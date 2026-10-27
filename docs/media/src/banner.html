@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- Winlestia README banner. Render: Edge headless, 1280x640 at device scale 2 -> docs/media/banner.png (2560x1280). -->
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: "Rubik"; src: url("fonts/Rubik.ttf"); font-weight: 300 900; }
+* { margin: 0; box-sizing: border-box; }
+html, body { width: 1280px; height: 640px; overflow: hidden; background: #0a0613; }
+.bg { position: absolute; inset: -40px; background: url("wallpaper-aurora.svg") center/cover; filter: saturate(1.15); }
+.shade { position: absolute; inset: 0;
+  background: radial-gradient(ellipse 46% 58% at 50% 50%, rgba(10,6,19,.62) 0%, rgba(10,6,19,.30) 55%, rgba(10,6,19,0) 80%),
+              linear-gradient(180deg, rgba(10,6,19,.35), rgba(10,6,19,0) 30%, rgba(10,6,19,0) 70%, rgba(10,6,19,.45)); }
+.stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-family: "Rubik", sans-serif; color: #fff; }
+.halo { position: absolute; left: 50%; top: 50%; width: 760px; height: 420px; transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(196,88,250,.38), rgba(196,88,250,0)); filter: blur(10px); }
+/* crop the mark to its drawn area (source 1250x1250, content ~x190-1080, y270-905) */
+.mark { position: relative; width: 178px; height: 127px; background: url("../../../src/frontend/assets/winlestia-mark.png") no-repeat;
+  background-size: 250px 250px; background-position: -38px -54px;
+  filter: drop-shadow(0 0 18px rgba(214,150,255,.75)) drop-shadow(0 6px 22px rgba(60,20,120,.6)); }
+h1 { position: relative; margin-top: 22px; font-size: 118px; font-weight: 700; letter-spacing: -2px; line-height: 1;
+  background: linear-gradient(180deg, #ffffff 30%, #e6c9ff 100%); -webkit-background-clip: text; color: transparent;
+  filter: drop-shadow(0 4px 24px rgba(120,40,200,.55)); }
+.tag { position: relative; margin-top: 18px; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.92); letter-spacing: .2px;
+  text-shadow: 0 2px 14px rgba(20,8,40,.6); }
+.pills { position: relative; margin-top: 30px; display: flex; gap: 12px; }
+.pill { padding: 9px 20px; border-radius: 999px; font-size: 17px; font-weight: 500; color: #f4e9ff;
+  background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 6px 20px rgba(10,6,19,.35); backdrop-filter: blur(12px); }
+</style></head>
+<body>
+<div class="bg"></div><div class="shade"></div>
+<div class="stage">
+  <div class="halo"></div>
+  <div class="mark"></div>
+  <h1>Winlestia</h1>
+  <div class="tag">Windows, beautifully reimagined</div>
+  <div class="pills"><span class="pill">Desktop shell for Windows 11</span><span class="pill">Glass panels</span><span class="pill">Open source</span></div>
+</div>
+</body></html>

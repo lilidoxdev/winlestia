@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/media/poster.png" alt="Winlestia" width="100%">
+<img src="docs/media/banner.png" alt="Winlestia, Windows beautifully reimagined" width="100%">
 
 [![Release](https://img.shields.io/badge/release-v0.7.6-5e81ac?style=flat-square)](../../releases/latest)
 [![Platform](https://img.shields.io/badge/platform-Windows%2011-3b4252?style=flat-square)](#installation)
@@ -39,7 +39,9 @@ The interface is a port of Caelestia; a .NET service handles the system side and
 
 ## Demo
 
-[![Watch the demo](docs/media/poster.png)](docs/media/winlestia-github.mp4)
+<a href="docs/media/winlestia-github.mp4"><img src="docs/media/demo-preview.webp" alt="Winlestia demo" width="100%"></a>
+
+Click the animation to open the full-quality video (1080p, 22 s).
 
 A vertical version for mobile viewing is available at [docs/media/winlestia-tiktok.mp4](docs/media/winlestia-tiktok.mp4).
 
