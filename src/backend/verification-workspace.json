@@ -1,0 +1,83 @@
+{
+  "At": "2026-10-24T02:20:41.7357434+02:00",
+  "Passed": 19,
+  "Failed": 0,
+  "Checks": [
+    {
+      "Name": "Redimensionnement du bord n",
+      "Pass": true
+    },
+    {
+      "Name": "Redimensionnement du bord s",
+      "Pass": true
+    },
+    {
+      "Name": "Redimensionnement du bord e",
+      "Pass": true
+    },
+    {
+      "Name": "Redimensionnement du bord w",
+      "Pass": true
+    },
+    {
+      "Name": "Redimensionnement du bord nw",
+      "Pass": true
+    },
+    {
+      "Name": "Redimensionnement du bord ne",
+      "Pass": true
+    },
+    {
+      "Name": "Redimensionnement du bord sw",
+      "Pass": true
+    },
+    {
+      "Name": "Redimensionnement du bord se",
+      "Pass": true
+    },
+    {
+      "Name": "Taille minimale et bord oppos\u00E9 conserv\u00E9",
+      "Pass": true
+    },
+    {
+      "Name": "D\u00E9placement born\u00E9 \u00E0 l\u2019\u00E9cran",
+      "Pass": true
+    },
+    {
+      "Name": "Disposition restaur\u00E9e \u00E0 l\u2019identique",
+      "Pass": true
+    },
+    {
+      "Name": "Disposition adapt\u00E9e \u00E0 une autre r\u00E9solution",
+      "Pass": true
+    },
+    {
+      "Name": "Migration sans perte des favoris existants",
+      "Pass": true
+    },
+    {
+      "Name": "Persistance de la taille, position et \u00E9toile locale",
+      "Pass": true
+    },
+    {
+      "Name": "Favoris tri\u00E9s par derni\u00E8re ouverture, acc\u00E8s masqu\u00E9s exclus",
+      "Pass": true
+    },
+    {
+      "Name": "Favoris limit\u00E9s \u00E0 la cat\u00E9gorie Jeux",
+      "Pass": true
+    },
+    {
+      "Name": "Recherche sans accents",
+      "Pass": true
+    },
+    {
+      "Name": "Ouvertures : r\u00E9cence sans doublon et compteur",
+      "Pass": true
+    },
+    {
+      "Name": "Favori ouvert replac\u00E9 en t\u00EAte",
+      "Pass": true
+    }
+  ]
+}

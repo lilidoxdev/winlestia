@@ -1,0 +1,7 @@
+module qs.modules.dashboard.dash
+Calendar Calendar.qml
+DateTime DateTime.qml
+Media Media.qml
+Resources Resources.qml
+User User.qml
+Weather Weather.qml

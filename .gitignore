@@ -1,0 +1,38 @@
+# Sorties de compilation
+build/
+bin/
+obj/
+*.pdb
+*.obj
+*.lib
+*.exp
+# Compilé par src/backend/build-rescue.cmd, livré via src/backend/native/
+src/backend/SECOURS_BUREAU.exe
+
+# Environnements Python
+.venv/
+__pycache__/
+*.pyc
+
+# État local du shell (jamais versionné)
+preferences-glass.json
+preferences-glass.json.bak
+catalog.json
+glass.log
+
+# Divers
+*.zip
+.DS_Store
+Thumbs.db
+
+# Bot Discord (dépôt séparé)
+Winlestia-Bot/
+
+# Publication publique
+backups/
+backup-location.txt
+clink.log
+catalog-workspace*
+*.dll
+*.exe
+*.log

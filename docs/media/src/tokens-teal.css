@@ -1,0 +1,15 @@
+/* Ambiance turquoise - overrides ONLY the palette variables.
+   Source colour HSV(182deg, 0.7, .98) = #4bf4fa; formula of chromatic_palette.py:42 (accent, surfaces, outlineVariant). */
+:root {
+  --primary:            #4bf4fa;
+  --secondary:          #4bf4fa;
+  --tertiary:           #4bf4fa;
+  --background:         #0c1010;   /* HSV(h, .28, .063) */
+  --surface:            #0c1010;
+  --surface-container-low:     #121818;  /* (.24, .095) */
+  --surface-container:         #1a2121;  /* (.23, .13)  */
+  --surface-container-high:    #222b2b;  /* (.22, .17)  */
+  --surface-container-highest: #2d3838;  /* (.20, .22)  */
+  --outline-variant:    #3d4c4c;   /* (.20, .30) */
+  --glass-panel-fill: rgba(12,16,16,.55); /* ESTIMATED surfaceOpacity, tinted by background */
+}

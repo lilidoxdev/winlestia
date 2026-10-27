@@ -1,0 +1,6 @@
+module qs.config
+singleton Appearance Appearance.qml
+AppearanceConfig AppearanceConfig.qml
+singleton Config Config.qml
+DashboardConfig DashboardConfig.qml
+LauncherConfig LauncherConfig.qml

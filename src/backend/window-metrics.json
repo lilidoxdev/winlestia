@@ -1,0 +1,176 @@
+[
+  {
+    "Title": "Panneaux Glass \u2014 commandes",
+    "Hwnd": 393688,
+    "Visible": true,
+    "WpfVisible": true,
+    "Left": -32768,
+    "Top": -32768,
+    "Width": 1130,
+    "Height": 64,
+    "ActualWidth": 1130,
+    "ActualHeight": 64,
+    "Opacity": 1,
+    "RegionKind": 3,
+    "CornerIncluded": false,
+    "Style": 369623040,
+    "ExStyle": 786440,
+    "Rect": [
+      -32768,
+      -32768,
+      -31638,
+      -32704
+    ],
+    "DwmFrame": [
+      -32768,
+      -32768,
+      -31638,
+      -32704
+    ]
+  },
+  {
+    "Title": "Panneaux Glass \u2014 Applications",
+    "Hwnd": 461174,
+    "Visible": true,
+    "WpfVisible": true,
+    "Left": -32768,
+    "Top": -32768,
+    "Width": 1325,
+    "Height": 604,
+    "ActualWidth": 1325,
+    "ActualHeight": 604,
+    "Opacity": 1,
+    "RegionKind": 3,
+    "CornerIncluded": false,
+    "Style": 369623040,
+    "ExStyle": 786440,
+    "Rect": [
+      -32768,
+      -32768,
+      -31443,
+      -32164
+    ],
+    "DwmFrame": [
+      -32768,
+      -32768,
+      -31443,
+      -32164
+    ]
+  },
+  {
+    "Title": "Panneaux Glass \u2014 Jeux",
+    "Hwnd": 395910,
+    "Visible": true,
+    "WpfVisible": true,
+    "Left": -32768,
+    "Top": -32768,
+    "Width": 1987,
+    "Height": 604,
+    "ActualWidth": 1987,
+    "ActualHeight": 604,
+    "Opacity": 1,
+    "RegionKind": 3,
+    "CornerIncluded": false,
+    "Style": 369623040,
+    "ExStyle": 786440,
+    "Rect": [
+      -32768,
+      -32768,
+      -30781,
+      -32164
+    ],
+    "DwmFrame": [
+      -32768,
+      -32768,
+      -30781,
+      -32164
+    ]
+  },
+  {
+    "Title": "Panneaux Glass \u2014 Projets",
+    "Hwnd": 133358,
+    "Visible": true,
+    "WpfVisible": true,
+    "Left": -32768,
+    "Top": -32768,
+    "Width": 1325,
+    "Height": 604,
+    "ActualWidth": 1325,
+    "ActualHeight": 604,
+    "Opacity": 1,
+    "RegionKind": 3,
+    "CornerIncluded": false,
+    "Style": 369623040,
+    "ExStyle": 786440,
+    "Rect": [
+      -32768,
+      -32768,
+      -31443,
+      -32164
+    ],
+    "DwmFrame": [
+      -32768,
+      -32768,
+      -31443,
+      -32164
+    ]
+  },
+  {
+    "Title": "Panneaux Glass \u2014 Documents \u0026 m\u00E9dias",
+    "Hwnd": 133354,
+    "Visible": true,
+    "WpfVisible": true,
+    "Left": -32768,
+    "Top": -32768,
+    "Width": 1987,
+    "Height": 604,
+    "ActualWidth": 1987,
+    "ActualHeight": 604,
+    "Opacity": 1,
+    "RegionKind": 3,
+    "CornerIncluded": false,
+    "Style": 369623040,
+    "ExStyle": 786440,
+    "Rect": [
+      -32768,
+      -32768,
+      -30781,
+      -32164
+    ],
+    "DwmFrame": [
+      -32768,
+      -32768,
+      -30781,
+      -32164
+    ]
+  },
+  {
+    "Title": "Panneaux Glass \u2014 ajouter un site",
+    "Hwnd": 919652,
+    "Visible": true,
+    "WpfVisible": true,
+    "Left": -38917,
+    "Top": -39972,
+    "Width": 56,
+    "Height": 56,
+    "ActualWidth": 56,
+    "ActualHeight": 56,
+    "Opacity": 1,
+    "RegionKind": 3,
+    "CornerIncluded": false,
+    "Style": 369623040,
+    "ExStyle": 786440,
+    "Rect": [
+      -32768,
+      -32768,
+      -32712,
+      -32712
+    ],
+    "DwmFrame": [
+      -32768,
+      -32768,
+      -32712,
+      -32712
+    ]
+  }
+]

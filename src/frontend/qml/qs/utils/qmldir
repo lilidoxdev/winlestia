@@ -1,0 +1,3 @@
+module qs.utils
+singleton Images Images.qml
+singleton Paths Paths.qml

@@ -1,0 +1,8 @@
+module qs.components.filedialog
+CurrentItem CurrentItem.qml
+DialogButtons DialogButtons.qml
+FileDialog FileDialog.qml
+FolderContents FolderContents.qml
+HeaderBar HeaderBar.qml
+Sidebar Sidebar.qml
+singleton Sizes Sizes.qml

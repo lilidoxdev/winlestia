@@ -1,0 +1,4 @@
+PySide6==6.10.3
+material-color-utilities==0.2.6
+numpy==2.5.4
+Pillow==13.0.0

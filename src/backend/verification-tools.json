@@ -1,0 +1,67 @@
+{
+  "At": "2026-10-24T23:58:57.4495015+02:00",
+  "Passed": 15,
+  "Failed": 0,
+  "Checks": [
+    {
+      "Name": "Capture d\u2019\u00E9cran : pixels saisis et PNG valide",
+      "Pass": true
+    },
+    {
+      "Name": "Moteur de lecture de texte disponible",
+      "Pass": true
+    },
+    {
+      "Name": "Sorties audio \u00E9num\u00E9r\u00E9es",
+      "Pass": true
+    },
+    {
+      "Name": "Tailles de fichiers lisibles",
+      "Pass": true
+    },
+    {
+      "Name": "Raccourcis F valides et libell\u00E9s",
+      "Pass": true
+    },
+    {
+      "Name": "Logo r\u00E9el d\u2019une application disponible pour la commande rapide",
+      "Pass": true
+    },
+    {
+      "Name": "Un acc\u00E8s sans logo re\u00E7oit une vignette de secours, jamais un blanc",
+      "Pass": true
+    },
+    {
+      "Name": "Un acc\u00E8s Microsoft Store est pr\u00E9sent dans le catalogue",
+      "Pass": true
+    },
+    {
+      "Name": "Pr\u00E9f\u00E9rences du quotidien par d\u00E9faut",
+      "Pass": true
+    },
+    {
+      "Name": "Niveau de mouvement lisible",
+      "Pass": true
+    },
+    {
+      "Name": "Profils d\u2019espace persistants",
+      "Pass": true
+    },
+    {
+      "Name": "\u00C9l\u00E9ments du presse-papiers persistants",
+      "Pass": true
+    },
+    {
+      "Name": "Papier pense-b\u00EAte : texte, taille, transparence et angle born\u00E9s",
+      "Pass": true
+    },
+    {
+      "Name": "Papier pense-b\u00EAte : position et image conserv\u00E9es au red\u00E9marrage",
+      "Pass": true
+    },
+    {
+      "Name": "Papier au-dessus de l\u2019espace : clics traversants puis rendus",
+      "Pass": true
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+<style>
+.p-wrap{display:flex;align-items:center;justify-content:center;gap:48px;height:100%;padding-bottom:6px}
+.p-res{position:relative;flex:none}
+.p-res svg{position:absolute;inset:0;overflow:visible}
+.p-res .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.p-res .l1{font-weight:400;line-height:1.05}
+.p-res .s1{color:var(--on-surface-variant);line-height:1.2}
+.p-res .l2{margin-top:10px;line-height:1.1}
+.p-res .s2{color:var(--on-surface-variant);line-height:1.2}
+.p-cap{position:absolute;left:0;right:0;text-align:center;font-size:var(--fs-small);color:var(--outline)}
+</style>
+<main class="panel tabbed">
+  <nav class="tabs"><div class="ind p2"></div>
+    <div class="tab"><svg><use href="#i-dash"/></svg>Tableau de bord</div>
+    <div class="tab"><svg><use href="#i-music"/></svg>Média</div>
+    <div class="tab on"><svg><use href="#i-speed"/></svg>Performance</div>
+    <div class="tab"><svg><use href="#i-work"/></svg>Workspaces</div>
+  </nav>
+  <div class="view"><div class="p-wrap" id="pw"></div></div>
+</main>
+<script>
+/* Resource rings: Performance.qml. arc1 45deg->220deg (temperature), arc2 230deg->360deg (usage); canvas angles, clockwise.
+   size 200 (x1.2 for the CPU), thickness 10, label1 28pt, sublabel1 12pt, label2 12pt, sublabel2 11pt. */
+var items=[
+ {m:1,  v1:44/90, v2:.09, l1:'44°C',  s1:'GPU temp',  l2:'9%',    s2:'Usage',   cap:'Carte graphique · 8 Go'},
+ {m:1.2,v1:51/90, v2:.18, l1:'51°C',  s1:'CPU temp',  l2:'18%',   s2:'Usage',   cap:'Processeur · 8 cœurs'},
+ {m:1,  v1:.49,   v2:.43, l1:'7,8 Go', s1:'Memory',   l2:'412 Go',s2:'Storage', cap:'RAM 16 Go · SSD 953 Go'}];
+function pt(cx,cy,r,d){var a=d*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
+function arc(cx,cy,r,a,b){var p=pt(cx,cy,r,a),q=pt(cx,cy,r,b);return 'M'+p[0].toFixed(2)+' '+p[1].toFixed(2)+' A'+r+' '+r+' 0 '+((b-a)>180?1:0)+' 1 '+q[0].toFixed(2)+' '+q[1].toFixed(2);}
+var h='';
+items.forEach(function(it){var S=200*it.m,t=10*it.m,r=(S-t)/2,c=S/2;
+ var a1=45,a2=220,b1=230,b2=360;
+ var svg='<svg width="'+S+'" height="'+S+'" viewBox="0 0 '+S+' '+S+'" fill="none" stroke-linecap="round" stroke-width="'+t+'">'+
+  '<path d="'+arc(c,c,r,a1,a2)+'" stroke="var(--primary-container)"/>'+
+  '<path d="'+arc(c,c,r,a1,a1+(a2-a1)*it.v1)+'" stroke="var(--primary)"/>'+
+  '<path d="'+arc(c,c,r,b1,b2)+'" stroke="var(--secondary-container)"/>'+
+  '<path d="'+arc(c,c,r,b1,b1+(b2-b1)*it.v2)+'" stroke="var(--secondary)"/></svg>';
+ h+='<div class="p-res" style="width:'+S+'px;height:'+S+'px">'+svg+'<div class="c">'+
+  '<div class="l1" style="font-size:'+(37.33*it.m)+'px;color:var(--primary)">'+it.l1+'</div>'+
+  '<div class="s1" style="font-size:'+(16*it.m)+'px">'+it.s1+'</div>'+
+  '<div class="l2" style="font-size:'+(16*it.m)+'px;color:var(--secondary)">'+it.l2+'</div>'+
+  '<div class="s2" style="font-size:'+(14.67*it.m)+'px">'+it.s2+'</div></div>'+
+  '<div class="p-cap" style="top:'+(S+8)+'px">'+it.cap+'</div></div>';});
+document.getElementById('pw').innerHTML=h;
+</script>

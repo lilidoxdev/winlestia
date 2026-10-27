@@ -1,0 +1,10 @@
+module qs.modules.dashboard
+Background Background.qml
+Content Content.qml
+Dash Dash.qml
+Media Media.qml
+Performance Performance.qml
+Tabs Tabs.qml
+Weather Weather.qml
+Workspaces Workspaces.qml
+Wrapper Wrapper.qml

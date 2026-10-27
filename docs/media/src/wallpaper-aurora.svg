@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1600" width="2560" height="1600">
+  <defs>
+    <filter id="b1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="150"/></filter>
+    <filter id="b2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="22"/></filter>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .05 0"/></filter>
+    <linearGradient id="w1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5fd2" stop-opacity="0"/><stop offset=".5" stop-color="#ff7ae0"/><stop offset="1" stop-color="#7a5cff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="w2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2ee6d0" stop-opacity="0"/><stop offset=".55" stop-color="#4fa8ff"/><stop offset="1" stop-color="#b04cff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect width="2560" height="1600" fill="#0a0613"/>
+  <g filter="url(#b1)">
+    <ellipse cx="520" cy="360" rx="760" ry="520" fill="#a52dff"/>
+    <ellipse cx="2060" cy="1280" rx="820" ry="520" fill="#2f3dff"/>
+    <ellipse cx="420" cy="1420" rx="640" ry="380" fill="#10d8c4"/>
+    <ellipse cx="2200" cy="180" rx="640" ry="380" fill="#ff5f7a"/>
+    <ellipse cx="1280" cy="860" rx="560" ry="300" fill="#7a2cff" opacity=".8"/>
+  </g>
+  <g filter="url(#b2)" fill="none" stroke-linecap="round">
+    <path d="M-100 1060 C 420 760, 860 1320, 1380 1000 S 2200 640, 2700 940" stroke="url(#w1)" stroke-width="64" opacity=".85"/>
+    <path d="M-100 1200 C 520 960, 940 1440, 1500 1160 S 2240 860, 2700 1100" stroke="url(#w2)" stroke-width="44" opacity=".8"/>
+    <path d="M-100 880 C 380 640, 900 1100, 1320 820 S 2100 460, 2700 700" stroke="url(#w1)" stroke-width="26" opacity=".6"/>
+  </g>
+  <rect width="2560" height="1600" filter="url(#grain)"/>
+</svg>

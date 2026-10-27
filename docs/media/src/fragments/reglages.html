@@ -1,0 +1,64 @@
+<style>
+.r-panel{width:1120px;padding:var(--pad-large) 24px 22px;display:flex;flex-direction:column;gap:14px}
+.r-head{display:flex;align-items:flex-start}
+.r-head .a{font-size:33.33px;line-height:1.1}
+.r-head .b{font-size:13.33px;color:var(--outline);margin-top:4px}
+.r-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+.r-card{border-radius:26px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.r-sec{display:flex;align-items:center;gap:10px}
+.r-sec svg{width:31px;height:31px;color:var(--primary)}
+.r-sec .a{font-size:20px;line-height:1.1}
+.r-sec .b{font-size:12px;color:var(--outline);margin-top:2px}
+.r-themes{display:flex;gap:8px}
+.r-th{flex:1;height:103px;border-radius:20px;position:relative}
+.r-th.sel{outline:2px solid var(--primary);outline-offset:-2px}
+.r-th .pv{position:absolute;left:50%;margin-left:-28px;top:15px;width:56px;height:34px;border-radius:8px}
+.r-th .pv i{position:absolute;display:block}
+.r-th .lb{position:absolute;left:0;right:0;top:63px;display:flex;justify-content:center;align-items:center;gap:6px;font-size:13.33px}
+.r-th .lb svg{width:20px;height:20px}
+.r-vl{display:flex;font-size:13.33px;margin-bottom:6px}.r-vl span:first-child{flex:1}.r-vl span:last-child{color:var(--primary)}
+.r-set{display:flex;align-items:center;gap:10px}
+.r-set>svg{width:25px;height:25px;color:var(--primary);flex:none}
+.r-set .n{font-size:13.33px}
+.r-set .h{font-size:10.67px;color:var(--outline);margin-top:2px}
+.r-seg{display:flex;gap:4px}
+.r-seg span{padding:7px 14px;border-radius:var(--r-full);font-size:13.33px}
+.r-seg span.on{background:var(--secondary-container)}
+.r-kbd{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-full);background:var(--secondary-container);font-size:13.33px}
+.r-kbd svg{width:20px;height:20px}
+.r-two{display:grid;grid-template-columns:1fr 1fr;gap:14px 36px}
+.r-foot{display:flex;align-items:center}
+</style>
+<section class="panel r-panel">
+  <div class="r-head"><div class="grow"><div class="a">Personnaliser</div><div class="b">Un espace qui te ressemble</div></div><span class="ibtn"><svg><use href="#i-close"/></svg></span></div>
+  <div class="r-cols">
+    <div class="card strong r-card">
+      <div class="r-sec"><svg><use href="#i-palette"/></svg><div><div class="a">Apparence</div><div class="b">Couleurs et transparence</div></div></div>
+      <div class="r-themes">
+        <div class="r-th" style="background:#fff8f6"><div class="pv" style="background:rgba(137,81,67,.14)"><i style="left:6px;top:5px;width:44px;height:4px;border-radius:2px;background:#895143"></i><i style="left:6px;top:14px;width:18px;height:14px;border-radius:4px;background:rgba(137,81,67,.55)"></i><i style="left:28px;top:14px;width:22px;height:14px;border-radius:4px;background:rgba(137,81,67,.25)"></i></div><div class="lb" style="color:#895143"><svg><use href="#i-sun"/></svg>Porcelaine</div></div>
+        <div class="r-th" style="background:#101518"><div class="pv" style="background:rgba(175,212,240,.14)"><i style="left:6px;top:5px;width:44px;height:4px;border-radius:2px;background:#afd4f0"></i><i style="left:6px;top:14px;width:18px;height:14px;border-radius:4px;background:rgba(175,212,240,.55)"></i><i style="left:28px;top:14px;width:22px;height:14px;border-radius:4px;background:rgba(175,212,240,.25)"></i></div><div class="lb" style="color:#afd4f0"><svg><use href="#i-moon"/></svg>Nuit</div></div>
+        <div class="r-th" style="background:var(--background)"><div class="pv" style="background:color-mix(in srgb,var(--primary) 14%,transparent)"><i style="left:6px;top:5px;width:44px;height:4px;border-radius:2px;background:var(--primary)"></i><i style="left:6px;top:14px;width:18px;height:14px;border-radius:4px;background:color-mix(in srgb,var(--primary) 55%,transparent)"></i><i style="left:28px;top:14px;width:22px;height:14px;border-radius:4px;background:color-mix(in srgb,var(--primary) 25%,transparent)"></i></div><div class="lb" style="color:var(--primary)"><svg><use href="#i-palette"/></svg>Personnalisé</div></div>
+        <div class="r-th sel" style="background:var(--surface-container-high)"><div class="pv" style="background:color-mix(in srgb,var(--primary) 14%,transparent)"><i style="left:6px;top:5px;width:44px;height:4px;border-radius:2px;background:var(--primary)"></i><i style="left:6px;top:14px;width:18px;height:14px;border-radius:4px;background:color-mix(in srgb,var(--primary) 55%,transparent)"></i><i style="left:28px;top:14px;width:22px;height:14px;border-radius:4px;background:color-mix(in srgb,var(--primary) 25%,transparent)"></i></div><div class="lb" style="color:var(--primary)"><svg><use href="#i-wall"/></svg>Automatique</div></div>
+      </div>
+      <div><div class="r-vl"><span>Transparence du verre</span><span>49 %</span></div><div class="slider"><div class="t"></div><div class="f" style="width:49%"></div><div class="h" style="left:49%"></div></div></div>
+      <div class="r-set"><svg><use href="#i-bolt"/></svg><div class="grow"><div class="n">Animations</div></div><div class="r-seg"><span>Sans</span><span>Rapides</span><span class="on">Caelestia</span></div></div>
+    </div>
+    <div class="card strong r-card">
+      <div class="r-sec"><svg><use href="#i-desktop"/></svg><div><div class="a">Bureau</div><div class="b">Cadre, dock et accès rapide</div></div></div>
+      <div class="r-set"><svg><use href="#i-grid"/></svg><div class="grow"><div class="n">Organisation automatique</div><div class="h">Les fenêtres se partagent chaque écran</div></div><span class="switch"></span></div>
+      <div class="r-set"><svg><use href="#i-desktop"/></svg><div class="grow"><div class="n">Cadre de l’écran</div></div><span class="switch on"></span></div>
+      <div><div class="r-vl"><span>Épaisseur des contours</span><span>22 px</span></div><div class="slider"><div class="t"></div><div class="f" style="width:50%"></div><div class="h" style="left:50%"></div></div></div>
+      <div class="r-set"><svg><use href="#i-apps"/></svg><div class="grow"><div class="n">Barre des tâches Winlestia</div></div><span class="switch on"></span></div>
+      <div><div class="r-vl"><span>Taille des icônes</span><span>56 px</span></div><div class="slider"><div class="t"></div><div class="f" style="width:40%"></div><div class="h" style="left:40%"></div></div></div>
+    </div>
+  </div>
+  <div class="card strong r-card">
+    <div class="r-sec"><svg><use href="#i-tune"/></svg><div><div class="a">Au quotidien</div><div class="b">Langue et raccourcis</div></div></div>
+    <div class="r-two">
+      <div class="r-set"><svg><use href="#i-grid"/></svg><div class="grow"><div class="n">Ouvrir le panneau</div></div><span class="r-kbd"><svg><use href="#i-keyboard"/></svg>Ctrl + F1</span></div>
+      <div class="r-set"><svg><use href="#i-power"/></svg><div class="grow"><div class="n">Démarrer avec Windows</div></div><span class="switch on"></span></div>
+      <div class="r-set"><svg><use href="#i-search"/></svg><div class="grow"><div class="n">Commande rapide</div></div><span class="r-kbd"><svg><use href="#i-keyboard"/></svg>Ctrl + F2</span></div>
+      <div class="r-set"><svg><use href="#i-paste"/></svg><div class="grow"><div class="n">Historique du presse-papiers</div></div><span class="switch on"></span></div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,45 @@
+{
+  "schemes": [
+    {
+      "name": "Winlestia Glass",
+      "background": "#0c0d10",
+      "foreground": "#f7f3f4",
+      "cursorColor": "#3c89fa",
+      "selectionBackground": "#1a3256",
+      "black": "#151619",
+      "red": "#F38B9D",
+      "green": "#A7DCB2",
+      "yellow": "#F2D397",
+      "blue": "#3c89fa",
+      "purple": "#5e92fb",
+      "cyan": "#7faff8",
+      "white": "#f7f3f4",
+      "brightBlack": "#868587",
+      "brightRed": "#FFADC0",
+      "brightGreen": "#C1ECC8",
+      "brightYellow": "#F7E1B8",
+      "brightBlue": "#7faff8",
+      "brightPurple": "#92bbf9",
+      "brightCyan": "#9fc3fa",
+      "brightWhite": "#F5F7FF"
+    }
+  ],
+  "themes": [
+    {
+      "name": "Winlestia",
+      "window": {
+        "applicationTheme": "dark",
+        "useMica": false
+      },
+      "tabRow": {
+        "background": "#0c0d1000",
+        "unfocusedBackground": "#0c0d1000"
+      },
+      "tab": {
+        "background": "terminalBackground",
+        "unfocusedBackground": "#0c0d10",
+        "showCloseButton": "activeOnly"
+      }
+    }
+  ]
+}

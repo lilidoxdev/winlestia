@@ -1,0 +1,6 @@
+module qs.components.effects
+ColouredIcon ColouredIcon.qml
+Colouriser Colouriser.qml
+Elevation Elevation.qml
+InnerBorder InnerBorder.qml
+OpacityMask OpacityMask.qml

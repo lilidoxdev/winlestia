@@ -1,0 +1,6 @@
+module Quickshell
+PersistentProperties PersistentProperties.qml
+singleton QsWindow QsWindow.qml
+singleton Quickshell Quickshell.qml
+Singleton Singleton.qml
+Variants Variants.qml

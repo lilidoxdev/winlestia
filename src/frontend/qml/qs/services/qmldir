@@ -1,0 +1,8 @@
+module qs.services
+singleton Audio Audio.qml
+singleton Colours Colours.qml
+singleton Players Players.qml
+singleton SysInfo SysInfo.qml
+singleton SystemUsage SystemUsage.qml
+singleton Time Time.qml
+singleton Weather Weather.qml

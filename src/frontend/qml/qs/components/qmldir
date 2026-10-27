@@ -1,0 +1,13 @@
+module qs.components
+Anim Anim.qml
+CAnim CAnim.qml
+ConnectionHeader ConnectionHeader.qml
+ConnectionInfoSection ConnectionInfoSection.qml
+MaterialIcon MaterialIcon.qml
+PropertyRow PropertyRow.qml
+SectionContainer SectionContainer.qml
+SectionHeader SectionHeader.qml
+StateLayer StateLayer.qml
+StyledClippingRect StyledClippingRect.qml
+StyledRect StyledRect.qml
+StyledText StyledText.qml

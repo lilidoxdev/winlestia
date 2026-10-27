@@ -1,0 +1,15 @@
+/* Ambiance chaude - overrides ONLY the palette variables.
+   Source colour HSV(8deg, 0.74, .98) = #fa5a41; formula of chromatic_palette.py:42 (accent, surfaces, outlineVariant). */
+:root {
+  --primary:            #fa5a41;
+  --secondary:          #fa5a41;
+  --tertiary:           #fa5a41;
+  --background:         #100c0c;   /* HSV(h, .28, .063) */
+  --surface:            #100c0c;
+  --surface-container-low:     #181312;  /* (.24, .095) */
+  --surface-container:         #211b1a;  /* (.23, .13)  */
+  --surface-container-high:    #2b2322;  /* (.22, .17)  */
+  --surface-container-highest: #382e2d;  /* (.20, .22)  */
+  --outline-variant:    #4c3f3d;   /* (.20, .30) */
+  --glass-panel-fill: rgba(16,12,12,.55); /* ESTIMATED surfaceOpacity, tinted by background */
+}

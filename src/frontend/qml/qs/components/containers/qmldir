@@ -1,0 +1,4 @@
+module qs.components.containers
+StyledFlickable StyledFlickable.qml
+StyledListView StyledListView.qml
+StyledWindow StyledWindow.qml

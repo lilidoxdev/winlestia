@@ -1,0 +1,74 @@
+/* Winlestia shared components (screenshots now, 9:16 video later).
+   Rules marked "= dashboard" are copied 1:1 from dashboard.html, the validated reference.
+   Colours come ONLY from tokens.css (+ an ambiance override); derived roles are marked ESTIMATED. */
+*{box-sizing:border-box;margin:0}
+html,body{width:1280px;height:800px;overflow:hidden;background:#0a0613;font-family:var(--font-sans);color:var(--on-surface)}
+:root{
+  /* ESTIMATED roles that tokens.css does not carry (Material You container roles) */
+  --primary-container: color-mix(in srgb,var(--primary) 24%,var(--surface-container-high));
+  --secondary-container: color-mix(in srgb,var(--primary) 22%,var(--surface-container-high));
+  --error:#ffb4ab;
+  --panel-w:864px;
+}
+svg.i{width:1em;height:1em;flex:none}
+.stage{position:relative;width:1280px;height:800px;background:center/cover}
+.frame{position:absolute;inset:0;border-radius:0;pointer-events:none}   /* = dashboard */
+.frame:before{content:"";position:absolute;inset:11px;border:1px solid color-mix(in srgb,var(--outline-variant) 70%,transparent);border-radius:var(--r-large)}
+
+/* ---- glass panel (= dashboard) */
+.panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:var(--pad-large);
+  border:var(--border) solid var(--outline-variant);border-radius:var(--r-large);background:var(--glass-panel-fill);
+  backdrop-filter:blur(var(--glass-panel-blur)) brightness(var(--glass-panel-dim)) saturate(1.15);}
+.panel.tabbed{width:var(--panel-w)}
+.view{height:414px;position:relative}
+
+/* ---- tabs (= dashboard) */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);position:relative;margin-bottom:var(--sp-normal);padding-top:var(--pad-smaller)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 10px;font-size:var(--fs-small);color:var(--on-surface)}
+.tab svg{width:25px;height:25px}
+.tab.on{color:var(--primary)}
+.tabs:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--outline-variant)}
+.ind{position:absolute;bottom:0;left:0;width:25%;height:var(--tab-indicator-h);border-radius:var(--r-full);background:var(--primary);z-index:1}
+.ind.p1{left:25%}.ind.p2{left:50%}.ind.p3{left:75%}
+
+/* ---- card (= dashboard) */
+.card{background:color-mix(in srgb,var(--surface-container) calc(var(--glass-card-alpha)*100%),transparent);border-radius:var(--r-large);position:relative;overflow:hidden}
+.card.strong{background:color-mix(in srgb,var(--surface-container) 76%,transparent)}   /* Qt.alpha(m3surfaceContainer,.76) in ShellPreferences */
+
+/* ---- text helpers */
+.muted{color:var(--outline)}
+.pri{color:var(--primary)}
+.row{display:flex;align-items:center}
+.col{display:flex;flex-direction:column}
+.grow{flex:1;min-width:0}
+
+/* ---- buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-full);font-size:var(--fs-small);color:var(--primary);white-space:nowrap}
+.btn svg{width:20px;height:20px}
+.btn.tonal{background:var(--secondary-container);color:var(--on-surface)}
+.btn.on{background:var(--secondary-container);color:var(--on-surface)}
+.ibtn{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--on-surface);flex:none}
+.ibtn svg{width:22px;height:22px}
+.ibtn.filled{background:var(--primary);color:var(--on-primary)}
+.ibtn.tonal{background:var(--secondary-container)}
+
+/* ---- switch / slider */
+.switch{width:52px;height:32px;border-radius:16px;background:var(--surface-container-highest);border:2px solid var(--outline);position:relative;flex:none}
+.switch:after{content:"";position:absolute;left:6px;top:6px;width:16px;height:16px;border-radius:50%;background:var(--outline)}
+.switch.on{background:var(--primary);border-color:var(--primary)}
+.switch.on:after{left:25px;top:3px;width:24px;height:24px;background:var(--on-primary)}
+.slider{position:relative;height:25px;width:100%}
+.slider .t{position:absolute;left:0;right:0;top:6px;height:13px;border-radius:var(--r-full);background:var(--secondary-container)}
+.slider .f{position:absolute;left:0;top:6px;height:13px;border-radius:var(--r-full);background:var(--primary)}
+.slider .h{position:absolute;top:0;width:4px;height:25px;border-radius:2px;background:var(--primary);margin-left:-2px}
+
+/* ---- generic app tile icons (neutral glyphs on gradient tiles) */
+.tile-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.9)}
+.tile-ico svg{width:26px;height:26px}
+.g1{background:linear-gradient(135deg,#ff7a59,#ffb347)}
+.g2{background:linear-gradient(135deg,#7a5cff,#3dc8ff)}
+.g3{background:linear-gradient(135deg,#2ee6a0,#1d9bd8)}
+.g4{background:linear-gradient(135deg,#ff5f9a,#a52dff)}
+.g5{background:linear-gradient(135deg,#6a7a8c,#2d3846)}
+.g6{background:linear-gradient(135deg,#ffd166,#ff7a3d)}
+.g7{background:linear-gradient(135deg,#3d6bff,#8c4cff)}

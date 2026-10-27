@@ -1,0 +1,7 @@
+ClipboardPane ClipboardPane.qml
+Dock Dock.qml
+Main Main.qml
+PalettePane PalettePane.qml
+ShellPreferences ShellPreferences.qml
+WindowsControls WindowsControls.qml
+WorkspaceBrowser WorkspaceBrowser.qml

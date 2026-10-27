@@ -1,0 +1,30 @@
+<style>
+.t-panel{width:780px;padding:var(--pad-large) 24px 24px;display:flex;flex-direction:column;gap:18px}
+.t-head{display:flex;align-items:center;gap:12px}
+.t-head svg.i{font-size:37px;color:var(--primary)}
+.t-head .a{font-size:30.67px;line-height:1.1}
+.t-head .b{font-size:13.33px;color:var(--outline);margin-top:3px}
+.t-chips{display:flex;gap:6px}
+.t-chips .btn{padding:8px 16px;color:var(--on-surface)}
+.t-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.t-card{height:112px;border-radius:24px;display:flex;align-items:center;gap:14px;padding:18px}
+.t-card .ic{width:36px;height:36px;color:var(--primary);flex:none}
+.t-card .ic svg{width:36px;height:36px}
+.t-card .n{font-size:var(--fs-smaller)}
+.t-card .d{font-size:12px;color:var(--outline);margin-top:6px}
+.t-card .ch{width:22px;height:22px;color:var(--outline);flex:none}.t-card .ch svg{width:22px;height:22px}
+</style>
+<section class="panel t-panel">
+  <div class="t-head"><svg class="i"><use href="#i-tune"/></svg><div class="grow"><div class="a">L’atelier</div><div class="b">Des outils à portée de main</div></div><span class="ibtn"><svg><use href="#i-close"/></svg></span></div>
+  <div class="t-chips"><span class="btn on">Tout</span><span class="btn">Écran</span><span class="btn">Audio</span><span class="btn">Fichiers</span><span class="btn">Confort</span></div>
+  <div class="t-grid">
+    <div class="card strong t-card"><span class="ic"><svg><use href="#i-shot"/></svg></span><div class="grow"><div class="n">Capturer et annoter</div><div class="d">Sélection, annotation et export</div></div><span class="ch"><svg><use href="#i-chev"/></svg></span></div>
+    <div class="card strong t-card"><span class="ic"><svg><use href="#i-ocr"/></svg></span><div class="grow"><div class="n">Texte d’une image</div><div class="d">Reconnaissance de texte Windows</div></div><span class="ch"><svg><use href="#i-chev"/></svg></span></div>
+    <div class="card strong t-card"><span class="ic"><svg><use href="#i-pipette"/></svg></span><div class="grow"><div class="n">Pipette</div><div class="d">Copier une couleur de l’écran</div></div><span class="ch"><svg><use href="#i-chev"/></svg></span></div>
+    <div class="card strong t-card"><span class="ic"><svg><use href="#i-ruler"/></svg></span><div class="grow"><div class="n">Règle pixel</div><div class="d">Mesurer une distance à l’écran</div></div><span class="ch"><svg><use href="#i-chev"/></svg></span></div>
+    <div class="card strong t-card"><span class="ic"><svg><use href="#i-vol"/></svg></span><div class="grow"><div class="n">Sortie audio</div><div class="d">Casque, enceintes et périphériques</div></div><span class="ch"><svg><use href="#i-chev"/></svg></span></div>
+    <div class="card strong t-card"><span class="ic"><svg><use href="#i-mic"/></svg></span><div class="grow"><div class="n">Microphones</div><div class="d">Entrée, niveau et bouton muet</div></div><span class="ch"><svg><use href="#i-chev"/></svg></span></div>
+    <div class="card strong t-card"><span class="ic"><svg><use href="#i-tune"/></svg></span><div class="grow"><div class="n">Mixeur d’applications</div><div class="d">Un volume pour chaque application</div></div><span class="ch"><svg><use href="#i-chev"/></svg></span></div>
+    <div class="card strong t-card"><span class="ic"><svg><use href="#i-paste"/></svg></span><div class="grow"><div class="n">Historique</div><div class="d">Retrouver les éléments copiés</div></div><span class="ch"><svg><use href="#i-chev"/></svg></span></div>
+  </div>
+</section>

@@ -1,0 +1,72 @@
+<style>
+.pal{position:absolute;left:50%;top:70px;transform:translateX(-50%);width:660px;padding:var(--pad-large) 20px 18px;display:flex;flex-direction:column;gap:14px}
+.pal-h{display:flex;align-items:center;gap:10px}
+.pal-h svg.i{font-size:29px;color:var(--primary)}
+.pal-h .t{flex:1;font-size:var(--fs-large)}
+.pal-h .k{font-size:13.33px;color:var(--outline)}
+.pal-in{display:flex;align-items:center;gap:10px;height:48px;border-radius:var(--r-full);padding:0 18px;background:var(--surface-container-high);font-size:var(--fs-normal)}
+.pal-in svg{width:22px;height:22px;color:var(--on-surface-variant)}
+.pal-in .caret{width:2px;height:22px;background:var(--primary);margin-left:-8px}
+.pal-list{display:flex;flex-direction:column;gap:4px}
+.pal-it{height:57px;border-radius:var(--r-normal);display:flex;align-items:center;gap:12px;padding:0 15px}
+.pal-it.sel{background:color-mix(in srgb,var(--on-surface) 9%,transparent)}
+.pal-it .tile-ico{width:42px;height:42px;border-radius:12px}
+.pal-it .tile-ico svg{width:24px;height:24px}
+.pal-it .n{font-size:var(--fs-normal)}
+.pal-it .d{font-size:var(--fs-small);color:var(--outline);margin-top:1px}
+.pal-it .tag{margin-left:auto;font-size:13.33px;color:var(--outline)}
+.pal-f{display:flex;align-items:baseline;font-size:13.33px;color:var(--outline)}
+.pal-f span:first-child{flex:1}
+/* dock: Dock.qml, 756x68 */
+.dock{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);width:756px;height:68px;border-radius:var(--r-large);
+  border:var(--border) solid var(--outline-variant);background:var(--glass-panel-fill);
+  backdrop-filter:blur(var(--glass-panel-blur)) brightness(var(--glass-panel-dim)) saturate(1.15);
+  display:flex;align-items:center;padding:8px 34px;gap:5px}
+.d-start{width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex:none}
+.d-start div{display:grid;grid-template-columns:8px 8px;gap:2px}
+.d-start i{width:8px;height:8px;background:var(--primary);border-radius:.5px}
+.d-sep{width:1px;height:23px;background:var(--outline-variant);margin:0 6px;flex:none}
+.d-apps{flex:1;display:flex;gap:4px;min-width:0}
+.d-app{width:42px;height:42px;border-radius:15px;display:flex;align-items:center;justify-content:center;position:relative;flex:none}
+.d-app.act{background:var(--secondary-container)}
+.d-app .tile-ico{width:28px;height:28px;border-radius:8px}
+.d-app .tile-ico svg{width:17px;height:17px}
+.d-app:after{content:"";position:absolute;bottom:1px;left:50%;margin-left:-2px;width:4px;height:3px;border-radius:2px;background:var(--primary)}
+.d-app.act:after{width:15px;margin-left:-7.500px}
+.d-app.pin:after{display:none}
+.d-clock{margin:0 7px 0 8px;text-align:center}
+.d-clock b{display:block;font-weight:400;font-size:13.33px}
+.d-clock span{display:block;font-size:10.67px;color:var(--on-surface-variant)}
+.dock .ibtn svg{width:22px;height:22px}
+</style>
+<section class="panel pal" style="transform:translateX(-50%)">
+  <div class="pal-h"><svg class="i"><use href="#i-search"/></svg><span class="t">Commande rapide</span><span class="k">Ctrl + F2</span><span class="ibtn"><svg><use href="#i-close"/></svg></span></div>
+  <div class="pal-in"><svg><use href="#i-search"/></svg><span>24 × 7</span><span class="caret"></span></div>
+  <div class="pal-list">
+    <div class="pal-it sel"><span class="tile-ico g7"><svg><use href="#i-calc"/></svg></span><div><div class="n">= 168</div><div class="d">Entrée pour copier le résultat</div></div></div>
+    <div class="pal-it"><span class="tile-ico g5"><svg><use href="#i-calc"/></svg></span><div><div class="n">Calculatrice Windows</div><div class="d">Ouvrir la calculatrice</div></div><span class="tag">commande</span></div>
+    <div class="pal-it"><span class="tile-ico g3"><svg><use href="#i-timer"/></svg></span><div><div class="n">Minuteur</div><div class="d">Une session de concentration</div></div><span class="tag">commande</span></div>
+    <div class="pal-it"><span class="tile-ico g1"><svg><use href="#i-note"/></svg></span><div><div class="n">Note rapide</div><div class="d">Bloc-notes persistant</div></div><span class="tag">commande</span></div>
+    <div class="pal-it"><span class="tile-ico g6"><svg><use href="#i-taskmgr"/></svg></span><div><div class="n">Gestionnaire des tâches</div><div class="d">Processus et démarrage</div></div><span class="tag">commande</span></div>
+  </div>
+  <div class="pal-f"><span>↑ ↓ naviguer · Entrée ouvrir · Échap fermer</span><span>&gt; commandes · 24 × 7 calculer</span></div>
+</section>
+<nav class="dock">
+  <span class="d-start"><div><i></i><i></i><i></i><i></i></div></span>
+  <span class="ibtn"><svg><use href="#i-search"/></svg></span>
+  <span class="d-sep"></span>
+  <div class="d-apps">
+    <span class="d-app pin"><span class="tile-ico g1"><svg><use href="#i-note"/></svg></span></span>
+    <span class="d-app pin"><span class="tile-ico g2"><svg><use href="#i-photo"/></svg></span></span>
+    <span class="d-app act"><span class="tile-ico g5"><svg><use href="#i-terminal"/></svg></span></span>
+    <span class="d-app"><span class="tile-ico g4"><svg><use href="#i-music2"/></svg></span></span>
+    <span class="d-app"><span class="tile-ico g3"><svg><use href="#i-folder"/></svg></span></span>
+    <span class="d-app"><span class="tile-ico g7"><svg><use href="#i-link"/></svg></span></span>
+  </div>
+  <span class="ibtn"><svg><use href="#i-apps"/></svg></span>
+  <span class="ibtn"><svg><use href="#i-vol"/></svg></span>
+  <span class="ibtn"><svg><use href="#i-wifi"/></svg></span>
+  <span class="ibtn"><svg><use href="#i-gear"/></svg></span>
+  <span class="ibtn"><svg><use href="#i-power"/></svg></span>
+  <div class="d-clock"><b>10:09</b><span>27 oct.</span></div>
+</nav>

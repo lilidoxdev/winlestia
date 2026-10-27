@@ -1,0 +1,66 @@
+<style>
+.m-wrap{display:flex;align-items:center;justify-content:center;gap:24px;height:100%}
+.m-cw{position:relative;width:310px;height:310px;flex:none}
+.m-cw svg.vis{position:absolute;inset:0;width:310px;height:310px}
+.m-cw .cover{position:absolute;left:80px;top:80px;width:150px;height:150px;border-radius:50%;
+  background:conic-gradient(from 20deg,#ff5f7a,#a52dff,#2f3dff,#10d8c4,#a52dff,#ff5f7a);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);overflow:hidden}
+.m-cw .cover:before{content:"";position:absolute;inset:0;border-radius:50%;background:repeating-radial-gradient(circle at 50% 50%,rgba(255,255,255,0) 0 9px,rgba(255,255,255,.07) 10px 11px)}
+.m-cw .cover:after{content:"";position:absolute;inset:34%;border-radius:50%;background:radial-gradient(circle,#0f0c10 0 30%,transparent 31%),rgba(255,255,255,.1)}
+.m-bg{width:190px;height:120px;flex:none}
+.m-bg svg{width:190px;height:120px;overflow:visible}
+.m-det{width:270px;display:flex;flex-direction:column;align-items:center}
+.m-title{font-size:var(--fs-normal);color:var(--primary);text-align:center;max-width:100%}
+.m-alb{font-size:var(--fs-small);color:var(--outline);margin-top:3px}
+.m-art{font-size:var(--fs-small);color:var(--secondary);margin-top:3px}
+.m-ctl{display:flex;gap:var(--sp-small);align-items:center;margin-top:18px}
+.m-ctl .ibtn{width:44px;height:44px}.m-ctl .ibtn svg{width:30px;height:30px}
+.m-ctl .ibtn.filled{width:56px;border-radius:18px}
+.m-prog{width:250px;margin-top:20px}
+.m-time{display:flex;justify-content:space-between;font-size:var(--fs-small);margin-top:6px}
+.m-bot{display:flex;align-items:center;gap:var(--sp-small);margin-top:18px}
+.m-split{display:flex;align-items:center;gap:8px;background:var(--secondary-container);border-radius:var(--r-full);padding:7px 14px;font-size:var(--fs-small)}
+.m-split svg{width:18px;height:18px}
+</style>
+<main class="panel tabbed">
+  <nav class="tabs"><div class="ind p1"></div>
+    <div class="tab"><svg><use href="#i-dash"/></svg>Tableau de bord</div>
+    <div class="tab on"><svg><use href="#i-music"/></svg>Média</div>
+    <div class="tab"><svg><use href="#i-speed"/></svg>Performance</div>
+    <div class="tab"><svg><use href="#i-work"/></svg>Workspaces</div>
+  </nav>
+  <div class="view"><div class="m-wrap">
+    <div class="m-cw">
+      <svg class="vis" id="vis" viewBox="0 0 310 310"></svg>
+      <div class="cover"></div>
+    </div>
+    <div class="m-det">
+      <div class="m-title">Slow Horizon</div>
+      <div class="m-alb">Night Signals</div>
+      <div class="m-art">Nova Fields</div>
+      <div class="m-ctl">
+        <span class="ibtn"><svg><use href="#i-prev"/></svg></span>
+        <span class="ibtn filled"><svg><use href="#i-pause"/></svg></span>
+        <span class="ibtn"><svg><use href="#i-next"/></svg></span>
+      </div>
+      <div class="m-prog">
+        <div class="slider"><div class="t"></div><div class="f" style="width:43%"></div><div class="h" style="left:43%"></div></div>
+        <div class="m-time"><span>1:42</span><span class="muted">3:58</span></div>
+      </div>
+      <div class="m-bot">
+        <span class="ibtn" style="color:var(--secondary)"><svg><use href="#i-vol"/></svg></span>
+        <span class="m-split"><svg><use href="#i-music2"/></svg>Lecteur démo</span>
+        <span class="ibtn" style="color:var(--error)"><svg><use href="#i-trash"/></svg></span>
+      </div>
+    </div>
+    <div class="m-bg"><svg viewBox="0 0 200 126"><use href="#i-bongo"/></svg></div>
+  </div></div>
+</main>
+<script>
+/* circular visualiser: 64 bars around the cover, deterministic heights (mediaVisualiserSize 80, cover 150) */
+(function(){var g='',n=64,c=155,r0=82;
+for(var i=0;i<n;i++){var a=i/n*Math.PI*2-Math.PI/2;
+ var h=6+30*Math.abs(Math.sin(i*.55)*Math.cos(i*.21+1))+8*Math.abs(Math.sin(i*1.9));
+ var x1=c+Math.cos(a)*r0,y1=c+Math.sin(a)*r0,x2=c+Math.cos(a)*(r0+h),y2=c+Math.sin(a)*(r0+h);
+ g+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="var(--primary)" stroke-width="4" stroke-linecap="round" opacity="'+(.55+.4*(h/44)).toFixed(2)+'"/>';}
+document.getElementById('vis').innerHTML=g;})();
+</script>

@@ -1,0 +1,72 @@
+<style>
+.term{position:absolute;left:50%;top:30px;transform:translateX(-50%);width:940px;height:740px;border-radius:12px;overflow:hidden;
+  border:1px solid var(--outline-variant);
+  /* terminal opacity 68 % (sync_theme.py: opacity, acrylic) over the wallpaper */
+  background:color-mix(in srgb,var(--background) 68%,transparent);
+  backdrop-filter:blur(var(--glass-panel-blur)) saturate(1.15)}
+.tb{height:34px;display:flex;align-items:center;padding:0 0 0 14px;gap:10px;font-size:12.5px;color:var(--on-surface-variant)}
+.tb .ic{width:16px;height:16px;color:var(--primary)}
+.tb .g{flex:1}
+.tb .w{width:46px;height:34px;display:flex;align-items:center;justify-content:center;color:var(--on-surface)}
+.tb .w svg{width:12px;height:12px}
+pre.t{font-family:Consolas,"Lucida Console",monospace;font-size:12.5px;line-height:15.2px;padding:2px 20px 0;color:var(--on-surface);white-space:pre;tab-size:8}
+pre.t .ac,pre.t b.ac{color:var(--primary);font-weight:400}
+/* palette synchronised with the wallpaper: accent = primary, secondary = lighter primary, muted = outline (ESTIMATED mixes) */
+.c1,.c2{display:inline-block;position:relative;width:2ch;height:15.2px;vertical-align:top}
+.c1:before,.c2:before{content:"";position:absolute;left:3px;right:1px;border:1px solid var(--outline)}
+.c1:before{top:5.5px;bottom:-1px;border-right:0;border-bottom:0;border-top-left-radius:6px}
+.c2:before{top:-1px;bottom:7px;border-right:0;border-top:0;border-bottom-left-radius:6px}
+svg.ch{display:inline-block;width:7px;height:11px;vertical-align:-1px;margin:0 .5ch 0 .4ch;color:var(--primary)}
+.bx{margin:4px 0 4px 2ch;width:max-content;padding:5px 16px 5px 12px;border:1px solid var(--outline);border-radius:9px}
+pre.t .cy{color:color-mix(in srgb,var(--primary) 62%,#fff)}
+pre.t .mu{color:var(--outline)}
+pre.t .fg{color:var(--on-surface)}
+pre.t .rd{color:#ff7b8a}
+.cur{display:inline-block;width:7px;height:13px;background:var(--primary);vertical-align:-2px}
+</style>
+<section class="term">
+  <div class="tb"><svg class="i ic"><use href="#i-terminal"/></svg><span>Winlestia - CMD</span><span class="g"></span>
+    <span class="w"><svg viewBox="0 0 12 12"><path d="M1 6h10" stroke="currentColor" fill="none"/></svg></span>
+    <span class="w"><svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" stroke="currentColor" fill="none"/></svg></span>
+    <span class="w"><svg viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" fill="none"/></svg></span></div>
+<pre class="t">
+  <b class="ac"> _       ___       __          __  _</b>
+  <b class="ac">| |     / (_)___  / /__  _____/ /_(_)___ _</b>
+  <b class="ac">| | /| / / / __ \/ / _ \/ ___/ __/ / __ `/</b>
+  <b class="ac">| |/ |/ / / / / / /  __(__  ) /_/ / /_/ /</b>
+  <b class="ac">|__/|__/_/_/ /_/_/\___/____/\__/_/\__,_/</b>
+
+  <span class="mu">WINDOWS / WINLESTIA  </span><span class="cy">·  espace de commande</span>
+
+<div class="bx"><span class="fg">système   </span>  <span class="cy">Windows 11 Home · 26200</span>
+<span class="fg">session   </span>  <span class="cy">Alex · Standard</span>
+<span class="fg">machine   </span>  <span class="cy">ALEX-PC</span>
+<span class="fg">shell     </span>  <span class="cy">CMD</span>
+<span class="fg">mémoire   </span>  <span class="cy">7,8 / 16 Go</span>
+<span class="fg">activité  </span>  <span class="cy">2 h 14 min</span></div><span class="c1"></span><span class="ac">C:\Users\Alex\projects\demo</span><span class="mu">  ·  CMD  ·  10:09</span>
+<span class="c2"></span><svg class="ch" viewBox="0 0 7 11"><path d="M1.2 1.2 5.6 5.5 1.2 9.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span class="fg">dir</span>
+ Le volume dans le lecteur C n’a pas de nom.
+ Répertoire de C:\Users\Alex\projects\demo
+
+27/10/2026  09:58    &lt;DIR&gt;          <span class="cy">.</span>
+27/10/2026  09:58    &lt;DIR&gt;          <span class="cy">..</span>
+27/10/2026  09:41    &lt;DIR&gt;          <span class="cy">src</span>
+27/10/2026  09:52             1 204 README.md
+27/10/2026  10:03               386 notes.txt
+               2 fichier(s)            1 590 octets
+               3 Rép(s)  580 894 326 784 octets libres
+<span class="c1"></span><span class="ac">C:\Users\Alex\projects\demo</span><span class="mu">  ·  CMD  ·  10:09</span>
+<span class="c2"></span><svg class="ch" viewBox="0 0 7 11"><path d="M1.2 1.2 5.6 5.5 1.2 9.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span class="fg">git status</span>
+Sur la branche main
+Votre branche est à jour avec 'origin/main'.
+
+Modifications qui ne seront pas validées :
+        <span class="rd">modifié :         src/app.js</span>
+Fichiers non suivis :
+        <span class="rd">notes.txt</span>
+<span class="c1"></span><span class="ac">C:\Users\Alex\projects\demo</span><span class="mu">  ·  CMD  ·  10:09</span>
+<span class="c2"></span><svg class="ch" viewBox="0 0 7 11"><path d="M1.2 1.2 5.6 5.5 1.2 9.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span class="fg">clink --version</span>
+Clink v1.9.0
+<span class="c1"></span><span class="ac">C:\Users\Alex\projects\demo</span><span class="mu">  ·  CMD  ·  10:09</span>
+<span class="c2"></span><svg class="ch" viewBox="0 0 7 11"><path d="M1.2 1.2 5.6 5.5 1.2 9.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span class="fg"><span class="cur"></span></span></pre>
+</section>

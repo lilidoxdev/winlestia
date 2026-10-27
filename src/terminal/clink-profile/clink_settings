@@ -1,0 +1,62 @@
+# name: Enable automatic suggestions
+# type: boolean
+autosuggest.enable = True
+
+# name: Command to run when injected
+# type: string
+clink.autostart = 
+
+# name: Auto-update the Clink program files
+# type: enum
+# options: off,check,prompt,auto
+clink.autoupdate = off
+
+# name: Colorize the input text
+# type: boolean
+clink.colorize_input = True
+
+# name: Selects default key bindings
+# type: enum
+# options: bash,windows
+clink.default_bindings = windows
+
+# name: Argument color
+# type: color
+color.arg = sgr 38;2;226;232;244
+
+# name: Argmatcher color
+# type: color
+color.argmatcher = sgr 34
+
+# name: Shell command completions
+# type: color
+color.cmd = sgr 34
+
+# name: Color for < and > redirection symbols
+# type: color
+color.cmdredir = sgr 34
+
+# name: Color for & and | command separators
+# type: color
+color.cmdsep = sgr 34
+
+# name: Color for executable command word
+# type: color
+color.executable = sgr 34
+
+# name: Flag color
+# type: color
+color.flag = sgr 38;2;242;211;151
+
+# name: Input text color
+# type: color
+color.input = sgr 38;2;226;232;244
+
+# name: Color for suggestion text
+# type: color
+color.suggestion = sgr 38;2;99;112;139
+
+# name: Color for unrecognized command word
+# type: color
+color.unrecognized = sgr 38;2;243;139;157
+

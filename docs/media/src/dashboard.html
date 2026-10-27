@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>Winlestia — Tableau de bord</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1280px;height:800px;overflow:hidden;background:#0a0613;font-family:var(--font-sans);color:var(--on-surface)}
+.stage{position:relative;width:1280px;height:800px;background:url(wallpaper-aurora.svg) center/cover}
+/* glass frame hugging the screen edges (FrameThickness) */
+.frame{position:absolute;inset:0;border-radius:0;pointer-events:none}
+.frame:before{content:"";position:absolute;inset:11px;border:1px solid color-mix(in srgb,var(--outline-variant) 70%,transparent);border-radius:var(--r-large)}
+/* panel */
+.panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:var(--pad-large) var(--pad-large) var(--pad-large);
+  border:var(--border) solid var(--outline-variant);border-radius:var(--r-large);background:var(--glass-panel-fill);
+  backdrop-filter:blur(var(--glass-panel-blur)) brightness(var(--glass-panel-dim)) saturate(1.15);}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);position:relative;margin-bottom:var(--sp-normal);padding-top:var(--pad-smaller)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 10px;font-size:var(--fs-small);color:var(--on-surface)}
+.tab svg{width:25px;height:25px}
+.tab.on{color:var(--primary)}
+.tabs:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--outline-variant)}
+.ind{position:absolute;bottom:0;left:0;width:25%;height:var(--tab-indicator-h);border-radius:var(--r-full);background:var(--primary);z-index:1}
+.grid{display:grid;grid-template-columns:110px 128px 112px 112px 112px 200px;grid-template-rows:132px 270px;gap:var(--dash-gap)}
+.card{background:color-mix(in srgb,var(--surface-container) calc(var(--glass-card-alpha)*100%),transparent);border-radius:var(--r-large);position:relative;overflow:hidden}
+.weather{grid-column:1/3;grid-row:1;border-radius:var(--weather-r);display:flex;align-items:center;justify-content:center;gap:var(--sp-large)}
+.weather svg{width:75px;height:75px;color:var(--secondary)}
+.weather .t{font-size:var(--fs-xl);font-weight:var(--fw-temp);color:var(--primary);line-height:1}
+.weather .c{font-size:var(--fs-normal);text-align:center;margin-top:6px}
+.user{grid-column:3/6;grid-row:1;display:flex;align-items:center;padding:var(--pad-larger);gap:var(--sp-normal)}
+.avatar{width:96px;height:96px;border-radius:var(--r-large);overflow:hidden;flex:none;background:color-mix(in srgb,var(--surface-container-high) 100%,var(--primary) 5%)}
+.info{display:flex;flex-direction:column;gap:var(--sp-normal);font-size:var(--fs-normal)}
+.info div{display:flex;align-items:center;gap:6px}.info svg{width:17px;height:17px;color:var(--primary);flex:none}
+.dt{grid-column:1;grid-row:2;border-radius:var(--r-normal);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:var(--fw-clock);font-size:var(--fs-xl);color:var(--secondary);line-height:1}
+.dt .d{font-size:25.2px;color:var(--primary);letter-spacing:2px;line-height:.4;margin:8px 0 12px}
+.cal{grid-column:2/5;grid-row:2;padding:var(--pad-large) var(--pad-normal)}
+.cal .h{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-small);color:var(--primary);padding:0 var(--pad-normal);margin-bottom:8px}
+.cal .h i{font-style:normal;font-size:var(--fs-small);opacity:.9}
+.days{display:grid;grid-template-columns:repeat(7,1fr);row-gap:6px;text-align:center;font-size:var(--fs-small)}
+.days b{font-weight:400;color:var(--on-surface);font-size:13.5px;padding-bottom:6px}
+.days b.we{color:var(--primary)}
+.days span{height:28px;display:flex;align-items:center;justify-content:center;font-size:var(--fs-small)}
+.days span.o{color:var(--outline-variant)}.days span.we{color:var(--primary)}
+.days span.today{background:var(--primary);color:var(--on-primary);border-radius:50%;width:28px;margin:auto;font-weight:500}
+.res{grid-column:5;grid-row:2;border-radius:var(--r-normal);display:flex;justify-content:center;gap:var(--sp-normal);padding:var(--pad-large)}
+.col{display:flex;flex-direction:column;align-items:center;gap:var(--sp-small);flex:1}
+.track{flex:1;width:var(--bar-w);border-radius:var(--r-full);background:color-mix(in srgb,var(--surface-container-high) 95%,var(--primary) 5%);position:relative;overflow:hidden}
+.fill{position:absolute;left:0;right:0;bottom:0;border-radius:var(--r-full)}
+.col svg{width:17px;height:17px;color:var(--on-surface-variant)}
+.media{grid-column:6;grid-row:1/3;border-radius:var(--media-r);display:flex;flex-direction:column;align-items:center;padding:var(--pad-large)}
+.cw{position:relative;width:176px;height:176px;margin:4px 0 8px;flex:none}
+.cw svg.ring{position:absolute;inset:-6px;width:188px;height:188px;overflow:visible}
+.cover{position:absolute;inset:13px;border-radius:50%;background:conic-gradient(from 20deg,#ff5f7a,#a52dff,#2f3dff,#10d8c4,#a52dff,#ff5f7a);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.cover:after{content:"";position:absolute;inset:34%;border-radius:50%;background:radial-gradient(circle,#0f0c10 0 30%,transparent 31%),rgba(255,255,255,.1)}
+.title{font-size:var(--fs-normal);color:var(--primary);text-align:center;margin-top:6px}
+.alb{font-size:var(--fs-small);color:var(--outline);margin-top:2px}
+.art{font-size:var(--fs-small);color:var(--secondary);margin-top:2px}
+.ctl{display:flex;gap:var(--sp-small);margin-top:12px;color:var(--on-surface)}
+.bongo{width:150px;height:94px;margin-top:auto;overflow:visible}
+.ctl svg{width:24px;height:24px;padding:3px}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+ <symbol id="i-dash" viewBox="0 0 24 24"><path fill="currentColor" d="M3 3h8v10H3zM13 3h8v6h-8zM3 15h8v6H3zM13 11h8v10h-8z"/></symbol>
+ <symbol id="i-music" viewBox="0 0 24 24"><path fill="currentColor" d="M3 6h12v2H3zM3 10h12v2H3zM3 14h8v2H3zM17 5v10.3a3 3 0 1 0 2 2.7V8h3V5z"/></symbol>
+ <symbol id="i-speed" viewBox="0 0 24 24"><path fill="currentColor" d="M12 4a10 10 0 0 0-9 14.2l1.8-.9A8 8 0 1 1 19.200 17.300l1.800.9A10 10 0 0 0 12 4zm4.200 4.300-4.400 4.800a2 2 0 1 0 1.500 1.300z"/></symbol>
+ <symbol id="i-work" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM5 14a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm14 0a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM12 9.500l-6 5 1.200 1.500 4.800-4 4.800 4 1.200-1.500z"/></symbol>
+ <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.400" stroke-linecap="round"><circle cx="12" cy="12" r="4.200"/><path d="M12 2.500v2.600M12 18.900v2.600M2.500 12h2.600M18.900 12h2.600M5.300 5.300l1.800 1.800M16.900 16.900l1.800 1.800M5.300 18.700l1.800-1.800M16.900 7.100l1.800-1.800"/></g></symbol>
+ <symbol id="i-win" viewBox="0 0 24 24"><path fill="currentColor" d="M3 3h8.500v8.500H3zM12.500 3H21v8.500h-8.500zM3 12.500h8.500V21H3zM12.500 12.500H21V21h-8.500z"/></symbol>
+ <symbol id="i-shell" viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm1 3v2h14V7z"/></symbol>
+ <symbol id="i-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></symbol>
+ <symbol id="i-cpu" viewBox="0 0 24 24"><path fill="currentColor" d="M8 8h8v8H8zM10 2h1.500v3H10zM13 2h1.500v3H13zM10 19h1.500v3H10zM13 19h1.500v3H13zM2 10h3v1.500H2zM2 13h3v1.500H2zM19 10h3v1.500h-3zM19 13h3v1.500h-3z"/></symbol>
+ <symbol id="i-ram" viewBox="0 0 24 24"><path fill="currentColor" d="M3 7h18v8h-2v3h-2v-3h-3v3h-2v-3h-3v3H7v-3H5v3H3zm3 3v2h3v-2zm5 0v2h3v-2z"/></symbol>
+ <symbol id="i-disk" viewBox="0 0 24 24"><path fill="currentColor" d="M4 6h16l2 9v4H2v-4zm2.200 2L4.300 15H19.700l-1.900-7zM17 16.500a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></symbol>
+ <symbol id="i-prev" viewBox="0 0 24 24"><path fill="currentColor" d="M6 6h2v12H6zm3.500 6L18 18V6z"/></symbol>
+ <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></symbol>
+ <symbol id="i-next" viewBox="0 0 24 24"><path fill="currentColor" d="M16 6h2v12h-2zM6 18l8.500-6L6 6z"/></symbol>
+ <symbol id="i-bongo" viewBox="0 0 200 126"><g stroke="#000" stroke-width="4.2" stroke-linejoin="round" stroke-linecap="round"><path fill="#fff" d="M46 42 68 29 90 17 98 4 110 17 117 22 147 32 167 43 187 35 191 42 183 68 198 103 187 107 173 100 160 108 143 108 130 107 125 97 128 88 113 88 20 68 18 53 25 38 37 35 45 42Z"/></g>
+  <g fill="#f79aa6"><circle cx="30" cy="51" r="4.600"/><circle cx="29" cy="44" r="2.200"/><circle cx="37" cy="46" r="2.600"/><circle cx="25" cy="52" r="2.200"/></g>
+  <g fill="#000"><ellipse cx="74" cy="55" rx="4.200" ry="4.800"/><ellipse cx="129" cy="73" rx="4" ry="4.600"/></g>
+  <path d="M85 59q4 6 8 1 4 6 12 3" fill="none" stroke="#000" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#b2102a"><rect x="109" y="111" width="12" height="4.500" rx="2" transform="rotate(-15 115 113)"/><rect x="120" y="115" width="5" height="9" rx="2.500" transform="rotate(-6 122 119)"/><rect x="138" y="116" width="5" height="9" rx="2.500" transform="rotate(-50 140 120)"/></g>
+ </symbol>
+</defs></svg>
+
+<div class="stage"><div class="frame"></div>
+<main class="panel">
+  <nav class="tabs"><div class="ind"></div>
+    <div class="tab on"><svg><use href="#i-dash"/></svg>Tableau de bord</div>
+    <div class="tab"><svg><use href="#i-music"/></svg>Média</div>
+    <div class="tab"><svg><use href="#i-speed"/></svg>Performance</div>
+    <div class="tab"><svg><use href="#i-work"/></svg>Workspaces</div>
+  </nav>
+  <div class="grid">
+    <section class="card weather"><svg><use href="#i-sun"/></svg><div><div class="t">18°C</div><div class="c">Paris</div></div></section>
+    <section class="card user">
+      <div class="avatar"><svg viewBox="0 0 96 96" width="96" height="96"><defs><linearGradient id="av" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5f7a"/><stop offset=".5" stop-color="#a52dff"/><stop offset="1" stop-color="#2f3dff"/></linearGradient></defs><rect width="96" height="96" fill="url(#av)"/><circle cx="48" cy="38" r="16" fill="rgba(255,255,255,.85)"/><path d="M16 96c4-24 20-32 32-32s28 8 32 32z" fill="rgba(255,255,255,.85)"/></svg></div>
+      <div class="info">
+        <div><svg><use href="#i-win"/></svg>: Windows 11</div>
+        <div><svg><use href="#i-shell"/></svg>: Winlestia</div>
+        <div><svg><use href="#i-up"/></svg>: up 2 h 14 min</div>
+      </div></section>
+    <section class="card dt"><div>10</div><div class="d">•••</div><div>09</div></section>
+    <section class="card cal">
+      <div class="h"><i>‹</i><span>Octobre 2026</span><i>›</i></div>
+      <div class="days">
+        <b>lun.</b><b>mar.</b><b>mer.</b><b>jeu.</b><b>ven.</b><b class="we">sam.</b><b class="we">dim.</b>
+        <span class="o">28</span><span class="o">29</span><span class="o">30</span><span>1</span><span>2</span><span class="we">3</span><span class="we">4</span>
+        <span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span class="we">10</span><span class="we">11</span>
+        <span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span class="we">17</span><span class="we">18</span>
+        <span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span class="we">24</span><span class="we">25</span>
+        <span>26</span><span class="today">27</span><span>28</span><span>29</span><span>30</span><span class="we">31</span><span class="o">1</span>
+        <span class="o">2</span><span class="o">3</span><span class="o">4</span><span class="o">5</span><span class="o">6</span><span class="o">7</span><span class="o">8</span>
+      </div></section>
+    <section class="card res">
+      <div class="col"><div class="track"><div class="fill" style="height:18%;background:var(--primary)"></div></div><svg><use href="#i-cpu"/></svg></div>
+      <div class="col"><div class="track"><div class="fill" style="height:49%;background:var(--secondary)"></div></div><svg><use href="#i-ram"/></svg></div>
+      <div class="col"><div class="track"><div class="fill" style="height:43%;background:var(--tertiary)"></div></div><svg><use href="#i-disk"/></svg></div>
+    </section>
+    <section class="card media">
+      <div class="cw">
+        <svg class="ring" viewBox="0 0 188 188"><g fill="none" stroke-linecap="round" stroke-width="8">
+          <path d="M94 8 A86 86 0 0 0 94 180" stroke="var(--outline-variant)" opacity=".5"/>
+          <path d="M94 8 A86 86 0 0 0 20 51" stroke="var(--primary)"/></g></svg>
+        <div class="cover"></div>
+      </div>
+      <div class="title">Slow Horizon</div><div class="alb">Night Signals</div><div class="art">Nova Fields</div>
+      <div class="ctl"><svg><use href="#i-prev"/></svg><svg><use href="#i-play"/></svg><svg><use href="#i-next"/></svg></div>
+      <svg class="bongo" viewBox="0 0 200 126"><use href="#i-bongo"/></svg>
+    </section>
+  </div>
+</main></div>
+</body></html>

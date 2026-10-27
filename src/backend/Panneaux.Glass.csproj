@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <ImplicitUsings>disable</ImplicitUsings><Nullable>enable</Nullable><StartupObject>PanneauxGlass.Program</StartupObject>
+    <AssemblyName>Panneaux.Glass</AssemblyName><ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>glass.ico</ApplicationIcon><Version>0.7.6</Version><Company>dj</Company><Product>Panneaux</Product>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>false</SelfContained>
+    <!-- WPF consumes the PerMonitorV2 manifest; WinForms is used only for tray and file pickers. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+  <ItemGroup><None Include="native/ProcessAudio.dll" Link="ProcessAudio.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><Compile Remove="checkpoint-*/**/*.cs" /><None Remove="checkpoint-*/**/*" /><None Update="GlassBackdrop.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /><None Update="assets/web/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="native/ProcessAudio.dll" Link="ProcessAudio.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup>
+    <None Update="RETABLIR_BARRE_WINDOWS.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup></Project>

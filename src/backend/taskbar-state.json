@@ -1,0 +1,58 @@
+{
+  "At": "2026-10-26T01:16:28.5608658+01:00",
+  "State": 1,
+  "Visible": 0,
+  "Bars": [
+    {
+      "Hwnd": 65754,
+      "Visible": false
+    }
+  ],
+  "WorkAreas": [
+    {
+      "Screen": "\\\\.\\DISPLAY1",
+      "Bounds": {
+        "Location": {
+          "IsEmpty": true,
+          "X": 0,
+          "Y": 0
+        },
+        "Size": {
+          "IsEmpty": false,
+          "Width": 3440,
+          "Height": 1440
+        },
+        "X": 0,
+        "Y": 0,
+        "Width": 3440,
+        "Height": 1440,
+        "Left": 0,
+        "Top": 0,
+        "Right": 3440,
+        "Bottom": 1440,
+        "IsEmpty": false
+      },
+      "WorkingArea": {
+        "Location": {
+          "IsEmpty": false,
+          "X": 20,
+          "Y": 20
+        },
+        "Size": {
+          "IsEmpty": false,
+          "Width": 3400,
+          "Height": 1400
+        },
+        "X": 20,
+        "Y": 20,
+        "Width": 3400,
+        "Height": 1400,
+        "Left": 20,
+        "Top": 20,
+        "Right": 3420,
+        "Bottom": 1420,
+        "IsEmpty": false
+      }
+    }
+  ]
+}
