@@ -1,5 +1,5 @@
 """Offscreen perf harness for the top dashboard (Content.qml) with a stub Bridge.
-Usage: python perf_dashboard.py [OUT.json]
+Usage: [REDUCED=1] [SHOT_DIR=dir SHOT_TAG=tag] python perf_dashboard.py [OUT.json]
 Measures first frame, per-tab switch time, frameSwapped intervals (median/p95/max) during open and tab
 animations, live objects per tab, and running Timers/Animations in inactive tabs. Offscreen = software
 scenegraph unless QSG_RHI_BACKEND is set, so compare before/after, not absolute GPU numbers.
@@ -33,6 +33,8 @@ class DStub(rw.Stub):
     perfChanged = Signal()
     def __init__(s, *a):
         super().__init__(*a); s.win = Win(); s.pl = Player()
+    # REDUCED=1 runs the reducedEffects variant (Appearance.reducedEffects true).
+    reducedEffects = Property(bool, lambda s: os.environ.get('REDUCED') == '1', notify=rw.Stub.changed)
     window = Property('QVariant', lambda s: s.win, constant=True)
     player = Property('QVariant', lambda s: s.pl, constant=True)
     performance = Property('QVariantMap', lambda s: {'cpu':12,'gpu':5,'cpuTemp':50,'gpuTemp':45,'memPercent':40,'memUsedKiB':8000000,'diskPercent':50,'diskUsedKiB':200000000}, notify=perfChanged)
@@ -57,6 +59,7 @@ def main():
     QTimer.singleShot(90000, lambda: os._exit(2))
     msgs = []
     from PySide6.QtCore import qInstallMessageHandler
+    from PySide6.QtQuick import QQuickItem
     qInstallMessageHandler(lambda t, c, m: msgs.append(m))
     stub = DStub(rw.PAL['red-dark'], 5, 4)
     eng = QQmlEngine(); eng.addImportPath(str(ROOT/'qml')); eng.rootContext().setContextProperty('Bridge', stub)
@@ -94,6 +97,9 @@ def main():
         while len(frames) == n0 and clock.nsecsElapsed()/1e6 - a < 2000: app.processEvents(QEventLoop.AllEvents, 5); QThread.msleep(1)
         first = clock.nsecsElapsed()/1e6 - a  # switch -> next swapped frame
         wait(600)
+        if os.environ.get('SHOT_DIR'):  # SHOT_TAG=before|after: idle screenshot of each tab, for visual diffs
+            Path(os.environ['SHOT_DIR']).mkdir(parents=True, exist_ok=True)
+            view.grabWindow().save(str(Path(os.environ['SHOT_DIR'])/f"{os.environ.get('SHOT_TAG','shot')}-tab{tab}.png"))
         b = clock.nsecsElapsed()/1e6
         ivs = intervals(a, b)
         key = f'tab{tab}' + ('_cold' if f'tab{tab}_cold' not in res['tabs'] else '_warm')
@@ -113,6 +119,24 @@ def main():
         ts = time.perf_counter()
         for _ in range(20): stub.perfChanged.emit()
         res.setdefault('perfChanged_emit_ms', {})[f'active_tab{tab}'] = round((time.perf_counter()-ts)*1000/20, 2)
+    # Simulated mouse drag on the view: neighbour panes must be visible mid-drag.
+    try:
+        from PySide6.QtTest import QTest
+        from PySide6.QtCore import Qt, QPoint
+        QMetaObject.invokeMethod(root, 'setTab', Q_ARG('QVariant', 1)); wait(900)
+        fl = [o for o in root.findChildren(QQuickItem) if o.metaObject().className().startswith('QQuickFlickable')]
+        fl = fl[0] if fl else None
+        vis = lambda: [bool(o.property('item') and o.property('item').property('visible')) for o in root.findChildren(QQuickItem) if o.property('paneIndex') is not None and o.property('shown') is not None]
+        p0 = QPoint(500, 400)
+        QTest.mousePress(view, Qt.LeftButton, Qt.NoModifier, p0); wait(30)
+        for dx in range(10, 90, 10):
+            QTest.mouseMove(view, p0 - QPoint(dx, 0)); wait(20)
+        res['drag'] = {'flick_found': fl is not None, 'dragging': bool(fl and fl.property('dragging')), 'visible_during': vis()}
+        QTest.mouseRelease(view, Qt.LeftButton, Qt.NoModifier, p0 - QPoint(80, 0)); wait(900)
+        res['drag']['visible_after'] = vis()
+    except Exception as e:
+        res['drag'] = {'error': str(e)}
+    res['qml_errors'] = [m[:200] for m in msgs if 'TypeError' in m or 'ReferenceError' in m or 'Cannot' in m or 'is not' in m or 'PANE' in m]
     print(json.dumps(res, indent=1, default=str))
     if len(sys.argv) > 1: Path(sys.argv[1]).write_text(json.dumps(res, indent=1, default=str))
     bad = [m for m in msgs if 'TypeError' in m or 'ReferenceError' in m or 'Cannot' in m or 'is not' in m]

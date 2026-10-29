@@ -1,5 +1,7 @@
 # Python 3.12 / Qt Quick 6.10, Windows 11. GPL-3.0-or-later; native host for the upstream Caelestia QML.
 from __future__ import annotations
+import os as _os
+for _k in ("OPENBLAS_NUM_THREADS","OMP_NUM_THREADS","MKL_NUM_THREADS"):_os.environ.setdefault(_k,"1")
 import argparse, ctypes, io, json, os, queue, shutil, sys, threading, time, urllib.request, urllib.parse
 from pathlib import Path
 from PySide6.QtCore import QObject, Property, Signal, Slot, QThread, QTimer, QUrl, QRect, Qt, qInstallMessageHandler
@@ -41,6 +43,7 @@ user32.IsZoomed.argtypes=[ctypes.c_void_p]
 user32.IsWindow.argtypes=[ctypes.c_void_p];user32.IsIconic.argtypes=[ctypes.c_void_p];user32.IsWindowVisible.argtypes=[ctypes.c_void_p]
 user32.MonitorFromWindow.argtypes=[ctypes.c_void_p,ctypes.c_ulong];user32.MonitorFromWindow.restype=ctypes.c_void_p
 user32.GetMonitorInfoW.argtypes=[ctypes.c_void_p,ctypes.c_void_p]
+user32.MonitorFromPoint.argtypes=[ctypes.wintypes.POINT,ctypes.c_ulong];user32.MonitorFromPoint.restype=ctypes.c_void_p
 class MonitorInfo(ctypes.Structure):
     _fields_=[('size',ctypes.c_ulong),('monitor',ctypes.c_long*4),('work',ctypes.c_long*4),('flags',ctypes.c_ulong),('name',ctypes.c_wchar*32)]
 kernel32=ctypes.windll.kernel32
@@ -125,10 +128,12 @@ class WindowsPlayer(QObject):
     def quit(self):pass
 
 class Bridge(QObject):
-    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int)
+    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int)
     def __init__(self,args):
         super().__init__();self.surface_scene=None;self.args=args;self._window=None;self._state={};self._pending_controls={};self._pending_audio={};self._icon_requests={};self._dark=False;self._player=WindowsPlayer(self);self.top=None;self.dock=None;self.social_win=None;self.away_social=0;self.bookmarks_win=None;self.away_bookmarks=0;self.last_reply=0;self.peek_until=0;self.away_top=0;self.away_dock=0;self.force_dock=0
         self.top_seen=False;self._screen=QApplication.primaryScreen();self.client=PipeClient(args.pipe);self.client.received.connect(self.update_state);self.client.start()
+        self._dict={'state':'idle','level':0.0,'levels':[0.0]*32,'lang':'','text':'','error':''};self._dict_stopped=False;self._dict_until=0;self._dict_area={'x':0,'y':0,'width':0,'height':0}
+        self.dictation_timer=QTimer(self);self.dictation_timer.setInterval(33);self.dictation_timer.timeout.connect(self.dictation_tick)
         self.pointer=QTimer(self);self.pointer.setInterval(90);self.pointer.timeout.connect(self.poll_pointer);self.pointer.start()
         self._weather={};self.weather_busy=False;self.weather_at=0;self.modal=False;self.weatherResult.connect(self.weather_ready)
         self.edge_policy=EdgePolicy();self._results=[];self.query='';self.opening_until=0;self.mode='dashboard';self.workspace_board='apps';self.health_at=0
@@ -254,6 +259,13 @@ class Bridge(QObject):
     notice=Property(str,lambda s:s._notice,notify=noticeChanged)
     networkKind=Property(str,lambda s:s._state.get('networkKind') if s._state.get('networkKind') in ('ethernet','wifi','none') else 'wifi',notify=changed)
     taskbarEnabled=Property(bool,lambda s:bool(s._state.get('taskbarEnabled',s.args.preview)),notify=changed)
+    dictationState=Property(str,lambda s:s._dict['state'],notify=dictationChanged)
+    dictationLevel=Property(float,lambda s:s._dict['level'],notify=dictationChanged)
+    dictationLevels=Property('QVariantList',lambda s:s._dict['levels'],notify=dictationChanged)
+    dictationLang=Property(str,lambda s:s._dict['lang'],notify=dictationChanged)
+    dictationText=Property(str,lambda s:s._dict['text'],notify=dictationChanged)
+    dictationError=Property(str,lambda s:s._dict['error'],notify=dictationChanged)
+    dictationArea=Property('QVariantMap',lambda s:s._dict_area,notify=dictationChanged)
     spectrum=Property('QVariantList',lambda s:getattr(s,'_spectrum',[0.0]*48),notify=spectrumChanged)
     iconRevision=Property(int,lambda s:int(s._state.get('iconRevision',0)),notify=changed)
     assetRoot=Property(str,lambda s:(ROOT/'assets').as_posix(),constant=True)
@@ -313,6 +325,7 @@ class Bridge(QObject):
             self._state.setdefault('settings',{})['themeMode']=args.get('mode') if args.get('mode') in ('auto','custom') else 'dark' if args.get('dark') else 'light'
             if args.get('mode')!='auto':self._dark=bool(args.get('dark'))
             self.changed.emit();self.frameChanged.emit()
+        if name=='preference' and args.get('key')=='dictationKey':self._state.setdefault('settings',{})['dictationKey']=int(args.get('value',0xA5));self.changed.emit()
         if name=='preference' and args.get('key') in ('glassOpacity','frameThickness'):
             key=args['key'];value=max(4,min(40,round(float(args.get('value',16))))) if key=='frameThickness' else max(.02,min(.95,float(args.get('value',.12))))
             self._state.setdefault('settings',{})[key]=value;self.changed.emit();self.frameChanged.emit()
@@ -363,6 +376,16 @@ class Bridge(QObject):
         if self.top:visit(self.top.contentItem())
         self.searchPalette(text)
     @Slot(int,int,result=str)
+    @Slot(int,result=str)
+    def vkName(self,vk):
+        names={0xA0:'Maj gauche',0xA1:'Maj droite',0xA2:'Ctrl gauche',0xA3:'Ctrl droite',0xA4:'Alt gauche',0xA5:'Alt droit',0x5B:'Windows gauche',0x5C:'Windows droite',0x14:'Verr. Maj',0x13:'Pause',0x91:'Arrêt défil.',0x5D:'Menu contextuel',0x20:'Espace',0x09:'Tab',0x08:'Retour arrière',0x0D:'Entrée',0x2D:'Inser',0x2E:'Suppr',0x24:'Début',0x23:'Fin',0x21:'Page préc.',0x22:'Page suiv.',0x70+0:'F1'}
+        if vk in names:return names[vk]
+        if 0x70<=vk<=0x87:return 'F%d'%(vk-0x6F)
+        if 0x30<=vk<=0x39 or 0x41<=vk<=0x5A:return chr(vk)
+        if vk<=0:return ''
+        buffer=ctypes.create_unicode_buffer(64);scan=user32.MapVirtualKeyW(vk,0)
+        if scan and user32.GetKeyNameTextW(scan<<16,buffer,64):return buffer.value
+        return 'Touche 0x%02X'%vk
     def shortcutText(self,key,modifiers):return QKeySequence(key|modifiers).toString(QKeySequence.NativeText)
     @Slot(str,int,int)
     def captureShortcut(self,kind,key,modifiers):
@@ -457,9 +480,43 @@ class Bridge(QObject):
         if self.recording_kind:self.recordShortcut(False,self.recording_kind)
         self.navigate('close')
     @Slot(dict)
+    def dictation_tick(self):
+        # Only runs between dictation:start and a final state; coalesced so the pipe never queues stale requests.
+        # Garde-fou : arrêt si le backend ne répond plus depuis 15 s (échéance prolongée à chaque réponse non finale).
+        if time.monotonic()>self._dict_until:self.dictation_timer.stop();return
+        with self.client.update_lock:self.client.updates['dictation']={'command':'dictation','args':{}}
+        kernel32.SetEvent(self.client.wakeup)
+    def dictation_event(self,event):
+        if event.startswith('dictation:key:'):
+            try:vk=int(event.rsplit(':',1)[1])
+            except ValueError:return
+            self._state.setdefault('settings',{})['dictationKey']=vk;self.changed.emit();self.dictationKeyCaptured.emit(vk);return
+        if event=='dictation:keycancel':self.dictationKeyCaptured.emit(0);return
+        if event=='dictation:start':
+            area=(QApplication.primaryScreen() or self._screen).geometry();self._dict_area={'x':area.x(),'y':area.y(),'width':area.width(),'height':area.height()}
+            self._dict={'state':'listening','level':0.0,'levels':[0.0]*32,'lang':'','text':'','error':''};self._dict_stopped=False;self._dict_until=time.monotonic()+15
+            self.dictationChanged.emit();self.dictation_timer.start();self.dictation_tick()
+        elif event=='dictation:stop':self._dict_stopped=True
+    def dictation_update(self,data):
+        levels=[max(0.0,min(1.0,float(v))) for v in (data.get('levels') or [])][:32];levels+=[0.0]*(32-len(levels))
+        state=str(data.get('state') or 'idle')
+        self._dict={'state':state,'level':max(0.0,min(1.0,float(data.get('level') or 0))),'levels':levels,'lang':str(data.get('lang') or ''),'text':str(data.get('text') or ''),'error':str(data.get('error') or '')};self.dictationChanged.emit()
+        if state in ('done','error') or (state=='idle' and self._dict_stopped):self.dictation_timer.stop()
+        elif state in ('loading','listening','transcribing','typing'):self._dict_until=time.monotonic()+15
+    def screen_names(self,devices):
+        # The backend names monitors by Win32 device (\.\DISPLAY1) but QScreen.name() is the model name on Qt 6: translate through the monitor under each screen.
+        devices=set(str(n) for n in devices);found=set()
+        for screen in QApplication.screens():
+            geometry=screen.geometry();info=MonitorInfo();info.size=ctypes.sizeof(info)
+            if user32.GetMonitorInfoW(user32.MonitorFromPoint(ctypes.wintypes.POINT(geometry.x()+1,geometry.y()+1),2),ctypes.byref(info)) and info.name in devices:found.add(screen.name())
+        return found
     def update_state(self,message):
+        if 'dictation' in message and isinstance(message['dictation'],dict):self.dictation_update(message['dictation'])
         if 'state' in message:
             self.walltheme.update(message['state'].get('wallpapers',[]),message['state'].get('wallpaperRevision'),self.client)
+        if 'state' in message and isinstance(message['state'].get('fullscreenMonitors'),list):
+            self._backend_fullscreen=True;names=tuple(sorted(self.screen_names(message['state']['fullscreenMonitors'])))
+            if names!=self.fullscreen_names:self.fullscreen_names=names;self.frameChanged.emit()
         if 'wallpaperCapture' in message:self.walltheme.captured(message['wallpaperCapture'])
         if message.get('notice'):self._notice=message['notice'];self.noticeChanged.emit()
         if 'spectrum' in message and message['spectrum']!=getattr(self,'_spectrum',None):self._spectrum=message['spectrum'];self.spectrumChanged.emit()
@@ -507,6 +564,7 @@ class Bridge(QObject):
                 continue
             if event in ('capture-select','capture-ocr'):
                 self.capture.start('text' if event=='capture-ocr' else 'region');continue
+            if event.startswith('dictation:'):self.dictation_event(event);continue
             if event=='dock':self.force_dock=time.monotonic()+3
             if event in ('toggle','access','media','performance','controls','palette','settings','clipboard','tools','audio','microphone','capture','mixer','close','settings:social','settings:bookmarks') or event.startswith('workspace:'):self.navigate(event)
             else:self.shellEvent.emit(event)
@@ -569,8 +627,10 @@ class Bridge(QObject):
             ctypes.windll.kernel32.CloseHandle(handle)
         point=QCursor.pos();screen=QApplication.screenAt(point) or QApplication.primaryScreen()
         if screen!=self._screen:self._screen=screen;self.geometryChanged.emit();self.frameChanged.emit();self.changed.emit()
-        now=time.monotonic();geometry=screen.geometry();full=self.fullscreen()
-        fullscreen_names=tuple(s.name() for s in QApplication.screens() if self.fullscreen(s))
+        now=time.monotonic();geometry=screen.geometry()
+        backend_full=getattr(self,'_backend_fullscreen',False)
+        full=screen.name() in self.fullscreen_names if backend_full else self.fullscreen()
+        fullscreen_names=self.fullscreen_names if backend_full else tuple(s.name() for s in QApplication.screens() if self.fullscreen(s))
         if fullscreen_names!=self.fullscreen_names:self.fullscreen_names=fullscreen_names;self.frameChanged.emit()
         panel_width=float(self.top.property('panelWidth') or self.top.width());panel_height=float(self.top.property('panelHeight') or self.top.height())
         panel_rect=QRect(round(self.top.x()+(self.top.width()-panel_width)/2),self.top.y(),round(panel_width),round(panel_height))
@@ -586,7 +646,8 @@ class Bridge(QObject):
             if now-self.away_top>.55 and not self.args.preview:self.navigate('close')
         if self.social_win:self.edge_rail(self.social_win,'right',point,geometry,full,now)
         if self.bookmarks_win:self.edge_rail(self.bookmarks_win,'left',point,geometry,full,now)
-        if self.dock and self.taskbarEnabled:
+        if self.dock and self.taskbarEnabled and full:self.edge_policy.away_since=0   # fullscreen: chrome stays hidden, no reveal and no timers; idle state resumes on exit
+        elif self.dock and self.taskbarEnabled:
             self.client.subscription['dock']=bool(self.dock.property('shown'))
             dock_inside=self.dock.isVisible() and self.dock.geometry().adjusted(-8,-10,8,4).contains(point)
             menu_open=bool(self.dock.property('menuOpen'))
@@ -612,7 +673,7 @@ def main():
     bridge.changed.connect(bridge.theme_inputs_changed);QTimer.singleShot(0,bridge.theme_inputs_changed)
     engine.load(QUrl.fromLocalFile(str(ROOT/'qml/Main.qml')))
     if not engine.rootObjects():bridge.stop();return 1
-    root=engine.rootObjects()[0];bridge.top=root;bridge._window=root;bridge.dock=root.findChild(QObject,'bottomDock');bridge.social_win=root.findChild(QObject,'socialRail');bridge.bookmarks_win=root.findChild(QObject,'bookmarksRail');bridge.windowChanged.emit();bridge.surface_scene=SurfaceScene(bridge);bridge.glass=NativeGlass(bridge)
+    root=engine.rootObjects()[0];bridge.top=root;bridge._window=root;bridge.dock=root.findChild(QObject,'bottomDock');bridge.social_win=root.findChild(QObject,'socialRail');bridge.bookmarks_win=root.findChild(QObject,'bookmarksRail');bridge.dictation_win=root.findChild(QObject,'dictationOverlay');bridge.windowChanged.emit();bridge.surface_scene=SurfaceScene(bridge);bridge.glass=NativeGlass(bridge)
     if os.environ.get('PANNEAUX_VERIFY_THICKNESS85')=='1':
         from validation85 import run
         run(bridge,root,app,QML_ISSUES,ROOT/'validation-8.5')

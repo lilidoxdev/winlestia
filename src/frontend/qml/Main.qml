@@ -37,7 +37,7 @@ Window {
     property int dashboardTab:drawer.dashState.currentTab
     x:Bridge.screenX+(Bridge.screenWidth-width)/2
     y:Bridge.screenY+Math.max(0,Config.border.thickness)
-    visible:panelHeight>1
+    visible:panelHeight>1&&!Bridge.screenFullscreen
     property int servicePage:pageMode==="dashboard"?drawer.dashState.currentTab:pageMode==="controls"?4:pageMode==="clipboard"?6:pageMode==="audio"||pageMode==="microphone"||pageMode==="mixer"?7:5
     function subscribe(){Bridge.subscribe(pageMode==="dashboard"?vis.dashboard:extraOpen,servicePage)}
     function openMode(mode){
@@ -109,7 +109,8 @@ Window {
     RecycleDrop{}
     Repeater{model:Bridge.frameScreens;delegate:Item{id:frameHolder;required property var modelData;ScreenFrame{modelData:frameHolder.modelData}DesktopLogo{modelData:frameHolder.modelData}}}
     CaptureWindow{}
-    Dock {objectName:"bottomDock"}
+    DictationOverlay{dock:bottomDock}
+    Dock {id:bottomDock;objectName:"bottomDock"}
     SocialRail {}
     BookmarksRail {}
 }

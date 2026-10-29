@@ -41,10 +41,10 @@ def frame_path(width,height,thickness):
     outer.addPath(inner.toReversed());outer.setFillRule(Qt.WindingFill);return outer
 
 
-def shell_path(width,height,thickness,panel=None,dock=None,rail=None,left=None):
+def shell_path(width,height,thickness,panel=None,dock=None,rail=None,left=None,dictation=None):
     path=QPainterPath(frame_path(width,height,thickness)) if thickness else QPainterPath()
     path.setFillRule(Qt.WindingFill)
-    for spec,builder in ((panel,panel_path),(dock,dock_path),(rail,rail_path),(left,lambda w,h,a:rail_path(w,h,a,'left'))):
+    for spec,builder in ((panel,panel_path),(dock,dock_path),(rail,rail_path),(left,lambda w,h,a:rail_path(w,h,a,'left')),(dictation,dock_path)):
         if spec:
             x,y,w,h,attached=spec;path.addPath(QTransform().translate(x,y).map(builder(w,h,attached)))
     return path
@@ -75,7 +75,7 @@ class SurfaceScene(QObject):
     def __init__(self,bridge):
         super().__init__(bridge);self.bridge=bridge;self.paths={};self.data={};self.signature=None;self.queued=False;self.revision=0;self.stopped=False;self.input_masks={}
         bridge.changed.connect(self.request);bridge.geometryChanged.connect(self.request);bridge.screensChanged.connect(self.request);bridge.frameChanged.connect(self.request);bridge.capture.changed.connect(self.request)
-        for window in (bridge.top,bridge.dock,getattr(bridge,'social_win',None),getattr(bridge,'bookmarks_win',None)):
+        for window in (bridge.top,bridge.dock,getattr(bridge,'social_win',None),getattr(bridge,'bookmarks_win',None),getattr(bridge,'dictation_win',None)):
             if window:
                 for signal in (window.xChanged,window.yChanged,window.widthChanged,window.heightChanged,window.visibleChanged):signal.connect(self.request)
         self.timer=QTimer(self);self.timer.setInterval(200);self.timer.timeout.connect(self.refresh);self.timer.start();self.request()
@@ -97,7 +97,12 @@ class SurfaceScene(QObject):
             bw=float(window.property('bumpWidth') or window.width());bh=float(window.property('bumpHeight') or window.height());offset=float(window.property('offset') or 0)
             x=window.x()+window.width()-bw+offset if side=='right' else window.x()-offset
             return (x,window.y()+(window.height()-bh)/2,bw,bh,bridge.frameEnabled and not bridge.screenFullscreen)
-        top=view(bridge.top);dock=view(bridge.dock,True);rail=rail_view(getattr(bridge,'social_win',None));left=rail_view(getattr(bridge,'bookmarks_win',None),'left')
+        def dictation_view(window):
+            # Dictation pill: dock silhouette (same concave joins) whose base slides in/out of the bottom band; width follows the animated pillWidth.
+            if not window or not window.isVisible():return None
+            width=float(window.property('pillWidth') or 0);offset=float(window.property('offset') or 0)
+            return (window.x()+(window.width()-width)/2,window.y()+offset,width,window.height(),bridge.frameEnabled and not bridge.screenFullscreen) if width>=1 else None
+        top=view(bridge.top);dock=view(bridge.dock,True);rail=rail_view(getattr(bridge,'social_win',None));left=rail_view(getattr(bridge,'bookmarks_win',None),'left');dictation=dictation_view(getattr(bridge,'dictation_win',None))
         for window,spec,side in ((getattr(bridge,'social_win',None),rail,'right'),(getattr(bridge,'bookmarks_win',None),left,'left')):
             if window and not spec:self.input_masks.pop(int(window.winId()),None)
             if spec:
@@ -115,7 +120,7 @@ class SurfaceScene(QObject):
                     path=QTransform().translate((window.width()-spec[2])/2,offset).map(builder(spec[2],spec[3],spec[4]))
                     window.setMask(QRegion(path.toFillPolygon().toPolygon(),Qt.WindingFill));self.input_masks[handle]=mask_key
         displays=[(s.name(),s.geometry().x(),s.geometry().y(),s.geometry().width(),s.geometry().height()) for s in QApplication.screens()]
-        signature=(tuple(displays),top,dock,rail,left,bridge.frameEnabled,bridge.frameThickness,bridge.capture.busy,bridge.picking,tuple(bridge.fullscreen_names))
+        signature=(tuple(displays),top,dock,rail,left,dictation,bridge.frameEnabled,bridge.frameThickness,bridge.capture.busy,bridge.picking,tuple(bridge.fullscreen_names))
         if signature==self.signature:return
         self.signature=signature;paths={};data={}
         for name,x,y,w,h in displays:
@@ -124,9 +129,10 @@ class SurfaceScene(QObject):
                     return (spec[0]-x,spec[1]-y,*spec[2:])
                 return None
             thickness=bridge.frameThickness if bridge.frameEnabled and name not in bridge.fullscreen_names else 0
-            path=QPainterPath() if bridge.capture.busy or bridge.picking else shell_path(w,h,thickness,local(top),local(dock),local(rail),local(left))
+            full=name in bridge.fullscreen_names
+            path=QPainterPath() if bridge.capture.busy or bridge.picking else shell_path(w,h,thickness,None if full else local(top),None if full else local(dock),None if full else local(rail),None if full else local(left),local(dictation))
             # Qt's curve renderer needs a normalized silhouette for overlapping contours.
             simple=path.simplified();outline=svg_path(simple)
-            paths[name]=simple;data[name]={'path':outline,'outline':outline,'visible':not path.isEmpty(),'components':(thickness,local(top),local(dock),local(rail),local(left))}
+            paths[name]=simple;data[name]={'path':outline,'outline':outline,'visible':not path.isEmpty(),'components':(thickness,local(top),local(dock),local(rail),local(left),local(dictation))}
         self.paths=paths;self.data=data;self.revision+=1;bridge.surfaceChanged.emit()
     def stop(self):self.stopped=True;self.timer.stop()

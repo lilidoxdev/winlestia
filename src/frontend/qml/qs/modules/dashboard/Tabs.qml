@@ -86,11 +86,15 @@ Item {
         }
 
         Behavior on x {
-            Anim {}
+            Anim {
+                duration: Appearance.reducedEffects ? 0 : Appearance.anim.durations.normal
+            }
         }
 
         Behavior on implicitWidth {
-            Anim {}
+            Anim {
+                duration: Appearance.reducedEffects ? 0 : Appearance.anim.durations.normal
+            }
         }
     }
 

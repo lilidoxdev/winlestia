@@ -174,6 +174,10 @@ Item {
     SettingRow{title:qsTr("Ouvrir le panneau");hint:qsTr("Affiche ou masque le tableau de bord");symbol:"dashboard";IconTextButton{text:Bridge.settings.shortcut||"Ctrl + F1";icon:"keyboard";type:IconTextButton.Tonal;onClicked:recorder.openFor("panel")}}
     SettingRow{title:qsTr("Commande rapide");hint:qsTr("Recherche et lance tout depuis un champ");symbol:"search";IconTextButton{text:Bridge.settings.paletteShortcut||"Ctrl + F2";icon:"keyboard";type:IconTextButton.Tonal;onClicked:recorder.openFor("palette")}}
    }
+   Card{title:qsTr("Dictée vocale");subtitle:qsTr("Appuyer pour parler, le texte est saisi là où tu écris");symbol:"mic"
+    SettingRow{title:qsTr("Activer la dictée");hint:qsTr("Transcription locale, sans envoyer ta voix sur Internet");symbol:"record_voice_over";StyledSwitch{objectName:"dictationToggle";checked:Bridge.settings.dictationEnabled??false;onClicked:Bridge.action("preference",{key:"dictationEnabled",enabled:checked})}}
+    SettingRow{title:qsTr("Touche de dictée");hint:qsTr("Maintenez la touche pour dicter (français, anglais, espagnol, détection auto)");symbol:"keyboard_keys";enabled:Bridge.settings.dictationEnabled??false;DictationKeyButton{objectName:"dictationKey"}}
+   }
    Card{title:qsTr("Démarrage et données");subtitle:qsTr("Lancement et historique");symbol:"power_settings_new"
     SettingRow{title:qsTr("Démarrer avec Windows");hint:qsTr("Winlestia s’ouvre à ta connexion");symbol:"power_settings_new";StyledSwitch{checked:Bridge.settings.autostart??false;onClicked:Bridge.action("preference",{key:"autostart",enabled:checked})}}
     SettingRow{title:qsTr("Historique du presse-papiers");hint:qsTr("Garde les éléments copiés pour les recoller");symbol:"content_paste";StyledSwitch{checked:Bridge.settings.clipboardHistory??false;onClicked:Bridge.action("preference",{key:"clipboardHistory",enabled:checked})}}

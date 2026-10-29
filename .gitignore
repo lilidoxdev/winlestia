@@ -36,3 +36,6 @@ catalog-workspace*
 *.dll
 *.exe
 *.log
+
+# Sorties de build de vérification
+buildverify-*/

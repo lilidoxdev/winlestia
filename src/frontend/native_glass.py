@@ -73,7 +73,7 @@ class NativeGlass(QObject):
             if rail and rail.property('nativeBump')!=native_bump[slot]:rail.setProperty('nativeBump',native_bump[slot])
         for handle in set(self.windows)-live:self.dll.BackdropDetach(handle);self.windows.pop(handle,None)
         # Content-only windows stay above the shared background and never tint their text twice.
-        for window in (self.bridge.top,self.bridge.dock,getattr(self.bridge,'social_win',None),getattr(self.bridge,'bookmarks_win',None)):
+        for window in (self.bridge.top,self.bridge.dock,getattr(self.bridge,'social_win',None),getattr(self.bridge,'bookmarks_win',None),getattr(self.bridge,'dictation_win',None)):
             if window and window.isVisible():self.user.SetWindowPos(int(window.winId()),ctypes.c_void_p(-1),0,0,0,0,0x13)
     def error(self,phase,status):
         message=f'{phase}: {status:#x}'

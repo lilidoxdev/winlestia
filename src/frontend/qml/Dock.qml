@@ -61,7 +61,7 @@ Window {
     height:68
     x:Bridge.screenX+(Bridge.screenWidth-width)/2
     y:Bridge.screenY+Bridge.screenHeight-height-(Bridge.screenFullscreen?12:Math.max(0,Config.border.thickness))
-    visible:Bridge.taskbarEnabled&&shownCore
+    visible:Bridge.taskbarEnabled&&shownCore&&!Bridge.screenFullscreen
     Behavior on offset {Anim {duration:Appearance.anim.durations.expressiveFastSpatial;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
     // Fixed (never translated) clip box = dock contour bounds; only the content inside slides.
     Item {

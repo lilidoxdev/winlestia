@@ -32,9 +32,29 @@ Item {
 
     readonly property real nonAnimHeight: content.item?.nonAnimHeight ?? 0
 
+    // True while the drawer is moving (y/height changing); the layer exists only then, not during tab slides.
+    property bool drawerMoving: false
+
     visible: height > 0
     implicitHeight: content.implicitHeight
     implicitWidth: content.implicitWidth
+
+    onYChanged: if (visible && !Appearance.reducedEffects) {
+        drawerMoving = true;
+        settle.restart();
+    }
+    onHeightChanged: if (visible && !Appearance.reducedEffects) {
+        drawerMoving = true;
+        settle.restart();
+    }
+
+    // Single-shot, only armed by a y/height change: no idle loop.
+    Timer {
+        id: settle
+
+        interval: 120
+        onTriggered: root.drawerMoving = false
+    }
 
     // Keep initialized content warm; closing the drawer only changes visibility.
     Loader {
@@ -45,7 +65,7 @@ Item {
 
         visible: true
         active: true
-        layer.enabled: !Appearance.reducedEffects
+        layer.enabled: !Appearance.reducedEffects && root.drawerMoving
 
         sourceComponent: Content {
             visibilities: root.visibilities
