@@ -51,7 +51,7 @@ EdgeRail {
                         x:-4;y:-8;height:22;width:Math.max(22,badgeText.implicitWidth+10);radius:11
                         color:Colours.palette.m3error
                         scale:logo.connected&&logo.count>0?1:0;visible:scale>.01;transformOrigin:Item.Center
-                        Behavior on scale {Anim {duration:Appearance.anim.durations.small;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
+                        Behavior on scale {enabled:!Appearance.reducedEffects;Anim {duration:Appearance.anim.durations.small;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
                         StyledText {id:badgeText;objectName:"badgeText-"+logo.modelData.id;anchors.centerIn:parent;text:parent.label;color:Colours.palette.m3onError;font.pointSize:Appearance.font.size.small;font.bold:true}
                     }
                     // Muted indicator: small crossed bell, bottom-right.

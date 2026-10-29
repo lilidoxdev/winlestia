@@ -92,7 +92,7 @@ Window{
    color:Colours.palette.m3primary;opacity:0.1+0.4*root.lvl
   }
   Rectangle{
-   id:badge;width:40;height:40;radius:20;x:14;anchors.verticalCenter:parent.verticalCenter
+   id:badge;width:40;height:40;radius:Appearance.rounding.full;x:14;anchors.verticalCenter:parent.verticalCenter
    color:root.st==="error"?Colours.palette.m3error:Colours.palette.m3primary
    Behavior on color{ColorAnimation{duration:Appearance.anim.durations.small}}
    MaterialIcon{
@@ -127,7 +127,7 @@ Window{
   Row{
    x:transLabel.x+transLabel.implicitWidth+8;anchors.verticalCenter:parent.verticalCenter;spacing:4
    opacity:root.st==="transcribing"?1:0;visible:opacity>0.01
-   Repeater{model:3;Rectangle{required property int index;width:5;height:5;radius:2.5;color:Colours.palette.m3primary;opacity:0.3+0.7*Math.max(0,Math.sin(root.t*6-index*0.9))}}
+   Repeater{model:3;Rectangle{required property int index;width:5;height:5;radius:Appearance.rounding.full;color:Colours.palette.m3primary;opacity:0.3+0.7*Math.max(0,Math.sin(root.t*6-index*0.9))}}
   }
   // Loading label with shimmer
   Item{
@@ -147,7 +147,7 @@ Window{
   // Done / typing: language chip + preview
   Rectangle{
    id:chip;visible:(root.st==="done"||root.st==="typing")&&Bridge.dictationLang!==""
-   x:root.contentX;width:34;height:22;radius:11;anchors.verticalCenter:parent.verticalCenter;color:Colours.palette.m3secondaryContainer
+   x:root.contentX;width:34;height:22;radius:Appearance.rounding.full;anchors.verticalCenter:parent.verticalCenter;color:Colours.palette.m3secondaryContainer
    StyledText{anchors.centerIn:parent;text:Bridge.dictationLang.toUpperCase();font.pointSize:Appearance.font.size.smaller;font.bold:true;color:Colours.palette.m3onSecondaryContainer}
   }
   StyledText{

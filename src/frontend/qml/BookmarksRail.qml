@@ -127,7 +127,7 @@ EdgeRail {
                             StyledText {
                                 objectName:"initial-"+entry.index
                                 visible:!entry.folder&&!favicon.visible;anchors.centerIn:parent
-                                text:rail.initial(entry.title,entry.url);color:"white";font.bold:true;font.pointSize:entry.depth>0?Appearance.font.size.normal:Appearance.font.size.large
+                                text:rail.initial(entry.title,entry.url);color:Colours.palette.m3onSurface;font.bold:true;font.pointSize:entry.depth>0?Appearance.font.size.normal:Appearance.font.size.large
                             }
                             StateLayer {radius:width/2;function onClicked(){if(entry.folder)rail.toggleFolder(entry.id);else{Bridge.action("bookmarksOpen",{id:entry.id});rail.shown=false}}}
                         }

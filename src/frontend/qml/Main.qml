@@ -22,7 +22,7 @@ Window {
     property real mixerExtent:mixerOpen?Math.min(430,Bridge.screenWidth-520):0
     property bool audioSampling:extraOpen&&(pageMode==="audio"||pageMode==="microphone"||pageMode==="mixer"||(pageMode==="controls"&&mixerOpen))
     onAudioSamplingChanged:subscribe()
-    Behavior on mixerExtent{Anim{duration:window.menuDuration;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
+    Behavior on mixerExtent{enabled:!Appearance.reducedEffects;Anim{duration:window.menuDuration;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
     property bool controlsOpen:pageMode==="controls"&&extraOpen
     property real extraHeight:extraOpen?extraBody.implicitHeight+36:0
     property real contentWidth:pageMode==="workspace"?Math.min(1220,Bridge.screenWidth-80):pageMode==="palette"?660:pageMode==="settings"?Math.min(900,Bridge.screenWidth-80):pageMode==="clipboard"?730:pageMode==="tools"?760:pageMode==="audio"||pageMode==="microphone"?650:pageMode==="mixer"?490:pageMode==="capture"?620:450+(pageMode==="controls"?mixerExtent:0)
@@ -31,8 +31,8 @@ Window {
     property real panelHeight:Bridge.fileDragNearTop?0:Math.ceil(Math.max(1,pageMode==="dashboard"?(vis.dashboard?drawer.implicitHeight:peek?82:0):extraHeight))
     width:Math.max(Math.min(1600,Bridge.screenWidth-16),Math.ceil(panelWidth))
     height:Math.max(Math.min(900,Bridge.screenHeight-Config.border.thickness),Math.ceil(panelHeight))
-    Behavior on panelWidth {Anim{duration:Math.round(250*(Bridge.settings.motionScale??1));easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
-    Behavior on panelHeight {Anim{duration:Math.round(260*(Bridge.settings.motionScale??1));easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
+    Behavior on panelWidth {enabled:!Appearance.reducedEffects;Anim{duration:Math.round(250*(Bridge.settings.motionScale??1));easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
+    Behavior on panelHeight {enabled:!Appearance.reducedEffects;Anim{duration:Math.round(260*(Bridge.settings.motionScale??1));easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
     onPanelWidthChanged:Bridge.updateSurfaces()
     onPanelHeightChanged:Bridge.updateSurfaces()
     property int dashboardTab:drawer.dashState.currentTab
@@ -74,12 +74,12 @@ Window {
         implicitHeight:window.pageMode==="workspace"?browser.implicitHeight:window.pageMode==="palette"?palette.implicitHeight:window.pageMode==="settings"?preferences.implicitHeight:window.pageMode==="clipboard"?clipboard.implicitHeight:window.pageMode==="tools"?tools.implicitHeight:window.pageMode==="audio"||window.pageMode==="microphone"?audio.implicitHeight:window.pageMode==="mixer"?fullMixer.implicitHeight:window.pageMode==="capture"?capturePane.implicitHeight:Math.max(controls.implicitHeight,window.mixerOpen?sideMixer.implicitHeight:0)
         visible:window.pageMode!=="dashboard";clip:true
         opacity:window.extraOpen?1:0
-        Behavior on opacity {Anim {duration:Appearance.anim.durations.small}}
+        Behavior on opacity {enabled:!Appearance.reducedEffects;Anim {duration:Appearance.anim.durations.small}}
         WindowsControls {id:controls;width:410;visible:window.pageMode==="controls";mixerOpen:window.mixerOpen;onToggleMixer:window.mixerOpen=!window.mixerOpen}
         Item{x:430;width:Math.max(0,window.mixerExtent-20);height:sideMixer.implicitHeight;visible:window.pageMode==="controls"&&window.mixerExtent>1;clip:true
             Loader{id:sideMixer;width:Math.max(320,window.mixerExtent-20);opacity:window.mixerOpen?1:0;x:window.mixerOpen?0:24;property bool once:false;property bool want:window.pageMode==="controls"&&(window.mixerOpen||window.mixerExtent>1);onWantChanged:if(want)once=true;active:want||once
                 sourceComponent:MixerPane{onDismiss:window.mixerOpen=false}
-                Behavior on opacity{Anim{duration:Appearance.anim.durations.small}} Behavior on x{Anim{duration:Appearance.anim.durations.expressiveFastSpatial}}
+                Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}} Behavior on x{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.expressiveFastSpatial}}
             }
         }
         // Keep-alive lazy panes: instantiated on first show, then kept loaded. Workspace/Palette are also preloaded asynchronously after idle.
@@ -110,7 +110,7 @@ Window {
         width:Math.min(window.panelWidth-80,640);height:noticeLabel.implicitHeight+22;radius:18
         color:Colours.palette.m3surfaceContainerHighest;border.width:1;border.color:Colours.palette.m3outlineVariant
         opacity:noticeTimer.running?1:0;visible:opacity>.01
-        Behavior on opacity{Anim{duration:Appearance.anim.durations.small}}
+        Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
         StyledText{id:noticeLabel;anchors.centerIn:parent;width:parent.width-26;text:Bridge.notice;wrapMode:Text.Wrap;font.pointSize:11}
     }
     RecycleDrop{}

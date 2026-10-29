@@ -173,6 +173,25 @@ Coucher du soleil|Sunset|Atardecer
 Humidité|Humidity|Humedad
 Ressenti|Feels Like|Sensación térmica
 Vent|Wind|Viento"""
+ROWS+="\n"+r"""Nouvelle sélection|New selection|Nueva selección
+Crayon|Pen|Lápiz
+Surligneur|Highlighter|Resaltador
+Changer de couleur|Change colour|Cambiar de color
+Annuler le dernier trait · Ctrl Z|Undo last stroke · Ctrl Z|Deshacer el último trazo · Ctrl Z
+Extraire le texte|Extract text|Extraer texto
+Épingler sur le bureau|Pin to desktop|Fijar en el escritorio
+Enregistrer en PNG · Ctrl S|Save as PNG · Ctrl S|Guardar como PNG · Ctrl S
+Fermer · Échap|Close · Esc|Cerrar · Esc
+Glisse pour sélectionner|Drag to select|Arrastra para seleccionar
+Sélectionner une zone|Select an area|Seleccionar una zona
+Extraire du texte|Extract text from screen|Extraer texto de la pantalla
+Copier cet écran|Copy this screen|Copiar esta pantalla
+Dessiner, surligner, copier, enregistrer ou épingler|Draw, highlight, copy, save or pin|Dibujar, resaltar, copiar, guardar o fijar
+Le texte reconnu rejoint le presse-papiers|Recognised text goes to the clipboard|El texto reconocido pasa al portapapeles
+Une image complète de l’écran actuel|A full image of the current screen|Una imagen completa de la pantalla actual
+Rechercher dans l’historique|Search history|Buscar en el historial
+Aucun enregistrement · réglage du niveau d’entrée uniquement|No recording · input level adjustment only|Sin grabación · solo ajuste del nivel de entrada
+Le changement s’applique aux nouvelles lectures Windows|The change applies to new Windows playback|El cambio se aplica a las nuevas reproducciones de Windows"""
 TABLE={}
 for row in ROWS.splitlines():
  fr,en,es=row.split('|');value={'fr':fr,'en':en,'es':es};TABLE[fr]=value;TABLE.setdefault(en,value)

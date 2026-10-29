@@ -247,7 +247,7 @@ Item {
         signal triggered
         implicitHeight:48
         MouseArea{id:navMouse;anchors.fill:parent;hoverEnabled:true;cursorShape:Qt.PointingHandCursor;onClicked:nav.triggered()}
-        Rectangle{anchors.fill:parent;radius:Appearance.rounding.full;color:Colours.palette.m3onSurface;opacity:navMouse.pressed?.12:navMouse.containsMouse&&!nav.selected?.07:0;Behavior on opacity{Anim{duration:Appearance.anim.durations.small}}}
+        Rectangle{anchors.fill:parent;radius:Appearance.rounding.full;color:Colours.palette.m3onSurface;opacity:navMouse.pressed?.12:navMouse.containsMouse&&!nav.selected?.07:0;Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}}
         RowLayout{anchors.fill:parent;anchors.leftMargin:Appearance.padding.larger;anchors.rightMargin:Appearance.padding.normal;spacing:Appearance.spacing.smaller
             MaterialIcon{text:nav.icon;fill:nav.selected?1:0;font.pointSize:Appearance.font.size.large;color:nav.selected?Colours.palette.m3onSecondaryContainer:Colours.palette.m3onSurfaceVariant
                 scale:nav.selected&&!Appearance.reducedEffects?1.12:1;Behavior on scale{Spring{}}}
@@ -265,13 +265,13 @@ Item {
         property bool selected
         signal triggered
         implicitHeight:34;implicitWidth:chipRow.implicitWidth+Appearance.padding.large*2
-        Behavior on implicitWidth{Anim{duration:Appearance.anim.durations.small}}
+        Behavior on implicitWidth{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
         Rectangle{id:chipBg;anchors.fill:parent
             // Morphs from a rounded rectangle into a pill when selected.
             radius:chip.selected?height/2:Appearance.rounding.small;Behavior on radius{Spring{}}
             color:chip.selected?Colours.palette.m3secondaryContainer:"transparent"
             border.width:chip.selected?0:1;border.color:Colours.palette.m3outlineVariant}
-        Rectangle{anchors.fill:parent;radius:chipBg.radius;color:Colours.palette.m3onSurface;opacity:chipMouse.pressed?.12:chipMouse.containsMouse?.07:0;Behavior on opacity{Anim{duration:Appearance.anim.durations.small}}}
+        Rectangle{anchors.fill:parent;radius:chipBg.radius;color:Colours.palette.m3onSurface;opacity:chipMouse.pressed?.12:chipMouse.containsMouse?.07:0;Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}}
         MouseArea{id:chipMouse;anchors.fill:parent;hoverEnabled:true;cursorShape:Qt.PointingHandCursor;onClicked:chip.triggered()}
         Row{id:chipRow;anchors.centerIn:parent;spacing:Appearance.spacing.small
             MaterialIcon{visible:chip.selected;anchors.verticalCenter:parent.verticalCenter;text:"check";font.pointSize:Appearance.font.size.normal;color:Colours.palette.m3onSecondaryContainer}
@@ -346,7 +346,7 @@ Item {
                         id:searchBox
                         Layout.fillWidth:true;implicitHeight:50;radius:Appearance.rounding.full
                         color:query.activeFocus?Colours.palette.m3surfaceContainerHighest:Colours.palette.m3surfaceContainerHigh
-                        Rectangle{anchors.fill:parent;radius:parent.radius;color:"transparent";border.width:2;border.color:Colours.palette.m3primary;opacity:query.activeFocus?1:0;Behavior on opacity{Anim{duration:Appearance.anim.durations.small}}}
+                        Rectangle{anchors.fill:parent;radius:parent.radius;color:"transparent";border.width:2;border.color:Colours.palette.m3primary;opacity:query.activeFocus?1:0;Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}}
                         RowLayout{anchors.fill:parent;anchors.leftMargin:Appearance.padding.large+Appearance.padding.small;anchors.rightMargin:Appearance.padding.larger
                             MaterialIcon{text:qsTr("search");color:query.activeFocus?Colours.palette.m3primary:Colours.palette.m3outline;scale:query.activeFocus&&browser.fx?1.15:1;Behavior on scale{Spring{}}}
                             StyledTextField{id:query;objectName:"workspaceQuery";Layout.fillWidth:true;placeholderText:"Rechercher dans "+browser.title.toLocaleLowerCase()+"  (Ctrl+F)"
@@ -370,7 +370,7 @@ Item {
                     readonly property bool overflow:chipFlow.implicitHeight>40
                     Layout.fillWidth:true;implicitHeight:open?chipFlow.implicitHeight:Math.min(chipFlow.implicitHeight,34);clip:true
                     opacity:browser.pHead
-                    Behavior on implicitHeight{Anim{duration:Appearance.anim.durations.small}}
+                    Behavior on implicitHeight{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
                     Flow{id:chipFlow;width:parent.width-(chipsBox.overflow?44:0);spacing:Appearance.spacing.small
                         Repeater{model:browser.categories
                             FilterChip{required property string modelData;label:modelData;count:modelData==="Tout"?-1:(browser.categoryCounts[modelData]??-1);selected:browser.category===modelData
@@ -468,7 +468,7 @@ Item {
                                         // Hover lift with overshoot, press squash.
                                         scale:tile.prs?.96:tile.hov&&browser.fx?1.04:1
                                         Behavior on scale{Spring{}}
-                                        Rectangle{anchors.fill:parent;radius:Appearance.rounding.normal;color:Colours.palette.m3onSurface;opacity:tile.prs?.12:tile.hov?.07:0;Behavior on opacity{Anim{duration:Appearance.anim.durations.small}}
+                                        Rectangle{anchors.fill:parent;radius:Appearance.rounding.normal;color:Colours.palette.m3onSurface;opacity:tile.prs?.12:tile.hov?.07:0;Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
                                             border.width:tile.current?2:0;border.color:Colours.palette.m3primary}
                                         Rectangle {
                                             id:iconWell
@@ -480,7 +480,7 @@ Item {
                                                 id:iconBox
                                                 width:browser.listMode?40:grid.iconSize;height:width;anchors.centerIn:parent
                                                 Image{id:logo;anchors.fill:parent;source:tile.folder||!tile.eid?"":Bridge.iconUrl(tile.eid,Bridge.iconRevision);asynchronous:true;cache:true;fillMode:Image.PreserveAspectFit
-                                                    sourceSize:Qt.size(width*2,height*2);opacity:status===Image.Ready?1:0;Behavior on opacity{Anim{duration:Appearance.anim.durations.small}}}
+                                                    sourceSize:Qt.size(width*2,height*2);opacity:status===Image.Ready?1:0;Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}}
                                                 MaterialIcon{anchors.centerIn:parent;text:tile.folder?"folder":"apps";fill:tile.folder?1:0;font.pointSize:tile.folder?Appearance.font.size.large:Appearance.font.size.extraLarge;color:tile.folder?Colours.palette.m3onSecondaryContainer:Colours.palette.m3primary;visible:tile.folder||logo.status!==Image.Ready}
                                             }
                                         }
@@ -512,7 +512,7 @@ Item {
                         id:empty
                         anchors.centerIn:parent;visible:opacity>.01&&browser.tileCount===0
                         opacity:browser.tileCount===0?1:0;scale:browser.tileCount===0||!browser.fx?1:.85
-                        Behavior on opacity{Anim{duration:Appearance.anim.durations.small}}
+                        Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
                         Behavior on scale{Spring{}}
                         icon:query.text?"search_off":"inbox"
                         title:query.text?qsTr("Aucun accès ne correspond à cette recherche"):qsTr("Cet espace est prêt à accueillir tes accès")
@@ -533,7 +533,7 @@ Item {
         z:50;visible:opacity>.01;opacity:shown?1:0;scale:shown||!browser.fx?1:.92
         implicitWidth:tipLabel.implicitWidth+Appearance.padding.large*2;implicitHeight:tipLabel.implicitHeight+Appearance.padding.normal*2
         radius:Appearance.rounding.small;color:Colours.palette.m3surfaceContainerHighest;border.width:1;border.color:Colours.palette.m3outlineVariant
-        Behavior on opacity{Anim{duration:Appearance.anim.durations.small}}
+        Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
         Behavior on scale{Spring{}}
         StyledText{id:tipLabel;anchors.centerIn:parent;font.pointSize:Appearance.font.size.small}
     }

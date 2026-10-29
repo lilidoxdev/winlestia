@@ -12,7 +12,7 @@ Item {
     id:root;spacing:18;anchors.fill:parent;
 
     RowLayout{Layout.fillWidth:true;MaterialIcon{text:qsTr("content_paste");font.pointSize:Appearance.font.size.title;color:Colours.palette.m3primary} Column{StyledText{text:qsTr("Presse-papiers");font.pointSize:Appearance.font.size.title} StyledText{text:qsTr("Clique sur un élément pour le recopier");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}} Item{Layout.fillWidth:true} IconButton{icon:"close";type:IconButton.Text;onClicked:Bridge.closePanel()}}
-    StyledRect{Layout.fillWidth:true;implicitHeight:48;radius:Appearance.rounding.large;color:Colours.palette.m3surfaceContainer;StyledTextField{id:query;anchors.fill:parent;anchors.leftMargin:18;anchors.rightMargin:18;placeholderText:"Rechercher dans l’historique"}}
+    StyledRect{Layout.fillWidth:true;implicitHeight:48;radius:Appearance.rounding.large;color:Colours.palette.m3surfaceContainer;StyledTextField{id:query;anchors.fill:parent;anchors.leftMargin:18;anchors.rightMargin:18;placeholderText:qsTr("Rechercher dans l’historique")}}
     StyledListView {
         id:list;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:8;reuseItems:true
         model:root.visible?Bridge.clipboardItems.filter(e=>e.text.toLocaleLowerCase().includes(query.text.toLocaleLowerCase())):[]

@@ -131,6 +131,8 @@ Item {
         elide: Text.ElideRight
     }
 
+    FontMetrics { id: albumFm; font: album.font }
+
     StyledText {
         id: album
 
@@ -139,7 +141,7 @@ Item {
         anchors.topMargin: visible ? Appearance.spacing.small : 0
 
         visible: !!Players.active
-        height: visible ? implicitHeight : 0
+        height: visible ? albumFm.height : 0
         animate: true
         horizontalAlignment: Text.AlignHCenter
         text: (Players.active?.trackAlbum ?? "") || qsTr("Unknown album")
@@ -150,6 +152,8 @@ Item {
         elide: Text.ElideRight
     }
 
+    FontMetrics { id: artistFm; font: artist.font }
+
     StyledText {
         id: artist
 
@@ -158,7 +162,7 @@ Item {
         anchors.topMargin: visible ? Appearance.spacing.small : 0
 
         visible: !!Players.active
-        height: visible ? implicitHeight : 0
+        height: visible ? artistFm.height : 0
         animate: true
         horizontalAlignment: Text.AlignHCenter
         text: (Players.active?.trackArtist ?? "") || qsTr("Unknown artist")

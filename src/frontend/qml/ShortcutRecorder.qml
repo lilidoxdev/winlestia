@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import qs.components
 import qs.components.controls
 import qs.services
+import qs.config
 Window{
  id:recorder;objectName:"shortcutRecorder";title:"Winlestia · Raccourci";transientParent:null;color:"transparent"
  flags:Qt.Tool|Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint|Qt.NoDropShadowWindowHint
@@ -14,7 +15,7 @@ Window{
  function finish(){if(!visible)return;visible=false;Bridge.recordShortcut(false,kind);Bridge.window.show();Bridge.navigate("settings")}
  Connections{target:Bridge;function onShellEvent(event){if(event==="shortcut-saved:"+recorder.kind)recorder.finish()}}
  onClosing:event=>{event.accepted=false;finish()}
- Rectangle{anchors.fill:parent;radius:24;color:Qt.alpha(Colours.surfaceBase,.98);border.width:1;border.color:Qt.alpha(Colours.palette.m3primary,.5)
+ Rectangle{anchors.fill:parent;radius:Appearance.rounding.large;color:Qt.alpha(Colours.surfaceBase,.98);border.width:1;border.color:Qt.alpha(Colours.palette.m3primary,.5)
   ColumnLayout{anchors.fill:parent;anchors.margins:24;spacing:14
    RowLayout{Layout.fillWidth:true;MaterialIcon{text:"keyboard";font.pointSize:25;color:Colours.palette.m3primary}StyledText{Layout.fillWidth:true;text:qsTr("Appuie sur le nouveau raccourci");font.pointSize:15}IconButton{icon:"close";type:IconButton.Text;onClicked:recorder.finish()}}
    StyledRect{id:input;objectName:"shortcutInput";Layout.fillWidth:true;Layout.preferredHeight:66;radius:15;color:Colours.palette.m3surfaceContainerHigh;focus:true

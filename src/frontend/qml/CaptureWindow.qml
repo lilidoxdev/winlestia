@@ -15,7 +15,8 @@ Window {
     property bool selected:false
     property string tool:"pen"
     property var strokes:[]
-    property color ink:"#ab4938"
+    readonly property var inks:["#ab4938","#32909f","#f9d465"]
+    property color ink:inks[0]
     property bool drawing:false
     property string loadedSource:""
     component CaptureAction:IconButton{
@@ -50,17 +51,17 @@ Window {
         anchors.horizontalCenter:parent.horizontalCenter;anchors.top:parent.top;anchors.topMargin:20
         width:Math.min(toolbar.implicitWidth+32,parent.width-32);height:64;radius:Appearance.rounding.large;color:Colours.palette.m3surface
         RowLayout{id:toolbar;anchors.centerIn:parent;spacing:8
-            StyledText{text:root.selected?Math.round(root.selection.width)+" × "+Math.round(root.selection.height):"Glisse pour sélectionner";font.pointSize:Appearance.font.size.small;Layout.leftMargin:8;Layout.rightMargin:8}
-            CaptureAction{hint:"Nouvelle sélection";icon:"crop_free";type:IconButton.Text;onClicked:{root.selected=false;root.strokes=[];root.selection=Qt.rect(0,0,0,0);canvas.requestPaint()}}
-            CaptureAction{hint:"Crayon";icon:"edit";toggle:true;checked:root.tool==="pen";type:IconButton.Tonal;onClicked:root.tool="pen"}
-            CaptureAction{hint:"Surligneur";icon:"ink_highlighter";toggle:true;checked:root.tool==="highlight";type:IconButton.Tonal;onClicked:root.tool="highlight"}
-            CaptureAction{hint:"Changer de couleur";icon:"palette";type:IconButton.Text;onClicked:root.ink=root.ink.toString()==="#ab4938"?"#32909f":root.ink.toString()==="#32909f"?"#f9d465":"#ab4938"}
-            CaptureAction{hint:"Annuler le dernier trait · Ctrl Z";icon:"undo";type:IconButton.Text;disabled:root.strokes.length===0;onClicked:{root.strokes=root.strokes.slice(0,-1);canvas.requestPaint()}}
-            CaptureAction{hint:"Extraire le texte";icon:"document_scanner";type:IconButton.Text;disabled:!root.selected;onClicked:root.finish("ocr")}
-            CaptureAction{hint:"Épingler sur le bureau";icon:"keep";type:IconButton.Text;disabled:!root.selected;onClicked:root.finish("pin")}
-            CaptureAction{hint:"Enregistrer en PNG · Ctrl S";icon:"save";type:IconButton.Text;disabled:!root.selected;onClicked:root.finish("save")}
+            StyledText{text:root.selected?Math.round(root.selection.width)+" × "+Math.round(root.selection.height):qsTr("Glisse pour sélectionner");font.pointSize:Appearance.font.size.small;Layout.leftMargin:8;Layout.rightMargin:8}
+            CaptureAction{hint:qsTr("Nouvelle sélection");icon:"crop_free";type:IconButton.Text;onClicked:{root.selected=false;root.strokes=[];root.selection=Qt.rect(0,0,0,0);canvas.requestPaint()}}
+            CaptureAction{hint:qsTr("Crayon");icon:"edit";toggle:true;checked:root.tool==="pen";type:IconButton.Tonal;onClicked:root.tool="pen"}
+            CaptureAction{hint:qsTr("Surligneur");icon:"ink_highlighter";toggle:true;checked:root.tool==="highlight";type:IconButton.Tonal;onClicked:root.tool="highlight"}
+            CaptureAction{hint:qsTr("Changer de couleur");icon:"palette";type:IconButton.Text;onClicked:root.ink=root.inks[(root.inks.indexOf(root.ink.toString())+1)%root.inks.length]}
+            CaptureAction{hint:qsTr("Annuler le dernier trait · Ctrl Z");icon:"undo";type:IconButton.Text;disabled:root.strokes.length===0;onClicked:{root.strokes=root.strokes.slice(0,-1);canvas.requestPaint()}}
+            CaptureAction{hint:qsTr("Extraire le texte");icon:"document_scanner";type:IconButton.Text;disabled:!root.selected;onClicked:root.finish("ocr")}
+            CaptureAction{hint:qsTr("Épingler sur le bureau");icon:"keep";type:IconButton.Text;disabled:!root.selected;onClicked:root.finish("pin")}
+            CaptureAction{hint:qsTr("Enregistrer en PNG · Ctrl S");icon:"save";type:IconButton.Text;disabled:!root.selected;onClicked:root.finish("save")}
             IconTextButton{icon:"content_copy";text:qsTr("Copier");enabled:root.selected;onClicked:root.finish("copy")}
-            CaptureAction{hint:"Fermer · Échap";icon:"close";type:IconButton.Text;onClicked:Bridge.capture.cancel()}
+            CaptureAction{hint:qsTr("Fermer · Échap");icon:"close";type:IconButton.Text;onClicked:Bridge.capture.cancel()}
         }
     }
     Shortcut{sequence:"Escape";enabled:root.visible;onActivated:Bridge.capture.cancel()}

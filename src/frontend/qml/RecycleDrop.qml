@@ -14,7 +14,7 @@ Window {
  property int count:0
  property int hovered:-1
  property real reveal:hasFiles?1:0
- Behavior on reveal {Anim{duration:Appearance.anim.durations.small;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
+ Behavior on reveal {enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
  function localPaths(urls){let result=[];for(let url of urls){let value=url.toString();if(value.startsWith("file:///"))result.push(decodeURIComponent(value.substring(8)).replace(/\//g,"\\"))}return result}
  function perform(index,urls){let paths=localPaths(urls);if(!paths.length)return;Bridge.action(["recycleFiles","clipboardFiles","zipFiles"][index],{paths:paths});hasFiles=false;hovered=-1}
  onVisibleChanged:if(!visible){hasFiles=false;hovered=-1}
@@ -26,17 +26,17 @@ Window {
   transform:Translate{y:-14*(1-shelf.reveal)}
   Row{
    anchors.centerIn:parent;spacing:12
-   Repeater{model:[{icon:"delete",label:"Corbeille",hint:"Déposer pour supprimer"},{icon:"content_copy",label:"Presse-papiers",hint:"Copier les fichiers"},{icon:"folder_zip",label:"Compresser",hint:"Créer une archive ZIP"}]
+   Repeater{model:[{icon:"delete",label:qsTr("Corbeille"),hint:qsTr("Déposer pour supprimer")},{icon:"content_copy",label:qsTr("Presse-papiers"),hint:qsTr("Copier les fichiers")},{icon:"folder_zip",label:qsTr("Compresser"),hint:qsTr("Créer une archive ZIP")}]
     delegate:Rectangle{
      id:tile;required property var modelData;required property int index
      objectName:"fileAction-"+index;width:212;height:92;radius:shelf.hovered===index?Appearance.rounding.large:Appearance.rounding.normal
      color:shelf.hovered===index?Colours.palette.m3primaryContainer:Colours.palette.m3surfaceContainerHigh
      border.width:shelf.hovered===index?1:0;border.color:Colours.palette.m3primary
      scale:shelf.hovered===index?1.035:1;y:shelf.hovered===index?-3:0
-     Behavior on color{CAnim{duration:Appearance.anim.durations.small}}Behavior on radius{Anim{duration:Appearance.anim.durations.small}}Behavior on scale{Anim{duration:Appearance.anim.durations.small}}Behavior on y{Anim{duration:Appearance.anim.durations.small}}
+     Behavior on color{enabled:!Appearance.reducedEffects;CAnim{duration:Appearance.anim.durations.small}}Behavior on radius{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}Behavior on scale{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}Behavior on y{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
      Row{anchors.centerIn:parent;spacing:12
       Rectangle{width:44;height:48;radius:Appearance.rounding.small;color:shelf.hovered===tile.index?Colours.palette.m3primary:Colours.palette.m3secondaryContainer
-       MaterialIcon{anchors.centerIn:parent;text:tile.modelData.icon;font.pointSize:Appearance.font.size.title;color:shelf.hovered===tile.index?Colours.palette.m3onPrimary:Colours.palette.m3onSecondaryContainer;fill:shelf.hovered===tile.index?1:0;rotation:shelf.hovered===tile.index?-8:0;Behavior on rotation{Anim{duration:Appearance.anim.durations.small}}}}
+       MaterialIcon{anchors.centerIn:parent;text:tile.modelData.icon;font.pointSize:Appearance.font.size.title;color:shelf.hovered===tile.index?Colours.palette.m3onPrimary:Colours.palette.m3onSecondaryContainer;fill:shelf.hovered===tile.index?1:0;rotation:shelf.hovered===tile.index?-8:0;Behavior on rotation{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}}}
       Column{anchors.verticalCenter:parent.verticalCenter;spacing:5;StyledText{text:qsTr(tile.modelData.label);font.pointSize:Appearance.font.size.normal;font.weight:Font.DemiBold;color:shelf.hovered===tile.index?Colours.palette.m3onPrimaryContainer:Colours.palette.m3onSurface}StyledText{text:qsTr(tile.modelData.hint);font.pointSize:Appearance.font.size.small;color:shelf.hovered===tile.index?Colours.palette.m3onPrimaryContainer:Colours.palette.m3onSurfaceVariant}}
      }
     }

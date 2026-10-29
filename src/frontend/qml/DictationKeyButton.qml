@@ -4,6 +4,7 @@ import QtQuick.Window
 import qs.components
 import qs.components.controls
 import qs.services
+import qs.config
 IconTextButton{
  id:button
  property bool capturing:false
@@ -25,7 +26,7 @@ IconTextButton{
   width:420;height:150;x:Bridge.screenX+(Bridge.screenWidth-width)/2;y:Bridge.screenY+(Bridge.screenHeight-height)/2
   onClosing:event=>{event.accepted=false;button.end()}
   onVisibleChanged:if(!visible)button.end()
-  Rectangle{anchors.fill:parent;radius:24;color:Qt.alpha(Colours.surfaceBase,.98);border.width:1;border.color:Qt.alpha(Colours.palette.m3primary,.5)
+  Rectangle{anchors.fill:parent;radius:Appearance.rounding.large;color:Qt.alpha(Colours.surfaceBase,.98);border.width:1;border.color:Qt.alpha(Colours.palette.m3primary,.5)
    Column{anchors.centerIn:parent;spacing:10
     StyledText{anchors.horizontalCenter:parent.horizontalCenter;text:qsTr("Appuyez sur une touche…");font.pointSize:15}
     StyledText{anchors.horizontalCenter:parent.horizontalCenter;text:qsTr("(Échap pour annuler)");font.pointSize:9;color:Colours.palette.m3outline}
