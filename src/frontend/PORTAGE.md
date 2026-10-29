@@ -24,7 +24,7 @@ Le dock est au bord physique inférieur et se masque automatiquement. La touche 
 
 `REVENIR_A_PANNEAUX.ps1` désactive le nouveau frontend et relance l’interface précédente. `../Glass-v5/RETABLIR_BARRE_WINDOWS.exe` rétablit la barre Windows indépendamment. Le secours du Bureau dans Documents reste inchangé.
 
-Les préférences restent dans `../Glass-v5/preferences-glass.json`. Favoris, récents, sites et profils ne sont pas remplacés par les données de test. Les caches Qt sont dans `%LOCALAPPDATA%/Panneaux/Caelestia`.
+Les préférences restent dans `%LOCALAPPDATA%\Panneaux\preferences-glass.json`. Favoris, récents, sites et profils ne sont pas remplacés par les données de test. Les caches Qt sont dans `%LOCALAPPDATA%/Panneaux/Caelestia`.
 
 ## Reconstruire
 

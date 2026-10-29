@@ -1,4 +1,4 @@
-// WINLESTIA_FILES_SELFTEST=palette : live palette update. Points Store.Root at <fixture>\prefs (never the real preferences), writes a light then a dark choice,
+// WINLESTIA_FILES_SELFTEST=palette : live palette update. Points Store.DataDir at <fixture>\prefs (never the real preferences), writes a light then a dark choice,
 // sends the "palette" message over this instance's own pipe (WINLESTIA_FILES_PIPE from the harness) and checks that a live token brush changed colour both ways.
 using System;
 using System.IO;
@@ -30,7 +30,7 @@ public sealed partial class MainWindow {
         if (!F.StartsWith(Path.Combine(Path.GetTempPath(), "WinlestiaFilesOps"), StringComparison.OrdinalIgnoreCase)) { T("ABORT fixture outside %TEMP%/WinlestiaFilesOps: " + F); return; }
         await WaitLoaded();
         string prefs = Path.Combine(F, "prefs"); Directory.CreateDirectory(prefs);
-        Store.Root = prefs;
+        Store.DataDir = prefs;
         var brush = UI.T(M3Role.Surface);
         Color dark = brush.Color;
         Check("starts dark", Theme.Current.IsDark);

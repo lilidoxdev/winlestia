@@ -13,7 +13,8 @@ SETTINGS=Path.home()/'AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8
 def rgb(value):return tuple(int(value[i:i+2],16) for i in (1,3,5))
 def blend(a,b,f):return '#'+''.join(f'{round(x*(1-f)+y*f):02x}' for x,y in zip(rgb(a),rgb(b)))
 def inputs():
-    prefs_path=ROOT.parent/'Glass-v5/preferences-glass.json'
+    prefs_path=Path(os.environ.get('WINLESTIA_DATA_DIR') or Path(os.environ.get('LOCALAPPDATA') or str(Path.home()/'AppData'/'Local'))/'Panneaux')/'preferences-glass.json'
+    if not prefs_path.exists():prefs_path=ROOT.parent/'Glass-v5/preferences-glass.json'
     prefs=json.loads(prefs_path.read_text(encoding='utf-8-sig')) if prefs_path.exists() else {}
     active=desktop_hut_active()
     if active:

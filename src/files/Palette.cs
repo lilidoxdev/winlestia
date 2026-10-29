@@ -40,8 +40,8 @@ internal static class PaletteLoader {
         });
     }
 
-    // Palette the frontend actually shows (Glass-v5/palette-shell.json, written by frontend.py in auto mode): it knows live-wallpaper overrides that SPI_GETDESKWALLPAPER cannot see.
-    internal static string ShellFile => Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_SHELL") is { Length: > 0 } over ? over : Path.Combine(Store.Root, "palette-shell.json");
+    // Palette the frontend actually shows (%LOCALAPPDATA%\Panneaux\palette-shell.json, written by frontend.py in auto mode): it knows live-wallpaper overrides that SPI_GETDESKWALLPAPER cannot see.
+    internal static string ShellFile => Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_SHELL") is { Length: > 0 } over ? over : Path.Combine(Store.DataDir, "palette-shell.json");
 
     internal static M3Palette? FromShellFile() {
         try {
@@ -71,6 +71,7 @@ internal static class PaletteLoader {
         if (watcher != null) return;
         try {
             string file = ShellFile, dir = Path.GetDirectoryName(file)!;
+            try { Directory.CreateDirectory(dir); } catch { }
             if (!Directory.Exists(dir)) return;
             watcher = new FileSystemWatcher(dir, Path.GetFileName(file)) { NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime };
             FileSystemEventHandler h = (_, _) => { debounce?.Dispose(); debounce = new Timer(_ => Refresh(ui, applied), null, 400, Timeout.Infinite); };

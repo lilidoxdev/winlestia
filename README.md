@@ -86,9 +86,9 @@ The data folders are named `Panneaux`, the project's former name.
 
 | File | Purpose |
 |---|---|
-| `Glass-v5\preferences-glass.json` (in the install folder) | Shell preferences. Change these options in Settings instead; the file is for advanced users. |
+| `%LOCALAPPDATA%\Panneaux\preferences-glass.json` | Shell preferences. Change these options in Settings instead; the file is for advanced users. |
 | `%LOCALAPPDATA%\Panneaux\Caelestia\weather.json` | Weather city, as `{"city": "..."}`. |
-| `Glass-v5\glass.log` | Backend log. |
+| `%LOCALAPPDATA%\Panneaux\glass.log` | Backend log. |
 
 Advanced: the keys of `preferences-glass.json` include `ReplaceTaskbar`, `AutoTheme`, `ScreenFrame`, `FrameThickness`, `GlassOpacity`, `AutoTile`, `DesktopLogo`, `TaskbarPins` and the shortcuts `Shortcut`, `PaletteShortcut`, `CaptureShortcut`, `PinShortcut` (each with `Modifiers` and `Key`).
 
@@ -106,7 +106,7 @@ Command-line flags of `Panneaux.Glass.exe`:
 
 - **The Windows taskbar is missing.** Run `RETABLIR_BARRE_WINDOWS.exe` from the `Glass-v5` folder of the install, or run `Panneaux.Glass.exe --restore-taskbar`. A watchdog also restores the taskbar if Winlestia stops unexpectedly. You can disable the replacement with the taskbar option in Settings ("Barre des tâches Panneaux").
 - **The desktop looks broken or icons are hidden.** Press Ctrl+Alt+Backspace. It runs `SECOURS_BUREAU.exe`, which brings back the Windows desktop icons, stops Winlestia and disables its autostart. The executable can also be launched directly from the install folder.
-- **The Caelestia shell does not start.** Start with `Panneaux.Glass.exe --legacy-shell` to use the Glass shell, and check `Glass-v5\glass.log`.
+- **The Caelestia shell does not start.** Start with `Panneaux.Glass.exe --legacy-shell` to use the Glass shell, and check `%LOCALAPPDATA%\Panneaux\glass.log`.
 - **A shortcut does not work.** Another application may already own the combination. Pick a different one in Settings.
 - **Windows protected your PC when launching the setup.** See the SmartScreen note under Installation.
 

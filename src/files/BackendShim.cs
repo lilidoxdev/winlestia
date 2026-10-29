@@ -39,12 +39,14 @@ internal static class Theme {
 // Same install folder as the backend (Glass-v5): reducedEffects is read from its preferences file.
 internal static class Store {
     internal static string Root = AppDomain.CurrentDomain.BaseDirectory;
+    // User data dir shared with the backend (same rule, same env var): %LOCALAPPDATA%\Panneaux. Not created here (the backend owns it).
+    internal static string DataDir = Environment.GetEnvironmentVariable("WINLESTIA_DATA_DIR") is { Length: > 0 } d ? d : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Panneaux");
     internal static Preferences State = Load();
     internal static void Reload() => State = Load();
     static Preferences Load() {
         var prefs = new Preferences();
         try {
-            string path = Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_FILE") is { Length: > 0 } over ? over : Path.Combine(Root, "preferences-glass.json");   // override: tests only
+            string path = Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_FILE") is { Length: > 0 } over ? over : Path.Combine(DataDir, "preferences-glass.json");   // override: tests only
             if (File.Exists(path)) prefs = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(path), new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? prefs;
         } catch { }
         return prefs;

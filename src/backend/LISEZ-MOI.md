@@ -137,7 +137,7 @@ Clic droit sur une icône : favoris, nom, catégorie, panneau de destination, ic
 
 Glisser-déposer un accès réordonne les icônes ou change leur panneau. Glisser un fichier ou un dossier depuis l’Explorateur crée un accès dans Panneaux. **Le fichier d’origine ne se déplace pas.** Les boutons Ajouter permettent aussi de choisir des fichiers et dossiers.
 
-La personnalisation s’exporte et s’importe en JSON. Elle est enregistrée dans `preferences-glass.json`, avec une copie précédente `.bak`. Le catalogue local est immédiatement disponible. Un inventaire de plus de 24 heures se rafraîchit en arrière-plan ; le menu de notification permet aussi de l’actualiser.
+La personnalisation s’exporte et s’importe en JSON. Elle est enregistrée dans `%LOCALAPPDATA%\Panneaux\preferences-glass.json`, avec une copie précédente `.bak`. Le catalogue local est immédiatement disponible. Un inventaire de plus de 24 heures se rafraîchit en arrière-plan ; le menu de notification permet aussi de l’actualiser.
 
 ## Sites web
 

@@ -166,7 +166,7 @@ internal sealed class PinWindow:Window {
     internal static void Open(Coordinator coordinator,BitmapSource image){
         if(System.Windows.Application.Current==null)return;
         try{
-            string folder=Path.Combine(Store.Root,"pins");Directory.CreateDirectory(folder);
+            string folder=Path.Combine(Store.DataDir,"pins");Directory.CreateDirectory(folder);
             var pinned=new PinNote{Kind="image",Width=Math.Min(420,image.PixelWidth*(96/Math.Max(1,image.DpiX))),Angle=-2.6};
             pinned.ImagePath=Path.Combine(folder,pinned.Id+".png");
             using(var stream=File.Create(pinned.ImagePath)){var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(image));encoder.Save(stream);}

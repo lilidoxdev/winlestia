@@ -26,7 +26,7 @@ internal sealed class ClipboardService:IDisposable {
     internal event Action? Changed;
     internal IReadOnlyList<ClipboardItem> Items=>items;
     internal ClipboardService(){
-        folder=Path.Combine(Store.Root,"clipboard");try{Directory.CreateDirectory(folder);}catch(Exception ex){Store.Log("Presse-papiers: "+ex.Message);}
+        folder=Path.Combine(Store.DataDir,"clipboard");try{Directory.CreateDirectory(folder);}catch(Exception ex){Store.Log("Presse-papiers: "+ex.Message);}
         Load();timer.Tick+=(_,_)=>_ = PollAsync();ApplySettings();Prune();
     }
     internal void ApplySettings(){timer.Stop();if(Store.State.ClipboardHistory)timer.Start();}

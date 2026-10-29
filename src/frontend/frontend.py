@@ -23,7 +23,7 @@ from surface_geometry import SurfaceScene
 
 ROOT=Path(__file__).resolve().parent
 BACKEND=ROOT.parent/'Glass-v5'
-CONFIG=Path(os.environ['LOCALAPPDATA'])/'Panneaux'/'Caelestia'
+CONFIG=Path(os.environ.get('LOCALAPPDATA') or str(Path.home()/'AppData'/'Local'))/'Panneaux'/'Caelestia'
 CONFIG.mkdir(parents=True,exist_ok=True)
 user32=ctypes.windll.user32
 user32.GetForegroundWindow.restype=ctypes.c_void_p
@@ -146,7 +146,7 @@ class Bridge(QObject):
     def setLanguage(self,mode):TRANSLATOR.select(mode);self.changed.emit();self.engine.retranslate()
     def current_theme(self):return self.walltheme.for_screen(self._screen.name())
     def theme_ready(self):self._theme_revision+=1;self.publish_palette();self.changed.emit();self.frameChanged.emit()
-    # Winlestia Fichiers (WPF) cannot see a live-wallpaper override, so the palette actually shown here is handed over in Glass-v5/palette-shell.json (auto mode only, written only when it changed; the file is event-watched there, never polled).
+    # Winlestia Fichiers (WPF) cannot see a live-wallpaper override, so the palette actually shown here is handed over in %LOCALAPPDATA%\Panneaux\palette-shell.json (auto mode only, written only when it changed; the file is event-watched there, never polled).
     def publish_palette(self):
         # Computed here, written off the UI thread (ordered single-worker executor). Leaving auto mode writes {"mode":"custom"} so Palette.cs drops the stale auto palette.
         try:
@@ -160,7 +160,7 @@ class Bridge(QObject):
             if not hasattr(self,'_publisher'):self._publisher=ThreadPoolExecutor(max_workers=1,thread_name_prefix='Panneaux Publish')
             def write(text=text):
                 try:
-                    target=BACKEND/'palette-shell.json';tmp=target.with_suffix('.tmp');tmp.write_text(text,encoding='utf-8');os.replace(tmp,target)
+                    data=Path(os.environ.get('WINLESTIA_DATA_DIR') or Path(os.environ.get('LOCALAPPDATA') or str(Path.home()/'AppData'/'Local'))/'Panneaux');data.mkdir(parents=True,exist_ok=True);target=data/'palette-shell.json';tmp=target.with_suffix('.tmp');tmp.write_text(text,encoding='utf-8');os.replace(tmp,target)
                 except Exception:
                     if getattr(self,'_published_palette',None)==text:self._published_palette=None
             self._publisher.submit(write)
