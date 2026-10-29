@@ -1,14 +1,19 @@
 # Python 3.12 / sync_theme.py / Windows. Shared Winlestia wallpaper palette, no screen capture.
 from pathlib import Path
-import sys,json,time,os,ctypes,winreg,colorsys,argparse,hashlib
+import sys,json,time,os,ctypes,winreg,colorsys,argparse,hashlib,subprocess
 ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT))
 from install import read_settings,note_written,STATE
 SHELL=ROOT.parent/'Caelestia-Windows'
 sys.path.insert(0,str(SHELL))
-from chromatic_palette import generate_palette
 from custom_palette import make_palette
 from wallpaper_sources import desktop_hut_active
+def generate_palette(path='',background='#182025'):
+    # numpy/PIL stay out of the resident daemon: the palette is computed in a short-lived child that frees them on exit.
+    python=Path(sys.executable);python=python.with_name('python.exe') if python.with_name('python.exe').exists() else python
+    done=subprocess.run([str(python),str(Path(__file__).resolve()),'--palette',path,background],stdin=subprocess.DEVNULL,capture_output=True,timeout=90,creationflags=0x08000000)
+    if done.returncode:raise RuntimeError('palette child failed: '+done.stderr.decode('utf-8','replace').strip()[-300:])
+    return json.loads(done.stdout.decode('utf-8'))
 SETTINGS=Path.home()/'AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json'
 def rgb(value):return tuple(int(value[i:i+2],16) for i in (1,3,5))
 def blend(a,b,f):return '#'+''.join(f'{round(x*(1-f)+y*f):02x}' for x,y in zip(rgb(a),rgb(b)))
@@ -108,4 +113,9 @@ def run(once=False):
         if once or (ROOT/'theme-sync.stop').exists():break
         wait_for_change()
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--once',action='store_true');run(parser.parse_args().once)
+    parser=argparse.ArgumentParser();parser.add_argument('--once',action='store_true');parser.add_argument('--palette',nargs=2,metavar=('PATH','BACKGROUND'))
+    args=parser.parse_args()
+    if args.palette:
+        from chromatic_palette import generate_palette as _generate
+        sys.stdout.write(json.dumps(_generate(*args.palette)))
+    else:run(args.once)

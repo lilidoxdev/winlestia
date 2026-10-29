@@ -1,7 +1,6 @@
 # Python 3.12 / chromatic_palette.py / Windows. Wallpaper -> seeds (pooled quantiser + HCT scoring) -> Material You palette (light or dark).
 from pathlib import Path
 import math
-import numpy as np
 
 HEX='#{:02x}{:02x}{:02x}'
 MONO_CHROMA=8.0        # HCT chroma under which a wallpaper is treated as colourless
@@ -9,6 +8,7 @@ TO_LIGHT=62.0;TO_DARK=50.0   # hysteresis on area-weighted L*
 _cache={};_dark_state={}  # _dark_state: bounded (<=16) light/dark hysteresis memory, keyed by monitor slot
 
 def _oklab(rgb):
+    import numpy as np
     c=rgb/255.0;c=np.where(c<=.04045,c/12.92,((c+.055)/1.055)**2.4)
     l=.4122214708*c[:,0]+.5363325363*c[:,1]+.0514459929*c[:,2]
     m=.2119034982*c[:,0]+.6806995451*c[:,1]+.1073969566*c[:,2]
@@ -17,11 +17,13 @@ def _oklab(rgb):
     return np.stack([.2104542553*l+.7936177850*m-.0040720468*s,1.9779984951*l-2.4285922050*m+.4505937099*s,.0259040371*l+.7827717662*m-.8086757660*s],1)
 
 def _lstar(rgb):
+    import numpy as np
     c=rgb/255.0;c=np.where(c<=.04045,c/12.92,((c+.055)/1.055)**2.4)
     y=c[:,0]*.2126+c[:,1]*.7152+c[:,2]*.0722
     return np.where(y>216/24389,116*np.cbrt(y)-16,y*24389/27)
 
 def _pixels(paths,background):
+    import numpy as np
     from PIL import Image
     chunks=[]
     for path in paths:
@@ -37,6 +39,7 @@ def _pixels(paths,background):
 
 def _quantize(pixels,clusters=24):
     """5-bit histogram then deterministic weighted k-means in OKLab (Celebi-style: Wu bins refined by WSMeans)."""
+    import numpy as np
     p=pixels.astype(np.int64);index=((p[:,0]>>3)<<10)|((p[:,1]>>3)<<5)|(p[:,2]>>3)
     counts=np.bincount(index,minlength=32768);used=np.nonzero(counts)[0];w=counts[used].astype(np.float64)
     mean=np.stack([np.bincount(index,weights=p[:,c],minlength=32768)[used]/w for c in range(3)],1)

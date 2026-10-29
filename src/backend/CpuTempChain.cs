@@ -11,12 +11,12 @@ namespace PanneauxGlass;
 // Fallbacks used when LibreHardwareMonitor has no plausible CPU reading (no sensor driver, no admin rights).
 // Slow sources (WMI/PDH) run on a separate task at most every 10 s, so the 1 s sampling loop never blocks.
 internal sealed class CpuTempChain:IDisposable {
-    sealed class Source(string name,Func<double?> read){internal readonly string Name=name;internal readonly Func<double?> Read=read;internal long RetryAt;internal bool Logged;}
+    sealed class Source(string name,Func<double?> read,bool hardware=false){internal readonly bool Hardware=hardware;internal bool EverWorked;internal readonly string Name=name;internal readonly Func<double?> Read=read;internal long RetryAt;internal bool Logged;internal int Fails;}
     readonly Source[] sources;readonly Func<long> clock;readonly Action<string> log;
     sealed record Reading(double Value,string Source,long At);
     Reading? cached;int busy,disposed,generation,probing=-1;long nextProbe,busySince;int working=-1; // cached: immutable, published via Volatile; probing: index of the source being read
     internal CpuTempChain(Func<long>? clock=null,Action<string>? log=null){this.clock=clock??(()=>Environment.TickCount64);this.log=log??Store.Log;
-        sources=new[]{new Source("LHM-WMI",()=>WmiSensor(@"root\LibreHardwareMonitor")),new Source("OHM-WMI",()=>WmiSensor(@"root\OpenHardwareMonitor")),new Source("ACPI",ReadAcpi),new Source("PDH",ReadPdh)};}
+        sources=new[]{new Source("LHM-WMI",()=>WmiSensor(@"root\LibreHardwareMonitor")),new Source("OHM-WMI",()=>WmiSensor(@"root\OpenHardwareMonitor")),new Source("ACPI",ReadAcpi,true),new Source("PDH",ReadPdh,true)};}
     internal static double? Plausible(double? v)=>v is >10 and <=125&&double.IsFinite(v.Value)?v:null;
     // ACPI/PDH stubs report a constant 3000 dK (26.85 C) or 3010 dK (27.85 C) on machines without a real thermal zone.
     internal static double? Real(double? v)=>Plausible(v) is {} t&&Math.Abs(t-26.85)>0.06&&Math.Abs(t-27.85)>0.06?t:null;
@@ -30,8 +30,9 @@ internal sealed class CpuTempChain:IDisposable {
     void Probe(int gen){var now=clock();if(working>=0){var s=sources[working];var v=Safe(s,now,working);if(v.HasValue){Publish(gen,new(v.Value,s.Name,now));return;}working=-1;}
         for(int i=0;i<sources.Length;i++){var s=sources[i];if(now<s.RetryAt)continue;var v=Safe(s,now,i);if(v.HasValue){working=i;Publish(gen,new(v.Value,s.Name,now));return;}}
         Publish(gen,null);}
-    double? Safe(Source s,long now,int index){Volatile.Write(ref probing,index);try{var v=s.Read();if(v.HasValue){s.Logged=false;return v;}throw new InvalidOperationException("aucune valeur plausible");}
-        catch(Exception ex){s.RetryAt=now+60000;if(!s.Logged){s.Logged=true;log("Température CPU "+s.Name+": "+ex.Message);}return null;}}
+    double? Safe(Source s,long now,int index){Volatile.Write(ref probing,index);try{var v=s.Read();if(v.HasValue){s.Logged=false;s.EverWorked=true;return v;}throw new InvalidOperationException("aucune valeur plausible");}
+        catch(Exception ex){s.RetryAt=s.Hardware&&!s.EverWorked&&++s.Fails>=3?long.MaxValue:now+60000; // ACPI/PDH failing 3 times without ever producing a reading: unsupported for the process lifetime (logged once)
+            if(!s.Logged){s.Logged=true;log("Température CPU "+s.Name+": "+ex.Message);}return null;}}
     public void Dispose(){Volatile.Write(ref disposed,1);}
 
     internal static double? WmiSensor(string ns){
