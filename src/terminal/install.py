@@ -49,6 +49,12 @@ def read_settings(path):
   out.append(c);i+=1
  return json.loads(''.join(out))
 
+def spawn_detached(args):
+ # Fully detached: no inherited stdio pipes, own process group, out of the installer's job, so Inno/Start-Process -Wait can finish.
+ flags=0x8|0x200
+ kw=dict(stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,close_fds=True)
+ try:return subprocess.Popen(args,creationflags=flags|0x01000000,**kw)
+ except OSError:return subprocess.Popen(args,creationflags=flags,**kw)
 def stop_previous_sync(command):
  paths=re.findall(r'"([^"\n]+)"',command or '')
  script=next((p for p in paths if Path(p).name.lower()=='sync_theme.py'),None)
@@ -267,10 +273,10 @@ def configure():
   save(snapshot,json.dumps(state,indent=2))
  (ROOT/'theme-sync.stop').unlink(missing_ok=True)
  initial_sync=subprocess.run([str(python.with_name('python.exe')),str(ROOT/'sync_theme.py'),'--once'],capture_output=True,timeout=45,creationflags=0x08000000)
- subprocess.Popen([str(python),str(ROOT/'sync_theme.py')],creationflags=0x08000000)
+ spawn_detached([str(python),str(ROOT/'sync_theme.py')])
  # Windows Terminal's packaged registry view needs the same registration.
  wt=shutil.which('wt.exe')
- if wt:subprocess.Popen([wt,'-w','new','powershell.exe','-NoLogo','-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'ConfigurePackagedCmd.ps1')],creationflags=0x08000000)
+ if wt:spawn_detached([wt,'-w','new','powershell.exe','-NoLogo','-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'ConfigurePackagedCmd.ps1')])
  save(ROOT/'install-result.json',json.dumps({'ok':True,'profiles':len(profiles),'terminalSettings':len(settings_paths)}))
 def restore():
  path=STATE/'state.json'

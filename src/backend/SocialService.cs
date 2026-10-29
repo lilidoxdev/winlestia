@@ -91,7 +91,7 @@ internal sealed class SocialService:IDisposable {
         foreach(var n in nets){
             if(disposed)return;
             if(!SocialPolicy.ShouldPreload(Store.State.SocialBackground,Enabled(n),n.Connected))continue;
-            if(n.Ctl==null)await CreateAsync(n);
+            if(n.Ctl==null)await CreateAsync(n,reason:"Preload");
             await Task.Delay(4000);
         }
     }
@@ -106,8 +106,8 @@ internal sealed class SocialService:IDisposable {
             if(login&&!Enabled(n)){Store.State.SocialEnabled[n.Id]=true;Store.Save();}
             if(!Enabled(n))return;
             n.Wanted=true;
-            if(n.Ctl==null)await CreateAsync(n,navigate:false);
-            if(n.Ctl==null&&n.Wanted)await CreateAsync(n,navigate:false);
+            if(n.Ctl==null)await CreateAsync(n,navigate:false,reason:"Open");
+            if(n.Ctl==null&&n.Wanted)await CreateAsync(n,navigate:false,reason:"Open");
             if(n.Ctl==null||n.Wv==null||n.Win==null||disposed)return;
             ShowWindow(n);
             string target=login&&!n.Connected&&n.Login.Length>0?n.Login:n.Url;
@@ -119,7 +119,7 @@ internal sealed class SocialService:IDisposable {
     internal async Task Enable(string id,bool enabled){
         var n=Find(id);if(n==null)return;
         Store.State.SocialEnabled[n.Id]=enabled;Store.Save();
-        if(enabled){if(n.Connected){n.Wanted=true;await CreateAsync(n);if(n.Ctl==null&&n.Wanted)await CreateAsync(n);}}
+        if(enabled){if(n.Connected){n.Wanted=true;await CreateAsync(n,reason:"Enable");if(n.Ctl==null&&n.Wanted)await CreateAsync(n,reason:"Enable");}}
         else{n.Wanted=false;CloseView(n);}
         Changed();
     }
@@ -159,14 +159,14 @@ internal sealed class SocialService:IDisposable {
     }
 
     // Une seule création à la fois par réseau : Start, Open et Enable attendent la même tâche.
-    async Task CreateAsync(Net n,bool navigate=true){
+    async Task CreateAsync(Net n,bool navigate=true,string reason="Open"){
         if(n.Ctl!=null||disposed)return;
         if(n.CreateTask!=null){await n.CreateTask;return;}
-        var task=CreateCore(n,navigate);n.CreateTask=task;
+        var task=CreateCore(n,navigate,reason);n.CreateTask=task;
         try{await task;}finally{if(ReferenceEquals(n.CreateTask,task))n.CreateTask=null;}
     }
 
-    async Task CreateCore(Net n,bool navigate){
+    async Task CreateCore(Net n,bool navigate,string reason){
         if(n.Ctl!=null||disposed)return;
         n.Creating=true;n.Wanted=true;Changed();
         try{
@@ -187,6 +187,7 @@ internal sealed class SocialService:IDisposable {
             SyncBounds(n);
             if(!n.Win.IsVisible)n.HiddenSince=DateTime.UtcNow;
             if(!slowTimer.IsEnabled)slowTimer.Start();
+            Store.Log("Social WebView2 créé · raison="+reason+" · réseau="+n.Id);
             if(navigate)n.Wv.Navigate(n.Url);
         }catch(Exception ex){Store.Log("Social vue "+n.Id+": "+ex.Message);}
         finally{n.Creating=false;Changed();}
@@ -225,6 +226,14 @@ internal sealed class SocialService:IDisposable {
         if(n.Win==null)return;
         n.Win.ShowInTaskbar=false;n.Win.Hide();n.HiddenSince=DateTime.UtcNow;
         try{if(n.Ctl!=null)n.Ctl.IsVisible=false;if(n.Wv!=null){n.Wv.MemoryUsageTargetLevel=CoreWebView2MemoryUsageTargetLevel.Low;n.Wv.IsMuted=true;}}catch{}
+    }
+
+    // Plus aucune vue et pas d'arrière-plan : lâche l'environnement pour que les processus msedgewebview2 se terminent ; GetEnvironment le recrée.
+    void ReleaseEnvironmentIfIdle(){
+        if(disposed||Store.State.SocialBackground||environment==null||nets.Any(x=>x.Ctl!=null||x.Creating||x.CreateTask!=null))return;
+        environment=null;
+        GC.Collect();GC.WaitForPendingFinalizers();GC.Collect();
+        Store.Log("Social environnement WebView2 libéré");
     }
 
     // Ferme la vue et sa fenêtre (désabonne tout, libère le contrôleur). Le profil sur disque reste sauf déconnexion.
@@ -447,7 +456,7 @@ internal sealed class SocialService:IDisposable {
         if(disposed)return;
         foreach(var n in nets)if(n.Script&&!n.Connected&&n.Wv!=null&&!n.Suspended&&!n.Navigating)_=CheckLater(n,0);
         var now=DateTime.UtcNow;
-        foreach(var n in nets)if(n.Wv!=null&&!n.Creating&&!n.Navigating&&SocialPolicy.ShouldRelease(n.Win is {IsVisible:true},n.HiddenSince,now,Store.State.SocialBackground,n.Connected)){n.Wanted=false;CloseView(n);n.Count=0;countsDirty=true;Changed();}
+        foreach(var n in nets)if(n.Wv!=null&&!n.Creating&&!n.Navigating&&SocialPolicy.ShouldRelease(n.Win is {IsVisible:true},n.HiddenSince,now,Store.State.SocialBackground,n.Connected)){n.Wanted=false;CloseView(n);Store.Log("Social WebView2 libéré · réseau="+n.Id);n.Count=0;countsDirty=true;Changed();ReleaseEnvironmentIfIdle();}
         try{
             var status=new MemoryStatus{Length=(uint)Marshal.SizeOf<MemoryStatus>()};
             if(!GlobalMemoryStatusEx(ref status))return;
