@@ -1,0 +1,34 @@
+{
+  "version": "8.1.0",
+  "upstreamCommit": "04bfc87f65d6e13b287358e1024d9bbc055b0c58",
+  "originalFiles": 75,
+  "unmodifiedOriginalFiles": 63,
+  "favoritesPreserved": true,
+  "recentPreserved": true,
+  "websitesPreserved": true,
+  "quickTabsPreserved": true,
+  "validation": {
+    "checks": {
+      "all15ViewsVisible": true,
+      "noQmlIssues": true,
+      "controlsStayOpen": true,
+      "shortcutRecorderArmed": true,
+      "shortcutRecorderReleased": true,
+      "sensorsStopped": true,
+      "panelClosed": true
+    },
+    "allPassed": true,
+    "pythonTests": 20,
+    "bridgeTests": 13,
+    "cpuPercentWholeMachineIdle": 0.195,
+    "idleSeconds": 6.0,
+    "logicalProcessors": 12
+  },
+  "backup": "checkpoint-20261025-before-8.1",
+  "desktopRescueSha256": "fd1015b569c9292a7fa07afd23bf3b4ce760ffce26e1b1daad320a1a4b619779",
+  "dockIndependentWindowFix": {
+    "date": "2026-10-26",
+    "nativeLifecycleChecks": 5,
+    "allPassed": true
+  }
+}

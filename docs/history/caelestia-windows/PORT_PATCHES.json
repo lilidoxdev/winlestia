@@ -1,0 +1,544 @@
+{
+  "upstreamCommit": "04bfc87f65d6e13b287358e1024d9bbc055b0c58",
+  "files": [
+    {
+      "source": "components/Anim.qml",
+      "destination": "qml/qs/components/Anim.qml",
+      "sha256": "daf84b005a64e78d8f50c02b42edb9ca502b01dd0eafc8685bce3dc98d87164f",
+      "portedSha256": "daf84b005a64e78d8f50c02b42edb9ca502b01dd0eafc8685bce3dc98d87164f",
+      "modified": false
+    },
+    {
+      "source": "components/CAnim.qml",
+      "destination": "qml/qs/components/CAnim.qml",
+      "sha256": "1634c7fd92a6bc0190d96fca86803e20ac528f114255d83adbf90cae71715a1f",
+      "portedSha256": "1634c7fd92a6bc0190d96fca86803e20ac528f114255d83adbf90cae71715a1f",
+      "modified": false
+    },
+    {
+      "source": "components/ConnectionHeader.qml",
+      "destination": "qml/qs/components/ConnectionHeader.qml",
+      "sha256": "0e03f121d9406b6732fb5ac7439175a01c8d536cd7086706fea57c5ca27939c2",
+      "portedSha256": "0e03f121d9406b6732fb5ac7439175a01c8d536cd7086706fea57c5ca27939c2",
+      "modified": false
+    },
+    {
+      "source": "components/ConnectionInfoSection.qml",
+      "destination": "qml/qs/components/ConnectionInfoSection.qml",
+      "sha256": "63eac37f457195fae4c2263da2f0d02f862474cf502ecadd187ce7f35dc926ec",
+      "portedSha256": "63eac37f457195fae4c2263da2f0d02f862474cf502ecadd187ce7f35dc926ec",
+      "modified": false
+    },
+    {
+      "source": "components/MaterialIcon.qml",
+      "destination": "qml/qs/components/MaterialIcon.qml",
+      "sha256": "d870983245e4fcf9886a2b0ac6fd31fc3ed480b8f7bffb6511543db462b16a37",
+      "portedSha256": "7a152099c3187deab38b59451e690ec7049dab9111ec3e8daf586e80d3265de1",
+      "modified": true
+    },
+    {
+      "source": "components/PropertyRow.qml",
+      "destination": "qml/qs/components/PropertyRow.qml",
+      "sha256": "cdcd744a0b3edff9e66182cd0bf4f00a7ee81d985b663bd6043bca24640a8dec",
+      "portedSha256": "cdcd744a0b3edff9e66182cd0bf4f00a7ee81d985b663bd6043bca24640a8dec",
+      "modified": false
+    },
+    {
+      "source": "components/SectionContainer.qml",
+      "destination": "qml/qs/components/SectionContainer.qml",
+      "sha256": "9b5fe860b1a1ec67983fcf5fc1723202f323206ca6526e9f14d7ae88079bd623",
+      "portedSha256": "9b5fe860b1a1ec67983fcf5fc1723202f323206ca6526e9f14d7ae88079bd623",
+      "modified": false
+    },
+    {
+      "source": "components/SectionHeader.qml",
+      "destination": "qml/qs/components/SectionHeader.qml",
+      "sha256": "1493475da6aeba138d558e6d6997103b687d4c06606f4ae27aeeec9fbffe6507",
+      "portedSha256": "1493475da6aeba138d558e6d6997103b687d4c06606f4ae27aeeec9fbffe6507",
+      "modified": false
+    },
+    {
+      "source": "components/StateLayer.qml",
+      "destination": "qml/qs/components/StateLayer.qml",
+      "sha256": "811a93ca953af089eed2409e5c8fa41712698161a67bed8637e2d05c3465c99c",
+      "portedSha256": "811a93ca953af089eed2409e5c8fa41712698161a67bed8637e2d05c3465c99c",
+      "modified": false
+    },
+    {
+      "source": "components/StyledClippingRect.qml",
+      "destination": "qml/qs/components/StyledClippingRect.qml",
+      "sha256": "9c7509b93a19c136e81e7c5b3e9b157736468b8a64961d1d2237b2dc61141745",
+      "portedSha256": "9c7509b93a19c136e81e7c5b3e9b157736468b8a64961d1d2237b2dc61141745",
+      "modified": false
+    },
+    {
+      "source": "components/StyledRect.qml",
+      "destination": "qml/qs/components/StyledRect.qml",
+      "sha256": "2555d0dc4a18ec897238cc1594fbc4ab32522ad1ac09679337e2b5de25500f2d",
+      "portedSha256": "2555d0dc4a18ec897238cc1594fbc4ab32522ad1ac09679337e2b5de25500f2d",
+      "modified": false
+    },
+    {
+      "source": "components/StyledText.qml",
+      "destination": "qml/qs/components/StyledText.qml",
+      "sha256": "5ecb84234195763bb52da29392a1c55ce047bd3b8be989be723f2e43a9274ad8",
+      "portedSha256": "5ecb84234195763bb52da29392a1c55ce047bd3b8be989be723f2e43a9274ad8",
+      "modified": false
+    },
+    {
+      "source": "components/containers/StyledFlickable.qml",
+      "destination": "qml/qs/components/containers/StyledFlickable.qml",
+      "sha256": "35653286ea5ea0c1cb1e387c827a2097b61d04e9e31b2524e95933e8dc872258",
+      "portedSha256": "35653286ea5ea0c1cb1e387c827a2097b61d04e9e31b2524e95933e8dc872258",
+      "modified": false
+    },
+    {
+      "source": "components/containers/StyledListView.qml",
+      "destination": "qml/qs/components/containers/StyledListView.qml",
+      "sha256": "15d8994170f60f3d012245947600dbb3f51bc4fb29394455dc578a753d820f27",
+      "portedSha256": "15d8994170f60f3d012245947600dbb3f51bc4fb29394455dc578a753d820f27",
+      "modified": false
+    },
+    {
+      "source": "components/containers/StyledWindow.qml",
+      "destination": "qml/qs/components/containers/StyledWindow.qml",
+      "sha256": "e6d8bc5cf20a4e5e27ce7354c83902711ee66a40ac89c23347d1fb87653a95d4",
+      "portedSha256": "e6d8bc5cf20a4e5e27ce7354c83902711ee66a40ac89c23347d1fb87653a95d4",
+      "modified": false
+    },
+    {
+      "source": "components/controls/CircularIndicator.qml",
+      "destination": "qml/qs/components/controls/CircularIndicator.qml",
+      "sha256": "b55d36c9d1697d40ba3d4d114eafaab5b563f4f7bb620c49753324abdcd271b2",
+      "portedSha256": "b55d36c9d1697d40ba3d4d114eafaab5b563f4f7bb620c49753324abdcd271b2",
+      "modified": false
+    },
+    {
+      "source": "components/controls/CircularProgress.qml",
+      "destination": "qml/qs/components/controls/CircularProgress.qml",
+      "sha256": "498fcab5ec9a6c3c76bcaae10adf90c9469da01a87255dd9a6f2fe1040355436",
+      "portedSha256": "498fcab5ec9a6c3c76bcaae10adf90c9469da01a87255dd9a6f2fe1040355436",
+      "modified": false
+    },
+    {
+      "source": "components/controls/CollapsibleSection.qml",
+      "destination": "qml/qs/components/controls/CollapsibleSection.qml",
+      "sha256": "d20d96f869fd85f03c4cfad8450474d00706c7bb48d1f54f1666da6f27581382",
+      "portedSha256": "d20d96f869fd85f03c4cfad8450474d00706c7bb48d1f54f1666da6f27581382",
+      "modified": false
+    },
+    {
+      "source": "components/controls/CustomMouseArea.qml",
+      "destination": "qml/qs/components/controls/CustomMouseArea.qml",
+      "sha256": "d558f65cd6614bdb299c35309aef6fea9fb86a910149a7f1add37298b8caad71",
+      "portedSha256": "d558f65cd6614bdb299c35309aef6fea9fb86a910149a7f1add37298b8caad71",
+      "modified": false
+    },
+    {
+      "source": "components/controls/CustomSpinBox.qml",
+      "destination": "qml/qs/components/controls/CustomSpinBox.qml",
+      "sha256": "acb1a8dc210104b2d68bfc908e7b745fa58a49dd244e69a63a0a4f1e4b189d9e",
+      "portedSha256": "acb1a8dc210104b2d68bfc908e7b745fa58a49dd244e69a63a0a4f1e4b189d9e",
+      "modified": false
+    },
+    {
+      "source": "components/controls/FilledSlider.qml",
+      "destination": "qml/qs/components/controls/FilledSlider.qml",
+      "sha256": "58c7ca603dda875fd175e6d101b295f5688ae584866625d290950e76620ef695",
+      "portedSha256": "58c7ca603dda875fd175e6d101b295f5688ae584866625d290950e76620ef695",
+      "modified": false
+    },
+    {
+      "source": "components/controls/IconButton.qml",
+      "destination": "qml/qs/components/controls/IconButton.qml",
+      "sha256": "464dd333c6ca7a995483e5bf525c1c50ca68674272df1d54326fae22dcd75358",
+      "portedSha256": "f2b2b99c8c36444731f7cc1c8c66790c7b5e00f49339b310c6bb34929d5623d3",
+      "modified": true
+    },
+    {
+      "source": "components/controls/IconTextButton.qml",
+      "destination": "qml/qs/components/controls/IconTextButton.qml",
+      "sha256": "1b1256141e5c3d05b2c4b89a3f76ed1ebac16a1d4c66ee0064d50ee45921b9bd",
+      "portedSha256": "1b1256141e5c3d05b2c4b89a3f76ed1ebac16a1d4c66ee0064d50ee45921b9bd",
+      "modified": false
+    },
+    {
+      "source": "components/controls/Menu.qml",
+      "destination": "qml/qs/components/controls/Menu.qml",
+      "sha256": "a3f7ad510270a0f7672ec806f8a2a9c32be74811e7f66280178a3d296cb9428d",
+      "portedSha256": "a3f7ad510270a0f7672ec806f8a2a9c32be74811e7f66280178a3d296cb9428d",
+      "modified": false
+    },
+    {
+      "source": "components/controls/MenuItem.qml",
+      "destination": "qml/qs/components/controls/MenuItem.qml",
+      "sha256": "c6c1d766d2c017e050c734ba0ca50052eee183b9b56d74a915fa38c64362931d",
+      "portedSha256": "c6c1d766d2c017e050c734ba0ca50052eee183b9b56d74a915fa38c64362931d",
+      "modified": false
+    },
+    {
+      "source": "components/controls/SpinBoxRow.qml",
+      "destination": "qml/qs/components/controls/SpinBoxRow.qml",
+      "sha256": "07c3a74e0ae89aefa817a7dc9f32641757c112fd318269a1e7a30bfa7270be9a",
+      "portedSha256": "07c3a74e0ae89aefa817a7dc9f32641757c112fd318269a1e7a30bfa7270be9a",
+      "modified": false
+    },
+    {
+      "source": "components/controls/SplitButton.qml",
+      "destination": "qml/qs/components/controls/SplitButton.qml",
+      "sha256": "b12e1d459b0781f260ea49054357726a769326ed38caf806e9fe3b7f6443b9e3",
+      "portedSha256": "b12e1d459b0781f260ea49054357726a769326ed38caf806e9fe3b7f6443b9e3",
+      "modified": false
+    },
+    {
+      "source": "components/controls/StyledInputField.qml",
+      "destination": "qml/qs/components/controls/StyledInputField.qml",
+      "sha256": "ee17c58b75890e6750c4f7257fa98ed30fad4022a5fde5436d4f938da1a01b58",
+      "portedSha256": "ee17c58b75890e6750c4f7257fa98ed30fad4022a5fde5436d4f938da1a01b58",
+      "modified": false
+    },
+    {
+      "source": "components/controls/StyledRadioButton.qml",
+      "destination": "qml/qs/components/controls/StyledRadioButton.qml",
+      "sha256": "a9205bf8b1ddbd779106620c2cc2223a7304297026be4fca7782083b6e5ab615",
+      "portedSha256": "a9205bf8b1ddbd779106620c2cc2223a7304297026be4fca7782083b6e5ab615",
+      "modified": false
+    },
+    {
+      "source": "components/controls/StyledScrollBar.qml",
+      "destination": "qml/qs/components/controls/StyledScrollBar.qml",
+      "sha256": "b5a63a5ceedf25a67db03d2d0a6a59d85a7ed3eca025fbd0a49d1f75e6926481",
+      "portedSha256": "b5a63a5ceedf25a67db03d2d0a6a59d85a7ed3eca025fbd0a49d1f75e6926481",
+      "modified": false
+    },
+    {
+      "source": "components/controls/StyledSlider.qml",
+      "destination": "qml/qs/components/controls/StyledSlider.qml",
+      "sha256": "c1efa217e500861de9b06df7e2712ce931a551eeededf1e513ff5c0ec0f40cf1",
+      "portedSha256": "c1efa217e500861de9b06df7e2712ce931a551eeededf1e513ff5c0ec0f40cf1",
+      "modified": false
+    },
+    {
+      "source": "components/controls/StyledSwitch.qml",
+      "destination": "qml/qs/components/controls/StyledSwitch.qml",
+      "sha256": "f83abd29b83da7ff59991ba6c77db90fbffc61cfc659e6794aaf8a1fa6ee7b2d",
+      "portedSha256": "f83abd29b83da7ff59991ba6c77db90fbffc61cfc659e6794aaf8a1fa6ee7b2d",
+      "modified": false
+    },
+    {
+      "source": "components/controls/StyledTextField.qml",
+      "destination": "qml/qs/components/controls/StyledTextField.qml",
+      "sha256": "57dc4adf28817b4d347d83da764f9da8d0dde2f6c1fbac57586e3025d1f0e6ef",
+      "portedSha256": "57dc4adf28817b4d347d83da764f9da8d0dde2f6c1fbac57586e3025d1f0e6ef",
+      "modified": false
+    },
+    {
+      "source": "components/controls/SwitchRow.qml",
+      "destination": "qml/qs/components/controls/SwitchRow.qml",
+      "sha256": "7a79f65393b7dfdbe1a9c887711fadf857a4461da5145a7ae87e0fe2de3dae95",
+      "portedSha256": "7a79f65393b7dfdbe1a9c887711fadf857a4461da5145a7ae87e0fe2de3dae95",
+      "modified": false
+    },
+    {
+      "source": "components/controls/TextButton.qml",
+      "destination": "qml/qs/components/controls/TextButton.qml",
+      "sha256": "706ca5d766de4b4aa0a2b4431a47c8f2b02bfb3679db88930399977e26bf5568",
+      "portedSha256": "706ca5d766de4b4aa0a2b4431a47c8f2b02bfb3679db88930399977e26bf5568",
+      "modified": false
+    },
+    {
+      "source": "components/controls/ToggleButton.qml",
+      "destination": "qml/qs/components/controls/ToggleButton.qml",
+      "sha256": "bf6ace2309b827c39852cd8a0eeedb5ddc736377e0933ca0ecd0345fe7523a64",
+      "portedSha256": "bf6ace2309b827c39852cd8a0eeedb5ddc736377e0933ca0ecd0345fe7523a64",
+      "modified": false
+    },
+    {
+      "source": "components/controls/ToggleRow.qml",
+      "destination": "qml/qs/components/controls/ToggleRow.qml",
+      "sha256": "4e27e73651daa0cf87501aeb1216d49106ed81bfa0b52aa81a0fa0d2f37cdce0",
+      "portedSha256": "4e27e73651daa0cf87501aeb1216d49106ed81bfa0b52aa81a0fa0d2f37cdce0",
+      "modified": false
+    },
+    {
+      "source": "components/controls/Tooltip.qml",
+      "destination": "qml/qs/components/controls/Tooltip.qml",
+      "sha256": "fc442b46f9d04e89863c931945b23cbc6e7ea26175f691b2c6051b34991a0c99",
+      "portedSha256": "fc442b46f9d04e89863c931945b23cbc6e7ea26175f691b2c6051b34991a0c99",
+      "modified": false
+    },
+    {
+      "source": "components/effects/ColouredIcon.qml",
+      "destination": "qml/qs/components/effects/ColouredIcon.qml",
+      "sha256": "b5a1bbe0a21447b1e878be8bf738d13636ff8e8a103f1ff2aca99bfcf8bbf9f2",
+      "portedSha256": "2851b3bfb364c01d04c3b99e8946f40ed77eec349b74ccf7e635b43df1cef623",
+      "modified": true
+    },
+    {
+      "source": "components/effects/Colouriser.qml",
+      "destination": "qml/qs/components/effects/Colouriser.qml",
+      "sha256": "033d2ecd96b51a47e4b857293ecac67a6edefa32651d2ed67f19ae498abef0a5",
+      "portedSha256": "033d2ecd96b51a47e4b857293ecac67a6edefa32651d2ed67f19ae498abef0a5",
+      "modified": false
+    },
+    {
+      "source": "components/effects/Elevation.qml",
+      "destination": "qml/qs/components/effects/Elevation.qml",
+      "sha256": "60c626e0612d2bd6292d7a1bd5367df6b36ec844178e77e2d88d747fc52872d3",
+      "portedSha256": "60c626e0612d2bd6292d7a1bd5367df6b36ec844178e77e2d88d747fc52872d3",
+      "modified": false
+    },
+    {
+      "source": "components/effects/InnerBorder.qml",
+      "destination": "qml/qs/components/effects/InnerBorder.qml",
+      "sha256": "6aeaba2fc7beb5164894447a63c32a7300e311fe3d06da5fddc3649560df6dc9",
+      "portedSha256": "6aeaba2fc7beb5164894447a63c32a7300e311fe3d06da5fddc3649560df6dc9",
+      "modified": false
+    },
+    {
+      "source": "components/effects/OpacityMask.qml",
+      "destination": "qml/qs/components/effects/OpacityMask.qml",
+      "sha256": "e8426f9af1efc42d4e57d4b5e10d4350991169fe6326097f0d83a1e15faf4558",
+      "portedSha256": "5f8d1754dcc53fcd9b189b62b47042c5782d1964a2e2baf5444bf1de2ef07923",
+      "modified": true
+    },
+    {
+      "source": "components/filedialog/CurrentItem.qml",
+      "destination": "qml/qs/components/filedialog/CurrentItem.qml",
+      "sha256": "5b76c88c4bd1bdc6af0346f90c833e3d19dee9da54f1f48917ce44fb74585cfe",
+      "portedSha256": "5b76c88c4bd1bdc6af0346f90c833e3d19dee9da54f1f48917ce44fb74585cfe",
+      "modified": false
+    },
+    {
+      "source": "components/filedialog/DialogButtons.qml",
+      "destination": "qml/qs/components/filedialog/DialogButtons.qml",
+      "sha256": "daac554da65b774f3b90ff3d387db2c5511e0e544db8691cfe9dba4ce56d5115",
+      "portedSha256": "daac554da65b774f3b90ff3d387db2c5511e0e544db8691cfe9dba4ce56d5115",
+      "modified": false
+    },
+    {
+      "source": "components/filedialog/FileDialog.qml",
+      "destination": "qml/qs/components/filedialog/FileDialog.qml",
+      "sha256": "3603dcd37b18a7eb0e6336bbd57c158a7a960a83a6df1aa2e4529c5cc1ea0028",
+      "portedSha256": "40a2d49dffaf73965da9454d3d17dc5c64ed12b451dc65352859e78579e3aac6",
+      "modified": true
+    },
+    {
+      "source": "components/filedialog/FolderContents.qml",
+      "destination": "qml/qs/components/filedialog/FolderContents.qml",
+      "sha256": "886016d444ae09fcc9d763878da96899cdcc3a58dcba769ff3071d449bb227ca",
+      "portedSha256": "886016d444ae09fcc9d763878da96899cdcc3a58dcba769ff3071d449bb227ca",
+      "modified": false
+    },
+    {
+      "source": "components/filedialog/HeaderBar.qml",
+      "destination": "qml/qs/components/filedialog/HeaderBar.qml",
+      "sha256": "4dbb3a19647beda53dd1dd5dede1a636022bf5182fc9561278b8da1ac29054b3",
+      "portedSha256": "4dbb3a19647beda53dd1dd5dede1a636022bf5182fc9561278b8da1ac29054b3",
+      "modified": false
+    },
+    {
+      "source": "components/filedialog/Sidebar.qml",
+      "destination": "qml/qs/components/filedialog/Sidebar.qml",
+      "sha256": "b34a8d7520ae9ffc6c1f025d40eb84dc9113a18b5c09dd6aad20108f822dcb91",
+      "portedSha256": "b34a8d7520ae9ffc6c1f025d40eb84dc9113a18b5c09dd6aad20108f822dcb91",
+      "modified": false
+    },
+    {
+      "source": "components/filedialog/Sizes.qml",
+      "destination": "qml/qs/components/filedialog/Sizes.qml",
+      "sha256": "e97931ccca06782a298da3b364ab5d76f78ce51688f1b8238b93e0147828c61b",
+      "portedSha256": "e97931ccca06782a298da3b364ab5d76f78ce51688f1b8238b93e0147828c61b",
+      "modified": false
+    },
+    {
+      "source": "components/images/CachingIconImage.qml",
+      "destination": "qml/qs/components/images/CachingIconImage.qml",
+      "sha256": "e8ea65276888b78b9e495bb7426e8baeb8a7206ddbbd144d47c229cfe3feefa0",
+      "portedSha256": "e8ea65276888b78b9e495bb7426e8baeb8a7206ddbbd144d47c229cfe3feefa0",
+      "modified": false
+    },
+    {
+      "source": "components/images/CachingImage.qml",
+      "destination": "qml/qs/components/images/CachingImage.qml",
+      "sha256": "50cf3a006df64eff545218726e6ef1244485396b9940821793e854f6c60c6509",
+      "portedSha256": "0e12bf92a5d8e34c366661f74737bd4e3465a703588656b35b35641e9f2458d5",
+      "modified": true
+    },
+    {
+      "source": "components/misc/CustomShortcut.qml",
+      "destination": "qml/qs/components/misc/CustomShortcut.qml",
+      "sha256": "209c4587ce9f2d15fddf1fccb90b714794c75d83d9b38780f90b367e6ed58716",
+      "portedSha256": "209c4587ce9f2d15fddf1fccb90b714794c75d83d9b38780f90b367e6ed58716",
+      "modified": false
+    },
+    {
+      "source": "components/misc/Ref.qml",
+      "destination": "qml/qs/components/misc/Ref.qml",
+      "sha256": "6d1ecab07d42502a9e960ee8c42b4c65c34af3d0fabaddab05ea97ff8b663d23",
+      "portedSha256": "6d1ecab07d42502a9e960ee8c42b4c65c34af3d0fabaddab05ea97ff8b663d23",
+      "modified": false
+    },
+    {
+      "source": "components/widgets/ExtraIndicator.qml",
+      "destination": "qml/qs/components/widgets/ExtraIndicator.qml",
+      "sha256": "c0f629a88b1f4aa1232e13a7bbb9fa40e98b283cb4d88dd449c9c79765d5b4f7",
+      "portedSha256": "c0f629a88b1f4aa1232e13a7bbb9fa40e98b283cb4d88dd449c9c79765d5b4f7",
+      "modified": false
+    },
+    {
+      "source": "modules/dashboard/Background.qml",
+      "destination": "qml/qs/modules/dashboard/Background.qml",
+      "sha256": "a3b3b517917ed6b977f020ad17f9cc8f45a491111fa1d3b12773a786e478474c",
+      "portedSha256": "a3b3b517917ed6b977f020ad17f9cc8f45a491111fa1d3b12773a786e478474c",
+      "modified": false
+    },
+    {
+      "source": "modules/dashboard/Content.qml",
+      "destination": "qml/qs/modules/dashboard/Content.qml",
+      "sha256": "ea54bd484dcdaa90decbb09e57247f97e82483f8d6bfa87f93e1d8c93af7fdb9",
+      "portedSha256": "b7e62080e97d13f058cbc48aeec4f1a05eb2fcb5648c07f0fb7bd81f905329fd",
+      "modified": true
+    },
+    {
+      "source": "modules/dashboard/Dash.qml",
+      "destination": "qml/qs/modules/dashboard/Dash.qml",
+      "sha256": "00de0d966cc2884dc205398a0e34b1f5e6e25e9b6cce46243e31568c6b04825f",
+      "portedSha256": "00de0d966cc2884dc205398a0e34b1f5e6e25e9b6cce46243e31568c6b04825f",
+      "modified": false
+    },
+    {
+      "source": "modules/dashboard/Media.qml",
+      "destination": "qml/qs/modules/dashboard/Media.qml",
+      "sha256": "fa269b03bf3bc57a160d76f8433bede03df38a2e675930463268bac2bef8ec77",
+      "portedSha256": "81269e42571ea33bc736d601eede3284d74cc038a44dbf4486de88cf0b134ec4",
+      "modified": true
+    },
+    {
+      "source": "modules/dashboard/Performance.qml",
+      "destination": "qml/qs/modules/dashboard/Performance.qml",
+      "sha256": "286780cb4f3710c4aaefe78b3191c09f388ac80336c4f7c46ec6aba145360df4",
+      "portedSha256": "f744683901d853c2f9471d19862e444aad20f7241dfe280b818422200ad8aa13",
+      "modified": true
+    },
+    {
+      "source": "modules/dashboard/Tabs.qml",
+      "destination": "qml/qs/modules/dashboard/Tabs.qml",
+      "sha256": "130f34e7f732e0bd7f44036cccbd786d55e2cb0d9507c9601919ef9fcb440b16",
+      "portedSha256": "c455042a2f6c147661d5f831abe9972ed28eade713c9c1af984a59938464a0cf",
+      "modified": true
+    },
+    {
+      "source": "modules/dashboard/Weather.qml",
+      "destination": "qml/qs/modules/dashboard/Weather.qml",
+      "sha256": "199d46e5e8c73a26f7a93963a68db84a983dd3b86fa5d35650480a5301127839",
+      "portedSha256": "199d46e5e8c73a26f7a93963a68db84a983dd3b86fa5d35650480a5301127839",
+      "modified": false
+    },
+    {
+      "source": "modules/dashboard/Wrapper.qml",
+      "destination": "qml/qs/modules/dashboard/Wrapper.qml",
+      "sha256": "d27391367eaa7a7c619f7c5a09c3da5dd17c4642dd0b85f0dfee63c48cc6c1c6",
+      "portedSha256": "2510692404a495aa70283085ea4d861008717446c40c4ee53af85a784fe9b3c4",
+      "modified": true
+    },
+    {
+      "source": "modules/dashboard/dash/Calendar.qml",
+      "destination": "qml/qs/modules/dashboard/dash/Calendar.qml",
+      "sha256": "530630415e2dcd2e9ebb287fe63378983089191f16a9348903267f00be4a43ea",
+      "portedSha256": "530630415e2dcd2e9ebb287fe63378983089191f16a9348903267f00be4a43ea",
+      "modified": false
+    },
+    {
+      "source": "modules/dashboard/dash/DateTime.qml",
+      "destination": "qml/qs/modules/dashboard/dash/DateTime.qml",
+      "sha256": "71f9922430dd9093b007c59e8914bd08657397c2956748a3715e69e46d883fcf",
+      "portedSha256": "71f9922430dd9093b007c59e8914bd08657397c2956748a3715e69e46d883fcf",
+      "modified": false
+    },
+    {
+      "source": "modules/dashboard/dash/Media.qml",
+      "destination": "qml/qs/modules/dashboard/dash/Media.qml",
+      "sha256": "51c254d5f1b15081a9ab6262448ea2d60e2ee98fbccfad6ebbb4bc94fe9238b1",
+      "portedSha256": "51c254d5f1b15081a9ab6262448ea2d60e2ee98fbccfad6ebbb4bc94fe9238b1",
+      "modified": false
+    },
+    {
+      "source": "modules/dashboard/dash/Resources.qml",
+      "destination": "qml/qs/modules/dashboard/dash/Resources.qml",
+      "sha256": "60259f1f737926aa8dc553c48d831b63b7ae074eb8c46b9d3f4576c2dd0d19c2",
+      "portedSha256": "60259f1f737926aa8dc553c48d831b63b7ae074eb8c46b9d3f4576c2dd0d19c2",
+      "modified": false
+    },
+    {
+      "source": "modules/dashboard/dash/User.qml",
+      "destination": "qml/qs/modules/dashboard/dash/User.qml",
+      "sha256": "9b3c0bb5c8bcd4504e469d995cf633fd6aacdd7e3e6c41e2f1367ee3e6d5066b",
+      "portedSha256": "9b3c0bb5c8bcd4504e469d995cf633fd6aacdd7e3e6c41e2f1367ee3e6d5066b",
+      "modified": false
+    },
+    {
+      "source": "modules/dashboard/dash/Weather.qml",
+      "destination": "qml/qs/modules/dashboard/dash/Weather.qml",
+      "sha256": "78c9d738cdeeece52f4d9dae3cdf11d06c22fc364306c4fa6e589fc6ee296dda",
+      "portedSha256": "36a792c8cb1c73c8a23ca6d2d84955d929987ee3811243bd0bfe1196fcb80bdc",
+      "modified": true
+    },
+    {
+      "source": "config/AppearanceConfig.qml",
+      "destination": "qml/qs/config/AppearanceConfig.qml",
+      "sha256": "83c680d2ded938f3b806b76583a1e2fe6aa6860da06b8db3e10e55badfe2e449",
+      "portedSha256": "83c680d2ded938f3b806b76583a1e2fe6aa6860da06b8db3e10e55badfe2e449",
+      "modified": false
+    },
+    {
+      "source": "config/DashboardConfig.qml",
+      "destination": "qml/qs/config/DashboardConfig.qml",
+      "sha256": "6952b707bea10e3f5d446b56da906a64f82256c77067a86740afe1d058174007",
+      "portedSha256": "6952b707bea10e3f5d446b56da906a64f82256c77067a86740afe1d058174007",
+      "modified": false
+    },
+    {
+      "source": "modules/launcher/Content.qml",
+      "destination": "qml/qs/modules/launcher/Content.qml",
+      "sha256": "2985b439005b63207e70fe619c2324cd77fd9c4d105e050fa688c7837235e3af",
+      "portedSha256": "10cf945889a2cc6962ed4b3169443b08f2e38bbe60f5e3895e644b4240feae4f",
+      "modified": true
+    },
+    {
+      "source": "modules/launcher/AppList.qml",
+      "destination": "qml/qs/modules/launcher/AppList.qml",
+      "sha256": "66ff5d423364ffe8d2704cdd4a6c57fd476827ca2706b5f09682cbff443d3822",
+      "portedSha256": "abab7263bcc5c395a32be38d5f0521d46d194b9135d447a631271b70e99acab3",
+      "modified": true
+    },
+    {
+      "source": "modules/launcher/items/AppItem.qml",
+      "destination": "qml/qs/modules/launcher/items/AppItem.qml",
+      "sha256": "10480d489d74c66b50adc5106439094af98fc621f3aa9910c7bc7bfc5214a83d",
+      "portedSha256": "0a10b8c87ae802a6cb739cd1c6296bdfe6e458cc2f497c88eb5061aa8fde8587",
+      "modified": true
+    },
+    {
+      "source": "config/LauncherConfig.qml",
+      "destination": "qml/qs/config/LauncherConfig.qml",
+      "sha256": "1c1176d0fc2b907413a83326f178ecc5893ce24fae2f244c2bd3c362a4f0735e",
+      "portedSha256": "1c1176d0fc2b907413a83326f178ecc5893ce24fae2f244c2bd3c362a4f0735e",
+      "modified": false
+    },
+    {
+      "source": "modules/drawers/Border.qml",
+      "destination": "qml/ScreenBorder.qml",
+      "sha256": "d1f1ba5123b7d96e5f84e3c4febf4a18c060512fbd8f0aeec569537142517a4e",
+      "portedSha256": "9d52192d4210543b66074d1c38c6f7908d469317e26780c155007c766fd84472",
+      "modified": true
+    },
+    {
+      "source": "modules/launcher/Background.qml",
+      "destination": "qml/DockBackground.qml",
+      "sha256": "e4e131915cff6e1b469ae1a6a05417627a7af99df241fe6718b8b22c86df4bd4",
+      "portedSha256": "a20e827a809c6c0d6052ad019857c23229a0a4bcb31008c557bca952a17ed64c",
+      "modified": true
+    }
+  ]
+}

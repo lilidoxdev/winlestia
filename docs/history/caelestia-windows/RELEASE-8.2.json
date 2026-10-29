@@ -1,0 +1,34 @@
+{
+  "version": "8.2.0",
+  "upstreamCommit": "04bfc87f65d6e13b287358e1024d9bbc055b0c58",
+  "originalFiles": 75,
+  "unmodifiedOriginalFiles": 63,
+  "preferencesPreserved": {
+    "Favorites": true,
+    "Websites": true,
+    "QuickTabs": true,
+    "Shortcut": true,
+    "PaletteShortcut": true,
+    "BoardOverrides": true,
+    "Names": true,
+    "Categories": true,
+    "Icons": true,
+    "ExistingRecentEntries": true
+  },
+  "desktopRescueSha256": "fd1015b569c9292a7fa07afd23bf3b4ce760ffce26e1b1daad320a1a4b619779",
+  "validation": {
+    "tools-report.json": 14,
+    "live-report.json": 14,
+    "audio-mixer-verification.json": 11,
+    "dock-lifecycle.json": 5
+  },
+  "allPassed": true,
+  "pythonTests": 20,
+  "bridgeTests": 13,
+  "backup": "checkpoint-20261026-before-8.2",
+  "idle": {
+    "seconds": 5.498555399997713,
+    "qtPercentOneCore": 0.568331092926935,
+    "backendPercentOneCore": 1.4208277323173373
+  }
+}

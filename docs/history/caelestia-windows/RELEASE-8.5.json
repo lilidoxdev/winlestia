@@ -1,0 +1,29 @@
+{
+  "version": "8.5.0",
+  "fix": "Bounded Acrylic frame helpers replace screen-sized backdrop",
+  "nativeFramePieces": 8,
+  "nativeFullscreenFrame": false,
+  "frameThicknessDefault": 16,
+  "frameThicknessRange": [
+    4,
+    40
+  ],
+  "windowInset": "frameThickness + 4",
+  "preferencesPreserved": true,
+  "allPassed": true,
+  "pythonTests": 27,
+  "validation": {
+    "theme-report.json": 48,
+    "desktop-regression-report.json": 47,
+    "native-blur-report.json": 0,
+    "live-thickness-report.json": 17
+  },
+  "backupFrontend": "checkpoint-8.4-before-8.5",
+  "backupBackend": "checkpoint-20261026-before-8.5",
+  "artifacts": {
+    "Panneaux.Glass.exe": "a0c0256871524e46efda939580ca6805757cd2b146e988b657dfef306635def3",
+    "Panneaux.Glass.dll": "5d0504be6644912ab9fc9deb812eaeef0e2ac6e0b607b8140ed136cf1890bf49"
+  },
+  "nativeDllSha256": "777bdad44446ba149dcb87e32e760ba73ba6b7b9d15c6e95fdbbbe09fe0f6bb8",
+  "desktopIconsLifecycleVerified": true
+}
