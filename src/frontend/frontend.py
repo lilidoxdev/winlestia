@@ -142,6 +142,7 @@ class Bridge(QObject):
         try:self.city=json.loads((CONFIG/'weather.json').read_text(encoding='utf-8')).get('city','')
         except (OSError,ValueError):self.city=''
     languageMode=Property(str,lambda s:TRANSLATOR.mode,notify=changed)
+    language=Property(str,lambda s:TRANSLATOR.language,notify=changed)
     @Slot(str)
     def setLanguage(self,mode):TRANSLATOR.select(mode);self.changed.emit();self.engine.retranslate()
     def current_theme(self):return self.walltheme.for_screen(self._screen.name())

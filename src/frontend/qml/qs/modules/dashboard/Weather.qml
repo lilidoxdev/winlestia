@@ -232,7 +232,7 @@ Item {
                 spacing: 0
 
                 StyledText {
-                    text: detailRoot.label
+                    text: qsTr(detailRoot.label)
                     font.pointSize: Appearance.font.size.smaller
                     opacity: 0.7
                     horizontalAlignment: Text.AlignLeft
@@ -264,7 +264,7 @@ Item {
 
         Column {
             StyledText {
-                text: weatherStat.label
+                text: qsTr(weatherStat.label)
                 font.pointSize: Appearance.font.size.smaller
                 color: Colours.palette.m3onSurfaceVariant
             }

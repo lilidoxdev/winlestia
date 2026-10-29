@@ -33,7 +33,7 @@ Item {
             Item{Layout.fillWidth:true}
             IconButton{icon:"close";type:IconButton.Text;onClicked:Bridge.closePanel()}
         }
-        RowLayout{spacing:6;Repeater{model:["Tout","Écran","Audio","Fichiers","Confort"];IconTextButton{required property string modelData;text:modelData;toggle:true;checked:root.filter===modelData;type:IconTextButton.Tonal;onClicked:root.filter=modelData}} Item{Layout.fillWidth:true}}
+        RowLayout{spacing:6;Repeater{model:["Tout","Écran","Audio","Fichiers","Confort"];IconTextButton{required property string modelData;text:qsTr(modelData);toggle:true;checked:root.filter===modelData;type:IconTextButton.Tonal;onClicked:root.filter=modelData}} Item{Layout.fillWidth:true}}
         StyledFlickable{id:scroll;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;contentWidth:width;contentHeight:cardsGrid.implicitHeight;flickableDirection:Flickable.VerticalFlick
             C.ScrollBar.vertical:StyledScrollBar{flickable:scroll}
             GridLayout{id:cardsGrid;width:scroll.width-10;columns:2;columnSpacing:12;rowSpacing:12
@@ -42,7 +42,7 @@ Item {
                         StateLayer{function onClicked(){if(card.modelData.nav)Bridge.navigate(card.modelData.target);else Bridge.action("toolRun",{id:card.modelData.target})}}
                         RowLayout{anchors.fill:parent;anchors.margins:18;spacing:14
                             MaterialIcon{text:card.modelData.icon;font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
-                            ColumnLayout{Layout.fillWidth:true;spacing:6;StyledText{Layout.fillWidth:true;text:card.modelData.name;font.pointSize:Appearance.font.size.normal;elide:Text.ElideRight} StyledText{Layout.fillWidth:true;text:card.modelData.description;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline;wrapMode:Text.Wrap}}
+                            ColumnLayout{Layout.fillWidth:true;spacing:6;StyledText{Layout.fillWidth:true;text:qsTr(card.modelData.name);font.pointSize:Appearance.font.size.normal;elide:Text.ElideRight} StyledText{Layout.fillWidth:true;text:qsTr(card.modelData.description);font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline;wrapMode:Text.Wrap}}
                             MaterialIcon{text:qsTr("chevron_right");font.pointSize:Appearance.font.size.larger;color:Colours.palette.m3outline}
                         }
                     }

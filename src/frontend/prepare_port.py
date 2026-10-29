@@ -103,7 +103,8 @@ QtObject {
  readonly property string osPrettyName: Bridge.sysInfo.osName || "Windows"
  readonly property string osName: "Windows"
  readonly property string osLogo: Bridge.assetRoot + "/windows.svg"
- readonly property string wm: "Panneaux"
+ readonly property string wm: "Winlestia"
+ readonly property string userName: Bridge.sysInfo.userName || ""
  readonly property string uptime: Bridge.sysInfo.uptime || "—"
 }
 ''')
@@ -120,7 +121,14 @@ QtObject {
  readonly property real memUsed: Bridge.performance.memUsedKiB ?? 0
  readonly property real storagePerc: Bridge.performance.diskPercent ?? 0
  readonly property real storageUsed: Bridge.performance.diskUsedKiB ?? 0
- function formatKib(value) { let unit="KiB";if(value>=1048576){value/=1048576;unit="GiB"}else if(value>=1024){value/=1024;unit="MiB"}return {value:value,unit:unit} }
+ readonly property string lang: Bridge.language || "en"
+ function fmtKib(value, decimals) {
+  const units = lang === "fr" ? ["Ko", "Mo", "Go"] : ["KB", "MB", "GB"];
+  let n = Number(value) || 0, u = 0;
+  while (n >= 1024 && u < 2) { n /= 1024; u++ }
+  n = decimals > 0 ? +n.toFixed(decimals) : Math.floor(n);
+  return Qt.locale(lang).toString(n, "f", decimals > 0 && n % 1 !== 0 ? decimals : 0) + units[u];
+ }
 }
 ''')
 put("qs/services/Players.qml",'''pragma Singleton

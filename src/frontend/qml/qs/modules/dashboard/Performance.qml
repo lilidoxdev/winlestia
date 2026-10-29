@@ -27,10 +27,12 @@ RowLayout {
         Layout.bottomMargin: root.padding
         Layout.leftMargin: root.padding * 2
 
-        value1: Math.min(1, SystemUsage.gpuTemp / 90)
+        visible: Number.isFinite(SystemUsage.gpuTemp) || Bridge.performance.gpu != null
+        hasValue1: Number.isFinite(SystemUsage.gpuTemp)
+        value1: Number.isFinite(SystemUsage.gpuTemp) ? Math.min(1, SystemUsage.gpuTemp / 90) : 0
         value2: SystemUsage.gpuPerc
 
-        label1: root.displayTemp(SystemUsage.gpuTemp)
+        label1: Number.isFinite(SystemUsage.gpuTemp) ? root.displayTemp(SystemUsage.gpuTemp) : qsTr("N/D")
         label2: `${Math.round(SystemUsage.gpuPerc * 100)}%`
 
         sublabel1: qsTr("GPU temp")
@@ -44,6 +46,7 @@ RowLayout {
 
         primary: true
 
+        hasValue1: Number.isFinite(SystemUsage.cpuTemp)
         value1: Number.isFinite(SystemUsage.cpuTemp) ? Math.min(1, SystemUsage.cpuTemp / 90) : 0
         value2: SystemUsage.cpuPerc
 
@@ -64,12 +67,10 @@ RowLayout {
         value2: SystemUsage.storagePerc
 
         label1: {
-            const fmt = SystemUsage.formatKib(SystemUsage.memUsed);
-            return `${+fmt.value.toFixed(1)}${fmt.unit}`;
+            return SystemUsage.fmtKib(SystemUsage.memUsed, 1);
         }
         label2: {
-            const fmt = SystemUsage.formatKib(SystemUsage.storageUsed);
-            return `${Math.floor(fmt.value)}${fmt.unit}`;
+            return SystemUsage.fmtKib(SystemUsage.storageUsed, 0);
         }
 
         sublabel1: qsTr("Memory")
@@ -87,6 +88,7 @@ RowLayout {
         required property string label2
 
         property bool primary
+        property bool hasValue1: true
         readonly property real primaryMult: primary ? 1.2 : 1
 
         readonly property real thickness: Config.dashboard.sizes.resourceProgessThickness * primaryMult
@@ -107,6 +109,7 @@ RowLayout {
         }
         onOnScreenChanged: repaint()
         onValue1Changed: repaint()
+        onHasValue1Changed: repaint()
         onValue2Changed: repaint()
         onFg1Changed: repaint()
         onFg2Changed: repaint()
@@ -186,15 +189,17 @@ RowLayout {
                 const a2s = arc2Start;
                 const a2e = arc2End;
 
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, a1s, a1e, false);
-                ctx.strokeStyle = res.bg1;
-                ctx.stroke();
+                if (res.hasValue1) {
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius, a1s, a1e, false);
+                    ctx.strokeStyle = res.bg1;
+                    ctx.stroke();
 
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, a1s, (a1e - a1s) * res.value1 + a1s, false);
-                ctx.strokeStyle = res.fg1;
-                ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius, a1s, (a1e - a1s) * res.value1 + a1s, false);
+                    ctx.strokeStyle = res.fg1;
+                    ctx.stroke();
+                }
 
                 ctx.beginPath();
                 ctx.arc(cx, cy, radius, a2s, a2e, false);

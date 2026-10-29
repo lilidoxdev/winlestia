@@ -123,7 +123,7 @@ Item {
 
         animate: true
         horizontalAlignment: Text.AlignHCenter
-        text: (Players.active?.trackTitle ?? qsTr("No media")) || qsTr("Unknown title")
+        text: Players.active ? (Players.active.trackTitle || qsTr("Unknown title")) : qsTr("No media playing")
         color: Colours.palette.m3primary
         font.pointSize: Appearance.font.size.normal
 
@@ -136,11 +136,13 @@ Item {
 
         anchors.top: title.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: Appearance.spacing.small
+        anchors.topMargin: visible ? Appearance.spacing.small : 0
 
+        visible: !!Players.active
+        height: visible ? implicitHeight : 0
         animate: true
         horizontalAlignment: Text.AlignHCenter
-        text: (Players.active?.trackAlbum ?? qsTr("No media")) || qsTr("Unknown album")
+        text: (Players.active?.trackAlbum ?? "") || qsTr("Unknown album")
         color: Colours.palette.m3outline
         font.pointSize: Appearance.font.size.small
 
@@ -153,11 +155,13 @@ Item {
 
         anchors.top: album.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: Appearance.spacing.small
+        anchors.topMargin: visible ? Appearance.spacing.small : 0
 
+        visible: !!Players.active
+        height: visible ? implicitHeight : 0
         animate: true
         horizontalAlignment: Text.AlignHCenter
-        text: (Players.active?.trackArtist ?? qsTr("No media")) || qsTr("Unknown artist")
+        text: (Players.active?.trackArtist ?? "") || qsTr("Unknown artist")
         color: Colours.palette.m3secondary
 
         width: parent.implicitWidth - Appearance.padding.large * 2

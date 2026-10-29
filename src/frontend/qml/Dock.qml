@@ -78,7 +78,7 @@ Window {
                 Grid {anchors.centerIn:parent;columns:2;spacing:2;Repeater {model:4;Rectangle{width:8;height:8;color:Colours.palette.m3primary;radius:Appearance.rounding.tiny/8}}}
             }
             IconButton {objectName:"dockRecycle";icon:"delete";type:IconButton.Text;onClicked:Bridge.action("emptyRecycleBin",{})}
-            IconButton {objectName:"dockFiles";icon:"folder";type:IconButton.Text;Accessible.name:"Fichiers";onClicked:Bridge.action("openFiles",{})}
+            IconButton {objectName:"dockFiles";icon:"folder";type:IconButton.Text;Accessible.name:qsTr("Files");onClicked:Bridge.action("openFiles",{})}
             IconButton {objectName:"dockSearch";icon:"search";type:IconButton.Text;onClicked:Bridge.action("palette",{})}
             Rectangle {implicitWidth:1;implicitHeight:23;color:Colours.palette.m3outlineVariant;Layout.leftMargin:6;Layout.rightMargin:6}
             Flickable {

@@ -171,7 +171,7 @@ Item {
 
             animate: true
             horizontalAlignment: Text.AlignHCenter
-            text: (Players.active?.trackTitle ?? qsTr("No media")) || qsTr("Unknown title")
+            text: Players.active ? (Players.active.trackTitle || qsTr("Unknown title")) : qsTr("No media playing")
             color: Players.active ? Colours.palette.m3primary : Colours.palette.m3onSurface
             font.pointSize: Appearance.font.size.normal
             elide: Text.ElideRight

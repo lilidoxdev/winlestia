@@ -143,6 +143,13 @@ Row {
         }
 
         InfoLine {
+            visible: SysInfo.userName !== ""
+            icon: "person"
+            text: SysInfo.userName
+            colour: Colours.palette.m3primary
+        }
+
+        InfoLine {
             icon: "select_window_2"
             text: SysInfo.wm
             colour: Colours.palette.m3secondary

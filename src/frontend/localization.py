@@ -125,6 +125,54 @@ Ctrl + F3 · capture rapide d’une zone|Ctrl + F3 · quick region capture|Ctrl 
 ↑ ↓ naviguer · Entrée ouvrir · Échap fermer|↑ ↓ navigate · Enter open · Esc close|↑ ↓ navegar · Intro abrir · Esc cerrar
 > commandes · 24 × 7 calculer|> commands · 24 × 7 calculate|> comandos · 24 × 7 calcular
 Terminal Winlestia — administrateur|Winlestia Terminal — administrator|Terminal Winlestia — administrador"""
+ROWS+="\n"+r"""Temp. GPU|GPU temp|Temp. GPU
+Temp. CPU|CPU temp|Temp. CPU
+Utilisation|Usage|Uso
+Mémoire|Memory|Memoria
+Stockage|Storage|Almacenamiento
+N/D|N/A|N/D
+en marche depuis %1|up %1|activo desde hace %1
+Aucun média en lecture|No media playing|No se está reproduciendo nada
+Fichiers|Files|Archivos
+Tout|All|Todo
+Écran|Screen|Pantalla
+Audio|Audio|Audio
+Confort|Comfort|Comodidad
+Capturer et annoter|Capture and annotate|Capturar y anotar
+Sélection, annotation et export|Selection, annotation and export|Selección, anotación y exportación
+Texte d’une image|Text from an image|Texto de una imagen
+Reconnaissance de texte Windows|Windows text recognition|Reconocimiento de texto de Windows
+Pipette|Colour picker|Cuentagotas
+Copier une couleur de l’écran|Copy a colour from the screen|Copiar un color de la pantalla
+Règle pixel|Pixel ruler|Regla de píxeles
+Mesurer une distance à l’écran|Measure a distance on screen|Medir una distancia en pantalla
+Casque, enceintes et périphériques|Headphones, speakers and devices|Auriculares, altavoces y dispositivos
+Entrée, niveau et bouton muet|Input, level and mute button|Entrada, nivel y botón de silencio
+Un volume pour chaque application|A volume for each app|Un volumen para cada aplicación
+Historique|History|Historial
+Retrouver les éléments copiés|Find copied items again|Recuperar los elementos copiados
+Toujours au premier plan|Always on top|Siempre visible
+Garder la fenêtre active devant|Keep the active window in front|Mantener delante la ventana activa
+Papier pense-bête|Sticky note|Nota adhesiva
+Écrire et épingler sur le bureau|Write and pin to the desktop|Escribir y fijar en el escritorio
+Notifications|Notifications|Notificaciones
+Activer ou couper les notifications|Turn notifications on or off|Activar o desactivar las notificaciones
+Gros fichiers|Large files|Archivos grandes
+Comprendre ce qui remplit le disque|See what fills the disk|Ver qué llena el disco
+Profils d’espace|Workspace profiles|Perfiles de espacio
+Retrouver une disposition de travail|Restore a work layout|Recuperar una disposición de trabajo
+Aide et raccourcis|Help and shortcuts|Ayuda y atajos
+Les gestes et touches de Panneaux|Winlestia gestures and keys|Gestos y teclas de Winlestia
+Corbeille|Recycle Bin|Papelera
+Déposer pour supprimer|Drop to delete|Soltar para eliminar
+Copier les fichiers|Copy the files|Copiar los archivos
+Compresser|Compress|Comprimir
+Créer une archive ZIP|Create a ZIP archive|Crear un archivo ZIP
+Lever du soleil|Sunrise|Amanecer
+Coucher du soleil|Sunset|Atardecer
+Humidité|Humidity|Humedad
+Ressenti|Feels Like|Sensación térmica
+Vent|Wind|Viento"""
 TABLE={}
 for row in ROWS.splitlines():
  fr,en,es=row.split('|');value={'fr':fr,'en':en,'es':es};TABLE[fr]=value;TABLE.setdefault(en,value)

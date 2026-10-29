@@ -37,7 +37,7 @@ Window {
      Row{anchors.centerIn:parent;spacing:12
       Rectangle{width:44;height:48;radius:Appearance.rounding.small;color:shelf.hovered===tile.index?Colours.palette.m3primary:Colours.palette.m3secondaryContainer
        MaterialIcon{anchors.centerIn:parent;text:tile.modelData.icon;font.pointSize:Appearance.font.size.title;color:shelf.hovered===tile.index?Colours.palette.m3onPrimary:Colours.palette.m3onSecondaryContainer;fill:shelf.hovered===tile.index?1:0;rotation:shelf.hovered===tile.index?-8:0;Behavior on rotation{Anim{duration:Appearance.anim.durations.small}}}}
-      Column{anchors.verticalCenter:parent.verticalCenter;spacing:5;StyledText{text:tile.modelData.label;font.pointSize:Appearance.font.size.normal;font.weight:Font.DemiBold;color:shelf.hovered===tile.index?Colours.palette.m3onPrimaryContainer:Colours.palette.m3onSurface}StyledText{text:tile.modelData.hint;font.pointSize:Appearance.font.size.small;color:shelf.hovered===tile.index?Colours.palette.m3onPrimaryContainer:Colours.palette.m3onSurfaceVariant}}
+      Column{anchors.verticalCenter:parent.verticalCenter;spacing:5;StyledText{text:qsTr(tile.modelData.label);font.pointSize:Appearance.font.size.normal;font.weight:Font.DemiBold;color:shelf.hovered===tile.index?Colours.palette.m3onPrimaryContainer:Colours.palette.m3onSurface}StyledText{text:qsTr(tile.modelData.hint);font.pointSize:Appearance.font.size.small;color:shelf.hovered===tile.index?Colours.palette.m3onPrimaryContainer:Colours.palette.m3onSurfaceVariant}}
      }
     }
    }
