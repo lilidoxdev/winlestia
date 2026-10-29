@@ -9,7 +9,7 @@ Window{
  flags:Qt.Tool|Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint|Qt.NoDropShadowWindowHint|Qt.WindowDoesNotAcceptFocus|Qt.WindowTransparentForInput
  // The background is not drawn here: ScreenFrame draws it (same surfaceColor, same dock_path silhouette fused with the frame band, see surface_geometry.py).
  // This window only holds the content, sliding out of the bottom band exactly like Dock.qml.
- property Item dock:null
+ property var dock:null
  readonly property rect area:Qt.rect(Bridge.dictationArea.x??0,Bridge.dictationArea.y??0,Bridge.dictationArea.width??0,Bridge.dictationArea.height??0)
  readonly property bool reduced:Appearance.reducedEffects
  readonly property string st:Bridge.dictationState

@@ -51,6 +51,8 @@ public partial class App : Application {
         }
     }
 
+    internal void ReleasePipe() { server?.Dispose(); server = null; }   // dying instance: no new client may connect before the replacement process starts
+
     // UI thread, window hidden and idle. The pipe is closed FIRST (no new client can connect; one that is mid-handshake fails and falls back to a cold launch),
     // then the shutdown is queued behind anything already posted. If a request still got a window in meanwhile, this instance simply becomes an ordinary one.
     internal void BeginRecycle() {

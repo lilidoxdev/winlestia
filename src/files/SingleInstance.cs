@@ -28,6 +28,14 @@ internal sealed class SingleInstance : IDisposable {
         new(FilesPipe.Name, PipeDirection.InOut, MaxInstances, PipeTransmissionMode.Byte,
             PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly | (first ? PipeOptions.FirstPipeInstance : PipeOptions.None));
 
+    // "All pipe instances are busy" is transient (a client or a dying instance still holds a slot): short backoff, 50 -> 800 ms.
+    static NamedPipeServerStream CreateRetry(CancellationToken ct) {
+        for (int attempt = 0; ; attempt++) {
+            try { return Create(false); }
+            catch (IOException) when (attempt < 4 && !ct.IsCancellationRequested) { Thread.Sleep(50 << attempt); }
+        }
+    }
+
     // Null when another instance already owns the pipe (or it cannot be created): the caller then simply runs standalone.
     internal static SingleInstance? TryStart(Action<Request> onRequest) {
         try {
@@ -47,7 +55,7 @@ internal sealed class SingleInstance : IDisposable {
                 await slots.WaitAsync(cts.Token).ConfigureAwait(false);   // saturated: the listener stays up, clients just wait their own short budget
                 try {
                     await stream.WaitForConnectionAsync(cts.Token).ConfigureAwait(false);
-                    pending = Create(false);                                // ready for the next client before this one is served
+                    pending = CreateRetry(cts.Token);                       // ready for the next client before this one is served
                     failures = 0; handed = true;
                     _ = Handle(stream);
                 } finally { if (!handed) slots.Release(); }
@@ -57,7 +65,7 @@ internal sealed class SingleInstance : IDisposable {
                 stream.Dispose();
                 if (!logged) { logged = true; App.CrashLog(ex); }           // once, never one line per retry
                 if (++failures >= 8) return;
-                try { await Task.Delay(100 * failures, cts.Token).ConfigureAwait(false); pending = Create(false); }
+                try { await Task.Delay(100 * failures, cts.Token).ConfigureAwait(false); pending = CreateRetry(cts.Token); }
                 catch (OperationCanceledException) { return; }
                 catch { continue; }
             }
@@ -91,7 +99,12 @@ internal sealed class SingleInstance : IDisposable {
     }
 
     static Request? Parse(string text) {
-        using var doc = JsonDocument.Parse(text.Trim());
+        if (string.IsNullOrWhiteSpace(text)) return null;
+        try { return ParseCore(text.Trim()); } catch (JsonException) { return null; }
+    }
+
+    static Request? ParseCore(string text) {
+        using var doc = JsonDocument.Parse(text);
         var root = doc.RootElement;
         if (root.ValueKind != JsonValueKind.Object) return null;
         var args = new System.Collections.Generic.List<string>();

@@ -102,10 +102,10 @@ public sealed partial class MainWindow {
 
         // 3. cut state + cut/paste 10 files into Sub
         SelectNames(Files(31, 40)); await CopySelectedAsync(true);
-        Check("cut dims the items (0.5)", Files(31, 40).All(n => Active.Find(Path.Combine(F, n))!.CutOpacity == 0.5));
+        Check("cut dims the items (0.5)", Files(31, 40).All(n => Active.Find(Path.Combine(F, n))?.CutOpacity == 0.5));
         SelectNames(new[] { "file041.txt" }); await CopySelectedAsync(false);
         await Task.Delay(400);
-        Check("another copy clears the cut state (WM_CLIPBOARDUPDATE)", Files(31, 40).All(n => Active.Find(Path.Combine(F, n))!.CutOpacity == 1.0));
+        Check("another copy clears the cut state (WM_CLIPBOARDUPDATE)", Files(31, 40).All(n => Active.Find(Path.Combine(F, n))?.CutOpacity == 1.0));
         SelectNames(Files(31, 40)); await CopySelectedAsync(true);
         before = Active.Items.Count;
         r = await PasteAsync(Path.Combine(F, "Sub"));

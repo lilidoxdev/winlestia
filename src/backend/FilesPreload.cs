@@ -10,7 +10,7 @@ using Winlestia.Shared;
 namespace PanneauxGlass;
 
 internal static class FilesPreload {
-    const int DelayMs = 25000;
+    const int DelayMs = 4000;
     static readonly FilesPreloadPolicy policy = new();
     static Timer? recycleTimer, paletteTimer;
     static volatile bool quitting;
@@ -35,6 +35,7 @@ internal static class FilesPreload {
         var p = Process.Start(new ProcessStartInfo(exe, "--background") { UseShellExecute = false, CreateNoWindow = true });
         if (p == null) return;
         child = p;
+        Store.Log("Files préchargé · t+" + (int)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds + " ms");
         try { p.PriorityClass = ProcessPriorityClass.BelowNormal; } catch { }
         p.EnableRaisingEvents = true;
         p.Exited += (_, _) => OnExited(p);

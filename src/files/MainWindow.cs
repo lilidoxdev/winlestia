@@ -148,7 +148,22 @@ public sealed partial class MainWindow : Window {
             if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
             OpenFirstTab(path);
             if (closed) return;
-            Show();
+            try { Show(); }
+            catch (InvalidOperationException ex) {   // window closed between the check and Show(): not a crash, a fresh process takes the request
+                App.LogLine("ShowAt: Show after close (" + ex.Message + "), handed to a fresh process");
+                closed = true;
+                try {
+                    (Application.Current as App)?.ReleasePipe();
+                    // the parser has no "--" separator and joins all args into one path: one process per path, '-' prefixed paths made absolute
+                    var all = new List<string> { path }; all.AddRange(deferred); deferred.Clear();
+                    foreach (var p in all) {
+                        var psi = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false };
+                        psi.ArgumentList.Add(p.StartsWith('-') ? System.IO.Path.GetFullPath(p) : p);
+                        System.Diagnostics.Process.Start(psi)?.Dispose();
+                    }
+                } catch { }
+                return;
+            }
             PaletteLoader.Start(Dispatcher, ApplyDwm);       // one-shot, off the UI thread: picks up a theme/wallpaper change made while hidden
         } else {
             if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
