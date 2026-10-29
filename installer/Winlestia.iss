@@ -59,6 +59,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 Name: "autostart";  Description: "Démarrer {#AppName} à l'ouverture de session"; GroupDescription: "Options :"; Flags: checkedonce
 Name: "desktopicon"; Description: "Créer un raccourci sur le Bureau"; GroupDescription: "Options :"; Flags: checkedonce
 Name: "startmenu";  Description: "Créer une entrée dans le menu Démarrer"; GroupDescription: "Options :"; Flags: checkedonce
+Name: "terminal";   Description: "Intégrer Winlestia au terminal (couleurs, clink, profils PowerShell) — réversible"; GroupDescription: "Options :"; Flags: unchecked
 
 
 [InstallDelete]
@@ -187,6 +188,11 @@ begin
   Result := True;
 end;
 
+function TerminalIntegrated(): Boolean;
+begin
+  Result := FileExists(ExpandConstant('{localappdata}\Winlestia\terminal-backup\state.json'));
+end;
+
 procedure InitializeWizard();
 var
   Pseudo: String;
@@ -289,15 +295,35 @@ begin
   RegWriteStringValue(HKCU, 'Software\Winlestia', 'DisplayName', Pseudo);
 end;
 
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  // Mise à jour interactive : la page des tâches s'affiche après la restauration des tâches précédentes (UsePreviousTasks),
+  // on coche donc ici 'terminal' si l'intégration est en place. Personne n'est désintégré sans le vouloir.
+  if (CurPageID = wpSelectTasks) and TerminalIntegrated() then
+    WizardSelectTasks('terminal');
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 var Code: Integer;
 begin
   if CurStep = ssPostInstall then
   begin
     SaveProfile();
+    // Comportement : intégrer si la tâche est cochée ; en mode silencieux (page non affichée) une intégration existante est
+    // conservée même sans /TASKS. Le retrait n'a lieu qu'en mode interactif (case décochée), jamais en silencieux.
+    if WizardIsTaskSelected('terminal') or (WizardSilent and TerminalIntegrated()) then
+    begin
       if (not Exec(ExpandConstant('{app}\Caelestia-Windows\.venv\Scripts\python.exe'),
           '"' + ExpandConstant('{app}\Winlestia-Terminal\install.py') + '"', '', SW_HIDE, ewWaitUntilTerminated, Code)) or (Code <> 0) then
         MsgBox('Le theme du terminal n''a pas pu etre applique. Consulte Winlestia-Terminal\install-result.json.', mbError, MB_OK);
+    end
+    else if (not WizardSilent) and TerminalIntegrated() then
+    begin
+      // Case décochée lors d'une mise à jour : on rend le terminal à son état d'origine.
+      if (not Exec(ExpandConstant('{app}\Caelestia-Windows\.venv\Scripts\python.exe'),
+          '"' + ExpandConstant('{app}\Winlestia-Terminal\install.py') + '" --restore', '', SW_HIDE, ewWaitUntilTerminated, Code)) or (Code <> 0) then
+        MsgBox('L''integration du terminal n''a pas pu etre retiree. Relance l''installation ou desinstalle Winlestia pour la retirer.', mbError, MB_OK);
+    end;
   end;
 end;
 

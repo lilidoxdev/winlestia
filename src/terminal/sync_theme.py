@@ -3,7 +3,7 @@ from pathlib import Path
 import sys,json,time,os,ctypes,winreg,colorsys,argparse,hashlib
 ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT))
-from install import read_settings
+from install import read_settings,note_written,STATE
 SHELL=ROOT.parent/'Caelestia-Windows'
 sys.path.insert(0,str(SHELL))
 from chromatic_palette import generate_palette
@@ -54,7 +54,9 @@ def update_terminal(settings_path,values):
     accent=values['accent'];secondary=values['secondary'];background=values['background'];fg=values['foreground']
     scheme.update(background=background,foreground=fg,white=fg,cursorColor=accent,selectionBackground=blend(background,accent,.30),blue=accent,brightBlue=secondary,purple=blend(accent,'#d8b4fe',.22),brightPurple=blend(secondary,'#ffffff',.15),cyan=secondary,brightCyan=blend(secondary,'#ffffff',.25),black=blend(background,fg,.04),brightBlack=values['muted'])
     theme=next(t for t in c['themes'] if t['name']=='Winlestia');theme['tabRow'].update(background=background+'00',unfocusedBackground=background+'00');theme['tab']['unfocusedBackground']=background
+    if not (STATE/'state.json').exists():return  # restored meanwhile: never write Windows Terminal settings
     write_changed(settings_path,json.dumps(c,indent=4,ensure_ascii=False)+'\n')
+    note_written(settings_path.parent.parent.name,useAcrylic=values.get('glass',True),opacity=round(values.get('opacity',.65)*100))
 
 def wait_for_change():
     # Event-driven replacement of the 4 s poll: block on registry (wallpaper keys) and folder (Winlestia prefs, wallpaper app configs) change notifications.
@@ -88,6 +90,7 @@ def run(once=False):
     (ROOT/'validation').mkdir(exist_ok=True)
     signature=None
     while True:
+        if not (STATE/'state.json').exists():return  # Winlestia terminal integration absent or restored: never touch Windows Terminal.
         try:
             prefs,path,label,bg=inputs();current=(prefs.get('CustomGlass'),prefs.get('CustomGlassOpacity'),json.dumps(prefs.get('CustomPalette',{}),sort_keys=True),prefs.get('AutoTheme',False),prefs.get('Theme','nuit'),path,Path(path).stat().st_mtime_ns if Path(path).is_file() else 0,bg,tuple(sorted(str(p) for p in (Path(os.environ['LOCALAPPDATA'])/'Packages').glob('Microsoft.WindowsTerminal*/LocalState/settings.json'))))
             if current!=signature:
