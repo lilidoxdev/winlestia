@@ -44,10 +44,10 @@ RowLayout {
 
         primary: true
 
-        value1: Math.min(1, SystemUsage.cpuTemp / 90)
+        value1: Number.isFinite(SystemUsage.cpuTemp) ? Math.min(1, SystemUsage.cpuTemp / 90) : 0
         value2: SystemUsage.cpuPerc
 
-        label1: root.displayTemp(SystemUsage.cpuTemp)
+        label1: Number.isFinite(SystemUsage.cpuTemp) ? root.displayTemp(SystemUsage.cpuTemp) : qsTr("N/D")
         label2: `${Math.round(SystemUsage.cpuPerc * 100)}%`
 
         sublabel1: qsTr("CPU temp")
@@ -99,12 +99,19 @@ RowLayout {
         implicitWidth: Config.dashboard.sizes.resourceSize * primaryMult
         implicitHeight: Config.dashboard.sizes.resourceSize * primaryMult
 
-        onValue1Changed: canvas.requestPaint()
-        onValue2Changed: canvas.requestPaint()
-        onFg1Changed: canvas.requestPaint()
-        onFg2Changed: canvas.requestPaint()
-        onBg1Changed: canvas.requestPaint()
-        onBg2Changed: canvas.requestPaint()
+        // Repaint only while the Performance tab is on screen; one catch-up paint when it appears.
+        readonly property bool onScreen: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 2
+        function repaint(): void {
+            if (onScreen)
+                canvas.requestPaint();
+        }
+        onOnScreenChanged: repaint()
+        onValue1Changed: repaint()
+        onValue2Changed: repaint()
+        onFg1Changed: repaint()
+        onFg2Changed: repaint()
+        onBg1Changed: repaint()
+        onBg2Changed: repaint()
 
         Column {
             anchors.centerIn: parent

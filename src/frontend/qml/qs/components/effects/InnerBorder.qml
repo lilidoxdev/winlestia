@@ -17,7 +17,7 @@ StyledRect {
     anchors.fill: parent
     color: Colours.tPalette.m3surfaceContainer
 
-    layer.enabled: true
+    layer.enabled: !Appearance.reducedEffects
     layer.effect: MultiEffect {
         maskSource: mask
         maskEnabled: true
@@ -30,7 +30,7 @@ StyledRect {
         id: mask
 
         anchors.fill: parent
-        layer.enabled: true
+        layer.enabled: !Appearance.reducedEffects
         visible: false
 
         Rectangle {

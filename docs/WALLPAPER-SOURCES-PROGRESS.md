@@ -1,0 +1,19 @@
+# Wallpaper sources progress
+- [started] reading code; plan: wallpaper_sources.py resolver, wallpaper_theme.py wiring, C# events + capture, tests.
+- WallpaperX: ProgramData\LiveWallpaperConfig\ServiceConfig.json (Screens:[], GlobalFilePath null = none set). Package LocalState empty. Reader best-effort
+- Finding: venv PySide6 6.10.3 has NO QtMultimedia (only .pyi stubs) -> frame extraction = backend exe CLI mode (WinRT Windows.Media.Editing MediaComposition.GetThumbnailAsync), launched as killable subprocess (5 s timeout) from Python. Fallback = thumbnail.
+- Finding: bridge is request/response (state replies); capture = command "wallpaperCapture" -> reply field wallpaperCapture. Revision pushed in state as wallpaperRevision.
+- Plan order: 1 wallpaper_sources.py, 2 wallpaper_theme.py + frontend.py ~436, 3 C# WindowsWallpaper.cs events, 4 C# FrameExtractor/WallpaperCapture + Coordinator CLI + QtShellBridge, 5 sync_theme, 6 tests, 7 build
+- [done] wallpaper_sources.py written (resolve, representative_images, extract_frames->backend exe --extract-frames)
+- [done] wallpaper_theme.py rewritten; frontend.py lines 435-437 (update call + wallpaperCapture reply hook)
+- [done] WindowsWallpaper.cs rewritten (reg notify, FSW, WinEvent hook, SystemEvents; Revision). Next: WallpaperMedia.cs (frames+capture), Coordinator CLI, QtShellBridge
+- [done] WallpaperMedia.cs, Coordinator CLI, QtShellBridge (cmd wallpaperCapture, state wallpaperRevision); dotnet build OK 0 err (-o scratchpad build dir). Next: test frames, unit tests, sync_theme
+- FINDING: all DesktopHut videos are HEVC (hvc1); Media Foundation has no HEVC decoder here (0xC00D5212 CODEC_NOT_FOUND); DesktopHut mpv.exe is access-denied outside its package. => on this machine frames fall back to thumbnail. MF path to be proven on an H.264 file. mpv tier only for env WINLESTIA_MPV / PATH.
+- MF frame extraction proven on H.264 wispysky.mp4: 8 frames in ~2.1 s (parallel clips, NearestKeyFrame)
+- [done] palette wiring: palette_from_images for >1 frame, generate_palette for single image. Remaining: unit tests, real test, sync_theme, final build
+- [done] tests (10 pass), sync_theme wait_for_change, real test, build OK. Only final report left.
+- [done] WgcCapture.cs (--capture-frames) + python tier 2 (MF -> WGC -> mpv(env/PATH) -> thumbnail). Next: real test on DesktopHut
+- [started] reviewer fixes 1-9
+- [done] fix5,6,7 python (publish off-thread+custom, theme_inputs_changed replaces explorer timer, slot hysteresis bounded, LRU)
+- [done] C# fixes 1,2,3,4,8 patched
+- [done] all reviewer fixes, tests 46 OK, build 0 err, real run done

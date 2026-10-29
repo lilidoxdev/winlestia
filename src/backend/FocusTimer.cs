@@ -23,10 +23,10 @@ internal sealed class FocusTimer:GlassWindow {
     }
     FocusTimer(Coordinator coordinator,int seconds):base("Panneaux Glass — focus"){
         owner=coordinator;Width=300;Height=196;Radius=28;ContentHost.Margin=new Thickness(22,20,22,20);
-        label=UI.Text("FOCUS · "+DurationText(seconds).ToUpperInvariant(),10,UI.Brush("#A9D3E4F1"),true);alarm=UI.Text("Sonnerie à la fin",9,UI.Dim);alarm.HorizontalAlignment=HorizontalAlignment.Right;alarm.VerticalAlignment=VerticalAlignment.Center;
+        label=UI.Text("FOCUS · "+DurationText(seconds).ToUpperInvariant(),10,UI.Label,true);alarm=UI.Text("Sonnerie à la fin",9,UI.Dim);alarm.HorizontalAlignment=HorizontalAlignment.Right;alarm.VerticalAlignment=VerticalAlignment.Center;
         remaining=UI.Text("",34,null,true);remaining.Margin=new Thickness(0,6,0,2);remaining.Typography.NumeralAlignment=FontNumeralAlignment.Tabular;
-        track.Height=4;track.Margin=new Thickness(0,9,0,12);track.Children.Add(new Border{CornerRadius=new CornerRadius(2),Background=UI.Brush("#1FFFFFFF")});
-        fill=new Border{CornerRadius=new CornerRadius(2),Background=UI.Brush("#BFE9F7FF"),HorizontalAlignment=HorizontalAlignment.Left};track.Children.Add(fill);
+        track.Height=4;track.Margin=new Thickness(0,9,0,12);track.Children.Add(new Border{CornerRadius=new CornerRadius(2),Background=UI.T(M3Role.OnSurface,0x1F)});
+        fill=new Border{CornerRadius=new CornerRadius(2),Background=UI.Label,HorizontalAlignment=HorizontalAlignment.Left};track.Children.Add(fill);
         var buttons=new StackPanel{Orientation=Orientation.Horizontal};
         buttons.Children.Add(UI.Button("+1 min",()=>{left+=60;total+=60;Update();}));
         var test=UI.Button("",()=>FocusAlarm.Play());test.Content=UI.Glyph("\uE767",14);test.Width=34;test.Height=34;test.Padding=new Thickness(0);test.Margin=new Thickness(8,0,0,0);test.ToolTip="Écouter la sonnerie";System.Windows.Automation.AutomationProperties.SetName(test,"Écouter la sonnerie de fin");buttons.Children.Add(test);

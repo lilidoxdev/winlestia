@@ -19,6 +19,12 @@ dotnet publish (Join-Path $root 'src\backend\Panneaux.Glass.csproj') `
     -o (Join-Path $payload 'Glass-v5') --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation du backend échouée.' }
 
+Write-Host '→ Winlestia Fichiers (.NET 8, auto-suffisant)' -ForegroundColor Cyan
+dotnet publish (Join-Path $root 'src\files\Winlestia.Files.csproj') `
+    -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false `
+    -o (Join-Path $payload 'Glass-v5') --nologo
+if ($LASTEXITCODE -ne 0) { throw 'Compilation de Winlestia Fichiers échouée.' }
+
 # Fichiers attendus à côté de l’exécutable mais hors du publish
 Copy-Item (Join-Path $root 'src\backend\Inventory.ps1')          (Join-Path $payload 'Glass-v5') -Force
 Copy-Item (Join-Path $root 'src\backend\native\*.dll')          (Join-Path $payload 'Glass-v5') -Force
@@ -109,4 +115,4 @@ if (-not $iscc) { throw 'Inno Setup 6 introuvable : winget install JRSoftware.In
 & $iscc /Qp (Join-Path $PSScriptRoot 'Winlestia.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Compilation Inno Setup échouée.' }
 
-Write-Host "`nTerminé : build\out\Winlestia-Setup-0.7.6.exe" -ForegroundColor Green
+Write-Host "`nTerminé : build\out\Winlestia-Setup-0.8.0.exe" -ForegroundColor Green

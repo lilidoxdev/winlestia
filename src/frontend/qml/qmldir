@@ -1,5 +1,8 @@
 ClipboardPane ClipboardPane.qml
 Dock Dock.qml
+EdgeRail EdgeRail.qml
+SocialRail SocialRail.qml
+BookmarksRail BookmarksRail.qml
 Main Main.qml
 PalettePane PalettePane.qml
 ShellPreferences ShellPreferences.qml

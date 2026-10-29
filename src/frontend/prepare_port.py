@@ -114,6 +114,7 @@ QtObject {
  readonly property real gpuTemp: Bridge.performance.gpuTemp ?? NaN
  readonly property real gpuPerc: (Bridge.performance.gpu ?? 0)/100
  readonly property real cpuTemp: Bridge.performance.cpuTemp ?? NaN
+ readonly property string cpuTempSource: Bridge.performance.cpuTempSource ?? ""
  readonly property real cpuPerc: (Bridge.performance.cpu ?? 0)/100
  readonly property real memPerc: Bridge.performance.memPercent ?? 0
  readonly property real memUsed: Bridge.performance.memUsedKiB ?? 0
@@ -173,7 +174,7 @@ QtObject {
 ''')
 p=q/"qs/modules/dashboard/Content.qml";t=p.read_text(encoding="utf-8").replace('sourceComponent: Weather {}','sourceComponent: Workspaces {}');p.write_text(t,encoding="utf-8")
 p=q/"qs/modules/dashboard/Tabs.qml";t=p.read_text(encoding="utf-8").replace('iconName: "cloud"','iconName: "workspaces"').replace('qsTr("Weather")','qsTr("Workspaces")');p.write_text(t,encoding="utf-8")
-p=q/"qs/modules/dashboard/Performance.qml";t=p.read_text(encoding="utf-8").replace('function displayTemp(temp: real): string {','function displayTemp(temp: real): string {\n        if (!Number.isFinite(temp)) return "—";',1);p.write_text(t,encoding="utf-8")
+p=q/"qs/modules/dashboard/Performance.qml";t=p.read_text(encoding="utf-8").replace('function displayTemp(temp: real): string {','function displayTemp(temp: real): string {\n        if (!Number.isFinite(temp)) return "—";',1).replace('value1: Math.min(1, SystemUsage.cpuTemp / 90)','value1: Number.isFinite(SystemUsage.cpuTemp) ? Math.min(1, SystemUsage.cpuTemp / 90) : 0',1).replace('label1: root.displayTemp(SystemUsage.cpuTemp)','label1: Number.isFinite(SystemUsage.cpuTemp) ? root.displayTemp(SystemUsage.cpuTemp) : qsTr("N/D")',1);p.write_text(t,encoding="utf-8")
 p=q/"qs/modules/dashboard/Media.qml";t=p.read_text(encoding="utf-8").replace('required property MprisPlayer modelData','required property var modelData');p.write_text(t,encoding="utf-8")
 def qmldirs():
  for folder in [q]+[p for p in q.rglob("*") if p.is_dir()]:

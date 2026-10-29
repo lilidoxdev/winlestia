@@ -10,6 +10,8 @@ JsonObject {
 
     component Rounding: JsonObject {
         property real scale: 1
+        property int tiny: 4 * scale
+        property int smaller: 8 * scale
         property int small: 12 * scale
         property int normal: 17 * scale
         property int large: 25 * scale
@@ -48,6 +50,7 @@ JsonObject {
         property int normal: 13 * scale
         property int larger: 15 * scale
         property int large: 18 * scale
+        property int title: 22 * scale
         property int extraLarge: 28 * scale
     }
 
@@ -69,7 +72,8 @@ JsonObject {
     }
 
     component AnimDurations: JsonObject {
-        property real scale: 1
+        // "Effets allégés": near-instant transitions (scale also applies to every duration below).
+        property real scale: Bridge.reducedEffects ? 0.1 : 1
         property int small: 200 * scale
         property int normal: 400 * scale
         property int large: 600 * scale

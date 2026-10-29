@@ -24,9 +24,9 @@ internal sealed class CommandPalette:GlassWindow {
         var glyph=UI.Glyph("\uE721",19);glyph.HorizontalAlignment=HorizontalAlignment.Left;bar.Children.Add(glyph);
         var field=new Grid();Grid.SetColumn(field,1);field.Children.Add(query);bar.Children.Add(field);
         query.FontSize=19;query.Background=Brushes.Transparent;query.BorderThickness=new Thickness(0);query.Padding=new Thickness(6,8,6,10);System.Windows.Automation.AutomationProperties.SetName(query,"Commande rapide");
-        hint=UI.Text("Tape une application, un calcul, une action…",17,UI.Brush("#8FB4CBDD"));hint.Margin=new Thickness(13,0,0,1);hint.VerticalAlignment=VerticalAlignment.Center;hint.IsHitTestVisible=false;field.Children.Add(hint);
+        hint=UI.Text("Tape une application, un calcul, une action…",17,UI.Label);hint.Margin=new Thickness(13,0,0,1);hint.VerticalAlignment=VerticalAlignment.Center;hint.IsHitTestVisible=false;field.Children.Add(hint);
         var close=UI.IconButton("\uE711","Fermer la commande rapide",Close);close.Width=32;close.Height=32;close.Margin=new Thickness(8,0,4,0);Grid.SetColumn(close,2);bar.Children.Add(close);
-        var plate=new Border{CornerRadius=new CornerRadius(20),Background=UI.Brush("#12FFFFFF"),BorderBrush=UI.Brush("#26FFFFFF"),BorderThickness=new Thickness(1),Child=bar,Height=58};ContentHost.Children.Add(plate);
+        var plate=new Border{CornerRadius=new CornerRadius(20),Background=UI.T(M3Role.OnSurface,0x12),BorderBrush=UI.T(M3Role.OnSurface,0x26),BorderThickness=new Thickness(1),Child=bar,Height=58};ContentHost.Children.Add(plate);
         Grid.SetRow(tabs,1);ContentHost.Children.Add(tabs);
         scroll=new ScrollViewer{VerticalScrollBarVisibility=ScrollBarVisibility.Auto,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled,Margin=new Thickness(0,10,0,10),Padding=new Thickness(0,0,6,0),Content=list};
         Grid.SetRow(scroll,2);ContentHost.Children.Add(scroll);
@@ -65,9 +65,9 @@ internal sealed class CommandPalette:GlassWindow {
     void EditTabs(){suppress=true;try{owner.EditQuickTabs(this);}finally{suppress=false;}if(IsVisible){Activate();BuildTabs();Update();}}
     void RunTab(WindowsShortcut tab){Close();Dispatcher.BeginInvoke((Action)(()=>owner.RunQuickTab(tab)));}
     void Move(int by){if(results.Count==0)return;selected=(selected+by+results.Count)%results.Count;Highlight();}
-    void Highlight(){for(int i=0;i<buttons.Count;i++)buttons[i].Background=i==selected?UI.Brush("#2BD4EEFF"):Brushes.Transparent;if(selected>=0&&selected<buttons.Count)buttons[selected].BringIntoView();}
+    void Highlight(){for(int i=0;i<buttons.Count;i++)buttons[i].Background=i==selected?UI.Selected:Brushes.Transparent;if(selected>=0&&selected<buttons.Count)buttons[selected].BringIntoView();}
     void Run(PaletteResult item){Close();Dispatcher.BeginInvoke((Action)item.Run);}
-    void Header(string title){headers++;var label=UI.Text(title.ToUpperInvariant(),10,UI.Brush("#9FC4D8E6"),true);label.Margin=new Thickness(13,12,0,5);list.Children.Add(label);}
+    void Header(string title){headers++;var label=UI.Text(title.ToUpperInvariant(),10,UI.Label,true);label.Margin=new Thickness(13,12,0,5);list.Children.Add(label);}
     void Add(PaletteResult item){
         int index=results.Count;results.Add(item);
         var button=UI.Button("",()=>Run(item));button.Height=46;button.Margin=new Thickness(0,2,0,2);button.Padding=new Thickness(12,0,12,0);button.BorderThickness=new Thickness(0);button.Background=Brushes.Transparent;button.HorizontalContentAlignment=HorizontalAlignment.Stretch;

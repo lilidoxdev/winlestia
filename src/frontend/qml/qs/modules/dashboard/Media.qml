@@ -18,6 +18,9 @@ Item {
     id: root
 
     required property PersistentProperties visibilities
+    // Animations/timers only run while this tab is actually on screen.
+    readonly property bool onScreen: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 1
+    readonly property bool spinning: onScreen && (Players.active?.isPlaying ?? false)
 
     property real playerProgress: {
         const active = Players.active;
@@ -139,9 +142,7 @@ Item {
 
         Image {
             id: image
-            property bool spinReady:false
-            Component.onCompleted:Qt.callLater(()=>spinReady=true)
-            RotationAnimator on rotation {from:0;to:360;duration:16000;loops:Animation.Infinite;running:true;paused:image.spinReady&&!(Players.active?.isPlaying??false)}
+            RotationAnimator on rotation {from:0;to:360;duration:16000;loops:Animation.Infinite;running:root.spinning&&!Appearance.reducedEffects}
 
             anchors.fill: parent
 

@@ -7,7 +7,7 @@
 ;   - déjà installé    → une page propose « Mettre à jour » ou « Désinstaller ».
 
 #define AppName        "Winlestia"
-#define AppVersion     "0.7.6"
+#define AppVersion     "0.8.0"
 #define AppPublisher   "dj"
 #define AppExe         "Panneaux.Glass.exe"
 #define AppId          "{{8E2B7C41-5F1A-4F7B-9C3D-6A2E0D5B7C18}"
@@ -93,6 +93,8 @@ Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDi
 
 [UninstallRun]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoLogo -NoProfile -ExecutionPolicy Bypass -File ""{app}\Close-Winlestia.ps1"" -AppRoot ""{app}"""; Flags: runhidden waituntilterminated; RunOnceId: "CloseWinlestia"
+
+Filename: "{app}\Glass-v5\Winlestia.Files.exe"; Parameters: "--restore"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "RestoreFolderHandler"
 
 Filename: "{app}\Caelestia-Windows\.venv\Scripts\python.exe"; Parameters: """{app}\Winlestia-Terminal\install.py"" --restore"; Flags: runhidden waituntilterminated; RunOnceId: "RestoreTerminal"
 

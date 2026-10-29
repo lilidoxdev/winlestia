@@ -10,5 +10,6 @@ Singleton {
     readonly property var padding: Config.appearance.padding
     readonly property var font: Config.appearance.font
     readonly property var anim: Config.appearance.anim
+    readonly property bool reducedEffects: Bridge.reducedEffects
     readonly property var transparency: Config.appearance.transparency
 }

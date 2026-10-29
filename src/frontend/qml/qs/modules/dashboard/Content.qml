@@ -110,7 +110,9 @@ Item {
 
                 Pane {
                     paneIndex:3
-                    sourceComponent: Workspaces {}
+                    sourceComponent: Workspaces {
+                        tabActive: root.state.currentTab === 3
+                    }
                 }
             }
 

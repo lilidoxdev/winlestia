@@ -14,6 +14,7 @@ from screen_picker import ClickPicker
 from search import palette_search
 from live_model import LiveListModel
 from capture_native import CaptureController
+from concurrent.futures import ThreadPoolExecutor
 from wallpaper_theme import WallpaperTheme
 from native_glass import NativeGlass
 from surface_geometry import SurfaceScene
@@ -28,6 +29,8 @@ user32.GetWindowLongPtrW.restype=ctypes.c_ssize_t
 user32.GetWindowLongPtrW.argtypes=[ctypes.c_void_p,ctypes.c_int]
 user32.SetWindowLongPtrW.argtypes=[ctypes.c_void_p,ctypes.c_int,ctypes.c_ssize_t]
 user32.GetWindowThreadProcessId.argtypes=[ctypes.c_void_p,ctypes.POINTER(ctypes.c_ulong)]
+import ctypes.wintypes
+user32.WindowFromPoint.argtypes=[ctypes.wintypes.POINT];user32.WindowFromPoint.restype=ctypes.c_void_p
 user32.GetWindowRect.argtypes=[ctypes.c_void_p,ctypes.c_void_p]
 user32.GetClientRect.argtypes=[ctypes.c_void_p,ctypes.c_void_p]
 user32.ClientToScreen.argtypes=[ctypes.c_void_p,ctypes.c_void_p]
@@ -122,9 +125,9 @@ class WindowsPlayer(QObject):
     def quit(self):pass
 
 class Bridge(QObject):
-    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int)
+    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int)
     def __init__(self,args):
-        super().__init__();self.surface_scene=None;self.args=args;self._window=None;self._state={};self._pending_controls={};self._pending_audio={};self._icon_requests={};self._dark=False;self._player=WindowsPlayer(self);self.top=None;self.dock=None;self.last_reply=0;self.peek_until=0;self.away_top=0;self.away_dock=0;self.force_dock=0
+        super().__init__();self.surface_scene=None;self.args=args;self._window=None;self._state={};self._pending_controls={};self._pending_audio={};self._icon_requests={};self._dark=False;self._player=WindowsPlayer(self);self.top=None;self.dock=None;self.social_win=None;self.away_social=0;self.bookmarks_win=None;self.away_bookmarks=0;self.last_reply=0;self.peek_until=0;self.away_top=0;self.away_dock=0;self.force_dock=0
         self.top_seen=False;self._screen=QApplication.primaryScreen();self.client=PipeClient(args.pipe);self.client.received.connect(self.update_state);self.client.start()
         self.pointer=QTimer(self);self.pointer.setInterval(90);self.pointer.timeout.connect(self.poll_pointer);self.pointer.start()
         self._weather={};self.weather_busy=False;self.weather_at=0;self.modal=False;self.weatherResult.connect(self.weather_ready)
@@ -137,7 +140,31 @@ class Bridge(QObject):
     @Slot(str)
     def setLanguage(self,mode):TRANSLATOR.select(mode);self.changed.emit();self.engine.retranslate()
     def current_theme(self):return self.walltheme.for_screen(self._screen.name())
-    def theme_ready(self):self._theme_revision+=1;self.changed.emit();self.frameChanged.emit()
+    def theme_ready(self):self._theme_revision+=1;self.publish_palette();self.changed.emit();self.frameChanged.emit()
+    # Winlestia Fichiers (WPF) cannot see a live-wallpaper override, so the palette actually shown here is handed over in Glass-v5/palette-shell.json (auto mode only, written only when it changed; the file is event-watched there, never polled).
+    def publish_palette(self):
+        # Computed here, written off the UI thread (ordered single-worker executor). Leaving auto mode writes {"mode":"custom"} so Palette.cs drops the stale auto palette.
+        try:
+            if self.themeMode=='auto':
+                palette=self.current_theme().get('palette',{})
+                if not palette:return
+                text=json.dumps({'mode':'auto','palette':palette},sort_keys=True,default=str)
+            else:text='{"mode":"custom"}'
+            if text==getattr(self,'_published_palette',None):return
+            self._published_palette=text
+            if not hasattr(self,'_publisher'):self._publisher=ThreadPoolExecutor(max_workers=1,thread_name_prefix='Panneaux Publish')
+            def write(text=text):
+                try:
+                    target=BACKEND/'palette-shell.json';tmp=target.with_suffix('.tmp');tmp.write_text(text,encoding='utf-8');os.replace(tmp,target)
+                except Exception:
+                    if getattr(self,'_published_palette',None)==text:self._published_palette=None
+            self._publisher.submit(write)
+        except Exception:pass
+    def theme_inputs_changed(self):
+        # Event-driven replacement of the explorer 4 s poll: runs only when a theme-relevant setting, the folder list or the wallpaper palette actually changed.
+        s=self.settings;key=(s.get('themeMode'),json.dumps(s.get('customPalette'),sort_keys=True,default=str),s.get('explorerTheme'),s.get('accentBorders'),str(s.get('explorerFolders')),self._theme_revision)
+        if key==getattr(self,'_theme_inputs',None):return
+        self._theme_inputs=key;self.publish_palette();self.sync_explorer_theme()
     def screen_list_changed(self,screen):self.screensChanged.emit()
     themeRevision=Property(int,lambda s:s._theme_revision,notify=frameChanged)
     fullscreenScreens=Property('QVariantList',lambda s:list(s.fullscreen_names),notify=frameChanged)
@@ -151,6 +178,33 @@ class Bridge(QObject):
     surfaceRevision=Property(int,lambda s:s.surface_scene.revision if s.surface_scene else 0,notify=surfaceChanged)
     @Slot(str,int,result='QVariantMap')
     def surfaceForScreen(self,name,revision):return self.surface_scene.data.get(name,{}) if self.surface_scene else {}
+    fileDragChanged=Signal()
+    @Property(bool,notify=fileDragChanged)
+    def fileDragActive(self):return getattr(self,'_file_drag_active',False)
+    @Property(bool,notify=fileDragChanged)
+    def fileDragNearTop(self):return getattr(self,'_file_drag_near',False)
+    def poll_file_drag(self):
+        down=bool(user32.GetAsyncKeyState(1)&0x8000);point=QCursor.pos();now=time.monotonic()
+        if down and not getattr(self,'_file_drag_down',False):
+            self._file_drag_origin=point;self._file_drag_start=now;self._file_drag_foreign=False
+            try:
+                cursor=ctypes.wintypes.POINT()
+                if user32.GetCursorPos(ctypes.byref(cursor)):
+                    owner=ctypes.c_ulong(0);user32.GetWindowThreadProcessId(user32.WindowFromPoint(cursor),ctypes.byref(owner))
+                    self._file_drag_foreign=owner.value!=os.getpid()
+            except Exception:pass
+        active=down and getattr(self,'_file_drag_foreign',False) and now-getattr(self,'_file_drag_start',now)>.25 and (point-getattr(self,'_file_drag_origin',point)).manhattanLength()>12
+        self._file_drag_down=down
+        screen=QApplication.screenAt(point);near=bool(active and screen and point.y()<=screen.geometry().top()+150)
+        changed=active!=getattr(self,'_file_drag_active',False) or near!=getattr(self,'_file_drag_near',False)
+        self._file_drag_active=active;self._file_drag_near=near
+        if changed:self.fileDragChanged.emit()
+    def sync_explorer_theme(self):
+        if not self.settings.get('explorerTheme',False) and not self.settings.get('accentBorders',True):self._explorer_signature=None;return
+        palette=self.adaptivePalette
+        args={'accent':palette.get('m3primary','#afd4f0' if self.dark else '#895143'),'background':palette.get('m3surface','#101518' if self.dark else '#fff8f6'),'text':palette.get('m3onSurface','#e5ebef' if self.dark else '#261916')}
+        signature=json.dumps(args,sort_keys=True)+str(self._state.get('settings',{}).get('explorerFolders',[]))
+        if signature!=getattr(self,'_explorer_signature',None):self.action('explorerPalette',args);self._explorer_signature=signature
     @Slot()
     def updateSurfaces(self):
         if self.surface_scene:self.surface_scene.request()
@@ -180,9 +234,9 @@ class Bridge(QObject):
         if not hasattr(self,'_audio_inputs'):self._audio_inputs=LiveListModel(self)
         return self._audio_inputs
     player=Property(QObject,lambda s:s._player,constant=True)
-    dark=Property(bool,lambda s:make_palette(s.settings.get("customPalette"))["dark"] if s.themeMode=="custom" else True if s.themeMode=="auto" else s._dark,notify=changed)
-    performance=Property('QVariantMap',lambda s:s._state.get('performance',{}),notify=changed)
-    sysInfo=Property('QVariantMap',lambda s:s._state.get('sysInfo',{}),notify=changed)
+    dark=Property(bool,lambda s:make_palette(s.settings.get("customPalette"))["dark"] if s.themeMode=="custom" else bool(s.current_theme().get("dark",True)) if s.themeMode=="auto" else s._dark,notify=changed)
+    performance=Property('QVariantMap',lambda s:s._state.get('performance',{}),notify=perfChanged)
+    sysInfo=Property('QVariantMap',lambda s:s._state.get('sysInfo',{}),notify=perfChanged)
     weather=Property('QVariantMap',lambda s:s._weather,notify=changed)
     audioReady=Property(bool,lambda s:bool(s._state.get('audioMixer',{}).get('ready',True)),notify=changed)
     controls=Property('QVariantMap',lambda s:s._state.get('controls',{}),notify=changed)
@@ -198,6 +252,7 @@ class Bridge(QObject):
     paletteResults=Property('QVariantList',lambda s:s._results,notify=searchChanged)
     workspaceBoard=Property(str,lambda s:s.workspace_board,notify=searchChanged)
     notice=Property(str,lambda s:s._notice,notify=noticeChanged)
+    networkKind=Property(str,lambda s:s._state.get('networkKind') if s._state.get('networkKind') in ('ethernet','wifi','none') else 'wifi',notify=changed)
     taskbarEnabled=Property(bool,lambda s:bool(s._state.get('taskbarEnabled',s.args.preview)),notify=changed)
     spectrum=Property('QVariantList',lambda s:getattr(s,'_spectrum',[0.0]*48),notify=spectrumChanged)
     iconRevision=Property(int,lambda s:int(s._state.get('iconRevision',0)),notify=changed)
@@ -242,6 +297,8 @@ class Bridge(QObject):
         cancel=bool(user32.GetAsyncKeyState(27)&0x8000 or self._click_picker.cancel or self._click_picker.failed)
         if cancel or self._click_picker.choice:
             self._click_picker.stop();self._pick_timer.stop();self._pick_timer.deleteLater();self._picking=False;self.changed.emit();self.colorPicked.emit('' if cancel else self._pick_color)
+    bookmarks=Property('QVariantMap',lambda s:{'browser':'','browsers':[],'items':[],'hiddenCount':0,'canDeleteInBrowser':False,'busy':False,'error':'',**(s._state.get('bookmarks') or {}),'items':getattr(s,'_bm_items',[])},notify=changed)
+    social=Property('QVariantMap',lambda s:{'muted':False,'sound':True,'volume':70,'networks':[],'history':[],**(s._state.get('social') or {})},notify=changed)
     reducedEffects=Property(bool,lambda s:bool(s._state.get('settings',{}).get('reducedEffects',False)),notify=changed)
     preview=Property(bool,lambda s:s.args.preview,constant=True)
     @Slot(str,'QVariant')
@@ -249,7 +306,7 @@ class Bridge(QObject):
         if hasattr(args,'toVariant'):args=args.toVariant()
         args=args or {}
         if name in ('palette','settings','controls','clipboard','workspace','tools','audio','microphone','capture','mixer'):
-            self.navigate('workspace:'+args.get('id','apps') if name=='workspace' else name);return
+            self.navigate('workspace:'+args.get('id','apps') if name=='workspace' else 'settings:'+str(args['section']) if name=='settings' and args.get('section') else name);return
         if name=='customTheme':
             self._state.setdefault('settings',{}).update(themeMode='custom',customPalette=args.get('colors',DEFAULT),customGlass=bool(args.get('glass')),customGlassOpacity=args.get('opacity',.12));self.changed.emit();self.frameChanged.emit()
         if name=='theme':
@@ -402,7 +459,8 @@ class Bridge(QObject):
     @Slot(dict)
     def update_state(self,message):
         if 'state' in message:
-            self.walltheme.update(message['state'].get('wallpapers',[]))
+            self.walltheme.update(message['state'].get('wallpapers',[]),message['state'].get('wallpaperRevision'),self.client)
+        if 'wallpaperCapture' in message:self.walltheme.captured(message['wallpaperCapture'])
         if message.get('notice'):self._notice=message['notice'];self.noticeChanged.emit()
         if 'spectrum' in message and message['spectrum']!=getattr(self,'_spectrum',None):self._spectrum=message['spectrum'];self.spectrumChanged.emit()
         if 'state' in message:
@@ -424,13 +482,24 @@ class Bridge(QObject):
             dock_changed=any(self._state.get(key)!=message['state'].get(key) for key in ('taskbarApps','runningApps'))
             clipboard_changed=self._state.get('clipboard')!=message['state'].get('clipboard')
             media_changed=self._state.get('media')!=message['state'].get('media')
-            self._state=message['state'];self._dark=bool(self._state.get('dark'));self._player.data=self._state.get('media',{});self.changed.emit()
+            # Perf counters change on almost every poll; they have their own signal so the Bridge.changed storm (every binding re-evaluating) only fires for real changes.
+            quiet=('diagnostics','performance','sysInfo')
+            core_changed=any(value!=self._state.get(key) for key,value in message['state'].items() if key not in quiet)
+            perf_changed=any(self._state.get(key)!=message['state'].get(key) for key in ('performance','sysInfo'))
+            self._state=message['state'];self._dark=bool(self._state.get('dark'));self._player.data=self._state.get('media',{})
+            if core_changed:self.changed.emit()
+            if perf_changed:self.perfChanged.emit()
             if media_changed:self._player.changed.emit()
             if catalog_changed:self.catalogChanged.emit()
             if dock_changed:self.dockChanged.emit()
             if clipboard_changed:self.clipboardChanged.emit()
             if catalog_changed and self.mode=='palette':self.searchPalette(self.query)
         elif 'state' in message:self._state=message['state']
+        if message.get('bookmarksItems'):
+            self._bm_items=message['bookmarksItems'].get('items') or [];self._bm_items_version=message['bookmarksItems'].get('version');self.changed.emit()
+        bm_version=(self._state.get('bookmarks') or {}).get('version')
+        if bm_version is not None and bm_version!=getattr(self,'_bm_items_version',None) and bm_version!=getattr(self,'_bm_requested',None):
+            self._bm_requested=bm_version;self.action('bookmarksItems',{})
         for event in message.get('events',[]):
             if event.startswith('shortcut-key:'):
                 if self.recording_kind:
@@ -439,7 +508,7 @@ class Bridge(QObject):
             if event in ('capture-select','capture-ocr'):
                 self.capture.start('text' if event=='capture-ocr' else 'region');continue
             if event=='dock':self.force_dock=time.monotonic()+3
-            if event in ('toggle','access','media','performance','controls','palette','settings','clipboard','tools','audio','microphone','capture','mixer','close') or event.startswith('workspace:'):self.navigate(event)
+            if event in ('toggle','access','media','performance','controls','palette','settings','clipboard','tools','audio','microphone','capture','mixer','close','settings:social','settings:bookmarks') or event.startswith('workspace:'):self.navigate(event)
             else:self.shellEvent.emit(event)
     @Slot(float,float,float,float,result=bool)
     def menuOutsideClick(self,x,y,w,h):
@@ -464,7 +533,33 @@ class Bridge(QObject):
         rect=(ctypes.c_long*4)();origin=(ctypes.c_long*2)(0,0)
         if not user32.GetClientRect(hwnd,ctypes.byref(rect)) or not user32.ClientToScreen(hwnd,ctypes.byref(origin)):return False
         return is_fullscreen(user32.GetWindowLongPtrW(hwnd,-16),bool(user32.IsZoomed(hwnd)),(origin[0],origin[1],origin[0]+rect[2],origin[1]+rect[3]),tuple(info.monitor))
+    def edge_zone(self,rail,edge,side='right'):
+        # Hover zone = displayed bump (content + drawer + chevron, aligned to its screen edge in the fixed-size window), +-16 px vertically, up to the screen edge.
+        rg=rail.geometry();bw=float(rail.property('bumpWidth') or rg.width());bh=float(rail.property('bumpHeight') or rg.height());offset=float(rail.property('offset') or 0)
+        by=rg.y()+(rg.height()-bh)/2
+        if side=='left':
+            bx=rg.x()-offset+bw;return QRect(int(edge),int(by)-16,int(bx-edge)+17,int(bh)+32)
+        bx=rg.x()+rg.width()-bw+offset
+        return QRect(int(bx)-16,int(by)-16,int(edge-bx)+17,int(bh)+32)
+    def social_zone(self,screen_right):return self.edge_zone(self.social_win,screen_right,'right')
+    def edge_rail(self,rail,side,point,geometry,full,now):
+        # Shared trigger/hide logic of the hidden edge rails: peek at the screen edge, hide 0.5 s after the pointer leaves the displayed bump.
+        key='social' if side=='right' else 'bookmarks';attr='away_'+key;event=(key+'Peek',key+'Hide')
+        margin=int(self._state.get("settings",{}).get("rightActivationMargin" if side=='right' else "leftActivationMargin",2))
+        rail_h=float(rail.property('bumpHeight') or rail.height() or 300)
+        at_edge=point.x()>=geometry.right()-margin if side=='right' else point.x()<=geometry.left()+margin
+        # A neighbouring screen on that side makes the shared edge a pass-through, not a trigger.
+        edge_x=geometry.right() if side=='right' else geometry.left()
+        adjacent=any(o.geometry()!=geometry and (o.geometry().left()<=edge_x+1 if side=='right' else o.geometry().right()>=edge_x-1) and (o.geometry().left()>=edge_x-1 if side=='right' else o.geometry().right()<=edge_x+1) and o.geometry().top()<geometry.bottom() and o.geometry().bottom()>geometry.top() for o in QApplication.screens())
+        trigger=at_edge and not adjacent and abs(point.y()-geometry.center().y())<rail_h/2+60
+        inside=rail.isVisible() and self.edge_zone(rail,geometry.right() if side=='right' else geometry.left(),side).contains(point)
+        if trigger and not full:self.shellEvent.emit(event[0]);setattr(self,attr,0)
+        elif inside or not rail.property('shown'):setattr(self,attr,0)
+        else:
+            if not getattr(self,attr):setattr(self,attr,now)
+            if now-getattr(self,attr)>.5 and not self.args.preview:self.shellEvent.emit(event[1]);setattr(self,attr,0)
     def poll_pointer(self):
+        self.poll_file_drag()
         if not self.top:return
         if self.modal:return
         if self.args.backend_pid and time.monotonic()>self.health_at:
@@ -481,11 +576,16 @@ class Bridge(QObject):
         panel_rect=QRect(round(self.top.x()+(self.top.width()-panel_width)/2),self.top.y(),round(panel_width),round(panel_height))
         top_inside=self.top.isVisible() and panel_rect.adjusted(-12,-2,12,16).contains(point)
         top_edge=geometry.top()<=point.y()<=geometry.top()+int(self._state.get("settings",{}).get("topActivationMargin",2)) and abs(point.x()-geometry.center().x())<460
-        if top_edge and not full:self.shellEvent.emit('peek');self.away_top=0
+        if self.fileDragNearTop:
+            if self.top.isVisible():self.navigate('close')
+            self.away_top=0
+        elif top_edge and not full:self.shellEvent.emit('peek');self.away_top=0
         elif top_inside:self.away_top=0;self.top_seen=True
         elif self.top.isVisible() and panel_height<95 and now>self.opening_until:
             if not self.away_top:self.away_top=now
             if now-self.away_top>.55 and not self.args.preview:self.navigate('close')
+        if self.social_win:self.edge_rail(self.social_win,'right',point,geometry,full,now)
+        if self.bookmarks_win:self.edge_rail(self.bookmarks_win,'left',point,geometry,full,now)
         if self.dock and self.taskbarEnabled:
             self.client.subscription['dock']=bool(self.dock.property('shown'))
             dock_inside=self.dock.isVisible() and self.dock.geometry().adjusted(-8,-10,8,4).contains(point)
@@ -509,9 +609,10 @@ def main():
     app=QApplication(sys.argv);TRANSLATOR=Translator(CONFIG);app.installTranslator(TRANSLATOR);app.setApplicationName('Panneaux · Caelestia Windows');app.setQuitOnLastWindowClosed(False);qInstallMessageHandler(message_handler)
     for font in (ROOT/'assets/fonts').glob('*.ttf'):QFontDatabase.addApplicationFont(str(font))
     bridge=Bridge(args);engine=QQmlApplicationEngine();bridge.engine=engine;engine.addImportPath(str(ROOT/'qml'));engine.addImageProvider('capture',bridge.capture.provider);engine.rootContext().setContextProperty('Bridge',bridge)
+    bridge.changed.connect(bridge.theme_inputs_changed);QTimer.singleShot(0,bridge.theme_inputs_changed)
     engine.load(QUrl.fromLocalFile(str(ROOT/'qml/Main.qml')))
     if not engine.rootObjects():bridge.stop();return 1
-    root=engine.rootObjects()[0];bridge.top=root;bridge._window=root;bridge.dock=root.findChild(QObject,'bottomDock');bridge.windowChanged.emit();bridge.surface_scene=SurfaceScene(bridge);bridge.glass=NativeGlass(bridge)
+    root=engine.rootObjects()[0];bridge.top=root;bridge._window=root;bridge.dock=root.findChild(QObject,'bottomDock');bridge.social_win=root.findChild(QObject,'socialRail');bridge.bookmarks_win=root.findChild(QObject,'bookmarksRail');bridge.windowChanged.emit();bridge.surface_scene=SurfaceScene(bridge);bridge.glass=NativeGlass(bridge)
     if os.environ.get('PANNEAUX_VERIFY_THICKNESS85')=='1':
         from validation85 import run
         run(bridge,root,app,QML_ISSUES,ROOT/'validation-8.5')

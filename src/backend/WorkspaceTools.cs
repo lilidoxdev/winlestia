@@ -25,7 +25,7 @@ internal sealed class PromptWindow:GlassWindow {
         error=UI.Text("",11,UI.Brush("#F3CF91"));error.Margin=new Thickness(2,8,0,0);root.Children.Add(error);
         var actions=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(0,18,0,0)};
         actions.Children.Add(UI.Button("Annuler",()=>DialogResult=false));
-        var ok=UI.Button("Valider",Accept);ok.MinWidth=110;ok.Margin=new Thickness(10,0,0,0);ok.Background=UI.Brush("#33BFE9F7");actions.Children.Add(ok);root.Children.Add(actions);
+        var ok=UI.Button("Valider",Accept);ok.MinWidth=110;ok.Margin=new Thickness(10,0,0,0);ok.Background=UI.Selected;actions.Children.Add(ok);root.Children.Add(actions);
         field.PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Enter){Accept();e.Handled=true;}};
         PreviewKeyDown+=(_,e)=>{if(e.Key==Key.Escape){DialogResult=false;e.Handled=true;}};
         Loaded+=(_,_)=>{ApplyGlass();field.Focus();field.SelectAll();};
@@ -76,7 +76,7 @@ internal sealed class WorkspaceWindow:GlassWindow {
         int index=0;foreach(var profile in profiles.ToList()){list.Children.Add(Row(profile,index++));}
     }
     FrameworkElement Row(WorkspaceProfile profile,int index){
-        var card=new Border{CornerRadius=new CornerRadius(17),Background=UI.Brush("#0CFFFFFF"),BorderBrush=UI.Brush("#1CFFFFFF"),BorderThickness=new Thickness(1),Padding=new Thickness(12),Margin=new Thickness(0,0,0,8)};
+        var card=new Border{CornerRadius=new CornerRadius(17),Background=UI.T(M3Role.OnSurface,0x0C),BorderBrush=UI.T(M3Role.OnSurface,0x1C),BorderThickness=new Thickness(1),Padding=new Thickness(12),Margin=new Thickness(0,0,0,8)};
         var grid=new Grid();grid.ColumnDefinitions.Add(new(){Width=new GridLength(38)});grid.ColumnDefinitions.Add(new(){Width=new GridLength(1,GridUnitType.Star)});grid.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
         var glyph=UI.Glyph("\uE7C3",17);glyph.HorizontalAlignment=HorizontalAlignment.Left;grid.Children.Add(glyph);
         var text=new StackPanel{Margin=new Thickness(4,0,10,0),VerticalAlignment=VerticalAlignment.Center};var name=UI.Text(profile.Name,13,null,true);name.TextTrimming=TextTrimming.CharacterEllipsis;text.Children.Add(name);

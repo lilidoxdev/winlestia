@@ -39,7 +39,7 @@ internal sealed class LargeFilesWindow:GlassWindow {
         var titles=new StackPanel();titles.Children.Add(UI.Text("Ce qui remplit le disque.",25,null,true));var sub=UI.Text("Les fichiers de plus de 200 Mo, classés du plus lourd au plus léger",11,UI.Dim);sub.Margin=new Thickness(0,6,0,0);titles.Children.Add(sub);header.Children.Add(titles);ContentHost.Children.Add(header);
         var actions=new DockPanel{Margin=new Thickness(0,14,0,12)};scan=UI.Button("Choisir un dossier…",Choose);scan.Padding=new Thickness(14,8,14,8);DockPanel.SetDock(scan,Dock.Right);actions.Children.Add(scan);
         status=UI.Text("Aucun dossier choisi",11,UI.Dim);status.VerticalAlignment=VerticalAlignment.Center;status.TextTrimming=TextTrimming.CharacterEllipsis;actions.Children.Add(status);Grid.SetRow(actions,1);ContentHost.Children.Add(actions);
-        var scroll=new ScrollViewer{Content=list,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled,Margin=new Thickness(0,0,0,8)};Grid.SetRow(scroll,2);ContentHost.Children.Add(scroll);
+        var first=UI.EmptyState("","","Aucun dossier choisi","Choisis un dossier pour voir ses fichiers de plus de 200 Mo, du plus lourd au plus léger.","Choisir un dossier…",Choose);list.Children.Add(first);var scroll=new ScrollViewer{Content=list,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled,Margin=new Thickness(0,0,0,8)};Grid.SetRow(scroll,2);ContentHost.Children.Add(scroll);
         var note=UI.Text("Rien n’est supprimé depuis Panneaux : chaque ligne ouvre l’Explorateur sur le fichier.",10,UI.Dim);note.TextWrapping=TextWrapping.Wrap;Grid.SetRow(note,3);ContentHost.Children.Add(note);
         Loaded+=(_,_)=>ApplyGlass();Closed+=(_,_)=>cancel?.Cancel();KeyDown+=(_,e)=>{if(e.Key==Key.Escape)Close();};
     }
@@ -56,7 +56,7 @@ internal sealed class LargeFilesWindow:GlassWindow {
             if(token.IsCancellationRequested)return;
             long total=found.Sum(file=>file.Size);
             status.Text=found.Count+" fichier"+(found.Count==1?"":"s")+" · "+SystemTools.Size(total)+" · "+watch.Elapsed.TotalSeconds.ToString("0.0")+" s";
-            if(found.Count==0){var empty=UI.Text("Aucun fichier de plus de 200 Mo dans ce dossier.",12,UI.Dim);empty.Margin=new Thickness(4,18,0,0);list.Children.Add(empty);return;}
+            if(found.Count==0){list.Children.Add(UI.EmptyState("","","Aucun gros fichier","Aucun fichier de plus de 200 Mo dans ce dossier.","Choisir un autre dossier…",Choose));return;}
             int index=0;foreach(var file in found.Take(120))list.Children.Add(Row(file,index++));
         }catch(OperationCanceledException){status.Text="Analyse annulée";}
         catch(Exception ex){status.Text="Analyse impossible : "+ex.Message;}

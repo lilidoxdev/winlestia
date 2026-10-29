@@ -2,7 +2,7 @@
 
 <img src="docs/media/banner.png" alt="Winlestia, Windows beautifully reimagined" width="100%">
 
-[![Release](https://img.shields.io/badge/release-v0.7.6-5e81ac?style=flat-square)](../../releases/latest)
+[![Release](https://img.shields.io/badge/release-v0.8.0-5e81ac?style=flat-square)](../../releases/latest)
 [![Platform](https://img.shields.io/badge/platform-Windows%2011-3b4252?style=flat-square)](#installation)
 [![License](https://img.shields.io/badge/license-GPL--3.0-d6405e?style=flat-square)](LICENSE)
 
@@ -53,7 +53,7 @@ Requirements:
 - From source: Windows 11 x64, the .NET 8 SDK (or the .NET 8 Desktop Runtime to run a build), Python 3.12 only for the Qt frontend, and Internet for Clink.
 - The terminal component downloads Clink 1.9.35 from its official GitHub page (github.com/chrisant996/clink), checks the archive against a known SHA256 fingerprint before extracting it, then checks each extracted Clink binary against its own fingerprint.
 
-1. Download `Winlestia-Setup-0.7.6.exe` from the [latest release](../../releases/latest). To check the download is intact, compare the output of `Get-FileHash .\Winlestia-Setup-0.7.6.exe` in PowerShell with the line for that file in `SHA256SUMS-0.7.6.txt`, published next to it.
+1. Download `Winlestia-Setup-0.8.0.exe` from the [latest release](../../releases/latest). To check the download is intact, compare the output of `Get-FileHash .\Winlestia-Setup-0.8.0.exe` in PowerShell with the line for that file in `SHA256SUMS-0.7.6.txt`, published next to it.
 2. Double-click the setup. It installs into `%LOCALAPPDATA%\Programs\Winlestia` (your own user folder), so it does not ask for administrator rights.
 3. Answer the prompts: the display name, whether Winlestia starts with Windows, and whether to add a desktop shortcut.
 4. Winlestia starts when the setup finishes, and the dock replaces the Windows taskbar.

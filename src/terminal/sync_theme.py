@@ -55,6 +55,31 @@ def update_terminal(settings_path,values):
     theme=next(t for t in c['themes'] if t['name']=='Winlestia');theme['tabRow'].update(background=background+'00',unfocusedBackground=background+'00');theme['tab']['unfocusedBackground']=background
     write_changed(settings_path,json.dumps(c,indent=4,ensure_ascii=False)+'\n')
 
+def wait_for_change():
+    # Event-driven replacement of the 4 s poll: block on registry (wallpaper keys) and folder (Winlestia prefs, wallpaper app configs) change notifications.
+    # 60 s timeout only so the theme-sync.stop file is still honoured; a change wakes us at once (0.5 s debounce).
+    kernel=ctypes.windll.kernel32;advapi=ctypes.windll.advapi32;kernel.CreateEventW.restype=ctypes.c_void_p;kernel.FindFirstChangeNotificationW.restype=ctypes.c_void_p
+    handles=[];keys=[]
+    for sub in (r'Control Panel\Desktop',r'Software\Microsoft\Windows\CurrentVersion\Explorer\Wallpapers'):
+        key=ctypes.c_void_p()
+        if advapi.RegOpenKeyExW(ctypes.c_void_p(0xFFFFFFFF80000001),sub,0,0x10,ctypes.byref(key))==0:
+            event=kernel.CreateEventW(None,True,False,None);advapi.RegNotifyChangeKeyValue(key,True,5,ctypes.c_void_p(event),True);keys.append(key);handles.append(event)
+    folders=[ROOT.parent/'Glass-v5',Path(os.environ.get('APPDATA',''))/'motion-photo-editor']
+    folders+=list((Path(os.environ.get('LOCALAPPDATA',''))/'Packages').glob('Desktophut.*/LocalCache/Roaming/motion-photo-editor'))
+    for folder in folders:
+        if folder.is_dir():
+            h=kernel.FindFirstChangeNotificationW(str(folder),False,0x1|0x10)
+            if h and h!=ctypes.c_void_p(-1).value:handles.append(h)
+    try:
+        if handles:
+            array=(ctypes.c_void_p*len(handles))(*handles)
+            if kernel.WaitForMultipleObjects(len(handles),array,False,60000)!=0x102:time.sleep(.5)
+        else:time.sleep(4)
+    finally:
+        for key in keys:advapi.RegCloseKey(key)
+        for h in handles:
+            kernel.CloseHandle(ctypes.c_void_p(h))
+
 def run(once=False):
     kernel=ctypes.windll.kernel32;kernel.CreateMutexW.argtypes=[ctypes.c_void_p,ctypes.c_bool,ctypes.c_wchar_p];kernel.CreateMutexW.restype=ctypes.c_void_p
     handle=kernel.CreateMutexW(None,False,'Local\\WinlestiaTerminalPalette-'+hashlib.sha256(str(ROOT).lower().encode()).hexdigest()[:12])
@@ -77,6 +102,6 @@ def run(once=False):
             (ROOT/'validation/sync-status.json').write_text(json.dumps({'ok':False,'error':str(error),'updated':time.time()}),encoding='utf-8')
             if once:raise
         if once or (ROOT/'theme-sync.stop').exists():break
-        time.sleep(4)
+        wait_for_change()
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--once',action='store_true');run(parser.parse_args().once)

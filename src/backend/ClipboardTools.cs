@@ -109,15 +109,15 @@ internal sealed class ClipboardWindow:GlassWindow {
         foreach(var item in visible){list.Children.Add(Row(item,index++));}
     }
     FrameworkElement Row(ClipboardItem item,int index){
-        var row=new Border{CornerRadius=new CornerRadius(16),Padding=new Thickness(10),Margin=new Thickness(0,0,0,7),Background=UI.Brush("#0CFFFFFF"),BorderBrush=UI.Brush("#1CFFFFFF"),BorderThickness=new Thickness(1),Cursor=Cursors.Hand};
+        var row=new Border{CornerRadius=new CornerRadius(16),Padding=new Thickness(10),Margin=new Thickness(0,0,0,7),Background=UI.T(M3Role.OnSurface,0x0C),BorderBrush=UI.T(M3Role.OnSurface,0x1C),BorderThickness=new Thickness(1),Cursor=Cursors.Hand};
         var grid=new Grid();grid.ColumnDefinitions.Add(new(){Width=new GridLength(52)});grid.ColumnDefinitions.Add(new(){Width=new GridLength(1,GridUnitType.Star)});grid.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
         if(item.Kind=="image"&&File.Exists(item.ImagePath)){
             var image=new Image{Width=42,Height=42,Stretch=Stretch.UniformToFill};
             try{var source=new BitmapImage();source.BeginInit();source.CacheOption=BitmapCacheOption.OnLoad;source.DecodePixelWidth=84;source.UriSource=new Uri(item.ImagePath);source.EndInit();source.Freeze();image.Source=source;}catch{}
             image.Clip=new RectangleGeometry(new Rect(0,0,42,42),9,9);
-            grid.Children.Add(new Border{Width=42,Height=42,CornerRadius=new CornerRadius(9),Background=UI.Brush("#18FFFFFF"),Child=image,VerticalAlignment=VerticalAlignment.Center});
+            grid.Children.Add(new Border{Width=42,Height=42,CornerRadius=new CornerRadius(9),Background=UI.T(M3Role.OnSurface,0x18),Child=image,VerticalAlignment=VerticalAlignment.Center});
         }else{
-            var glyph=UI.Glyph("\uE8C8",17);glyph.HorizontalAlignment=HorizontalAlignment.Center;grid.Children.Add(new Border{Width=42,Height=42,CornerRadius=new CornerRadius(9),Background=UI.Brush("#18FFFFFF"),Child=glyph,VerticalAlignment=VerticalAlignment.Center});
+            var glyph=UI.Glyph("\uE8C8",17);glyph.HorizontalAlignment=HorizontalAlignment.Center;grid.Children.Add(new Border{Width=42,Height=42,CornerRadius=new CornerRadius(9),Background=UI.T(M3Role.OnSurface,0x18),Child=glyph,VerticalAlignment=VerticalAlignment.Center});
         }
         var text=new StackPanel{VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(12,0,8,0)};
         var preview=UI.Text(item.Kind=="image"?"Image copiée":item.Text.Replace("\r"," ").Replace("\n","  "),12);
@@ -125,7 +125,7 @@ internal sealed class ClipboardWindow:GlassWindow {
         var meta=UI.Text(item.At+(item.Pinned?" · épinglé":""),10,UI.Dim);meta.Margin=new Thickness(0,4,0,0);text.Children.Add(meta);
         Grid.SetColumn(text,1);grid.Children.Add(text);
         var tools=new StackPanel{Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center};
-        var pin=UI.IconButton("\uE840",item.Pinned?"Détacher":"Épingler",()=>service.TogglePin(item));pin.Width=28;pin.Height=28;pin.Background=item.Pinned?UI.Brush("#3AD8EEFF"):Brushes.Transparent;pin.BorderBrush=Brushes.Transparent;pin.Margin=new Thickness(0,0,2,0);tools.Children.Add(pin);
+        var pin=UI.IconButton("\uE840",item.Pinned?"Détacher":"Épingler",()=>service.TogglePin(item));pin.Width=28;pin.Height=28;pin.Background=item.Pinned?UI.Selected:Brushes.Transparent;pin.BorderBrush=Brushes.Transparent;pin.Margin=new Thickness(0,0,2,0);tools.Children.Add(pin);
         var remove=UI.IconButton("\uE74D","Supprimer",()=>service.Remove(item));remove.Width=28;remove.Height=28;remove.Background=Brushes.Transparent;remove.BorderBrush=Brushes.Transparent;tools.Children.Add(remove);
         Grid.SetColumn(tools,2);grid.Children.Add(tools);
         row.Child=grid;

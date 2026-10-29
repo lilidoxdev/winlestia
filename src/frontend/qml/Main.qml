@@ -24,10 +24,10 @@ Window {
     Behavior on mixerExtent{Anim{duration:window.menuDuration;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
     property bool controlsOpen:pageMode==="controls"&&extraOpen
     property real extraHeight:extraOpen?extraBody.implicitHeight+36:0
-    property real contentWidth:pageMode==="workspace"?Math.min(1220,Bridge.screenWidth-80):pageMode==="palette"?660:pageMode==="settings"?690:pageMode==="clipboard"?730:pageMode==="tools"?760:pageMode==="audio"||pageMode==="microphone"?650:pageMode==="mixer"?490:pageMode==="capture"?620:450+(pageMode==="controls"?mixerExtent:0)
+    property real contentWidth:pageMode==="workspace"?Math.min(1220,Bridge.screenWidth-80):pageMode==="palette"?660:pageMode==="settings"?Math.min(900,Bridge.screenWidth-80):pageMode==="clipboard"?730:pageMode==="tools"?760:pageMode==="audio"||pageMode==="microphone"?650:pageMode==="mixer"?490:pageMode==="capture"?620:450+(pageMode==="controls"?mixerExtent:0)
 
     property real panelWidth:Math.ceil((pageMode==="dashboard"?Math.max(600,drawer.implicitWidth||854):contentWidth)+40)
-    property real panelHeight:Math.ceil(Math.max(1,pageMode==="dashboard"?(vis.dashboard?drawer.implicitHeight:peek?82:0):extraHeight))
+    property real panelHeight:Bridge.fileDragNearTop?0:Math.ceil(Math.max(1,pageMode==="dashboard"?(vis.dashboard?drawer.implicitHeight:peek?82:0):extraHeight))
     width:Math.max(Math.min(1600,Bridge.screenWidth-16),Math.ceil(panelWidth))
     height:Math.max(Math.min(900,Bridge.screenHeight-Config.border.thickness),Math.ceil(panelHeight))
     Behavior on panelWidth {Anim{duration:Math.round(250*(Bridge.settings.motionScale??1));easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
@@ -48,12 +48,14 @@ Window {
         }else{
             mixerOpen=false;vis.dashboard=false;peek=false;pageMode=mode.split(":")[0];extraOpen=true
             if(pageMode==="palette")Qt.callLater(()=>palette.reset())
+            if(pageMode==="settings"&&mode==="settings:social")preferences.tab=4
+            if(pageMode==="settings"&&mode==="settings:bookmarks")preferences.tab=5
         }
         subscribe();Bridge.activate()
     }
     onVisibleChanged:subscribe()
     onControlsOpenChanged:subscribe()
-    Shortcut {sequence:"Escape";enabled:window.visible;onActivated:Bridge.closePanel()}
+    Shortcut {sequence:"Escape";enabled:window.visible&&!browser.dialogOpen;onActivated:Bridge.closePanel()}
     Shortcut {sequence:"Ctrl+1";enabled:window.visible&&window.pageMode!=="settings";onActivated:Bridge.navigate("workspace:apps")}
     Shortcut {sequence:"Ctrl+2";enabled:window.visible&&window.pageMode!=="settings";onActivated:Bridge.navigate("workspace:games")}
     Shortcut {sequence:"Ctrl+3";enabled:window.visible&&window.pageMode!=="settings";onActivated:Bridge.navigate("workspace:projects")}
@@ -104,7 +106,10 @@ Window {
         Behavior on opacity{Anim{duration:Appearance.anim.durations.small}}
         StyledText{id:noticeLabel;anchors.centerIn:parent;width:parent.width-26;text:Bridge.notice;wrapMode:Text.Wrap;font.pointSize:11}
     }
+    RecycleDrop{}
     Repeater{model:Bridge.frameScreens;delegate:Item{id:frameHolder;required property var modelData;ScreenFrame{modelData:frameHolder.modelData}DesktopLogo{modelData:frameHolder.modelData}}}
     CaptureWindow{}
     Dock {objectName:"bottomDock"}
+    SocialRail {}
+    BookmarksRail {}
 }

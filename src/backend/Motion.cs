@@ -21,7 +21,7 @@ internal static class Motion {
     internal static int Level=>SystemParameters.ClientAreaAnimation?Math.Clamp(Store.State.MotionLevel,0,2):0;
     internal static string LevelName=>Level switch{0=>"Calme",2=>"Expressif",_=>"Standard"};
     internal static double Factor=>Level switch{0=>0,2=>1.15,_=>1};
-    internal static bool On=>Level>0&&Store.State.Motion>0;
+    internal static bool On=>Level>0&&Store.State.Motion>0&&!M3.ReducedEffects;
     internal static IEasingFunction Ease=>Curve(MotionKind.DefaultSpatial);
     internal static IEasingFunction Curve(MotionKind kind)=>kind switch{
         MotionKind.FastEffects or MotionKind.DefaultEffects or MotionKind.SlowEffects=>new ShellSpline(.2,0,.2,1),

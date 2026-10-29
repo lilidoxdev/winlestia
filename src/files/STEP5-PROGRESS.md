@@ -1,0 +1,10 @@
+- P1 done: builds 0 errors, no control chars found
+- P2 audited: already in code (ShowAt re-entrancy guard+deferred queue, MaxTabs=50+toast, bounded pipe queue, token brush repaint, Thumbs.Next guard, ShellMenu owner/parent guards, closed guards, single recycle handoff). Nothing more to do.
+- P3 starting: no SHChangeNotify code existed; EmptyState exists in MainWindow.cs:486
+- FolderTab: Sync/SetFilter/Mutating/Notice/Stale + Bulk=20 + RangeObservableCollection.Resets done (compiles?)
+- MainWindow.Watch.cs (watch/filter/view state) + MainWindow.cs wiring done, builds. NEXT: selftest 'refresh' mode, tests/FilesHarness/Run-Files.ps1, verification
+- selftests refresh/states written (MainWindow.SelfTest.Refresh.cs). NEXT: harness + run
+- harness tests/FilesHarness/Run-Files.ps1 written; running refresh
+- refresh selftest passes (1 filter test string fixed); latency 20 files ~1.16s (shell delivery), NEXT: states shots, ops, dnd, tabs, idle, unit tests, cleanup
+- P3 done+tested via harness (refresh/states). tabs/idle/unit tests ok. ops: no FAIL but 60s cap hit before DONE. dnd: 3 FAIL (real-input) with NOWATCH. Cleaned bin/obj+fixtures.
+- dnd/ops fixed+verified: 'open' fail = stale FileItem in test (re-find It("Cible")); real-drag fail = consequence (stray Explorer window from native open); Properties close retried (WM_CLOSE/SC_CLOSE); idle CPU threshold 100 ms; WINLESTIA_FILES_SETTLE (s, default 30); harness cap 120 s. Results: dnd fails=0, ops DONE fails=0, refresh fails=0, Router 18/18, Preload 12/12. bin/obj + fixtures cleaned.

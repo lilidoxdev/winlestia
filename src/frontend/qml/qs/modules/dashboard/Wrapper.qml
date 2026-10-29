@@ -45,7 +45,7 @@ Item {
 
         visible: true
         active: true
-        layer.enabled: true
+        layer.enabled: !Appearance.reducedEffects
 
         sourceComponent: Content {
             visibilities: root.visibilities

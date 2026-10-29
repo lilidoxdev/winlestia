@@ -28,10 +28,10 @@ Window {
     function finish(action){if(selected)Bridge.capture.export(action,selection,strokes)}
     onVisibleChanged:if(visible){if(loadedSource!==Bridge.capture.source){loadedSource=Bridge.capture.source;selected=false;strokes=[];selection=Qt.rect(0,0,0,0);tool="pen";canvas.requestPaint()}requestActivate()}
     Image{anchors.fill:parent;source:Bridge.capture.visible?Bridge.capture.source:"";fillMode:Image.Stretch;cache:false}
-    Rectangle{x:0;y:0;width:root.width;height:root.selection.y;color:"#88000000"}
-    Rectangle{x:0;y:root.selection.y;width:root.selection.x;height:root.selection.height;color:"#88000000"}
-    Rectangle{x:root.selection.x+root.selection.width;y:root.selection.y;width:root.width-x;height:root.selection.height;color:"#88000000"}
-    Rectangle{x:0;y:root.selection.y+root.selection.height;width:root.width;height:root.height-y;color:"#88000000"}
+    Rectangle{x:0;y:0;width:root.width;height:root.selection.y;color:Qt.alpha(Colours.palette.m3scrim,.53)}
+    Rectangle{x:0;y:root.selection.y;width:root.selection.x;height:root.selection.height;color:Qt.alpha(Colours.palette.m3scrim,.53)}
+    Rectangle{x:root.selection.x+root.selection.width;y:root.selection.y;width:root.width-x;height:root.selection.height;color:Qt.alpha(Colours.palette.m3scrim,.53)}
+    Rectangle{x:0;y:root.selection.y+root.selection.height;width:root.width;height:root.height-y;color:Qt.alpha(Colours.palette.m3scrim,.53)}
     Rectangle{x:root.selection.x;y:root.selection.y;width:root.selection.width;height:root.selection.height;color:"transparent";border.width:2;border.color:Colours.palette.m3primary}
     Canvas{
         id:canvas;anchors.fill:parent;renderStrategy:Canvas.Cooperative
@@ -48,9 +48,9 @@ Window {
     }
     StyledRect{
         anchors.horizontalCenter:parent.horizontalCenter;anchors.top:parent.top;anchors.topMargin:20
-        width:Math.min(toolbar.implicitWidth+32,parent.width-32);height:64;radius:32;color:Colours.palette.m3surface
+        width:Math.min(toolbar.implicitWidth+32,parent.width-32);height:64;radius:Appearance.rounding.large;color:Colours.palette.m3surface
         RowLayout{id:toolbar;anchors.centerIn:parent;spacing:8
-            StyledText{text:root.selected?Math.round(root.selection.width)+" × "+Math.round(root.selection.height):"Glisse pour sélectionner";font.pointSize:10;Layout.leftMargin:8;Layout.rightMargin:8}
+            StyledText{text:root.selected?Math.round(root.selection.width)+" × "+Math.round(root.selection.height):"Glisse pour sélectionner";font.pointSize:Appearance.font.size.small;Layout.leftMargin:8;Layout.rightMargin:8}
             CaptureAction{hint:"Nouvelle sélection";icon:"crop_free";type:IconButton.Text;onClicked:{root.selected=false;root.strokes=[];root.selection=Qt.rect(0,0,0,0);canvas.requestPaint()}}
             CaptureAction{hint:"Crayon";icon:"edit";toggle:true;checked:root.tool==="pen";type:IconButton.Tonal;onClicked:root.tool="pen"}
             CaptureAction{hint:"Surligneur";icon:"ink_highlighter";toggle:true;checked:root.tool==="highlight";type:IconButton.Tonal;onClicked:root.tool="highlight"}
@@ -64,7 +64,7 @@ Window {
         }
     }
     Shortcut{sequence:"Escape";enabled:root.visible;onActivated:Bridge.capture.cancel()}
-    StyledRect{anchors.bottom:parent.bottom;anchors.bottomMargin:20;anchors.horizontalCenter:parent.horizontalCenter;width:Math.min(600,parent.width-40);height:errorLabel.implicitHeight+24;radius:20;color:Colours.palette.m3surface;visible:Bridge.capture.errorText.length>0;StyledText{id:errorLabel;anchors.centerIn:parent;width:parent.width-28;wrapMode:Text.Wrap;text:Bridge.capture.errorText}}
+    StyledRect{anchors.bottom:parent.bottom;anchors.bottomMargin:20;anchors.horizontalCenter:parent.horizontalCenter;width:Math.min(600,parent.width-40);height:errorLabel.implicitHeight+24;radius:Appearance.rounding.large;color:Colours.palette.m3surface;visible:Bridge.capture.errorText.length>0;StyledText{id:errorLabel;anchors.centerIn:parent;width:parent.width-28;wrapMode:Text.Wrap;text:Bridge.capture.errorText}}
     Shortcut{sequence:"Ctrl+C";enabled:root.visible&&root.selected;onActivated:root.finish("copy")}
     Shortcut{sequence:"Ctrl+S";enabled:root.visible&&root.selected;onActivated:root.finish("save")}
     Shortcut{sequence:"Ctrl+Z";enabled:root.visible;onActivated:{root.strokes=root.strokes.slice(0,-1);canvas.requestPaint()}}

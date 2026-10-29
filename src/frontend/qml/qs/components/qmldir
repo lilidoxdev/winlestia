@@ -11,3 +11,6 @@ StateLayer StateLayer.qml
 StyledClippingRect StyledClippingRect.qml
 StyledRect StyledRect.qml
 StyledText StyledText.qml
+Dialog Dialog.qml
+ConfirmDialog ConfirmDialog.qml
+EmptyState EmptyState.qml

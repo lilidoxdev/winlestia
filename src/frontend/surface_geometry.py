@@ -26,16 +26,25 @@ def dock_path(width,height,attached=True):
     p.lineTo(width-r,height-r);p.quadTo(width-r,height,width,height);p.closeSubpath();return p
 
 
+def rail_path(width,height,attached=True,side='right'):
+    # Right-edge panel: the dock silhouette transposed ((X,Y)->(Y,X)) so its base lies on the right frame band, convex corners on the left (width x height = window size).
+    # Attached: overlap the band by 2 px so the union has no hairline seam where bump and frame meet.
+    # The transpose mirrors the contour: reverse it so its winding matches the frame ring (else WindingFill cancels the band under a sliding bump).
+    path=QTransform(0,1,1,0,0,0).map(dock_path(height,width+(2 if attached else 0),attached)).toReversed()
+    # Left edge: horizontal mirror (x -> width-x, base overlaps the band by 2 px at x=-2); the mirror flips the winding again, so reverse once more.
+    return QTransform(-1,0,0,1,width,0).map(path).toReversed() if side=='left' else path
+
+
 @lru_cache(maxsize=24)
 def frame_path(width,height,thickness):
     outer=QPainterPath();outer.addRect(QRectF(0,0,width,height));inner=QPainterPath();inner.addRoundedRect(QRectF(thickness,thickness,width-2*thickness,height-2*thickness),26,26)
     outer.addPath(inner.toReversed());outer.setFillRule(Qt.WindingFill);return outer
 
 
-def shell_path(width,height,thickness,panel=None,dock=None):
+def shell_path(width,height,thickness,panel=None,dock=None,rail=None,left=None):
     path=QPainterPath(frame_path(width,height,thickness)) if thickness else QPainterPath()
     path.setFillRule(Qt.WindingFill)
-    for spec,builder in ((panel,panel_path),(dock,dock_path)):
+    for spec,builder in ((panel,panel_path),(dock,dock_path),(rail,rail_path),(left,lambda w,h,a:rail_path(w,h,a,'left'))):
         if spec:
             x,y,w,h,attached=spec;path.addPath(QTransform().translate(x,y).map(builder(w,h,attached)))
     return path
@@ -66,7 +75,7 @@ class SurfaceScene(QObject):
     def __init__(self,bridge):
         super().__init__(bridge);self.bridge=bridge;self.paths={};self.data={};self.signature=None;self.queued=False;self.revision=0;self.stopped=False;self.input_masks={}
         bridge.changed.connect(self.request);bridge.geometryChanged.connect(self.request);bridge.screensChanged.connect(self.request);bridge.frameChanged.connect(self.request);bridge.capture.changed.connect(self.request)
-        for window in (bridge.top,bridge.dock):
+        for window in (bridge.top,bridge.dock,getattr(bridge,'social_win',None),getattr(bridge,'bookmarks_win',None)):
             if window:
                 for signal in (window.xChanged,window.yChanged,window.widthChanged,window.heightChanged,window.visibleChanged):signal.connect(self.request)
         self.timer=QTimer(self);self.timer.setInterval(200);self.timer.timeout.connect(self.refresh);self.timer.start();self.request()
@@ -82,7 +91,21 @@ class SurfaceScene(QObject):
             width=float(window.property('panelWidth') or window.width()) if not dock else window.width()
             height=float(window.property('panelHeight') or window.height()) if not dock else window.height()
             return (window.x()+(window.width()-width)/2,window.y()+offset,width,height,bridge.frameEnabled and not bridge.screenFullscreen)
-        top=view(bridge.top);dock=view(bridge.dock,True)
+        def rail_view(window,side='right'):
+            if not window or not window.isVisible():return None
+            # The window has a fixed size; the animated bump (bumpWidth/bumpHeight) is aligned to its screen edge and vertically centred in it.
+            bw=float(window.property('bumpWidth') or window.width());bh=float(window.property('bumpHeight') or window.height());offset=float(window.property('offset') or 0)
+            x=window.x()+window.width()-bw+offset if side=='right' else window.x()-offset
+            return (x,window.y()+(window.height()-bh)/2,bw,bh,bridge.frameEnabled and not bridge.screenFullscreen)
+        top=view(bridge.top);dock=view(bridge.dock,True);rail=rail_view(getattr(bridge,'social_win',None));left=rail_view(getattr(bridge,'bookmarks_win',None),'left')
+        for window,spec,side in ((getattr(bridge,'social_win',None),rail,'right'),(getattr(bridge,'bookmarks_win',None),left,'left')):
+            if window and not spec:self.input_masks.pop(int(window.winId()),None)
+            if spec:
+                # Input mask uses the resting position (offset 0): it never depends on the slide animation phase, and is re-applied after every reveal.
+                mask_x=window.width()-spec[2] if side=='right' else 0;mask_key=(window.width(),window.height(),spec[4],round(mask_x),round(spec[1]-window.y()),round(spec[2]),round(spec[3]));handle=int(window.winId())
+                if self.input_masks.get(handle)!=mask_key:
+                    path=QTransform().translate(mask_x,spec[1]-window.y()).map(rail_path(spec[2],spec[3],spec[4],side))
+                    window.setMask(QRegion(path.toFillPolygon().toPolygon(),Qt.WindingFill));self.input_masks[handle]=mask_key
         for window,spec,builder,is_dock in ((bridge.top,top,panel_path,False),(bridge.dock,dock,dock_path,True)):
             if window and spec:
                 offset=spec[1]-window.y() if is_dock else 0
@@ -92,7 +115,7 @@ class SurfaceScene(QObject):
                     path=QTransform().translate((window.width()-spec[2])/2,offset).map(builder(spec[2],spec[3],spec[4]))
                     window.setMask(QRegion(path.toFillPolygon().toPolygon(),Qt.WindingFill));self.input_masks[handle]=mask_key
         displays=[(s.name(),s.geometry().x(),s.geometry().y(),s.geometry().width(),s.geometry().height()) for s in QApplication.screens()]
-        signature=(tuple(displays),top,dock,bridge.frameEnabled,bridge.frameThickness,bridge.capture.busy,bridge.picking,tuple(bridge.fullscreen_names))
+        signature=(tuple(displays),top,dock,rail,left,bridge.frameEnabled,bridge.frameThickness,bridge.capture.busy,bridge.picking,tuple(bridge.fullscreen_names))
         if signature==self.signature:return
         self.signature=signature;paths={};data={}
         for name,x,y,w,h in displays:
@@ -101,9 +124,9 @@ class SurfaceScene(QObject):
                     return (spec[0]-x,spec[1]-y,*spec[2:])
                 return None
             thickness=bridge.frameThickness if bridge.frameEnabled and name not in bridge.fullscreen_names else 0
-            path=QPainterPath() if bridge.capture.busy or bridge.picking else shell_path(w,h,thickness,local(top),local(dock))
+            path=QPainterPath() if bridge.capture.busy or bridge.picking else shell_path(w,h,thickness,local(top),local(dock),local(rail),local(left))
             # Qt's curve renderer needs a normalized silhouette for overlapping contours.
-            outline=svg_path(path.simplified())
-            paths[name]=path;data[name]={'path':outline,'outline':outline,'visible':not path.isEmpty(),'components':(thickness,local(top),local(dock))}
+            simple=path.simplified();outline=svg_path(simple)
+            paths[name]=simple;data[name]={'path':outline,'outline':outline,'visible':not path.isEmpty(),'components':(thickness,local(top),local(dock),local(rail),local(left))}
         self.paths=paths;self.data=data;self.revision+=1;bridge.surfaceChanged.emit()
     def stop(self):self.stopped=True;self.timer.stop()

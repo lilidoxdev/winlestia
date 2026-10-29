@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF><ImplicitUsings>disable</ImplicitUsings><Nullable>enable</Nullable>
+    <AssemblyName>Winlestia.Files</AssemblyName><RootNamespace>WinlestiaFiles</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets\winlestia-files.ico</ApplicationIcon>
+    <Version>0.8.0</Version><Company>dj</Company><Product>Panneaux</Product>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>false</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun><TieredPGO>false</TieredPGO>
+    <StartupObject>WinlestiaFiles.Program</StartupObject>
+    <NoWarn>$(NoWarn);CS0649</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Shared tokens, linked not copied. Theme/Store/UI/Motion are satisfied by BackendShim.cs (Visuals.cs and Themes.cs drag in GlassWindow, Native, Motion, Store...). -->
+    <Compile Include="..\backend\Tokens.cs" Link="Shared\Tokens.cs" />
+    <Compile Include="..\backend\UiTokens.cs" Link="Shared\UiTokens.cs" />
+    <Compile Include="..\backend\FilesPipe.cs" Link="Shared\FilesPipe.cs" />
+    <Compile Include="..\backend\FilesHandler.cs" Link="Shared\FilesHandler.cs" />
+    <Compile Include="..\backend\FilesHandlerGuard.cs" Link="Shared\FilesHandlerGuard.cs" />
+  </ItemGroup>
+</Project>

@@ -12,17 +12,17 @@ using System.Windows.Shapes;
 using System.Windows.Input;
 
 namespace PanneauxGlass;
-internal static class UI {
+internal static partial class UI {
     static readonly Dictionary<string,SolidColorBrush> brushes=new(StringComparer.OrdinalIgnoreCase);
     static ResourceDictionary? style;static bool installed;
     // Mutable on purpose: a theme swap recolours every TextBlock already on screen.
     internal static readonly SolidColorBrush White=new(System.Windows.Media.Color.FromRgb(0xF5,0xF7,0xFC)),Dim=new(System.Windows.Media.Color.FromRgb(0xB9,0xC9,0xDB)),Accent=new(System.Windows.Media.Color.FromRgb(0x9F,0xE4,0xF7));
     internal static readonly FontFamily Display=new("Segoe UI Variable Display"),Serif=new("Georgia"),Mono=new("Consolas"),Poster=new("Arial Black"),Pixel=new("MS Sans Serif");
-    internal static FontFamily Font=>Theme.Current.Kind switch{SurfaceKind.Ink=>Mono,SurfaceKind.Retro=>Pixel,_=>Display};
-    internal static FontFamily Heading=>Theme.Current.Kind switch{
+    internal static FontFamily Font=>Theme.Current.Unified?M3.Body:Theme.Current.Kind switch{SurfaceKind.Ink=>Mono,SurfaceKind.Retro=>Pixel,_=>Display};
+    internal static FontFamily Heading=>Theme.Current.Unified?M3.Body:Theme.Current.Kind switch{
         SurfaceKind.Poster=>Poster,SurfaceKind.Retro=>Pixel,
         _=>Theme.Current.Heading switch{"serif"=>Serif,"mono"=>Mono,"pixel"=>Pixel,_=>Display}};
-    internal static readonly FontFamily Icons=new("Segoe Fluent Icons");
+    internal static readonly FontFamily Icons=new("Segoe Fluent Icons, Segoe MDL2 Assets");
     internal static SolidColorBrush Brush(string hex){
         if(brushes.TryGetValue(hex,out var value))return value;
         value=new SolidColorBrush(Resolve(hex));brushes[hex]=value;return value;
@@ -36,7 +36,7 @@ internal static class UI {
         if(Theme.Current.Light&&color.A<255&&luminance>170)return System.Windows.Media.Color.FromArgb(color.A,(byte)(color.R*.18),(byte)(color.G*.18),(byte)(color.B*.18));
         return color;
     }
-    internal static void Repaint(){foreach(var pair in brushes)pair.Value.Color=Resolve(pair.Key);}
+    internal static void Repaint(){foreach(var pair in brushes)pair.Value.Color=Resolve(pair.Key);RepaintTokens();}
     internal static void ApplyTheme(){
         var theme=Theme.Current;
         White.Color=theme.Text;Dim.Color=theme.Dim;Accent.Color=theme.Accent;
@@ -46,7 +46,7 @@ internal static class UI {
     }
     // Keeps live windows in the theme's voice: serif titles on paper, mono everywhere in ink.
     internal static void ApplyTypography(DependencyObject root){
-        if(root is TextBlock text){if(!(text.FontFamily?.Source.Contains("Fluent Icons",StringComparison.OrdinalIgnoreCase)??false))text.FontFamily=text.FontWeight>=FontWeights.SemiBold&&text.FontSize>=15?Heading:Font;}
+        if(root is TextBlock text){if(!(text.FontFamily?.Source.Contains("Icons",StringComparison.OrdinalIgnoreCase)??false)&&!(text.FontFamily?.Source.Contains("Material Symbols",StringComparison.OrdinalIgnoreCase)??false))text.FontFamily=text.FontWeight>=FontWeights.SemiBold&&text.FontSize>=15?Heading:Font;}
         else if(root is TextBox box)box.FontFamily=Font;
         else if(root is Control control&&root is not ScrollViewer)control.FontFamily=Font;
         int count=VisualTreeHelper.GetChildrenCount(root);
@@ -54,11 +54,11 @@ internal static class UI {
     }
     internal static string Hex(Color color)=>"#"+color.R.ToString("X2")+color.G.ToString("X2")+color.B.ToString("X2");
     static string A(byte alpha,string rgb)=>"#"+alpha.ToString("X2")+rgb;
-    static int Radius(int basis)=>Math.Clamp((int)Math.Round(basis*Theme.Current.RadiusScale),2,30);
+    static int Radius(int basis)=>Theme.Current.Unified?M3.Round(basis):Math.Clamp((int)Math.Round(basis*Theme.Current.RadiusScale),2,30);
     internal static void Install(){if(installed)return;installed=true;Restyle();}
     static void Restyle(){
         if(System.Windows.Application.Current==null)return;
-        var theme=Theme.Current;string themeText=Hex(theme.Text),surfaceRgb=Hex(theme.Surface)[1..],accentRgb=Hex(theme.Accent)[1..];string overlay=theme.Light?"000000":"FFFFFF";
+        var theme=Theme.Current;string themeText=Hex(theme.Text),surfaceRgb=Hex(theme.Surface)[1..],accentRgb=Hex(theme.Accent)[1..];string overlay=theme.Unified?Hex(theme.Text)[1..]:theme.Light?"000000":"FFFFFF";string popRgb=theme.Unified?Hex(theme.Role(M3Role.SurfaceHigh))[1..]:surfaceRgb,outlineRgb=theme.Unified?Hex(theme.Role(M3Role.OutlineVariant))[1..]:accentRgb;
         bool plated=theme.Opaque;string textRgb=Hex(theme.Text)[1..];
         // Opaque themes paint real plates; glass keeps its translucent whites. Mixing toward the
         // ink gives every material its own raised, hover and pressed tone instead of one grey.
@@ -72,15 +72,16 @@ internal static class UI {
         <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
           __BUTTON__
           __FIELD__
-          <Style TargetType="ContextMenu"><Setter Property="Background" Value="#F0232D3D"/><Setter Property="Foreground" Value="#F5F8FF"/><Setter Property="BorderBrush" Value="#60D6E6FC"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="7"/><Setter Property="HasDropShadow" Value="True"/></Style>
-          <Style TargetType="MenuItem"><Setter Property="Foreground" Value="#F5F8FF"/><Setter Property="Padding" Value="12,8"/>
-            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="MenuItem"><Border x:Name="hover" CornerRadius="10" Background="Transparent"><Grid Margin="{TemplateBinding Padding}"><Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock x:Name="check" Text="✓" Visibility="Collapsed"/><ContentPresenter Grid.Column="1" ContentSource="Header"/></Grid></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="hover" Property="Background" Value="#30FFFFFF"/></Trigger><Trigger Property="IsChecked" Value="True"><Setter TargetName="check" Property="Visibility" Value="Visible"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+          <Style TargetType="ContextMenu"><Setter Property="Background" Value="#F0232D3D"/><Setter Property="Foreground" Value="#F5F8FF"/><Setter Property="BorderBrush" Value="#60D6E6FC"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="7"/><Setter Property="HasDropShadow" Value="True"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ContextMenu"><Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12" Padding="{TemplateBinding Padding}"><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/></Border></ControlTemplate></Setter.Value></Setter></Style>
+          <Style TargetType="MenuItem"><Setter Property="Foreground" Value="#F5F8FF"/><Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="MenuItem"><Border x:Name="hover" CornerRadius="10" Background="Transparent" MinHeight="36"><Grid Margin="{TemplateBinding Padding}" VerticalAlignment="Center"><Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock x:Name="check" Text="✓" Visibility="Collapsed" VerticalAlignment="Center"/><ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center"/></Grid></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="hover" Property="Background" Value="#HOVERLAYER"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="hover" Property="Background" Value="#PRESSLAYER"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.38"/></Trigger><Trigger Property="IsChecked" Value="True"><Setter TargetName="check" Property="Visibility" Value="Visible"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
           </Style>
           <Style TargetType="CheckBox"><Setter Property="Foreground" Value="#E9F0FF"/><Setter Property="FontSize" Value="14"/><Setter Property="Margin" Value="0,8"/>
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox"><StackPanel Orientation="Horizontal" Background="Transparent"><Border x:Name="switch" Width="38" Height="22" CornerRadius="11" Background="#35FFFFFF" BorderBrush="#30FFFFFF" BorderThickness="1"><Ellipse x:Name="knob" Width="16" Height="16" Fill="White" HorizontalAlignment="Left" Margin="2,0"/></Border><ContentPresenter Margin="12,0,0,0" VerticalAlignment="Center"/></StackPanel><ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="switch" Property="Background" Value="#C173C8DE"/><Setter TargetName="knob" Property="HorizontalAlignment" Value="Right"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="switch" Property="BorderBrush" Value="White"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
           </Style>
           <Style TargetType="Slider"><Setter Property="MinHeight" Value="28"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Slider"><Grid VerticalAlignment="Center"><Border Height="5" Background="#22FFFFFF" CornerRadius="3"/><Track x:Name="PART_Track"><Track.DecreaseRepeatButton><RepeatButton Command="Slider.DecreaseLarge"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Height="5" Background="#C8DFF4FF" CornerRadius="3"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.DecreaseRepeatButton><Track.IncreaseRepeatButton><RepeatButton Command="Slider.IncreaseLarge"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.IncreaseRepeatButton><Track.Thumb><Thumb Width="15" Height="15"><Thumb.Template><ControlTemplate TargetType="Thumb"><Ellipse Fill="#F4FFFFFF" Stroke="#80FFFFFF" StrokeThickness="1"/></ControlTemplate></Thumb.Template></Thumb></Track.Thumb></Track></Grid></ControlTemplate></Setter.Value></Setter></Style>
-          <Style TargetType="ComboBoxItem"><Setter Property="Foreground" Value="White"/><Setter Property="Padding" Value="10,8"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="item" CornerRadius="10" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="item" Property="Background" Value="#30FFFFFF"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+          <Style TargetType="ComboBoxItem"><Setter Property="Foreground" Value="White"/><Setter Property="Padding" Value="10,8"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="item" CornerRadius="10" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="item" Property="Background" Value="#HOVERLAYER"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
           <Style TargetType="ComboBox"><Setter Property="Foreground" Value="#F5F8FF"/><Setter Property="FontSize" Value="14"/><Setter Property="Padding" Value="10,6"/><Setter Property="MinHeight" Value="38"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox"><Grid><ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"><ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border CornerRadius="13" Background="#14FFFFFF" BorderBrush="#38FFFFFF" BorderThickness="1"/></ControlTemplate></ToggleButton.Template></ToggleButton><ContentPresenter Margin="13,8,35,8" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/><TextBlock Text="⌄" Margin="0,0,14,0" HorizontalAlignment="Right" VerticalAlignment="Center" IsHitTestVisible="False"/><Popup x:Name="PART_Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False"><Border Background="#FA243041" BorderBrush="#60D6E6FC" BorderThickness="1" CornerRadius="14" Padding="6" MinWidth="{TemplateBinding ActualWidth}"><ScrollViewer MaxHeight="300"><ItemsPresenter/></ScrollViewer></Border></Popup></Grid></ControlTemplate></Setter.Value></Setter></Style>
           <Style TargetType="ScrollViewer"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollViewer"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" CanContentScroll="{TemplateBinding CanContentScroll}" Margin="{TemplateBinding Padding}"/><ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="1" Orientation="Vertical" Width="5" Margin="3,6,0,6" Minimum="0" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}" Value="{TemplateBinding VerticalOffset}" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" Opacity="0.6"/></Grid></ControlTemplate></Setter.Value></Setter></Style>
           <Style TargetType="ScrollBar"><Setter Property="Width" Value="8"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollBar"><Track x:Name="PART_Track" IsDirectionReversed="True"><Track.Thumb><Thumb Background="#60FFFFFF"><Thumb.Template><ControlTemplate TargetType="Thumb"><Border Background="{TemplateBinding Background}" CornerRadius="4"/></ControlTemplate></Thumb.Template></Thumb></Track.Thumb></Track></ControlTemplate></Setter.Value></Setter></Style>
@@ -91,11 +92,12 @@ internal static class UI {
             .Replace("#F5F8FF",themeText).Replace("#E9F0FF",themeText).Replace("#EEF7FF",themeText)
             .Replace("#20FFFFFF",A(32,overlay)).Replace("#14FFFFFF",A(15,overlay)).Replace("#38FFFFFF",A(52,overlay))
             .Replace("#2DFFFFFF",A(45,overlay)).Replace("#65FFFFFF",A(theme.Light?(byte)70:(byte)101,overlay)).Replace("#46FFFFFF",A(70,overlay)).Replace("#D6EEFF",themeText)
-            .Replace("#6592CDE7",A(140,accentRgb)).Replace("#F0232D3D","#F4"+surfaceRgb).Replace("#60D6E6FC",A(96,accentRgb))
+            .Replace("#HOVERLAYER",A(theme.Unified?HoverLayer:(byte)48,overlay)).Replace("#PRESSLAYER",A(theme.Unified?PressedLayer:(byte)70,overlay))
+            .Replace("#6592CDE7",A(140,accentRgb)).Replace("#F0232D3D","#F4"+popRgb).Replace("#60D6E6FC",theme.Unified?A(255,outlineRgb):A(96,accentRgb))
             .Replace("#30FFFFFF",A(48,overlay)).Replace("#35FFFFFF",A(53,overlay)).Replace("#C173C8DE",A(200,accentRgb))
-            .Replace("#22FFFFFF",A(34,overlay)).Replace("#C8DFF4FF",A(200,accentRgb)).Replace("#F4FFFFFF",theme.Light?"#3A4756":"#F4FFFFFF")
-            .Replace("#80FFFFFF",A(128,overlay)).Replace("#FA243041","#FA"+surfaceRgb).Replace("#60FFFFFF",A(96,overlay))
-            .Replace("#EF263646","#EF"+surfaceRgb).Replace("#45D6E6FC",A(69,accentRgb))
+            .Replace("#22FFFFFF",A(34,overlay)).Replace("#C8DFF4FF",A(200,accentRgb)).Replace("#F4FFFFFF",theme.Unified?Hex(theme.Accent):theme.Light?"#3A4756":"#F4FFFFFF")
+            .Replace("#80FFFFFF",A(128,overlay)).Replace("#FA243041","#FA"+popRgb).Replace("#60FFFFFF",A(96,overlay))
+            .Replace("#EF263646","#F4"+popRgb).Replace("#45D6E6FC",theme.Unified?A(255,outlineRgb):A(69,accentRgb))
             .Replace("CornerRadius=\"16\"","CornerRadius=\""+Radius(16)+"\"").Replace("CornerRadius=\"15\"","CornerRadius=\""+Radius(15)+"\"")
             .Replace("CornerRadius=\"14\"","CornerRadius=\""+Radius(14)+"\"").Replace("CornerRadius=\"13\"","CornerRadius=\""+Radius(13)+"\"")
             .Replace("CornerRadius=\"12\"","CornerRadius=\""+Radius(12)+"\"").Replace("CornerRadius=\"11\"","CornerRadius=\""+Radius(11)+"\"")
@@ -109,6 +111,7 @@ internal static class UI {
     // One button frame per material: glass floats, bento and zen sit flat, suisse rules, rétro bevels,
     // néon glows. The mechanics (click, hover, focus, disabled) are identical everywhere.
     static string ButtonStyle(ThemeDefinition theme,string raised,string hover,string pressed,string line){
+        if(theme.Unified)return UnifiedButton(theme);
         int radius=Radius(16);string text=Hex(theme.Text),accent=Hex(theme.Accent);
         string setters="<Setter Property=\"Foreground\" Value=\"%TEXT%\"/><Setter Property=\"Background\" Value=\"%FACE%\"/><Setter Property=\"BorderBrush\" Value=\"%LINE%\"/><Setter Property=\"BorderThickness\" Value=\"1\"/><Setter Property=\"Padding\" Value=\"14,9\"/><Setter Property=\"FontSize\" Value=\"13\"/><Setter Property=\"Cursor\" Value=\"Hand\"/><Setter Property=\"FocusVisualStyle\" Value=\"{x:Null}\"/>";
         string template=theme.Frame switch{
@@ -184,9 +187,49 @@ internal static class UI {
             .Replace("%BORDER%",border).Replace("%ACCENT%",accent).Replace("%RADIUS%",radius.ToString())
             .Replace("%HOVER%",hover).Replace("%PRESSED%",pressed);
     }
+    // Material-3 buttons: filled-tonal by default (secondaryContainer), text and icon variants through Tag,
+    // a hover / pressed state layer of onSurface on top, corners from the shared rounding tokens.
+    static string UnifiedButton(ThemeDefinition theme){
+        string face=Hex(theme.Role(M3Role.SecondaryContainer)),ink=Hex(theme.Role(M3Role.OnSecondaryContainer)),primary=Hex(theme.Role(M3Role.Primary)),layer=Hex(theme.Text)[1..];
+        return """
+        <Style TargetType="Button">
+          <Setter Property="Foreground" Value="%INK%"/><Setter Property="Background" Value="%FACE%"/><Setter Property="BorderBrush" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="Padding" Value="15,7"/><Setter Property="FontSize" Value="%FONT%"/><Setter Property="Cursor" Value="Hand"/><Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+          <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+            <Grid>
+              <Border x:Name="body" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="%RADIUS%"/>
+              <Border x:Name="state" Background="Transparent" CornerRadius="%RADIUS%" IsHitTestVisible="False"/>
+              <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="Tag" Value="m3text"><Setter TargetName="body" Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="%PRIMARY%"/></Trigger>
+              <Trigger Property="Tag" Value="m3icon"><Setter TargetName="body" Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="%TEXT%"/></Trigger>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="state" Property="Background" Value="%HOVER%"/></Trigger>
+              <Trigger Property="IsPressed" Value="True"><Setter TargetName="state" Property="Background" Value="%PRESSED%"/></Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="body" Property="BorderBrush" Value="%PRIMARY%"/><Setter TargetName="body" Property="BorderThickness" Value="2"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.38"/></Trigger>
+            </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+        </Style>
+        """.Replace("%INK%",ink).Replace("%FACE%",face).Replace("%PRIMARY%",primary).Replace("%TEXT%",Hex(theme.Text)).Replace("%FONT%",M3.FontSmall.ToString(System.Globalization.CultureInfo.InvariantCulture))
+            .Replace("%RADIUS%",((int)M3.Normal).ToString()).Replace("%HOVER%",A(HoverLayer,layer)).Replace("%PRESSED%",A(PressedLayer,layer));
+    }
+    static string UnifiedField(ThemeDefinition theme){
+        string text=Hex(theme.Text),fill=Hex(theme.Role(M3Role.SurfaceHigh)),line=Hex(theme.Role(M3Role.OutlineVariant)),primary=Hex(theme.Role(M3Role.Primary));
+        return """
+        <Style TargetType="TextBox">
+          <Setter Property="Foreground" Value="%TEXT%"/><Setter Property="CaretBrush" Value="%TEXT%"/><Setter Property="SelectionBrush" Value="%SELECTION%"/>
+          <Setter Property="Background" Value="%FIELD%"/><Setter Property="BorderBrush" Value="%LINE%"/><Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="Padding" Value="12,9"/><Setter Property="FontSize" Value="%FONT%"/>
+          <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox"><Border x:Name="box" CornerRadius="%RADIUS%" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"><ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/></Border>
+            <ControlTemplate.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="box" Property="BorderBrush" Value="%PRIMARY%"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+        </Style>
+        """.Replace("%TEXT%",text).Replace("%SELECTION%",A(140,primary[1..])).Replace("%FIELD%",fill).Replace("%LINE%",line).Replace("%PRIMARY%",primary)
+            .Replace("%FONT%",M3.FontBody.ToString(System.Globalization.CultureInfo.InvariantCulture)).Replace("%RADIUS%",((int)M3.Small).ToString());
+    }
     // The field follows the same material: an inset plate on paper and bento, a ruled box in suisse,
     // a sunken slot in rétro, a dark recess in néon and on glass.
     static string FieldStyle(ThemeDefinition theme,string field,string fieldLine){
+        if(theme.Unified)return UnifiedField(theme);
         string text=Hex(theme.Text),accent=Hex(theme.Accent);int radius=Radius(15);
         string background=theme.Plated?field:"#14FFFFFF",border=theme.Plated?fieldLine:"#38FFFFFF";
         return """
@@ -201,7 +244,7 @@ internal static class UI {
     internal static TextBlock Text(string value,double size=14,Brush? color=null,bool bold=false)=>new(){Text=value,FontSize=size,Foreground=color??White,FontFamily=bold&&size>=15?Heading:Font,FontWeight=bold?FontWeights.SemiBold:FontWeights.Normal};
     internal static TextBlock Glyph(string code,double size=18)=>new(){Text=code,FontFamily=Icons,FontSize=size,Foreground=White,VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center};
     internal static Button Button(string label,Action action){var b=new Button{Content=label,HorizontalContentAlignment=HorizontalAlignment.Center,VerticalContentAlignment=VerticalAlignment.Center};b.Click+=(_,_)=>action();Motion.BindButton(b);return b;}
-    internal static Button IconButton(string glyph,string name,Action action){var b=Button("",action);b.Content=Glyph(glyph);b.Width=38;b.Height=38;b.Padding=new Thickness(0);b.ToolTip=name;System.Windows.Automation.AutomationProperties.SetName(b,name);return b;}
+    internal static Button IconButton(string glyph,string name,Action action){var b=Button("",action);b.Tag="m3icon";b.Content=Glyph(glyph);b.Width=38;b.Height=38;b.Padding=new Thickness(0);b.ToolTip=name;System.Windows.Automation.AutomationProperties.SetName(b,name);return b;}
     internal static MenuItem Menu(string text,Action action){var item=new MenuItem{Header=text};item.Click+=(_,_)=>action();return item;}
     internal static Color Color(string hex)=>((SolidColorBrush)Brush(hex)).Color;
     internal static void SetIcon(Image image,ImageSource source){image.Source=source;image.Effect=null;if(!Theme.Current.Light||source is not System.Windows.Media.Imaging.BitmapSource bitmap)return;try{var converted=new System.Windows.Media.Imaging.FormatConvertedBitmap(bitmap,PixelFormats.Bgra32,null,0);int stride=converted.PixelWidth*4;var bytes=new byte[stride*converted.PixelHeight];converted.CopyPixels(bytes,stride,0);double light=0;int visible=0;for(int y=0;y<converted.PixelHeight;y+=6)for(int x=0;x<converted.PixelWidth;x+=6){int index=y*stride+x*4;if(bytes[index+3]<170)continue;light+=(bytes[index]+bytes[index+1]+bytes[index+2])/3d;visible++;}if(visible>0&&light/visible>224){var shadow=new DropShadowEffect{Color=Theme.Current.Text,BlurRadius=3,ShadowDepth=0,Opacity=.8};shadow.Freeze();image.Effect=shadow;}}catch{}}
@@ -248,7 +291,7 @@ internal class GlassWindow:Window {
             new(colorWith(Color.FromArgb(27,255,255,255),theme.ReflectionGain),0),new(colorWith(Color.FromArgb(7,255,255,255),theme.ReflectionGain),.35),new(Colors.Transparent,.53),
             new(Color.FromArgb((byte)Math.Clamp(12*theme.ReflectionGain,0,255),theme.Reflection.R,theme.Reflection.G,theme.Reflection.B),.70),new(Colors.Transparent,1)}};
         rimBrush.StartPoint=new Point(0,0);rimBrush.EndPoint=new Point(1,1);rimBrush.GradientStops.Clear();
-        rimBrush.GradientStops.Add(theme.Light?new(Color.FromArgb(170,theme.RimB.R,theme.RimB.G,theme.RimB.B),0):new(Color.FromArgb(174,255,255,255),0));
+        rimBrush.GradientStops.Add(theme.Light||theme.Unified?new(Color.FromArgb(170,theme.RimB.R,theme.RimB.G,theme.RimB.B),0):new(Color.FromArgb(174,255,255,255),0));
         rimBrush.GradientStops.Add(new(Color.FromArgb((byte)(50*theme.ReflectionGain),theme.RimA.R,theme.RimA.G,theme.RimA.B),.3));
         rimBrush.GradientStops.Add(new(Color.FromArgb(23,255,255,255),.50));
         rimBrush.GradientStops.Add(new(Color.FromArgb(105,theme.RimB.R,theme.RimB.G,theme.RimB.B),1));

@@ -28,8 +28,8 @@ Item {
     ]
     ColumnLayout{anchors.fill:parent;spacing:18
         RowLayout{Layout.fillWidth:true;spacing:12
-            MaterialIcon{text:qsTr("construction");font.pointSize:28;color:Colours.palette.m3primary}
-            ColumnLayout{spacing:3;StyledText{text:qsTr("L’atelier");font.pointSize:23} StyledText{text:qsTr("Des outils à portée de main");font.pointSize:10;color:Colours.palette.m3outline}}
+            MaterialIcon{text:qsTr("construction");font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
+            ColumnLayout{spacing:3;StyledText{text:qsTr("L’atelier");font.pointSize:Appearance.font.size.title} StyledText{text:qsTr("Des outils à portée de main");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}}
             Item{Layout.fillWidth:true}
             IconButton{icon:"close";type:IconButton.Text;onClicked:Bridge.closePanel()}
         }
@@ -38,12 +38,12 @@ Item {
             C.ScrollBar.vertical:StyledScrollBar{flickable:scroll}
             GridLayout{id:cardsGrid;width:scroll.width-10;columns:2;columnSpacing:12;rowSpacing:12
                 Repeater{model:root.cards.filter(c=>root.filter==="Tout"||c.category===root.filter)
-                    StyledRect{id:card;required property var modelData;Layout.fillWidth:true;implicitHeight:112;radius:24;color:Colours.palette.m3surfaceContainer
+                    StyledRect{id:card;required property var modelData;Layout.fillWidth:true;implicitHeight:112;radius:Appearance.rounding.large;color:Colours.palette.m3surfaceContainer
                         StateLayer{function onClicked(){if(card.modelData.nav)Bridge.navigate(card.modelData.target);else Bridge.action("toolRun",{id:card.modelData.target})}}
                         RowLayout{anchors.fill:parent;anchors.margins:18;spacing:14
-                            MaterialIcon{text:card.modelData.icon;font.pointSize:27;color:Colours.palette.m3primary}
-                            ColumnLayout{Layout.fillWidth:true;spacing:6;StyledText{Layout.fillWidth:true;text:card.modelData.name;font.pointSize:12;elide:Text.ElideRight} StyledText{Layout.fillWidth:true;text:card.modelData.description;font.pointSize:9;color:Colours.palette.m3outline;wrapMode:Text.Wrap}}
-                            MaterialIcon{text:qsTr("chevron_right");font.pointSize:16;color:Colours.palette.m3outline}
+                            MaterialIcon{text:card.modelData.icon;font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
+                            ColumnLayout{Layout.fillWidth:true;spacing:6;StyledText{Layout.fillWidth:true;text:card.modelData.name;font.pointSize:Appearance.font.size.normal;elide:Text.ElideRight} StyledText{Layout.fillWidth:true;text:card.modelData.description;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline;wrapMode:Text.Wrap}}
+                            MaterialIcon{text:qsTr("chevron_right");font.pointSize:Appearance.font.size.larger;color:Colours.palette.m3outline}
                         }
                     }
                 }

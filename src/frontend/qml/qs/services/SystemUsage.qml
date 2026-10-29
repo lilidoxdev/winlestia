@@ -5,6 +5,7 @@ QtObject {
  readonly property real gpuTemp: Bridge.performance.gpuTemp ?? NaN
  readonly property real gpuPerc: (Bridge.performance.gpu ?? 0)/100
  readonly property real cpuTemp: Bridge.performance.cpuTemp ?? NaN
+ readonly property string cpuTempSource: Bridge.performance.cpuTempSource ?? ""
  readonly property real cpuPerc: (Bridge.performance.cpu ?? 0)/100
  readonly property real memPerc: Bridge.performance.memPercent ?? 0
  readonly property real memUsed: Bridge.performance.memUsedKiB ?? 0

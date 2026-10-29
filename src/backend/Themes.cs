@@ -22,6 +22,15 @@ internal sealed class ThemeDefinition {
     public string Frame="glass";       // glass · flat · outline · bevel · neon
     public double BorderWeight=1;
     public bool Light;
+    // Unified = colours come from the shell's Material-3 palette (see Tokens.cs), not from a hand-made theme.
+    public bool Unified;
+    M3Palette? palette;
+    public M3Palette P{get=>palette??=M3Palette.FromTheme(this);init=>palette=value;}
+    public Color Role(M3Role role)=>role switch{
+        M3Role.Surface=>P.Surface,M3Role.SurfaceLow=>P.SurfaceLow,M3Role.SurfaceContainer=>P.SurfaceContainer,M3Role.SurfaceHigh=>P.SurfaceHigh,M3Role.SurfaceHighest=>P.SurfaceHighest,
+        M3Role.OnSurface=>P.OnSurface,M3Role.OnSurfaceVariant=>P.OnSurfaceVariant,M3Role.Primary=>P.Primary,M3Role.OnPrimary=>P.OnPrimary,M3Role.PrimaryContainer=>P.PrimaryContainer,
+        M3Role.OnPrimaryContainer=>P.OnPrimaryContainer,M3Role.SecondaryContainer=>P.SecondaryContainer,M3Role.OnSecondaryContainer=>P.OnSecondaryContainer,
+        M3Role.Outline=>P.Outline,M3Role.OutlineVariant=>P.OutlineVariant,M3Role.Error=>P.Error,_=>P.OnError};
     public bool Opaque=>Kind!=SurfaceKind.Glass;
     public string Family=>Kind switch{
         SurfaceKind.Paper=>"Papier",SurfaceKind.Ink=>"Encre",SurfaceKind.Poster=>"Affiche",
@@ -152,12 +161,30 @@ internal static class Theme {
     internal static IReadOnlyList<ThemeDefinition> Catalogue=>All;
     internal static ThemeDefinition? Find(string? id)=>All.FirstOrDefault(t=>string.Equals(t.Id,id,StringComparison.OrdinalIgnoreCase));
     internal static Color Mix(Color a,Color b,double t)=>Color.FromRgb((byte)Math.Round(a.R+(b.R-a.R)*t),(byte)Math.Round(a.G+(b.G-a.G)*t),(byte)Math.Round(a.B+(b.B-a.B)*t));
+    // Ids that stand for "the shell look": the default, the light/dark toggle of the shell and the custom palette.
+    // Every other id (amethyste, calque, retro...) is a legacy theme and only applies when the user picks it.
+    static bool IsShellFamily(string id)=>id is "shell" or "shell-dark" or "nuit" or "custom";
+    // Same decision tree as QtShellBridge settings.themeMode: auto > custom > light (shell) > dark.
+    static ThemeDefinition Unify(ThemeDefinition legacy,bool custom){
+        M3Palette palette;
+        if(Store.State.AutoTheme)palette=M3.AutoPalette??M3Palette.DarkDefault();
+        else if(custom)palette=M3Palette.Custom(Store.State.CustomPalette);
+        else palette=legacy.Id=="shell"?M3Palette.LightDefault():M3Palette.DarkDefault();
+        // Dark shells are translucent glass over the window backdrop; light and reduced-effects stay solid.
+        var kind=!palette.Dark||M3.ReducedEffects?SurfaceKind.Soft:SurfaceKind.Glass;
+        return new ThemeDefinition{Id=legacy.Id,Name=legacy.Name,Description=legacy.Description,Unified=true,P=palette,
+            Surface=palette.SurfaceContainer,HaloA=palette.Primary,HaloB=palette.Primary,RimA=palette.OutlineVariant,RimB=palette.OutlineVariant,Reflection=palette.OnSurface,
+            Accent=palette.Primary,Text=palette.OnSurface,Dim=palette.OnSurfaceVariant,Kind=kind,Heading="sans",Tiles="grid",Frame="flat",Light=!palette.Dark,
+            ReflectionGain=0,HaloGain=0,Signature="none",RadiusScale=1};
+    }
     internal static void Use(string? id){
         bool custom=id=="custom";string nativeId=id??"nuit";
         if(custom){nativeId="shell";try{var color=(Color)ColorConverter.ConvertFromString(Store.State.CustomPalette.GetValueOrDefault("background","#fff8f6"));nativeId=color.R*.2126+color.G*.7152+color.B*.0722<128?"nuit":"shell";}catch{}}
         var next=Find(nativeId)??Find("nuit")!;
+        if(IsShellFamily(next.Id))next=Unify(next,custom);
         Current=next;Version++;
         UI.ApplyTheme();
+        FilesPreload.NotifyPalette();
         if(!custom&&!string.Equals(Store.State.Theme,next.Id,StringComparison.Ordinal)){Store.State.Theme=next.Id;Store.Save();}
     }
     static Color C(byte r,byte g,byte b)=>Color.FromRgb(r,g,b);

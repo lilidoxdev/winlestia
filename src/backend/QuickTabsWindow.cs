@@ -42,7 +42,7 @@ internal sealed class QuickTabsWindow:GlassWindow {
         list.Children.Clear();var tabs=Store.State.QuickTabs;
         for(int index=0;index<tabs.Count;index++){
             var tab=tabs[index];int position=index;
-            var card=new Border{CornerRadius=new CornerRadius(18),Padding=new Thickness(10),Margin=new Thickness(0,0,0,8),Background=UI.Brush("#0CFFFFFF"),BorderBrush=UI.Brush("#20FFFFFF"),BorderThickness=new Thickness(1)};
+            var card=new Border{CornerRadius=new CornerRadius(18),Padding=new Thickness(10),Margin=new Thickness(0,0,0,8),Background=UI.T(M3Role.OnSurface,0x0C),BorderBrush=UI.T(M3Role.OnSurface,0x20),BorderThickness=new Thickness(1)};
             var row=new Grid();row.ColumnDefinitions.Add(new(){Width=new GridLength(46)});row.ColumnDefinitions.Add(new(){Width=new GridLength(1,GridUnitType.Star)});row.ColumnDefinitions.Add(new(){Width=GridLength.Auto});row.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
             Button icon=UI.Button("",()=>{ });
             icon.Content=UI.Glyph(tab.Glyph,16);icon.Width=38;icon.Height=38;icon.Padding=new Thickness(0);icon.ToolTip="Changer l’icône";System.Windows.Automation.AutomationProperties.SetName(icon,"Icône de "+tab.Name);
@@ -59,7 +59,7 @@ internal sealed class QuickTabsWindow:GlassWindow {
             card.Child=row;list.Children.Add(card);
         }
         var add=UI.Button("+  Ajouter un onglet",Add);add.HorizontalAlignment=HorizontalAlignment.Left;add.Padding=new Thickness(16,9,16,9);add.Margin=new Thickness(0,6,0,22);list.Children.Add(add);
-        list.Children.Add(UI.Text("OUVRIR LA COMMANDE RAPIDE",10,UI.Brush("#ABD2E4F1"),true));
+        list.Children.Add(UI.Text("OUVRIR LA COMMANDE RAPIDE",10,UI.Label,true));
         var note=UI.Text("Un raccourci global, actif même launcher fermé, depuis n’importe quelle application. Ctrl F2 par défaut.",12,UI.Dim);note.Margin=new Thickness(0,8,0,12);note.TextWrapping=TextWrapping.Wrap;list.Children.Add(note);
         BuildShortcut();
     }

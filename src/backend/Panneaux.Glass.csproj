@@ -4,7 +4,7 @@
     <UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <ImplicitUsings>disable</ImplicitUsings><Nullable>enable</Nullable><StartupObject>PanneauxGlass.Program</StartupObject>
     <AssemblyName>Panneaux.Glass</AssemblyName><ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>glass.ico</ApplicationIcon><Version>0.7.6</Version><Company>dj</Company><Product>Panneaux</Product>
+    <ApplicationIcon>glass.ico</ApplicationIcon><Version>0.8.0</Version><Company>dj</Company><Product>Panneaux</Product>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>false</SelfContained>
     <!-- WPF consumes the PerMonitorV2 manifest; WinForms is used only for tray and file pickers. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
@@ -15,5 +15,7 @@
   <ItemGroup>
     <None Update="RETABLIR_BARRE_WINDOWS.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
     <PackageReference Include="NAudio" Version="2.2.1" />
   </ItemGroup></Project>

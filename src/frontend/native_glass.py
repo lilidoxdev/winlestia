@@ -28,7 +28,7 @@ class NativeGlass(QObject):
         if self.stopped:return
         scene=self.bridge.surface_scene
         if not scene or not self.dll:return
-        live=set()
+        live=set();native_bump={3:-1,4:-1}
         for window in QApplication.allWindows():
             if not window.title().startswith('Panneaux · Cadre '):continue
             handle=int(window.winId());live.add(handle);record=self.windows.get(handle);name=window.property('screenName')
@@ -64,9 +64,16 @@ class NativeGlass(QObject):
                 record['key']=key;record['components']=components
             status=self.dll.BackdropUpdate(handle,0,True,True)
             if status<0:self.error('Update',status)
+            elif components:
+                for slot in (3,4):
+                    if len(components)>slot and components[slot]:native_bump[slot]=components[slot][2]
+        # The rail content follows the bump width last sent to the native backdrop (-1 = no native backdrop: QML follows its own animation).
+        for slot,attr in ((3,'social_win'),(4,'bookmarks_win')):
+            rail=getattr(self.bridge,attr,None)
+            if rail and rail.property('nativeBump')!=native_bump[slot]:rail.setProperty('nativeBump',native_bump[slot])
         for handle in set(self.windows)-live:self.dll.BackdropDetach(handle);self.windows.pop(handle,None)
         # Content-only windows stay above the shared background and never tint their text twice.
-        for window in (self.bridge.top,self.bridge.dock):
+        for window in (self.bridge.top,self.bridge.dock,getattr(self.bridge,'social_win',None),getattr(self.bridge,'bookmarks_win',None)):
             if window and window.isVisible():self.user.SetWindowPos(int(window.winId()),ctypes.c_void_p(-1),0,0,0,0,0x13)
     def error(self,phase,status):
         message=f'{phase}: {status:#x}'
