@@ -22,6 +22,7 @@ Item {
  onVisibleChanged:if(visible){maxPageHeight=0;measured=0;measuring=true}
  implicitHeight:Math.min(640,Bridge.screenHeight-100,mainCol.implicitHeight)
  CustomThemeEditor{id:customEditor}
+ function openCustomEditor(){customEditor.openEditor()}
  ShortcutRecorder{id:recorder}
  DetectionGuide{id:detectionGuide}
  Connections{target:Bridge;function onShellEvent(event){if(Bridge.preview&&event==="verifyRecorder")recorder.openFor("panel");else if(Bridge.preview&&event==="verifyRecorderClose")recorder.finish()}}
@@ -83,7 +84,7 @@ Item {
        Layout.fillWidth:true;Layout.preferredWidth:1;implicitHeight:92;radius:Appearance.rounding.normal;color:modelData.bg
        border.width:current?2:0;border.color:Colours.palette.m3primary
        activeFocusOnTab:true
-       function choose(){Bridge.action("theme",{mode:modelData.mode,dark:modelData.dark??false});if(modelData.mode==="custom")customEditor.openEditor()}
+       function choose(){Bridge.action("theme",{mode:modelData.mode,dark:modelData.dark??false});if(modelData.mode==="custom")page.openCustomEditor()}
        Keys.onPressed:event=>{if(event.key===Qt.Key_Return||event.key===Qt.Key_Enter||event.key===Qt.Key_Space){choose();event.accepted=true}}
        StateLayer{color:theme.modelData.fg;function onClicked(){theme.choose();theme.forceActiveFocus()}}
        FocusRing{target:theme}
@@ -103,7 +104,7 @@ Item {
     }
     RowLayout{Layout.fillWidth:true;spacing:10
      StyledText{Layout.fillWidth:true;wrapMode:Text.WordWrap;text:Bridge.themeMode==="light"?qsTr("Porcelaine : thème clair et chaleureux, fixe, indépendant du fond d’écran."):Bridge.themeMode==="dark"?qsTr("Nuit : thème sombre et reposant, fixe, indépendant du fond d’écran."):Bridge.themeMode==="custom"?qsTr("Personnalisé : tes propres couleurs, avec option de verre transparent."):qsTr("Automatique : les couleurs suivent ton fond d’écran, la transparence du verre est réglable.");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
-     IconTextButton{visible:Bridge.themeMode==="custom";text:qsTr("Modifier ma palette");icon:"palette";onClicked:customEditor.openEditor()}
+     IconTextButton{visible:Bridge.themeMode==="custom";text:qsTr("Modifier ma palette");icon:"palette";onClicked:page.openCustomEditor()}
     }
     SettingRow{title:qsTr("Liseré sur les applications");hint:qsTr("La couleur du thème autour des fenêtres du Bureau");symbol:"border_outer";StyledSwitch{checked:Bridge.settings.accentBorders??true;onClicked:Bridge.action("preference",{key:"accentBorders",enabled:checked})}}
    }
@@ -204,6 +205,7 @@ Item {
  Component{id:socialPage
   GridLayout{objectName:"socialSettings";columns:1;columnSpacing:14;rowSpacing:14
    Card{title:qsTr("Réseaux sociaux");subtitle:qsTr("Le panneau caché au bord droit de l’écran");symbol:"forum"
+    SettingRow{title:qsTr("Garder les messageries actives en arrière-plan (compteurs de messages, plus de mémoire)");symbol:"memory";StyledSwitch{objectName:"socialBackgroundToggle";checked:Bridge.settings.socialBackground??false;onClicked:Bridge.action("preference",{key:"socialBackground",enabled:checked})}}
     Repeater{model:Bridge.social.networks??[]
      RowLayout{id:net;required property var modelData;objectName:"socialRow-"+modelData.id;Layout.fillWidth:true;spacing:12
       readonly property bool connected:modelData.connected??false

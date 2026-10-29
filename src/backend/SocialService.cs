@@ -31,7 +31,7 @@ internal sealed class SocialService:IDisposable {
     sealed class Net {
         public string Id="",Name="",Url="",Login="";public string[] Hosts=Array.Empty<string>();public bool Script;
         public string[] Allowed=Array.Empty<string>();public Task? CreateTask;public HistoryItem? LastCountEntry;
-        public readonly UnreadCounter U=new();public int Count{get=>U.Count;set=>U.Count=value;}public bool Connected,Navigating,Creating,Wanted,Suspended,ForceClose,Armed,Arming;
+        public readonly UnreadCounter U=new();public int Count{get=>U.Count;set=>U.Count=value;}public bool Connected,Navigating,Creating,Wanted,Suspended,ForceClose,Armed,Arming;public DateTime HiddenSince=DateTime.MinValue;
         public DateTime LastNative=DateTime.MinValue,TitleChangedAt=DateTime.MinValue,NextCheck=DateTime.MinValue;
         public System.Windows.Window? Win;public CoreWebView2Controller? Ctl;public CoreWebView2? Wv;
     }
@@ -82,19 +82,29 @@ internal sealed class SocialService:IDisposable {
         if(started||disposed)return;started=true;
         try{
             await Task.Delay(6000);
-            foreach(var n in nets){
-                if(disposed)return;
-                if(Enabled(n)&&n.Connected)await CreateAsync(n);
-                await Task.Delay(4000);
-            }
+            await PreloadAsync();
         }catch(Exception ex){Store.Log("Social démarrage: "+ex.Message);}
     }
+
+    // Crée les vues des réseaux connectés, une par une. Rien si SocialBackground est faux (création à l'ouverture).
+    async Task PreloadAsync(){
+        foreach(var n in nets){
+            if(disposed)return;
+            if(!SocialPolicy.ShouldPreload(Store.State.SocialBackground,Enabled(n),n.Connected))continue;
+            if(n.Ctl==null)await CreateAsync(n);
+            await Task.Delay(4000);
+        }
+    }
+
+    // Appelé quand l'option « arrière-plan » est activée à l'exécution.
+    internal void BackgroundChanged(){if(started&&!disposed&&Store.State.SocialBackground)_=PreloadAsync();}
 
     // ---- Actions -----------------------------------------------------------------------------------------------
     internal async Task Open(string id,bool login){
         var n=Find(id);if(n==null||disposed)return;
         try{
             if(login&&!Enabled(n)){Store.State.SocialEnabled[n.Id]=true;Store.Save();}
+            if(!Enabled(n))return;
             n.Wanted=true;
             if(n.Ctl==null)await CreateAsync(n,navigate:false);
             if(n.Ctl==null&&n.Wanted)await CreateAsync(n,navigate:false);
@@ -175,6 +185,7 @@ internal sealed class SocialService:IDisposable {
             n.Wv.ProcessFailed+=OnProcessFailed;
             ctl.IsVisible=n.Win!.IsVisible;n.Wv.MemoryUsageTargetLevel=n.Win.IsVisible?CoreWebView2MemoryUsageTargetLevel.Normal:CoreWebView2MemoryUsageTargetLevel.Low;
             SyncBounds(n);
+            if(!n.Win.IsVisible)n.HiddenSince=DateTime.UtcNow;
             if(!slowTimer.IsEnabled)slowTimer.Start();
             if(navigate)n.Wv.Navigate(n.Url);
         }catch(Exception ex){Store.Log("Social vue "+n.Id+": "+ex.Message);}
@@ -206,13 +217,13 @@ internal sealed class SocialService:IDisposable {
         n.Wv.MemoryUsageTargetLevel=CoreWebView2MemoryUsageTargetLevel.Normal;n.Wv.IsMuted=false;
         n.Win.ShowInTaskbar=true;n.Win.Show();
         if(n.Win.WindowState==System.Windows.WindowState.Minimized)n.Win.WindowState=System.Windows.WindowState.Normal;
-        n.Ctl.IsVisible=true;SyncBounds(n);n.Win.Activate();
+        n.HiddenSince=DateTime.MinValue;n.Ctl.IsVisible=true;SyncBounds(n);n.Win.Activate();
         try{n.Ctl.MoveFocus(CoreWebView2MoveFocusReason.Programmatic);}catch{}
     }
 
     void HideWindow(Net n){
         if(n.Win==null)return;
-        n.Win.ShowInTaskbar=false;n.Win.Hide();
+        n.Win.ShowInTaskbar=false;n.Win.Hide();n.HiddenSince=DateTime.UtcNow;
         try{if(n.Ctl!=null)n.Ctl.IsVisible=false;if(n.Wv!=null){n.Wv.MemoryUsageTargetLevel=CoreWebView2MemoryUsageTargetLevel.Low;n.Wv.IsMuted=true;}}catch{}
     }
 
@@ -435,6 +446,8 @@ internal sealed class SocialService:IDisposable {
     void SlowTick(object? sender,EventArgs e){
         if(disposed)return;
         foreach(var n in nets)if(n.Script&&!n.Connected&&n.Wv!=null&&!n.Suspended&&!n.Navigating)_=CheckLater(n,0);
+        var now=DateTime.UtcNow;
+        foreach(var n in nets)if(n.Wv!=null&&!n.Creating&&!n.Navigating&&SocialPolicy.ShouldRelease(n.Win is {IsVisible:true},n.HiddenSince,now,Store.State.SocialBackground,n.Connected)){n.Wanted=false;CloseView(n);n.Count=0;countsDirty=true;Changed();}
         try{
             var status=new MemoryStatus{Length=(uint)Marshal.SizeOf<MemoryStatus>()};
             if(!GlobalMemoryStatusEx(ref status))return;

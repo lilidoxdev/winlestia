@@ -100,6 +100,7 @@ Weather|Weather|Tiempo
 Performance|Performance|Rendimiento
 Workspaces|Workspaces|Espacios de trabajo'''
 ROWS+="\n"+r"""Arrêter l’application|Stop application|Detener aplicación
+Garder les messageries actives en arrière-plan (compteurs de messages, plus de mémoire)|Keep messaging apps active in the background (message counters, more memory)|Mantener las mensajerías activas en segundo plano (contadores de mensajes, más memoria)
 Arrêter l’application…|Stop application…|Detener aplicación…
 Barre des tâches Panneaux|Winlestia taskbar|Barra de tareas Winlestia
 Cadre de l’écran|Screen frame|Marco de pantalla

@@ -73,7 +73,7 @@ public sealed class Preferences {
     public List<PinNote> Pins {get;set;}=new();
     public ShortcutPreferences PinShortcut {get;set;}=new(){Modifiers=2,Key=0x77};
     public ShortcutPreferences CaptureShortcut {get;set;}=new(){Modifiers=2,Key=0x72};
-    public bool DictationEnabled {get;set;}=false;public int DictationKey {get;set;}=0xA5;
+    public bool SocialBackground {get;set;}=false;public bool DictationEnabled {get;set;}=false;public int DictationKey {get;set;}=0xA5;
     public string Scratch {get;set;}="";
     public bool SocialMuted {get;set;}=false;public bool SocialSound {get;set;}=true;public int SocialVolume {get;set;}=60;
     public string BookmarksBrowser {get;set;}="";public Dictionary<string,List<string>> BookmarksHidden {get;set;}=new();
