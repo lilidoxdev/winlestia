@@ -127,7 +127,7 @@ QtObject {
   let n = Number(value) || 0, u = 0;
   while (n >= 1024 && u < 2) { n /= 1024; u++ }
   n = decimals > 0 ? +n.toFixed(decimals) : Math.floor(n);
-  return Qt.locale(lang).toString(n, "f", decimals > 0 && n % 1 !== 0 ? decimals : 0) + units[u];
+  return Qt.locale(lang).toString(n, "f", decimals > 0 && n % 1 !== 0 ? decimals : 0) + "\u00a0" + units[u];
  }
 }
 ''')
