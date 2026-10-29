@@ -13,12 +13,14 @@ IconTextButton{
  onClicked:button.begin()
  // La capture se fait dans le backend (hook clavier bas niveau) : Qt ne reçoit pas le clavier dans ce shell.
  // Le backend renvoie dictation:key:<vk> ou dictation:keycancel (signal Bridge.dictationKeyCaptured), ou expire seul après 30 s.
- function begin(){if(capturing)return;capturing=true;Bridge.action("dictationCapture",{enabled:true});Bridge.editTheme(true);cap.visible=true;expiry.restart()}
- function end(){if(!capturing)return;capturing=false;expiry.stop();cap.visible=false;Bridge.action("dictationCapture",{enabled:false});Bridge.editTheme(false)}
+ function begin(){if(capturing)return;capturing=true;Bridge.action("dictationCapture",{enabled:true});Bridge.editTheme(true);if(!cap)cap=capComp.createObject(button);cap.visible=true;expiry.restart()}
+ function end(){if(!capturing)return;capturing=false;expiry.stop();if(cap)cap.visible=false;Bridge.action("dictationCapture",{enabled:false});Bridge.editTheme(false)}
  Timer{id:expiry;interval:31000;onTriggered:button.end()}
  Connections{target:Bridge;function onDictationKeyCaptured(vk){button.end()}}
- Window{
-  id:cap;objectName:"dictationCapture";title:"Winlestia · Touche de dictée";transientParent:null;color:"transparent"
+ // Capture window is created on first use only.
+ property var cap:null
+ Component{id:capComp;Window{
+  objectName:"dictationCapture";title:"Winlestia · Touche de dictée";transientParent:null;color:"transparent"
   flags:Qt.Tool|Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint|Qt.NoDropShadowWindowHint
   width:420;height:150;x:Bridge.screenX+(Bridge.screenWidth-width)/2;y:Bridge.screenY+(Bridge.screenHeight-height)/2
   onClosing:event=>{event.accepted=false;button.end()}
@@ -34,6 +36,6 @@ IconTextButton{
     MouseArea{anchors.fill:parent;cursorShape:Qt.PointingHandCursor;onClicked:button.end()}
    }
   }
- }
+ }}
  Component.onDestruction:end()
 }

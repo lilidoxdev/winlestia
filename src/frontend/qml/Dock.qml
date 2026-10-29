@@ -108,7 +108,7 @@ Window {
                                 onReleased:{if(moving){dock.commitMove()}else{dock.previewClose();Bridge.closePanel();Bridge.action("activate",{id:app.modelData.id,hwnd:app.modelData.hwnd})}}
                             }
                             SequentialAnimation on rotation {running:dock.dragId===app.modelData.id;loops:Animation.Infinite;NumberAnimation{to:-3;duration:75}NumberAnimation{to:3;duration:110}NumberAnimation{to:0;duration:75}}
-                            Image {anchors.centerIn:parent;width:28;height:28;fillMode:Image.PreserveAspectFit;asynchronous:true;source:Bridge.iconUrl(app.modelData.id,Bridge.iconRevision)}
+                            Image {anchors.centerIn:parent;width:28;height:28;sourceSize.width:Math.ceil(28*Screen.devicePixelRatio);sourceSize.height:Math.ceil(28*Screen.devicePixelRatio);fillMode:Image.PreserveAspectFit;asynchronous:true;source:Bridge.iconUrl(app.modelData.id,Bridge.iconRevision)}
                             Rectangle {anchors.bottom:parent.bottom;anchors.horizontalCenter:parent.horizontalCenter;anchors.bottomMargin:1;width:app.modelData.active?15:4;height:3;radius:Appearance.rounding.tiny/2;color:Colours.palette.m3primary;visible:app.modelData.hwnd>0}
                         }
                     }

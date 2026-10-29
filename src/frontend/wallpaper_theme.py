@@ -1,17 +1,32 @@
 # Python 3.12 / wallpaper_theme.py / Windows. Material You from the wallpaper really on screen. Event-driven: the backend bumps wallpaperRevision, we re-resolve once (debounced).
+import json,subprocess,sys
 from pathlib import Path
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from PySide6.QtCore import QObject, QTimer, Signal
 
-import chromatic_palette
-from chromatic_palette import generate_palette
 import wallpaper_sources
+
+def _in_process(request):
+    import chromatic_palette  # fallback: compute in-process as before
+    if request.get('op')=='images':return chromatic_palette.palette_from_images(list(request['images']),background=request['background'],previous_dark=request.get('previous_dark'),slot=request.get('slot'),source=request.get('source',''))
+    return chromatic_palette.generate_palette(request.get('path',''),request['background'])
+def _palette(request):
+    # numpy/PIL/material_color_utilities stay out of the resident frontend: the palette is computed in a short-lived child (palette_child.py) that frees them on exit.
+    if getattr(sys,'frozen',False):return _in_process(request)
+    python=Path(sys.executable);python=python.with_name('python.exe') if python.with_name('python.exe').exists() else python
+    try:done=subprocess.run([str(python),str(Path(__file__).resolve().with_name('palette_child.py')),json.dumps(request)],stdin=subprocess.DEVNULL,capture_output=True,timeout=90,creationflags=0x08000000)
+    except (OSError,subprocess.TimeoutExpired):return _in_process(request)
+    if done.returncode:
+        if b'ModuleNotFoundError' in done.stderr or b'ImportError' in done.stderr:return _in_process(request)
+        raise RuntimeError('palette child failed: '+done.stderr.decode('utf-8','replace').strip()[-300:])
+    return json.loads(done.stdout.decode('utf-8'))
+def generate_palette(path='',background='#182025'):return _palette({'op':'generate','path':path,'background':background})
 
 class WallpaperTheme(QObject):
     changed=Signal();result=Signal(dict)
     def __init__(self,parent=None):
-        super().__init__(parent);self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='Panneaux Palette');self.cache=OrderedDict();self.monitors=[];self.signature=None;self.closed=False;self.generation=0;self.pending=False;self.again=False;self.client=None;self.captures=OrderedDict();self.revision=None;self.requested=set();self.result.connect(self.accept)
+        super().__init__(parent);self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='Panneaux Palette');self.cache=OrderedDict();self.monitors=[];self.signature=None;self.closed=False;self.generation=0;self.pending=False;self.again=False;self.client=None;self.captures=OrderedDict();self.revision=None;self.requested=set();self.dark_state=OrderedDict();self.result.connect(self.accept)
         self.debounce=QTimer(self);self.debounce.setSingleShot(True);self.debounce.setInterval(300);self.debounce.timeout.connect(self.resolve)
     def update(self,monitors,revision=None,client=None):
         # Called with every state message; costs one tuple comparison. A real change (revision or monitor paths) arms a single 300 ms debounce.
@@ -57,14 +72,13 @@ class WallpaperTheme(QObject):
                 if not self.closed:self.result.emit({'generation':generation,'themes':results})
         self.executor.submit(work)
     def analyze(self,images,background,source,slot=''):
-        # Several frames (video) -> palette_from_images; otherwise analyze_images, then the single-image generate_palette.
+        # Single or several frames -> palette_from_images in the child; the light/dark hysteresis memory (per monitor slot, <=16) stays here and is passed along.
         images=[i for i in images if i]
         if not images:return generate_palette('',background)
-        build=getattr(chromatic_palette,'palette_from_images',None)
-        if build is not None:return build(list(images),background=background,key=(source.key,source.modified,background,tuple(images)),slot=str(slot),source=source.label)
-        function=getattr(chromatic_palette,'analyze_images',None)
-        if function is None or len(images)==1:return generate_palette(images[0],background)
-        return function(list(images),key=source.key)
+        slot=str(slot);result=_palette({'op':'images','images':[str(i) for i in images],'background':background,'slot':slot,'previous_dark':self.dark_state.get(slot),'source':source.label})
+        self.dark_state.pop(slot,None);self.dark_state[slot]=result['dark']
+        while len(self.dark_state)>16:self.dark_state.popitem(last=False)
+        return result
     def accept(self,result):
         self.pending=False
         again,self.again=self.again,False

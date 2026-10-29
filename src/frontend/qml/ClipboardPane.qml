@@ -21,7 +21,7 @@ Item {
             StateLayer{function onClicked(){Bridge.action("clipboardCopy",{id:row.modelData.id});Bridge.closePanel()}}
             RowLayout{anchors.fill:parent;anchors.margins:14;spacing:14
                 MaterialIcon{text:row.modelData.kind==="image"?"image":"notes";font.pointSize:Appearance.font.size.title;color:Colours.palette.m3primary}
-                Image{Layout.preferredWidth:55;Layout.preferredHeight:45;source:Bridge.localUrl(row.modelData.image);visible:row.modelData.kind==="image";asynchronous:true;fillMode:Image.PreserveAspectFit}
+                Image{Layout.preferredWidth:55;Layout.preferredHeight:45;sourceSize.width:Math.ceil(55*Screen.devicePixelRatio);sourceSize.height:Math.ceil(45*Screen.devicePixelRatio);source:Bridge.localUrl(row.modelData.image);visible:row.modelData.kind==="image";asynchronous:true;fillMode:Image.PreserveAspectFit}
                 Column{Layout.fillWidth:true;StyledText{width:parent.width;text:row.modelData.text||"Image copiée";maximumLineCount:2;wrapMode:Text.Wrap;elide:Text.ElideRight;font.pointSize:Appearance.font.size.normal} StyledText{text:row.modelData.at;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}}
                 IconButton{icon:"keep";toggle:true;checked:row.modelData.pinned;type:IconButton.Text;onClicked:Bridge.action("clipboardPin",{id:row.modelData.id})}
             }

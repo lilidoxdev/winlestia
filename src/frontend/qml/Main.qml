@@ -2,6 +2,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Shapes
+import QtQml
 import Quickshell
 import qs.config
 import qs.services
@@ -47,15 +48,15 @@ Window {
             extraOpen=false;pageMode="dashboard";drawer.dashState.currentTab=mode==="media"?1:mode==="performance"?2:mode==="access"?3:0;vis.dashboard=true;peek=true
         }else{
             mixerOpen=false;vis.dashboard=false;peek=false;pageMode=mode.split(":")[0];extraOpen=true
-            if(pageMode==="palette")Qt.callLater(()=>palette.reset())
-            if(pageMode==="settings"&&mode==="settings:social")preferences.tab=4
-            if(pageMode==="settings"&&mode==="settings:bookmarks")preferences.tab=5
+            if(pageMode==="palette")Qt.callLater(()=>{if(palette.item)palette.item.reset()})
+            if(pageMode==="settings"&&mode==="settings:social"){if(preferences.item)preferences.item.tab=4;else preferences.pendingTab=4}
+            if(pageMode==="settings"&&mode==="settings:bookmarks"){if(preferences.item)preferences.item.tab=5;else preferences.pendingTab=5}
         }
         subscribe();Bridge.activate()
     }
     onVisibleChanged:subscribe()
     onControlsOpenChanged:subscribe()
-    Shortcut {sequence:"Escape";enabled:window.visible&&!browser.dialogOpen;onActivated:Bridge.closePanel()}
+    Shortcut {sequence:"Escape";enabled:window.visible&&!(browser.item&&browser.item.dialogOpen);onActivated:Bridge.closePanel()}
     Shortcut {sequence:"Ctrl+1";enabled:window.visible&&window.pageMode!=="settings";onActivated:Bridge.navigate("workspace:apps")}
     Shortcut {sequence:"Ctrl+2";enabled:window.visible&&window.pageMode!=="settings";onActivated:Bridge.navigate("workspace:games")}
     Shortcut {sequence:"Ctrl+3";enabled:window.visible&&window.pageMode!=="settings";onActivated:Bridge.navigate("workspace:projects")}
@@ -76,18 +77,24 @@ Window {
         Behavior on opacity {Anim {duration:Appearance.anim.durations.small}}
         WindowsControls {id:controls;width:410;visible:window.pageMode==="controls";mixerOpen:window.mixerOpen;onToggleMixer:window.mixerOpen=!window.mixerOpen}
         Item{x:430;width:Math.max(0,window.mixerExtent-20);height:sideMixer.implicitHeight;visible:window.pageMode==="controls"&&window.mixerExtent>1;clip:true
-            MixerPane{id:sideMixer;width:Math.max(320,window.mixerExtent-20);opacity:window.mixerOpen?1:0;x:window.mixerOpen?0:24;onDismiss:window.mixerOpen=false
+            Loader{id:sideMixer;width:Math.max(320,window.mixerExtent-20);opacity:window.mixerOpen?1:0;x:window.mixerOpen?0:24;property bool once:false;property bool want:window.pageMode==="controls"&&(window.mixerOpen||window.mixerExtent>1);onWantChanged:if(want)once=true;active:want||once
+                sourceComponent:MixerPane{onDismiss:window.mixerOpen=false}
                 Behavior on opacity{Anim{duration:Appearance.anim.durations.small}} Behavior on x{Anim{duration:Appearance.anim.durations.expressiveFastSpatial}}
             }
         }
-        ToolsPane{id:tools;width:parent.width;visible:window.pageMode==="tools"}
-        AudioPane{id:audio;width:parent.width;visible:window.pageMode==="audio"||window.pageMode==="microphone";microphone:window.pageMode==="microphone"}
-        MixerPane{id:fullMixer;width:parent.width;visible:window.pageMode==="mixer";standalone:true;onDismiss:Bridge.closePanel()}
-        CapturePane{id:capturePane;width:parent.width;visible:window.pageMode==="capture"}
-        WorkspaceBrowser {id:browser;width:parent.width;visible:window.pageMode==="workspace"}
-        PalettePane {id:palette;width:parent.width;visible:window.pageMode==="palette"}
-        ShellPreferences {id:preferences;width:parent.width;visible:window.pageMode==="settings"}
-        ClipboardPane {id:clipboard;width:parent.width;visible:window.pageMode==="clipboard"}
+        // Keep-alive lazy panes: instantiated on first show, then kept loaded. Workspace/Palette are also preloaded asynchronously after idle.
+        component PaneLoader:Loader{property bool want:false;property bool once:false;property bool warm:false;width:parent.width;visible:want&&item!==null;active:want||once||warm;onWantChanged:if(want)once=true;Component.onCompleted:if(want)once=true}
+        Timer{id:warmTimer;interval:5000;running:true;repeat:false;onTriggered:{browser.warm=true;palette.warm=true}}
+        PaneLoader{id:tools;want:window.pageMode==="tools";sourceComponent:ToolsPane{}}
+        PaneLoader{id:audio;want:window.pageMode==="audio"||window.pageMode==="microphone";sourceComponent:AudioPane{microphone:window.pageMode==="microphone"}}
+        PaneLoader{id:fullMixer;want:window.pageMode==="mixer";sourceComponent:MixerPane{standalone:true;onDismiss:Bridge.closePanel()}}
+        PaneLoader{id:capturePane;want:window.pageMode==="capture";sourceComponent:CapturePane{}}
+        PaneLoader{id:browser;want:window.pageMode==="workspace";asynchronous:true;sourceComponent:WorkspaceBrowser{}}
+        PaneLoader{id:palette;want:window.pageMode==="palette";asynchronous:true;sourceComponent:PalettePane{}
+            onLoaded:if(want)item.reset()}
+        PaneLoader{id:preferences;want:window.pageMode==="settings";property int pendingTab:-1;sourceComponent:ShellPreferences{}
+            onLoaded:if(pendingTab>=0){item.tab=pendingTab;pendingTab=-1}}
+        PaneLoader{id:clipboard;want:window.pageMode==="clipboard";sourceComponent:ClipboardPane{}}
     }
     Connections {target:drawer.dashState;function onCurrentTabChanged(){window.subscribe()}}
     Connections {
@@ -107,7 +114,7 @@ Window {
         StyledText{id:noticeLabel;anchors.centerIn:parent;width:parent.width-26;text:Bridge.notice;wrapMode:Text.Wrap;font.pointSize:11}
     }
     RecycleDrop{}
-    Repeater{model:Bridge.frameScreens;delegate:Item{id:frameHolder;required property var modelData;ScreenFrame{modelData:frameHolder.modelData}DesktopLogo{modelData:frameHolder.modelData}}}
+    Repeater{model:Bridge.frameScreens;delegate:Item{id:frameHolder;required property var modelData;ScreenFrame{modelData:frameHolder.modelData}Instantiator{model:1;active:Bridge.settings.desktopLogo??false;delegate:DesktopLogo{modelData:frameHolder.modelData}}}}
     CaptureWindow{}
     DictationOverlay{dock:bottomDock}
     Dock {id:bottomDock;objectName:"bottomDock"}

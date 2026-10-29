@@ -104,7 +104,7 @@ Window {
                     objectName:"runningGrid";visible:menu.kind==="running";columns:5;spacing:8;width:body.width
                     Repeater {model:menu.kind==="running"?Bridge.runningApps.filter(a=>!!a.background===menu.backgroundTab):[]
                         StyledRect{id:runningCell;required property var modelData;objectName:"running-cell-"+modelData.id;width:(body.width-32)/5;height:62;radius:Appearance.rounding.normal;color:hover.containsMouse?Colours.palette.m3secondaryContainer:Colours.palette.m3surfaceContainer
-                            Image{id:appLogo;anchors.centerIn:parent;width:32;height:32;source:Bridge.iconUrl(runningCell.modelData.id,Bridge.iconRevision);asynchronous:true;fillMode:Image.PreserveAspectFit}
+                            Image{id:appLogo;anchors.centerIn:parent;width:32;height:32;sourceSize.width:Math.ceil(32*Screen.devicePixelRatio);sourceSize.height:Math.ceil(32*Screen.devicePixelRatio);source:Bridge.iconUrl(runningCell.modelData.id,Bridge.iconRevision);asynchronous:true;fillMode:Image.PreserveAspectFit}
                             MaterialIcon{anchors.centerIn:parent;text:"apps";visible:appLogo.status!==Image.Ready;color:Colours.palette.m3primary}
                             MouseArea{id:hover;anchors.fill:parent;hoverEnabled:true;acceptedButtons:Qt.LeftButton|Qt.RightButton;onClicked:menu.selectEntry(runningCell.modelData)}
                             C.ToolTip.visible:hover.containsMouse;C.ToolTip.text:modelData.name;C.ToolTip.delay:350

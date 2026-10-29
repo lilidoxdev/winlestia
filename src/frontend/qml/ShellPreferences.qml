@@ -24,7 +24,10 @@ Item {
  CustomThemeEditor{id:customEditor}
  function openCustomEditor(){customEditor.openEditor()}
  ShortcutRecorder{id:recorder}
- DetectionGuide{id:detectionGuide}
+ // Created on first use (rare, owns two native windows).
+ Component{id:detectionComp;DetectionGuide{}}
+ property var detectionGuide:null
+ function openDetectionGuide(){if(!detectionGuide)detectionGuide=detectionComp.createObject(page);detectionGuide.visible=true}
  Connections{target:Bridge;function onShellEvent(event){if(Bridge.preview&&event==="verifyRecorder")recorder.openFor("panel");else if(Bridge.preview&&event==="verifyRecorderClose")recorder.finish()}}
  // Hidden measuring pass (once per opening): the panel height follows the tallest page so it does not jump between tabs.
  Repeater{id:measurer;model:page.measuring?6:0
@@ -140,7 +143,7 @@ Item {
     SliderRow{title:qsTr("Taille des icônes");hint:qsTr("Icônes du dock et de la barre des tâches");value:Math.round(iconSize.value)+" px"
      StyledSlider{id:iconSize;Layout.fillWidth:true;implicitHeight:25;from:40;to:80;stepSize:2;onMoved:Bridge.action("preference",{key:"iconSize",value:value});Binding{target:iconSize;property:"value";value:Bridge.settings.iconSize??56;when:!iconSize.pressed}}
     }
-    SettingRow{title:qsTr("Zone de détection");hint:(Bridge.settings.topActivationMargin??2)+" px · "+qsTr("bande en haut de l’écran qui ouvre le panneau");symbol:"vertical_align_top";IconTextButton{objectName:"calibrateButton";text:qsTr("Calibrer");icon:"straighten";type:IconTextButton.Tonal;onClicked:detectionGuide.visible=true}}
+    SettingRow{title:qsTr("Zone de détection");hint:(Bridge.settings.topActivationMargin??2)+" px · "+qsTr("bande en haut de l’écran qui ouvre le panneau");symbol:"vertical_align_top";IconTextButton{objectName:"calibrateButton";text:qsTr("Calibrer");icon:"straighten";type:IconTextButton.Tonal;onClicked:page.openDetectionGuide()}}
    }
   }
  }

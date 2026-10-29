@@ -387,6 +387,7 @@ class Bridge(QObject):
         buffer=ctypes.create_unicode_buffer(64);scan=user32.MapVirtualKeyW(vk,0)
         if scan and user32.GetKeyNameTextW(scan<<16,buffer,64):return buffer.value
         return 'Touche 0x%02X'%vk
+    @Slot(int,int,result=str)
     def shortcutText(self,key,modifiers):return QKeySequence(key|modifiers).toString(QKeySequence.NativeText)
     @Slot(str,int,int)
     def captureShortcut(self,kind,key,modifiers):

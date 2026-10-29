@@ -42,7 +42,7 @@ Item {
                 id:row;required property var modelData;width:list.width;implicitHeight:100;radius:Appearance.rounding.large;color:Colours.palette.m3surfaceContainer
                 ColumnLayout {anchors.fill:parent;anchors.margins:14;spacing:5
                     RowLayout{Layout.fillWidth:true;spacing:10
-                        Image{Layout.preferredWidth:28;Layout.preferredHeight:28;source:Bridge.iconUrl(row.modelData.id,Bridge.iconRevision);asynchronous:true;fillMode:Image.PreserveAspectFit;visible:status===Image.Ready}
+                        Image{Layout.preferredWidth:28;Layout.preferredHeight:28;sourceSize.width:Math.ceil(28*Screen.devicePixelRatio);sourceSize.height:Math.ceil(28*Screen.devicePixelRatio);source:Bridge.iconUrl(row.modelData.id,Bridge.iconRevision);asynchronous:true;fillMode:Image.PreserveAspectFit;visible:status===Image.Ready}
                         MaterialIcon{text:row.modelData.pid===0?"notifications":"music_note";visible:!Bridge.iconUrl(row.modelData.id,Bridge.iconRevision);color:Colours.palette.m3primary}
                         StyledText{text:row.modelData.name;Layout.fillWidth:true;elide:Text.ElideRight;font.pointSize:Appearance.font.size.normal}
                         IconButton{icon:row.modelData.muted?"volume_off":"volume_up";type:IconButton.Text;onClicked:Bridge.action("sessionMute",{id:row.modelData.id,muted:!row.modelData.muted})}
