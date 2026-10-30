@@ -25,7 +25,7 @@ Window {
     Behavior on mixerExtent{enabled:!Appearance.reducedEffects;Anim{duration:window.menuDuration;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
     property bool controlsOpen:pageMode==="controls"&&extraOpen
     property real extraHeight:extraOpen?extraBody.implicitHeight+36:0
-    property real contentWidth:pageMode==="workspace"?Math.min(1220,Bridge.screenWidth-80):pageMode==="palette"?660:pageMode==="settings"?Math.min(900,Bridge.screenWidth-80):pageMode==="clipboard"?730:pageMode==="tools"?760:pageMode==="audio"||pageMode==="microphone"?650:pageMode==="mixer"?490:pageMode==="capture"?620:450+(pageMode==="controls"?mixerExtent:0)
+    property real contentWidth:pageMode==="workspace"?Math.min(1220,Bridge.screenWidth-80):pageMode==="palette"?(palette.item&&palette.item.wide?Math.min(1320,Bridge.screenWidth-80):660):pageMode==="settings"?Math.min(900,Bridge.screenWidth-80):pageMode==="clipboard"?730:pageMode==="tools"?760:pageMode==="audio"||pageMode==="microphone"?650:pageMode==="mixer"?490:pageMode==="capture"?620:450+(pageMode==="controls"?mixerExtent:0)
 
     property real panelWidth:Math.ceil((pageMode==="dashboard"?Math.max(600,drawer.implicitWidth||854):contentWidth)+40)
     property real panelHeight:Bridge.fileDragNearTop?0:Math.ceil(Math.max(1,pageMode==="dashboard"?(vis.dashboard?drawer.implicitHeight:peek?82:0):extraHeight))
@@ -117,6 +117,7 @@ Window {
     Repeater{model:Bridge.frameScreens;delegate:Item{id:frameHolder;required property var modelData;ScreenFrame{modelData:frameHolder.modelData}Instantiator{model:1;active:Bridge.settings.desktopLogo??false;delegate:DesktopLogo{modelData:frameHolder.modelData}}}}
     CaptureWindow{}
     DictationOverlay{dock:bottomDock}
+    Loader{id:osdLoader;active:Bridge.settings.osd??true;sourceComponent:Osd{}}
     Dock {id:bottomDock;objectName:"bottomDock"}
     SocialRail {}
     BookmarksRail {}

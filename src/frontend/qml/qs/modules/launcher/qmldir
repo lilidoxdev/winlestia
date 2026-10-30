@@ -2,3 +2,4 @@ module qs.modules.launcher
 AppList AppList.qml
 Content Content.qml
 ContentList ContentList.qml
+WallpaperList WallpaperList.qml

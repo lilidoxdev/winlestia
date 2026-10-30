@@ -11,6 +11,7 @@ internal static class SystemActions {
     [DllImport("powrprof.dll")]static extern bool SetSuspendState(bool hibernate,bool forceCritical,bool disableWakeEvent);
     [DllImport("shell32.dll",CharSet=CharSet.Unicode)]static extern int SHEmptyRecycleBin(IntPtr handle,string? root,uint flags);
     internal static void Lock(Coordinator owner){owner.CollapseImmediately();LockWorkStation();}
+    internal static void LockNow()=>LockWorkStation();
     internal static void Sleep(Coordinator owner){owner.CollapseImmediately();if(!SetSuspendState(false,false,false))owner.Message("La mise en veille n’a pas pu être déclenchée sur ce PC.");}
     internal static void Screenshot(Coordinator owner)=>owner.LaunchWindowsShortcut(new WindowsShortcut{Name="Capture",Target="ms-screenclip:"});
     internal static void TaskManager(Coordinator owner){owner.CollapseImmediately();TryStart("taskmgr.exe",owner);}

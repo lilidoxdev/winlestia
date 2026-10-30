@@ -30,6 +30,9 @@ En cours|Running|En ejecución
 Arrière-plan|Background|Segundo plano
 Alimentation|Power|Energía
 Mettre en veille|Sleep|Suspender
+Verrouiller|Lock|Bloquear
+Se déconnecter|Log out|Cerrar sesión
+Hibernation|Hibernate|Hibernar
 Redémarrer|Restart|Reiniciar
 Éteindre|Shut down|Apagar
 Confirmer|Confirm|Confirmar
@@ -191,7 +194,9 @@ Le texte reconnu rejoint le presse-papiers|Recognised text goes to the clipboard
 Une image complète de l’écran actuel|A full image of the current screen|Una imagen completa de la pantalla actual
 Rechercher dans l’historique|Search history|Buscar en el historial
 Aucun enregistrement · réglage du niveau d’entrée uniquement|No recording · input level adjustment only|Sin grabación · solo ajuste del nivel de entrada
-Le changement s’applique aux nouvelles lectures Windows|The change applies to new Windows playback|El cambio se aplica a las nuevas reproducciones de Windows"""
+Le changement s’applique aux nouvelles lectures Windows|The change applies to new Windows playback|El cambio se aplica a las nuevas reproducciones de Windows
+Aucun fond d’écran trouvé|No wallpapers found|No se encontraron fondos de pantalla
+Ajoute des images dans ton dossier Images|Try putting some images in your Pictures folder|Añade imágenes en tu carpeta Imágenes"""
 TABLE={}
 for row in ROWS.splitlines():
  fr,en,es=row.split('|');value={'fr':fr,'en':en,'es':es};TABLE[fr]=value;TABLE.setdefault(en,value)
@@ -220,5 +225,7 @@ Cadre, dock et accès rapide|Frame, dock and quick access|Marco, dock y acceso r
 Zone de détection|Activation area|Zona de activación
 Ajuster avec le repère à l’écran|Adjust using the on-screen guide|Ajustar con la guía en pantalla
 Langue et raccourcis|Language and shortcuts|Idioma y atajos
-Un rendu plus léger pour les petites configurations|Lighter rendering for modest hardware|Renderizado ligero para equipos modestos""".splitlines():
+Un rendu plus léger pour les petites configurations|Lighter rendering for modest hardware|Renderizado ligero para equipos modestos
+Afficher l’OSD|Show the OSD|Mostrar el OSD
+Indicateur de volume à l’écran|On-screen volume indicator|Indicador de volumen en pantalla""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}

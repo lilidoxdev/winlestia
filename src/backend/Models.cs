@@ -51,7 +51,7 @@ public sealed class Preferences {
     public bool FilesDefaultsMigrated {get;set;}   // set once the default-on / default-pinned migration ran; a later opt-out is never undone
     public bool FilesPinRemoved {get;set;}   // set once the old "Winlestia Fichiers" dock pin was removed (the app has its own dock button now); see FilesPinMigration
     public bool FilesPreload {get;set;}=true;   // default on: keep a hidden Winlestia Fichiers resident so folders open instantly
-    public bool AutoTile {get;set;}=false;public bool DesktopLogo {get;set;}=false;
+    public bool AutoTile {get;set;}=false;public bool DesktopLogo {get;set;}=false;public bool Osd {get;set;}=true;
     public bool? ReducedEffects {get;set;}
     public int TopActivationMargin {get;set;}=2; public double DockWidth {get;set;}=0;
     public int ShellRevision {get;set;}

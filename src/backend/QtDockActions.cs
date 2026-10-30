@@ -97,6 +97,9 @@ internal sealed partial class QtShellBridge {
         switch(id){
             case "shutdown":target="shutdown.exe";arguments="/s /t 0";break;
             case "restart":target="shutdown.exe";arguments="/r /t 0";break;
+            case "lock":SystemActions.LockNow();return;
+            case "logout":target="shutdown.exe";arguments="/l";break;
+            case "hibernate":System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Hibernate,false,false);return;
             case "sleep":System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend,false,false);return;
             case "terminal":target="wt.exe";break;case "terminalAdmin":target="wt.exe";admin=true;break;
             case "taskmgr":target="taskmgr.exe";break;case "settings":target="ms-settings:";break;

@@ -1,2 +1,3 @@
 module qs.modules.launcher.items
 AppItem AppItem.qml
+WallpaperItem WallpaperItem.qml

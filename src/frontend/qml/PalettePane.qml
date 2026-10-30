@@ -17,6 +17,7 @@ Column {
         StyledText {text:Bridge.settings.paletteShortcut||"Ctrl + F2";font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
         IconButton {icon:"close";type:IconButton.Text;onClicked:Bridge.closePanel()}
     }
+    readonly property bool wide:launcher.wallpaperMode
     Launcher.Content {id:launcher;width:parent.width;visibilities:vis;panels:({});maxHeight:Math.min(610,Bridge.screenHeight-210)}
     RowLayout {
         id:footer;width:parent.width

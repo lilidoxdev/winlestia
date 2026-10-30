@@ -13,7 +13,7 @@ from interaction import EdgePolicy, is_fullscreen
 from localization import Translator
 from custom_palette import make_palette,DEFAULT,valid_color
 from screen_picker import ClickPicker
-from search import palette_search
+from search import palette_search, wallpaper_choices, wallpaper_refresh, wallpaper_known
 from live_model import LiveListModel
 from capture_native import CaptureController
 from concurrent.futures import ThreadPoolExecutor
@@ -128,7 +128,7 @@ class WindowsPlayer(QObject):
     def quit(self):pass
 
 class Bridge(QObject):
-    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int)
+    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal()
     def __init__(self,args):
         super().__init__();self.surface_scene=None;self.args=args;self._window=None;self._state={};self._pending_controls={};self._pending_audio={};self._icon_requests={};self._dark=False;self._player=WindowsPlayer(self);self.top=None;self.dock=None;self.social_win=None;self.away_social=0;self.bookmarks_win=None;self.away_bookmarks=0;self.last_reply=0;self.peek_until=0;self.away_top=0;self.away_dock=0;self.force_dock=0
         self.top_seen=False;self._screen=QApplication.primaryScreen();self.client=PipeClient(args.pipe);self.client.received.connect(self.update_state);self.client.start()
@@ -172,6 +172,12 @@ class Bridge(QObject):
         if key==getattr(self,'_theme_inputs',None):return
         self._theme_inputs=key;self.publish_palette();self.sync_explorer_theme()
     def screen_list_changed(self,screen):self.screensChanged.emit()
+    @Property(bool,constant=True)
+    def hibernateAvailable(self):
+        try:
+            caps=ctypes.create_string_buffer(76)  # SYSTEM_POWER_CAPABILITIES; byte 6 = SystemS4, byte 8 = HiberFilePresent
+            return bool(ctypes.windll.powrprof.GetPwrCapabilities(caps)) and caps.raw[8]!=0 and caps.raw[6]!=0
+        except Exception:return False
     themeRevision=Property(int,lambda s:s._theme_revision,notify=frameChanged)
     fullscreenScreens=Property('QVariantList',lambda s:list(s.fullscreen_names),notify=frameChanged)
     @Slot(str,int,result='QVariantMap')
@@ -353,6 +359,15 @@ class Bridge(QObject):
     @Slot(str)
     def searchPalette(self,text):
         self.query=text;self._results=palette_search(text,self._state);self.searchChanged.emit()
+    @Slot(str,result='QVariantList')
+    def wallpaperChoices(self,query):return wallpaper_choices(query)
+    @Slot()
+    def refreshWallpapers(self):wallpaper_refresh(self.wallpapersReady.emit)
+    def setWallpaper(self,path):
+        # Only files from the last scan; the backend sees the Windows change event and the palette is re-derived by WallpaperTheme.
+        if not wallpaper_known(path):return
+        def apply():ctypes.windll.user32.SystemParametersInfoW(0x14,0,path,3)
+        threading.Thread(target=apply,daemon=True).start()
     @Slot('QVariant')
     def executeResult(self,value):
         if hasattr(value,'toVariant'):value=value.toVariant()
@@ -360,6 +375,8 @@ class Bridge(QObject):
         kind=value.get('kind','app');key=value.get('id','')
         if kind=='navigate':self.navigate(key)
         elif kind=='calc':self.closePanel();self.action('copyText',{'text':value['name'][2:]})
+        elif kind=='autocomplete':self.prefillPalette(key)
+        elif kind=='wallpaper':self.closePanel();self.setWallpaper(key)
         else:
             self.closePanel()
             self.action('paletteRun',{'kind':kind,'id':key,'query':self.query})
