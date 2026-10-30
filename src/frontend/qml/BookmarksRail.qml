@@ -133,7 +133,7 @@ EdgeRail {
                         }
                         HoverHandler {id:hover}
                         TapHandler {acceptedButtons:Qt.RightButton;onTapped:{const p=entry.mapToGlobal(entry.width,entry.height/2);menu.openFor(entry.id,entry.title,p.x,p.y)}}
-                        C.ToolTip {visible:hover.hovered;text:entry.title||entry.url;delay:500;popupType:C.Popup.Window}
+                        ShellToolTip {visible:hover.hovered;text:entry.title||entry.url;delay:500}
                     }
                 }
                 // Empty / busy / error states (only while there is nothing to list).
@@ -144,7 +144,7 @@ EdgeRail {
                     property string label:kind==="busy"?qsTr("Chargement des favoris…"):kind==="error"?rail.errorText(rail.error):qsTr("Aucun favori")
                     MaterialIcon {anchors.centerIn:parent;text:parent.kind==="busy"?"hourglass_empty":parent.kind==="error"?"error":"bookmark_border";font.pointSize:Appearance.font.size.title;color:parent.kind==="error"?Colours.palette.m3error:Colours.palette.m3onSurfaceVariant}
                     HoverHandler {id:stateHover}
-                    C.ToolTip {visible:stateHover.hovered;text:parent.label;delay:300;popupType:C.Popup.Window}
+                    ShellToolTip {visible:stateHover.hovered;text:parent.label;delay:300}
                 }
             }
             // Error while the list is non-empty (not the sync warning, which the menu handles).
@@ -153,7 +153,7 @@ EdgeRail {
                 visible:flat.count>0&&rail.error!==""&&rail.error!=="sync";Layout.alignment:Qt.AlignHCenter;Layout.preferredWidth:30;Layout.preferredHeight:30;radius:15;color:Colours.palette.m3error
                 MaterialIcon {anchors.centerIn:parent;text:"warning";font.pointSize:Appearance.font.size.large;color:Colours.palette.m3onError}
                 HoverHandler {id:warnHover}
-                C.ToolTip {visible:warnHover.hovered;text:rail.errorText(rail.error);delay:300;popupType:C.Popup.Window}
+                ShellToolTip {visible:warnHover.hovered;text:rail.errorText(rail.error);delay:300}
             }
             Rectangle {Layout.alignment:Qt.AlignHCenter;implicitWidth:34;implicitHeight:1;color:Colours.palette.m3outlineVariant}
             IconButton {objectName:"bookmarksGear";Layout.alignment:Qt.AlignHCenter;icon:"settings";type:IconButton.Text;onClicked:{Bridge.action("settings",{section:"bookmarks"});rail.shown=false}}

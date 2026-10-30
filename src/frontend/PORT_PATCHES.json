@@ -145,8 +145,9 @@
       "source": "components/controls/FilledSlider.qml",
       "destination": "qml/qs/components/controls/FilledSlider.qml",
       "sha256": "58c7ca603dda875fd175e6d101b295f5688ae584866625d290950e76620ef695",
-      "portedSha256": "58c7ca603dda875fd175e6d101b295f5688ae584866625d290950e76620ef695",
-      "modified": false
+      "portedSha256": "4eeaa53c43e95387b07f38dee0b8fa7acf5966255431f8a068cda03c11a10791",
+      "modified": true,
+      "reason": "added showValue property so the OSD can keep its icon instead of the percentage"
     },
     {
       "source": "components/controls/IconButton.qml",

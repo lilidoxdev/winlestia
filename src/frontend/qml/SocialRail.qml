@@ -2,7 +2,6 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Layouts
-import QtQuick.Controls as C
 import qs.components
 import qs.components.controls
 import qs.config
@@ -43,7 +42,7 @@ EdgeRail {
                     }
                     StateLayer {radius:width/2;function onClicked(){Bridge.action(logo.connected?"socialOpen":"socialLogin",{id:logo.modelData.id});rail.shown=false}}
                     HoverHandler {id:hover}
-                    C.ToolTip {visible:hover.hovered;text:logo.modelData.name;delay:500;popupType:C.Popup.Window}
+                    ShellToolTip {visible:hover.hovered;text:logo.modelData.name;delay:500}
                     // Unread counter: top-left, hidden at 0, scale-in.
                     Rectangle {
                         objectName:"badge-"+logo.modelData.id

@@ -1,6 +1,7 @@
 // C# 12 / VirtualDesktops.cs / Windows 11. Virtual desktop indicator support WITHOUT any undocumented COM interface.
 // Read: HKCU registry only (VirtualDesktopIDs, CurrentVirtualDesktop - per-session key first, general key as fallback, optional Desktops\{GUID}\Name).
-// Changes: RegNotifyChangeKeyValue + WaitHandle on one dedicated thread (no timer, no polling); Stop() signals and joins it.
+// Changes: no registry notification (Windows 11 does not signal RegNotifyChangeKeyValue for these writes): out-of-context WinEvent hooks (foreground, cloak/uncloak)
+// on one dedicated message-loop thread re-read the registry 150 ms and 900 ms after the last event. At rest the thread blocks in GetMessage: no timer, no polling, no wakeup. Stop() posts WM_QUIT and joins it.
 // Switch: only when asked by a user gesture; Win+Ctrl+Left/Right through SendInput, repeated by the gap between current and target. Modifiers are always released.
 using System;
 using System.Collections.Generic;
@@ -17,69 +18,90 @@ internal static class VirtualDesktops {
     const string Explorer = @"Software\Microsoft\Windows\CurrentVersion\Explorer";
     const string General = Explorer + @"\VirtualDesktops";
     static readonly object gate = new();
-    static Thread? worker;
-    static ManualResetEvent? stop;
     static volatile Snapshot snapshot = new(0, 0, Array.Empty<string>());
     internal static Snapshot Current => snapshot;
     // Raised on the watcher thread only when the snapshot differs; subscribers must not throw (swallowed).
     internal static event Action? Changed;
 
+    static Thread? worker;
+    static uint workerId;
+    static WinEventProc? proc;   // static: the GC must never collect the hook delegate
+
     internal static void Start() {
+        var ready = new ManualResetEventSlim(false);
         lock (gate) {
             if (worker != null) return;
-            stop = new ManualResetEvent(false);
-            var s = stop;
-            worker = new Thread(() => Run(s)) { IsBackground = true, Name = "VirtualDesktopsWatcher" };
+            worker = new Thread(() => Run(ready)) { IsBackground = true, Name = "VirtualDesktopsWatcher" };
             worker.Start();
         }
+        ready.Wait(2000);
     }
 
     internal static void Stop() {
-        Thread? t; ManualResetEvent? s;
-        lock (gate) { t = worker; s = stop; worker = null; stop = null; }
-        if (t == null || s == null) return;
-        try { s.Set(); t.Join(2000); } catch { }
-        try { s.Dispose(); } catch { }
+        Thread? t; uint id;
+        lock (gate) { t = worker; id = workerId; worker = null; workerId = 0; }
+        if (t == null) return;
+        try { if (id != 0) PostThreadMessageW(id, WM_QUIT, IntPtr.Zero, IntPtr.Zero); t.Join(2000); } catch { }
     }
 
     static string SessionRoot => Explorer + @"\SessionInfo\" + Process.GetCurrentProcess().SessionId;
     static string SessionKey => SessionRoot + @"\VirtualDesktops";
 
-    static void Run(ManualResetEvent stopEvent) {
-        while (true) {
+    // Hook thread state (touched only by the watcher thread: WinEvent callbacks run inside its DispatchMessage).
+    [ThreadStatic] static long lastEventTick;
+    [ThreadStatic] static int step;   // 0 idle, 1 waiting for the 150 ms re-read, 2 waiting for the 900 ms re-read
+    [ThreadStatic] static uint timerId;   // a thread timer (no hwnd) gets its id FROM Windows: the requested id only selects an existing timer to replace
+
+    static void Arm(uint ms) { var id = SetTimer(IntPtr.Zero, timerId, ms, IntPtr.Zero); if (id != UIntPtr.Zero) timerId = (uint)id; }
+    static void Disarm() { if (timerId != 0) KillTimer(IntPtr.Zero, timerId); timerId = 0; }
+
+    static void Run(ManualResetEventSlim ready) {
+        PeekMessageW(out MSG m, IntPtr.Zero, 0, 0, 0);   // creates this thread's message queue before Stop can post to it
+        IntPtr hFg = IntPtr.Zero, hCloak = IntPtr.Zero;
+        try {
+            lock (gate) { if (worker == null) return; workerId = GetCurrentThreadId(); }   // Stop already ran: leave
+            proc = OnEvent;
+            hFg = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, proc, 0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+            hCloak = SetWinEventHook(EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED, IntPtr.Zero, proc, 0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+            ready.Set();
             Refresh();
-            var keys = new List<RegistryKey>(); var events = new List<ManualResetEvent>();
-            try {
-                // General key (subtree: Desktops\{GUID}\Name). Session key when present, else its parent (a non-recursive name watch sees the subkey appear).
-                Watch(General, true, keys, events);
-                if (!Watch(SessionKey, false, keys, events)) Watch(SessionRoot, false, keys, events);
-                if (events.Count == 0) { stopEvent.WaitOne(); return; }   // nothing to watch: stay idle until Stop()
-                var handles = new WaitHandle[events.Count + 1]; handles[0] = stopEvent;
-                for (int i = 0; i < events.Count; i++) handles[i + 1] = events[i];
-                if (WaitHandle.WaitAny(handles) == 0) return;
-            } catch { try { if (stopEvent.WaitOne(1000)) return; } catch { return; } }   // rare failure: back off on the stop event, not a poll
-            finally { foreach (var k in keys) try { k.Dispose(); } catch { } foreach (var e in events) try { e.Dispose(); } catch { } }
+            while (GetMessageW(out m, IntPtr.Zero, 0, 0) > 0) {
+                if (m.hwnd == IntPtr.Zero && m.message == WM_TIMER && timerId != 0 && (uint)m.wParam == timerId) { OnTimer(); continue; }
+                TranslateMessage(ref m); DispatchMessageW(ref m);
+            }
+        } catch { }
+        finally {
+            Disarm();
+            if (hFg != IntPtr.Zero) UnhookWinEvent(hFg);
+            if (hCloak != IntPtr.Zero) UnhookWinEvent(hCloak);
+            ready.Set();
         }
     }
 
-    static bool Watch(string path, bool subtree, List<RegistryKey> keys, List<ManualResetEvent> events) {
-        RegistryKey? key = null;
-        try {
-            key = Registry.CurrentUser.OpenSubKey(path, false);
-            if (key == null) return false;
-            var ev = new ManualResetEvent(false);
-            int rc = RegNotifyChangeKeyValue(key.Handle.DangerousGetHandle(), subtree, 0x1 | 0x4, ev.SafeWaitHandle.DangerousGetHandle(), true);   // NAME | LAST_SET
-            if (rc != 0) { ev.Dispose(); key.Dispose(); return false; }
-            keys.Add(key); events.Add(ev); return true;
-        } catch { key?.Dispose(); return false; }
+    static void OnEvent(IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time) {
+        if (evt != EVENT_SYSTEM_FOREGROUND && (idObject != OBJID_WINDOW || idChild != 0)) return;
+        lastEventTick = Environment.TickCount64; step = 1;
+        Arm(150);   // passing the live id replaces the pending timer
+    }
+
+    static void OnTimer() {
+        if (step == 0) { Disarm(); return; }
+        Refresh();
+        if (step == 1) {
+            step = 2;
+            long left = lastEventTick + 900 - Environment.TickCount64;
+            Arm((uint)Math.Max(left, 10));
+        } else { step = 0; Disarm(); }   // idle again: nothing armed
     }
 
     static void Refresh() {
-        Snapshot next;
-        try { next = Read(); } catch { next = new Snapshot(0, 0, Array.Empty<string>()); }
-        var old = snapshot;
-        if (old.Count == next.Count && old.Current == next.Current && old.Names.SequenceEqual(next.Names)) return;
-        snapshot = next;
+        lock (gate) {   // watcher thread and SwitchTo's caller both land here: a slow read must not overwrite a newer one
+            Snapshot next;
+            try { next = Read(); } catch { next = new Snapshot(0, 0, Array.Empty<string>()); }
+            var old = snapshot;
+            if (old.Count == next.Count && old.Current == next.Current && old.Names.SequenceEqual(next.Names)) return;
+            snapshot = next;
+        }
         try { Changed?.Invoke(); } catch { }
     }
 
@@ -128,6 +150,7 @@ internal static class VirtualDesktops {
 
     // User gesture entry point. relative != 0 means wheel (next/previous), otherwise absolute target index.
     internal static bool SwitchTo(int target, int relative = 0) {
+        Refresh();   // a gesture may come before the pending debounce: never act on a stale snapshot
         var s = snapshot;
         if (s.Count < 2) return false;
         int dest = relative != 0 ? Math.Clamp(s.Current + relative, 0, s.Count - 1) : target;
@@ -162,5 +185,18 @@ internal static class VirtualDesktops {
     [StructLayout(LayoutKind.Explicit)] struct InputUnion { [FieldOffset(0)] public MOUSEINPUT mi; [FieldOffset(0)] public KEYBDINPUT ki; }
     [StructLayout(LayoutKind.Sequential)] struct INPUT { public uint type; public InputUnion U; }
     [DllImport("user32.dll", SetLastError = true)] static extern uint SendInput(uint n, INPUT[] inputs, int size);
-    [DllImport("advapi32.dll")] static extern int RegNotifyChangeKeyValue(IntPtr hKey, bool watchSubtree, uint filter, IntPtr hEvent, bool asynchronous);
+    const uint EVENT_SYSTEM_FOREGROUND = 0x0003, EVENT_OBJECT_CLOAKED = 0x8017, EVENT_OBJECT_UNCLOAKED = 0x8018, WINEVENT_OUTOFCONTEXT = 0, WINEVENT_SKIPOWNPROCESS = 2, WM_QUIT = 0x12, WM_TIMER = 0x113;
+    const int OBJID_WINDOW = 0;
+    delegate void WinEventProc(IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time);
+    [StructLayout(LayoutKind.Sequential)] struct MSG { public IntPtr hwnd; public uint message; public IntPtr wParam, lParam; public uint time; public int ptX, ptY, lPrivate; }
+    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid, uint thread, uint flags);
+    [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
+    [DllImport("user32.dll")] static extern int GetMessageW(out MSG m, IntPtr h, uint min, uint max);
+    [DllImport("user32.dll")] static extern bool PeekMessageW(out MSG m, IntPtr h, uint min, uint max, uint remove);
+    [DllImport("user32.dll")] static extern bool TranslateMessage(ref MSG m);
+    [DllImport("user32.dll")] static extern IntPtr DispatchMessageW(ref MSG m);
+    [DllImport("user32.dll")] static extern bool PostThreadMessageW(uint tid, uint msg, IntPtr w, IntPtr l);
+    [DllImport("user32.dll")] static extern UIntPtr SetTimer(IntPtr h, uint id, uint ms, IntPtr proc);
+    [DllImport("user32.dll")] static extern bool KillTimer(IntPtr h, uint id);
+    [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
 }

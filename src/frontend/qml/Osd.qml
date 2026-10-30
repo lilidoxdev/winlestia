@@ -39,7 +39,7 @@ Window{
   opacity:root.reveal;scale:root.reduced?1:.94+.06*root.reveal;transformOrigin:Item.Right
   FilledSlider{
    anchors.centerIn:parent;width:root.sliderWidth;height:root.sliderHeight
-   enabled:false;icon:root.volumeIcon();value:root.muted?0:root.volume
+   enabled:false;showValue:false;icon:root.volumeIcon();value:root.muted?0:root.volume
   }
  }
 }

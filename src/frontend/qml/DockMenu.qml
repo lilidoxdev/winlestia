@@ -107,7 +107,7 @@ Window {
                             Image{id:appLogo;anchors.centerIn:parent;width:32;height:32;sourceSize.width:Math.ceil(32*Screen.devicePixelRatio);sourceSize.height:Math.ceil(32*Screen.devicePixelRatio);source:Bridge.iconUrl(runningCell.modelData.id,Bridge.iconRevision);asynchronous:true;fillMode:Image.PreserveAspectFit}
                             MaterialIcon{anchors.centerIn:parent;text:"apps";visible:appLogo.status!==Image.Ready;color:Colours.palette.m3primary}
                             MouseArea{id:hover;anchors.fill:parent;hoverEnabled:true;acceptedButtons:Qt.LeftButton|Qt.RightButton;onClicked:menu.selectEntry(runningCell.modelData)}
-                            C.ToolTip.visible:hover.containsMouse;C.ToolTip.text:modelData.name;C.ToolTip.delay:350
+                            ShellToolTip{visible:hover.containsMouse;text:runningCell.modelData.name;delay:350}
                         }
                     }
                 }

@@ -11,6 +11,7 @@ Slider {
     required property string icon
     property real oldValue
     property bool initialized
+    property bool showValue: true
 
     orientation: Qt.Vertical
 
@@ -69,9 +70,10 @@ Slider {
 
                 function update(): void {
                     animate = !moving;
-                    binding.when = moving;
-                    font.pointSize = moving ? Appearance.font.size.small : Appearance.font.size.larger;
-                    font.family = moving ? Appearance.font.family.sans : Appearance.font.family.material;
+                    const showNumber = moving && root.showValue;
+                    binding.when = showNumber;
+                    font.pointSize = showNumber ? Appearance.font.size.small : Appearance.font.size.larger;
+                    font.family = showNumber ? Appearance.font.family.sans : Appearance.font.family.material;
                 }
 
                 text: root.icon

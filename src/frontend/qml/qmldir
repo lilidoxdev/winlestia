@@ -7,5 +7,6 @@ BookmarksRail BookmarksRail.qml
 Main Main.qml
 PalettePane PalettePane.qml
 ShellPreferences ShellPreferences.qml
+ShellToolTip ShellToolTip.qml
 WindowsControls WindowsControls.qml
 WorkspaceBrowser WorkspaceBrowser.qml

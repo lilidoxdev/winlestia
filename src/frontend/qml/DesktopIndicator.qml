@@ -1,6 +1,5 @@
 // One pill per Windows virtual desktop (registry-driven, see VirtualDesktops.cs). Active pill = palette primary; click switches, wheel = next/previous.
 import QtQuick
-import QtQuick.Controls as C
 import qs.components
 import qs.config
 import qs.services
@@ -35,7 +34,7 @@ Item {
                 }
                 HoverHandler {id:hover;cursorShape:Qt.PointingHandCursor}
                 TapHandler {onTapped:Bridge.action("desktopSwitch",{index:cell.index})}
-                C.ToolTip {visible:hover.hovered;delay:400;popupType:C.Popup.Window;text:(root.info.names&&root.info.names[cell.index])||qsTr("Bureau %1").arg(cell.index+1)}
+                ShellToolTip {visible:hover.hovered;delay:400;text:(root.info.names&&root.info.names[cell.index])||qsTr("Bureau %1").arg(cell.index+1)}
             }
         }
     }
