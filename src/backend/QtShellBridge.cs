@@ -84,7 +84,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
         dismissal=new OutsideDismiss(()=>Send("close"),()=>active&&!DialogOpen,h=>{GetWindowThreadProcessId(h,out uint pid);return frontend!=null&&(pid==frontend.Id||pid==frontendWindowPid);});
 
-        dictation=new DictationService(dispatcher,Send);osdWatcher=new OsdWatcher(dispatcher,(volume,muted)=>{if(Store.State.Osd&&!active)Send("osd:volume:"+volume+":"+(muted?1:0));});dictation.KeyCaptured=vk=>{if(vk is >0 and <255)Store.State.DictationKey=vk;dictation.Apply(Store.State.DictationEnabled,Store.State.DictationKey);Store.Save();};dictation.Apply(Store.State.DictationEnabled,Store.State.DictationKey);
+        dictation=new DictationService(dispatcher,Send);osdWatcher=new OsdWatcher(dispatcher,(volume,muted)=>{if(Store.State.Osd&&!active)Send("osd:volume:"+volume+":"+(muted?1:0));},line=>{if(Store.State.Osd&&!active)Send(line);});dictation.KeyCaptured=vk=>{if(vk is >0 and <255)Store.State.DictationKey=vk;dictation.Apply(Store.State.DictationEnabled,Store.State.DictationKey);Store.Save();};dictation.Apply(Store.State.DictationEnabled,Store.State.DictationKey);
         _=Serve();
         var launched=DateTime.UtcNow;
         var start=new ProcessStartInfo(Path.Combine(root,".venv","Scripts","pythonw.exe")){UseShellExecute=false,CreateNoWindow=true,WorkingDirectory=root,RedirectStandardError=true};

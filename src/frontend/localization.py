@@ -228,7 +228,7 @@ Ajuster avec le repère à l’écran|Adjust using the on-screen guide|Ajustar c
 Langue et raccourcis|Language and shortcuts|Idioma y atajos
 Un rendu plus léger pour les petites configurations|Lighter rendering for modest hardware|Renderizado ligero para equipos modestos
 Afficher l’OSD|Show the OSD|Mostrar el OSD
-Indicateur de volume à l’écran|On-screen volume indicator|Indicador de volumen en pantalla
+Indicateur de volume, luminosité et micro à l’écran|On-screen volume, brightness and microphone indicator|Indicador en pantalla de volumen, brillo y micrófono
 Sélecteur de fonds d’écran|Wallpaper switcher|Selector de fondos de pantalla
 Choisis un fond en plein écran avec aperçu|Pick a wallpaper full screen with a live preview|Elige un fondo a pantalla completa con vista previa
 Aucun fond d’écran trouvé|No wallpaper found|No se encontró ningún fondo

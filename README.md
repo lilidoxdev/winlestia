@@ -23,6 +23,7 @@ The interface is a port of Caelestia; a .NET service handles the system side and
 - Dock that replaces the Windows taskbar, with a quick command palette.
 - Toolbox: screen capture, text recognition (OCR) on a captured area, color picker, clipboard history, focus timer and notes.
 - Settings for theme, glass opacity, screen frame thickness, taskbar replacement, autostart and global shortcuts.
+- On-screen indicator (OSD) for volume, screen brightness and microphone mute, driven by system events. The native Windows volume popup is left as is.
 - Color palette generated from the wallpaper, with an automatic theme option.
 - Real blur and rounded corners provided by Windows itself.
 - Enhanced Command Prompt powered by Clink (installed automatically), with colors synchronized to the same palette.
