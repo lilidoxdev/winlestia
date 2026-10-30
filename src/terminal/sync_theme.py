@@ -30,6 +30,30 @@ def inputs():
         value=winreg.QueryValueEx(key,'Background')[0];background='#'+''.join(f'{int(v):02x}' for v in value.split())
     return prefs,path,label,background
 
+def lum(c):
+    f=lambda v:(v/255/12.92) if v/255<=.03928 else ((v/255+.055)/1.055)**2.4
+    r_,g,b=(f(v) for v in rgb(c));return .2126*r_+.7152*g+.0722*b
+def contrast(a,b):
+    x,y=sorted((lum(a),lum(b)),reverse=True);return (x+.05)/(y+.05)
+def lighten(color,against,ratio=4.5,minlum=0):
+    for i in range(21):
+        c=blend(color,'#ffffff',i/20)
+        if contrast(c,against)>=ratio and lum(c)>=minlum:return c
+    return '#ffffff'
+CONSOLE_GREY='#161616'
+def shell_palette():
+    path=(Path(os.environ.get('WINLESTIA_DATA_DIR') or Path(os.environ.get('LOCALAPPDATA') or str(Path.home()/'AppData'/'Local'))/'Panneaux'))/'palette-shell.json'
+    try:
+        data=json.loads(path.read_text(encoding='utf-8-sig'))
+        if data.get('mode')=='auto' and data.get('palette',{}).get('m3primary'):return {'palette':data['palette']}
+    except (OSError,ValueError):pass
+    return None
+def console_values(values,palette):
+    # Console background is always translucent dark grey (about 8% toward the palette neutral); text and accent follow the shell palette, lightened to stay readable on it.
+    p=palette['palette'];neutral=p.get('m3surface',CONSOLE_GREY);background=blend(CONSOLE_GREY,neutral,.08) if lum(neutral)<.2 else CONSOLE_GREY
+    foreground=lighten(p.get('m3onSurface','#f7f3f4'),background,7,.6);accent=lighten(p['m3primary'],background,4.5,.45)
+    values.update(accent=accent,foreground=foreground,background=background,secondary=lighten(blend(accent,foreground,.36),background,4.5,.45),muted=lighten(blend(background,foreground,.52),background,4.5),glass=True,opacity=.70,unfocusedOpacity=.55)
+    return values
 def theme_values(palette,source):
     p=palette['palette'];accent=p['m3primary'];foreground=p.get('m3onSurface','#f7f3f4');background=p['m3surface']
     return {'accent':accent,'secondary':blend(accent,foreground,.36),'muted':blend(background,foreground,.52),'foreground':foreground,'background':background,'source':source,'sourceColor':palette.get('sourceColor',accent)}
@@ -54,10 +78,10 @@ def update_terminal(settings_path,values):
         items=c.setdefault(key,[])
         for item in template.get(key,[]):
             if not any(existing.get('name')==item['name'] for existing in items):items.append(item)
-    c.setdefault('profiles',{}).setdefault('defaults',{}).update(colorScheme='Winlestia Glass',useAcrylic=values.get('glass',True),opacity=round(values.get('opacity',.65)*100))
+    c.setdefault('profiles',{}).setdefault('defaults',{}).update(colorScheme='Winlestia Glass',useAcrylic=values.get('glass',True),opacity=round(values.get('opacity',.65)*100),unfocusedAppearance={'opacity':round(values.get('unfocusedOpacity',.55)*100)})
     scheme=next(s for s in c['schemes'] if s['name']=='Winlestia Glass')
     accent=values['accent'];secondary=values['secondary'];background=values['background'];fg=values['foreground']
-    scheme.update(background=background,foreground=fg,white=fg,cursorColor=accent,selectionBackground=blend(background,accent,.30),blue=accent,brightBlue=secondary,purple=blend(accent,'#d8b4fe',.22),brightPurple=blend(secondary,'#ffffff',.15),cyan=secondary,brightCyan=blend(secondary,'#ffffff',.25),black=blend(background,fg,.04),brightBlack=values['muted'])
+    scheme.update(background=background,foreground=fg,white=fg,cursorColor=accent,selectionBackground=blend(background,accent,.30),blue=accent,brightBlue=accent,purple=blend(accent,'#d8b4fe',.22),brightPurple=blend(secondary,'#ffffff',.15),cyan=secondary,brightCyan=blend(secondary,'#ffffff',.25),black=blend(background,fg,.04),brightBlack=values['muted'],brightWhite=blend(fg,'#ffffff',.5),red='#ff8fa0',green='#a7dcb2',yellow='#f2d397',brightRed='#ffadc0',brightGreen='#c1ecc8',brightYellow='#f7e1b8')
     theme=next(t for t in c['themes'] if t['name']=='Winlestia');theme['tabRow'].update(background=background+'00',unfocusedBackground=background+'00');theme['tab']['unfocusedBackground']=background
     if not (STATE/'state.json').exists():return  # restored meanwhile: never write Windows Terminal settings
     write_changed(settings_path,json.dumps(c,indent=4,ensure_ascii=False)+'\n')
@@ -72,7 +96,7 @@ def wait_for_change():
         key=ctypes.c_void_p()
         if advapi.RegOpenKeyExW(ctypes.c_void_p(0xFFFFFFFF80000001),sub,0,0x10,ctypes.byref(key))==0:
             event=kernel.CreateEventW(None,True,False,None);advapi.RegNotifyChangeKeyValue(key,True,5,ctypes.c_void_p(event),True);keys.append(key);handles.append(event)
-    folders=[ROOT.parent/'Glass-v5',Path(os.environ.get('APPDATA',''))/'motion-photo-editor']
+    folders=[ROOT.parent/'Glass-v5',Path(os.environ.get('WINLESTIA_DATA_DIR') or Path(os.environ.get('LOCALAPPDATA') or '')/'Panneaux'),Path(os.environ.get('APPDATA',''))/'motion-photo-editor']
     folders+=list((Path(os.environ.get('LOCALAPPDATA',''))/'Packages').glob('Desktophut.*/LocalCache/Roaming/motion-photo-editor'))
     for folder in folders:
         if folder.is_dir():
@@ -97,14 +121,16 @@ def run(once=False):
     while True:
         if not (STATE/'state.json').exists():return  # Winlestia terminal integration absent or restored: never touch Windows Terminal.
         try:
-            prefs,path,label,bg=inputs();current=(prefs.get('CustomGlass'),prefs.get('CustomGlassOpacity'),json.dumps(prefs.get('CustomPalette',{}),sort_keys=True),prefs.get('AutoTheme',False),prefs.get('Theme','nuit'),path,Path(path).stat().st_mtime_ns if Path(path).is_file() else 0,bg,tuple(sorted(str(p) for p in (Path(os.environ['LOCALAPPDATA'])/'Packages').glob('Microsoft.WindowsTerminal*/LocalState/settings.json'))))
+            prefs,path,label,bg=inputs();current=(prefs.get('CustomGlass'),prefs.get('CustomGlassOpacity'),json.dumps(prefs.get('CustomPalette',{}),sort_keys=True),prefs.get('AutoTheme',False),prefs.get('Theme','nuit'),path,shell_palette(),Path(path).stat().st_mtime_ns if Path(path).is_file() else 0,bg,tuple(sorted(str(p) for p in (Path(os.environ['LOCALAPPDATA'])/'Packages').glob('Microsoft.WindowsTerminal*/LocalState/settings.json'))))
             if current!=signature:
-                if prefs.get('Theme')=='custom':palette=make_palette(prefs.get('CustomPalette'))
+                palette=shell_palette()
+                if palette:pass
+                elif prefs.get('Theme')=='custom':palette=make_palette(prefs.get('CustomPalette'))
                 elif prefs.get('AutoTheme',False):palette=generate_palette(path,bg)
                 else:
                     light=prefs.get('Theme') in ('porcelaine','shell');palette={'palette':{'m3surface':'#fff8f6' if light else '#101518','m3primary':'#895143' if light else '#afd4f0','m3onSurface':'#261916' if light else '#e5ebef'}}
                 values=theme_values(palette,label if prefs.get('AutoTheme') else prefs.get('Theme','nuit'))
-                if prefs.get('Theme')=='custom':values.update(glass=bool(prefs.get('CustomGlass',False)),opacity=prefs.get('CustomGlassOpacity',.12) if prefs.get('CustomGlass') else 1)
+                values=console_values(values,palette)
                 apply(values);signature=current
                 (ROOT/'validation/sync-status.json').write_text(json.dumps({'ok':True,'source':label,'auto':prefs.get('AutoTheme',False),'updated':time.time()}),encoding='utf-8')
         except Exception as error:
