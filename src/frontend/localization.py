@@ -228,6 +228,10 @@ Ajuster avec le repère à l’écran|Adjust using the on-screen guide|Ajustar c
 Langue et raccourcis|Language and shortcuts|Idioma y atajos
 Un rendu plus léger pour les petites configurations|Lighter rendering for modest hardware|Renderizado ligero para equipos modestos
 Afficher l’OSD|Show the OSD|Mostrar el OSD
+Indicateur de bureaux virtuels|Virtual desktop indicator|Indicador de escritorios virtuales
+Une pastille par bureau Windows dans le dock|One dot per Windows desktop in the dock|Un punto por escritorio de Windows en el dock
+Bureaux virtuels|Virtual desktops|Escritorios virtuales
+Bureau %1|Desktop %1|Escritorio %1
 Indicateur de volume, luminosité et micro à l’écran|On-screen volume, brightness and microphone indicator|Indicador en pantalla de volumen, brillo y micrófono
 Sélecteur de fonds d’écran|Wallpaper switcher|Selector de fondos de pantalla
 Choisis un fond en plein écran avec aperçu|Pick a wallpaper full screen with a live preview|Elige un fondo a pantalla completa con vista previa

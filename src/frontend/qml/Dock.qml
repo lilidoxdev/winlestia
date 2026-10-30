@@ -114,6 +114,7 @@ Window {
                     }
                 }
             }
+            DesktopIndicator {}
             IconButton {id:runningButton;objectName:"dockRunning";icon:"apps";type:IconButton.Text;onClicked:dock.showMenu("running",{},runningButton)}
             IconButton {icon:"volume_up";type:IconButton.Text;onClicked:Bridge.navigate("controls")}
             IconButton {objectName:"dockNetwork";icon:Bridge.networkKind==="ethernet"?"lan":Bridge.networkKind==="none"?"wifi_off":"wifi";type:IconButton.Text;onClicked:Bridge.navigate("controls")}

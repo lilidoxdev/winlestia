@@ -1,5 +1,6 @@
 ClipboardPane ClipboardPane.qml
 Dock Dock.qml
+DesktopIndicator DesktopIndicator.qml
 EdgeRail EdgeRail.qml
 SocialRail SocialRail.qml
 BookmarksRail BookmarksRail.qml

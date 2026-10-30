@@ -266,6 +266,7 @@ class Bridge(QObject):
     workspaceBoard=Property(str,lambda s:s.workspace_board,notify=searchChanged)
     notice=Property(str,lambda s:s._notice,notify=noticeChanged)
     networkKind=Property(str,lambda s:s._state.get('networkKind') if s._state.get('networkKind') in ('ethernet','wifi','none') else 'wifi',notify=changed)
+    virtualDesktops=Property('QVariantMap',lambda s:s._state.get('virtualDesktops') if isinstance(s._state.get('virtualDesktops'),dict) else {},notify=changed)
     taskbarEnabled=Property(bool,lambda s:bool(s._state.get('taskbarEnabled',s.args.preview)),notify=changed)
     dictationState=Property(str,lambda s:s._dict['state'],notify=dictationChanged)
     dictationLevel=Property(float,lambda s:s._dict['level'],notify=dictationChanged)
