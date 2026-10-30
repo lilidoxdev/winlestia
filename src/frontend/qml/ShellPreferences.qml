@@ -87,9 +87,10 @@ Item {
        Layout.fillWidth:true;Layout.preferredWidth:1;implicitHeight:92;radius:Appearance.rounding.normal;color:modelData.bg
        border.width:current?2:0;border.color:Colours.palette.m3primary
        activeFocusOnTab:true
-       function choose(){Bridge.action("theme",{mode:modelData.mode,dark:modelData.dark??false});if(modelData.mode==="custom")page.openCustomEditor()}
+       // The action recolours the model above, which destroys this delegate: read everything before calling it.
+       function choose(){const mode=modelData.mode,dark=modelData.dark??false,host=page;Bridge.action("theme",{mode:mode,dark:dark});if(mode==="custom")host.openCustomEditor()}
        Keys.onPressed:event=>{if(event.key===Qt.Key_Return||event.key===Qt.Key_Enter||event.key===Qt.Key_Space){choose();event.accepted=true}}
-       StateLayer{color:theme.modelData.fg;function onClicked(){theme.choose();theme.forceActiveFocus()}}
+       StateLayer{color:theme.modelData.fg;function onClicked(){theme.forceActiveFocus();theme.choose()}}
        FocusRing{target:theme}
        Rectangle{anchors.horizontalCenter:parent.horizontalCenter;y:12;width:52;height:32;radius:Appearance.rounding.smaller;color:Qt.alpha(theme.modelData.fg,.14)
         Rectangle{x:6;y:5;width:parent.width-12;height:4;radius:Appearance.rounding.tiny/2;color:theme.modelData.fg}
