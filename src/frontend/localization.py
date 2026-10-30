@@ -242,5 +242,18 @@ Masquer ce fond par défaut ? Entrée pour confirmer · Échap annuler|Hide this
 Les images du dossier Images ne sont pas supprimées ici|Images from the Pictures folder are not deleted here|Las imágenes de la carpeta Imágenes no se eliminan aquí
 Restaurer les fonds par défaut|Restore default wallpapers|Restaurar los fondos predeterminados
 Supprimer ce fond de votre dossier ? Entrée confirmer · Échap annuler|Delete this wallpaper from your folder? Enter confirm · Esc cancel|¿Eliminar este fondo de tu carpeta? Intro confirmar · Esc cancelar
-← → choisir · Entrée appliquer · Ctrl+O ajouter · Suppr retirer · Échap fermer|← → choose · Enter apply · Ctrl+O add · Del remove · Esc close|← → elegir · Intro aplicar · Ctrl+O añadir · Supr quitar · Esc cerrar""".splitlines():
+← → choisir · Entrée appliquer · Ctrl+O ajouter · Suppr retirer · Échap fermer|← → choose · Enter apply · Ctrl+O add · Del remove · Esc close|← → elegir · Intro aplicar · Ctrl+O añadir · Supr quitar · Esc cerrar
+Organisation automatique|Automatic tiling|Organización automática
+Les fenêtres se partagent chaque écran en tuiles, dans un ordre stable, avec des raccourcis clavier|Windows share each screen as tiles, in a stable order, with keyboard shortcuts|Las ventanas se reparten cada pantalla en mosaicos, en un orden estable, con atajos de teclado
+Raccourcis du tuilage|Tiling shortcuts|Atajos del mosaico
+Actifs seulement quand l’organisation automatique est activée|Active only while automatic tiling is on|Activos solo cuando la organización automática está activada
+Passer à la tuile voisine|Move to the neighbouring tile|Pasar al mosaico vecino
+Échanger avec la tuile voisine, y compris sur l’écran d’à côté|Swap with the neighbouring tile, including on the next screen|Intercambiar con el mosaico vecino, también en la pantalla contigua
+Sortir la fenêtre du tuilage, ou l’y remettre|Float the window out of the tiling, or put it back|Sacar la ventana del mosaico, o volver a ponerla
+Agrandir ou réduire la tuile active (20 à 80 %)|Grow or shrink the active tile (20 to 80 %)|Agrandar o reducir el mosaico activo (20 a 80 %)
+Exclure l’application de la fenêtre active, ou la réintégrer|Exclude the active window's application, or include it again|Excluir la aplicación de la ventana activa, o reincorporarla
+Souris|Mouse|Ratón
+Lâcher une fenêtre sur une autre tuile les échange|Dropping a window on another tile swaps them|Soltar una ventana sobre otro mosaico las intercambia
+Applications exclues|Excluded applications|Aplicaciones excluidas
+Aucune application exclue|No excluded application|Ninguna aplicación excluida""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}

@@ -25,6 +25,7 @@ The interface is a port of Caelestia; a .NET service handles the system side and
 - Settings for theme, glass opacity, screen frame thickness, taskbar replacement, autostart and global shortcuts.
 - Virtual desktop indicator in the dock: one dot per Windows desktop, the current one highlighted; click a dot or scroll to switch. It reads the desktop list from the registry and switches with the Win+Ctrl+arrow shortcut. It can be turned off in Settings.
 - On-screen indicator (OSD) for volume, screen brightness and microphone mute, driven by system events. The native Windows volume popup is left as is.
+- Automatic tiling (off by default): stable tile order, keyboard focus, swap, resize and float shortcuts (Ctrl+Alt+arrows, listed in Settings), drag-to-swap, and a per-application exclusion list.
 - Color palette generated from the wallpaper, with an automatic theme option.
 - Real blur and rounded corners provided by Windows itself.
 - Enhanced Command Prompt powered by Clink (installed automatically), with colors synchronized to the same palette.

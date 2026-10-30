@@ -1,7 +1,7 @@
 // C#12 / WindowTiler.cs / Windows11. Reversible per-monitor tiling; no global input hook.
 using System.Diagnostics;using System;using System.Linq;using System.Collections.Generic;using System.Runtime.InteropServices;using System.Windows.Threading;using Forms=System.Windows.Forms;
 namespace PanneauxGlass;
-internal sealed class WindowTiler:IDisposable{
+internal sealed partial class WindowTiler:IDisposable{
  [StructLayout(LayoutKind.Sequential)]internal struct Placement{public int Length,Flags,Show;public Native.Point Min,Max;public Native.Rect Normal;}
  sealed class Managed{internal Placement Original;internal uint Pid;internal Native.Rect Last;internal bool Placed;internal Native.Rect? Constrained;}
  [DllImport("user32.dll")]static extern bool GetWindowPlacement(IntPtr h,ref Placement placement);
@@ -66,34 +66,34 @@ internal sealed class WindowTiler:IDisposable{
 
  internal WindowTiler(Func<IEnumerable<IntPtr>>? source=null){fixtureSource=source!=null;this.source=source??Collect;hookProc=OnWinEvent;nameProc=OnNameChange;timer.Tick+=(_,_)=>Tick();animation.Tick+=(_,_)=>Animate();coalesce.Tick+=(_,_)=>{coalesce.Stop();if((GetAsyncKeyState(1)&0x8000)!=0){coalesce.Interval=TimeSpan.FromMilliseconds(150);coalesce.Start();return;}coalesce.Interval=TimeSpan.FromMilliseconds(25);Tick();};}
  // WinEvent hooks (out of context, UI thread): only top-level window events trigger one coalesced Tick ~25 ms later.
- void OnWinEvent(IntPtr hook,uint ev,IntPtr h,int idObject,int idChild,uint thread,uint time){if(!enabled||h==IntPtr.Zero||idObject!=0||idChild!=0||coalesce.IsEnabled)return;if(ev is 3 or 0x16 or 0x17 or 0x8001 or 0x8002 or 0x8017 or 0x8018)coalesce.Start();}
+ void OnWinEvent(IntPtr hook,uint ev,IntPtr h,int idObject,int idChild,uint thread,uint time){if(enabled&&ev==0x0B&&h!=IntPtr.Zero&&idObject==0&&idChild==0){try{Dropped(h);}catch(Exception ex){Store.Log("Tuilage · dépôt : "+ex.Message);}return;}if(!enabled||h==IntPtr.Zero||idObject!=0||idChild!=0||coalesce.IsEnabled)return;if(ev is 3 or 0x16 or 0x17 or 0x8001 or 0x8002 or 0x8017 or 0x8018)coalesce.Start();}
  // EVENT_OBJECT_NAMECHANGE has its own hook (never widen the range above); near-free early exits.
  void OnNameChange(IntPtr hook,uint ev,IntPtr h,int idObject,int idChild,uint thread,uint time){if(!enabled||idObject!=0||idChild!=0||coalesce.IsEnabled||h==IntPtr.Zero||managed.ContainsKey(h)||!Eligible(h))return;coalesce.Start();}
  // The fixture source lives in our own process, so SKIPOWNPROCESS is only used on the real desktop path.
  void Hook(){if(hooks.Count>0)return;uint flags=(uint)(fixtureSource?0:2);foreach(var (min,max) in new[]{(3u,0x17u),(0x8001u,0x8002u),(0x8017u,0x8018u)}){var hook=SetWinEventHook(min,max,IntPtr.Zero,hookProc,0,0,flags);if(hook!=IntPtr.Zero)hooks.Add(hook);}
   var nameHook=SetWinEventHook(0x800C,0x800C,IntPtr.Zero,nameProc,0,0,flags);if(nameHook!=IntPtr.Zero)hooks.Add(nameHook);}
  void Unhook(){foreach(var hook in hooks)UnhookWinEvent(hook);hooks.Clear();coalesce.Stop();}
- internal void SetEnabled(bool value){if(disposed||enabled==value)return;enabled=value;if(value){Hook();timer.Start();}else{Unhook();timer.Stop();Restore();}}
+ internal void SetEnabled(bool value){if(disposed||enabled==value)return;enabled=value;if(value){Hook();timer.Start();Keys(true);}else{Unhook();timer.Stop();Keys(false);Restore();}}
  IEnumerable<IntPtr> Collect(){var list=new List<IntPtr>();TaskbarNative.EnumWindows((h,_)=>{if(Eligible(h))list.Add(h);return true;},IntPtr.Zero);return list;}
- bool Eligible(IntPtr h){if(!Native.IsWindow(h)||!TaskbarNative.IsWindowVisible(h)||TaskbarNative.IsIconic(h)||(!fixtureSource&&Native.Owns(h)))return false;GetWindowThreadProcessId(h,out uint pid);if(pid==ExcludedProcess)return false;
+ bool Eligible(IntPtr h){if(floating.Contains(h))return false;if(!Native.IsWindow(h)||!TaskbarNative.IsWindowVisible(h)||TaskbarNative.IsIconic(h)||(!fixtureSource&&Native.Owns(h)))return false;GetWindowThreadProcessId(h,out uint pid);if(pid==ExcludedProcess||Excluded(pid))return false;
   long style=Style(h,-16).ToInt64(),ex=Style(h,-20).ToInt64();if((style&0x40000)==0||(style&0x40000000)!=0||(!fixtureSource&&(ex&0x80)!=0)||GetWindow(h,4)!=IntPtr.Zero)return false;
   if(DwmGetWindowAttribute(h,14,out int cloaked,4)==0&&cloaked!=0)return false;return !string.IsNullOrWhiteSpace(Native.Title(h))&&TaskbarNative.ClassName(h) is not ("Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd");
  }
  static Native.Rect Visible(IntPtr h){TaskbarNative.GetWindowRect(h,out var rect);return ExtendedBounds(h,9,out var frame,Marshal.SizeOf<Native.Rect>())==0?frame:rect;}
  static bool Same(Native.Rect a,Native.Rect b)=>Math.Abs(a.Left-b.Left)<=2&&Math.Abs(a.Top-b.Top)<=2&&Math.Abs(a.Right-b.Right)<=2&&Math.Abs(a.Bottom-b.Bottom)<=2;
  static bool Fullscreen(IntPtr h,Forms.Screen screen){var point=new Native.Point();return GetClientRect(h,out var client)&&ClientToScreen(h,ref point)&&Math.Abs(point.X-screen.Bounds.Left)<=2&&Math.Abs(point.Y-screen.Bounds.Top)<=2&&Math.Abs(point.X+client.Right-screen.Bounds.Right)<=2&&Math.Abs(point.Y+client.Bottom-screen.Bounds.Bottom)<=2;}
- internal static Native.Rect[] Layout(Native.Rect area,int count,int gap){var result=new List<Native.Rect>();void Split(Native.Rect r,int n){if(n==1){result.Add(r);return;}int first=n/2;bool vertical=r.Right-r.Left>=r.Bottom-r.Top;
-  if(vertical){int middle=r.Left+(r.Right-r.Left-gap)/2;Split(new(){Left=r.Left,Top=r.Top,Right=middle,Bottom=r.Bottom},first);Split(new(){Left=middle+gap,Top=r.Top,Right=r.Right,Bottom=r.Bottom},n-first);}else{int middle=r.Top+(r.Bottom-r.Top-gap)/2;Split(new(){Left=r.Left,Top=r.Top,Right=r.Right,Bottom=middle},first);Split(new(){Left=r.Left,Top=middle+gap,Right=r.Right,Bottom=r.Bottom},n-first);}}
-  if(count>0&&area.Right>area.Left&&area.Bottom>area.Top)Split(area,count);return result.ToArray();}
- internal void Tick(){if(!enabled||disposed||(GetAsyncKeyState(1)&0x8000)!=0)return;try{
+ internal static Native.Rect[] Layout(Native.Rect area,int count,int gap)=>TileLogic.Layout(area,count,gap);
+ internal void Tick(){if(!enabled||disposed||(GetAsyncKeyState(1)&0x8000)!=0)return;try{processNames.Clear();
   foreach(var h in managed.Keys.ToArray()){GetWindowThreadProcessId(h,out uint pid);if(!Native.IsWindow(h)||pid!=managed[h].Pid){managed.Remove(h);motions.Remove(h);failing.Remove(h);}}
   var handles=source().Where(Eligible).ToArray();var added=new HashSet<IntPtr>();foreach(var h in handles)if(!managed.ContainsKey(h)){var place=new Placement{Length=Marshal.SizeOf<Placement>()};if(GetWindowPlacement(h,ref place)){GetWindowThreadProcessId(h,out uint pid);managed[h]=new(){Original=place,Pid=pid};added.Add(h);}}
+  order.Sync(managed.Keys.Where(h=>!added.Contains(h)).Concat(handles.Where(added.Contains)));var laid=new Dictionary<IntPtr,(string screen,int index,int count,Native.Rect slot)>();
   var immediate=new List<(IntPtr h,Native.Rect wanted,Native.Rect shadow)>();bool moving=false;
-  foreach(var group in managed.Keys.Where(handles.Contains).GroupBy(h=>Forms.Screen.FromHandle(h).DeviceName)){
+  foreach(var group in order.Items.Where(handles.Contains).GroupBy(h=>Forms.Screen.FromHandle(h).DeviceName)){
    var windows=group.ToArray();var screen=Forms.Screen.FromHandle(windows[0]);if(windows.Any(h=>Fullscreen(h,screen)))continue;
    bool fresh=windows.Any(added.Contains);if(windows.Any(IsZoomed)){if(fresh)foreach(var h in windows.Where(IsZoomed))ShowWindowAsync(h,9);continue;}
    var work=screen.WorkingArea;int gap=Math.Max(4,(int)Math.Round(8*TaskbarNative.Scale(screen)));int capacity=Math.Min(16,Math.Max(1,work.Width/240)*Math.Max(1,work.Height/140));windows=windows.TakeLast(capacity).ToArray();
-   var slots=Layout(new(){Left=work.Left+gap,Top=work.Top+gap,Right=work.Right-gap,Bottom=work.Bottom-gap},windows.Length,gap);
+   var slots=TileLogic.Layout(new(){Left=work.Left+gap,Top=work.Top+gap,Right=work.Right-gap,Bottom=work.Bottom-gap},windows.Length,gap,path=>Ratio(screen.DeviceName,path));
+   for(int i=0;i<windows.Length&&i<slots.Length;i++)laid[windows[i]]=(screen.DeviceName,i,windows.Length,slots[i]);
    for(int i=0;i<windows.Length;i++){var h=windows[i];var wanted=slots[i];var current=Visible(h);var item=managed[h];if(motions.TryGetValue(h,out var active)&&Same(active.To,wanted))continue;if(Same(current,wanted))continue;
     if(item.Constrained is Native.Rect constrained&&Same(constrained,wanted))continue;
     if(item.Placed&&Same(item.Last,wanted)&&((current.Right-current.Left)>(wanted.Right-wanted.Left)+2||(current.Bottom-current.Top)>(wanted.Bottom-wanted.Top)+2)){item.Constrained=wanted;item.Last=current;continue;}
@@ -101,8 +101,8 @@ internal sealed class WindowTiler:IDisposable{
     if(added.Contains(h)){motions.Remove(h);immediate.Add((h,wanted,shadow));}else{motions[h]=new(){From=current,To=wanted,Shadow=shadow,Monitor=MonitorFromWindow(h,2),Started=Stopwatch.GetTimestamp()};moving=true;}
    }
   }
-  Apply(immediate);if(moving)animation.Start();
+  tiles=laid;Apply(immediate);if(moving)animation.Start();
  }catch(Exception ex){Store.Log("MosaÃ¯que: "+ex.Message);}}
- void Restore(){animation.Stop();coalesce.Stop();motions.Clear();failing.Clear();foreach(var item in managed){GetWindowThreadProcessId(item.Key,out uint pid);if(!Native.IsWindow(item.Key)||pid!=item.Value.Pid||TaskbarNative.IsIconic(item.Key)||IsZoomed(item.Key))continue;if(item.Value.Placed&&Same(Visible(item.Key),item.Value.Last)){var placement=item.Value.Original;SetWindowPlacement(item.Key,ref placement);}}managed.Clear();}
- public void Dispose(){if(disposed)return;Unhook();timer.Stop();Restore();disposed=true;}
+ void Restore(){order.Clear();tiles=new();floating.Clear();animation.Stop();coalesce.Stop();motions.Clear();failing.Clear();foreach(var item in managed){GetWindowThreadProcessId(item.Key,out uint pid);if(!Native.IsWindow(item.Key)||pid!=item.Value.Pid||TaskbarNative.IsIconic(item.Key)||IsZoomed(item.Key))continue;if(item.Value.Placed&&Same(Visible(item.Key),item.Value.Last)){var placement=item.Value.Original;SetWindowPlacement(item.Key,ref placement);}}managed.Clear();}
+ public void Dispose(){if(disposed)return;Unhook();timer.Stop();Keys(false);Restore();disposed=true;}
 }

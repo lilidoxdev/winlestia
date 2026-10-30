@@ -131,7 +131,28 @@ Item {
  Component{id:deskPage
   GridLayout{columns:2;columnSpacing:14;rowSpacing:14;uniformCellWidths:true
    Card{title:qsTr("Fenêtres et écran");subtitle:qsTr("Organisation et cadre autour du Bureau");symbol:"desktop_windows"
-    SettingRow{title:qsTr("Organisation automatique");hint:qsTr("Les fenêtres se partagent chaque écran");symbol:"grid_view";StyledSwitch{objectName:"autoTileToggle";checked:Bridge.settings.autoTile??false;onClicked:Bridge.action("preference",{key:"autoTile",enabled:checked})}}
+    SettingRow{title:qsTr("Organisation automatique");hint:qsTr("Les fenêtres se partagent chaque écran en tuiles, dans un ordre stable, avec des raccourcis clavier");symbol:"grid_view";StyledSwitch{objectName:"autoTileToggle";checked:Bridge.settings.autoTile??false;onClicked:Bridge.action("preference",{key:"autoTile",enabled:checked})}}
+    // Tiling shortcuts and per-application exclusions; dimmed while tiling is off (the keys are then not registered).
+    ColumnLayout{Layout.fillWidth:true;spacing:3;opacity:(Bridge.settings.autoTile??false)?1:.55
+     StyledText{Layout.fillWidth:true;wrapMode:Text.WordWrap;text:qsTr("Raccourcis du tuilage");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3primary}
+     StyledText{Layout.fillWidth:true;wrapMode:Text.WordWrap;text:qsTr("Actifs seulement quand l’organisation automatique est activée");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+     Repeater{model:[{keys:"Ctrl + Alt + ← ↑ → ↓",label:qsTr("Passer à la tuile voisine")},{keys:"Ctrl + Alt + Maj + ← ↑ → ↓",label:qsTr("Échanger avec la tuile voisine, y compris sur l’écran d’à côté")},{keys:"Ctrl + Alt + Maj + F",label:qsTr("Sortir la fenêtre du tuilage, ou l’y remettre")},{keys:"Ctrl + Alt + Maj + + / −",label:qsTr("Agrandir ou réduire la tuile active (20 à 80 %)")},{keys:"Ctrl + Alt + Maj + X",label:qsTr("Exclure l’application de la fenêtre active, ou la réintégrer")},{keys:qsTr("Souris"),label:qsTr("Lâcher une fenêtre sur une autre tuile les échange")}]
+      RowLayout{required property var modelData;Layout.fillWidth:true;spacing:10
+       StyledText{Layout.preferredWidth:190;text:modelData.keys;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3onSurface}
+       StyledText{Layout.fillWidth:true;wrapMode:Text.WordWrap;text:modelData.label;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+      }
+     }
+    }
+    ColumnLayout{Layout.fillWidth:true;spacing:2
+     StyledText{Layout.fillWidth:true;wrapMode:Text.WordWrap;text:qsTr("Applications exclues");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3primary}
+     StyledText{Layout.fillWidth:true;visible:(Bridge.settings.tileExclusions??[]).length===0;text:qsTr("Aucune application exclue");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+     Repeater{model:Bridge.settings.tileExclusions??[]
+      RowLayout{required property var modelData;Layout.fillWidth:true;spacing:8
+       StyledText{Layout.fillWidth:true;elide:Text.ElideRight;text:modelData;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3onSurface}
+       IconButton{icon:"close";type:IconButton.Text;onClicked:Bridge.action("preference",{key:"tileExclusionRemove",value:modelData})}
+      }
+     }
+    }
     SettingRow{title:qsTr("Logo Winlestia");hint:qsTr("Un repère discret dans le coin de l’écran");symbol:"branding_watermark";StyledSwitch{objectName:"desktopLogoToggle";checked:Bridge.settings.desktopLogo??false;onClicked:Bridge.action("preference",{key:"desktopLogo",enabled:checked})}}
     SettingRow{title:qsTr("Afficher l’OSD");hint:qsTr("Indicateur de volume, luminosité et micro à l’écran");symbol:"volume_up";StyledSwitch{objectName:"osdToggle";checked:Bridge.settings.osd??true;onClicked:Bridge.action("preference",{key:"osd",enabled:checked})}}
     SettingRow{title:qsTr("Indicateur de bureaux virtuels");hint:qsTr("Une pastille par bureau Windows dans le dock");symbol:"view_carousel";StyledSwitch{objectName:"desktopIndicatorToggle";checked:Bridge.settings.desktopIndicator??true;onClicked:Bridge.action("preference",{key:"desktopIndicator",enabled:checked})}}
