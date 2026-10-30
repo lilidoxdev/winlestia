@@ -619,6 +619,9 @@ class Bridge(QObject):
             if not getattr(self,attr):setattr(self,attr,now)
             if now-getattr(self,attr)>.5 and not self.args.preview:self.shellEvent.emit(event[1]);setattr(self,attr,0)
     def poll_pointer(self):
+        try:self._poll_pointer()
+        finally:self.pointer_pace()
+    def _poll_pointer(self):
         self.poll_file_drag()
         if not self.top:return
         if self.modal:return
@@ -658,6 +661,16 @@ class Bridge(QObject):
             decision=self.edge_policy.update(now,bottom,dock_inside,full,now<self.force_dock)
             if decision is True:self.shellEvent.emit('dock')
             elif decision is False and not self.args.preview:self.shellEvent.emit('dockHide')
+    def pointer_pace(self):
+        point=QCursor.pos();geometry=(QApplication.screenAt(point) or QApplication.primaryScreen()).geometry();now=time.monotonic()
+        # Adaptive pace: 90 ms while a reveal is active, the button is down (file drag) or the pointer is within 48 px of a screen edge; 250 ms otherwise.
+        near=min(point.y()-geometry.top(),geometry.bottom()-point.y(),point.x()-geometry.left(),geometry.right()-point.x())<=48
+        active=near or self.away_top or self.away_social or self.away_bookmarks or now<self.force_dock or getattr(self,'_file_drag_down',False) or bool(user32.GetAsyncKeyState(1)&0x8000)
+        if self.top and self.top.isVisible() and float(self.top.property('panelHeight') or 0)>=95:active=True   # an open panel; the collapsed bar is covered by away_top / edge proximity
+        for win in (self.dock,self.social_win,self.bookmarks_win):
+            if win and (win.property('shown') or win.property('menuOpen')):active=True
+        interval=90 if active else 250
+        if self.pointer.interval()!=interval:self.pointer.setInterval(interval)
     def stop(self):
         if getattr(self,'_click_picker',None):self._click_picker.stop()
         if getattr(self,'glass',None):self.glass.stop()

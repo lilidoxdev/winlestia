@@ -20,7 +20,7 @@ internal sealed partial class ExplorerAppearance:IDisposable{
  static void Release(object? value){if(value!=null&&Marshal.IsComObject(value))Marshal.FinalReleaseComObject(value);}
  // Event-driven rescans: a window set/title change (seen by FrameTick, no I/O) or a sub-folder created/renamed/deleted in a visible folder (FileSystemWatcher) arms ONE scan 1.5 s later.
  readonly Dictionary<string,FileSystemWatcher> watchers=new(StringComparer.OrdinalIgnoreCase);string windowSignature="";DateTime scanDue=DateTime.MaxValue;
- internal void RequestScan(){scanDue=DateTime.UtcNow.AddSeconds(1.5);}
+ internal void RequestScan(){scanDue=DateTime.UtcNow.AddSeconds(1.5);if(disposed)return;void Fast(){if(!disposed&&!eventPending&&timer.Interval>TimeSpan.FromSeconds(1)){timer.Stop();timer.Interval=TimeSpan.FromSeconds(1);timer.Start();}}if(timer.Dispatcher.CheckAccess())Fast();else timer.Dispatcher.BeginInvoke(Fast);}
  void Watch(HashSet<string> visible){lock(watchers){foreach(var gone in watchers.Keys.Where(k=>!visible.Contains(k)).ToArray()){watchers[gone].Dispose();watchers.Remove(gone);}
   foreach(string path in visible){if(watchers.ContainsKey(path)||disposed||!Directory.Exists(path)||path.StartsWith(@"\\"))continue;try{var w=new FileSystemWatcher(path){NotifyFilter=NotifyFilters.DirectoryName,IncludeSubdirectories=false,EnableRaisingEvents=true};FileSystemEventHandler h=(_,_)=>RequestScan();w.Created+=h;w.Deleted+=h;w.Renamed+=(_,_)=>RequestScan();watchers[path]=w;}catch{}}}}
  // Per-folder notification debounce: at most one shell notification per folder per 10 s. Returns whether it was sent.
@@ -56,7 +56,12 @@ internal sealed partial class ExplorerAppearance:IDisposable{
  static bool Within(string full,bool strict){string real=Real(full);return PersonalFolders().Any(p=>{if(p.path.Length==0)return false;string root=Real(p.path);return (!strict&&real.Equals(root,StringComparison.OrdinalIgnoreCase))||real.StartsWith(root+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase);});}
  static readonly HashSet<string> DevDirs=new(StringComparer.OrdinalIgnoreCase){"node_modules","bin","obj",".venv","__pycache__","target","build","dist"};
  static bool Skipped(string folder){try{return DevDirs.Contains(Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar)))||Directory.Exists(Path.Combine(folder,".git"))||File.Exists(Path.Combine(folder,".git"));}catch{return true;}}
- internal ExplorerAppearance(string? directory=null){root=directory??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Winlestia","Explorer");timer.Tick+=(_,_)=>FrameTick();timer.Start();}
+ internal ExplorerAppearance(string? directory=null){root=directory??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Winlestia","Explorer");timer.Tick+=(_,_)=>{try{FrameTick();}finally{eventPending=false;timer.Interval=scanDue!=DateTime.MaxValue?TimeSpan.FromSeconds(1):IdleInterval;}};timer.Start();hookProc=(_,_,h,id,_,_,_)=>{if(h==IntPtr.Zero||id!=0||disposed||eventPending||GetAncestor(h,2)!=h)return;eventPending=true;timer.Stop();timer.Interval=TimeSpan.FromMilliseconds(150);timer.Start();};foreach(var r in new (uint,uint)[]{(3,3),(0x16,0x17),(0x8000,0x8003),(0x800C,0x800C)})hooks.Add(SetWinEventHook(r.Item1,r.Item2,IntPtr.Zero,hookProc,0,0,0));}
+ // Idle back-off: windows events (foreground/minimize/create/destroy/show/hide/name change) re-arm a 150 ms debounce tick; otherwise 5 s safety tick (1 s while a scan is due).
+ static readonly TimeSpan IdleInterval=TimeSpan.FromSeconds(5);bool eventPending;readonly List<IntPtr> hooks=new();[DllImport("user32.dll")]static extern IntPtr GetAncestor(IntPtr h,uint flags);readonly WinEventProc? hookProc;
+ delegate void WinEventProc(IntPtr hook,uint evt,IntPtr hwnd,int id,int child,uint thread,uint time);
+ [DllImport("user32.dll")]static extern IntPtr SetWinEventHook(uint min,uint max,IntPtr mod,WinEventProc proc,uint pid,uint thread,uint flags);
+ [DllImport("user32.dll")]static extern bool UnhookWinEvent(IntPtr hook);
  string Manifest=>Path.Combine(root,"manifest.json");
  List<Backup> Read()=>File.Exists(Manifest)?JsonSerializer.Deserialize<List<Backup>>(File.ReadAllText(Manifest))??new():new();
  void Save(List<Backup> data){Directory.CreateDirectory(root);string temp=Manifest+".tmp";File.WriteAllText(temp,JsonSerializer.Serialize(data));File.Move(temp,Manifest,true);}
@@ -126,5 +131,5 @@ internal sealed partial class ExplorerAppearance:IDisposable{
   }images.Add(memory.ToArray());}
   using var output=File.Create(path);using var writer=new BinaryWriter(output);writer.Write((ushort)0);writer.Write((ushort)1);writer.Write((ushort)sizes.Length);int offset=6+16*sizes.Length;for(int i=0;i<sizes.Length;i++){writer.Write((byte)(sizes[i]%256));writer.Write((byte)(sizes[i]%256));writer.Write((byte)0);writer.Write((byte)0);writer.Write((ushort)1);writer.Write((ushort)32);writer.Write(images[i].Length);writer.Write(offset);offset+=images[i].Length;}foreach(var image in images)writer.Write(image);
  }
- public void Dispose(){disposed=true;timer.Stop();DisposeIcons();lock(watchers){foreach(var w in watchers.Values)w.Dispose();watchers.Clear();}RestoreFrames();}
+ public void Dispose(){disposed=true;timer.Stop();if(timer.Dispatcher.CheckAccess()){foreach(var k in hooks)UnhookWinEvent(k);hooks.Clear();}else timer.Dispatcher.Invoke(()=>{foreach(var k in hooks)UnhookWinEvent(k);hooks.Clear();});DisposeIcons();lock(watchers){foreach(var w in watchers.Values)w.Dispose();watchers.Clear();}RestoreFrames();}
 }

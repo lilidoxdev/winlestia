@@ -10,7 +10,7 @@ class SurfaceCommand(ctypes.Structure):
 
 class NativeGlass(QObject):
     def __init__(self,bridge,library=None):
-        super().__init__(bridge);self.bridge=bridge;self.windows={};self.errors=[];self.dll=None;self.stopped=False;self.queued=False
+        super().__init__(bridge);self.bridge=bridge;self.windows={};self.errors=[];self.dll=None;self.stopped=False;self.queued=False;self.watched=set()
         try:
             self.dll=ctypes.WinDLL(str(library or Path(__file__).with_name('QtGlassBackdrop.dll')))
             signatures={'BackdropAttach':[ctypes.c_void_p],'BackdropUpdate':[ctypes.c_void_p,ctypes.c_double,ctypes.c_int,ctypes.c_int],'BackdropSurface':[ctypes.c_void_p,ctypes.POINTER(SurfaceCommand),ctypes.c_uint32],'BackdropMaterial':[ctypes.c_void_p,ctypes.c_float],'BackdropDetach':[ctypes.c_void_p],'BackdropPart':[ctypes.c_void_p,ctypes.c_int]}
@@ -28,10 +28,12 @@ class NativeGlass(QObject):
         if self.stopped:return
         scene=self.bridge.surface_scene
         if not scene or not self.dll:return
-        live=set();native_bump={3:-1,4:-1}
+        live=set();native_bump={3:-1,4:-1};busy=False
         for window in QApplication.allWindows():
             if not window.title().startswith('Panneaux · Cadre '):continue
-            handle=int(window.winId());live.add(handle);record=self.windows.get(handle);name=window.property('screenName')
+            handle=int(window.winId());live.add(handle)
+            if handle not in self.watched:self.watched.add(handle);window.visibleChanged.connect(self.request_sync)
+            record=self.windows.get(handle);name=window.property('screenName')
             if not self.bridge.glassEnabled or self.bridge.reducedEffects:
                 if record:self.dll.BackdropDetach(handle);self.windows.pop(handle,None)
                 continue
@@ -74,7 +76,10 @@ class NativeGlass(QObject):
         for handle in set(self.windows)-live:self.dll.BackdropDetach(handle);self.windows.pop(handle,None)
         # Content-only windows stay above the shared background and never tint their text twice.
         for window in (self.bridge.top,self.bridge.dock,getattr(self.bridge,'social_win',None),getattr(self.bridge,'bookmarks_win',None),getattr(self.bridge,'dictation_win',None)):
-            if window and window.isVisible():self.user.SetWindowPos(int(window.winId()),ctypes.c_void_p(-1),0,0,0,0,0x13)
+            if window and window.isVisible():self.user.SetWindowPos(int(window.winId()),ctypes.c_void_p(-1),0,0,0,0,0x13);busy=True
+        # Back-off: nothing native to keep on top/updated -> 500 ms safety tick (changed/surfaceChanged still sync at once); 250 ms otherwise.
+        interval=250 if busy or any(r.get('key') for r in self.windows.values()) else 500
+        if self.timer.interval()!=interval:self.timer.setInterval(interval)
     def error(self,phase,status):
         message=f'{phase}: {status:#x}'
         if message not in self.errors:self.errors.append(message)
