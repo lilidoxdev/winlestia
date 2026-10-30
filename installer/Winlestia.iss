@@ -18,6 +18,7 @@ AppId={#AppId}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
+ChangesEnvironment=yes
 AppPublisher={#AppPublisher}
 VersionInfoVersion={#AppVersion}
 VersionInfoProductName={#AppName}
@@ -59,6 +60,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 Name: "autostart";  Description: "Démarrer {#AppName} à l'ouverture de session"; GroupDescription: "Options :"; Flags: checkedonce
 Name: "desktopicon"; Description: "Créer un raccourci sur le Bureau"; GroupDescription: "Options :"; Flags: checkedonce
 Name: "startmenu";  Description: "Créer une entrée dans le menu Démarrer"; GroupDescription: "Options :"; Flags: checkedonce
+Name: "cli";        Description: "Ajouter la commande « winlestia » au PATH de l'utilisateur (scripts et tests)"; GroupDescription: "Options :"; Flags: checkedonce
 Name: "terminal";   Description: "Intégrer Winlestia au terminal (couleurs, clink, profils PowerShell) — réversible"; GroupDescription: "Options :"; Flags: unchecked
 
 
@@ -67,6 +69,10 @@ Name: "terminal";   Description: "Intégrer Winlestia au terminal (couleurs, cli
 ; l'ancienne version ne survit à côté des nouveaux.
 ; Preserve existing preferences/catalogue during upgrade.
 Type: filesandordirs; Name: "{app}\Caelestia-Windows"
+; winlestia.exe est desormais un fichier unique : retirer les restes de l'ancien publish multi-fichiers.
+Type: files; Name: "{app}\Glass-v5\winlestia.dll"
+Type: files; Name: "{app}\Glass-v5\winlestia.deps.json"
+Type: files; Name: "{app}\Glass-v5\winlestia.runtimeconfig.json"
 
 [Files]
 Source: "Close-Winlestia.ps1"; Flags: dontcopy
@@ -89,6 +95,8 @@ Name: "{autoprograms}\Restaurer la barre des tâches Windows"; Filename: "{app}\
 Name: "{autoprograms}\Désinstaller {#AppName}"; Filename: "{uninstallexe}"; Tasks: startmenu
 
 [Registry]
+Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\Glass-v5"; Check: PathMissing() and not PathIsEmpty(); Tasks: cli
+Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{app}\Glass-v5"; Check: PathMissing() and PathIsEmpty(); Tasks: cli
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Panneaux"; ValueData: """{app}\Glass-v5\{#AppExe}"""; Flags: uninsdeletevalue; Tasks: autostart
 
 [Run]
@@ -330,11 +338,50 @@ begin
   end;
 end;
 
+function PathIsEmpty(): Boolean;
+var Current: String;
+begin
+  if not RegQueryStringValue(HKCU, 'Environment', 'Path', Current) then Current := '';
+  Result := Trim(Current) = '';
+end;
+
+function PathMissing(): Boolean;
+var Current, Entry, Local, Alt: String;
+begin
+  if not RegQueryStringValue(HKCU, 'Environment', 'Path', Current) then Current := '';
+  Current := ';' + Lowercase(Current) + ';';
+  Entry := Lowercase(ExpandConstant('{app}\Glass-v5'));
+  Result := Pos(';' + Entry + ';', Current) = 0;
+  { Same folder written with %LOCALAPPDATA% }
+  Local := Lowercase(ExpandConstant('{localappdata}'));
+  if Result and (Copy(Entry, 1, Length(Local)) = Local) then begin
+    Alt := '%localappdata%' + Copy(Entry, Length(Local) + 1, MaxInt);
+    Result := Pos(';' + Alt + ';', Current) = 0;
+  end;
+end;
+
+procedure RemoveFromPath();
+var Current, Entry: String;
+    At: Integer;
+begin
+  if not RegQueryStringValue(HKCU, 'Environment', 'Path', Current) then Exit;
+  Entry := ExpandConstant('{app}\Glass-v5');
+  At := Pos(';' + Lowercase(Entry) + ';', ';' + Lowercase(Current) + ';');
+  if At = 0 then Exit;
+  Current := ';' + Current + ';';
+  Delete(Current, At, Length(Entry) + 1);
+  Current := Copy(Current, 2, Length(Current) - 2);
+  RegWriteExpandStringValue(HKCU, 'Environment', 'Path', Current);
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   // Le profil et le cache restent : une réinstallation retrouve le même pseudo.
   if CurUninstallStep = usPostUninstall then
-    RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', 'Panneaux');
+    begin
+      RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', 'Panneaux');
+      RemoveFromPath();
+    end;
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;

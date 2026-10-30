@@ -46,6 +46,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     readonly ExplorerAppearance explorer=new();readonly WindowTiler tiler=new();readonly ScreenFrameReservations frame=new();readonly WindowsWallpaper wallpaper=new();readonly AudioMixerHost mixer=new();bool mixerVisible;readonly WindowsSpectrum spectrum=new();readonly MediaController media=new();readonly SystemAudio audio=new();readonly WindowsConnections connections=new();readonly PcTelemetry telemetry=new();readonly DictationService dictation;
 
+    CliServer? cli;
     readonly DispatcherTimer timer=new(){Interval=TimeSpan.FromMilliseconds(500)};
 
     readonly Dictionary<string,string> icons=new();readonly HashSet<string> requested=new();readonly Dictionary<string,Entry> dockEntries=new();
@@ -85,7 +86,7 @@ internal sealed partial class QtShellBridge:IDisposable {
         dismissal=new OutsideDismiss(()=>Send("close"),()=>active&&!DialogOpen,h=>{GetWindowThreadProcessId(h,out uint pid);return frontend!=null&&(pid==frontend.Id||pid==frontendWindowPid);});
 
         dictation=new DictationService(dispatcher,Send);osdWatcher=new OsdWatcher(dispatcher,(volume,muted)=>{if(Store.State.Osd&&!active)Send("osd:volume:"+volume+":"+(muted?1:0));},line=>{if(Store.State.Osd&&!active)Send(line);});dictation.KeyCaptured=vk=>{if(vk is >0 and <255)Store.State.DictationKey=vk;dictation.Apply(Store.State.DictationEnabled,Store.State.DictationKey);Store.Save();};dictation.Apply(Store.State.DictationEnabled,Store.State.DictationKey);
-        _=Serve();
+        _=Serve();cli=new CliServer(RunCli);
         var launched=DateTime.UtcNow;
         var start=new ProcessStartInfo(Path.Combine(root,".venv","Scripts","pythonw.exe")){UseShellExecute=false,CreateNoWindow=true,WorkingDirectory=root,RedirectStandardError=true};
         // Le PySide6 livré est le seul valable : un site-packages utilisateur ne doit pas s'intercaler.
@@ -267,6 +268,24 @@ internal sealed partial class QtShellBridge:IDisposable {
         }catch(Exception ex){notice=ex.Message;Store.Log("Commande Qt: "+ex.Message);}var queued=events.Where(e=>KeepEvent(e.name,e.epoch,frontendEpoch)).Select(e=>e.name).ToArray();events.Clear();return JsonSerializer.Serialize(new{state=State(),events=queued,notice,wallpaperCapture,bookmarksItems},Json);}
 
     void RefreshMixer(){foreach(var app in mixer.Applications.Where(a=>!string.IsNullOrEmpty(a.path)))LoadIcon(new Entry{Id=app.id,Name=app.name,Target=app.path,IconPath=app.path});}
+    [System.Runtime.InteropServices.DllImport("user32.dll",CharSet=System.Runtime.InteropServices.CharSet.Unicode,SetLastError=true)]static extern bool SystemParametersInfo(uint action,uint param,string value,uint flags);
+    // `winlestia` command line: only the commands accepted by CliCommands.TryParse reach this point. Runs on the UI dispatcher.
+    // Wallpaper: the file check (possibly a network drive) and SystemParametersInfo (may wait on a hung window) stay off the UI thread.
+    Task<(int code,string text)> RunCli(CliCommand c)=>c.Kind==CliKind.Wallpaper?Task.Run(()=>{if(!CliCommands.ValidWallpaper(c.Arg,File.Exists,out var why))return(2,why);if(!SystemParametersInfo(0x14,0,c.Arg,3))return(1,"Windows refused the wallpaper.");return(0,"ok");}):RunCliUi(c);
+    Task<(int code,string text)> RunCliUi(CliCommand c)=>dispatcher.InvokeAsync(()=>{
+        switch(c.Kind){
+            case CliKind.Help:return(0,CliCommands.HelpText);
+            case CliKind.Status:{var snap=VirtualDesktops.Current;return(0,JsonSerializer.Serialize(new{version=typeof(QtShellBridge).Assembly.GetName().Version?.ToString(3)??"",desktops=snap.Count,currentDesktop=snap.Current+1,theme=Store.State.Theme,wallpaper=wallpaper.Monitors.FirstOrDefault()?.path??"",reducedEffects=LightRendering,autoOrganize=Store.State.AutoTile},Json));}
+            case CliKind.Panel:Send(c.Arg);return(0,"ok");
+            case CliKind.Palette:Send("palette");return(0,"ok");
+            case CliKind.DesktopNext:_=Task.Run(()=>VirtualDesktops.SwitchTo(0,1));return(0,"ok");
+            case CliKind.DesktopPrev:_=Task.Run(()=>VirtualDesktops.SwitchTo(0,-1));return(0,"ok");
+            case CliKind.DesktopNew:_=Task.Run(()=>VirtualDesktops.CreateNew());return(0,"ok");
+            case CliKind.DesktopGo:{int count=VirtualDesktops.Current.Count;if(c.Number>count)return(1,"Desktop "+c.Number+" does not exist ("+count+" available).");int to=c.Number-1;_=Task.Run(()=>VirtualDesktops.SwitchTo(to));return(0,"ok");}
+        }
+        return(2,"Unknown command.");
+    }).Task;
+
     void RunTool(string id){
         switch(id){
             case "capture":Send("capture");return;case "ocr":Send("capture-ocr");return;
@@ -317,7 +336,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     }
 
-    public void Dispose(){if(disposed)return;disposed=true;timer.Stop();dictation.Dispose();osdWatcher?.Dispose();dockPreview.Dispose();social.Dispose();bookmarks.Dispose();explorer.Dispose();dismissal.Dispose();cancellation.Cancel();pipe?.Dispose();tiler.Dispose();frame.Dispose();wallpaper.Dispose();mixer.Dispose();spectrum.Dispose();media.Dispose();telemetry.Dispose();NetworkKindWatcher.Changed-=networkChanged;NetworkKindWatcher.Stop();VirtualDesktops.Changed-=networkChanged;VirtualDesktops.Stop();FullscreenWatcher.Changed-=networkChanged;FullscreenWatcher.Stop();audio.Dispose();if(frontend is {HasExited:false}){try{frontend.Kill();frontend.WaitForExit(2000);}catch{}}frontend?.Dispose();wake.Dispose();cancellation.Dispose();}
+    public void Dispose(){if(disposed)return;disposed=true;timer.Stop();dictation.Dispose();osdWatcher?.Dispose();dockPreview.Dispose();social.Dispose();bookmarks.Dispose();explorer.Dispose();dismissal.Dispose();cli?.Dispose();cancellation.Cancel();pipe?.Dispose();tiler.Dispose();frame.Dispose();wallpaper.Dispose();mixer.Dispose();spectrum.Dispose();media.Dispose();telemetry.Dispose();NetworkKindWatcher.Changed-=networkChanged;NetworkKindWatcher.Stop();VirtualDesktops.Changed-=networkChanged;VirtualDesktops.Stop();FullscreenWatcher.Changed-=networkChanged;FullscreenWatcher.Stop();audio.Dispose();if(frontend is {HasExited:false}){try{frontend.Kill();frontend.WaitForExit(2000);}catch{}}frontend?.Dispose();wake.Dispose();cancellation.Dispose();}
 
 }
 

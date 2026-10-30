@@ -2,6 +2,7 @@
 
 ## Non publié
 
+- Commande `winlestia` (status, panel, desktop, wallpaper, palette, help) pour piloter le shell déjà lancé depuis un script ; tube nommé local réservé à l'utilisateur courant, liste blanche de commandes, aucune commande d'arrêt ni de suppression. Entrée PATH facultative à l'installation.
 - Dock : bouton « + » pour créer un bureau virtuel ; clic droit sur une pastille pour fermer ce bureau ; une petite flèche affiche ou range, dans la barre, les boutons d'organisation automatique et d'applications ouvertes (état mémorisé).
 - Le dossier de données passe à %LOCALAPPDATA%\Panneaux (L2).
 - L'intégration du terminal est désormais facultative et réversible (L3).

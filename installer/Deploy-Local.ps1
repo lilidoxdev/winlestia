@@ -35,6 +35,12 @@ dotnet publish (Join-Path $root 'src\files\Winlestia.Files.csproj') `
     -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false `
     -o $stage --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation de Winlestia Fichiers echouee.' }
+Write-Host '-> Publish winlestia.exe' -ForegroundColor Cyan
+dotnet publish (Join-Path $root 'src\cli\winlestia.csproj') `
+    -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true `
+    -p:EnableCompressionInSingleFile=true -p:DebugType=none `
+    -o $stage --nologo
+if ($LASTEXITCODE -ne 0) { throw 'Compilation de winlestia.exe echouee.' }
 Copy-Item (Join-Path $root 'src\backend\Inventory.ps1') $stage -Force
 Copy-Item (Join-Path $root 'src\backend\native\*.dll') $stage -Force
 Copy-Item (Join-Path $root 'src\backend\native\*.exe') $stage -Force
