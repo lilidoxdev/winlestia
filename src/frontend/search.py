@@ -25,7 +25,64 @@ COMMANDS=[
  ('taskmgr','Gestionnaire des tâches','Processus et démarrage','monitoring','command'),
  ('calculator','Calculatrice Windows','Ouvrir la calculatrice','calculate','command'),
  ('>wallpaper ','Fond d’écran','Wallpaper · changer le fond du bureau','wallpaper','autocomplete'),
- ('>emoji ','Emojis','Emoji · chercher et copier un emoji','mood','autocomplete')]
+ ('>emoji ','Emojis','Emoji · chercher et copier un emoji','mood','autocomplete'),
+ ('>file ','Fichiers','File · chercher dans l’index Windows','folder_search','autocomplete')]
+
+# Windows Settings pages: (ms-settings URI, fr, en, es, extra keywords). Only these URIs can be opened from the palette.
+SETTINGS_PAGES=(
+ ('ms-settings:network-wifi','Wi-Fi','Wi-Fi','Wi-Fi','wifi reseau sans fil network wireless'),
+ ('ms-settings:network','Réseau et Internet','Network & internet','Red e Internet','reseau network ethernet'),
+ ('ms-settings:network-vpn','VPN','VPN','VPN',''),
+ ('ms-settings:bluetooth','Bluetooth et appareils','Bluetooth & devices','Bluetooth y dispositivos','bluetooth peripheriques devices'),
+ ('ms-settings:printers','Imprimantes et scanners','Printers & scanners','Impresoras y escáneres','printer imprimante scanner'),
+ ('ms-settings:display','Écran','Display','Pantalla','ecran display resolution luminosite brightness'),
+ ('ms-settings:nightlight','Éclairage nocturne','Night light','Luz nocturna','night light lumiere bleue'),
+ ('ms-settings:sound','Son','Sound','Sonido','audio volume sound haut-parleur speaker microphone'),
+ ('ms-settings:notifications','Notifications','Notifications','Notificaciones','alertes alerts'),
+ ('ms-settings:batterysaver','Batterie','Battery','Batería','batterie battery economie energie power'),
+ ('ms-settings:powersleep','Alimentation et mise en veille','Power & sleep','Energía y suspensión','veille sleep power'),
+ ('ms-settings:storagesense','Stockage','Storage','Almacenamiento','disque disk espace storage'),
+ ('ms-settings:multitasking','Multitâche','Multitasking','Multitarea','snap fenetres'),
+ ('ms-settings:about','À propos','About','Acerca de','systeme system info version'),
+ ('ms-settings:personalization','Personnalisation','Personalization','Personalización','theme fond wallpaper couleurs'),
+ ('ms-settings:personalization-colors','Couleurs','Colors','Colores','mode sombre dark accent'),
+ ('ms-settings:taskbar','Barre des tâches','Taskbar','Barra de tareas',''),
+ ('ms-settings:appsfeatures','Applications installées','Installed apps','Aplicaciones instaladas','desinstaller uninstall programmes programs'),
+ ('ms-settings:defaultapps','Applications par défaut','Default apps','Aplicaciones predeterminadas','navigateur browser'),
+ ('ms-settings:startupapps','Applications au démarrage','Startup apps','Aplicaciones de inicio','demarrage startup'),
+ ('ms-settings:yourinfo','Comptes','Accounts','Cuentas','compte utilisateur account profil'),
+ ('ms-settings:dateandtime','Date et heure','Date & time','Fecha y hora','fuseau timezone horloge clock'),
+ ('ms-settings:regionformatting','Région','Region','Región','format pays country'),
+ ('ms-settings:regionlanguage','Langue','Language','Idioma','langue language'),
+ ('ms-settings:typing','Clavier','Keyboard','Teclado','saisie typing'),
+ ('ms-settings:mousetouchpad','Souris et pavé tactile','Mouse & touchpad','Ratón y panel táctil','souris mouse touchpad curseur'),
+ ('ms-settings:easeofaccess','Accessibilité','Accessibility','Accesibilidad','loupe magnifier narrator'),
+ ('ms-settings:privacy','Confidentialité','Privacy','Privacidad','securite security'),
+ ('ms-settings:privacy-webcam','Caméra (confidentialité)','Camera privacy','Privacidad de la cámara','camera webcam'),
+ ('ms-settings:privacy-microphone','Microphone (confidentialité)','Microphone privacy','Privacidad del micrófono','micro'),
+ ('ms-settings:windowsupdate','Windows Update','Windows Update','Windows Update','mise a jour updates'))
+SETTINGS_URIS=frozenset(page[0] for page in SETTINGS_PAGES)
+SETTINGS_LABEL={'fr':'Paramètres Windows','en':'Windows Settings','es':'Configuración de Windows'}
+
+def settings_uri_known(uri):return uri in SETTINGS_URIS
+
+def settings_results(words,language='fr',limit=4):
+    column={'fr':1,'en':2,'es':3}.get(language,1);found=[]
+    for page in SETTINGS_PAGES:
+        if all(w in fold(' '.join(page[1:])) for w in words):found.append({'id':page[0],'name':page[column],'comment':SETTINGS_LABEL.get(language,SETTINGS_LABEL['fr']),'icon':'settings','kind':'setting'})
+    return found[:limit]
+
+def window_results(needle,windows,limit=5):
+    # Open windows whose title or executable name contains every typed word; the shell's own windows (titles "Panneaux · ...") are left out.
+    words=fold(needle).split();ranked=[]
+    for entry in windows or []:
+        try:hwnd=int(entry.get('hwnd',0))
+        except (AttributeError,TypeError,ValueError):continue
+        title=str(entry.get('title') or '');exe=str(entry.get('exe') or '')
+        if not hwnd or not title or fold(title).startswith('panneaux ·'):continue
+        if words and all(w in fold(title+' '+exe) for w in words):ranked.append((0 if fold(title).startswith(words[0]) else 1,hwnd,title,exe))
+    ranked.sort(key=lambda v:v[0])
+    return [{'id':'window:%d'%hwnd,'hwnd':hwnd,'name':title,'comment':exe or 'Fenêtre','icon':'web_asset','kind':'window'} for _,hwnd,title,exe in ranked[:limit]]
 
 CALC_WORDS=((re.compile(r'(?<=[\d)\s])\s*divis[eé]e?\s+par\s*',re.I),'/'),(re.compile(r'\sfois\s',re.I),'*'),(re.compile(r'\splus\s',re.I),'+'),(re.compile(r'\smoins\s',re.I),'-'))
 TIME_LIKE=re.compile(r'^\d{1,2}:\d{2}(:\d{2})?\s*(am|pm)?$',re.I)
@@ -56,7 +113,7 @@ def calculate(text,language='fr'):
         return shown.replace('.',',') if language in ('fr','es') else shown
     except (ValueError,SyntaxError,OverflowError,ZeroDivisionError,TypeError,KeyError):return None
 
-def palette_search(query,state,language='fr'):
+def palette_search(query,state,language='fr',windows=None):
     raw=query.strip();needle=fold(raw.lstrip('>'));words=needle.split();results=[]
     result=calculate(raw,language)
     if result is not None:results.append({'id':raw,'name':'= '+result,'comment':'Entrée pour copier le résultat','icon':'calculate','kind':'calc'})
@@ -67,6 +124,7 @@ def palette_search(query,state,language='fr'):
     if not raw.startswith('>'):
         for tab in state.get('quickTabs',[]):
             if not raw or all(w in fold(tab['name']) for w in words):results.append({**tab,'kind':'quickTab','icon':'bolt','comment':'Onglet rapide'})
+        if raw:results.extend(window_results(needle,windows))
         entries=state.get('apps',[]) if raw else []
         ranked=[]
         for entry in entries:
@@ -77,6 +135,7 @@ def palette_search(query,state,language='fr'):
             if all(w in fold(entry['name']) for w in words):results.append({**entry,'kind':'website','icon':'language','comment':'Site internet'})
     for key,name,detail,icon,kind in COMMANDS:
         if all(w in fold(name+' '+detail) for w in words):results.append({'id':key,'name':name,'comment':detail,'icon':icon,'kind':kind})
+    if raw and not raw.startswith('>'):results.extend(settings_results(words,language))
     if raw and not results:results.append({'id':raw,'name':'Rechercher « '+raw+' »','comment':'Ouvrir dans le navigateur','kind':'web','icon':'travel_explore'})
     return results[:12]
 

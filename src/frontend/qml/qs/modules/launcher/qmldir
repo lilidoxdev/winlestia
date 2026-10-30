@@ -4,3 +4,4 @@ Content Content.qml
 ContentList ContentList.qml
 WallpaperList WallpaperList.qml
 EmojiList EmojiList.qml
+FileList FileList.qml

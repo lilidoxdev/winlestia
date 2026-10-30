@@ -44,7 +44,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     readonly CancellationTokenSource cancellation=new();readonly EventWaitHandle wake=new(false,EventResetMode.AutoReset,@"Local\PanneauxCaelestiaWake");readonly Queue<(string name,long epoch)> events=new();long frontendEpoch;readonly Action networkChanged;
 
-    readonly ExplorerAppearance explorer=new();readonly WindowTiler tiler=new();readonly ScreenFrameReservations frame=new();readonly WindowsWallpaper wallpaper=new();readonly AudioMixerHost mixer=new();bool mixerVisible;readonly WindowsSpectrum spectrum=new();readonly MediaController media=new();readonly SystemAudio audio=new();readonly WindowsConnections connections=new();readonly PcTelemetry telemetry=new();readonly DictationService dictation;
+    readonly ExplorerAppearance explorer=new();readonly WindowTiler tiler=new();readonly ScreenFrameReservations frame=new();readonly WindowsWallpaper wallpaper=new();readonly AudioMixerHost mixer=new();bool mixerVisible;readonly WindowsSpectrum spectrum=new();readonly MediaController media=new();readonly SystemAudio audio=new();readonly WindowsConnections connections=new();readonly PcTelemetry telemetry=new();readonly DictationService dictation;readonly FileSearch fileSearch=new();
 
     CliServer? cli;
     readonly DispatcherTimer timer=new(){Interval=TimeSpan.FromMilliseconds(500)};
@@ -128,7 +128,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     static bool Flag(JsonElement args,string name)=>args.TryGetProperty(name,out var value)&&value.ValueKind==JsonValueKind.True;
 
-    async Task<string> Handle(JsonElement request){string? notice=null;object? wallpaperCapture=null;object? bookmarksItems=null;try{string command=Text(request,"command");var args=request.TryGetProperty("args",out var a)?a:default;string id=args.ValueKind==JsonValueKind.Object?Text(args,"id"):"";
+    async Task<string> Handle(JsonElement request){string? notice=null;object? wallpaperCapture=null;object? bookmarksItems=null;object? windowItems=null;object? fileItems=null;try{string command=Text(request,"command");var args=request.TryGetProperty("args",out var a)?a:default;string id=args.ValueKind==JsonValueKind.Object?Text(args,"id"):"";
 
         if(args.ValueKind==JsonValueKind.Object&&args.TryGetProperty("epoch",out _)){long epoch=(long)Number(args,"epoch");bool navigationChanged=epoch!=frontendEpoch;if(navigationChanged){DesktopRecents.RefreshSoon();dockPreview.Close();}frontendEpoch=epoch;frontendWindowPid=(uint)Number(args,"pid");bool shown=Flag(args,"visible");tiler.ExcludedProcess=frontendWindowPid;explorer.ExcludedProcess=frontendWindowPid;tiler.SetEnabled(Store.State.AutoTile&&!Program.QtReview&&!Program.QtVerify&&!Program.QtVerifyTools);if(Store.State.ScreenFrame&&!Program.QtVerifyTools)frame.Enable();else frame.Disable();if(!shown)CapturingShortcut=false;page=(int)Number(args,"page");dockVisible=Flag(args,"dock");controls=Flag(args,"controls");mixerVisible=Flag(args,"mixer");if(active!=shown||navigationChanged){active=shown;dismissal.SetActive(active);}lastReply=DateTime.UtcNow;UpdateSampling();}
         if(command=="dictation"){var d=dictation.Snapshot();return JsonSerializer.Serialize(new{dictation=new{state=d.State,level=d.Level,levels=d.Levels,lang=d.Lang,text=d.Text,error=d.Error}},Json);}
@@ -201,6 +201,11 @@ internal sealed partial class QtShellBridge:IDisposable {
             case "bookmarksUnhideAll":bookmarks.UnhideAll();break;
             case "bookmarksDeleteInBrowser":_=bookmarks.DeleteInBrowser(id,Flag(args,"confirmSync"));break;
             case "bookmarksItems":bookmarksItems=bookmarks.Items();break;
+            case "windowList":windowItems=await Task.Run(()=>PaletteWindows().Take(60).ToArray());break;
+            case "fileSearch":fileSearch.Start(Text(args,"term"),(long)Number(args,"gen"),()=>_=dispatcher.BeginInvoke((Action)(()=>{if(!disposed)Send("files");})));break;
+            case "fileResults":fileItems=fileSearch.Payload();break;
+            case "fileCancel":fileSearch.Cancel();break;
+            case "fileOpen":if(fileSearch.TryResolve((long)Number(args,"gen"),(int)Number(args,"index"),out var filePath)){try{if(FileQuery.IsExecutable(filePath)){var selectInfo=new ProcessStartInfo("explorer.exe"){UseShellExecute=false};selectInfo.ArgumentList.Add("/select,"+filePath.Replace("\"",""));Process.Start(selectInfo);}else Process.Start(new ProcessStartInfo(filePath){UseShellExecute=true});}catch{notice="Impossible d’ouvrir ce fichier.";}}break;
             case "bookmarksRefresh":bookmarks.Refresh(Flag(args,"ifDirty"));break;
             case "socialTestSound":social.TestSound();break;
 
@@ -265,13 +270,17 @@ internal sealed partial class QtShellBridge:IDisposable {
 
         }
 
-        }catch(Exception ex){notice=ex.Message;Store.Log("Commande Qt: "+ex.Message);}var queued=events.Where(e=>KeepEvent(e.name,e.epoch,frontendEpoch)).Select(e=>e.name).ToArray();events.Clear();return JsonSerializer.Serialize(new{state=State(),events=queued,notice,wallpaperCapture,bookmarksItems},Json);}
+        }catch(Exception ex){notice=ex.Message;Store.Log("Commande Qt: "+ex.Message);}var queued=events.Where(e=>KeepEvent(e.name,e.epoch,frontendEpoch)).Select(e=>e.name).ToArray();events.Clear();return JsonSerializer.Serialize(new{state=State(),events=queued,notice,wallpaperCapture,bookmarksItems,windows=windowItems,fileResults=fileItems},Json);}
 
     void RefreshMixer(){foreach(var app in mixer.Applications.Where(a=>!string.IsNullOrEmpty(a.path)))LoadIcon(new Entry{Id=app.id,Name=app.name,Target=app.path,IconPath=app.path});}
     [System.Runtime.InteropServices.DllImport("user32.dll",CharSet=System.Runtime.InteropServices.CharSet.Unicode,SetLastError=true)]static extern bool SystemParametersInfo(uint action,uint param,string value,uint flags);
     // `winlestia` command line: only the commands accepted by CliCommands.TryParse reach this point. Runs on the UI dispatcher.
     // Wallpaper: the file check (possibly a network drive) and SystemParametersInfo (may wait on a hung window) stay off the UI thread.
-    Task<(int code,string text)> RunCli(CliCommand c)=>c.Kind==CliKind.Wallpaper?Task.Run(()=>{if(!CliCommands.ValidWallpaper(c.Arg,File.Exists,out var why))return(2,why);if(!SystemParametersInfo(0x14,0,c.Arg,3))return(1,"Windows refused the wallpaper.");return(0,"ok");}):RunCliUi(c);
+    // Open windows for the palette and `find windows`: the shell’s own windows (titles « Panneaux · … ») are left out. Called off the UI thread.
+    static IEnumerable<object> PaletteWindows()=>TaskbarNative.Applications().Where(w=>!w.Title.StartsWith("Panneaux ·",StringComparison.Ordinal)).Select(w=>(object)new{hwnd=w.Handle.ToInt64(),title=w.Title,exe=Path.GetFileNameWithoutExtension(w.Path)});
+    Task<(int code,string text)> RunCli(CliCommand c)=>c.Kind==CliKind.FindWindows?Task.Run(()=>(0,JsonSerializer.Serialize(new{count=PaletteWindows().Count()},Json))):c.Kind==CliKind.FindFiles?RunFindFiles(c.Arg):c.Kind==CliKind.Wallpaper?Task.Run(()=>{if(!CliCommands.ValidWallpaper(c.Arg,File.Exists,out var why))return(2,why);if(!SystemParametersInfo(0x14,0,c.Arg,3))return(1,"Windows refused the wallpaper.");return(0,"ok");}):RunCliUi(c);
+    // Counts only: neither a path nor a name leaves this method. FileSearch bounds the query to 2 s, below the server’s 5 s.
+    static async Task<(int code,string text)> RunFindFiles(string term){var r=await FileSearch.RunOnceAsync(term,CancellationToken.None);return(0,JsonSerializer.Serialize(new{count=r.Items.Count,indexAvailable=r.Status!=FileSearch.Unavailable},Json));}
     Task<(int code,string text)> RunCliUi(CliCommand c)=>dispatcher.InvokeAsync(()=>{
         switch(c.Kind){
             case CliKind.Help:return(0,CliCommands.HelpText);
@@ -336,7 +345,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     }
 
-    public void Dispose(){if(disposed)return;disposed=true;timer.Stop();dictation.Dispose();osdWatcher?.Dispose();dockPreview.Dispose();social.Dispose();bookmarks.Dispose();explorer.Dispose();dismissal.Dispose();cli?.Dispose();cancellation.Cancel();pipe?.Dispose();tiler.Dispose();frame.Dispose();wallpaper.Dispose();mixer.Dispose();spectrum.Dispose();media.Dispose();telemetry.Dispose();NetworkKindWatcher.Changed-=networkChanged;NetworkKindWatcher.Stop();VirtualDesktops.Changed-=networkChanged;VirtualDesktops.Stop();FullscreenWatcher.Changed-=networkChanged;FullscreenWatcher.Stop();audio.Dispose();if(frontend is {HasExited:false}){try{frontend.Kill();frontend.WaitForExit(2000);}catch{}}frontend?.Dispose();wake.Dispose();cancellation.Dispose();}
+    public void Dispose(){if(disposed)return;disposed=true;timer.Stop();dictation.Dispose();osdWatcher?.Dispose();dockPreview.Dispose();social.Dispose();bookmarks.Dispose();explorer.Dispose();dismissal.Dispose();cli?.Dispose();fileSearch.Dispose();cancellation.Cancel();pipe?.Dispose();tiler.Dispose();frame.Dispose();wallpaper.Dispose();mixer.Dispose();spectrum.Dispose();media.Dispose();telemetry.Dispose();NetworkKindWatcher.Changed-=networkChanged;NetworkKindWatcher.Stop();VirtualDesktops.Changed-=networkChanged;VirtualDesktops.Stop();FullscreenWatcher.Changed-=networkChanged;FullscreenWatcher.Stop();audio.Dispose();if(frontend is {HasExited:false}){try{frontend.Kill();frontend.WaitForExit(2000);}catch{}}frontend?.Dispose();wake.Dispose();cancellation.Dispose();}
 
 }
 

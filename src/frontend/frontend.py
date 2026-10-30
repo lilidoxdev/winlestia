@@ -13,7 +13,7 @@ from interaction import EdgePolicy, is_fullscreen
 from localization import Translator
 from custom_palette import make_palette,DEFAULT,valid_color
 from screen_picker import ClickPicker
-from search import palette_search, emoji_choices, wallpaper_choices, wallpaper_refresh, wallpaper_known, wallpaper_import, wallpaper_remove, wallpaper_hide, wallpaper_hidden, wallpaper_restore_hidden, user_wallpaper_dir
+from search import palette_search, emoji_choices, wallpaper_choices, wallpaper_refresh, wallpaper_known, wallpaper_import, wallpaper_remove, wallpaper_hide, wallpaper_hidden, wallpaper_restore_hidden, user_wallpaper_dir, settings_uri_known
 from live_model import LiveListModel
 from capture_native import CaptureController
 from concurrent.futures import ThreadPoolExecutor
@@ -130,6 +130,8 @@ class WindowsPlayer(QObject):
 
 class Bridge(QObject):
     colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperThumbReady=Signal(str,str);
+    # Palette sources: open windows (asked on opening, dropped on closing) and the file index (debounced, newest request wins by generation number).
+    fileChanged=Signal();_windows=[];_file_gen=0;_file_term='';_file_items=[];_file_status='idle';_file_sent=False;_file_timer=None
     def __init__(self,args):
         super().__init__();self.surface_scene=None;self.args=args;self._window=None;self._state={};self._pending_controls={};self._pending_audio={};self._icon_requests={};self._dark=False;self._player=WindowsPlayer(self);self.top=None;self.dock=None;self.social_win=None;self.away_social=0;self.bookmarks_win=None;self.away_bookmarks=0;self.last_reply=0;self.peek_until=0;self.away_top=0;self.away_dock=0;self.force_dock=0
         self.top_seen=False;self._screen=QApplication.primaryScreen();self.client=PipeClient(args.pipe);self.client.received.connect(self.update_state);self.client.start()
@@ -263,6 +265,8 @@ class Bridge(QObject):
     clipboardItems=Property('QVariantList',lambda s:s._state.get('clipboard',[]),notify=clipboardChanged)
     settings=Property('QVariantMap',lambda s:s._state.get('settings',{}),notify=changed)
     paletteResults=Property('QVariantList',lambda s:s._results,notify=searchChanged)
+    fileResults=Property('QVariantList',lambda s:s._file_items,notify=fileChanged)
+    fileStatus=Property(str,lambda s:s._file_status,notify=fileChanged)
     workspaceBoard=Property(str,lambda s:s.workspace_board,notify=searchChanged)
     notice=Property(str,lambda s:s._notice,notify=noticeChanged)
     networkKind=Property(str,lambda s:s._state.get('networkKind') if s._state.get('networkKind') in ('ethernet','wifi','none') else 'wifi',notify=changed)
@@ -357,10 +361,31 @@ class Bridge(QObject):
         self.navigation_epoch+=1;self.client.subscription['epoch']=self.navigation_epoch
         self.top_seen=False;self.away_top=0;self.opening_until=time.monotonic()+.8
         if mode.startswith('workspace:'):self.workspace_board=mode.split(':',1)[1];self.searchChanged.emit()
-        self.mode=mode.split(':',1)[0];self.navigationRequested.emit(mode)
+        was=self.mode;self.mode=mode.split(':',1)[0];self.navigationRequested.emit(mode);self.palette_lifecycle(was)
     @Slot(str)
     def searchPalette(self,text):
-        self.query=text;self._results=palette_search(text,self._state,TRANSLATOR.language);self.searchChanged.emit()
+        self.query=text;self._results=palette_search(text,self._state,TRANSLATOR.language,self._windows);self.searchChanged.emit()
+    def palette_lifecycle(self,was):
+        if self.mode=='palette' and was!='palette':self.action('windowList',{})
+        elif was=='palette' and self.mode!='palette':self._windows=[];self.fileQuery('')
+    @Slot(str)
+    def fileQuery(self,term):
+        # Under 2 characters: no request. Otherwise a 200 ms single-shot timer sends the latest term; older answers are dropped by generation.
+        self._file_gen+=1;self._file_term=term.strip();self._file_items=[]
+        if self._file_timer is None:
+            self._file_timer=QTimer(self);self._file_timer.setSingleShot(True);self._file_timer.setInterval(200);self._file_timer.timeout.connect(self.file_send)
+        self._file_timer.stop()
+        if len(self._file_term)<2:
+            if self._file_sent:self._file_sent=False;self.action('fileCancel',{})
+            self._file_status='idle'
+        else:self._file_status='searching';self._file_timer.start()
+        self.fileChanged.emit()
+    def file_send(self):self._file_sent=True;self.action('fileSearch',{'term':self._file_term,'gen':self._file_gen})
+    def files_arrived(self,data):
+        if not isinstance(data,dict) or data.get('gen')!=self._file_gen or self.mode!='palette':return
+        gen=self._file_gen;self._file_status=str(data.get('status') or 'ok')
+        self._file_items=[{'id':'file:%d'%int(f.get('index',0)),'index':int(f.get('index',0)),'gen':gen,'name':str(f.get('name') or ''),'comment':str(f.get('path') or ''),'icon':'draft','kind':'file'} for f in (data.get('items') or []) if isinstance(f,dict)]
+        self.fileChanged.emit()
     @Slot(str,result='QVariantList')
     def emojiChoices(self,query):return emoji_choices(query)
     @Slot(str,result='QVariantList')
@@ -416,6 +441,17 @@ class Bridge(QObject):
         elif kind=='autocomplete':self.prefillPalette(key)
         elif kind=='wallpaper':self.closePanel();self.setWallpaper(key)
         elif kind=='emoji':self.closePanel();self.action('copyText',{'text':key})
+        elif kind=='window':
+            hwnd=value.get('hwnd')
+            if isinstance(hwnd,int) and any(w.get('hwnd')==hwnd for w in self._windows):self.closePanel();self.action('activate',{'hwnd':hwnd})
+        elif kind=='setting':
+            if settings_uri_known(key):
+                self.closePanel()
+                try:os.startfile(key)
+                except OSError:pass
+        elif kind=='file':
+            # The backend resolves the path from its own last result; only a generation and an index travel back (queued before the panel closes, which cancels the search).
+            if value.get('gen')==self._file_gen and self.mode=='palette':self.action('fileOpen',{'gen':value['gen'],'index':value.get('index',-1)});self.closePanel()
         else:
             self.closePanel()
             self.action('paletteRun',{'kind':kind,'id':key,'query':self.query})
@@ -469,7 +505,7 @@ class Bridge(QObject):
         if updated!=self.client.subscription:self.client.subscription=updated;kernel32.SetEvent(self.client.wakeup)
     @Slot(int)
     def openTab(self,index):
-        self.navigation_epoch+=1;self.client.subscription['epoch']=self.navigation_epoch;self.mode='dashboard';self.top_seen=False;self.opening_until=time.monotonic()+.8;self.tabRequested.emit(index)
+        self.navigation_epoch+=1;self.client.subscription['epoch']=self.navigation_epoch;was=self.mode;self.mode='dashboard';self.top_seen=False;self.opening_until=time.monotonic()+.8;self.tabRequested.emit(index);self.palette_lifecycle(was)
     @Slot(str,result=str)
     def localUrl(self,path):
         if not path:return ''
@@ -576,6 +612,8 @@ class Bridge(QObject):
             self._backend_fullscreen=True;names=tuple(sorted(self.screen_names(message['state']['fullscreenMonitors'])))
             if names!=self.fullscreen_names:self.fullscreen_names=names;self.frameChanged.emit()
         if 'wallpaperCapture' in message:self.walltheme.captured(message['wallpaperCapture'])
+        if isinstance(message.get('windows'),list) and self.mode=='palette':self._windows=message['windows'];self.searchPalette(self.query)
+        if message.get('fileResults'):self.files_arrived(message['fileResults'])
         if message.get('notice'):self._notice=message['notice'];self.noticeChanged.emit()
         if 'spectrum' in message and message['spectrum']!=getattr(self,'_spectrum',None):self._spectrum=message['spectrum'];self.spectrumChanged.emit()
         if 'state' in message:
@@ -622,6 +660,7 @@ class Bridge(QObject):
                 continue
             if event in ('capture-select','capture-ocr'):
                 self.capture.start('text' if event=='capture-ocr' else 'region');continue
+            if event=='files':self.action('fileResults',{});continue
             if event.startswith('dictation:'):self.dictation_event(event);continue
             if event=='dock':self.force_dock=time.monotonic()+3
             if event in ('toggle','access','media','performance','controls','palette','settings','clipboard','tools','audio','microphone','capture','mixer','close','settings:social','settings:bookmarks') or event.startswith('workspace:'):self.navigate(event)

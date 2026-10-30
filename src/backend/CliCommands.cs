@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace PanneauxGlass;
 
-internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, Palette }
+internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, Palette, FindWindows, FindFiles }
 
 internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0);
 
@@ -22,6 +22,8 @@ internal static class CliCommands {
         "  desktop next|prev|new|<n>    switch virtual desktop (n starts at 1) or create one\n" +
         "  wallpaper <path>             set the wallpaper to an existing image file\n" +
         "  palette                      open the quick command palette\n" +
+        "  find windows                 print {\"count\":n} for the open windows (no titles)\n" +
+        "  find files <term>            print {\"count\":n,\"indexAvailable\":b} for the Windows index (no paths)\n" +
         "  help                         show this text\n" +
         "Exit codes: 0 success, 1 refused by the shell, 2 unknown command or bad argument, 3 shell not running.";
 
@@ -48,6 +50,12 @@ internal static class CliCommands {
                 }
                 if (target.Length is >= 1 and <= 2 && target.All(char.IsAsciiDigit) && int.Parse(target) is >= 1 and <= 20) { command = new(CliKind.DesktopGo, "", int.Parse(target)); return true; }
                 error = "Desktop must be next, prev, new or a number from 1 to 20."; return false;
+            }
+            case "find" when args.Length == 2 && (args[1] ?? "").ToLowerInvariant() == "windows": command = new(CliKind.FindWindows); return true;
+            case "find" when args.Length >= 3 && (args[1] ?? "").ToLowerInvariant() == "files": {
+                string term = string.Join(" ", args.Skip(2)).Trim();
+                if (term.Length is < 2 or > 64 || term.Any(char.IsControl)) { error = "Search term must have 2 to 64 characters."; return false; }
+                command = new(CliKind.FindFiles, term); return true;
             }
             case "wallpaper" when args.Length == 2: command = new(CliKind.Wallpaper, args[1] ?? ""); return true;
         }

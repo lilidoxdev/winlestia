@@ -197,7 +197,13 @@ Aucun enregistrement · réglage du niveau d’entrée uniquement|No recording �
 Le changement s’applique aux nouvelles lectures Windows|The change applies to new Windows playback|El cambio se aplica a las nuevas reproducciones de Windows
 Aucun fond d’écran trouvé|No wallpapers found|No se encontraron fondos de pantalla
 Ajoute des images dans ton dossier Images|Try putting some images in your Pictures folder|Añade imágenes en tu carpeta Imágenes
-Aucun emoji trouvé|No emoji found|No se encontró ningún emoji"""
+Aucun emoji trouvé|No emoji found|No se encontró ningún emoji
+Index Windows indisponible|Windows index unavailable|Índice de Windows no disponible
+Le service Windows Search est arrêté ou désactivé|The Windows Search service is stopped or disabled|El servicio Windows Search está detenido o desactivado
+La recherche a pris trop de temps|The search took too long|La búsqueda tardó demasiado
+Tape au moins 2 caractères|Type at least 2 characters|Escribe al menos 2 caracteres
+Aucun fichier trouvé|No file found|No se encontró ningún archivo
+Recherche…|Searching…|Buscando…"""
 TABLE={}
 for row in ROWS.splitlines():
  fr,en,es=row.split('|');value={'fr':fr,'en':en,'es':es};TABLE[fr]=value;TABLE.setdefault(en,value)
