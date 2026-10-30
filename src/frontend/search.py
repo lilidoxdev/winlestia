@@ -1,5 +1,5 @@
 # Python 3.12 / Windows 11. Local launcher matching and bounded arithmetic; no eval or shell execution.
-import ast, json, math, operator, os, shutil, threading, time, unicodedata
+import ast, json, math, operator, os, re, shutil, threading, time, unicodedata
 from pathlib import Path
 
 def fold(value):
@@ -24,12 +24,18 @@ COMMANDS=[
  ('tools','Atelier','Les outils du quotidien','handyman','command'),
  ('taskmgr','Gestionnaire des tâches','Processus et démarrage','monitoring','command'),
  ('calculator','Calculatrice Windows','Ouvrir la calculatrice','calculate','command'),
- ('>wallpaper ','Fond d’écran','Wallpaper · changer le fond du bureau','wallpaper','autocomplete')]
+ ('>wallpaper ','Fond d’écran','Wallpaper · changer le fond du bureau','wallpaper','autocomplete'),
+ ('>emoji ','Emojis','Emoji · chercher et copier un emoji','mood','autocomplete')]
 
-def calculate(text):
+CALC_WORDS=((re.compile(r'(?<=[\d)\s])\s*divis[eé]e?\s+par\s*',re.I),'/'),(re.compile(r'\sfois\s',re.I),'*'),(re.compile(r'\splus\s',re.I),'+'),(re.compile(r'\smoins\s',re.I),'-'))
+TIME_LIKE=re.compile(r'^\d{1,2}:\d{2}(:\d{2})?\s*(am|pm)?$',re.I)
+def calculate(text,language='fr'):
     text=text.strip()
-    if text.startswith('>calc '):text=text[6:]
-    if len(text)>160 or not any(c.isdigit() for c in text) or not any(c in '+-*/%^×÷(' for c in text.lstrip('+-')):return None
+    if text.startswith('>calc '):text=text[6:].strip()
+    if len(text)>160 or TIME_LIKE.match(text):return None
+    for pattern,symbol in CALC_WORDS:text=pattern.sub(symbol,text)
+    text=text.replace(':','/')
+    if not any(c.isdigit() for c in text) or not any(c in '+-*/%^×÷(' for c in text.lstrip('+-')):return None
     try:
         tree=ast.parse(text.replace('^','**').replace(',','.').replace('×','*').replace('÷','/'),mode='eval')
         if sum(1 for _ in ast.walk(tree))>64:return None
@@ -46,12 +52,13 @@ def calculate(text):
             else:raise ValueError()
             if not isinstance(value,(int,float)) or not math.isfinite(value) or abs(value)>1e100:raise ValueError()
             return value
-        return format(run(tree.body),'.12g')
+        shown=format(run(tree.body),'.12g')
+        return shown.replace('.',',') if language in ('fr','es') else shown
     except (ValueError,SyntaxError,OverflowError,ZeroDivisionError,TypeError,KeyError):return None
 
-def palette_search(query,state):
+def palette_search(query,state,language='fr'):
     raw=query.strip();needle=fold(raw.lstrip('>'));words=needle.split();results=[]
-    result=calculate(raw)
+    result=calculate(raw,language)
     if result is not None:results.append({'id':raw,'name':'= '+result,'comment':'Entrée pour copier le résultat','icon':'calculate','kind':'calc'})
     if not raw and not raw.startswith('>'):
         for entry in state.get('systemRecent',[]):results.append({**entry,'kind':'systemRecent'})
@@ -73,6 +80,16 @@ def palette_search(query,state):
     if raw and not results:results.append({'id':raw,'name':'Rechercher « '+raw+' »','comment':'Ouvrir dans le navigateur','kind':'web','icon':'travel_explore'})
     return results[:12]
 
+
+_emoji_index=None
+def emoji_choices(query):
+    # Bundled table read on first use only; matches every typed word against French and English keywords (accent-insensitive).
+    global _emoji_index
+    if _emoji_index is None:
+        from emoji_data import EMOJI_ROWS
+        _emoji_index=[(glyph,fold(fr+' '+en),fr.split(' ')[0]) for glyph,fr,en in EMOJI_ROWS]
+    words=fold(query).split()
+    return [{'id':glyph,'name':glyph,'comment':label,'kind':'emoji'} for glyph,hay,label in _emoji_index if all(w in hay for w in words)]
 
 # Wallpaper picker data: scanned only when the launcher wallpaper mode asks for it, scanned on a worker thread at most every 30 s, capped.
 WALL_EXT={'.jpg','.jpeg','.png','.bmp','.webp'}

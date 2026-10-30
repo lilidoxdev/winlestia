@@ -1,0 +1,853 @@
+# Python 3.12 / emoji_data.py / Compact bundled emoji table: one emoji per line, "emoji|mots-clés français|english keywords". Written by hand, no download.
+EMOJI_TABLE='''
+😀|sourire content visage|grin smile happy face
+😃|sourire joie grand|smile happy open mouth
+😄|rire joyeux yeux|laugh happy smiling eyes
+😁|sourire dents|beaming grin teeth
+😆|rire fou|laughing squint
+😅|rire gêne sueur|sweat smile relief
+🤣|mort de rire mdr|rofl lol rolling laughing
+😂|larmes de joie rire mdr|joy tears laugh lol
+🙂|sourire léger|slight smile
+🙃|à l'envers|upside down
+😉|clin d'oeil|wink
+😊|rougir sourire doux|blush smile
+😇|ange auréole innocent|angel halo innocent
+🥰|amoureux coeurs|love hearts adore
+😍|yeux coeur amour|heart eyes love
+🤩|étoiles yeux wow|star struck wow
+😘|bisou baiser|kiss blowing
+😗|bisou|kissing
+😚|bisou yeux fermés|kissing closed eyes
+😙|bisou sourire|kissing smiling
+😋|miam délicieux|yum delicious tasty
+😛|langue|tongue
+😜|langue clin d'oeil|wink tongue
+🤪|fou dingue|crazy zany
+😝|langue yeux fermés|squint tongue
+🤑|argent riche|money mouth rich
+🤗|câlin|hug hugging
+🤭|oups main bouche|oops hand over mouth giggle
+🤫|chut silence|shush quiet secret
+🤔|réfléchir penser hmm|thinking hmm
+🤐|bouche fermée zip|zipper mouth secret
+🤨|sourcil suspect|raised eyebrow skeptical
+😐|neutre|neutral
+😑|sans expression|expressionless
+😶|sans bouche muet|no mouth silent
+😏|sourire en coin|smirk
+😒|ennui agacé|unamused annoyed
+🙄|yeux au ciel|eye roll
+😬|grimace|grimace awkward
+🤥|menteur mensonge|liar lying pinocchio
+😌|soulagé calme|relieved calm
+😔|triste pensif|pensive sad
+😪|fatigué sommeil|sleepy tired
+🤤|bave|drool
+😴|dormir sommeil zzz|sleep zzz
+😷|masque malade|mask sick
+🤒|fièvre malade thermomètre|fever sick thermometer
+🤕|blessé bandage|hurt bandage injured
+🤢|nausée dégoût|nauseated sick green
+🤮|vomir|vomit
+🤧|éternuer rhume|sneeze cold
+🥵|chaud transpirer|hot sweating
+🥶|froid gelé|cold freezing
+🥴|étourdi ivre|woozy drunk dizzy
+😵|étourdi|dizzy knocked out
+🤯|tête qui explose choc|mind blown exploding head
+🤠|cowboy|cowboy hat
+🥳|fête anniversaire|party celebrate birthday
+😎|lunettes cool soleil|cool sunglasses
+🤓|intello lunettes|nerd glasses
+🧐|monocle inspecter|monocle curious
+😕|perplexe|confused
+😟|inquiet|worried
+🙁|triste légèrement|slightly frowning
+☹️|triste|frowning sad
+😮|surpris bouche ouverte|surprised open mouth
+😯|stupéfait|hushed
+😲|étonné|astonished
+😳|gêné rougir|flushed embarrassed
+🥺|supplier yeux|pleading puppy eyes
+😦|choqué|frowning open mouth
+😧|angoissé|anguished
+😨|peur effrayé|fearful scared
+😰|anxieux sueur|anxious sweat
+😥|déçu soulagé|sad relieved
+😢|pleurer larme|cry tear
+😭|sangloter pleurer|sob loudly crying
+😱|crier peur|scream fear
+😖|confus|confounded
+😣|persévérer|persevering
+😞|déçu|disappointed
+😓|sueur froide|downcast sweat
+😩|las épuisé|weary
+😫|fatigué|tired
+🥱|bâiller|yawn
+😤|colère fumée|huffing angry triumph
+😡|colère rouge|angry red mad
+😠|fâché|angry mad
+🤬|jurons insultes|swearing cursing
+😈|diable sourire|devil smiling imp
+👿|diable en colère|angry devil
+💀|crâne mort|skull dead
+☠️|tête de mort|skull crossbones
+💩|caca|poop poo
+🤡|clown|clown
+👹|ogre monstre|ogre monster
+👻|fantôme|ghost
+👽|extraterrestre alien|alien
+👾|monstre jeu vidéo|space invader game
+🤖|robot|robot
+🎃|citrouille halloween|pumpkin halloween
+😺|chat sourire|cat smile
+😸|chat rire|cat grin
+😹|chat larmes|cat joy tears
+😻|chat amoureux|cat heart eyes
+😼|chat malin|cat smirk
+😽|chat bisou|cat kiss
+🙀|chat peur|cat weary scared
+😿|chat pleure|cat crying
+😾|chat fâché|cat pouting
+🙈|singe yeux cachés|see no evil monkey
+🙉|singe oreilles|hear no evil monkey
+🙊|singe bouche|speak no evil monkey
+💋|bisou lèvres|kiss mark lips
+💌|lettre d'amour|love letter
+💘|coeur flèche|heart arrow cupid
+💝|coeur cadeau|heart ribbon gift
+💖|coeur brillant|sparkling heart
+💗|coeur grandissant|growing heart
+💓|coeur battant|beating heart
+💞|coeurs tournants|revolving hearts
+💕|deux coeurs|two hearts
+💟|décoration coeur|heart decoration
+❣️|point d'exclamation coeur|heart exclamation
+💔|coeur brisé|broken heart
+❤️|coeur rouge amour|red heart love
+🧡|coeur orange|orange heart
+💛|coeur jaune|yellow heart
+💚|coeur vert|green heart
+💙|coeur bleu|blue heart
+💜|coeur violet|purple heart
+🖤|coeur noir|black heart
+🤍|coeur blanc|white heart
+🤎|coeur marron|brown heart
+💯|cent parfait|hundred perfect score
+💢|colère|anger symbol
+💥|explosion collision|boom collision
+💫|étourdi étoile|dizzy star
+💦|gouttes eau sueur|sweat droplets water
+💨|vitesse fuite|dash wind
+💬|bulle dialogue|speech bubble
+💭|bulle pensée|thought bubble
+💤|dormir zzz|zzz sleeping
+👋|salut main coucou|wave hello hand
+🤚|main levée|raised back of hand
+🖐️|main ouverte|hand fingers splayed
+✋|stop main|raised hand stop
+🖖|spock vulcain|vulcan salute
+👌|ok parfait|ok perfect
+🤌|doigts pincés italien|pinched fingers
+🤏|petit peu|pinching little bit
+✌️|victoire paix|victory peace
+🤞|doigts croisés chance|crossed fingers luck
+🤟|je t'aime main|love you gesture
+🤘|rock cornes|rock horns metal
+🤙|appelle-moi|call me shaka
+👈|main gauche|point left
+👉|main droite|point right
+👆|main haut|point up
+👇|main bas|point down
+☝️|index haut|index up
+👍|pouce levé bien|thumbs up like good
+👎|pouce bas|thumbs down dislike
+✊|poing levé|raised fist
+👊|poing frapper|fist bump punch
+🤛|poing gauche|left fist
+🤜|poing droit|right fist
+👏|applaudir bravo|clap applause bravo
+🙌|mains levées hourra|raising hands hooray
+👐|mains ouvertes|open hands
+🤲|paumes|palms up
+🤝|poignée de main accord|handshake deal
+🙏|merci prière svp|pray thanks please
+✍️|écrire|writing hand
+💅|vernis ongles|nail polish
+🤳|selfie|selfie
+💪|muscle force biceps|muscle strong flexed biceps
+🦾|bras robot|mechanical arm
+🦵|jambe|leg
+🦶|pied|foot
+👂|oreille|ear
+👃|nez|nose
+🧠|cerveau|brain
+🦷|dent|tooth
+🦴|os|bone
+👀|yeux regarder|eyes look
+👁️|oeil|eye
+👅|langue|tongue
+👄|bouche lèvres|mouth lips
+👶|bébé|baby
+🧒|enfant|child
+👦|garçon|boy
+👧|fille|girl
+🧑|personne adulte|person adult
+👨|homme|man
+👩|femme|woman
+🧓|personne âgée|older person
+👴|vieil homme|old man
+👵|vieille femme|old woman
+👮|policier|police officer
+👷|ouvrier chantier|construction worker
+💂|garde|guard
+🕵️|détective espion|detective spy
+🧑‍⚕️|médecin soignant|health worker doctor
+🧑‍🎓|étudiant diplômé|student graduate
+🧑‍🏫|professeur enseignant|teacher
+🧑‍🍳|cuisinier chef|cook chef
+🧑‍💻|informaticien développeur|technologist developer coder
+🧑‍🎨|artiste peintre|artist painter
+🧑‍🚀|astronaute|astronaut
+🧑‍🚒|pompier|firefighter
+🦸|super héros|superhero
+🦹|super vilain|supervillain
+🧙|magicien sorcier|mage wizard
+🧚|fée|fairy
+🧛|vampire|vampire
+🧜|sirène|merperson mermaid
+🧝|elfe|elf
+🧞|génie|genie
+🧟|zombie|zombie
+💃|danseuse danser|dancer dancing
+🕺|danseur|man dancing
+🚶|marcher piéton|walking person
+🏃|courir|running person
+🧍|debout|standing
+🤷|haussement d'épaules|shrug
+🤦|facepalm main visage|facepalm
+🙋|lever la main|raising hand
+🙇|s'incliner révérence|bowing
+🧘|méditation yoga|lotus position yoga meditate
+👪|famille|family
+👫|couple|couple holding hands
+💑|couple coeur|couple with heart
+💏|baiser couple|kiss couple
+🐶|chien|dog face
+🐕|chien|dog
+🐩|caniche|poodle
+🐺|loup|wolf
+🦊|renard|fox
+🦝|raton laveur|raccoon
+🐱|chat|cat face
+🐈|chat|cat
+🦁|lion|lion
+🐯|tigre|tiger
+🐅|tigre|tiger
+🐆|léopard|leopard
+🐴|cheval|horse face
+🐎|cheval|horse
+🦄|licorne|unicorn
+🦓|zèbre|zebra
+🦌|cerf|deer
+🐮|vache|cow face
+🐂|boeuf|ox
+🐷|cochon|pig face
+🐖|cochon|pig
+🐗|sanglier|boar
+🐏|bélier|ram
+🐑|mouton|sheep
+🐐|chèvre|goat
+🐪|dromadaire|camel
+🦙|lama|llama
+🦒|girafe|giraffe
+🐘|éléphant|elephant
+🦏|rhinocéros|rhinoceros
+🦛|hippopotame|hippo
+🐭|souris|mouse face
+🐁|souris|mouse
+🐀|rat|rat
+🐹|hamster|hamster
+🐰|lapin|rabbit face
+🐇|lapin|rabbit
+🐿️|écureuil|chipmunk squirrel
+🦔|hérisson|hedgehog
+🦇|chauve-souris|bat
+🐻|ours|bear
+🐨|koala|koala
+🐼|panda|panda
+🦥|paresseux|sloth
+🦦|loutre|otter
+🦘|kangourou|kangaroo
+🐾|pattes empreintes|paw prints
+🦃|dinde|turkey
+🐔|poule|chicken
+🐓|coq|rooster
+🐣|poussin|hatching chick
+🐤|poussin|baby chick
+🐥|poussin|front facing chick
+🐦|oiseau|bird
+🐧|pingouin manchot|penguin
+🕊️|colombe paix|dove peace
+🦅|aigle|eagle
+🦆|canard|duck
+🦢|cygne|swan
+🦉|hibou chouette|owl
+🦩|flamant rose|flamingo
+🦚|paon|peacock
+🦜|perroquet|parrot
+🐸|grenouille|frog
+🐊|crocodile|crocodile
+🐢|tortue|turtle
+🦎|lézard|lizard
+🐍|serpent|snake
+🐲|dragon|dragon face
+🐉|dragon|dragon
+🦕|dinosaure|sauropod dinosaur
+🦖|dinosaure t-rex|t-rex dinosaur
+🐳|baleine|spouting whale
+🐋|baleine|whale
+🐬|dauphin|dolphin
+🐟|poisson|fish
+🐠|poisson tropical|tropical fish
+🐡|poisson-globe|blowfish
+🦈|requin|shark
+🐙|pieuvre|octopus
+🐚|coquillage|shell
+🐌|escargot|snail
+🦋|papillon|butterfly
+🐛|chenille insecte|bug caterpillar
+🐜|fourmi|ant
+🐝|abeille|honeybee bee
+🐞|coccinelle|lady beetle
+🦗|criquet grillon|cricket
+🕷️|araignée|spider
+🦂|scorpion|scorpion
+🦟|moustique|mosquito
+🦠|microbe virus|microbe virus
+💐|bouquet|bouquet flowers
+🌸|fleur de cerisier|cherry blossom
+🌹|rose|rose
+🌺|hibiscus|hibiscus
+🌻|tournesol|sunflower
+🌼|fleur|blossom
+🌷|tulipe|tulip
+🌱|pousse plante|seedling sprout
+🌲|sapin conifère|evergreen tree
+🌳|arbre|deciduous tree
+🌴|palmier|palm tree
+🌵|cactus|cactus
+🌾|blé riz|sheaf of rice
+🌿|herbe feuille|herb leaf
+☘️|trèfle|shamrock
+🍀|trèfle à quatre feuilles chance|four leaf clover luck
+🍁|feuille d'érable|maple leaf
+🍂|feuille morte automne|fallen leaf autumn
+🍃|feuilles vent|leaf fluttering wind
+🍄|champignon|mushroom
+🍇|raisin|grapes
+🍈|melon|melon
+🍉|pastèque|watermelon
+🍊|orange mandarine|tangerine orange
+🍋|citron|lemon
+🍌|banane|banana
+🍍|ananas|pineapple
+🥭|mangue|mango
+🍎|pomme rouge|red apple
+🍏|pomme verte|green apple
+🍐|poire|pear
+🍑|pêche|peach
+🍒|cerises|cherries
+🍓|fraise|strawberry
+🫐|myrtilles|blueberries
+🥝|kiwi|kiwi
+🍅|tomate|tomato
+🥥|noix de coco|coconut
+🥑|avocat|avocado
+🍆|aubergine|eggplant
+🥔|pomme de terre|potato
+🥕|carotte|carrot
+🌽|maïs|corn
+🌶️|piment|hot pepper chili
+🥒|concombre|cucumber
+🥬|salade légume vert|leafy green lettuce
+🥦|brocoli|broccoli
+🧄|ail|garlic
+🧅|oignon|onion
+🥜|cacahuètes|peanuts
+🌰|châtaigne|chestnut
+🍞|pain|bread
+🥐|croissant|croissant
+🥖|baguette|baguette
+🥨|bretzel|pretzel
+🥯|bagel|bagel
+🥞|crêpes pancakes|pancakes
+🧇|gaufre|waffle
+🧀|fromage|cheese
+🍖|viande|meat on bone
+🍗|poulet cuisse|poultry leg
+🥩|steak|cut of meat steak
+🥓|bacon lard|bacon
+🍔|hamburger|hamburger
+🍟|frites|french fries
+🍕|pizza|pizza
+🌭|hot-dog|hot dog
+🥪|sandwich|sandwich
+🌮|taco|taco
+🌯|burrito|burrito
+🥗|salade|green salad
+🍝|pâtes spaghetti|spaghetti pasta
+🍜|nouilles ramen|steaming bowl ramen noodles
+🍲|ragoût marmite|pot of food stew
+🍛|curry riz|curry rice
+🍣|sushi|sushi
+🍱|bento|bento box
+🥟|raviolis|dumpling
+🍤|crevette frite|fried shrimp
+🍙|boule de riz|rice ball
+🍚|riz|cooked rice
+🥚|oeuf|egg
+🍳|oeuf au plat poêle|cooking fried egg
+🍦|glace|soft ice cream
+🍧|granité|shaved ice
+🍨|glace|ice cream
+🍩|beignet donut|doughnut donut
+🍪|biscuit cookie|cookie
+🎂|gâteau anniversaire|birthday cake
+🍰|part de gâteau|shortcake cake slice
+🧁|cupcake|cupcake
+🥧|tarte|pie
+🍫|chocolat|chocolate bar
+🍬|bonbon|candy
+🍭|sucette|lollipop
+🍯|miel|honey pot
+🍼|biberon|baby bottle
+🥛|lait verre|glass of milk
+☕|café|hot beverage coffee
+🍵|thé|teacup tea
+🍶|saké|sake
+🍾|champagne bouteille|bottle with popping cork champagne
+🍷|vin rouge|wine glass
+🍸|cocktail|cocktail glass
+🍹|boisson tropicale|tropical drink
+🍺|bière|beer mug
+🍻|trinquer bières|clinking beer mugs cheers
+🥂|trinquer champagne|clinking glasses toast
+🥃|whisky verre|tumbler glass whisky
+🥤|soda gobelet|cup with straw soda
+🧃|jus de fruit|juice box
+🥢|baguettes|chopsticks
+🍽️|assiette couverts|fork and knife with plate
+🍴|fourchette couteau|fork and knife
+🥄|cuillère|spoon
+⚽|football|soccer ball football
+🏀|basket|basketball
+🏈|football américain|american football
+⚾|baseball|baseball
+🎾|tennis|tennis
+🏐|volley|volleyball
+🏉|rugby|rugby
+🎱|billard|pool 8 ball billiards
+🏓|ping-pong|ping pong table tennis
+🏸|badminton|badminton
+🥊|boxe gant|boxing glove
+🥋|arts martiaux judo|martial arts uniform judo
+⛳|golf|flag in hole golf
+⛸️|patin à glace|ice skate
+🎣|pêche canne|fishing pole
+🎿|ski|skis
+🏂|snowboard|snowboarder
+🏋️|haltères musculation|weight lifting
+🚴|vélo cycliste|biking cyclist
+🏊|natation nager|swimming
+🏆|trophée coupe|trophy cup
+🥇|médaille or première|gold medal first
+🥈|médaille argent|silver medal
+🥉|médaille bronze|bronze medal
+🎮|manette jeu vidéo|video game controller gaming
+🕹️|joystick|joystick
+🎲|dé jeu|game die dice
+♟️|échecs pion|chess pawn
+🎯|cible fléchettes|direct hit dart bullseye
+🎳|bowling|bowling
+🎰|machine à sous casino|slot machine casino
+🧩|puzzle|puzzle piece
+🎨|palette peinture art|artist palette art
+🎭|théâtre masques|performing arts theater
+🎬|clap cinéma|clapper board movie
+🎤|micro chanter|microphone sing
+🎧|casque écouteurs|headphone
+🎼|partition|musical score
+🎹|piano clavier|musical keyboard piano
+🥁|batterie tambour|drum
+🎷|saxophone|saxophone
+🎺|trompette|trumpet
+🎸|guitare|guitar
+🎻|violon|violin
+🎵|note de musique|musical note
+🎶|notes de musique|musical notes
+🚗|voiture|automobile car
+🚕|taxi|taxi
+🚙|suv|sport utility vehicle
+🚌|bus|bus
+🚎|trolleybus|trolleybus
+🏎️|voiture de course|racing car
+🚓|voiture de police|police car
+🚑|ambulance|ambulance
+🚒|camion de pompiers|fire engine
+🚚|camion livraison|delivery truck
+🚜|tracteur|tractor
+🚲|vélo|bicycle bike
+🛴|trottinette|kick scooter
+🛵|scooter|motor scooter
+🏍️|moto|motorcycle
+🚂|locomotive train|locomotive
+🚄|train grande vitesse tgv|high speed train
+🚇|métro|metro
+🚊|tramway|tram
+✈️|avion|airplane plane
+🛫|décollage|takeoff
+🛬|atterrissage|landing
+🚀|fusée|rocket
+🛸|soucoupe volante ovni|flying saucer ufo
+🚁|hélicoptère|helicopter
+⛵|voilier|sailboat
+🚢|bateau navire|ship
+⚓|ancre|anchor
+⛽|pompe à essence|fuel pump
+🚧|travaux|construction
+🚦|feux de circulation|traffic light
+🚥|feu|horizontal traffic light
+🗺️|carte du monde|world map
+🗿|statue moai|moai
+🗽|statue de la liberté|statue of liberty
+🗼|tour de tokyo|tokyo tower
+🏰|château|castle
+🏯|château japonais|japanese castle
+🎡|grande roue|ferris wheel
+🎢|montagnes russes|roller coaster
+⛲|fontaine|fountain
+⛺|tente camping|tent camping
+🏠|maison|house
+🏡|maison jardin|house with garden
+🏢|immeuble bureau|office building
+🏥|hôpital|hospital
+🏦|banque|bank
+🏨|hôtel|hotel
+🏪|supérette magasin|convenience store
+🏫|école|school
+⛪|église|church
+🕌|mosquée|mosque
+🌋|volcan|volcano
+🏔️|montagne enneigée|snow capped mountain
+⛰️|montagne|mountain
+🏕️|camping|camping
+🏖️|plage parasol|beach with umbrella
+🏝️|île déserte|desert island
+🌅|lever de soleil|sunrise
+🌄|lever de soleil montagne|sunrise over mountains
+🌇|coucher de soleil|sunset
+🌃|nuit étoilée|night with stars
+🌉|pont de nuit|bridge at night
+🌌|voie lactée|milky way
+🌈|arc-en-ciel|rainbow
+🌍|terre europe afrique|globe europe africa earth
+🌎|terre amériques|globe americas
+🌏|terre asie|globe asia
+🌐|globe internet|globe with meridians internet
+🌑|nouvelle lune|new moon
+🌓|premier quartier|first quarter moon
+🌕|pleine lune|full moon
+🌙|croissant de lune|crescent moon
+🌞|soleil visage|sun with face
+🌝|pleine lune visage|full moon face
+⭐|étoile|star
+🌟|étoile brillante|glowing star
+✨|étincelles|sparkles
+☄️|comète|comet
+☀️|soleil|sun
+⛅|soleil nuage|sun behind cloud
+☁️|nuage|cloud
+🌧️|pluie|cloud with rain
+⛈️|orage|cloud with lightning and rain
+🌩️|éclair nuage|cloud with lightning
+🌨️|neige nuage|cloud with snow
+❄️|flocon de neige|snowflake
+☃️|bonhomme de neige|snowman
+⛄|bonhomme de neige|snowman without snow
+🌬️|vent|wind face
+🌪️|tornade|tornado
+🌫️|brouillard|fog
+🌊|vague|water wave
+💧|goutte|droplet
+☔|parapluie pluie|umbrella with rain drops
+⚡|éclair foudre électricité|high voltage lightning
+🔥|feu flamme|fire flame hot
+🎄|sapin de noël|christmas tree
+🎆|feu d'artifice|fireworks
+🎇|cierge magique|sparkler
+🧨|pétard|firecracker
+🎈|ballon|balloon
+🎉|fête confettis|party popper tada
+🎊|confettis|confetti ball
+🎁|cadeau|wrapped gift present
+🎀|ruban|ribbon
+🎫|ticket billet|ticket
+🎖️|médaille militaire|military medal
+⌚|montre|watch
+📱|téléphone portable smartphone|mobile phone smartphone
+💻|ordinateur portable|laptop computer
+⌨️|clavier|keyboard
+🖥️|ordinateur de bureau écran|desktop computer
+🖨️|imprimante|printer
+🖱️|souris ordinateur|computer mouse
+💽|disque minidisc|computer disk
+💾|disquette sauvegarder|floppy disk save
+💿|cd|optical disk cd
+📀|dvd|dvd
+📷|appareil photo|camera photo
+📹|caméra vidéo|video camera
+🎥|caméra cinéma|movie camera
+📺|télévision|television tv
+📻|radio|radio
+☎️|téléphone fixe|telephone
+🔋|batterie pile|battery
+🔌|prise électrique|electric plug
+💡|ampoule idée|light bulb idea
+🔦|lampe torche|flashlight
+🕯️|bougie|candle
+🧯|extincteur|fire extinguisher
+💰|sac d'argent|money bag
+💵|billet dollar|dollar banknote
+💶|billet euro|euro banknote
+💳|carte bancaire|credit card
+💎|diamant gemme|gem stone diamond
+⚖️|balance justice|balance scale justice
+🔧|clé outil|wrench tool
+🔨|marteau|hammer
+⚒️|marteau pioche|hammer and pick
+🛠️|outils|hammer and wrench tools
+⛏️|pioche|pick
+🔩|vis boulon|nut and bolt
+⚙️|engrenage paramètres|gear settings
+🧱|brique|brick
+🧲|aimant|magnet
+🔫|pistolet à eau|water pistol
+💣|bombe|bomb
+🔪|couteau|kitchen knife
+🗡️|dague épée|dagger
+🛡️|bouclier|shield
+🚬|cigarette|cigarette
+⚰️|cercueil|coffin
+🔮|boule de cristal|crystal ball
+🧿|mauvais oeil|nazar amulet
+💈|barbier|barber pole
+⚗️|alambic chimie|alembic chemistry
+🔭|télescope|telescope
+🔬|microscope|microscope
+💊|pilule médicament|pill medicine
+💉|seringue vaccin|syringe vaccine
+🩹|pansement|adhesive bandage
+🩺|stéthoscope|stethoscope
+🧬|adn|dna
+🧪|éprouvette|test tube
+🧫|boîte de pétri|petri dish
+🧹|balai|broom
+🧺|panier|basket laundry
+🧻|papier toilette|roll of paper
+🚽|toilettes|toilet
+🚿|douche|shower
+🛁|baignoire|bathtub
+🧼|savon|soap
+🧽|éponge|sponge
+🔑|clé|key
+🗝️|vieille clé|old key
+🚪|porte|door
+🛋️|canapé|couch and lamp
+🛏️|lit|bed
+🧸|ours en peluche|teddy bear
+🖼️|cadre tableau|framed picture
+🛍️|shopping sacs|shopping bags
+🛒|caddie chariot|shopping cart
+📦|colis paquet|package parcel box
+📫|boîte aux lettres|mailbox
+📧|e-mail courriel|e-mail
+✉️|enveloppe|envelope
+📨|courrier entrant|incoming envelope
+📝|mémo note|memo note
+📁|dossier|file folder
+📂|dossier ouvert|open file folder
+📅|calendrier|calendar
+📆|calendrier|tear-off calendar
+📈|graphique en hausse|chart increasing
+📉|graphique en baisse|chart decreasing
+📊|graphique barres|bar chart
+📋|presse-papiers|clipboard
+📌|punaise|pushpin
+📍|repère position|round pushpin location
+📎|trombone|paperclip
+🖇️|trombones|linked paperclips
+📏|règle|straight ruler
+📐|équerre|triangular ruler
+✂️|ciseaux|scissors
+🗃️|boîte de fichiers|card file box
+🗑️|corbeille poubelle|wastebasket trash
+🔒|cadenas fermé|locked
+🔓|cadenas ouvert|unlocked
+🔏|cadenas stylo|locked with pen
+🔐|cadenas clé|locked with key
+📕|livre fermé rouge|closed book
+📖|livre ouvert|open book
+📗|livre vert|green book
+📘|livre bleu|blue book
+📚|livres|books
+📓|cahier|notebook
+📰|journal|newspaper
+🔖|marque-page|bookmark
+🏷️|étiquette|label tag
+✏️|crayon|pencil
+✒️|plume stylo|black nib
+🖊️|stylo|pen
+🖋️|stylo plume|fountain pen
+🖍️|crayon de couleur|crayon
+🔍|loupe recherche|magnifying glass search
+🔎|loupe|magnifying glass right
+⏰|réveil|alarm clock
+⏱️|chronomètre|stopwatch
+⏲️|minuteur|timer clock
+🕐|une heure|one o'clock
+⌛|sablier|hourglass done
+⏳|sablier en cours|hourglass not done
+📡|antenne satellite|satellite antenna
+🔔|cloche notification|bell notification
+🔕|sans notification|bell with slash
+📢|haut-parleur|loudspeaker
+📣|mégaphone|megaphone
+🔊|volume fort|speaker high volume
+🔇|muet|muted speaker
+🎙️|micro studio|studio microphone
+👓|lunettes|glasses
+🕶️|lunettes de soleil|sunglasses
+👔|cravate chemise|necktie
+👕|t-shirt|t-shirt
+👖|jean|jeans
+🧣|écharpe|scarf
+🧤|gants|gloves
+🧥|manteau|coat
+👗|robe|dress
+👙|bikini|bikini
+👜|sac à main|handbag
+🎒|sac à dos|backpack
+👞|chaussure|man's shoe
+👟|basket chaussure sport|running shoe
+👠|talon haut|high-heeled shoe
+👑|couronne|crown
+🎩|chapeau haut de forme|top hat
+🎓|diplôme chapeau|graduation cap
+💍|bague|ring
+💄|rouge à lèvres|lipstick
+☂️|parapluie|umbrella
+✅|coche validé|check mark button done
+☑️|case cochée|check box
+✔️|coche|check mark
+❌|croix erreur|cross mark error
+❎|croix|cross mark button
+➕|plus|plus
+➖|moins|minus
+➗|division|divide
+✖️|multiplication|multiply
+❓|point d'interrogation|question mark
+❔|question blanche|white question mark
+❗|point d'exclamation|exclamation mark
+❕|exclamation blanche|white exclamation mark
+‼️|double exclamation|double exclamation
+⚠️|attention avertissement|warning
+🚫|interdit|prohibited
+⛔|sens interdit|no entry
+🔞|moins de 18 ans|no one under eighteen
+♻️|recyclage|recycling
+✳️|astérisque|eight spoked asterisk
+❇️|étincelle|sparkle
+🔱|trident|trident
+⭕|cercle rouge|hollow red circle
+🛑|stop panneau|stop sign
+🆗|ok|ok button
+🆕|nouveau|new button
+🆒|cool|cool button
+🆓|gratuit|free button
+🆘|sos|sos
+ℹ️|information|information
+🔴|cercle rouge|red circle
+🟠|cercle orange|orange circle
+🟡|cercle jaune|yellow circle
+🟢|cercle vert|green circle
+🔵|cercle bleu|blue circle
+🟣|cercle violet|purple circle
+⚫|cercle noir|black circle
+⚪|cercle blanc|white circle
+🟥|carré rouge|red square
+🟧|carré orange|orange square
+🟨|carré jaune|yellow square
+🟩|carré vert|green square
+🟦|carré bleu|blue square
+🟪|carré violet|purple square
+⬛|carré noir|black large square
+⬜|carré blanc|white large square
+🔶|losange orange|large orange diamond
+🔷|losange bleu|large blue diamond
+🔺|triangle rouge haut|red triangle pointed up
+🔻|triangle rouge bas|red triangle pointed down
+⬆️|flèche haut|up arrow
+⬇️|flèche bas|down arrow
+⬅️|flèche gauche|left arrow
+➡️|flèche droite|right arrow
+↗️|flèche haut droite|up right arrow
+↘️|flèche bas droite|down right arrow
+↩️|retour gauche|right arrow curving left
+🔄|rafraîchir actualiser|counterclockwise arrows refresh
+🔁|répéter|repeat
+🔀|aléatoire mélanger|shuffle
+▶️|lecture play|play button
+⏸️|pause|pause button
+⏹️|arrêt stop|stop button
+⏺️|enregistrer|record button
+⏭️|suivant|next track
+⏮️|précédent|previous track
+⏩|avance rapide|fast forward
+⏪|retour rapide|rewind
+🔼|haut|upwards button
+🔽|bas|downwards button
+🔆|luminosité|bright button
+📶|signal réseau|antenna bars signal
+📴|éteint|mobile phone off
+☮️|paix|peace symbol
+☯️|yin yang|yin yang
+✝️|croix latine|latin cross
+♾️|infini|infinity
+©️|copyright droits d'auteur|copyright
+®️|marque déposée|registered
+™️|marque|trade mark
+🏁|drapeau à damier arrivée|chequered flag finish
+🚩|drapeau rouge|triangular flag
+🎌|drapeaux croisés|crossed flags
+🏴|drapeau noir|black flag
+🏳️|drapeau blanc|white flag
+🏳️‍🌈|drapeau arc-en-ciel fierté|rainbow flag pride
+🏴‍☠️|pirate drapeau|pirate flag
+🇫🇷|france drapeau français|france flag french
+🇬🇧|royaume-uni drapeau anglais|united kingdom flag british
+🇺🇸|états-unis drapeau américain|united states flag american usa
+🇪🇸|espagne drapeau espagnol|spain flag spanish
+🇩🇪|allemagne drapeau allemand|germany flag german
+🇮🇹|italie drapeau italien|italy flag italian
+🇵🇹|portugal drapeau|portugal flag
+🇧🇪|belgique drapeau belge|belgium flag belgian
+🇨🇭|suisse drapeau suisse|switzerland flag swiss
+🇨🇦|canada drapeau canadien|canada flag canadian
+🇯🇵|japon drapeau japonais|japan flag japanese
+🇨🇳|chine drapeau chinois|china flag chinese
+🇧🇷|brésil drapeau brésilien|brazil flag brazilian
+🇪🇺|europe union européenne drapeau|european union flag europe
+'''
+EMOJI_ROWS=[tuple(line.split('|',2)) for line in EMOJI_TABLE.strip().splitlines() if line.count('|')==2]

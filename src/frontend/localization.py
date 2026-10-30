@@ -196,7 +196,8 @@ Rechercher dans l’historique|Search history|Buscar en el historial
 Aucun enregistrement · réglage du niveau d’entrée uniquement|No recording · input level adjustment only|Sin grabación · solo ajuste del nivel de entrada
 Le changement s’applique aux nouvelles lectures Windows|The change applies to new Windows playback|El cambio se aplica a las nuevas reproducciones de Windows
 Aucun fond d’écran trouvé|No wallpapers found|No se encontraron fondos de pantalla
-Ajoute des images dans ton dossier Images|Try putting some images in your Pictures folder|Añade imágenes en tu carpeta Imágenes"""
+Ajoute des images dans ton dossier Images|Try putting some images in your Pictures folder|Añade imágenes en tu carpeta Imágenes
+Aucun emoji trouvé|No emoji found|No se encontró ningún emoji"""
 TABLE={}
 for row in ROWS.splitlines():
  fr,en,es=row.split('|');value={'fr':fr,'en':en,'es':es};TABLE[fr]=value;TABLE.setdefault(en,value)

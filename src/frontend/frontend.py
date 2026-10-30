@@ -13,7 +13,7 @@ from interaction import EdgePolicy, is_fullscreen
 from localization import Translator
 from custom_palette import make_palette,DEFAULT,valid_color
 from screen_picker import ClickPicker
-from search import palette_search, wallpaper_choices, wallpaper_refresh, wallpaper_known, wallpaper_import, wallpaper_remove, wallpaper_hide, wallpaper_hidden, wallpaper_restore_hidden, user_wallpaper_dir
+from search import palette_search, emoji_choices, wallpaper_choices, wallpaper_refresh, wallpaper_known, wallpaper_import, wallpaper_remove, wallpaper_hide, wallpaper_hidden, wallpaper_restore_hidden, user_wallpaper_dir
 from live_model import LiveListModel
 from capture_native import CaptureController
 from concurrent.futures import ThreadPoolExecutor
@@ -359,7 +359,9 @@ class Bridge(QObject):
         self.mode=mode.split(':',1)[0];self.navigationRequested.emit(mode)
     @Slot(str)
     def searchPalette(self,text):
-        self.query=text;self._results=palette_search(text,self._state);self.searchChanged.emit()
+        self.query=text;self._results=palette_search(text,self._state,TRANSLATOR.language);self.searchChanged.emit()
+    @Slot(str,result='QVariantList')
+    def emojiChoices(self,query):return emoji_choices(query)
     @Slot(str,result='QVariantList')
     def wallpaperChoices(self,query):return wallpaper_choices(query)
     @Slot()
@@ -412,6 +414,7 @@ class Bridge(QObject):
         elif kind=='calc':self.closePanel();self.action('copyText',{'text':value['name'][2:]})
         elif kind=='autocomplete':self.prefillPalette(key)
         elif kind=='wallpaper':self.closePanel();self.setWallpaper(key)
+        elif kind=='emoji':self.closePanel();self.action('copyText',{'text':key})
         else:
             self.closePanel()
             self.action('paletteRun',{'kind':kind,'id':key,'query':self.query})

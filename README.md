@@ -75,7 +75,7 @@ To update or uninstall, run the setup again: it detects the installed version an
 | Shortcut | Action |
 |---|---|
 | Ctrl+F1 | Open the panel |
-| Ctrl+F2 | Quick command |
+| Ctrl+F2 | Quick command: type `25/2`, `25:2` or `25 divisé par 2` to calculate (decimal comma in French and Spanish), `>emoji cat` (or `>emoji chat`) for a searchable emoji grid copied on Enter, `>wallpaper` to switch wallpaper |
 | Ctrl+F3 | Screen capture |
 | Ctrl+F8 | Pin a window on top |
 | Win+Alt+W | Wallpaper switcher: Left/Right to preview, Enter to apply, Esc to close (falls back to Ctrl+Alt+W if Windows refuses it; configurable in Settings) |

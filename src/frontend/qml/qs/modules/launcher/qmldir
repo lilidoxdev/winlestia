@@ -3,3 +3,4 @@ AppList AppList.qml
 Content Content.qml
 ContentList ContentList.qml
 WallpaperList WallpaperList.qml
+EmojiList EmojiList.qml
