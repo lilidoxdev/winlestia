@@ -233,6 +233,9 @@ Choisis un fond en plein écran avec aperçu|Pick a wallpaper full screen with a
 Aucun fond d’écran trouvé|No wallpaper found|No se encontró ningún fondo
 Ajouter des images|Add images|Añadir imágenes
 Ouvrir le dossier|Open folder|Abrir carpeta
+Masquer ce fond par défaut ? Entrée pour confirmer · Échap annuler|Hide this default wallpaper? Enter to confirm · Esc cancel|¿Ocultar este fondo predeterminado? Intro para confirmar · Esc cancelar
+Les images du dossier Images ne sont pas supprimées ici|Images from the Pictures folder are not deleted here|Las imágenes de la carpeta Imágenes no se eliminan aquí
+Restaurer les fonds par défaut|Restore default wallpapers|Restaurar los fondos predeterminados
 Supprimer ce fond de votre dossier ? Entrée confirmer · Échap annuler|Delete this wallpaper from your folder? Enter confirm · Esc cancel|¿Eliminar este fondo de tu carpeta? Intro confirmar · Esc cancelar
 ← → choisir · Entrée appliquer · Ctrl+O ajouter · Suppr retirer · Échap fermer|← → choose · Enter apply · Ctrl+O add · Del remove · Esc close|← → elegir · Intro aplicar · Ctrl+O añadir · Supr quitar · Esc cerrar""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}

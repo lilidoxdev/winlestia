@@ -1,5 +1,5 @@
 # Python 3.12 / Windows 11. Local launcher matching and bounded arithmetic; no eval or shell execution.
-import ast, math, operator, os, shutil, threading, time, unicodedata
+import ast, json, math, operator, os, shutil, threading, time, unicodedata
 from pathlib import Path
 
 def fold(value):
@@ -117,6 +117,25 @@ def wallpaper_remove(path):
     try:os.remove(path)
     except OSError:return False
     return True
+def hidden_wallpaper_file():
+    return user_wallpaper_dir().parent/'wallpapers-hidden.json'
+def wallpaper_hidden():
+    # File names (lower case) of bundled wallpapers the user hid; the install folder itself is never touched.
+    try:data=json.loads(hidden_wallpaper_file().read_text(encoding='utf-8'))
+    except (OSError,ValueError):return set()
+    return {str(n).lower() for n in data} if isinstance(data,list) else set()
+def _hidden_write(names):
+    f=hidden_wallpaper_file()
+    try:
+        if names:f.parent.mkdir(parents=True,exist_ok=True);f.write_text(json.dumps(sorted(names),ensure_ascii=False),encoding='utf-8')
+        elif f.exists():f.unlink()
+    except OSError:return False
+    return True
+def wallpaper_hide(path):
+    # Only bundled images can be hidden.
+    if not _under(path,bundled_wallpaper_dir()) or os.path.splitext(path)[1].lower() not in WALL_EXT:return False
+    return _hidden_write(wallpaper_hidden()|{os.path.basename(path).lower()})
+def wallpaper_restore_hidden():return _hidden_write(set())
 def wallpaper_scan(limit=200):
     found=[];seen=set();names=set();user=user_wallpaper_dir();bundled=bundled_wallpaper_dir()
     def walk(folder,depth):
@@ -125,7 +144,7 @@ def wallpaper_scan(limit=200):
                 for e in it:
                     if len(found)>=limit:return
                     if e.is_dir(follow_symlinks=False) and depth>0:walk(e.path,depth-1)
-                    elif e.is_file() and os.path.splitext(e.name)[1].lower() in WALL_EXT and e.path.lower() not in seen and e.name.lower() not in names:
+                    elif e.is_file() and os.path.splitext(e.name)[1].lower() in WALL_EXT and e.path.lower() not in seen and e.name.lower() not in names and os.path.isfile(e.path):
                         seen.add(e.path.lower());names.add(e.name.lower());origin='user' if _under(e.path,user) else 'bundled' if _under(e.path,bundled) else 'other'
                         found.append({'id':e.path,'path':e.path,'name':os.path.splitext(e.name)[0],'url':Path(e.path).as_uri(),'kind':'wallpaper','origin':origin})
         except OSError:pass
@@ -149,6 +168,6 @@ def wallpaper_refresh(done,force=False):
         done()
     threading.Thread(target=run,daemon=True).start()
 def wallpaper_choices(query=''):
-    words=fold(query).split()
-    return [w for w in _walls if all(x in fold(w['name']) for x in words)]
-def wallpaper_known(path):return any(w['path']==path for w in _walls)
+    words=fold(query).split();hidden=wallpaper_hidden()
+    return [w for w in _walls if os.path.isfile(w['path']) and not (w['origin']=='bundled' and os.path.basename(w['path']).lower() in hidden) and all(x in fold(w['name']) for x in words)]
+def wallpaper_known(path):return os.path.isfile(path) and any(w['path']==path for w in _walls)

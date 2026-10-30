@@ -18,6 +18,8 @@ Window{
  property int current:0
  property bool dialogOpen:false
  property bool confirmDelete:false
+ property bool notRemovable:false
+ property int hiddenCount:0
  property string wantPath:""
  property bool seenActive:false
  property int front:0
@@ -25,24 +27,25 @@ Window{
  readonly property string currentPath:current>=0&&current<items.count?items.get(current).path:""
  readonly property string currentUrl:current>=0&&current<items.count?items.get(current).url:""
  readonly property string currentName:current>=0&&current<items.count?items.get(current).name:""
- readonly property bool currentRemovable:current>=0&&current<items.count&&items.get(current).origin==="user"
+ readonly property string currentOrigin:current>=0&&current<items.count?items.get(current).origin:""
+ readonly property bool currentRemovable:currentOrigin==="user"||currentOrigin==="bundled"
 
  ListModel{id:items}
  function norm(value){return String(value||"").toLowerCase().split("\\").join("/").replace("file:///","")}
  function load(){
-  var keep=wantPath||currentPath,choices=Bridge.wallpaperChoices(""),want=keep||norm((Bridge.wallpaperInfo||{}).source);wantPath="";confirmDelete=false;
+  var keep=wantPath||currentPath,choices=Bridge.wallpaperChoices(""),want=keep||norm((Bridge.wallpaperInfo||{}).source);wantPath="";confirmDelete=false;notRemovable=false;hiddenCount=Bridge.hiddenWallpaperCount()
   items.clear();var index=0;
   for(var i=0;i<choices.length;i++){
    items.append({path:choices[i].path,name:choices[i].name,url:choices[i].url,origin:choices[i].origin||"",thumb:""})
    if(want&&norm(choices[i].path)===norm(want))index=i
   }
-  current=index;list.currentIndex=index;show(currentUrl)
+  index=Math.max(0,Math.min(index,items.count-1));current=index;list.currentIndex=index;show(currentUrl)
   var order=[];for(var j=0;j<choices.length;j++)order.push(choices[(index+j)%choices.length].path)
   Bridge.requestWallpaperThumbs(order)
  }
- function move(step){if(items.count<1)return;confirmDelete=false;current=(current+step+items.count)%items.count;list.currentIndex=current;show(currentUrl)}
- function select(index){if(index<0||index>=items.count)return;confirmDelete=false;current=index;list.currentIndex=index;show(currentUrl)}
- function apply(){if(currentPath!=="")Bridge.setWallpaper(currentPath);closeRequested()}
+ function move(step){if(items.count<1)return;confirmDelete=false;notRemovable=false;current=(current+step+items.count)%items.count;list.currentIndex=current;show(currentUrl)}
+ function select(index){if(index<0||index>=items.count)return;confirmDelete=false;notRemovable=false;current=index;list.currentIndex=index;show(currentUrl)}
+ function apply(){if(currentPath!==""&&Bridge.wallpaperChoices("").some(function(w){return w.path===currentPath}))Bridge.setWallpaper(currentPath);closeRequested()}
  // The native dialog cannot sit above this topmost frameless window: hide it while the dialog is open (no auto-close meanwhile), then come back with focus.
  function addImages(){if(dialogOpen)return;confirmDelete=false;dialogOpen=true;visible=false;addTimer.start()}
  function finishAdd(){
@@ -51,9 +54,11 @@ Window{
  }
  function removeCurrent(){
   var path=currentPath,next=current+1<items.count?items.get(current+1).path:current>0?items.get(current-1).path:""
-  confirmDelete=false
-  if(path!==""&&Bridge.removeWallpaper(path)){wantPath=norm(next);Bridge.refreshWallpapersNow()}
+  var bundled=currentOrigin==="bundled";confirmDelete=false
+  var ok=path!==""&&(bundled?Bridge.hideWallpaper(path):Bridge.removeWallpaper(path))
+  if(ok){wantPath=norm(next);Bridge.refreshWallpapersNow();load()}
  }
+ function restoreHidden(){if(Bridge.restoreHiddenWallpapers()){wantPath=currentPath;Bridge.refreshWallpapersNow();load()}}
  Timer{id:addTimer;interval:80;repeat:false;onTriggered:root.finishAdd()}
  // Cross-fade: the hidden layer loads the next file asynchronously and takes over once Ready.
  function show(url){
@@ -65,7 +70,7 @@ Window{
  }
  function layerReady(index){if(pending===index){front=index;pending=-1}}
 
- Component.onCompleted:{Bridge.refreshWallpapers();load();requestActivate();keys.forceActiveFocus()}
+ Component.onCompleted:{Bridge.refreshWallpapersNow();load();requestActivate();keys.forceActiveFocus()}
  onVisibleChanged:if(visible){requestActivate();keys.forceActiveFocus()}
  onActiveChanged:{if(active)seenActive=true;else if(seenActive&&!dialogOpen)closeRequested()}
  onClosing:event=>{event.accepted=false;closeRequested()}
@@ -87,7 +92,7 @@ Window{
    else if(event.key===Qt.Key_Return||event.key===Qt.Key_Enter)root.apply()
    else if(event.key===Qt.Key_Escape)root.closeRequested()
    else if(event.key===Qt.Key_O&&(event.modifiers&Qt.ControlModifier))root.addImages()
-   else if(event.key===Qt.Key_Delete){if(root.currentRemovable)root.confirmDelete=true}
+   else if(event.key===Qt.Key_Delete){if(root.currentRemovable)root.confirmDelete=true;else if(root.currentPath!=="")root.notRemovable=true}
    else return
    event.accepted=true
   }
@@ -104,10 +109,10 @@ Window{
    gradient:Gradient{GradientStop{position:0;color:Qt.alpha(Colours.palette.m3scrim,0)}GradientStop{position:1;color:Qt.alpha(Colours.palette.m3scrim,.7)}}}
 
   StyledRect{
-   visible:root.confirmDelete;anchors.horizontalCenter:parent.horizontalCenter;anchors.top:parent.top;anchors.topMargin:Appearance.padding.large*2
+   visible:root.confirmDelete||root.notRemovable;anchors.horizontalCenter:parent.horizontalCenter;anchors.top:parent.top;anchors.topMargin:Appearance.padding.large*2
    radius:Appearance.rounding.full;color:Qt.alpha(Colours.palette.m3surfaceContainer,.92)
    implicitWidth:confirmText.implicitWidth+Appearance.padding.large*2;implicitHeight:confirmText.implicitHeight+Appearance.padding.normal*2
-   StyledText{id:confirmText;anchors.centerIn:parent;text:qsTr("Supprimer ce fond de votre dossier ? Entrée confirmer · Échap annuler");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3onSurface}
+   StyledText{id:confirmText;anchors.centerIn:parent;text:root.notRemovable?qsTr("Les images du dossier Images ne sont pas supprimées ici"):root.currentOrigin==="bundled"?qsTr("Masquer ce fond par défaut ? Entrée pour confirmer · Échap annuler"):qsTr("Supprimer ce fond de votre dossier ? Entrée confirmer · Échap annuler");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3onSurface}
   }
 
   StyledText{
@@ -143,6 +148,7 @@ Window{
    Row{
     anchors.horizontalCenter:parent.horizontalCenter;spacing:Appearance.spacing.normal
     IconTextButton{text:qsTr("Ajouter des images");icon:"add_photo_alternate";type:IconTextButton.Tonal;onClicked:root.addImages()}
+    IconTextButton{visible:root.hiddenCount>0;text:qsTr("Restaurer les fonds par défaut");icon:"restore";type:IconTextButton.Text;onClicked:root.restoreHidden()}
     IconTextButton{text:qsTr("Ouvrir le dossier");icon:"folder_open";type:IconTextButton.Text;onClicked:Bridge.openWallpaperFolder()}
    }
    StyledText{anchors.horizontalCenter:parent.horizontalCenter;text:qsTr("← → choisir · Entrée appliquer · Ctrl+O ajouter · Suppr retirer · Échap fermer");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}

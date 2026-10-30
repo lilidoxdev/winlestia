@@ -13,7 +13,7 @@ from interaction import EdgePolicy, is_fullscreen
 from localization import Translator
 from custom_palette import make_palette,DEFAULT,valid_color
 from screen_picker import ClickPicker
-from search import palette_search, wallpaper_choices, wallpaper_refresh, wallpaper_known, wallpaper_import, wallpaper_remove, user_wallpaper_dir
+from search import palette_search, wallpaper_choices, wallpaper_refresh, wallpaper_known, wallpaper_import, wallpaper_remove, wallpaper_hide, wallpaper_hidden, wallpaper_restore_hidden, user_wallpaper_dir
 from live_model import LiveListModel
 from capture_native import CaptureController
 from concurrent.futures import ThreadPoolExecutor
@@ -378,6 +378,12 @@ class Bridge(QObject):
         except OSError:pass
     @Slot(str,result=bool)
     def removeWallpaper(self,path):return wallpaper_remove(path)
+    @Slot(str,result=bool)
+    def hideWallpaper(self,path):return wallpaper_hide(path)
+    @Slot(result=int)
+    def hiddenWallpaperCount(self):return len(wallpaper_hidden())
+    @Slot(result=bool)
+    def restoreHiddenWallpapers(self):return wallpaper_restore_hidden()
     @Slot('QVariantList')
     def requestWallpaperThumbs(self,paths):
         # Switcher thumbnails: one background thread per request (a newer request stops the older one), each file emitted as soon as its cached JPEG exists.
