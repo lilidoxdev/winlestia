@@ -1,10 +1,9 @@
-# Python 3.12 / wallpaper_thumbs.py / cached 480 px JPEG thumbnails for the wallpaper switcher, plus the animated-wallpaper process check.
-import hashlib,os,subprocess
+# Python 3.12 / wallpaper_thumbs.py / cached 480 px JPEG thumbnails for the wallpaper switcher.
+import hashlib,os
 from pathlib import Path
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage,QImageReader
 THUMB_WIDTH=480
-ANIMATED_PROCESSES=('desktophut','wallpaperx','wallpaper x')
 def thumb_dir():
     return Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData'/'Local')))/'Panneaux'/'Caelestia'/'thumbs'
 def thumb_for(path):
@@ -22,9 +21,3 @@ def thumb_for(path):
         if not image.save(str(part),'JPEG',82):return ''
         os.replace(part,target);return str(target)
     except OSError:return ''
-def animated_wallpaper_running():
-    # One tasklist call, only when the switcher opens.
-    try:
-        out=subprocess.run(['tasklist','/FO','CSV','/NH'],capture_output=True,text=True,timeout=6,creationflags=0x08000000).stdout.lower()
-    except (OSError,subprocess.SubprocessError):return False
-    return any(line.startswith('"'+name) for line in out.splitlines() for name in ANIMATED_PROCESSES)

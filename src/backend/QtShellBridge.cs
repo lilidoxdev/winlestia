@@ -146,6 +146,7 @@ internal sealed partial class QtShellBridge:IDisposable {
             case "emptyRecycleBin":RecycleActions.Empty();break;
             case "recycleFiles":if(args.TryGetProperty("paths",out var paths)&&paths.ValueKind==JsonValueKind.Array)RecycleActions.Recycle(paths.EnumerateArray().Select(p=>p.GetString()??"").ToArray());break;
             case "wallpaperCapture":{Native.Rect? shotTarget=args.ValueKind==JsonValueKind.Object&&Number(args,"w")>0?new Native.Rect{Left=(int)Number(args,"x"),Top=(int)Number(args,"y"),Right=(int)(Number(args,"x")+Number(args,"w")),Bottom=(int)(Number(args,"y")+Number(args,"h"))}:null;string? shot=null;try{shot=await Task.Run(()=>{try{return WallpaperMedia.CaptureHost(shotTarget);}catch(Exception ex){Store.Log("Capture du fond: "+ex.Message);return null;}}).WaitAsync(TimeSpan.FromSeconds(3));}catch(TimeoutException){Store.Log("Capture du fond: delai depasse.");}wallpaperCapture=new{token=Text(args,"token"),ok=shot!=null,path=shot??""};break;}
+            case "wallpaperChanged":wallpaper.Notify(100,true);break;
             case "dockApp":notice=DockAction(args);nextTasks=DateTime.MinValue;break;
             case "dockPreview":DockPreviewOpen(args);break;
             case "dockPreviewEnd":DockPreviewEnd(args);break;

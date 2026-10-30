@@ -77,6 +77,9 @@ Source: "..\build\payload\Glass-v5\*"; DestDir: "{app}\Glass-v5"; Flags: ignorev
 ; Frontend Qt Quick + Python 3.12 embarque + Qt 6.10
 Source: "..\build\payload\Caelestia-Windows\*"; DestDir: "{app}\Caelestia-Windows"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "__pycache__,*.pyc,validation-*,tests"
 
+; Collection de fonds d'écran par défaut (Unsplash, hors ligne), lue en lecture seule par le sélecteur Ctrl+Alt+W
+Source: "..\assets\wallpapers\*"; DestDir: "{app}\wallpapers"; Flags: ignoreversion
+
 Source: "..\build\payload\Winlestia-Terminal\*"; DestDir: "{app}\Winlestia-Terminal"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]

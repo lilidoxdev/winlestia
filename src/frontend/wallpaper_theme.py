@@ -26,7 +26,7 @@ def generate_palette(path='',background='#182025'):return _palette({'op':'genera
 class WallpaperTheme(QObject):
     changed=Signal();result=Signal(dict)
     def __init__(self,parent=None):
-        super().__init__(parent);self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='Panneaux Palette');self.cache=OrderedDict();self.monitors=[];self.signature=None;self.closed=False;self.generation=0;self.pending=False;self.again=False;self.client=None;self.captures=OrderedDict();self.revision=None;self.requested=set();self.dark_state=OrderedDict();self.result.connect(self.accept)
+        super().__init__(parent);self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='Panneaux Palette');self.cache=OrderedDict();self.monitors=[];self.signature=None;self.closed=False;self.generation=0;self.pending=False;self.again=False;self.client=None;self.captures=OrderedDict();self.revision=None;self.requested=set();self.suppressed=set();self.static_changed=False;self.paths=None;self.dark_state=OrderedDict();self.result.connect(self.accept)
         self.debounce=QTimer(self);self.debounce.setSingleShot(True);self.debounce.setInterval(300);self.debounce.timeout.connect(self.resolve)
     def update(self,monitors,revision=None,client=None):
         # Called with every state message; costs one tuple comparison. A real change (revision or monitor paths) arms a single 300 ms debounce.
@@ -34,7 +34,9 @@ class WallpaperTheme(QObject):
         if client is not None:self.client=client
         signature=(revision,tuple((m.get('name'),m.get('path'),m.get('modified'),m.get('background')) for m in monitors))
         if signature==self.signature:return
-        self.signature=signature;self.revision=revision;self.monitors=monitors;self.debounce.start()
+        paths=tuple((m.get('name'),m.get('path')) for m in monitors)
+        if self.paths is not None and paths!=self.paths:self.static_changed=True  # the Windows picture changed (switcher, Settings app): it now wins over a live-wallpaper config that did not change itself
+        self.paths=paths;self.signature=signature;self.revision=revision;self.monitors=monitors;self.debounce.start()
     def captured(self,reply):
         # Reply of the backend one-shot capture of the live host; remember it for the current revision and re-resolve.
         if self.closed or not isinstance(reply,dict):return
@@ -49,6 +51,11 @@ class WallpaperTheme(QObject):
             results={}
             try:
                 sources=wallpaper_sources.resolve(monitors)
+                if self.static_changed:
+                    self.static_changed=False;self.suppressed|={s.key for s in sources.values() if s.provider not in ('Windows','Slideshow','Spotlight')}
+                for n,s in list(sources.items()):
+                    if s.key in self.suppressed:sources[n]=wallpaper_sources.windows_source(wallpaper_sources.default_bases(),next((m for m in monitors if m.get('name')==n),{'name':n}),wallpaper_sources.background_type())
+                if len(self.suppressed)>16:self.suppressed.clear()
                 for monitor in monitors or [{'name':''}]:
                     name=monitor.get('name','');source=sources[name];background=monitor.get('background','#182025')
                     if source.needs_capture:

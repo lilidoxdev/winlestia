@@ -1,5 +1,5 @@
 # Python 3.12 / Windows 11. Local launcher matching and bounded arithmetic; no eval or shell execution.
-import ast, math, operator, os, threading, time, unicodedata
+import ast, math, operator, os, shutil, threading, time, unicodedata
 from pathlib import Path
 
 def fold(value):
@@ -76,34 +76,75 @@ def palette_search(query,state):
 
 # Wallpaper picker data: scanned only when the launcher wallpaper mode asks for it, scanned on a worker thread at most every 30 s, capped.
 WALL_EXT={'.jpg','.jpeg','.png','.bmp','.webp'}
-_walls=[];_walls_at=-100.0;_scanning=False
+_walls=[];_walls_at=-100.0;_scanning=False;_rescan=False
+def user_wallpaper_dir():
+    return Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData'/'Local')))/'Panneaux'/'Wallpapers'
+def bundled_wallpaper_dir():
+    # Installed: <app>\wallpapers next to <app>\Caelestia-Windows; from the sources: <repo>ssets\wallpapers. Read-only.
+    here=Path(__file__).resolve().parent
+    for candidate in (here.parent/'wallpapers',here.parent.parent/'assets'/'wallpapers'):
+        if candidate.is_dir():return candidate
+    return here.parent/'wallpapers'
 def wallpaper_dirs():
     home=Path(os.environ.get('USERPROFILE',str(Path.home())));windir=Path(os.environ.get('WINDIR','C:/Windows'))
-    bundled=Path(os.environ.get('LOCALAPPDATA',str(home/'AppData'/'Local')))/'Panneaux'/'Wallpapers'
-    roots=[(bundled,2),(home/'Pictures'/'Wallpapers',2),(Path(os.environ.get('OneDrive',home/'OneDrive'))/'Pictures'/'Wallpapers',2),(home/'Pictures',0),(windir/'Web'/'Wallpaper',2),(windir/'Web'/'4K'/'Wallpaper',2)]
+    roots=[(user_wallpaper_dir(),2),(bundled_wallpaper_dir(),2),(home/'Pictures'/'Wallpapers',2),(Path(os.environ.get('OneDrive',home/'OneDrive'))/'Pictures'/'Wallpapers',2),(home/'Pictures',0),(windir/'Web'/'Wallpaper',2),(windir/'Web'/'4K'/'Wallpaper',2)]
     return roots
+def _under(path,folder):
+    try:
+        p=os.path.normcase(os.path.abspath(path));f=os.path.normcase(os.path.abspath(str(folder)))
+        return p.startswith(f+os.sep)
+    except (OSError,ValueError):return False
+def wallpaper_deletable(path):
+    # Only files from the user folder; never bundled or Pictures images.
+    return _under(path,user_wallpaper_dir()) and os.path.splitext(path)[1].lower() in WALL_EXT and os.path.isfile(path)
+def wallpaper_import(paths):
+    # Copies picked images into the user folder (unique name on collision); returns the new paths in order.
+    dest=user_wallpaper_dir();added=[]
+    try:dest.mkdir(parents=True,exist_ok=True)
+    except OSError:return added
+    for source in paths:
+        source=str(source)
+        if source.startswith('file:///'):source=source[8:].replace('/',os.sep)
+        stem,ext=os.path.splitext(os.path.basename(source))
+        if ext.lower() not in WALL_EXT or not os.path.isfile(source):continue
+        target=dest/(stem+ext);n=2
+        while target.exists():target=dest/f'{stem} ({n}){ext}';n+=1
+        try:shutil.copy2(source,target);added.append(str(target))
+        except OSError:pass
+    return added
+def wallpaper_remove(path):
+    if not wallpaper_deletable(path):return False
+    try:os.remove(path)
+    except OSError:return False
+    return True
 def wallpaper_scan(limit=200):
-    found=[];seen=set()
+    found=[];seen=set();names=set();user=user_wallpaper_dir();bundled=bundled_wallpaper_dir()
     def walk(folder,depth):
         try:
             with os.scandir(folder) as it:
                 for e in it:
                     if len(found)>=limit:return
                     if e.is_dir(follow_symlinks=False) and depth>0:walk(e.path,depth-1)
-                    elif e.is_file() and os.path.splitext(e.name)[1].lower() in WALL_EXT and e.path.lower() not in seen:
-                        seen.add(e.path.lower());found.append({'id':e.path,'path':e.path,'name':os.path.splitext(e.name)[0],'url':Path(e.path).as_uri(),'kind':'wallpaper'})
+                    elif e.is_file() and os.path.splitext(e.name)[1].lower() in WALL_EXT and e.path.lower() not in seen and e.name.lower() not in names:
+                        seen.add(e.path.lower());names.add(e.name.lower());origin='user' if _under(e.path,user) else 'bundled' if _under(e.path,bundled) else 'other'
+                        found.append({'id':e.path,'path':e.path,'name':os.path.splitext(e.name)[0],'url':Path(e.path).as_uri(),'kind':'wallpaper','origin':origin})
         except OSError:pass
     for folder,depth in wallpaper_dirs():walk(str(folder),depth)
     return sorted(found,key=lambda w:fold(w['name']))
-def wallpaper_refresh(done):
+def wallpaper_refresh(done,force=False):
     # Worker-thread scan, at most once per 30 s; `done` is called from the worker when the cache was replaced.
-    global _walls_at,_scanning
+    global _walls_at,_scanning,_rescan
     now=time.monotonic()
-    if _scanning or now-_walls_at<30:return
+    if _scanning:
+        if force:_rescan=True
+        return
+    if now-_walls_at<30 and not force:return
     _scanning=True;_walls_at=now
     def run():
-        global _walls,_scanning
-        try:_walls=wallpaper_scan()
+        global _walls,_scanning,_rescan
+        try:
+            _walls=wallpaper_scan()
+            while _rescan:_rescan=False;_walls=wallpaper_scan()
         finally:_scanning=False
         done()
     threading.Thread(target=run,daemon=True).start()

@@ -13,12 +13,12 @@ from interaction import EdgePolicy, is_fullscreen
 from localization import Translator
 from custom_palette import make_palette,DEFAULT,valid_color
 from screen_picker import ClickPicker
-from search import palette_search, wallpaper_choices, wallpaper_refresh, wallpaper_known
+from search import palette_search, wallpaper_choices, wallpaper_refresh, wallpaper_known, wallpaper_import, wallpaper_remove, user_wallpaper_dir
 from live_model import LiveListModel
 from capture_native import CaptureController
 from concurrent.futures import ThreadPoolExecutor
 from wallpaper_theme import WallpaperTheme
-from wallpaper_thumbs import thumb_for, animated_wallpaper_running
+from wallpaper_thumbs import thumb_for
 from native_glass import NativeGlass
 from surface_geometry import SurfaceScene
 
@@ -129,7 +129,7 @@ class WindowsPlayer(QObject):
     def quit(self):pass
 
 class Bridge(QObject):
-    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperThumbReady=Signal(str,str);animatedWallpaperChecked=Signal(bool)
+    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperThumbReady=Signal(str,str);
     def __init__(self,args):
         super().__init__();self.surface_scene=None;self.args=args;self._window=None;self._state={};self._pending_controls={};self._pending_audio={};self._icon_requests={};self._dark=False;self._player=WindowsPlayer(self);self.top=None;self.dock=None;self.social_win=None;self.away_social=0;self.bookmarks_win=None;self.away_bookmarks=0;self.last_reply=0;self.peek_until=0;self.away_top=0;self.away_dock=0;self.force_dock=0
         self.top_seen=False;self._screen=QApplication.primaryScreen();self.client=PipeClient(args.pipe);self.client.received.connect(self.update_state);self.client.start()
@@ -364,6 +364,20 @@ class Bridge(QObject):
     def wallpaperChoices(self,query):return wallpaper_choices(query)
     @Slot()
     def refreshWallpapers(self):wallpaper_refresh(self.wallpapersReady.emit)
+    @Slot()
+    def refreshWallpapersNow(self):wallpaper_refresh(self.wallpapersReady.emit,True)
+    @Slot(result='QVariantList')
+    def addWallpaperImages(self):
+        # Native multi-select dialog (the switcher is hidden by the caller meanwhile), then copy into the user folder; returns the new paths.
+        files,_=QFileDialog.getOpenFileNames(None,'Ajouter des images',str(Path.home()/'Pictures'),'Images (*.jpg *.jpeg *.png *.bmp *.webp)')
+        return wallpaper_import(files) if files else []
+    @Slot()
+    def openWallpaperFolder(self):
+        folder=user_wallpaper_dir()
+        try:folder.mkdir(parents=True,exist_ok=True);os.startfile(str(folder))
+        except OSError:pass
+    @Slot(str,result=bool)
+    def removeWallpaper(self,path):return wallpaper_remove(path)
     @Slot('QVariantList')
     def requestWallpaperThumbs(self,paths):
         # Switcher thumbnails: one background thread per request (a newer request stops the older one), each file emitted as soon as its cached JPEG exists.
@@ -374,13 +388,14 @@ class Bridge(QObject):
                 made=thumb_for(path)
                 if made:self.wallpaperThumbReady.emit(path,Path(made).as_uri())
         threading.Thread(target=run,daemon=True).start()
-    @Slot()
-    def checkAnimatedWallpaper(self):threading.Thread(target=lambda:self.animatedWallpaperChecked.emit(animated_wallpaper_running()),daemon=True).start()
     @Slot(str)
     def setWallpaper(self,path):
         # Only files from the last scan; the backend sees the Windows change event and the palette is re-derived by WallpaperTheme.
         if not wallpaper_known(path):return
-        def apply():ctypes.windll.user32.SystemParametersInfoW(0x14,0,path,3)
+        def apply():
+            # SPI alone does not always move the backend revision (a live-wallpaper host or an unchanged registry value): tell it explicitly, the watcher stays for external changes.
+            if ctypes.windll.user32.SystemParametersInfoW(0x14,0,path,3) and self.client is not None:
+                self.client.commands.put({'command':'wallpaperChanged','args':{}});kernel32.SetEvent(self.client.wakeup)
         threading.Thread(target=apply,daemon=True).start()
     @Slot('QVariant')
     def executeResult(self,value):

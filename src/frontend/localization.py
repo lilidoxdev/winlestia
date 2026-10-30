@@ -230,7 +230,9 @@ Afficher l’OSD|Show the OSD|Mostrar el OSD
 Indicateur de volume à l’écran|On-screen volume indicator|Indicador de volumen en pantalla
 Sélecteur de fonds d’écran|Wallpaper switcher|Selector de fondos de pantalla
 Choisis un fond en plein écran avec aperçu|Pick a wallpaper full screen with a live preview|Elige un fondo a pantalla completa con vista previa
-Un fond animé est actif : l’appliquer le remplacera|An animated wallpaper is active: applying one will replace it|Hay un fondo animado activo: aplicar uno lo reemplazará
 Aucun fond d’écran trouvé|No wallpaper found|No se encontró ningún fondo
-← → choisir · Entrée appliquer · Échap fermer|← → choose · Enter apply · Esc close|← → elegir · Intro aplicar · Esc cerrar""".splitlines():
+Ajouter des images|Add images|Añadir imágenes
+Ouvrir le dossier|Open folder|Abrir carpeta
+Supprimer ce fond de votre dossier ? Entrée confirmer · Échap annuler|Delete this wallpaper from your folder? Enter confirm · Esc cancel|¿Eliminar este fondo de tu carpeta? Intro confirmar · Esc cancelar
+← → choisir · Entrée appliquer · Ctrl+O ajouter · Suppr retirer · Échap fermer|← → choose · Enter apply · Ctrl+O add · Del remove · Esc close|← → elegir · Intro aplicar · Ctrl+O añadir · Supr quitar · Esc cerrar""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}
