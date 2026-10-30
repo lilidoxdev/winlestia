@@ -25,6 +25,7 @@ The interface is a port of Caelestia; a .NET service handles the system side and
 - Settings for theme, glass opacity, screen frame thickness, taskbar replacement, autostart and global shortcuts.
 - Virtual desktop indicator in the dock: one dot per Windows desktop, the current one highlighted; click a dot or scroll to switch. It reads the desktop list from the registry and switches with the Win+Ctrl+arrow shortcut. It can be turned off in Settings. A "+" button next to the dots creates a new desktop (Win+Ctrl+D); right-click a dot to close that desktop (its windows move to the neighbouring one).
 - On-screen indicator (OSD) for volume, screen brightness and microphone mute, driven by system events. The native Windows volume popup is left as is.
+- Accent border on applications (on by default), with an optional "Active window only" mode that colours only the foreground window.
 - Automatic tiling (off by default): stable tile order, keyboard focus, swap, resize and float shortcuts (Ctrl+Alt+arrows, listed in Settings), drag-to-swap, and a per-application exclusion list. A dock button turns it on or off, same as the Settings toggle; it sits in a group next to the desktop dots that a small arrow shows or tucks away (state remembered).
 - Command line `winlestia` (status, panel, desktop, wallpaper, palette, help) to drive the running shell from scripts, through a pipe reserved to the current user. Optional PATH entry at setup.
 - Color palette generated from the wallpaper, with an automatic theme option.

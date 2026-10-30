@@ -56,7 +56,7 @@ internal sealed partial class ExplorerAppearance:IDisposable{
  static bool Within(string full,bool strict){string real=Real(full);return PersonalFolders().Any(p=>{if(p.path.Length==0)return false;string root=Real(p.path);return (!strict&&real.Equals(root,StringComparison.OrdinalIgnoreCase))||real.StartsWith(root+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase);});}
  static readonly HashSet<string> DevDirs=new(StringComparer.OrdinalIgnoreCase){"node_modules","bin","obj",".venv","__pycache__","target","build","dist"};
  static bool Skipped(string folder){try{return DevDirs.Contains(Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar)))||Directory.Exists(Path.Combine(folder,".git"))||File.Exists(Path.Combine(folder,".git"));}catch{return true;}}
- internal ExplorerAppearance(string? directory=null){root=directory??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Winlestia","Explorer");timer.Tick+=(_,_)=>{try{FrameTick();}finally{eventPending=false;timer.Interval=scanDue!=DateTime.MaxValue?TimeSpan.FromSeconds(1):IdleInterval;}};timer.Start();hookProc=(_,_,h,id,_,_,_)=>{if(h==IntPtr.Zero||id!=0||disposed||eventPending||GetAncestor(h,2)!=h)return;eventPending=true;timer.Stop();timer.Interval=TimeSpan.FromMilliseconds(150);timer.Start();};foreach(var r in new (uint,uint)[]{(3,3),(0x16,0x17),(0x8000,0x8003),(0x800C,0x800C)})hooks.Add(SetWinEventHook(r.Item1,r.Item2,IntPtr.Zero,hookProc,0,0,0));}
+ internal ExplorerAppearance(string? directory=null){root=directory??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Winlestia","Explorer");timer.Tick+=(_,_)=>{try{FrameTick();}finally{eventPending=false;timer.Interval=scanDue!=DateTime.MaxValue?TimeSpan.FromSeconds(1):IdleInterval;}};timer.Start();hookProc=(_,evt,h,id,_,_,_)=>{if(evt==3&&h!=IntPtr.Zero&&id==0&&!disposed&&GetAncestor(h,2)==h)ForegroundChanged(h);if(h==IntPtr.Zero||id!=0||disposed||eventPending||GetAncestor(h,2)!=h)return;eventPending=true;timer.Stop();timer.Interval=TimeSpan.FromMilliseconds(150);timer.Start();};foreach(var r in new (uint,uint)[]{(3,3),(0x16,0x17),(0x8000,0x8003),(0x800C,0x800C)})hooks.Add(SetWinEventHook(r.Item1,r.Item2,IntPtr.Zero,hookProc,0,0,0));}
  // Idle back-off: windows events (foreground/minimize/create/destroy/show/hide/name change) re-arm a 150 ms debounce tick; otherwise 5 s safety tick (1 s while a scan is due).
  static readonly TimeSpan IdleInterval=TimeSpan.FromSeconds(5);bool eventPending;readonly List<IntPtr> hooks=new();[DllImport("user32.dll")]static extern IntPtr GetAncestor(IntPtr h,uint flags);readonly WinEventProc? hookProc;
  delegate void WinEventProc(IntPtr hook,uint evt,IntPtr hwnd,int id,int child,uint thread,uint time);
@@ -68,7 +68,7 @@ internal sealed partial class ExplorerAppearance:IDisposable{
  static string Hash(string path)=>Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
  internal static string Known(string guid){var id=new Guid(guid);if(SHGetKnownFolderPath(ref id,0,IntPtr.Zero,out var pointer)!=0)return "";try{return Marshal.PtrToStringUni(pointer)??"";}finally{Marshal.FreeCoTaskMem(pointer);}}
  internal static (string path,string kind)[] PersonalFolders()=>new[]{(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),"desktop"),(Known("374DE290-123F-4565-9164-39C4925E467B"),"download"),(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),"document"),(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),"picture"),(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic),"music"),(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),"video")};
- internal string Sync(string a,string bg,string fg,bool force=false){lock(gate){if(disposed)return "";foreach(string value in new[]{a,bg,fg})if(!System.Text.RegularExpressions.Regex.IsMatch(value,"^#[0-9a-fA-F]{6}$"))throw new ArgumentException("Palette invalide");accent=a;background=bg;text=fg;
+ internal string Sync(string a,string bg,string fg,bool force=false){lock(gate){if(disposed)return "";foreach(string value in new[]{a,bg,fg})if(!System.Text.RegularExpressions.Regex.IsMatch(value,"^#[0-9a-fA-F]{6}$"))throw new ArgumentException("Palette invalide");accent=a;background=bg;text=fg;if(Store.State.AccentBorders&&Store.State.ActiveBorderOnly)RefreshFrames();
   if(!Store.State.ExplorerTheme)return "";if(!repairPassDone){repairPassDone=true;_=System.Threading.Tasks.Task.Run(RepairManifestDates);}StartIconMaintenance();string key=a+bg+fg+string.Join("|",Store.State.ExplorerFolders);if(!force&&key==signature)return "";
   var report=new List<string>();var folders=PersonalFolders().Concat(Store.State.ExplorerFolders.Select(p=>(p,"folder"))).DistinctBy(p=>p.Item1,StringComparer.OrdinalIgnoreCase).ToArray();
   foreach(var item in folders){try{if(!Directory.Exists(item.Item1))continue;string icon=EnsureIcon(item.Item2);ApplyFolder(item.Item1,icon);report.Add("OK "+item.Item1);}catch(Exception ex){report.Add("SKIPPED "+item.Item1+": "+ex.Message);}}
@@ -97,11 +97,31 @@ internal sealed partial class ExplorerAppearance:IDisposable{
    if(File.Exists(ini))File.SetAttributes(ini,FileAttributes.Normal);if(saved.Ini==null){if(File.Exists(ini))File.Delete(ini);}else{File.WriteAllBytes(ini,Convert.FromBase64String(saved.Ini));File.SetAttributes(ini,(FileAttributes)saved.IniAttributes);}File.SetAttributes(saved.Folder,(FileAttributes)saved.Attributes);SHChangeNotify(0x2000,5,saved.Folder,IntPtr.Zero);SetStamp(saved.Folder,stamp);
   }catch(Exception ex){remaining.Add(saved);Store.Log("Explorateur restauration: "+ex.Message);}}Save(remaining);scanned.Clear();signature="";if(navigationConflicts>0){Status=navigationConflicts+" réglage(s) de navigation modifié(s) ailleurs, conservé(s).";return Status;}Status=remaining.Count==0?"Icônes d’origine restaurées.":remaining.Count+" conflit(s) conservé(s).";return remaining.Count==0?"Icônes d’origine restaurées.":remaining.Count+" dossier(s) conservé(s), consulter le journal.";}}
  static uint Colour(string hex){var c=D.ColorTranslator.FromHtml(hex);return (uint)(c.R|c.G<<8|c.B<<16);}
- void FrameTick(){if(disposed)return;if(!Store.State.ExplorerTheme&&!Store.State.AccentBorders){RestoreFrames();return;}var alive=new HashSet<IntPtr>();var sig=new List<string>();TaskbarNative.EnumWindows((h,_)=>{
-  bool explorer=TaskbarNative.ClassName(h)=="CabinetWClass";
-  if(Native.Owns(h)||!TaskbarNative.IsWindowVisible(h)||TaskbarNative.IsIconic(h)||(Style(h,-16).ToInt64()&0x40000000)!=0||(Native.ExtendedStyle(h)&0x80)!=0||string.IsNullOrWhiteSpace(Native.Title(h))||(!explorer&&!Store.State.AccentBorders))return true;
-  var style=Style(h,-16).ToInt64();if((style&0x00c40000)==0)return true;
-  GetWindowThreadProcessId(h,out uint pid);if(pid==ExcludedProcess)return true;alive.Add(h);ColourFrame(h,explorer);if(explorer)sig.Add(h+"|"+Native.Title(h));
+ // Active-only mode: the single window carrying the border (last one coloured, no list).
+ IntPtr activeFrame;
+ bool Eligible(IntPtr h,out bool explorer){explorer=TaskbarNative.ClassName(h)=="CabinetWClass";
+  if(Native.Owns(h)||!TaskbarNative.IsWindowVisible(h)||TaskbarNative.IsIconic(h)||(Style(h,-16).ToInt64()&0x40000000)!=0||(Native.ExtendedStyle(h)&0x80)!=0||string.IsNullOrWhiteSpace(Native.Title(h)))return false;
+  if((Style(h,-16).ToInt64()&0x00c40000)==0)return false;
+  GetWindowThreadProcessId(h,out uint pid);return pid!=ExcludedProcess;}
+ static bool ThemedExplorer(IntPtr h)=>Store.State.ExplorerTheme&&TaskbarNative.ClassName(h)=="CabinetWClass";
+ // Foreground event (same hook, no new timer): colour the new active window, restore the previous one. DWM refusals stay silent.
+ void ForegroundChanged(IntPtr h){bool on=Store.State.AccentBorders&&Store.State.ActiveBorderOnly;
+  var plan=FramePolicy.Foreground(Store.State.AccentBorders,Store.State.ActiveBorderOnly,on&&Eligible(h,out _),h,activeFrame);activeFrame=plan.tracked;
+  if(plan.restore!=IntPtr.Zero&&!ThemedExplorer(plan.restore))RestoreFrame(plan.restore);
+  if(plan.colour!=IntPtr.Zero)ColourFrame(plan.colour,TaskbarNative.ClassName(plan.colour)=="CabinetWClass");}
+ // One-shot pass requested by a setting or palette change (UI thread, nothing at rest).
+ internal void RefreshFrames(){if(!disposed)timer.Dispatcher.BeginInvoke(new Action(()=>{if(!disposed)FrameTick();}));}
+ void FrameTick(){if(disposed)return;if(!Store.State.ExplorerTheme&&!Store.State.AccentBorders){activeFrame=IntPtr.Zero;RestoreFrames();return;}var alive=new HashSet<IntPtr>();var sig=new List<string>();
+  bool activeOnly=Store.State.AccentBorders&&Store.State.ActiveBorderOnly;
+  if(!activeOnly||(activeFrame!=IntPtr.Zero&&!Native.IsWindow(activeFrame)))activeFrame=IntPtr.Zero;
+  if(activeOnly&&activeFrame==IntPtr.Zero){var foreground=Native.GetForegroundWindow();if(foreground!=IntPtr.Zero&&Eligible(foreground,out _))activeFrame=foreground;}   // prefer the real foreground window over the top of the z-order
+  TaskbarNative.EnumWindows((h,_)=>{
+  if(!Eligible(h,out bool explorer))return true;
+  if(!explorer&&!Store.State.AccentBorders)return true;
+  bool themed=explorer&&Store.State.ExplorerTheme;
+  if(activeOnly&&!themed&&activeFrame==IntPtr.Zero)activeFrame=h;
+  if(FramePolicy.Carries(true,activeOnly&&!themed,h,activeFrame)){alive.Add(h);ColourFrame(h,explorer);}
+  if(explorer)sig.Add(h+"|"+Native.Title(h));
   return true;},IntPtr.Zero);foreach(var h in frames.Keys.Where(h=>!alive.Contains(h)).ToArray())RestoreFrame(h);
   sig.Sort(StringComparer.Ordinal);string now=string.Join("|;",sig);if(now!=windowSignature){windowSignature=now;if(now.Length>0)RequestScan();}
   if(DateTime.UtcNow>=scanDue){scanDue=DateTime.MaxValue;ScanVisibleFolders();}

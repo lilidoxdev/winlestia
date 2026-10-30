@@ -263,5 +263,7 @@ Exclure l’application de la fenêtre active, ou la réintégrer|Exclude the ac
 Souris|Mouse|Ratón
 Lâcher une fenêtre sur une autre tuile les échange|Dropping a window on another tile swaps them|Soltar una ventana sobre otro mosaico las intercambia
 Applications exclues|Excluded applications|Aplicaciones excluidas
-Aucune application exclue|No excluded application|Ninguna aplicación excluida""".splitlines():
+Aucune application exclue|No excluded application|Ninguna aplicación excluida
+Seulement la fenêtre active|Active window only|Solo la ventana activa
+Le liseré suit la fenêtre au premier plan|The border follows the foreground window|El borde sigue a la ventana en primer plano""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}

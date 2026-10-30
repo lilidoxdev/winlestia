@@ -110,6 +110,7 @@ Item {
      IconTextButton{visible:Bridge.themeMode==="custom";text:qsTr("Modifier ma palette");icon:"palette";onClicked:page.openCustomEditor()}
     }
     SettingRow{title:qsTr("Liseré sur les applications");hint:qsTr("La couleur du thème autour des fenêtres du Bureau");symbol:"border_outer";StyledSwitch{checked:Bridge.settings.accentBorders??true;onClicked:Bridge.action("preference",{key:"accentBorders",enabled:checked})}}
+    SettingRow{enabled:Bridge.settings.accentBorders??true;opacity:enabled?1:.5;title:qsTr("Seulement la fenêtre active");hint:qsTr("Le liseré suit la fenêtre au premier plan");symbol:"select_window_2";StyledSwitch{checked:Bridge.settings.activeBorderOnly??false;onClicked:Bridge.action("preference",{key:"activeBorderOnly",enabled:checked})}}
    }
    Card{Layout.preferredWidth:8;title:qsTr("Rendu");subtitle:qsTr("Transparence, animations et liseré");symbol:"blur_on"
     SliderRow{title:qsTr("Transparence du verre");hint:Bridge.themeMode==="auto"?qsTr("Plus la valeur est haute, plus le fond transparaît"):qsTr("Réglable avec le thème Automatique");value:Math.round(glass.value)+" %";dim:Bridge.themeMode!=="auto"
