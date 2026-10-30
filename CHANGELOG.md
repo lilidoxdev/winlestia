@@ -2,6 +2,8 @@
 
 ## Non publié
 
+- Réglages : champ de recherche (titre et description, sans tenir compte de la casse ni des accents) sur les six pages ; le résultat choisi ouvre la page, défile jusqu'à la ligne et la met en évidence brièvement.
+- Commandes rapides : interrupteur « Effets allégés ». Si Windows refuse la bascule Wi-Fi ou Bluetooth, la page correspondante des Paramètres Windows s'ouvre en plus du message d'erreur.
 - Palette Ctrl+F2 : fenêtres ouvertes (5 au plus, listées à l'ouverture et oubliées à la fermeture), une trentaine de pages des Paramètres Windows (FR/EN/ES) et préfixe `>file ` pour chercher des fichiers du profil dans l'index Windows (requête hors thread UI, 2 s, 200 ms d'anti-rebond, message si l'index est indisponible ; ni saisie ni chemins journalisés). `winlestia find windows` et `winlestia find files <terme>` ne renvoient que des comptes.
 
 - Réglage « Seulement la fenêtre active » (sous « Liseré sur les applications », désactivé par défaut) : le liseré ne colore que la fenêtre au premier plan ; `winlestia status` expose `activeBorderOnly`.

@@ -52,6 +52,10 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth:true
+        MaterialIcon{text:"speed"} StyledText{text:qsTr("Effets allégés");Layout.fillWidth:true} StyledSwitch{objectName:"reducedEffectsToggle";checked:Bridge.reducedEffects;onClicked:Bridge.action("preference",{key:"reducedEffects",enabled:checked})}
+    }
+    RowLayout {
+        Layout.fillWidth:true
         IconButton {icon:"dark_mode";type:IconButton.Tonal;toggle:true;checked:Bridge.dark;onClicked:Bridge.action("theme",{dark:!Bridge.dark})}
         IconTextButton {Layout.fillWidth:true;type:IconTextButton.Text;icon:"settings";text:qsTr("Personnaliser");onClicked:Bridge.action("settings",{})}
         IconTextButton {Layout.fillWidth:true;type:IconTextButton.Text;icon:"construction";text:qsTr("Atelier");onClicked:Bridge.action("tools",{})}

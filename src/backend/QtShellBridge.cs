@@ -44,7 +44,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     readonly CancellationTokenSource cancellation=new();readonly EventWaitHandle wake=new(false,EventResetMode.AutoReset,@"Local\PanneauxCaelestiaWake");readonly Queue<(string name,long epoch)> events=new();long frontendEpoch;readonly Action networkChanged;
 
-    readonly ExplorerAppearance explorer=new();readonly WindowTiler tiler=new();readonly ScreenFrameReservations frame=new();readonly WindowsWallpaper wallpaper=new();readonly AudioMixerHost mixer=new();bool mixerVisible;readonly WindowsSpectrum spectrum=new();readonly MediaController media=new();readonly SystemAudio audio=new();readonly WindowsConnections connections=new();readonly PcTelemetry telemetry=new();readonly DictationService dictation;readonly FileSearch fileSearch=new();
+    readonly ExplorerAppearance explorer=new();readonly WindowTiler tiler=new();readonly ScreenFrameReservations frame=new();readonly WindowsWallpaper wallpaper=new();readonly AudioMixerHost mixer=new();bool mixerVisible;readonly WindowsSpectrum spectrum=new();readonly MediaController media=new();readonly SystemAudio audio=new();readonly WindowsConnections connections=new();bool wifiSettingsOpened,bluetoothSettingsOpened;readonly PcTelemetry telemetry=new();readonly DictationService dictation;readonly FileSearch fileSearch=new();
 
     CliServer? cli;
     readonly DispatcherTimer timer=new(){Interval=TimeSpan.FromMilliseconds(500)};
@@ -173,7 +173,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
             case "brightness":Native.GetCursorPos(out var point);await MonitorBrightness.SetAsync(point,Math.Clamp(Number(args,"value"),0,100));nextBrightness=DateTime.MinValue;break;
 
-            case "radio":await connections.ToggleAsync(Text(args,"kind")=="wifi"?RadioKind.WiFi:RadioKind.Bluetooth);connection=await connections.ReadAsync();break;
+            case "radio":{var radioWifi=Text(args,"kind")=="wifi";try{await connections.ToggleAsync(radioWifi?RadioKind.WiFi:RadioKind.Bluetooth);}catch(RadioAccessDeniedException){if(radioWifi?!wifiSettingsOpened:!bluetoothSettingsOpened){if(radioWifi)wifiSettingsOpened=true;else bluetoothSettingsOpened=true;try{Process.Start(new ProcessStartInfo(radioWifi?"ms-settings:network-wifi":"ms-settings:bluetooth"){UseShellExecute=true})?.Dispose();}catch(Exception ex){Store.Log("Réglages connexion: "+ex.Message);}}throw;}}connection=await connections.ReadAsync();break;
 
             case "customTheme":
                 if(!args.TryGetProperty("colors",out var colors)||colors.ValueKind!=JsonValueKind.Object)throw new InvalidOperationException("Palette invalide.");

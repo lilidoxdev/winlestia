@@ -203,7 +203,11 @@ Le service Windows Search est arrêté ou désactivé|The Windows Search service
 La recherche a pris trop de temps|The search took too long|La búsqueda tardó demasiado
 Tape au moins 2 caractères|Type at least 2 characters|Escribe al menos 2 caracteres
 Aucun fichier trouvé|No file found|No se encontró ningún archivo
-Recherche…|Searching…|Buscando…"""
+Recherche…|Searching…|Buscando…
+Rechercher un réglage|Search settings|Buscar un ajuste
+Aucun réglage trouvé|No setting found|No se encontró ningún ajuste
+Essaie un autre mot|Try another word|Prueba con otra palabra
+Effets allégés|Reduced effects|Efectos reducidos"""
 TABLE={}
 for row in ROWS.splitlines():
  fr,en,es=row.split('|');value={'fr':fr,'en':en,'es':es};TABLE[fr]=value;TABLE.setdefault(en,value)

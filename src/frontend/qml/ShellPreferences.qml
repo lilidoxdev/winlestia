@@ -19,7 +19,38 @@ Item {
  property int measured:0
  function endMeasure(){let m=0;for(let i=0;i<5;i++){const it=measurer.itemAt(i)?.item;if(it)m=Math.max(m,it.implicitHeight)}maxPageHeight=m;measuring=false}
  onMeasuredChanged:if(measured>=6)Qt.callLater(endMeasure)
- onVisibleChanged:if(visible){maxPageHeight=0;measured=0;measuring=true}
+ onVisibleChanged:{if(visible){maxPageHeight=0;measured=0;measuring=true}else{searchField.text="";glowOff()}}
+ onTabChanged:{searchField.text="";glowOff()}
+
+ // ---- Search: no hand-written index. The six pages are instantiated by `indexer` only while a query is typed,
+ // then their SettingRow/SliderRow/Card objects (searchKind) are read; clearing the field frees them again.
+ property bool searching:false
+ property var results:[]
+ property var pending:null
+ property Item pendingItem:null
+ property Item glowing:null
+ function fold(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’‘]/g,"'").toLowerCase()}
+ function collect(root,out){const c=root?root.children:[];for(let i=0;i<c.length;i++){if(c[i].searchKind)out.push(c[i]);collect(c[i],out)}}
+ function runSearch(){
+  const q=fold(searchField.text).trim();searching=q!=="";
+  if(!searching){results=[];return}
+  glowOff();
+  const words=q.split(/\s+/),out=[];
+  for(let p=0;p<6;p++){const found=[];collect(indexer.itemAt(p)?.item,found)
+   for(const o of found){const hint=o.searchKind==="card"?o.subtitle:o.hint;if(words.every(w=>fold(o.title+" "+hint).includes(w)))out.push({title:o.title,hint:hint,page:p,kind:o.searchKind})}}
+  results=out}
+ function glowOff(){glowing?.hideGlow();glowing=null;pendingItem=null;pending=null}
+ function openResult(i){const r=results[i];if(!r)return;searchField.text="";tab=r.page;pending=r;Qt.callLater(settle)}
+ // Finds the live row of the opened page; waits (through pendingItem) until the layout has placed it, then scrolls and lights it.
+ function settle(){
+  const r=pending;if(!r||tab!==r.page)return;
+  const found=[];collect(pageLoader.item,found);
+  const o=found.find(f=>f.searchKind===r.kind&&f.title===r.title);
+  if(!o){pending=null;return}
+  if(o.width<=0||o.height<=0){pendingItem=o;return}
+  scroll.contentY=Math.max(0,Math.min(o.mapToItem(pageLoader,0,0).y-Appearance.padding.large,scroll.contentHeight-scroll.height));
+  pending=null;pendingItem=null;glowing=o;o.showGlow()}
+ Connections{target:page.pendingItem;function onWidthChanged(){Qt.callLater(page.settle)}function onHeightChanged(){Qt.callLater(page.settle)}function onYChanged(){Qt.callLater(page.settle)}}
  implicitHeight:Math.min(640,Bridge.screenHeight-100,mainCol.implicitHeight)
  CustomThemeEditor{id:customEditor}
  function openCustomEditor(){customEditor.openEditor()}
@@ -34,11 +65,27 @@ Item {
   Loader{required property int index;visible:false;width:page.width;active:true;sourceComponent:index===0?appearancePage:index===1?deskPage:index===2?filesPage:index===3?dailyPage:index===4?socialPage:bookmarksPage
    onLoaded:page.measured++}
  }
+ Repeater{id:indexer;model:page.searching?6:0
+  Loader{required property int index;visible:false;width:page.width;active:true;sourceComponent:index===0?appearancePage:index===1?deskPage:index===2?filesPage:index===3?dailyPage:index===4?socialPage:bookmarksPage}
+  onItemAdded:Qt.callLater(page.runSearch)
+ }
  ColumnLayout{id:mainCol;anchors.fill:parent;spacing:14
   RowLayout{Layout.fillWidth:true
    ColumnLayout{spacing:2;StyledText{text:qsTr("Personnaliser");font.pointSize:Appearance.font.size.title}StyledText{text:qsTr("Un espace qui te ressemble");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}}
    Item{Layout.fillWidth:true}
    IconButton{icon:"close";type:IconButton.Text;onClicked:Bridge.closePanel()}
+  }
+  StyledRect{Layout.fillWidth:true;implicitHeight:44;radius:Appearance.rounding.full;color:Colours.palette.m3surfaceContainer
+   MaterialIcon{id:searchIcon;anchors.left:parent.left;anchors.leftMargin:16;anchors.verticalCenter:parent.verticalCenter;text:"search";color:Colours.palette.m3outline;font.pointSize:Appearance.font.size.large}
+   StyledTextField{id:searchField;objectName:"prefsSearch";anchors.fill:parent;anchors.leftMargin:48;anchors.rightMargin:18;placeholderText:qsTr("Rechercher un réglage")
+    onTextChanged:page.runSearch()
+    Keys.onShortcutOverride:event=>{if(event.key===Qt.Key_Escape&&text.length>0)event.accepted=true}
+    Keys.onEscapePressed:event=>{if(text!==""){text="";event.accepted=true}else event.accepted=false}
+    Keys.onDownPressed:resultList.currentIndex=Math.min(resultList.count-1,resultList.currentIndex+1)
+    Keys.onUpPressed:resultList.currentIndex=Math.max(0,resultList.currentIndex-1)
+    Keys.onReturnPressed:page.openResult(resultList.currentIndex)
+    Keys.onEnterPressed:page.openResult(resultList.currentIndex)
+   }
   }
   Flickable{id:tabStrip;objectName:"prefsTabStrip";Layout.fillWidth:true;implicitHeight:44;contentWidth:tabRow.implicitWidth;contentHeight:height;flickableDirection:Flickable.HorizontalFlick;clip:true;boundsBehavior:Flickable.StopAtBounds
    // Keep the selected pill visible; wheel scrolls the strip sideways.
@@ -63,11 +110,29 @@ Item {
     }
    }
   }
-  Flickable{id:scroll;Layout.fillWidth:true;Layout.fillHeight:true;Layout.preferredHeight:page.maxPageHeight;contentHeight:pageLoader.height;clip:true;boundsBehavior:Flickable.StopAtBounds
+  Item{id:stage;Layout.fillWidth:true;Layout.fillHeight:true;Layout.preferredHeight:page.maxPageHeight
+  Flickable{id:scroll;anchors.fill:parent;visible:!page.searching;onMovementStarted:page.glowOff();contentHeight:pageLoader.height;clip:true;boundsBehavior:Flickable.StopAtBounds
    C.ScrollBar.vertical:StyledScrollBar{flickable:scroll}
    Loader{id:pageLoader;width:scroll.width;height:item?item.implicitHeight:0;active:page.visible
     sourceComponent:page.tab===0?appearancePage:page.tab===1?deskPage:page.tab===2?filesPage:page.tab===3?dailyPage:page.tab===4?socialPage:bookmarksPage
    }
+  }
+   ListView{id:resultList;objectName:"prefsResults";anchors.fill:parent;visible:page.searching&&page.results.length>0;clip:true;spacing:6;model:page.results;boundsBehavior:Flickable.StopAtBounds
+    C.ScrollBar.vertical:StyledScrollBar{flickable:resultList}
+    Connections{target:page;function onResultsChanged(){resultList.currentIndex=0}}
+    delegate:StyledRect{id:hit;required property var modelData;required property int index;objectName:"prefsResult"+index
+     width:ListView.view.width;implicitHeight:hitCol.implicitHeight+2*Appearance.padding.normal;radius:Appearance.rounding.normal
+     color:ListView.isCurrentItem?Qt.alpha(Colours.palette.m3primary,.14):Qt.alpha(Colours.palette.m3surfaceContainer,.76);activeFocusOnTab:true
+     Keys.onPressed:event=>{if(event.key===Qt.Key_Return||event.key===Qt.Key_Enter||event.key===Qt.Key_Space){page.openResult(index);event.accepted=true}}
+     StateLayer{color:Colours.palette.m3onSurface;function onClicked(){page.openResult(hit.index)}}
+     FocusRing{target:hit}
+     Column{id:hitCol;anchors.left:parent.left;anchors.right:parent.right;anchors.verticalCenter:parent.verticalCenter;anchors.leftMargin:Appearance.padding.large;anchors.rightMargin:Appearance.padding.large;spacing:1
+      StyledText{width:parent.width;elide:Text.ElideRight;text:hit.modelData.title;font.pointSize:Appearance.font.size.normal}
+      StyledText{width:parent.width;elide:Text.ElideRight;text:page.tabs[hit.modelData.page].label;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+     }
+    }
+   }
+   EmptyState{anchors.centerIn:parent;visible:page.searching&&indexer.count===6&&page.results.length===0;title:qsTr("Aucun réglage trouvé");body:qsTr("Essaie un autre mot")}
   }
   RowLayout{Layout.fillWidth:true
    IconTextButton{text:qsTr("Rétablir la barre Windows");icon:"desktop_windows";type:IconTextButton.Text;onClicked:Bridge.action("restoreTaskbar",{})}
@@ -290,7 +355,17 @@ Item {
  // Keyboard focus outline drawn over a focusable item.
  component FocusRing:Rectangle{property Item target;anchors.fill:target;anchors.margins:-2;radius:(target?.radius??0)+2;color:"transparent";border.width:2;border.color:Colours.palette.m3primary;visible:target?.activeFocus??false}
  // Rounded section card: icon + title + one-line subtitle, then its settings.
+ // Short highlight used by the search: fades after a moment, or stays lit (no animation) with reduced effects until the next scroll.
+ component HitGlow:Rectangle{id:g;anchors.fill:parent;anchors.margins:-6;radius:Appearance.rounding.normal;color:Qt.alpha(Colours.palette.m3primary,.16);border.width:2;border.color:Colours.palette.m3primary;opacity:0;visible:opacity>0
+  function show(){fade.stop();opacity=1;if(!Bridge.reducedEffects)fade.restart()}
+  function hide(){fade.stop();opacity=0}
+  SequentialAnimation{id:fade;PauseAnimation{duration:1200}NumberAnimation{target:g;property:"opacity";to:0;duration:Appearance.anim.durations.normal}}
+ }
  component Card:StyledRect{id:card;property string title;property string subtitle;property string symbol;default property alias content:body.data
+  readonly property string searchKind:"card"
+  function showGlow(){glow.show()}
+  function hideGlow(){glow.hide()}
+  HitGlow{id:glow}
   Layout.fillWidth:true;Layout.fillHeight:true;Layout.preferredWidth:1;implicitHeight:inner.implicitHeight+36;radius:Appearance.rounding.large;color:Qt.alpha(Colours.palette.m3surfaceContainer,.76)
   ColumnLayout{id:inner;anchors.fill:parent;anchors.margins:18;spacing:0
    RowLayout{Layout.fillWidth:true;Layout.bottomMargin:14;spacing:12
@@ -303,6 +378,10 @@ Item {
  }
  // One setting: icon, label, short explanation, control on the right. The control gets a focus outline when tabbed to.
  component SettingRow:FocusScope{id:row;property string title;property string hint:"";property string symbol;default property alias control:ctl.data
+  readonly property string searchKind:"row"
+  function showGlow(){glow.show()}
+  function hideGlow(){glow.hide()}
+  HitGlow{id:glow}
   Layout.fillWidth:true;implicitHeight:Math.max(40,rl.implicitHeight)
   Rectangle{anchors.fill:parent;anchors.margins:-4;radius:Appearance.rounding.normal;color:"transparent";border.width:2;border.color:Colours.palette.m3primary;visible:row.activeFocus}
   RowLayout{id:rl;anchors.fill:parent;spacing:12
@@ -313,6 +392,10 @@ Item {
  }
  // Slider with label, live value and explanation; dimmed when the option it drives is off.
  component SliderRow:FocusScope{id:sr;property string title;property string hint;property string value;property bool dim:false;default property alias control:box.data
+  readonly property string searchKind:"row"
+  function showGlow(){glow.show()}
+  function hideGlow(){glow.hide()}
+  HitGlow{id:glow}
   Layout.fillWidth:true;implicitHeight:col.implicitHeight;opacity:dim?.5:1
   ColumnLayout{id:col;anchors.fill:parent;spacing:5
    RowLayout{Layout.fillWidth:true;StyledText{Layout.fillWidth:true;text:sr.title;font.pointSize:Appearance.font.size.normal}StyledText{text:sr.value;color:Colours.palette.m3primary;font.pointSize:Appearance.font.size.small}}

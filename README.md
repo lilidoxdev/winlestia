@@ -23,6 +23,8 @@ The interface is a port of Caelestia; a .NET service handles the system side and
 - Dock that replaces the Windows taskbar, with a quick command palette.
 - Toolbox: screen capture, text recognition (OCR) on a captured area, color picker, clipboard history, focus timer and notes.
 - Settings for theme, glass opacity, screen frame thickness, taskbar replacement, autostart and global shortcuts.
+- Search field in the settings panel: finds a setting by title or description, ignoring case and accents, across all pages, then scrolls to it and highlights it.
+- Quick controls panel: a "Reduced effects" switch; if Windows refuses a Wi-Fi or Bluetooth toggle, the matching Windows Settings page opens.
 - Virtual desktop indicator in the dock: one dot per Windows desktop, the current one highlighted; click a dot or scroll to switch. It reads the desktop list from the registry and switches with the Win+Ctrl+arrow shortcut. It can be turned off in Settings. A "+" button next to the dots creates a new desktop (Win+Ctrl+D); right-click a dot to close that desktop (its windows move to the neighbouring one).
 - On-screen indicator (OSD) for volume, screen brightness and microphone mute, driven by system events. The native Windows volume popup is left as is.
 - Accent border on applications (on by default), with an optional "Active window only" mode that colours only the foreground window.
