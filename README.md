@@ -78,6 +78,7 @@ To update or uninstall, run the setup again: it detects the installed version an
 | Ctrl+F2 | Quick command |
 | Ctrl+F3 | Screen capture |
 | Ctrl+F8 | Pin a window on top |
+| Win+Alt+W | Wallpaper switcher: Left/Right to preview, Enter to apply, Esc to close (falls back to Ctrl+Alt+W if Windows refuses it; configurable in Settings) |
 | Ctrl+Alt+Backspace | Emergency desktop restore (see Troubleshooting) |
 
 ## Configuration

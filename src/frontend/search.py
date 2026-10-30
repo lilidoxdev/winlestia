@@ -79,7 +79,8 @@ WALL_EXT={'.jpg','.jpeg','.png','.bmp','.webp'}
 _walls=[];_walls_at=-100.0;_scanning=False
 def wallpaper_dirs():
     home=Path(os.environ.get('USERPROFILE',str(Path.home())));windir=Path(os.environ.get('WINDIR','C:/Windows'))
-    roots=[(home/'Pictures'/'Wallpapers',2),(Path(os.environ.get('OneDrive',home/'OneDrive'))/'Pictures'/'Wallpapers',2),(home/'Pictures',0),(windir/'Web'/'Wallpaper',2),(windir/'Web'/'4K'/'Wallpaper',2)]
+    bundled=Path(os.environ.get('LOCALAPPDATA',str(home/'AppData'/'Local')))/'Panneaux'/'Wallpapers'
+    roots=[(bundled,2),(home/'Pictures'/'Wallpapers',2),(Path(os.environ.get('OneDrive',home/'OneDrive'))/'Pictures'/'Wallpapers',2),(home/'Pictures',0),(windir/'Web'/'Wallpaper',2),(windir/'Web'/'4K'/'Wallpaper',2)]
     return roots
 def wallpaper_scan(limit=200):
     found=[];seen=set()

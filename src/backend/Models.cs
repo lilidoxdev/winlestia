@@ -73,6 +73,7 @@ public sealed class Preferences {
     public List<PinNote> Pins {get;set;}=new();
     public ShortcutPreferences PinShortcut {get;set;}=new(){Modifiers=2,Key=0x77};
     public ShortcutPreferences CaptureShortcut {get;set;}=new(){Modifiers=2,Key=0x72};
+    public ShortcutPreferences WallpaperShortcut {get;set;}=new(){Modifiers=9,Key=0x57};
     public bool SocialBackground {get;set;}=false;public bool DictationEnabled {get;set;}=false;public int DictationKey {get;set;}=0xA5;
     public string Scratch {get;set;}="";
     public bool SocialMuted {get;set;}=false;public bool SocialSound {get;set;}=true;public int SocialVolume {get;set;}=60;
@@ -103,6 +104,7 @@ public sealed class Preferences {
             if(pin.Left is double left&&!double.IsFinite(left))pin.Left=null;if(pin.Top is double top&&!double.IsFinite(top))pin.Top=null;}
         PinShortcut??=new(){Modifiers=2,Key=0x77};PinShortcut.Normalize();
         CaptureShortcut??=new(){Modifiers=2,Key=0x72};CaptureShortcut.Normalize();
+        WallpaperShortcut??=new(){Modifiers=9,Key=0x57};if(!GlobalShortcut.ValidWallpaper(WallpaperShortcut.Modifiers,WallpaperShortcut.Key)){WallpaperShortcut.Modifiers=9;WallpaperShortcut.Key=0x57;}
         PaletteShortcut??=new(){Modifiers=2,Key=0x71};PaletteShortcut.Normalize();QuickTabs??=DefaultQuickTabs();
         QuickTabs=QuickTabs.Where(t=>t!=null&&!string.IsNullOrWhiteSpace(t.Target)).Take(12).ToList();foreach(var tab in QuickTabs){if(string.IsNullOrWhiteSpace(tab.Id))tab.Id=Guid.NewGuid().ToString("N");if(string.IsNullOrWhiteSpace(tab.Name))tab.Name=tab.Target;if(string.IsNullOrWhiteSpace(tab.Glyph))tab.Glyph="\uE713";tab.Arguments??="";}Favorites??=new();Recent??=new();Hidden??=new();Order??=new();Custom??=new();BoardOverrides??=new();Names??=new();Categories??=new();Icons??=new();if(Boards==null||Boards.Count!=4||!Boards.Select(x=>x.Id).OrderBy(x=>x).SequenceEqual(new[]{"apps","documents","games","projects"}))Boards=Defaults();foreach(var b in Boards){if(string.IsNullOrWhiteSpace(b.Title))b.Title=Defaults().First(x=>x.Id==b.Id).Title;try{_ =System.Windows.Media.ColorConverter.ConvertFromString(b.Accent);}catch{b.Accent="#91DFF5";}b.Filter??="Tous";if(b.Placement?.Valid==false)b.Placement=null;}}
 }

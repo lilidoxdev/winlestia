@@ -178,6 +178,7 @@ Item {
    Card{title:qsTr("Raccourcis");subtitle:qsTr("Clique sur une touche pour la changer");symbol:"keyboard"
     SettingRow{title:qsTr("Ouvrir le panneau");hint:qsTr("Affiche ou masque le tableau de bord");symbol:"dashboard";IconTextButton{text:Bridge.settings.shortcut||"Ctrl + F1";icon:"keyboard";type:IconTextButton.Tonal;onClicked:recorder.openFor("panel")}}
     SettingRow{title:qsTr("Commande rapide");hint:qsTr("Recherche et lance tout depuis un champ");symbol:"search";IconTextButton{text:Bridge.settings.paletteShortcut||"Ctrl + F2";icon:"keyboard";type:IconTextButton.Tonal;onClicked:recorder.openFor("palette")}}
+    SettingRow{title:qsTr("Sélecteur de fonds d’écran");hint:qsTr("Choisis un fond en plein écran avec aperçu");symbol:"wallpaper";IconTextButton{text:Bridge.settings.wallpaperShortcut||"Win + Alt + W";icon:"keyboard";type:IconTextButton.Tonal;onClicked:recorder.openFor("wallpaper")}}
    }
    Card{title:qsTr("Dictée vocale");subtitle:qsTr("Appuyer pour parler, le texte est saisi là où tu écris");symbol:"mic"
     SettingRow{title:qsTr("Activer la dictée");hint:qsTr("Transcription locale, sans envoyer ta voix sur Internet");symbol:"record_voice_over";StyledSwitch{objectName:"dictationToggle";checked:Bridge.settings.dictationEnabled??false;onClicked:Bridge.action("preference",{key:"dictationEnabled",enabled:checked})}}

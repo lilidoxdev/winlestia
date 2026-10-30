@@ -117,6 +117,8 @@ Window {
     Repeater{model:Bridge.frameScreens;delegate:Item{id:frameHolder;required property var modelData;ScreenFrame{modelData:frameHolder.modelData}Instantiator{model:1;active:Bridge.settings.desktopLogo??false;delegate:DesktopLogo{modelData:frameHolder.modelData}}}}
     CaptureWindow{}
     DictationOverlay{dock:bottomDock}
+    Loader{id:wallpaperSwitcher;active:false;sourceComponent:WallpaperSwitcher{onCloseRequested:wallpaperSwitcher.active=false}}
+    Connections{target:Bridge;function onShellEvent(event){if(event==="wallpaper-switcher")wallpaperSwitcher.active=!wallpaperSwitcher.active}}
     Loader{id:osdLoader;active:Bridge.settings.osd??true;sourceComponent:Osd{}}
     Dock {id:bottomDock;objectName:"bottomDock"}
     SocialRail {}

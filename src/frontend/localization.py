@@ -227,5 +227,10 @@ Ajuster avec le repère à l’écran|Adjust using the on-screen guide|Ajustar c
 Langue et raccourcis|Language and shortcuts|Idioma y atajos
 Un rendu plus léger pour les petites configurations|Lighter rendering for modest hardware|Renderizado ligero para equipos modestos
 Afficher l’OSD|Show the OSD|Mostrar el OSD
-Indicateur de volume à l’écran|On-screen volume indicator|Indicador de volumen en pantalla""".splitlines():
+Indicateur de volume à l’écran|On-screen volume indicator|Indicador de volumen en pantalla
+Sélecteur de fonds d’écran|Wallpaper switcher|Selector de fondos de pantalla
+Choisis un fond en plein écran avec aperçu|Pick a wallpaper full screen with a live preview|Elige un fondo a pantalla completa con vista previa
+Un fond animé est actif : l’appliquer le remplacera|An animated wallpaper is active: applying one will replace it|Hay un fondo animado activo: aplicar uno lo reemplazará
+Aucun fond d’écran trouvé|No wallpaper found|No se encontró ningún fondo
+← → choisir · Entrée appliquer · Échap fermer|← → choose · Enter apply · Esc close|← → elegir · Intro aplicar · Esc cerrar""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}

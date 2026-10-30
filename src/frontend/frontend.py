@@ -18,6 +18,7 @@ from live_model import LiveListModel
 from capture_native import CaptureController
 from concurrent.futures import ThreadPoolExecutor
 from wallpaper_theme import WallpaperTheme
+from wallpaper_thumbs import thumb_for, animated_wallpaper_running
 from native_glass import NativeGlass
 from surface_geometry import SurfaceScene
 
@@ -128,7 +129,7 @@ class WindowsPlayer(QObject):
     def quit(self):pass
 
 class Bridge(QObject):
-    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal()
+    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperThumbReady=Signal(str,str);animatedWallpaperChecked=Signal(bool)
     def __init__(self,args):
         super().__init__();self.surface_scene=None;self.args=args;self._window=None;self._state={};self._pending_controls={};self._pending_audio={};self._icon_requests={};self._dark=False;self._player=WindowsPlayer(self);self.top=None;self.dock=None;self.social_win=None;self.away_social=0;self.bookmarks_win=None;self.away_bookmarks=0;self.last_reply=0;self.peek_until=0;self.away_top=0;self.away_dock=0;self.force_dock=0
         self.top_seen=False;self._screen=QApplication.primaryScreen();self.client=PipeClient(args.pipe);self.client.received.connect(self.update_state);self.client.start()
@@ -363,6 +364,19 @@ class Bridge(QObject):
     def wallpaperChoices(self,query):return wallpaper_choices(query)
     @Slot()
     def refreshWallpapers(self):wallpaper_refresh(self.wallpapersReady.emit)
+    @Slot('QVariantList')
+    def requestWallpaperThumbs(self,paths):
+        # Switcher thumbnails: one background thread per request (a newer request stops the older one), each file emitted as soon as its cached JPEG exists.
+        self._thumb_job=getattr(self,'_thumb_job',0)+1;job=self._thumb_job;paths=[str(p) for p in paths]
+        def run():
+            for path in paths:
+                if job!=self._thumb_job:return
+                made=thumb_for(path)
+                if made:self.wallpaperThumbReady.emit(path,Path(made).as_uri())
+        threading.Thread(target=run,daemon=True).start()
+    @Slot()
+    def checkAnimatedWallpaper(self):threading.Thread(target=lambda:self.animatedWallpaperChecked.emit(animated_wallpaper_running()),daemon=True).start()
+    @Slot(str)
     def setWallpaper(self,path):
         # Only files from the last scan; the backend sees the Windows change event and the palette is re-derived by WallpaperTheme.
         if not wallpaper_known(path):return
