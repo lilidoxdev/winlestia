@@ -16,6 +16,7 @@ Check(Seq(5,0,3)=="","invalid current: nothing");
 var l=VirtualDesktops.PlanKeys(0,3,4);Check(l.Count>0&&l[^1]==new VirtualDesktops.Key(0x5B,true)&&l[^2]==new VirtualDesktops.Key(0x11,true),"modifiers released last");
 Check(VirtualDesktops.ParseIds(new byte[33]).Count==2,"ParseIds ignores trailing partial id");
 Check(VirtualDesktops.ParseIds(null).Count==0,"ParseIds null safe");
+Check(string.Join(" ",VirtualDesktops.PlanNew().Select(k=>k.Vk.ToString("X2")+(k.Up?"^":"v")))=="5Bv 11v 44v 44^ 11^ 5B^","new desktop plan: Win+Ctrl+D, modifiers released last");
 int fired=0;VirtualDesktops.Changed+=()=>fired++;
 VirtualDesktops.Start();VirtualDesktops.Start();Thread.Sleep(1000);
 Check(VirtualDesktops.Current.Count==s.Count,"watcher snapshot equals direct read");

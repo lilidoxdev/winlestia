@@ -131,7 +131,7 @@ internal static class VirtualDesktops {
     }
 
     // ---- switching ----
-    const ushort VkLWin = 0x5B, VkControl = 0x11, VkLeft = 0x25, VkRight = 0x27;
+    const ushort VkLWin = 0x5B, VkControl = 0x11, VkLeft = 0x25, VkRight = 0x27, VkD = 0x44;
     internal readonly record struct Key(ushort Vk, bool Up);
 
     // Pure plan, unit-tested without sending anything: modifiers down, one arrow press per step, modifiers up (always last).
@@ -155,6 +155,17 @@ internal static class VirtualDesktops {
         if (s.Count < 2) return false;
         int dest = relative != 0 ? Math.Clamp(s.Current + relative, 0, s.Count - 1) : target;
         return Send(PlanKeys(s.Current, dest, s.Count));
+    }
+
+    // New desktop: Win+Ctrl+D (Windows creates it and switches to it). Pure plan, same release order as PlanKeys.
+    internal static List<Key> PlanNew() => new() { new Key(VkLWin, false), new Key(VkControl, false), new Key(VkD, false), new Key(VkD, true), new Key(VkControl, true), new Key(VkLWin, true) };
+
+    // User gesture entry point (the "+" in the dock).
+    internal static bool CreateNew() {
+        Refresh();
+        bool ok = Send(PlanNew());
+        Refresh();
+        return ok;
     }
 
     static bool Send(List<Key> keys) {

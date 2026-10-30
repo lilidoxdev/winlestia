@@ -1,6 +1,7 @@
 // One pill per Windows virtual desktop (registry-driven, see VirtualDesktops.cs). Active pill = palette primary; click switches, wheel = next/previous.
 import QtQuick
 import qs.components
+import qs.components.controls
 import qs.config
 import qs.services
 
@@ -12,11 +13,21 @@ Item {
     readonly property int current:info.current||0
     property real wheelAcc:0
     visible:(Bridge.settings.desktopIndicator??true)&&count>0
-    implicitWidth:visible?pills.width+8:0;implicitHeight:32
+    implicitWidth:visible?pills.width+8+addButton.implicitWidth+4:0;implicitHeight:32
     Accessible.name:qsTr("Bureaux virtuels")
+    // "+" = Win+Ctrl+D on a user gesture (VirtualDesktops.CreateNew); Windows creates and switches to the new desktop.
+    IconButton {
+        id:addButton
+        objectName:"dockDesktopAdd"
+        anchors.right:parent.right;anchors.rightMargin:2;anchors.verticalCenter:parent.verticalCenter
+        icon:"add";type:IconButton.Text;Accessible.name:qsTr("Nouveau bureau")
+        onClicked:Bridge.action("desktopNew",{})
+        HoverHandler {id:addHover}
+        ShellToolTip {visible:addHover.hovered;delay:400;text:qsTr("Nouveau bureau")}
+    }
     Row {
         id:pills
-        anchors.centerIn:parent;spacing:0
+        anchors.verticalCenter:parent.verticalCenter;anchors.left:parent.left;spacing:0
         Repeater {
             model:root.count
             delegate:Item {

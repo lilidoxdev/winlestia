@@ -2,6 +2,7 @@
 
 ## Non publié
 
+- Dock : bouton « + » pour créer un bureau virtuel et bouton d'organisation automatique à côté des pastilles.
 - Le dossier de données passe à %LOCALAPPDATA%\Panneaux (L2).
 - L'intégration du terminal est désormais facultative et réversible (L3).
 - Préchargement de Files plus rapide ; correction du journal de démarrage (L4).

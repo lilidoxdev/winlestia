@@ -57,7 +57,7 @@ Window {
     onReducedChanged:{hiding=false;syncShown()}
     Component.onCompleted:syncShown()
     property real customWidth:Bridge.settings.dockWidth??0
-    width:Math.min(Bridge.screenWidth-24,customWidth>0?Math.max(560,customWidth):Math.max(756,520+Bridge.taskbarApps.length*47))
+    width:Math.min(Bridge.screenWidth-24,customWidth>0?Math.max(560,customWidth):Math.max(756,520+Bridge.taskbarApps.length*47+desktops.implicitWidth+tileButton.implicitWidth+10))
     height:68
     x:Bridge.screenX+(Bridge.screenWidth-width)/2
     y:Bridge.screenY+Bridge.screenHeight-height-(Bridge.screenFullscreen?12:Math.max(0,Config.border.thickness))
@@ -114,7 +114,16 @@ Window {
                     }
                 }
             }
-            DesktopIndicator {}
+            DesktopIndicator {id:desktops}
+            IconButton {
+                id:tileButton;objectName:"dockAutoTile"
+                readonly property bool on:Bridge.settings.autoTile??false
+                icon:"grid_view";type:IconButton.Text;checked:on;color:on?Colours.palette.m3secondaryContainer:"transparent"
+                Accessible.name:qsTr("Organisation automatique");Accessible.checked:on
+                onClicked:Bridge.action("preference",{key:"autoTile",enabled:!on})
+                HoverHandler {id:tileHover}
+                ShellToolTip {visible:tileHover.hovered;delay:400;text:(tileButton.on?qsTr("Organisation automatique : activée")+"\n"+qsTr("Ctrl+Alt+flèches : changer de fenêtre"):qsTr("Organisation automatique : désactivée"))}
+            }
             IconButton {id:runningButton;objectName:"dockRunning";icon:"apps";type:IconButton.Text;onClicked:dock.showMenu("running",{},runningButton)}
             IconButton {icon:"volume_up";type:IconButton.Text;onClicked:Bridge.navigate("controls")}
             IconButton {objectName:"dockNetwork";icon:Bridge.networkKind==="ethernet"?"lan":Bridge.networkKind==="none"?"wifi_off":"wifi";type:IconButton.Text;onClicked:Bridge.navigate("controls")}
