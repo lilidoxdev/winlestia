@@ -113,7 +113,7 @@ Window {
         Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
         StyledText{id:noticeLabel;anchors.centerIn:parent;width:parent.width-26;text:Bridge.notice;wrapMode:Text.Wrap;font.pointSize:11}
     }
-    RecycleDrop{}
+    Loader{id:recycleLoader;property bool once:false;active:Bridge.fileDragNearTop||once;onLoaded:once=true;sourceComponent:RecycleDrop{}}
     Repeater{model:Bridge.frameScreens;delegate:Item{id:frameHolder;required property var modelData;ScreenFrame{modelData:frameHolder.modelData}Instantiator{model:1;active:Bridge.settings.desktopLogo??false;delegate:DesktopLogo{modelData:frameHolder.modelData}}}}
     CaptureWindow{}
     DictationOverlay{dock:bottomDock}
