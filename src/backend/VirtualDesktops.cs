@@ -18,6 +18,8 @@ internal static class VirtualDesktops {
     const string Explorer = @"Software\Microsoft\Windows\CurrentVersion\Explorer";
     const string General = Explorer + @"\VirtualDesktops";
     static readonly object gate = new();
+    // Serializes user gestures (switch / new / close) so two quick actions never interleave. Separate from gate: Refresh must stay possible while Close waits.
+    static readonly object actionGate = new();
     static volatile Snapshot snapshot = new(0, 0, Array.Empty<string>());
     internal static Snapshot Current => snapshot;
     // Raised on the watcher thread only when the snapshot differs; subscribers must not throw (swallowed).
@@ -131,7 +133,7 @@ internal static class VirtualDesktops {
     }
 
     // ---- switching ----
-    const ushort VkLWin = 0x5B, VkControl = 0x11, VkLeft = 0x25, VkRight = 0x27, VkD = 0x44;
+    const ushort VkLWin = 0x5B, VkControl = 0x11, VkLeft = 0x25, VkRight = 0x27, VkD = 0x44, VkF4 = 0x73;
     internal readonly record struct Key(ushort Vk, bool Up);
 
     // Pure plan, unit-tested without sending anything: modifiers down, one arrow press per step, modifiers up (always last).
@@ -150,6 +152,10 @@ internal static class VirtualDesktops {
 
     // User gesture entry point. relative != 0 means wheel (next/previous), otherwise absolute target index.
     internal static bool SwitchTo(int target, int relative = 0) {
+        lock (actionGate) return SwitchCore(target, relative);
+    }
+
+    static bool SwitchCore(int target, int relative) {
         Refresh();   // a gesture may come before the pending debounce: never act on a stale snapshot
         var s = snapshot;
         if (s.Count < 2) return false;
@@ -162,10 +168,59 @@ internal static class VirtualDesktops {
 
     // User gesture entry point (the "+" in the dock).
     internal static bool CreateNew() {
-        Refresh();
-        bool ok = Send(PlanNew());
-        Refresh();
-        return ok;
+        lock (actionGate) {
+            Refresh();
+            bool ok = Send(PlanNew());
+            Refresh();
+            return ok;
+        }
+    }
+
+    // Close the current desktop: Win+Ctrl+F4 (windows move to the neighbouring desktop). Same release order as PlanNew.
+    internal static List<Key> PlanClose() => new() { new Key(VkLWin, false), new Key(VkControl, false), new Key(VkF4, false), new Key(VkF4, true), new Key(VkControl, true), new Key(VkLWin, true) };
+
+    // Desktop to go back to after closing `closed` while the user was on `origin`; -1 = nothing to restore (the user was on the closed one).
+    internal static int ReturnIndex(int origin, int closed) => origin == closed ? -1 : origin > closed ? origin - 1 : origin;
+
+    const int SwitchTimeoutMs = 1500, CloseTimeoutMs = 1500, SettleMs = 120, StepMs = 30;
+
+    static Snapshot? TryRead() { try { return Read(); } catch { return null; } }
+
+    // Bounded wait on the registry (user gesture only, never at idle).
+    static bool WaitFor(Func<Snapshot, bool> ok, int timeoutMs) {
+        long end = Environment.TickCount64 + timeoutMs;
+        while (true) {
+            var r = TryRead();
+            if (r != null && ok(r)) return true;
+            if (Environment.TickCount64 >= end) return false;
+            Thread.Sleep(StepMs);
+        }
+    }
+
+    // User gesture entry point (right-click on a dot, 0-based index). Safety: the key chord only goes out once the registry shows the
+    // target as current desktop with the expected count; otherwise nothing is closed and the user is sent back where they were.
+    internal static bool Close(int index) {
+        lock (actionGate) {
+            Refresh();
+            var s = snapshot;
+            if (s.Count <= 1 || index < 0 || index >= s.Count) return false;
+            int origin = s.Current, count = s.Count;
+            if (index != origin) {
+                if (!SwitchCore(index, 0)) return false;
+                if (!WaitFor(r => r.Count == count && r.Current == index, SwitchTimeoutMs)) { SwitchCore(origin, 0); return false; }
+                Thread.Sleep(SettleMs);
+            }
+            var now = TryRead();   // last look right before the destructive chord
+            if (now == null || now.Count != count || now.Current != index) { if (index != origin) SwitchCore(origin, 0); return false; }
+            bool ok = Send(PlanClose());
+            if (!ok) { if (index != origin) SwitchCore(origin, 0); Refresh(); return false; }
+            WaitFor(r => r.Count == count - 1, CloseTimeoutMs);
+            Refresh();
+            int back = ReturnIndex(origin, index);
+            if (ok && back >= 0 && snapshot.Count > back && snapshot.Current != back) SwitchCore(back, 0);
+            Refresh();
+            return ok;
+        }
     }
 
     static bool Send(List<Key> keys) {

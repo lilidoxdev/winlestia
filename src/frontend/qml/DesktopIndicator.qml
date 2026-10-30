@@ -1,4 +1,4 @@
-// One pill per Windows virtual desktop (registry-driven, see VirtualDesktops.cs). Active pill = palette primary; click switches, wheel = next/previous.
+// One pill per Windows virtual desktop (registry-driven, see VirtualDesktops.cs). Active pill = palette primary; click switches, wheel = next/previous, right-click = close menu.
 import QtQuick
 import qs.components
 import qs.components.controls
@@ -11,7 +11,10 @@ Item {
     readonly property var info:Bridge.virtualDesktops||({})
     readonly property int count:info.count||0
     readonly property int current:info.current||0
+    property bool menuOpen:false
     property real wheelAcc:0
+    // Right-click on a dot: Dock.qml opens the shared dock menu (kind "desktop") anchored on that dot. Not offered with a single desktop.
+    signal menuRequested(Item anchor,var data)
     visible:(Bridge.settings.desktopIndicator??true)&&count>0
     implicitWidth:visible?pills.width+8+addButton.implicitWidth+4:0;implicitHeight:32
     Accessible.name:qsTr("Bureaux virtuels")
@@ -45,7 +48,8 @@ Item {
                 }
                 HoverHandler {id:hover;cursorShape:Qt.PointingHandCursor}
                 TapHandler {onTapped:Bridge.action("desktopSwitch",{index:cell.index})}
-                ShellToolTip {visible:hover.hovered;delay:400;text:(root.info.names&&root.info.names[cell.index])||qsTr("Bureau %1").arg(cell.index+1)}
+                TapHandler {acceptedButtons:Qt.RightButton;enabled:root.count>1;onTapped:root.menuRequested(cell,{index:cell.index,name:(root.info.names&&root.info.names[cell.index])||"",canClose:true})}
+                ShellToolTip {visible:hover.hovered&&!root.menuOpen;delay:400;text:(root.info.names&&root.info.names[cell.index])||qsTr("Bureau %1").arg(cell.index+1)}
             }
         }
     }

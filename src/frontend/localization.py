@@ -236,6 +236,10 @@ Nouveau bureau|New desktop|Nuevo escritorio
 Organisation automatique : activée|Automatic tiling: on|Organización automática: activada
 Organisation automatique : désactivée|Automatic tiling: off|Organización automática: desactivada
 Ctrl+Alt+flèches : changer de fenêtre|Ctrl+Alt+arrows: move focus|Ctrl+Alt+flechas: mover el foco
+Afficher plus|Show more|Mostrar más
+Ranger|Hide|Ocultar
+Fermer le bureau|Close desktop|Cerrar escritorio
+Les fenêtres passent sur le bureau voisin|Windows move to the neighbouring desktop|Las ventanas pasan al escritorio vecino
 Indicateur de volume, luminosité et micro à l’écran|On-screen volume, brightness and microphone indicator|Indicador en pantalla de volumen, brillo y micrófono
 Sélecteur de fonds d’écran|Wallpaper switcher|Selector de fondos de pantalla
 Choisis un fond en plein écran avec aperçu|Pick a wallpaper full screen with a live preview|Elige un fondo a pantalla completa con vista previa

@@ -2,7 +2,7 @@
 
 ## Non publié
 
-- Dock : bouton « + » pour créer un bureau virtuel et bouton d'organisation automatique à côté des pastilles.
+- Dock : bouton « + » pour créer un bureau virtuel ; clic droit sur une pastille pour fermer ce bureau ; une petite flèche affiche ou range, dans la barre, les boutons d'organisation automatique et d'applications ouvertes (état mémorisé).
 - Le dossier de données passe à %LOCALAPPDATA%\Panneaux (L2).
 - L'intégration du terminal est désormais facultative et réversible (L3).
 - Préchargement de Files plus rapide ; correction du journal de démarrage (L4).

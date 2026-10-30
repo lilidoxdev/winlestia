@@ -57,7 +57,7 @@ Window {
     onReducedChanged:{hiding=false;syncShown()}
     Component.onCompleted:syncShown()
     property real customWidth:Bridge.settings.dockWidth??0
-    width:Math.min(Bridge.screenWidth-24,customWidth>0?Math.max(560,customWidth):Math.max(756,520+Bridge.taskbarApps.length*47+desktops.implicitWidth+tileButton.implicitWidth+10))
+    width:Math.min(Bridge.screenWidth-24,customWidth>0?Math.max(560,customWidth):Math.max(756,520+Bridge.taskbarApps.length*47+desktops.implicitWidth+drawer.full+drawerToggle.implicitWidth+10))
     height:68
     x:Bridge.screenX+(Bridge.screenWidth-width)/2
     y:Bridge.screenY+Bridge.screenHeight-height-(Bridge.screenFullscreen?12:Math.max(0,Config.border.thickness))
@@ -114,17 +114,38 @@ Window {
                     }
                 }
             }
-            DesktopIndicator {id:desktops}
-            IconButton {
-                id:tileButton;objectName:"dockAutoTile"
-                readonly property bool on:Bridge.settings.autoTile??false
-                icon:"grid_view";type:IconButton.Text;checked:on;color:on?Colours.palette.m3secondaryContainer:"transparent"
-                Accessible.name:qsTr("Organisation automatique");Accessible.checked:on
-                onClicked:Bridge.action("preference",{key:"autoTile",enabled:!on})
-                HoverHandler {id:tileHover}
-                ShellToolTip {visible:tileHover.hovered;delay:400;text:(tileButton.on?qsTr("Organisation automatique : activée")+"\n"+qsTr("Ctrl+Alt+flèches : changer de fenêtre"):qsTr("Organisation automatique : désactivée"))}
+            DesktopIndicator {id:desktops;menuOpen:dock.menuOpen;onMenuRequested:(anchor,data)=>dock.showMenu("desktop",data,anchor)}
+            // Collapsible group (default collapsed, state persisted as dockDrawerOpen): only the clipped width animates, so hidden buttons take no space and cannot be clicked.
+            Item {
+                id:drawer;objectName:"dockDrawerGroup"
+                property bool open:Bridge.settings.dockDrawerOpen??false
+                readonly property real full:drawerRow.implicitWidth
+                property real w:open?full:0
+                Behavior on w {enabled:!Appearance.reducedEffects;Anim {duration:Appearance.anim.durations.normal}}
+                Layout.preferredWidth:w;implicitHeight:40;clip:true
+                Row {
+                    id:drawerRow;anchors.right:parent.right;anchors.verticalCenter:parent.verticalCenter;spacing:5
+                    visible:drawer.w>0.5;enabled:drawer.open;opacity:drawer.full>0?Math.min(1,drawer.w/drawer.full):0
+                    IconButton {
+                        id:tileButton;objectName:"dockAutoTile"
+                        readonly property bool on:Bridge.settings.autoTile??false
+                        icon:"grid_view";type:IconButton.Text;checked:on;color:on?Colours.palette.m3secondaryContainer:"transparent"
+                        Accessible.name:qsTr("Organisation automatique");Accessible.checked:on
+                        onClicked:Bridge.action("preference",{key:"autoTile",enabled:!on})
+                        HoverHandler {id:tileHover}
+                        ShellToolTip {visible:tileHover.hovered;delay:400;text:(tileButton.on?qsTr("Organisation automatique : activée")+"\n"+qsTr("Ctrl+Alt+flèches : changer de fenêtre"):qsTr("Organisation automatique : désactivée"))}
+                    }
+                    IconButton {id:runningButton;objectName:"dockRunning";icon:"apps";type:IconButton.Text;onClicked:dock.showMenu("running",{},runningButton)}
+                }
             }
-            IconButton {id:runningButton;objectName:"dockRunning";icon:"apps";type:IconButton.Text;onClicked:dock.showMenu("running",{},runningButton)}
+            IconButton {
+                id:drawerToggle;objectName:"dockDrawer";implicitWidth:24
+                icon:drawer.open?"chevron_right":"chevron_left";type:IconButton.Text
+                Accessible.name:drawer.open?qsTr("Ranger"):qsTr("Afficher plus");Accessible.checked:drawer.open
+                onClicked:{drawer.open=!drawer.open;Bridge.action("preference",{key:"dockDrawerOpen",enabled:drawer.open})}
+                HoverHandler {id:drawerHover}
+                ShellToolTip {visible:drawerHover.hovered;delay:400;text:drawer.open?qsTr("Ranger"):qsTr("Afficher plus")}
+            }
             IconButton {icon:"volume_up";type:IconButton.Text;onClicked:Bridge.navigate("controls")}
             IconButton {objectName:"dockNetwork";icon:Bridge.networkKind==="ethernet"?"lan":Bridge.networkKind==="none"?"wifi_off":"wifi";type:IconButton.Text;onClicked:Bridge.navigate("controls")}
             IconButton {icon:"settings";type:IconButton.Text;onClicked:Bridge.action("settings",{})}

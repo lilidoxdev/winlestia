@@ -14,7 +14,7 @@ Window {
     transientParent:null
     flags:Qt.Tool|Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint|Qt.NoDropShadowWindowHint
     color:"transparent"
-    width:390
+    width:kind==="desktop"?300:390
     height:Math.min(620,Bridge.screenHeight-120,body.implicitHeight+28)
     property string kind:"app"
     property var entry:({})
@@ -27,10 +27,12 @@ Window {
     function openAt(type,data,px,py){if(type==="running")Bridge.action("runningRefresh",{});fromRunning=type==="running";kind=type;powerChoice="";backgroundTab=false;entry=data??({});confirmStop=false;anchorX=px;anchorY=py;position();visible=true;requestActivate()}
     function position(){x=Math.max(Bridge.screenX+8,Math.min(anchorX-width/2,Bridge.screenX+Bridge.screenWidth-width-8));y=Math.max(Bridge.screenY+8,anchorY-height-8)}
     onHeightChanged:if(visible)position()
+    onWidthChanged:if(visible)position()
     // Closes when another window takes focus (event-driven); the pointer poll below only covers clicks that never change focus (e.g. the dock itself).
     property bool wasActive:false
     onActiveChanged:{if(active)wasActive=true;else if(visible&&wasActive){wasActive=false;visible=false}}
     onVisibleChanged:if(!visible)wasActive=false
+    function closeDesktop(){const index=(entry.index??0)+1;visible=false;Bridge.action("desktopClose",{index:index})}
     onConfirmStopChanged:confirmDialog.open=confirmStop
     Timer{id:focusCheck;objectName:"outsideClickTimer";interval:100;repeat:true;running:menu.visible;onTriggered:if(Bridge.menuOutsideClick(menu.x,menu.y,menu.width,menu.height))menu.visible=false}
     Shortcut {sequence:"Escape";enabled:menu.visible&&!confirmDialog.open;onActivated:menu.visible=false}
@@ -68,7 +70,7 @@ Window {
             anchors.fill:parent;anchors.margins:14;clip:true;contentWidth:availableWidth
             Column {
                 id:body;width:menu.width-28;spacing:3
-                StyledText {width:parent.width-12;x:6;text:menu.kind==="system"?"Windows · Winlestia":menu.kind==="power"?"Alimentation":menu.kind==="running"?"Applications":menu.entry.name??"Application";font.pointSize:Appearance.font.size.normal;elide:Text.ElideRight;topPadding:5;bottomPadding:9}
+                StyledText {width:parent.width-12;x:6;text:menu.kind==="desktop"?(menu.entry.name||qsTr("Bureau %1").arg((menu.entry.index??0)+1)):menu.kind==="system"?"Windows · Winlestia":menu.kind==="power"?"Alimentation":menu.kind==="running"?"Applications":menu.entry.name??"Application";font.pointSize:Appearance.font.size.normal;elide:Text.ElideRight;topPadding:5;bottomPadding:9}
                 IconTextButton{visible:menu.fromRunning&&menu.kind==="app";text:qsTr("Retour");icon:"arrow_back";type:IconTextButton.Text;onClicked:{menu.kind="running";menu.confirmStop=false}}
                 StyledText {visible:menu.kind==="app";width:parent.width-12;x:6;text:(menu.entry.background?"En arrière-plan":(menu.entry.count??0)+" fenêtre(s)")+"\n"+(menu.entry.path??"");font.pointSize:Appearance.font.size.small;wrapMode:Text.WrapAnywhere;color:Colours.palette.m3onSurfaceVariant;bottomPadding:8;maximumLineCount:3;elide:Text.ElideRight}
                             Row {visible:menu.kind==="running";spacing:4
@@ -81,6 +83,15 @@ Window {
                         RowLayout{anchors.fill:parent;anchors.margins:14;spacing:14;MaterialIcon{text:parent.parent.modelData.icon;font.pointSize:Appearance.font.size.title;color:Colours.palette.m3primary}StyledText{Layout.fillWidth:true;text:parent.parent.modelData.text;font.pointSize:Appearance.font.size.normal}}
                     }
                 }
+                StyledRect {
+                    visible:menu.kind==="desktop";objectName:"desktopCloseRow";width:body.width;height:visible?40:0;radius:Appearance.rounding.small;color:"transparent"
+                    StateLayer {disabled:!menu.entry.canClose;function onClicked(){menu.closeDesktop()}}
+                    RowLayout {anchors.fill:parent;anchors.leftMargin:12;anchors.rightMargin:10;spacing:12;opacity:menu.entry.canClose?1:.4
+                        MaterialIcon{text:"close";font.pointSize:Appearance.font.size.large;color:Colours.palette.m3error}
+                        StyledText{Layout.fillWidth:true;text:qsTr("Fermer le bureau");font.pointSize:Appearance.font.size.normal;elide:Text.ElideRight}
+                    }
+                }
+                StyledText {visible:menu.kind==="desktop";width:parent.width-12;x:6;text:qsTr("Les fenêtres passent sur le bureau voisin");font.pointSize:Appearance.font.size.small;wrapMode:Text.WordWrap;color:Colours.palette.m3onSurfaceVariant;topPadding:4;bottomPadding:4}
                 Repeater {
                     model:menu.kind==="system"?menu.systemItems:menu.kind==="app"?menu.appItems:[]
                     delegate:StyledRect {
