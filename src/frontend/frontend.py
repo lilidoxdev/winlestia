@@ -130,7 +130,7 @@ class WindowsPlayer(QObject):
     def quit(self):pass
 
 class Bridge(QObject):
-    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();audioBarsChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperPickerChanged=Signal();wallpaperThumbReady=Signal(str,str);
+    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();audioBarsChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();sessionRequested=Signal(str);searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperPickerChanged=Signal();wallpaperThumbReady=Signal(str,str);
     # Palette sources: open windows (asked on opening, dropped on closing) and the file index (debounced, newest request wins by generation number).
     fileChanged=Signal();_windows=[];_file_gen=0;_file_term='';_file_items=[];_file_status='idle';_file_sent=False;_file_timer=None
     def __init__(self,args):
@@ -460,6 +460,9 @@ class Bridge(QObject):
         if kind=='navigate':self.navigate(key)
         elif kind=='calc':self.closePanel();self.action('copyText',{'text':value['name'][2:]})
         elif kind=='autocomplete':self.prefillPalette(key)
+        elif kind=='session':
+            # Every session action, lock included, waits for the confirmation dialog in Main.qml, which sends confirmed:true itself.
+            if key in ('shutdown','restart','logout','lock','sleep','hibernate'):self.sessionRequested.emit(key)
         elif kind=='wallpaper':self.closePanel();self.setWallpaper(key)
         elif kind=='emoji':self.closePanel();self.action('copyText',{'text':key})
         elif kind=='window':

@@ -47,7 +47,7 @@ Item {
                 }
             }
             C.ScrollBar.vertical:StyledScrollBar{flickable:list}
-            EmptyState{anchors.centerIn:parent;width:parent.width-20;visible:list.count===0;icon:root.microphone?"mic_off":"speaker_notes_off";title:!Bridge.audioReady?"Recherche des périphériques…":root.microphone?"Aucun microphone connecté":"Aucune sortie audio détectée"}
+            EmptyState{anchors.centerIn:parent;width:parent.width-20;visible:list.count===0;icon:root.microphone?"mic_off":"speaker_notes_off";title:!Bridge.audioReady?qsTr("Recherche des périphériques…"):root.microphone?qsTr("Aucun microphone connecté"):qsTr("Aucune sortie audio détectée")}
         }
         RowLayout{Layout.fillWidth:true
             StyledText{text:root.microphone?qsTr("Aucun enregistrement · réglage du niveau d’entrée uniquement"):qsTr("Le changement s’applique aux nouvelles lectures Windows");Layout.fillWidth:true;wrapMode:Text.Wrap;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}

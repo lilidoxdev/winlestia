@@ -27,7 +27,7 @@ Item {
             }
         }
         C.ScrollBar.vertical:StyledScrollBar{flickable:list}
-        EmptyState{anchors.centerIn:parent;visible:list.count===0;icon:"content_paste_off";title:Bridge.settings.clipboardHistory?"Aucun élément dans cet historique":"L’historique est désactivé";body:Bridge.settings.clipboardHistory?"":"Active-le dans les paramètres pour retrouver ce que tu copies."}
+        EmptyState{anchors.centerIn:parent;visible:list.count===0;icon:"content_paste_off";title:Bridge.settings.clipboardHistory?qsTr("Aucun élément dans cet historique"):qsTr("L’historique est désactivé");body:Bridge.settings.clipboardHistory?"":qsTr("Active-le dans les paramètres pour retrouver ce que tu copies.")}
     }
     RowLayout{Layout.fillWidth:true;StyledText{text:qsTr("Historique local · aucun envoi en ligne");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline;Layout.fillWidth:true} IconTextButton{text:qsTr("Paramètres");icon:"settings";type:IconTextButton.Text;onClicked:Bridge.navigate("settings")}}
 }

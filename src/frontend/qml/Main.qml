@@ -54,9 +54,11 @@ Window {
         }
         subscribe();Bridge.activate()
     }
-    onVisibleChanged:subscribe()
+    onVisibleChanged:{if(!visible)sessionDialog.open=false;subscribe()}
+    onExtraOpenChanged:if(!extraOpen)sessionDialog.open=false
+    onPageModeChanged:sessionDialog.open=false
     onControlsOpenChanged:subscribe()
-    Shortcut {sequence:"Escape";enabled:window.visible&&!(browser.item&&browser.item.dialogOpen);onActivated:Bridge.closePanel()}
+    Shortcut {sequence:"Escape";enabled:window.visible&&!sessionDialog.open&&!(browser.item&&browser.item.dialogOpen);onActivated:Bridge.closePanel()}
     Shortcut {sequence:"Ctrl+1";enabled:window.visible&&window.pageMode!=="settings";onActivated:Bridge.navigate("workspace:apps")}
     Shortcut {sequence:"Ctrl+2";enabled:window.visible&&window.pageMode!=="settings";onActivated:Bridge.navigate("workspace:games")}
     Shortcut {sequence:"Ctrl+3";enabled:window.visible&&window.pageMode!=="settings";onActivated:Bridge.navigate("workspace:projects")}
@@ -71,7 +73,7 @@ Window {
     Item {
         id:extraBody
         anchors.top:parent.top;anchors.topMargin:18;anchors.horizontalCenter:parent.horizontalCenter;width:window.panelWidth-80
-        implicitHeight:window.pageMode==="workspace"?browser.implicitHeight:window.pageMode==="palette"?palette.implicitHeight:window.pageMode==="settings"?preferences.implicitHeight:window.pageMode==="clipboard"?clipboard.implicitHeight:window.pageMode==="tools"?tools.implicitHeight:window.pageMode==="audio"||window.pageMode==="microphone"?audio.implicitHeight:window.pageMode==="mixer"?fullMixer.implicitHeight:window.pageMode==="capture"?capturePane.implicitHeight:Math.max(controls.implicitHeight,window.mixerOpen?sideMixer.implicitHeight:0)
+        implicitHeight:Math.max(sessionDialog.open?260:0,window.pageMode==="workspace"?browser.implicitHeight:window.pageMode==="palette"?palette.implicitHeight:window.pageMode==="settings"?preferences.implicitHeight:window.pageMode==="clipboard"?clipboard.implicitHeight:window.pageMode==="tools"?tools.implicitHeight:window.pageMode==="audio"||window.pageMode==="microphone"?audio.implicitHeight:window.pageMode==="mixer"?fullMixer.implicitHeight:window.pageMode==="capture"?capturePane.implicitHeight:Math.max(controls.implicitHeight,window.mixerOpen?sideMixer.implicitHeight:0))
         visible:window.pageMode!=="dashboard";clip:true
         opacity:window.extraOpen?1:0
         Behavior on opacity {enabled:!Appearance.reducedEffects;Anim {duration:Appearance.anim.durations.small}}
@@ -95,6 +97,15 @@ Window {
         PaneLoader{id:preferences;want:window.pageMode==="settings";property int pendingTab:-1;sourceComponent:ShellPreferences{}
             onLoaded:if(pendingTab>=0){item.tab=pendingTab;pendingTab=-1}}
         PaneLoader{id:clipboard;want:window.pageMode==="clipboard";sourceComponent:ClipboardPane{}}
+        ConfirmDialog {
+            id:sessionDialog;cardWidth:340;destructive:true;property string choice:""
+            function label(id){return id==="lock"?qsTr("Verrouiller"):id==="logout"?qsTr("Se déconnecter"):id==="sleep"?qsTr("Mettre en veille"):id==="hibernate"?qsTr("Hibernation"):id==="restart"?qsTr("Redémarrer"):id==="shutdown"?qsTr("Éteindre"):""}
+            title:qsTr("%1 ?").arg(label(choice))
+            message:choice==="lock"?qsTr("Ta session sera verrouillée."):qsTr("Les modifications non enregistrées seront perdues.")
+            confirmText:label(choice)
+            onConfirmed:{const id=choice;Bridge.closePanel();Bridge.action("systemAction",{id:id,confirmed:true})}
+        }
+        Connections {target:Bridge;function onSessionRequested(id){sessionDialog.choice=id;sessionDialog.open=true}}
     }
     Connections {target:drawer.dashState;function onCurrentTabChanged(){window.subscribe()}}
     Connections {

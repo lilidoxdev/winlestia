@@ -2,6 +2,8 @@
 
 ## Non publié
 
+- Lanceur Ctrl+F2 : entrées Éteindre, Redémarrer, Se déconnecter, Verrouiller, Mettre en veille et Hibernation (confirmation avant chaque action) ; textes vides des panneaux Audio, Mélangeur et Presse-papiers traduits.
+
 - Menu de session : extinction, redémarrage, déconnexion, veille et hibernation exigent la confirmation, vérifiée aussi côté C# ; la fermeture du menu annule le choix. Panneaux secondaires : marges et espacements sur les jetons `Appearance`, en-têtes alignés, message « Aucun résultat » dans la commande rapide.
 
 - Mode plein écran : quand une fenêtre couvre tout un écran (vidéo, jeu, fenêtre sans bordure), le dock, l'OSD, les barres audio, les animations et le suivi des bords sont coupés et les minuteurs du frontend ralentissent ; tout revient à la sortie, sans redémarrage. L'état suit les événements de fenêtre au premier plan, avec un contrôle de secours toutes les 10 s pendant ce mode seulement. Option « Masquer le dock et l'OSD en plein écran » (activée par défaut), `winlestia quiet [on|off|auto]` pour le tester sans fenêtre plein écran (non enregistré), `quiet` dans `winlestia status`. Le watchdog, les outils de secours et le raccourci du panneau ne sont pas touchés.

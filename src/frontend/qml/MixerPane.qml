@@ -54,8 +54,8 @@ Item {
                 }
             }
             C.ScrollBar.vertical:StyledScrollBar{flickable:list}
-            EmptyState{anchors.centerIn:parent;width:parent.width-20;visible:list.count===0;icon:"music_off";title:!Bridge.audioReady?"Recherche des sessions audio…":"Aucune application ne joue de son";body:Bridge.audioReady?"Lance une musique, une vidéo ou un jeu.
-Ses commandes audio apparaîtront ici.":""}
+            EmptyState{anchors.centerIn:parent;width:parent.width-20;visible:list.count===0;icon:"music_off";title:!Bridge.audioReady?qsTr("Recherche des sessions audio…"):qsTr("Aucune application ne joue de son");body:Bridge.audioReady?qsTr("Lance une musique, une vidéo ou un jeu.")+"
+"+qsTr("Ses commandes audio apparaîtront ici."):""}
         }
         StyledText{Layout.fillWidth:true;text:qsTr("Réglages Windows en direct · volume conservé par Windows");wrapMode:Text.Wrap;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
     }

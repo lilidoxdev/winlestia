@@ -26,7 +26,13 @@ COMMANDS=[
  ('calculator','Calculatrice Windows','Ouvrir la calculatrice','calculate','command'),
  ('>wallpaper ','Fond d’écran','Wallpaper · changer le fond du bureau','wallpaper','autocomplete'),
  ('>emoji ','Emojis','Emoji · chercher et copier un emoji','mood','autocomplete'),
- ('>file ','Fichiers','File · chercher dans l’index Windows','folder_search','autocomplete')]
+ ('>file ','Fichiers','File · chercher dans l’index Windows','folder_search','autocomplete'),
+ ('shutdown','Éteindre','Shutdown · éteindre le PC (confirmation demandée)','power_settings_new','session'),
+ ('restart','Redémarrer','Reboot · redémarrer le PC (confirmation demandée)','cached','session'),
+ ('logout','Se déconnecter','Logout · fermer la session (confirmation demandée)','exit_to_app','session'),
+ ('lock','Verrouiller','Lock · verrouiller la session (confirmation demandée)','lock','session'),
+ ('sleep','Mettre en veille','Sleep · mise en veille (confirmation demandée)','bedtime','session'),
+ ('hibernate','Hibernation','Hibernate · hiberner le PC (confirmation demandée)','downloading','session')]
 
 # Windows Settings pages: (ms-settings URI, fr, en, es, extra keywords). Only these URIs can be opened from the palette.
 SETTINGS_PAGES=(
@@ -63,6 +69,8 @@ SETTINGS_PAGES=(
  ('ms-settings:windowsupdate','Windows Update','Windows Update','Windows Update','mise a jour updates'))
 SETTINGS_URIS=frozenset(page[0] for page in SETTINGS_PAGES)
 SETTINGS_LABEL={'fr':'Paramètres Windows','en':'Windows Settings','es':'Configuración de Windows'}
+
+SESSION_KEYWORDS={'shutdown':('shut down','poweroff','eteindre','arreter','apagar'),'restart':('reboot','redemarrer','reiniciar'),'logout':('log out','sign out','deconnecter','deconnexion','cerrar sesion'),'lock':('verrouiller','bloquear'),'sleep':('veille','mettre en veille','suspend','suspender'),'hibernate':('hibernation','hiberner','hibernar')}
 
 def settings_uri_known(uri):return uri in SETTINGS_URIS
 
@@ -134,7 +142,11 @@ def palette_search(query,state,language='fr',windows=None):
         for entry in state.get('websites',[]):
             if all(w in fold(entry['name']) for w in words):results.append({**entry,'kind':'website','icon':'language','comment':'Site internet'})
     for key,name,detail,icon,kind in COMMANDS:
-        if all(w in fold(name+' '+detail) for w in words):results.append({'id':key,'name':name,'comment':detail,'icon':icon,'kind':kind})
+        if kind=='session':
+            # Session actions are destructive: whole-query prefix of the name, an explicit keyword or the id, at least 3 letters, never a substring.
+            if len(needle)<3 or not any(c.startswith(needle) for c in [fold(name),key,*SESSION_KEYWORDS.get(key,())]):continue
+        elif not all(w in fold(name+' '+detail) for w in words):continue
+        results.append({'id':key,'name':name,'comment':detail,'icon':icon,'kind':kind})
     if raw and not raw.startswith('>'):results.extend(settings_results(words,language))
     if raw and not results:results.append({'id':raw,'name':'Rechercher « '+raw+' »','comment':'Ouvrir dans le navigateur','kind':'web','icon':'travel_explore'})
     return results[:12]

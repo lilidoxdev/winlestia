@@ -285,5 +285,17 @@ Aucune application exclue|No excluded application|Ninguna aplicación excluida
 Seulement la fenêtre active|Active window only|Solo la ventana activa
 Le liseré suit la fenêtre au premier plan|The border follows the foreground window|El borde sigue a la ventana en primer plano
 Aucun résultat|No results|Sin resultados
+Recherche des périphériques…|Searching for devices…|Buscando dispositivos…
+Aucun microphone connecté|No microphone connected|Ningún micrófono conectado
+Aucune sortie audio détectée|No audio output detected|No se detectó ninguna salida de audio
+Recherche des sessions audio…|Searching for audio sessions…|Buscando sesiones de audio…
+Aucune application ne joue de son|No application is playing sound|Ninguna aplicación reproduce sonido
+Lance une musique, une vidéo ou un jeu.|Start some music, a video or a game.|Inicia música, un vídeo o un juego.
+Aucun élément dans cet historique|No item in this history|Ningún elemento en este historial
+L’historique est désactivé|History is turned off|El historial está desactivado
+Active-le dans les paramètres pour retrouver ce que tu copies.|Turn it on in settings to find what you copy.|Actívalo en los ajustes para recuperar lo que copias.
+Les modifications non enregistrées seront perdues.|Unsaved changes will be lost.|Se perderán los cambios sin guardar.
+Ta session sera verrouillée.|Your session will be locked.|Tu sesión se bloqueará.
+Ses commandes audio apparaîtront ici.|Its audio controls will appear here.|Sus controles de audio aparecerán aquí.
 %1 ?|%1?|¿%1?""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}
