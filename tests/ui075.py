@@ -43,7 +43,7 @@ def wrapped(engine,url):
     report['outsideClickCloses']=not menu.isVisible()
     menu.setVisible(False)
     b.fullscreen_names=(b._screen.name(),);b.frameChanged.emit();b.surface_scene.refresh()
-    spec=b.surface_scene.data[b._screen.name()]['components'];report['fullscreenHidesLogo']=not logos[0].isVisible();report['fullscreenNoFrame']=spec[0]==0;report['ovalSilhouette']=spec[2] is not None and spec[2][-1] is False
+    spec=b.surface_scene.data[b._screen.name()]['components'];report['fullscreenHidesLogo']=not logos[0].isVisible();report['fullscreenNoFrame']=spec[0]==0;report['fullscreenNoDock']=spec[2] is None
     b.top.grabWindow().save(str(root/'build/personalization0652.png'))
     # Native monitor coordinates intentionally differ from Qt's offscreen geometry.
     def info(handle,pointer):

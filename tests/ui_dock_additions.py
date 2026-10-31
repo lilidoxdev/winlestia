@@ -40,9 +40,10 @@ def wrapped(engine,url):
    report['recycleButton']=find(b.dock.contentItem(),'dockRecycle') is not None
    from PySide6.QtCore import QMimeData,QUrl
    from PySide6.QtGui import QDragEnterEvent,QDropEvent
-   binwindow=next(w for w in QApplication.allWindows() if w.title()=='Winlestia · Actions fichiers')
-   QApplication.instance().findChild(QObject,'fileDragPoll').stop()
+   b.poll_file_drag=lambda:None   # polling now runs inside the pointer tick (no 'fileDragPoll' timer): neutralised so the real mouse cannot reset the simulated drag
    b._file_drag_active=True;b._file_drag_near=True;b.fileDragChanged.emit();QTest.qWait(50)
+   QTest.qWait(150)   # RecycleDrop is a lazy Loader: its window exists only once a file drag is near the top
+   binwindow=next(w for w in QApplication.allWindows() if w.title()=='Winlestia · Actions fichiers')
    mime=QMimeData();mime.setUrls([QUrl.fromLocalFile('C:/Winlestia test/été.txt')])
    enter=QDragEnterEvent(QPoint(80,40),Qt.MoveAction,mime,Qt.LeftButton,Qt.NoModifier);QApplication.sendEvent(binwindow,enter)
    QTest.qWait(300)
@@ -68,7 +69,7 @@ def wrapped(engine,url):
     report['outsideClickCloses']=not menu.isVisible()
     menu.setVisible(False)
     b.fullscreen_names=(b._screen.name(),);b.frameChanged.emit();b.surface_scene.refresh()
-    spec=b.surface_scene.data[b._screen.name()]['components'];report['fullscreenHidesLogo']=not logos[0].isVisible();report['fullscreenNoFrame']=spec[0]==0;report['ovalSilhouette']=spec[2] is not None and spec[2][-1] is False
+    spec=b.surface_scene.data[b._screen.name()]['components'];report['fullscreenHidesLogo']=not logos[0].isVisible();report['fullscreenNoFrame']=spec[0]==0;report['fullscreenNoDock']=spec[2] is None
     b.top.grabWindow().save(str(root/'build/personalization0652.png'))
     # Native monitor coordinates intentionally differ from Qt's offscreen geometry.
     def info(handle,pointer):
