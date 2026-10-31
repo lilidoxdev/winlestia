@@ -2,6 +2,7 @@
 
 ## Non publié
 
+- Commandes rapides : un curseur de luminosité par écran, externes compris (DDC/CI) ; lecture à l'ouverture puis toutes les 30 s panneau ouvert, écran sans DDC/CI grisé. `winlestia brightness` liste les écrans en JSON et `winlestia brightness <id> <0-100>` règle l'un d'eux (OSD affiché, écriture limitée à une toutes les 120 ms par écran).
 - Réglages : champ de recherche (titre et description, sans tenir compte de la casse ni des accents) sur les six pages ; le résultat choisi ouvre la page, défile jusqu'à la ligne et la met en évidence brièvement.
 - Commandes rapides : interrupteur « Effets allégés ». Si Windows refuse la bascule Wi-Fi ou Bluetooth, la page correspondante des Paramètres Windows s'ouvre en plus du message d'erreur.
 - Palette Ctrl+F2 : fenêtres ouvertes (5 au plus, listées à l'ouverture et oubliées à la fermeture), une trentaine de pages des Paramètres Windows (FR/EN/ES) et préfixe `>file ` pour chercher des fichiers du profil dans l'index Windows (requête hors thread UI, 2 s, 200 ms d'anti-rebond, message si l'index est indisponible ; ni saisie ni chemins journalisés). `winlestia find windows` et `winlestia find files <terme>` ne renvoient que des comptes.

@@ -133,7 +133,7 @@ class Bridge(QObject):
     # Palette sources: open windows (asked on opening, dropped on closing) and the file index (debounced, newest request wins by generation number).
     fileChanged=Signal();_windows=[];_file_gen=0;_file_term='';_file_items=[];_file_status='idle';_file_sent=False;_file_timer=None
     def __init__(self,args):
-        super().__init__();self.surface_scene=None;self.args=args;self._window=None;self._state={};self._pending_controls={};self._pending_audio={};self._icon_requests={};self._dark=False;self._player=WindowsPlayer(self);self.top=None;self.dock=None;self.social_win=None;self.away_social=0;self.bookmarks_win=None;self.away_bookmarks=0;self.last_reply=0;self.peek_until=0;self.away_top=0;self.away_dock=0;self.force_dock=0
+        super().__init__();self.surface_scene=None;self.args=args;self._window=None;self._state={};self._pending_controls={};self._pending_displays={};self._pending_audio={};self._icon_requests={};self._dark=False;self._player=WindowsPlayer(self);self.top=None;self.dock=None;self.social_win=None;self.away_social=0;self.bookmarks_win=None;self.away_bookmarks=0;self.last_reply=0;self.peek_until=0;self.away_top=0;self.away_dock=0;self.force_dock=0
         self.top_seen=False;self._screen=QApplication.primaryScreen();self.client=PipeClient(args.pipe);self.client.received.connect(self.update_state);self.client.start()
         self._dict={'state':'idle','level':0.0,'levels':[0.0]*32,'lang':'','text':'','error':''};self._dict_stopped=False;self._dict_until=0;self._dict_area={'x':0,'y':0,'width':0,'height':0}
         self.dictation_timer=QTimer(self);self.dictation_timer.setInterval(33);self.dictation_timer.timeout.connect(self.dictation_tick)
@@ -346,7 +346,12 @@ class Bridge(QObject):
             self._pending_audio[(name,args.get('id',''))]=(float(args.get('value',0)),time.monotonic()+1.5)
         if name=='mediaVolume':
             self._pending_controls['mediaVolume']=(float(args.get('value',0)),time.monotonic()+1.5)
-        if name in ('volume','brightness'):
+        if name=='brightness' and 'id' in args:
+            self._pending_displays[args['id']]=(float(args.get('value',0)),time.monotonic()+1.5)
+            for row in self._state.get('controls',{}).get('displays',[]):
+                if row.get('id')==args['id']:row['value']=float(args.get('value',0))
+            self.changed.emit()
+        elif name in ('volume','brightness'):
             self._pending_controls[name]=(float(args.get('value',0)),time.monotonic()+1.5)
             self._state.setdefault('controls',{})[name]=float(args.get('value',0));self.changed.emit()
         if self.args.backend_pid:user32.AllowSetForegroundWindow(self.args.backend_pid)
@@ -620,6 +625,10 @@ class Bridge(QObject):
             self.last_reply=time.monotonic()
         if 'state' in message and any(value!=self._state.get(key) for key,value in message['state'].items() if key!='diagnostics'):
             catalog_changed=any(self._state.get(key)!=message['state'].get(key) for key in ('apps','favorites','recent','websites','profiles','quickTabs'))
+            for ident,(value,until) in list(self._pending_displays.items()):
+                row=next((r for r in message['state'].get('controls',{}).get('displays',[]) if r.get('id')==ident),None)
+                if row is None or abs(row.get('value',0)-value)<1 or time.monotonic()>until:self._pending_displays.pop(ident,None)
+                else:row['value']=value
             for key,(value,until) in list(self._pending_controls.items()):
                 target=message['state'].setdefault('media' if key=='mediaVolume' else 'controls',{})
                 field='volume' if key=='mediaVolume' else key

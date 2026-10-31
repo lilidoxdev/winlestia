@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PanneauxGlass;
 internal sealed record BrightnessSnapshot(bool Available,double Value,string Device,string Error="");
-internal static class MonitorBrightness {
+internal static partial class MonitorBrightness {
     [StructLayout(LayoutKind.Sequential,CharSet=CharSet.Unicode)]struct PhysicalMonitor {public IntPtr Handle;[MarshalAs(UnmanagedType.ByValTStr,SizeConst=128)]public string Description;}
     [DllImport("user32.dll")]static extern IntPtr MonitorFromPoint(Native.Point point,uint flags);
     [DllImport("dxva2.dll",SetLastError=true)]static extern bool GetNumberOfPhysicalMonitorsFromHMONITOR(IntPtr monitor,out uint count);

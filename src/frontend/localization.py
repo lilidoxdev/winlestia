@@ -51,6 +51,7 @@ Mixeur d’applications|Application mixer|Mezclador de aplicaciones
 Chaque application, à son niveau|Each application at its own level|Cada aplicación a su nivel
 Commandes rapides|Quick controls|Controles rápidos
 Luminosité|Brightness|Brillo
+Non pris en charge par cet écran|Not supported by this screen|No compatible con esta pantalla
 Transparence du verre|Glass transparency|Transparencia del vidrio
 Épaisseur des contours|Frame thickness|Grosor del marco
 Zone de detection en haut|Top activation area|Zona de activación superior

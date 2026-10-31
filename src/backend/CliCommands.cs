@@ -5,9 +5,9 @@ using System.Linq;
 
 namespace PanneauxGlass;
 
-internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, Palette, FindWindows, FindFiles }
+internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, Palette, FindWindows, FindFiles, Brightness, BrightnessSet }
 
-internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0);
+internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0, int Value = 0);
 
 internal static class CliCommands {
     // Explicit allow-list. Nothing here shuts down, restarts, signs out or deletes anything.
@@ -24,6 +24,8 @@ internal static class CliCommands {
         "  palette                      open the quick command palette\n" +
         "  find windows                 print {\"count\":n} for the open windows (no titles)\n" +
         "  find files <term>            print {\"count\":n,\"indexAvailable\":b} for the Windows index (no paths)\n" +
+        "  brightness                   print the displays as JSON [{\"id\":n,\"name\":s,\"value\":0-100,\"available\":b}]\n" +
+        "  brightness <id> <0-100>      set the brightness of one display (DDC/CI)\n" +
         "  help                         show this text\n" +
         "Exit codes: 0 success, 1 refused by the shell, 2 unknown command or bad argument, 3 shell not running.";
 
@@ -56,6 +58,13 @@ internal static class CliCommands {
                 string term = string.Join(" ", args.Skip(2)).Trim();
                 if (term.Length is < 2 or > 64 || term.Any(char.IsControl)) { error = "Search term must have 2 to 64 characters."; return false; }
                 command = new(CliKind.FindFiles, term); return true;
+            }
+            case "brightness" when args.Length == 1: command = new(CliKind.Brightness); return true;
+            case "brightness" when args.Length == 3: {
+                string id = args[1] ?? "", value = args[2] ?? "";
+                if (id.Length is < 1 or > 2 || !id.All(char.IsAsciiDigit) || int.Parse(id) < 1) { error = "Display id must be a number from 1 to 99 (see 'winlestia brightness')."; return false; }
+                if (value.Length is < 1 or > 3 || !value.All(char.IsAsciiDigit) || int.Parse(value) > 100) { error = "Brightness must be a whole number from 0 to 100."; return false; }
+                command = new(CliKind.BrightnessSet, "", int.Parse(id), int.Parse(value)); return true;
             }
             case "wallpaper" when args.Length == 2: command = new(CliKind.Wallpaper, args[1] ?? ""); return true;
         }

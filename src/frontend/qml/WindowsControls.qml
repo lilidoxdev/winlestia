@@ -31,13 +31,60 @@ ColumnLayout {
         }
     }
     ColumnLayout {
-        Layout.fillWidth:true;spacing:4
-        RowLayout {Layout.fillWidth:true;MaterialIcon{text:qsTr("brightness_6")} StyledText{text:qsTr("Luminosité");Layout.fillWidth:true} StyledText{text:Bridge.controls.brightnessAvailable?Math.round(brightness.value)+" %":"—"}}
-        StyledSlider {
-            id:brightness
-            Layout.fillWidth:true;implicitHeight:32;from:0;to:100;stepSize:1;enabled:Bridge.controls.brightnessAvailable??false
-            onMoved:Bridge.action("brightness",{value:value})
-            Binding {target:brightness;property:"value";value:Bridge.controls.brightness??0;when:!brightness.pressed}
+        id:screens
+        readonly property var list:Bridge.controls.displays??[]
+        readonly property bool usable:list.some(d=>d.available)
+        Layout.fillWidth:true;spacing:Appearance.spacing.large
+        // Stable model: rows are added/removed only when the id list changes; otherwise properties are updated in place (no delegate is destroyed while dragging).
+        ListModel {id:screenModel}
+        function syncModel(){
+            const src=screens.usable?screens.list:[]
+            let same=src.length===screenModel.count
+            for(let i=0;same&&i<src.length;i++)same=screenModel.get(i).screenId===src[i].id
+            if(!same){
+                screenModel.clear()
+                for(const d of src)screenModel.append({screenId:d.id,name:d.name||"",value:d.value??0,available:!!d.available})
+                return
+            }
+            for(let i=0;i<src.length;i++){
+                screenModel.setProperty(i,"name",src[i].name||"")
+                screenModel.setProperty(i,"value",src[i].value??0)
+                screenModel.setProperty(i,"available",!!src[i].available)
+            }
+        }
+        onListChanged:syncModel()
+        Component.onCompleted:syncModel()
+        Repeater {
+            model:screenModel
+            ColumnLayout {
+                id:screenRow
+                required property int screenId
+                required property string name
+                required property real value
+                required property bool available
+                Layout.fillWidth:true;spacing:4
+                RowLayout {
+                    Layout.fillWidth:true;opacity:screenRow.available?1:.5
+                    MaterialIcon{text:qsTr("brightness_6")}
+                    StyledText{text:screenModel.count>1?(screenRow.name||qsTr("Écran")+" "+screenRow.screenId):qsTr("Luminosité");Layout.fillWidth:true;elide:Text.ElideRight}
+                    StyledText{text:screenRow.available?Math.round(screenSlider.value)+" %":"—"}
+                }
+                StyledSlider {
+                    id:screenSlider
+                    Layout.fillWidth:true;implicitHeight:32;from:0;to:100;stepSize:1;enabled:screenRow.available
+                    onMoved:Bridge.action("brightness",{id:screenRow.screenId,value:value})
+                    Binding {target:screenSlider;property:"value";value:screenRow.value;when:!screenSlider.pressed}
+                }
+                StyledText{visible:!screenRow.available;text:qsTr("Non pris en charge par cet écran");Layout.fillWidth:true;wrapMode:Text.Wrap;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+            }
+        }
+        ColumnLayout {
+            visible:!screens.usable
+            Layout.fillWidth:true;spacing:4
+            RowLayout {Layout.fillWidth:true;MaterialIcon{text:qsTr("brightness_6")} StyledText{text:qsTr("Luminosité");Layout.fillWidth:true} StyledText{text:"—"}}
+            StyledSlider {
+                Layout.fillWidth:true;implicitHeight:32;from:0;to:100;stepSize:1;enabled:false
+            }
         }
     }
     RowLayout {
