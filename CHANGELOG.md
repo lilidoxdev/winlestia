@@ -2,6 +2,8 @@
 
 ## Non publié
 
+- Applications récentes : un raccourci ajouté au menu Démarrer (utilisateur ou commun) apparaît dans la palette Ctrl+F2 environ 3 s plus tard, sans attendre l'inventaire complet ; les applications du Store sont relues à l'ouverture de la palette si le catalogue a plus de 5 minutes. Une relecture demandée pendant une autre est rejouée à la fin. Dock : les fenêtres d'un programme élevé sont listées (chemin lu par `QueryFullProcessImageName`, sinon icône de la fenêtre) ; elles peuvent être activées ou fermées, pas lancées ni épinglées. Une icône de secours n'est plus gardée : l'extraction est retentée quatre fois au plus (5 s à 2 min), puis à chaque relecture du catalogue ; pour un raccourci dont l'icône est une bibliothèque, l'icône du raccourci est utilisée.
+
 - Démarrage et Bureau : lancement par une tâche planifiée utilisateur `WinlestiaShell` à l'ouverture de session (`--qt-shell`, sans administrateur, sans délai), la valeur Run est migrée au lancement et gardée en repli ; les icônes du Bureau sont réaffirmées sur événement Explorer (anti-rebond, au plus une fois par 2 s, après redémarrage d'Explorer) ; la barre Windows attend `TaskbarCreated` si Explorer n'est pas prêt ; les messageries restent chargées en arrière-plan par défaut ; `glass.log` note le premier affichage Qt.
 
 - Lanceur Ctrl+F2 : entrées Éteindre, Redémarrer, Se déconnecter, Verrouiller, Mettre en veille et Hibernation (confirmation avant chaque action) ; textes vides des panneaux Audio, Mélangeur et Presse-papiers traduits.

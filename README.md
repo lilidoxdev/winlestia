@@ -32,7 +32,7 @@ The interface is a port of Caelestia; a .NET service handles the system side and
 - On-screen indicator (OSD) for volume, screen brightness and microphone mute, driven by system events. The native Windows volume popup is left as is.
 - Accent border on applications (on by default), with an optional "Active window only" mode that colours only the foreground window.
 - Automatic tiling (off by default): stable tile order, keyboard focus, swap, resize and float shortcuts (Ctrl+Alt+arrows, listed in Settings), drag-to-swap, and a per-application exclusion list. A dock button turns it on or off, same as the Settings toggle; it sits in a group next to the desktop dots that a small arrow shows or tucks away (state remembered).
-- Command palette (Ctrl+F2): open windows, Windows Settings pages and, with `>file `, files from the Windows index (`winlestia find windows|files <term>` returns counts only).
+- Command palette (Ctrl+F2): open windows, Windows Settings pages and, with `>file `, files from the Windows index (`winlestia find windows|files <term>` returns counts only). A shortcut added to the Start menu is listed a few seconds later, without restarting the shell.
 - Command line `winlestia` (status, panel, desktop, wallpaper, palette, help) to drive the running shell from scripts, through a pipe reserved to the current user. Optional PATH entry at setup.
 - Color palette generated from the wallpaper, with an automatic theme option.
 - Wallpaper switcher (Ctrl+Alt+W): with several displays, Tab picks all displays or one; a line warns when DesktopHut, Wallpaper Engine, Lively or Wallpaper X is running. `winlestia wallpaper list` and `wallpaper <path> --display <id>` do the same from a script.

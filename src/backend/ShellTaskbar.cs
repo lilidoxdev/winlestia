@@ -87,7 +87,7 @@ internal sealed class ShellDockWindow:Window {
         if(themeVersion!=Theme.Version)Build();apps.Children.Clear();var represented=new HashSet<IntPtr>();
         foreach(var entry in manager.Pins().Take(24)){string target=TaskbarNative.LaunchPath(entry.Target);var matching=windows.FirstOrDefault(w=>!represented.Contains(w.Handle)&&!string.IsNullOrEmpty(w.Path)&&string.Equals(w.Path,target,StringComparison.OrdinalIgnoreCase));if(matching!=null)represented.Add(matching.Handle);AddApp(entry,matching,true);}
         if(apps.Children.Count>0&&windows.Any(w=>!represented.Contains(w.Handle)))apps.Children.Add(new Border{Width=1,Height=23,Background=UI.Alpha(Theme.Current.Dim,50),Margin=new Thickness(9,0,9,0)});
-        foreach(var window in windows.Where(w=>!represented.Contains(w.Handle)))AddApp(new Entry{Id=string.IsNullOrWhiteSpace(window.Path)?"window:"+window.Handle.ToInt64():"running:"+window.Path.ToLowerInvariant(),Name=window.Title,Target=window.Path,IconPath=window.Path},window,false);
+        foreach(var window in windows.Where(w=>!represented.Contains(w.Handle)))AddApp(new Entry{Id=string.IsNullOrWhiteSpace(window.RealPath)?"window:"+window.Handle.ToInt64():"running:"+window.RealPath.ToLowerInvariant(),Name=window.Title,Target=window.RealPath,IconPath=window.RealPath},window,false);
         SizePill();
     }
     void SizePill(){double width=screen.Bounds.Width/TaskbarNative.Scale(screen);pill.Width=Math.Min(Math.Min(1440,width-24),Math.Max(740,420+apps.Children.Count*44));}

@@ -26,11 +26,11 @@ internal sealed partial class QtShellBridge {
     static bool CanStop(string path)=>File.Exists(path)&&!path.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.Windows)+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)&&!SamePath(path,Environment.ProcessPath??"");
     void RefreshDockApps(){
         var windows=TaskbarNative.Applications().Where(w=>!w.Title.Contains("Caelestia")&&!w.Title.StartsWith("Panneaux ·",StringComparison.Ordinal)).ToArray();
-        var result=new List<object>();var running=new List<object>();var pinnedEntries=new Dictionary<string,Entry>(StringComparer.OrdinalIgnoreCase);dockEntries.Clear();dockWindows.Clear();var seen=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var groups=windows.Where(w=>!string.IsNullOrEmpty(w.Path)).GroupBy(w=>w.Path,StringComparer.OrdinalIgnoreCase).ToDictionary(g=>g.Key,g=>g.ToArray(),StringComparer.OrdinalIgnoreCase);
+        var livePseudo=new HashSet<string>();var result=new List<object>();var running=new List<object>();var pinnedEntries=new Dictionary<string,Entry>(StringComparer.OrdinalIgnoreCase);dockEntries.Clear();dockWindows.Clear();var seen=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var groups=windows.GroupBy(w=>CatalogueWatchRules.WindowGroupKey(w.Path,w.Handle.ToInt64()),StringComparer.OrdinalIgnoreCase).ToDictionary(g=>g.Key,g=>g.ToArray(),StringComparer.OrdinalIgnoreCase);
         var entries=Store.Entries.Where(e=>!string.IsNullOrEmpty(e.Target)).ToArray();
         object Value(Entry entry,TaskbarNative.AppWindow[] matches,bool pinned,bool background=false){
-            string path=TaskbarNative.LaunchPath(entry.Target);dockEntries[entry.Id]=entry;LoadIcon(entry);
+            string path=TaskbarNative.LaunchPath(entry.Target);dockEntries[entry.Id]=entry;if(CatalogueWatchRules.IsPseudoPath(path)){livePseudo.Add(entry.Id);LoadWindowIcon(entry,matches.FirstOrDefault()?.Handle??IntPtr.Zero);}else LoadIcon(entry);
             dockWindows[entry.Id]=matches.Select(w=>new PreviewWindow(w.Handle.ToInt64(),w.Title)).ToArray();
             return new{id=entry.Id,name=entry.Name,path,hwnd=matches.FirstOrDefault()?.Handle.ToInt64()??0,pinned,favorite=Store.State.Favorites.Contains(entry.Id),background,canStop=CanStop(path),count=matches.Length,active=matches.Any(w=>w.Handle==Native.GetForegroundWindow()),windows=matches.Select(w=>new{hwnd=w.Handle.ToInt64(),title=w.Title}).ToArray()};
         }
@@ -50,18 +50,41 @@ internal sealed partial class QtShellBridge {
             pinnedEntries[path]=e;foreach(var match in matches){seen.Add(match.Path);pinnedEntries[match.Path]=e;}result.Add(Value(e,matches,true));
         }
         foreach(var group in groups){
-            var e=pinnedEntries.GetValueOrDefault(group.Key)??entries.FirstOrDefault(e=>SamePath(e.Target,group.Key))??new Entry{Id="task:"+group.Key,Name=Path.GetFileNameWithoutExtension(group.Key),Target=group.Key,IconPath=group.Key};
+            var e=pinnedEntries.GetValueOrDefault(group.Key)??entries.FirstOrDefault(e=>SamePath(e.Target,group.Key))??new Entry{Id="task:"+group.Key,Name=CatalogueWatchRules.IsPseudoPath(group.Key)?group.Value[0].Title:Path.GetFileNameWithoutExtension(group.Key),Target=group.Key,IconPath=group.Key};
             bool pinned=Store.State.TaskbarPins.Contains(e.Id)||Store.State.TaskbarPins.Contains(group.Key);
             var value=Value(e,group.Value,pinned);running.Add(value);if(seen.Add(group.Key))result.Add(value);
         }
         foreach(var e in backgroundEntries){if(groups.ContainsKey(e.Target)||!seen.Add(e.Target))continue;running.Add(Value(e,Array.Empty<TaskbarNative.AppWindow>(),Store.State.TaskbarPins.Contains(e.Id),true));}
-        tasks=result.Take(48).ToArray();runningApps=running.ToArray();SyncDockPreview();
+        tasks=result.Take(48).ToArray();runningApps=running.ToArray();ForgetWindowIcons(livePseudo);SyncDockPreview();
     }
     Entry[] backgroundEntries=Array.Empty<Entry>();bool scanningBackground;DateTime backgroundAt;
     void RefreshBackgroundApps(){if(scanningBackground||DateTime.UtcNow<backgroundAt)return;scanningBackground=true;backgroundAt=DateTime.UtcNow.AddSeconds(5);var known=Store.Entries.ToArray();
         _=System.Threading.Tasks.Task.Run(()=>{var result=new List<Entry>();var paths=new HashSet<string>(StringComparer.OrdinalIgnoreCase);int session=Process.GetCurrentProcess().SessionId;
             foreach(var process in Process.GetProcesses())using(process)try{if(process.Id==Environment.ProcessId||process.SessionId!=session)continue;string path=process.MainModule?.FileName??"";if(!CanStop(path)||!paths.Add(path))continue;result.Add(known.FirstOrDefault(e=>SamePath(e.Target,path))??new Entry{Id="background:"+path,Name=FileVersionInfo.GetVersionInfo(path).FileDescription??process.ProcessName,Target=path,IconPath=path});}catch{}
             dispatcher.BeginInvoke((Action)(()=>{scanningBackground=false;if(!disposed){backgroundEntries=result.ToArray();nextTasks=DateTime.MinValue;}}));
+        });
+    }
+    // Pseudo-path windows: the icon comes from the window itself (WM_GETICON with a timeout, then the class icon), never from a file.
+    [DllImport("user32.dll",EntryPoint="SendMessageTimeoutW")]static extern IntPtr SendMessageTimeoutW(IntPtr window,uint message,IntPtr wp,IntPtr lp,uint flags,uint timeout,out IntPtr result);
+    [DllImport("user32.dll",EntryPoint="GetClassLongPtrW")]static extern IntPtr GetClassLongPtrW(IntPtr window,int index);
+    readonly Dictionary<string,int> windowIconTries=new();
+    string WindowIconFile(string id)=>Path.Combine(cache,"icons","win-"+Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(id)))[..24]+".png");
+    // Called by each dock refresh: a window that is gone loses its attempt counter, its entry in the icon map and its PNG.
+    void ForgetWindowIcons(HashSet<string> live){foreach(string id in windowIconTries.Keys.Where(k=>!live.Contains(k)).ToArray()){windowIconTries.Remove(id);requested.Remove(id);icons.Remove(id);try{File.Delete(WindowIconFile(id));}catch{}}}
+    void LoadWindowIcon(Entry entry,IntPtr window){
+        if(window==IntPtr.Zero||!requested.Add(entry.Id))return;
+        int tries=windowIconTries.GetValueOrDefault(entry.Id)+1;windowIconTries[entry.Id]=tries;
+        _=System.Threading.Tasks.Task.Run(()=>{
+            try{
+                IntPtr icon=IntPtr.Zero;
+                try{SendMessageTimeoutW(window,0x007F,new IntPtr(2),IntPtr.Zero,0x2,100,out icon);if(icon==IntPtr.Zero)SendMessageTimeoutW(window,0x007F,new IntPtr(1),IntPtr.Zero,0x2,100,out icon);}catch{icon=IntPtr.Zero;}
+                if(icon==IntPtr.Zero)icon=GetClassLongPtrW(window,-34);
+                if(icon==IntPtr.Zero)icon=GetClassLongPtrW(window,-14);
+                if(icon==IntPtr.Zero)throw new InvalidOperationException("no window icon");
+                var bitmap=System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(icon,System.Windows.Int32Rect.Empty,System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());bitmap.Freeze();
+                string file=WindowIconFile(entry.Id);
+                SaveImage(bitmap,file);dispatcher.BeginInvoke((Action)(()=>{if(disposed)return;if(windowIconTries.ContainsKey(entry.Id)){icons[entry.Id]=file;iconRevision++;}else{try{File.Delete(file);}catch{}}}));
+            }catch{dispatcher.BeginInvoke((Action)(()=>{if(tries<3)requested.Remove(entry.Id);}));}
         });
     }
     Entry PersistDockEntry(Entry entry){
@@ -72,6 +95,8 @@ internal sealed partial class QtShellBridge {
         string id=Text(args,"id"),action=Text(args,"action");long handle=(long)Number(args,"hwnd");
         if(!dockEntries.TryGetValue(id,out var entry)){entry=Store.Entries.FirstOrDefault(e=>e.Id==id);if(entry==null)return "Cette application n’est plus disponible.";}
         string path=TaskbarNative.LaunchPath(entry.Target);var matches=TaskbarNative.Applications().Where(w=>SamePath(w.Path,path)).ToArray();var selected=matches.FirstOrDefault(w=>w.Handle.ToInt64()==handle)??matches.FirstOrDefault();
+        // A window whose program cannot be read (elevated) has a pseudo-path: it can be activated or closed, never launched, pinned or revealed.
+        if(CatalogueWatchRules.IsPseudoPath(path)&&action is "open" or "admin" or "pin" or "favorite" or "reveal" or "stop")return "Cette fenêtre n’a pas de programme lançable.";
         switch(action){
             case "reorder":int from=Store.State.TaskbarPins.IndexOf(id),to=(int)Number(args,"index");if(from>=0){Store.State.TaskbarPins.RemoveAt(from);Store.State.TaskbarPins.Insert(Math.Clamp(to,0,Store.State.TaskbarPins.Count),id);Store.Save();}break;
             case "open":owner.Launch(entry);break;

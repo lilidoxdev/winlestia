@@ -15,7 +15,12 @@ namespace PanneauxGlass;
 internal static class TaskbarNative {
     [StructLayout(LayoutKind.Sequential)] internal struct BarData { public uint Size;public IntPtr Window;public uint Callback,Edge;public Native.Rect Rect;public IntPtr Param; }
     internal sealed class Lease { public int State {get;set;}public List<long> Visible {get;set;}=new();public string Ready {get;set;}="";public string Release {get;set;}="";public long ParentStart {get;set;} }
-    internal sealed record AppWindow(IntPtr Handle,string Title,string Path);
+    internal sealed record AppWindow(IntPtr Handle,string Title,string Path){internal string RealPath=>CatalogueWatchRules.IsPseudoPath(Path)?"":Path;}
+    [DllImport("kernel32.dll",SetLastError=true)] static extern IntPtr OpenProcess(uint access,bool inherit,uint pid);
+    [DllImport("kernel32.dll",CharSet=CharSet.Unicode,SetLastError=true)] static extern bool QueryFullProcessImageName(IntPtr process,uint flags,StringBuilder buffer,ref uint size);
+    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
+    // PROCESS_QUERY_LIMITED_INFORMATION also opens most elevated processes, which Process.MainModule refuses.
+    internal static string ProcessImagePath(uint pid){IntPtr process=OpenProcess(0x1000,false,pid);if(process==IntPtr.Zero)return "";try{var buffer=new StringBuilder(1024);uint size=(uint)buffer.Capacity;return QueryFullProcessImageName(process,0,buffer,ref size)?buffer.ToString(0,(int)size):"";}catch{return "";}finally{CloseHandle(process);}}
     internal delegate bool EnumProc(IntPtr window,IntPtr data);
     internal delegate void WinEvent(IntPtr hook,uint kind,IntPtr window,int obj,int child,uint thread,uint time);
     [DllImport("shell32.dll")] internal static extern UIntPtr SHAppBarMessage(uint message,ref BarData data);
@@ -61,7 +66,8 @@ internal static class TaskbarNative {
         long style=Native.ExtendedStyle(h);if((style&0x80)!=0||GetWindow(h,4)!=IntPtr.Zero&&(style&0x40000)==0)return true;
         if(DwmGetWindowAttribute(h,14,out int cloaked,4)==0&&cloaked!=0)return true;
         string title=Native.Title(h);if(string.IsNullOrWhiteSpace(title))return true;
-        string path="";try{GetWindowThreadProcessId(h,out uint pid);using var process=Process.GetProcessById((int)pid);path=process.MainModule?.FileName??"";}catch{}
+        string path="";try{GetWindowThreadProcessId(h,out uint pid);path=ProcessImagePath(pid);}catch{}
+        if(string.IsNullOrEmpty(path))path=CatalogueWatchRules.PseudoPath(h.ToInt64());
         result.Add(new(h,title,path));return true;
     },IntPtr.Zero);return result;}
     internal static void Activate(AppWindow app){if(!Native.IsWindow(app.Handle))return;if(Native.GetForegroundWindow()==app.Handle){ShowWindow(app.Handle,6);return;}if(IsIconic(app.Handle))ShowWindow(app.Handle,9);SetForegroundWindow(app.Handle);}

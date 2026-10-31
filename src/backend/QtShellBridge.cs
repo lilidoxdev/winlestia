@@ -82,7 +82,7 @@ internal sealed partial class QtShellBridge:IDisposable {
         System.Windows.Application.Current.Shutdown();
     });
 
-    internal QtShellBridge(Coordinator coordinator){DialogOpen=Program.QtVerifyTools||Environment.GetEnvironmentVariable("PANNEAUX_VERIFY_MATERIAL84")=="1"||Environment.GetEnvironmentVariable("PANNEAUX_VERIFY_THICKNESS85")=="1";owner=coordinator;root=Program.QtRoot??Path.GetFullPath(Path.Combine(Store.Root,"..","Caelestia-Windows"));cache=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Panneaux","Caelestia");Directory.CreateDirectory(Path.Combine(cache,"icons"));
+    internal QtShellBridge(Coordinator coordinator){DialogOpen=Program.QtVerifyTools||Environment.GetEnvironmentVariable("PANNEAUX_VERIFY_MATERIAL84")=="1"||Environment.GetEnvironmentVariable("PANNEAUX_VERIFY_THICKNESS85")=="1";owner=coordinator;root=Program.QtRoot??Path.GetFullPath(Path.Combine(Store.Root,"..","Caelestia-Windows"));cache=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Panneaux","Caelestia");Directory.CreateDirectory(Path.Combine(cache,"icons"));try{foreach(string stale in Directory.GetFiles(Path.Combine(cache,"icons"),"*.fb.png").Concat(Directory.GetFiles(Path.Combine(cache,"icons"),"win-*.png")))File.Delete(stale);}catch{}
 
         dismissal=new OutsideDismiss(()=>Send("close"),()=>active&&!DialogOpen,h=>{GetWindowThreadProcessId(h,out uint pid);return frontend!=null&&(pid==frontend.Id||pid==frontendWindowPid);});
 
@@ -119,7 +119,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     }
 
-    int firstReply;internal void Send(string value){if(frontendWindowPid>0&&(value is "toggle" or "access" or "media" or "performance" or "controls" or "palette" or "settings" or "settings:social" or "settings:bookmarks" or "clipboard" or "audio" or "microphone" or "tools" or "capture" or "wallpaper-switcher"||value.StartsWith("workspace:")))AllowSetForegroundWindow(frontendWindowPid);if(events.Count<32)events.Enqueue((value,frontendEpoch));wake.Set();}
+    int firstReply;internal void Send(string value){if(value=="palette")dispatcher.BeginInvoke(DispatcherPriority.Background,(Action)owner.RefreshCatalogueIfStale);if(frontendWindowPid>0&&(value is "toggle" or "access" or "media" or "performance" or "controls" or "palette" or "settings" or "settings:social" or "settings:bookmarks" or "clipboard" or "audio" or "microphone" or "tools" or "capture" or "wallpaper-switcher"||value.StartsWith("workspace:")))AllowSetForegroundWindow(frontendWindowPid);if(events.Count<32)events.Enqueue((value,frontendEpoch));wake.Set();}
 
     async Task Serve(){while(!cancellation.IsCancellationRequested){try{using var server=new NamedPipeServerStream("PanneauxCaelestia",PipeDirection.InOut,1,PipeTransmissionMode.Byte,PipeOptions.Asynchronous|PipeOptions.CurrentUserOnly);pipe=server;await server.WaitForConnectionAsync(cancellation.Token);using var reader=new StreamReader(server,new UTF8Encoding(false),false,65536,true);using var writer=new StreamWriter(server,new UTF8Encoding(false),65536,true){AutoFlush=true};while(server.IsConnected&&!cancellation.IsCancellationRequested){string? line=await reader.ReadLineAsync(cancellation.Token);if(line==null||line.Length>131072)break;using var request=JsonDocument.Parse(line);var element=request.RootElement.Clone();var operation=await dispatcher.InvokeAsync(()=>Handle(element));string reply=await operation;await writer.WriteLineAsync(reply.AsMemory(),cancellation.Token);}}catch(OperationCanceledException){break;}catch(Exception ex){if(!disposed)Store.Log("Qt IPC: "+ex.Message);}finally{pipe=null;if(!disposed)_ = dispatcher.BeginInvoke((Action)(()=>{dockPreview.Close();active=false;CapturingShortcut=false;dismissal.SetActive(false);tiler.SetEnabled(false);StopSampling();}));}}}
 
@@ -357,9 +357,15 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     void LoadIcon(Entry entry){if(!requested.Add(entry.Id))return;owner.Icons.Load(entry,source=>{
         if(disposed)return;BitmapSource bitmap;if(source is BitmapSource native)bitmap=native;else{var image=new System.Windows.Media.DrawingVisual();using(var dc=image.RenderOpen())dc.DrawImage(source,new System.Windows.Rect(0,0,64,64));var target=new RenderTargetBitmap(64,64,96,96,System.Windows.Media.PixelFormats.Pbgra32);target.Render(image);target.Freeze();bitmap=target;}
-        string file=Path.Combine(cache,"icons",Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(entry.Id+entry.IconPath+entry.Target)))[..24]+".png");
-        _=Task.Run(()=>{try{SaveImage(bitmap,file);dispatcher.BeginInvoke((Action)(()=>{if(!disposed){icons[entry.Id]=file;iconRevision++;}}));}catch(Exception ex){dispatcher.BeginInvoke((Action)(()=>requested.Remove(entry.Id)));Store.Log("Icon Qt: "+ex.Message);}});
+        bool fallback=owner.Icons.IsPlaceholder(source);string file=Path.Combine(cache,"icons",Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(entry.Id+entry.IconPath+entry.Target)))[..24]+(fallback?".fb.png":".png"));
+        _=Task.Run(()=>{try{SaveImage(bitmap,file);dispatcher.BeginInvoke((Action)(()=>{if(disposed)return;string previous=icons.GetValueOrDefault(entry.Id,"");icons[entry.Id]=file;iconRevision++;if(fallback)RetryIcon(entry);else{placeholderIcons.Remove(entry.Id);if(previous.EndsWith(".fb.png",StringComparison.Ordinal)){try{File.Delete(previous);}catch{}}}}));}catch(Exception ex){dispatcher.BeginInvoke((Action)(()=>requested.Remove(entry.Id)));Store.Log("Icon Qt: "+ex.Message);}});
     },"qt");}
+
+    // A stand-in tile is shown from a separate .fb.png file and replaced by the real PNG once a bounded retry succeeds.
+    readonly HashSet<string> placeholderIcons=new();
+    void RetryIcon(Entry entry){placeholderIcons.Add(entry.Id);if(CatalogueWatchRules.IconRetryDelay(owner.Icons.FailureCount(entry)) is not TimeSpan delay)return;_=Task.Delay(delay).ContinueWith(_=>dispatcher.BeginInvoke((Action)(()=>{if(disposed||!placeholderIcons.Contains(entry.Id))return;requested.Remove(entry.Id);LoadIcon(Store.Entries.FirstOrDefault(e=>e.Id==entry.Id)??entry);})));}
+    // Catalogue read again: failed icons get a fresh series of attempts.
+    internal void CatalogueChanged(){dispatcher.BeginInvoke((Action)(()=>{if(disposed)return;owner.Icons.ResetFailures();foreach(string id in placeholderIcons.ToArray()){var entry=Store.Entries.FirstOrDefault(e=>e.Id==id);if(entry==null||owner.Icons.FailureCount(entry)>0)continue;requested.Remove(id);LoadIcon(entry);}}));}
 
     static void SaveImage(BitmapSource bitmap,string file){var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(bitmap));using var stream=File.Create(file);encoder.Save(stream);}
 
