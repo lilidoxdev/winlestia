@@ -293,7 +293,7 @@ end;
 
 procedure SaveProfile();
 var
-  Dir, Json, Pseudo: String;
+  Dir, Json, Pseudo, PseudoJson: String;
 begin
   Pseudo := Trim(ProfilePage.Values[0]);
   if Pseudo = '' then
@@ -302,8 +302,12 @@ begin
   Dir := ExtractFileDir(ProfilePath());
   ForceDirectories(Dir);
 
+  PseudoJson := Pseudo;
+  StringChangeEx(PseudoJson, '\', '\\', True);
+  StringChangeEx(PseudoJson, '"', '\"', True);
+
   Json := '{' + #13#10 +
-          '  "displayName": "' + Pseudo + '",' + #13#10 +
+          '  "displayName": "' + PseudoJson + '",' + #13#10 +
           '  "version": "{#AppVersion}",' + #13#10 +
           '  "installedAt": "' + GetDateTimeString('yyyy-mm-dd hh:nn:ss', '-', ':') + '"' + #13#10 +
           '}' + #13#10;

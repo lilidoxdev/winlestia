@@ -38,7 +38,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]static extern bool AllowSetForegroundWindow(uint pid);
     [System.Runtime.InteropServices.DllImport("secur32.dll",CharSet=System.Runtime.InteropServices.CharSet.Unicode)]static extern bool GetUserNameEx(int format,System.Text.StringBuilder name,ref uint size);
-    static readonly Lazy<string> displayUserName=new(()=>{try{var name=new StringBuilder(256);uint size=256;if(GetUserNameEx(3,name,ref size)&&name.Length>0)return name.ToString();}catch{}return Environment.UserName;});
+    static readonly Lazy<string> displayUserName=new(()=>{try{string file=Path.Combine(Store.DataDir,"profil.json");if(File.Exists(file)){byte[] raw=File.ReadAllBytes(file);if(raw.Length>=3&&raw[0]==0xEF&&raw[1]==0xBB&&raw[2]==0xBF)raw=raw[3..];string text;try{text=new UTF8Encoding(false,true).GetString(raw);}catch{text=CodePagesEncodingProvider.Instance.GetEncoding(1252)!.GetString(raw);}using var doc=System.Text.Json.JsonDocument.Parse(text);if(doc.RootElement.TryGetProperty("displayName",out var dn)&&dn.ValueKind==System.Text.Json.JsonValueKind.String&&dn.GetString() is{} s&&!string.IsNullOrWhiteSpace(s))return s.Trim();}}catch{}try{var name=new StringBuilder(256);uint size=256;if(GetUserNameEx(3,name,ref size)&&name.Length>0)return name.ToString();}catch{}return Environment.UserName;});
 
     uint frontendWindowPid;readonly Coordinator owner;readonly Dispatcher dispatcher=Dispatcher.CurrentDispatcher;
 
