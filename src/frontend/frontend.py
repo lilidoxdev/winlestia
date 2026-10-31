@@ -192,7 +192,8 @@ class Bridge(QObject):
     _wpicker={}
     wallpaperPicker=Property('QVariantMap',lambda s:s._wpicker,notify=wallpaperPickerChanged)
     glassOpacity=Property(float,lambda s:max(.02,min(.95,float(s.settings.get('customGlassOpacity',.12) if s.themeMode=='custom' else s.settings.get('glassOpacity',.12)))),notify=changed)
-    glassTintOpacity=Property(float,lambda s:s.glassOpacity*.75/(1-s.glassOpacity*.25),notify=changed)
+    # Auto theme, dark scheme on a bright wallpaper: pale text needs a denser tint to stay legible. Wallpapers at L* 40 or below render exactly as before.
+    glassTintOpacity=Property(float,lambda s:min(.95,s.glassOpacity*.75/(1-s.glassOpacity*.25)+(max(0.,float(s.current_theme().get('luminance',0))-.4)*3 if s.themeMode=='auto' and s.dark else 0.)),notify=changed)
     surfaceRevision=Property(int,lambda s:s.surface_scene.revision if s.surface_scene else 0,notify=surfaceChanged)
     @Slot(str,int,result='QVariantMap')
     def surfaceForScreen(self,name,revision):return self.surface_scene.data.get(name,{}) if self.surface_scene else {}
