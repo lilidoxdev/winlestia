@@ -4,7 +4,7 @@ import os as _os
 for _k in ("OPENBLAS_NUM_THREADS","OMP_NUM_THREADS","MKL_NUM_THREADS"):_os.environ.setdefault(_k,"1")
 import argparse, ctypes, io, json, os, queue, shutil, sys, threading, time, urllib.request, urllib.parse
 from pathlib import Path
-from PySide6.QtCore import QObject, Property, Signal, Slot, QThread, QTimer, QUrl, QRect, Qt, qInstallMessageHandler
+from PySide6.QtCore import QCoreApplication, QObject, Property, Signal, Slot, QThread, QTimer, QUrl, QRect, Qt, qInstallMessageHandler
 from PySide6.QtGui import QCursor, QFontDatabase, QKeySequence, QColor
 from PySide6.QtWidgets import QApplication, QFileDialog, QInputDialog, QLineEdit
 from PySide6.QtQml import QQmlApplicationEngine
@@ -407,7 +407,7 @@ class Bridge(QObject):
     @Slot(result='QVariantList')
     def addWallpaperImages(self):
         # Native multi-select dialog (the switcher is hidden by the caller meanwhile), then copy into the user folder; returns the new paths.
-        files,_=QFileDialog.getOpenFileNames(None,'Ajouter des images',str(Path.home()/'Pictures'),'Images (*.jpg *.jpeg *.png *.bmp *.webp)')
+        files,_=QFileDialog.getOpenFileNames(None,QCoreApplication.translate('','Ajouter des images'),str(Path.home()/'Pictures'),'Images (*.jpg *.jpeg *.png *.bmp *.webp)')
         return wallpaper_import(files) if files else []
     @Slot()
     def openWallpaperFolder(self):
@@ -520,7 +520,7 @@ class Bridge(QObject):
     def chooseEntryIcon(self,key):
         self.modal=True
         try:
-            path,_=QFileDialog.getOpenFileName(None,'Icône de cet accès','','Images (*.png *.ico *.jpg *.jpeg *.webp)')
+            path,_=QFileDialog.getOpenFileName(None,QCoreApplication.translate('','Icône de cet accès'),'','Images (*.png *.ico *.jpg *.jpeg *.webp)')
             if path:self.action('entryIcon',{'id':key,'path':path})
         finally:self.modal=False
     @Slot(bool)
@@ -557,7 +557,7 @@ class Bridge(QObject):
         return self.localUrl(path) if path else ''
     @Slot(result=str)
     def pickAvatar(self):
-        path,_=QFileDialog.getOpenFileName(None,'Photo de profil','','Images (*.png *.jpg *.jpeg *.webp)')
+        path,_=QFileDialog.getOpenFileName(None,QCoreApplication.translate('','Photo de profil'),'','Images (*.png *.jpg *.jpeg *.webp)')
         if path:shutil.copyfile(path,CONFIG/'.face');self.changed.emit()
         return self.localUrl(str(CONFIG/'.face')) if path else ''
     @Slot(str,str,result=bool)
@@ -591,7 +591,7 @@ class Bridge(QObject):
     def chooseCity(self):
         self.modal=True
         try:
-            city,ok=QInputDialog.getText(None,'Météo · Open-Meteo','Ville, pays',QLineEdit.Normal,self.city)
+            city,ok=QInputDialog.getText(None,QCoreApplication.translate('','Météo · Open-Meteo'),QCoreApplication.translate('','Ville, pays'),QLineEdit.Normal,self.city)
             if ok and city.strip():self.city=city.strip()[:120];(CONFIG/'weather.json').write_text(json.dumps({'city':self.city}),encoding='utf-8');self.weather_at=0;self.refreshWeather()
         finally:self.modal=False
     @Slot()

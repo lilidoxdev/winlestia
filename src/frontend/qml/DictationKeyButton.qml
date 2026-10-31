@@ -9,7 +9,7 @@ IconTextButton{
  id:button
  property bool capturing:false
  readonly property int current:Bridge.settings.dictationKey??0xA5
- text:capturing?qsTr("Appuie sur une touche…"):Bridge.vkName(current)||qsTr("Choisir")
+ text:capturing?qsTr("Appuie sur une touche…"):qsTr(Bridge.vkName(current))||qsTr("Choisir")
  icon:"keyboard";type:IconTextButton.Tonal
  onClicked:button.begin()
  // La capture se fait dans le backend (hook clavier bas niveau) : Qt ne reçoit pas le clavier dans ce shell.

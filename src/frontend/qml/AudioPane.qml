@@ -14,8 +14,8 @@ Item {
         RowLayout{Layout.fillWidth:true;spacing:Appearance.spacing.normal
             MaterialIcon{text:root.microphone?"mic":"speaker";font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
             ColumnLayout{spacing:3
-                StyledText{text:root.microphone?"Microphones":"Sortie audio";font.pointSize:Appearance.font.size.title}
-                StyledText{text:root.microphone?"Choisis ton entrée et règle sa sensibilité":"Choisis où écouter tes applications";font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+                StyledText{text:root.microphone?qsTr("Microphones"):qsTr("Sortie audio");font.pointSize:Appearance.font.size.title}
+                StyledText{text:root.microphone?qsTr("Choisis ton entrée et règle sa sensibilité"):qsTr("Choisis où écouter tes applications");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
             }
             Item{Layout.fillWidth:true}
             IconButton{icon:"close";type:IconButton.Text;onClicked:Bridge.closePanel()}
@@ -35,9 +35,9 @@ Item {
                         IconButton{icon:row.modelData.selected?"check_circle":root.microphone?"mic":"speaker";type:IconButton.Text;onClicked:Bridge.action("deviceSelect",{id:row.modelData.id})}
                         ColumnLayout{Layout.fillWidth:true;spacing:4
                             StyledText{text:row.modelData.name;Layout.fillWidth:true;elide:Text.ElideRight;font.pointSize:Appearance.font.size.normal}
-                            StyledText{text:row.modelData.selected?"Périphérique par défaut":"Cliquer pour utiliser";font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+                            StyledText{text:row.modelData.selected?qsTr("Périphérique par défaut"):qsTr("Cliquer pour utiliser");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
                         }
-                        IconTextButton{text:row.modelData.selected?"Actuel":"Choisir";type:IconTextButton.Text;onClicked:Bridge.action("deviceSelect",{id:row.modelData.id})}
+                        IconTextButton{text:row.modelData.selected?qsTr("Actuel"):qsTr("Choisir");type:IconTextButton.Text;onClicked:Bridge.action("deviceSelect",{id:row.modelData.id})}
                     }
                     RowLayout{Layout.fillWidth:true;spacing:12
                         IconButton{icon:row.modelData.muted?(root.microphone?"mic_off":"volume_off"):(root.microphone?"mic":"volume_up");type:IconButton.Text;onClicked:Bridge.action("deviceMute",{id:row.modelData.id,muted:!row.modelData.muted})}

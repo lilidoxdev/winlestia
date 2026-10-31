@@ -135,7 +135,7 @@ Window {
         color:Colours.palette.m3surfaceContainerHighest;border.width:1;border.color:Colours.palette.m3outlineVariant
         opacity:noticeTimer.running?1:0;visible:opacity>.01
         Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
-        StyledText{id:noticeLabel;anchors.centerIn:parent;width:parent.width-26;text:Bridge.notice;wrapMode:Text.Wrap;font.pointSize:11}
+        StyledText{id:noticeLabel;anchors.centerIn:parent;width:parent.width-26;text:qsTr(Bridge.notice);wrapMode:Text.Wrap;font.pointSize:11}
     }
     Loader{id:recycleLoader;property bool once:false;active:Bridge.fileDragNearTop||once;onLoaded:once=true;sourceComponent:RecycleDrop{}}
     Repeater{model:Bridge.frameScreens;delegate:Item{id:frameHolder;required property var modelData;ScreenFrame{modelData:frameHolder.modelData}Instantiator{model:1;active:Bridge.settings.desktopLogo??false;delegate:DesktopLogo{modelData:frameHolder.modelData}}}}

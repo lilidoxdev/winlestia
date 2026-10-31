@@ -22,7 +22,7 @@ Window{
     StyledText{anchors.centerIn:parent;text:recorder.draft||qsTr("Ctrl + une touche");font.pointSize:22;color:Colours.palette.m3primary}
     Keys.onPressed:event=>{event.accepted=true;if(event.key===Qt.Key_Escape){recorder.finish();return}if(event.key>=Qt.Key_Shift&&event.key<=Qt.Key_Alt)return;recorder.draft=Bridge.shortcutText(event.key,event.modifiers);Bridge.captureShortcut(recorder.kind,event.key,event.modifiers)}
    }
-   StyledText{Layout.fillWidth:true;text:Bridge.notice||qsTr("Le raccourci est enregistré automatiquement.");font.pointSize:10;wrapMode:Text.WordWrap;color:Colours.palette.m3onSurfaceVariant}
+   StyledText{Layout.fillWidth:true;text:qsTr(Bridge.notice)||qsTr("Le raccourci est enregistré automatiquement.");font.pointSize:10;wrapMode:Text.WordWrap;color:Colours.palette.m3onSurfaceVariant}
    StyledText{text:qsTr("Échap pour annuler");font.pointSize:9;color:Colours.palette.m3outline}
   }
  }

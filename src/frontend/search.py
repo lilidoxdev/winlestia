@@ -2,6 +2,12 @@
 import ast, json, math, operator, os, re, shutil, threading, time, unicodedata
 from pathlib import Path
 
+def tr(text,language='fr'):
+    # Same table as the QML qsTr(); French stays the source text. Matching always uses the French originals.
+    try:from localization import TABLE
+    except ImportError:return text
+    return TABLE.get(text,{}).get(language,text)
+
 def fold(value):
     return ''.join(c for c in unicodedata.normalize('NFD',value.lower()) if not unicodedata.combining(c))
 
@@ -80,7 +86,7 @@ def settings_results(words,language='fr',limit=4):
         if all(w in fold(' '.join(page[1:])) for w in words):found.append({'id':page[0],'name':page[column],'comment':SETTINGS_LABEL.get(language,SETTINGS_LABEL['fr']),'icon':'settings','kind':'setting'})
     return found[:limit]
 
-def window_results(needle,windows,limit=5):
+def window_results(needle,windows,limit=5,language='fr'):
     # Open windows whose title or executable name contains every typed word; the shell's own windows (titles "Panneaux · ...") are left out.
     words=fold(needle).split();ranked=[]
     for entry in windows or []:
@@ -90,7 +96,7 @@ def window_results(needle,windows,limit=5):
         if not hwnd or not title or fold(title).startswith('panneaux ·'):continue
         if words and all(w in fold(title+' '+exe) for w in words):ranked.append((0 if fold(title).startswith(words[0]) else 1,hwnd,title,exe))
     ranked.sort(key=lambda v:v[0])
-    return [{'id':'window:%d'%hwnd,'hwnd':hwnd,'name':title,'comment':exe or 'Fenêtre','icon':'web_asset','kind':'window'} for _,hwnd,title,exe in ranked[:limit]]
+    return [{'id':'window:%d'%hwnd,'hwnd':hwnd,'name':title,'comment':exe or tr('Fenêtre',language),'icon':'web_asset','kind':'window'} for _,hwnd,title,exe in ranked[:limit]]
 
 CALC_WORDS=((re.compile(r'(?<=[\d)\s])\s*divis[eé]e?\s+par\s*',re.I),'/'),(re.compile(r'\sfois\s',re.I),'*'),(re.compile(r'\splus\s',re.I),'+'),(re.compile(r'\smoins\s',re.I),'-'))
 TIME_LIKE=re.compile(r'^\d{1,2}:\d{2}(:\d{2})?\s*(am|pm)?$',re.I)
@@ -124,15 +130,15 @@ def calculate(text,language='fr'):
 def palette_search(query,state,language='fr',windows=None):
     raw=query.strip();needle=fold(raw.lstrip('>'));words=needle.split();results=[]
     result=calculate(raw,language)
-    if result is not None:results.append({'id':raw,'name':'= '+result,'comment':'Entrée pour copier le résultat','icon':'calculate','kind':'calc'})
+    if result is not None:results.append({'id':raw,'name':'= '+result,'comment':tr('Entrée pour copier le résultat',language),'icon':'calculate','kind':'calc'})
     if not raw and not raw.startswith('>'):
         for entry in state.get('systemRecent',[]):results.append({**entry,'kind':'systemRecent'})
         for entry in state.get('recent',[]):
-            if not any(r['id']==entry['id'] for r in results):results.append({**entry,'kind':'app','icon':'apps','comment':'Recent'})
+            if not any(r['id']==entry['id'] for r in results):results.append({**entry,'kind':'app','icon':'apps','comment':tr('Récents',language)})
     if not raw.startswith('>'):
         for tab in state.get('quickTabs',[]):
-            if not raw or all(w in fold(tab['name']) for w in words):results.append({**tab,'kind':'quickTab','icon':'bolt','comment':'Onglet rapide'})
-        if raw:results.extend(window_results(needle,windows))
+            if not raw or all(w in fold(tab['name']) for w in words):results.append({**tab,'kind':'quickTab','icon':'bolt','comment':tr('Onglet rapide',language)})
+        if raw:results.extend(window_results(needle,windows,language=language))
         entries=state.get('apps',[]) if raw else []
         ranked=[]
         for entry in entries:
@@ -140,15 +146,15 @@ def palette_search(query,state,language='fr',windows=None):
             if all(w in haystack for w in words):ranked.append((0 if name.startswith(needle) else 1,name,entry))
         for _,_,entry in sorted(ranked,key=lambda v:v[:2])[:8]:results.append({**entry,'comment':entry.get('category','')+' · '+entry.get('board',''),'kind':'app','icon':'apps'})
         for entry in state.get('websites',[]):
-            if all(w in fold(entry['name']) for w in words):results.append({**entry,'kind':'website','icon':'language','comment':'Site internet'})
+            if all(w in fold(entry['name']) for w in words):results.append({**entry,'kind':'website','icon':'language','comment':tr('Site internet',language)})
     for key,name,detail,icon,kind in COMMANDS:
         if kind=='session':
             # Session actions are destructive: whole-query prefix of the name, an explicit keyword or the id, at least 3 letters, never a substring.
             if len(needle)<3 or not any(c.startswith(needle) for c in [fold(name),key,*SESSION_KEYWORDS.get(key,())]):continue
         elif not all(w in fold(name+' '+detail) for w in words):continue
-        results.append({'id':key,'name':name,'comment':detail,'icon':icon,'kind':kind})
+        results.append({'id':key,'name':tr(name,language),'comment':tr(detail,language),'icon':icon,'kind':kind})
     if raw and not raw.startswith('>'):results.extend(settings_results(words,language))
-    if raw and not results:results.append({'id':raw,'name':'Rechercher « '+raw+' »','comment':'Ouvrir dans le navigateur','kind':'web','icon':'travel_explore'})
+    if raw and not results:results.append({'id':raw,'name':tr('Rechercher « %1 »',language).replace('%1',raw),'comment':tr('Ouvrir dans le navigateur',language),'kind':'web','icon':'travel_explore'})
     return results[:12]
 
 

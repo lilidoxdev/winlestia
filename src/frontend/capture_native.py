@@ -1,5 +1,5 @@
 # Python 3.12 / capture_native.py / Qt 6. In-memory capture and matching annotation export.
-from PySide6.QtCore import QObject, Signal, Slot, Property, QRect, QPointF, Qt
+from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot, Property, QRect, QPointF, Qt
 from PySide6.QtGui import QImage, QPainter, QPen, QColor, QGuiApplication
 from PySide6.QtQuick import QQuickImageProvider
 from PySide6.QtWidgets import QFileDialog
@@ -65,7 +65,7 @@ class CaptureController(QObject):
             output=render_capture(self.provider.image,region,strokes,self.logical)
             if action=='save':
                 self.active=False;self.changed.emit()
-                path,_=QFileDialog.getSaveFileName(None,'Enregistrer la capture','Capture.png','Image PNG (*.png)')
+                path,_=QFileDialog.getSaveFileName(None,QCoreApplication.translate('','Enregistrer la capture'),'Capture.png','Image PNG (*.png)')
                 if not path:self.active=True;self.changed.emit();return
                 if not path.lower().endswith('.png'):path+='.png'
                 if not output.save(path,'PNG'):raise ValueError('Impossible d’enregistrer la capture.')

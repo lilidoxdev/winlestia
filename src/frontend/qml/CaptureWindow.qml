@@ -65,7 +65,7 @@ Window {
         }
     }
     Shortcut{sequence:"Escape";enabled:root.visible;onActivated:Bridge.capture.cancel()}
-    StyledRect{anchors.bottom:parent.bottom;anchors.bottomMargin:20;anchors.horizontalCenter:parent.horizontalCenter;width:Math.min(600,parent.width-40);height:errorLabel.implicitHeight+24;radius:Appearance.rounding.large;color:Colours.palette.m3surface;visible:Bridge.capture.errorText.length>0;StyledText{id:errorLabel;anchors.centerIn:parent;width:parent.width-28;wrapMode:Text.Wrap;text:Bridge.capture.errorText}}
+    StyledRect{anchors.bottom:parent.bottom;anchors.bottomMargin:20;anchors.horizontalCenter:parent.horizontalCenter;width:Math.min(600,parent.width-40);height:errorLabel.implicitHeight+24;radius:Appearance.rounding.large;color:Colours.palette.m3surface;visible:Bridge.capture.errorText.length>0;StyledText{id:errorLabel;anchors.centerIn:parent;width:parent.width-28;wrapMode:Text.Wrap;text:qsTr(Bridge.capture.errorText)}}
     Shortcut{sequence:"Ctrl+C";enabled:root.visible&&root.selected;onActivated:root.finish("copy")}
     Shortcut{sequence:"Ctrl+S";enabled:root.visible&&root.selected;onActivated:root.finish("save")}
     Shortcut{sequence:"Ctrl+Z";enabled:root.visible;onActivated:{root.strokes=root.strokes.slice(0,-1);canvas.requestPaint()}}

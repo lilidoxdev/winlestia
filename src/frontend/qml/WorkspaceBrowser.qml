@@ -81,7 +81,7 @@ Item {
     readonly property var navItems:spaces.concat(shortcuts)
     readonly property int navIndex:navItems.findIndex(n=>n.id===scope)
     function navY(i){return i*52+(i>=4?17:0)}
-    readonly property string title:scope==="documents"?"Documents & médias":scope==="favorites"?"Favoris":scope==="recent"?"Récemment ouverts":spaces.find(s=>s.id===scope)?.name||"Tout ton espace"
+    readonly property string title:scope==="documents"?qsTr("Documents & médias"):scope==="favorites"?qsTr("Favoris"):scope==="recent"?qsTr("Récemment ouverts"):qsTr(spaces.find(s=>s.id===scope)?.name||"Tout ton espace")
     readonly property var base:index.filter(i=>{const e=i.entry;return (scope==="all"||scope==="favorites"||scope==="recent"||e.board===scope)&&(!(favoritesOnly||scope==="favorites")||e.favorite)&&(scope!=="recent"||e.recent>=0)})
     readonly property var categoryCounts:{const m={};for(const i of base){const c=i.entry.category;if(c)m[c]=(m[c]||0)+1}return m}
     readonly property var categories:["Tout"].concat(Object.keys(categoryCounts).sort((a,b)=>a.localeCompare(b)))
@@ -312,7 +312,7 @@ Item {
                         }
                         Rectangle{y:browser.navY(3)+48+8;width:parent.width;height:1;color:Colours.palette.m3outlineVariant}
                         Repeater {model:browser.navItems
-                            NavItem {required property var modelData;required property int index;width:parent.width;y:browser.navY(index);icon:modelData.icon;label:modelData.name;count:browser.counts[modelData.id]??0;selected:browser.scope===modelData.id;onTriggered:browser.selectBoard(modelData.id)}
+                            NavItem {required property var modelData;required property int index;width:parent.width;y:browser.navY(index);icon:modelData.icon;label:qsTr(modelData.name);count:browser.counts[modelData.id]??0;selected:browser.scope===modelData.id;onTriggered:browser.selectBoard(modelData.id)}
                         }
                     }
                     Item{Layout.fillHeight:true}
@@ -349,7 +349,7 @@ Item {
                         Rectangle{anchors.fill:parent;radius:parent.radius;color:"transparent";border.width:2;border.color:Colours.palette.m3primary;opacity:query.activeFocus?1:0;Behavior on opacity{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}}
                         RowLayout{anchors.fill:parent;anchors.leftMargin:Appearance.padding.large+Appearance.padding.small;anchors.rightMargin:Appearance.padding.larger
                             MaterialIcon{text:qsTr("search");color:query.activeFocus?Colours.palette.m3primary:Colours.palette.m3outline;scale:query.activeFocus&&browser.fx?1.15:1;Behavior on scale{Spring{}}}
-                            StyledTextField{id:query;objectName:"workspaceQuery";Layout.fillWidth:true;placeholderText:"Rechercher dans "+browser.title.toLocaleLowerCase()+"  (Ctrl+F)"
+                            StyledTextField{id:query;objectName:"workspaceQuery";Layout.fillWidth:true;placeholderText:qsTr("Rechercher dans %1  (Ctrl+F)").arg(browser.title.toLocaleLowerCase())
                                 Keys.onReturnPressed:{if(browser.entries.length)Bridge.action("launch",{id:browser.entries[0].id})}
                                 // First Esc clears the text (overrides Main's Escape shortcut only when there is text); next Esc closes via Main.
                                 Keys.onShortcutOverride:event=>{if(event.key===Qt.Key_Escape&&query.text.length>0)event.accepted=true}
@@ -539,8 +539,8 @@ Item {
     }
     Dialog {
         id:editor;title:qsTr("Personnaliser cet accès");cardWidth:430
-        StyledTextField{id:nameField;Layout.fillWidth:true;placeholderText:"Nom"}
-        StyledTextField{id:categoryField;Layout.fillWidth:true;placeholderText:"Catégorie"}
+        StyledTextField{id:nameField;Layout.fillWidth:true;placeholderText:qsTr("Nom")}
+        StyledTextField{id:categoryField;Layout.fillWidth:true;placeholderText:qsTr("Catégorie")}
         actions:[
             Item{Layout.fillWidth:true},
             TextButton{type:TextButton.Text;text:qsTr("Annuler");onClicked:editor.close()},

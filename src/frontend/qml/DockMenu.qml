@@ -56,8 +56,8 @@ Window {
     readonly property var appItems:[
         {id:"open",text:qsTr("Ouvrir une nouvelle fenêtre"),icon:"open_in_new"},
         {id:"admin",text:qsTr("Exécuter en administrateur"),icon:"admin_panel_settings"},
-        {id:"pin",text:entry.pinned?"Détacher de la barre des tâches":"Épingler à la barre des tâches",icon:"keep"},
-        {id:"favorite",text:entry.favorite?"Retirer des favoris":"Ajouter aux favoris et au dock",icon:"star"},
+        {id:"pin",text:entry.pinned?qsTr("Détacher de la barre des tâches"):qsTr("Épingler à la barre des tâches"),icon:"keep"},
+        {id:"favorite",text:entry.favorite?qsTr("Retirer des favoris"):qsTr("Ajouter aux favoris et au dock"),icon:"star"},
         {id:"reveal",text:qsTr("Afficher dans l’Explorateur"),icon:"folder_open"},
         {id:"minimize",text:qsTr("Réduire la fenêtre"),icon:"minimize",window:true},
         {id:"maximize",text:qsTr("Agrandir la fenêtre"),icon:"fullscreen",window:true},
@@ -71,9 +71,9 @@ Window {
             anchors.fill:parent;anchors.margins:14;clip:true;contentWidth:availableWidth
             Column {
                 id:body;width:menu.width-28;spacing:3
-                StyledText {width:parent.width-12;x:6;text:menu.kind==="desktop"?(menu.entry.name||qsTr("Bureau %1").arg((menu.entry.index??0)+1)):menu.kind==="system"?"Windows · Winlestia":menu.kind==="power"?"Alimentation":menu.kind==="running"?"Applications":menu.entry.name??"Application";font.pointSize:Appearance.font.size.normal;elide:Text.ElideRight;topPadding:5;bottomPadding:9}
+                StyledText {width:parent.width-12;x:6;text:menu.kind==="desktop"?(menu.entry.name||qsTr("Bureau %1").arg((menu.entry.index??0)+1)):menu.kind==="system"?"Windows · Winlestia":menu.kind==="power"?qsTr("Alimentation"):menu.kind==="running"?qsTr("Applications"):menu.entry.name??qsTr("Application");font.pointSize:Appearance.font.size.normal;elide:Text.ElideRight;topPadding:5;bottomPadding:9}
                 IconTextButton{visible:menu.fromRunning&&menu.kind==="app";text:qsTr("Retour");icon:"arrow_back";type:IconTextButton.Text;onClicked:{menu.kind="running";menu.confirmStop=false}}
-                StyledText {visible:menu.kind==="app";width:parent.width-12;x:6;text:(menu.entry.background?"En arrière-plan":(menu.entry.count??0)+" fenêtre(s)")+"\n"+(menu.entry.path??"");font.pointSize:Appearance.font.size.small;wrapMode:Text.WrapAnywhere;color:Colours.palette.m3onSurfaceVariant;bottomPadding:8;maximumLineCount:3;elide:Text.ElideRight}
+                StyledText {visible:menu.kind==="app";width:parent.width-12;x:6;text:(menu.entry.background?qsTr("En arrière-plan"):qsTr("%1 fenêtre(s)").arg(menu.entry.count??0))+"\n"+(menu.entry.path??"");font.pointSize:Appearance.font.size.small;wrapMode:Text.WrapAnywhere;color:Colours.palette.m3onSurfaceVariant;bottomPadding:8;maximumLineCount:3;elide:Text.ElideRight}
                             Row {visible:menu.kind==="running";spacing:4
                     IconTextButton{text:qsTr("En cours");checked:!menu.backgroundTab;onClicked:menu.backgroundTab=false}
                     IconTextButton{text:qsTr("Arrière-plan");checked:menu.backgroundTab;onClicked:menu.backgroundTab=true}

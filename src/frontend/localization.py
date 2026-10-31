@@ -500,3 +500,102 @@ Ajouter|Add|Añadir
 Voir|View|Ver
 Tes derniers accès apparaîtront ici|Your latest shortcuts will appear here|Tus últimos accesos aparecerán aquí""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}
+for row in """Choisis ton entrée et règle sa sensibilité|Pick your input and adjust its sensitivity|Elige tu entrada y ajusta su sensibilidad
+Choisis où écouter tes applications|Choose where to hear your applications|Elige dónde escuchar tus aplicaciones
+Périphérique par défaut|Default device|Dispositivo predeterminado
+Cliquer pour utiliser|Click to use|Haz clic para usar
+Actuel|Current|Actual
+Image copiée|Copied image|Imagen copiada
+Application|Application|Aplicación
+En arrière-plan|In the background|En segundo plano
+%1 fenêtre(s)|%1 window(s)|%1 ventana(s)
+Documents & médias|Documents & media|Documentos y multimedia
+Récemment ouverts|Recently opened|Abiertos recientemente
+Tout ton espace|Your whole space|Todo tu espacio
+Rechercher dans %1  (Ctrl+F)|Search in %1  (Ctrl+F)|Buscar en %1  (Ctrl+F)
+Nom|Name|Nombre
+Catégorie|Category|Categoría
+Météo indisponible · réessayer|Weather unavailable · try again|Tiempo no disponible · reintentar
+Entrée pour copier le résultat|Press Enter to copy the result|Intro para copiar el resultado
+Fenêtre|Window|Ventana
+Onglet rapide|Quick tab|Pestaña rápida
+Site internet|Website|Sitio web
+Rechercher « %1 »|Search « %1 »|Buscar « %1 »
+Ouvrir dans le navigateur|Open in browser|Abrir en el navegador
+Horloge, calendrier et lecture|Clock, calendar and playback|Reloj, calendario y reproducción
+Commandes Windows|Windows controls|Controles de Windows
+Volume, écran et connexions|Volume, display and connections|Volumen, pantalla y conexiones
+Températures et activité du PC|PC temperatures and activity|Temperaturas y actividad del PC
+Tous tes logiciels|All your software|Todo tu software
+Ta bibliothèque de jeux|Your game library|Tu biblioteca de juegos
+Reprendre tes projets|Resume your projects|Retomar tus proyectos
+Dossiers et médias|Folders and media|Carpetas y multimedia
+Retrouver un élément copié|Find a copied item|Encontrar un elemento copiado
+Apparence et comportement|Appearance and behaviour|Apariencia y comportamiento
+Capture annotée|Annotated capture|Captura anotada
+Encadrer une zone de l’écran|Frame an area of the screen|Enmarcar una zona de la pantalla
+Note rapide|Quick note|Nota rápida
+Bloc-notes persistant|Persistent notepad|Bloc de notas persistente
+Une session de concentration|A focus session|Una sesión de concentración
+Son et micro|Sound and microphone|Sonido y micrófono
+Périphériques et applications|Devices and applications|Dispositivos y aplicaciones
+Retrouver une session de travail|Resume a work session|Retomar una sesión de trabajo
+Onglets rapides|Quick tabs|Pestañas rápidas
+Personnaliser les raccourcis de cette commande|Customize this command's shortcuts|Personalizar los atajos de este comando
+Les outils du quotidien|Everyday tools|Las herramientas del día a día
+Processus et démarrage|Processes and startup|Procesos e inicio
+Calculatrice Windows|Windows Calculator|Calculadora de Windows
+Ouvrir la calculatrice|Open the calculator|Abrir la calculadora
+Fond d’écran|Wallpaper|Fondo de pantalla
+Wallpaper · changer le fond du bureau|Wallpaper · change the desktop background|Wallpaper · cambiar el fondo del escritorio
+Emojis|Emojis|Emojis
+Emoji · chercher et copier un emoji|Emoji · find and copy an emoji|Emoji · buscar y copiar un emoji
+File · chercher dans l’index Windows|File · search the Windows index|File · buscar en el índice de Windows
+Shutdown · éteindre le PC (confirmation demandée)|Shutdown · turn off the PC (confirmation required)|Shutdown · apagar el PC (se pide confirmación)
+Reboot · redémarrer le PC (confirmation demandée)|Reboot · restart the PC (confirmation required)|Reboot · reiniciar el PC (se pide confirmación)
+Logout · fermer la session (confirmation demandée)|Logout · sign out (confirmation required)|Logout · cerrar la sesión (se pide confirmación)
+Lock · verrouiller la session (confirmation demandée)|Lock · lock the session (confirmation required)|Lock · bloquear la sesión (se pide confirmación)
+Sleep · mise en veille (confirmation demandée)|Sleep · put the PC to sleep (confirmation required)|Sleep · suspender el PC (se pide confirmación)
+Hibernate · hiberner le PC (confirmation demandée)|Hibernate · hibernate the PC (confirmation required)|Hibernate · hibernar el PC (se pide confirmación)
+Aucune capture disponible.|No capture available.|No hay ninguna captura disponible.
+Sélectionne une zone plus grande.|Select a larger area.|Selecciona una zona más grande.
+Le panneau ne s’est pas masqué. Relance la capture.|The panel did not hide. Start the capture again.|El panel no se ocultó. Vuelve a iniciar la captura.
+Windows ne permet pas cette capture.|Windows does not allow this capture.|Windows no permite esta captura.
+Impossible d’enregistrer la capture.|Could not save the capture.|No se pudo guardar la captura.
+Impossible de préparer la capture.|Could not prepare the capture.|No se pudo preparar la captura.
+Le fond d’écran n’a pas pu être appliqué.|The wallpaper could not be applied.|No se pudo aplicar el fondo de pantalla.
+Fond d’écran par écran indisponible pour le moment.|Per-screen wallpaper is unavailable for now.|El fondo por pantalla no está disponible por ahora.
+Fichiers copiés dans le presse-papiers.|Files copied to the clipboard.|Archivos copiados al portapapeles.
+Archive ZIP créée.|ZIP archive created.|Archivo ZIP creado.
+Impossible d’ouvrir ce fichier.|Could not open this file.|No se pudo abrir este archivo.
+Raccourci enregistré|Shortcut saved|Atajo guardado
+Choisis Ctrl, Alt ou Windows avec une autre touche.|Choose Ctrl, Alt or Windows together with another key.|Elige Ctrl, Alt o Windows junto con otra tecla.
+Capture épinglée|Capture pinned|Captura fijada
+Texte copié dans le presse-papiers|Text copied to the clipboard|Texto copiado al portapapeles
+Maj gauche|Left Shift|Mayús izquierda
+Maj droite|Right Shift|Mayús derecha
+Ctrl gauche|Left Ctrl|Ctrl izquierda
+Ctrl droite|Right Ctrl|Ctrl derecha
+Alt gauche|Left Alt|Alt izquierda
+Alt droit|Right Alt|Alt derecha
+Windows gauche|Left Windows|Windows izquierda
+Windows droite|Right Windows|Windows derecha
+Verr. Maj|Caps Lock|Bloq Mayús
+Arrêt défil.|Scroll Lock|Bloq Despl
+Menu contextuel|Context menu|Menú contextual
+Espace|Space|Espacio
+Retour arrière|Backspace|Retroceso
+Entrée|Enter|Intro
+Inser|Insert|Insertar
+Suppr|Delete|Supr
+Début|Home|Inicio
+Fin|End|Fin
+Page préc.|Page Up|Re Pág
+Page suiv.|Page Down|Av Pág
+Enregistrer la capture|Save the capture|Guardar la captura
+Ajouter des images|Add images|Añadir imágenes
+Icône de cet accès|Icon for this shortcut|Icono de este acceso
+Photo de profil|Profile picture|Foto de perfil
+Ville, pays|City, country|Ciudad, país
+Météo · Open-Meteo|Weather · Open-Meteo|Tiempo · Open-Meteo""".splitlines():
+ fr,en,es=row.split('|');TABLE.setdefault(fr,{'fr':fr,'en':en,'es':es})
