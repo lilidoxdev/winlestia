@@ -8,7 +8,9 @@ import qs.config
 
 ColumnLayout {
     property bool mixerOpen:false
+    property bool wifiOpen:false
     signal toggleMixer()
+    signal toggleWifi()
     spacing:Appearance.spacing.large
     RowLayout {
         Layout.fillWidth:true
@@ -18,6 +20,7 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth:true;spacing:12
         IconTextButton {Layout.fillWidth:true;icon:"wifi";text:Bridge.controls.network || "Wi-Fi";toggle:true;checked:Bridge.controls.wifiOn??false;onClicked:Bridge.action("radio",{kind:"wifi"})}
+        IconButton{objectName:"wifiToggle";icon:"chevron_right";type:IconButton.Text;rotation:wifiOpen?180:0;onClicked:toggleWifi();Behavior on rotation{Anim{duration:Appearance.anim.durations.small}}}
         IconTextButton {Layout.fillWidth:true;icon:"bluetooth";text:qsTr("Bluetooth");toggle:true;checked:Bridge.controls.bluetoothOn??false;onClicked:Bridge.action("radio",{kind:"bluetooth"})}
     }
     ColumnLayout {

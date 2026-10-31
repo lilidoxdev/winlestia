@@ -209,6 +209,38 @@ Rechercher un réglage|Search settings|Buscar un ajuste
 Aucun réglage trouvé|No setting found|No se encontró ningún ajuste
 Essaie un autre mot|Try another word|Prueba con otra palabra
 Effets allégés|Reduced effects|Efectos reducidos"""
+ROWS+="\n"+r"""Le Wi-Fi est désactivé.|Wi-Fi is turned off.|El Wi-Fi está desactivado.
+Aucune carte Wi-Fi détectée sur cet ordinateur.|No Wi-Fi adapter found on this computer.|No se detectó ningún adaptador Wi-Fi en este equipo.
+Le service Wi-Fi de Windows est arrêté.|The Windows Wi-Fi service is stopped.|El servicio Wi-Fi de Windows está detenido.
+Windows demande l’autorisation de localisation pour afficher les réseaux Wi-Fi.|Windows needs location permission to show Wi-Fi networks.|Windows necesita permiso de ubicación para mostrar las redes Wi-Fi.
+Aucun réseau trouvé pour le moment.|No network found for now.|No se encontró ninguna red por ahora.
+La liste des réseaux est indisponible pour le moment.|The network list is unavailable for now.|La lista de redes no está disponible por ahora.
+Recherche des réseaux…|Looking for networks…|Buscando redes…
+Connexion impossible. Vérifiez le mot de passe.|Could not connect. Check the password.|No se pudo conectar. Comprueba la contraseña.
+Le réseau ne répond pas. Réessayez.|The network is not responding. Try again.|La red no responde. Inténtalo de nuevo.
+Ce réseau n’est plus à portée.|This network is no longer in range.|Esta red ya no está al alcance.
+Windows a refusé l’opération.|Windows refused the operation.|Windows rechazó la operación.
+Ce type de réseau n’est pas pris en charge ici.|This network type is not supported here.|Este tipo de red no es compatible aquí.
+Le mot de passe doit contenir au moins 8 caractères.|The password must have at least 8 characters.|La contraseña debe tener al menos 8 caracteres.
+Le mot de passe doit contenir 63 caractères au plus.|The password must have 63 characters at most.|La contraseña debe tener 63 caracteres como máximo.
+Le mot de passe contient des caractères non pris en charge.|The password contains unsupported characters.|La contraseña contiene caracteres no compatibles.
+La connexion a échoué.|The connection failed.|La conexión falló.
+Réseaux Wi-Fi|Wi-Fi networks|Redes Wi-Fi
+Choisissez un réseau pour vous connecter|Choose a network to connect|Elige una red para conectarte
+Ce réseau demande une page de connexion.|This network needs a sign-in page.|Esta red requiere una página de inicio de sesión.
+Ouvrir la page|Open the page|Abrir la página
+Activer le Wi-Fi|Turn on Wi-Fi|Activar el Wi-Fi
+Ouvrir les réglages de localisation|Open location settings|Abrir ajustes de ubicación
+Connecté|Connected|Conectado
+Mémorisé|Remembered|Recordada
+Réseau d’entreprise|Enterprise network|Red empresarial
+Non pris en charge|Not supported|No compatible
+Mot de passe|Password|Contraseña
+Ce réseau demande une authentification d’entreprise (802.1X). Connectez-vous depuis Windows.|This network needs enterprise (802.1X) sign-in. Connect from Windows.|Esta red requiere autenticación empresarial (802.1X). Conéctate desde Windows.
+Connexion…|Connecting…|Conectando…
+Ouvrir dans Windows|Open in Windows|Abrir en Windows
+Oublier|Forget|Olvidar
+Se connecter|Connect|Conectar"""
 TABLE={}
 for row in ROWS.splitlines():
  fr,en,es=row.split('|');value={'fr':fr,'en':en,'es':es};TABLE[fr]=value;TABLE.setdefault(en,value)

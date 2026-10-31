@@ -9,4 +9,5 @@ PalettePane PalettePane.qml
 ShellPreferences ShellPreferences.qml
 ShellToolTip ShellToolTip.qml
 WindowsControls WindowsControls.qml
+WifiPane WifiPane.qml
 WorkspaceBrowser WorkspaceBrowser.qml

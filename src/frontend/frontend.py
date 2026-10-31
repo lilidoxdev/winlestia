@@ -532,7 +532,7 @@ class Bridge(QObject):
     @Slot(bool,int)
     def subscribe(self,visible,page):
         visible=visible or bool(self.recording_kind)
-        updated={**self.client.subscription,'visible':visible,'page':page,'controls':bool(self.top and self.top.property('controlsOpen')),'mixer':bool(self.top and self.top.property('audioSampling'))}
+        updated={**self.client.subscription,'visible':visible,'page':page,'controls':bool(self.top and self.top.property('controlsOpen')),'mixer':bool(self.top and self.top.property('audioSampling')),'wifi':bool(self.top and self.top.property('wifiSampling'))}
         if updated!=self.client.subscription:self.client.subscription=updated;kernel32.SetEvent(self.client.wakeup)
     @Slot(int)
     def openTab(self,index):

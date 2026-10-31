@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace PanneauxGlass;
 
-internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, WallpaperList, Palette, FindWindows, FindFiles, Brightness, BrightnessSet, Visualizer, Quiet }
+internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, WallpaperList, Palette, FindWindows, FindFiles, Brightness, BrightnessSet, Visualizer, Quiet, Wifi }
 
 internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0, int Value = 0);
 
@@ -31,6 +31,7 @@ internal static class CliCommands {
         "  visualizer                   print {\"running\":b,\"frames\":n,\"panelOpen\":b,\"wanted\":b} for the dashboard audio bars (frames since the last start)\n" +
         "  quiet                        print {\"quiet\":b,\"forced\":\"auto|on|off\",\"detected\":b} for the fullscreen quiet mode\n" +
         "  quiet on|off|auto            force the quiet mode without a fullscreen window (not saved: back to auto when the shell restarts)\n" +
+        "  wifi                         print {\"available\":b,\"connected\":b,\"networks\":n,\"reason\":s} for the Wi-Fi (read-only, no network name)\n" +
         "  help                         show this text\n" +
         "Exit codes: 0 success, 1 refused by the shell, 2 unknown command or bad argument, 3 shell not running.";
 
@@ -44,6 +45,7 @@ internal static class CliCommands {
             case "status" when args.Length == 1: command = new(CliKind.Status); return true;
             case "visualizer" when args.Length == 1: command = new(CliKind.Visualizer); return true;
             case "palette" when args.Length == 1: command = new(CliKind.Palette); return true;
+            case "wifi" when args.Length == 1: command = new(CliKind.Wifi); return true;
             case "quiet" when args.Length == 1: command = new(CliKind.Quiet); return true;
             case "quiet" when args.Length == 2: {
                 if (!QuietPolicy.TryParse(args[1], out var forced)) { error = "Quiet mode must be on, off or auto."; return false; }
