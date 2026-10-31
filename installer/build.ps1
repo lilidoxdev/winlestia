@@ -32,6 +32,12 @@ dotnet publish (Join-Path $root 'src\cli\winlestia.csproj') `
     -o (Join-Path $payload 'Glass-v5') --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation de winlestia.exe échouée.' }
 
+# Composants natifs précompilés (ignorés par git) : sans eux le setup serait livré sans outil de restauration.
+$nativeDir = Join-Path $root 'src\backend\native'
+foreach ($required in 'RETABLIR_BARRE_WINDOWS.exe','SECOURS_BUREAU.exe','GlassBackdrop.dll') {
+    if (-not (Test-Path (Join-Path $nativeDir $required))) { throw "Composant natif manquant : $required dans $nativeDir. Copie-le depuis une installation de Winlestia (Glass-v5) ou recompile-le (voir native\README.md)." }
+}
+
 # Fichiers attendus à côté de l’exécutable mais hors du publish
 Copy-Item (Join-Path $root 'src\backend\Inventory.ps1')          (Join-Path $payload 'Glass-v5') -Force
 Copy-Item (Join-Path $root 'src\backend\native\*.dll')          (Join-Path $payload 'Glass-v5') -Force

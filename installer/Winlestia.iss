@@ -104,6 +104,9 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDir: "{app}\Glass-v5"; Description: "Lancer {#AppName} maintenant"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [UninstallRun]
+; Tâche de session créée par le backend (migration de la clé Run) : retirée avant tout le reste.
+Filename: "{sys}\schtasks.exe"; Parameters: "/delete /tn WinlestiaShell /f"; Flags: runhidden waituntilterminated; RunOnceId: "DeleteLogonTask"
+
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoLogo -NoProfile -ExecutionPolicy Bypass -File ""{app}\Close-Winlestia.ps1"" -AppRoot ""{app}"""; Flags: runhidden waituntilterminated; RunOnceId: "CloseWinlestia"
 
 Filename: "{app}\Glass-v5\Winlestia.Files.exe"; Parameters: "--restore"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "RestoreFolderHandler"

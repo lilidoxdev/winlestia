@@ -2,6 +2,8 @@
 
 ## Non publié
 
+- Démarrage et Bureau : lancement par une tâche planifiée utilisateur `WinlestiaShell` à l'ouverture de session (`--qt-shell`, sans administrateur, sans délai), la valeur Run est migrée au lancement et gardée en repli ; les icônes du Bureau sont réaffirmées sur événement Explorer (anti-rebond, au plus une fois par 2 s, après redémarrage d'Explorer) ; la barre Windows attend `TaskbarCreated` si Explorer n'est pas prêt ; les messageries restent chargées en arrière-plan par défaut ; `glass.log` note le premier affichage Qt.
+
 - Lanceur Ctrl+F2 : entrées Éteindre, Redémarrer, Se déconnecter, Verrouiller, Mettre en veille et Hibernation (confirmation avant chaque action) ; textes vides des panneaux Audio, Mélangeur et Presse-papiers traduits.
 
 - Menu de session : extinction, redémarrage, déconnexion, veille et hibernation exigent la confirmation, vérifiée aussi côté C# ; la fermeture du menu annule le choix. Panneaux secondaires : marges et espacements sur les jetons `Appearance`, en-têtes alignés, message « Aucun résultat » dans la commande rapide.

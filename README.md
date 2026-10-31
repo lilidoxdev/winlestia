@@ -22,7 +22,7 @@ The interface is a port of Caelestia; a .NET service handles the system side and
 - Workspaces page listing installed applications, with search.
 - Dock that replaces the Windows taskbar, with a quick command palette.
 - Toolbox: screen capture, text recognition (OCR) on a captured area, color picker, clipboard history, focus timer and notes.
-- Settings for theme, glass opacity, screen frame thickness, taskbar replacement, autostart and global shortcuts.
+- Settings for theme, glass opacity, screen frame thickness, taskbar replacement, autostart and global shortcuts. Autostart is a per-user scheduled task named `WinlestiaShell` (logon trigger, `--qt-shell`, no admin); the old `Run` registry value is migrated to it at launch and kept as a fallback if the task cannot be created. Messaging apps are kept loaded in the background by default (option in Settings).
 - Search field in the settings panel: finds a setting by title or description, ignoring case and accents, across all pages, then scrolls to it and highlights it.
 - Quick controls panel: a "Reduced effects" switch; if Windows refuses a Wi-Fi or Bluetooth toggle, the matching Windows Settings page opens.
 - Virtual desktop indicator in the dock: one dot per Windows desktop, the current one highlighted; click a dot or scroll to switch. It reads the desktop list from the registry and switches with the Win+Ctrl+arrow shortcut. It can be turned off in Settings. A "+" button next to the dots creates a new desktop (Win+Ctrl+D); right-click a dot to close that desktop (its windows move to the neighbouring one).
@@ -118,7 +118,7 @@ Command-line flags of `Panneaux.Glass.exe`:
 ## Troubleshooting
 
 - **The Windows taskbar is missing.** Run `RETABLIR_BARRE_WINDOWS.exe` from the `Glass-v5` folder of the install, or run `Panneaux.Glass.exe --restore-taskbar`. A watchdog also restores the taskbar if Winlestia stops unexpectedly. You can disable the replacement with the taskbar option in Settings ("Barre des tâches Panneaux").
-- **The desktop looks broken or icons are hidden.** Press Ctrl+Alt+Backspace. It runs `SECOURS_BUREAU.exe`, which brings back the Windows desktop icons, stops Winlestia and disables its autostart. The executable can also be launched directly from the install folder.
+- **The desktop looks broken or icons are hidden.** Press Ctrl+Alt+Backspace. It runs `SECOURS_BUREAU.exe`, which brings back the Windows desktop icons, stops Winlestia and disables its autostart (the `WinlestiaShell` task is removed once `SECOURS_BUREAU.exe` is rebuilt from `Secours.cpp`). The executable can also be launched directly from the install folder.
 - **The Caelestia shell does not start.** Start with `Panneaux.Glass.exe --legacy-shell` to use the Glass shell, and check `%LOCALAPPDATA%\Panneaux\glass.log`.
 - **A shortcut does not work.** Another application may already own the combination. Pick a different one in Settings.
 - **Windows protected your PC when launching the setup.** See the SmartScreen note under Installation.

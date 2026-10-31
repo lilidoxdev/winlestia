@@ -46,6 +46,7 @@ internal static class TaskbarNative {
     internal static double Scale(Forms.Screen screen){try{var p=new Native.Point{X=screen.Bounds.Left+10,Y=screen.Bounds.Top+10};if(GetDpiForMonitor(MonitorFromPoint(p,2),0,out var x,out _)==0)return x/96d;}catch{}return 1;}
     internal static Lease Snapshot(){var data=Data(FindWindow("Shell_TrayWnd",null));return new(){State=(int)SHAppBarMessage(4,ref data).ToUInt64(),Visible=ExplorerBars().Where(IsWindowVisible).Select(h=>h.ToInt64()).ToList(),ParentStart=Process.GetCurrentProcess().StartTime.ToUniversalTime().Ticks};}
     internal static void HideExplorer(){var data=Data(FindWindow("Shell_TrayWnd",null));var state=(int)SHAppBarMessage(4,ref data).ToUInt64();data.Param=new IntPtr(state|1);SHAppBarMessage(10,ref data);foreach(var bar in ExplorerBars())ShowWindow(bar,0);}
+    internal static bool ExplorerReady()=>FindWindow("Shell_TrayWnd",null)!=IntPtr.Zero;
     internal static void EnsureHidden(){foreach(var bar in ExplorerBars())if(IsWindowVisible(bar))ShowWindow(bar,0);}
     internal static void Restore(Lease? lease){if(lease==null)return;var data=Data(FindWindow("Shell_TrayWnd",null));data.Param=new IntPtr(lease.State);SHAppBarMessage(10,ref data);foreach(var bar in ExplorerBars())ShowWindow(bar,5);}
     internal static Lease? ReadLease(string path){try{return JsonSerializer.Deserialize<Lease>(File.ReadAllText(path),Store.Json);}catch{return null;}}
