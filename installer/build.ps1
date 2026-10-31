@@ -2,6 +2,16 @@
 # PowerShell 7 / Windows 11. Reproduit exactement l'archive de release :
 #   backend .NET auto-suffisant  +  frontend QML  +  Python 3.12 embarqué  +  Qt 6.10
 # Sortie : build\out\Winlestia-Setup-<version>.exe
+#
+# Build neutre (obligatoire pour une release publique) : les chemins de construction finissent
+# dans les .pyc, les DLL natives et les .pdb. Construire donc depuis un emplacement sans nom
+# d'utilisateur, jamais depuis le dossier personnel :
+#   git clone --no-hardlinks <depot> C:\wl-build\src   (ou git worktree add --detach, au commit final)
+#   cmd /c src\backend\build-backdrop.cmd, build-process-audio.cmd, build-rescue.cmd, build-taskbar-rescue.cmd
+#   $env:TEMP = $env:TMP = 'C:\wl-build\tmp'; $env:NUGET_PACKAGES = 'C:\wl-build\nuget'; $env:PIP_CACHE_DIR = 'C:\wl-build\pip'
+#   pwsh C:\wl-build\src\installer\build.ps1
+# Aucun .pdb ni lanceur pip n'est livre. Verifier ensuite que build\payload ne contient ni le nom
+# d'utilisateur ni C:\Users\ (UTF-8 et UTF-16LE).
 
 $ErrorActionPreference = 'Stop'
 $root    = Split-Path $PSScriptRoot -Parent
@@ -15,13 +25,13 @@ New-Item -ItemType Directory -Force -Path $payload | Out-Null
 
 Write-Host '→ Backend .NET 8 (auto-suffisant)' -ForegroundColor Cyan
 dotnet publish (Join-Path $root 'src\backend\Panneaux.Glass.csproj') `
-    -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false `
+    -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:DebugType=none -p:DebugSymbols=false `
     -o (Join-Path $payload 'Glass-v5') --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation du backend échouée.' }
 
 Write-Host '→ Winlestia Fichiers (.NET 8, auto-suffisant)' -ForegroundColor Cyan
 dotnet publish (Join-Path $root 'src\files\Winlestia.Files.csproj') `
-    -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false `
+    -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:DebugType=none -p:DebugSymbols=false `
     -o (Join-Path $payload 'Glass-v5') --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation de Winlestia Fichiers échouée.' }
 
@@ -90,6 +100,11 @@ Get-ChildItem $site -Filter 'Qt6Quick3D*.dll'     | Remove-Item -Force
 Get-ChildItem $site -Filter 'Qt6Charts*.dll'      | Remove-Item -Force
 Get-ChildItem $site -Filter 'Qt6Multimedia*.dll'  | Remove-Item -Force
 Get-ChildItem $site -Filter '*.pyd' | Where-Object { $_.Name -match 'WebEngine|Pdf|3D|Quick3D|Charts|Multimedia|DataVisualization|Graphs' } | Remove-Item -Force
+
+# Lanceurs pip (pyside6-*.exe, f2py.exe...) : outils de developpement, jamais lances par l'application,
+# et chacun embarque le chemin de l'interpreteur de construction.
+Remove-Item -Recurse -Force (Join-Path $pyDir 'Lib\site-packages\bin') -ErrorAction SilentlyContinue
+Get-ChildItem $payload -Recurse -Filter '*.pdb' -ErrorAction SilentlyContinue | Remove-Item -Force
 
 Write-Host '→ Vérification du runtime embarqué' -ForegroundColor Cyan
 & (Join-Path $pyDir 'python.exe') -c "import PySide6, numpy, PIL, material_color_utilities; print('runtime ok', PySide6.__version__)"
