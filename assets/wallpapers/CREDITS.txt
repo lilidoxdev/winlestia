@@ -1,17 +1,21 @@
 Bundled wallpapers
 
-These 9 images were supplied by the Winlestia maintainer.
+These 10 images were supplied by the Winlestia maintainer.
 They are NOT covered by the GPL-3.0 licence of Winlestia.
 Rights remain with their respective owners. Their licence has not been established.
 Rights holders can ask for the removal of an image through a GitHub issue:
 https://github.com/lilidoxdev/winlestia/issues
 
-racing-teal.jpg
-milky-way-lake.jpg
-crimson-hand.jpg
-black-bloom.jpg
-red-maple-mountain.jpg
-sunset-watchtower.jpg
-pixel-meadow.jpg
-violet-butterfly.jpg
-lofi-rooftop.jpg
+The files are the maintainer's original files, shipped unchanged (not re-encoded or resized).
+Format: bundled name <- original downloaded file name
+
+racing-teal.jpg <- ferrari-296-gt-3840x2160-27353.jpg
+milky-way-lake.jpg <- milky-way-alps-3840x2160-27371.jpg
+crimson-hand.png <- jujutsu-kaisen-3840x2160-27211.png
+black-bloom.png <- windows-11-dark-mode-abstract-background-black-background-3840x2160-8710.png
+red-maple-mountain.jpg <- japan-artistic-3840x2160-25406.jpg
+sunset-watchtower.png <- 1363709.png
+pixel-meadow.png <- 1130469.png
+violet-butterfly.jpeg <- 1371403.jpeg
+lofi-rooftop.jpeg <- 1354305.jpeg
+torii-blossom.jpeg <- 1354199.jpeg
