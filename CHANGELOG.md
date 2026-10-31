@@ -1,6 +1,6 @@
 # Journal des modifications
 
-## Non publié
+## 0.9.0 — 2026-10-31
 
 - Commandes rapides : une flèche à côté de l'interrupteur Wi-Fi ouvre la liste des réseaux (nom, force, verrou, connecté, mémorisé), avec saisie du mot de passe, connexion et oubli d'un réseau. Lecture et connexion par Native Wifi (`wlanapi.dll`) hors thread d'interface ; balayage seulement liste ouverte (à l'ouverture puis toutes les 15 s), rien au repos ni en plein écran, poignée WLAN fermée après chaque opération. Le mot de passe ne va que du champ au profil WLAN créé par Windows (utilisateur courant ; tous les utilisateurs seulement si Windows rejette la portée utilisateur elle-même) ; un mot de passe tapé pour un réseau mémorisé remplace le profil, l'ancien étant restauré en cas d'échec : ni journal, ni état renvoyé, ni préférences, ni commande `winlestia`. Un profil créé pour une connexion échouée est supprimé ; un profil existant n'est jamais supprimé. Réseaux d'entreprise (802.1X) et réseaux masqués non gérés (bouton « Ouvrir dans Windows »). Messages dédiés si la localisation est refusée, si le Wi-Fi est absent ou arrêté, et bouton vers la page de connexion quand l'accès est restreint. `winlestia wifi` (lecture seule, sans nom de réseau). Tests : `tests/WifiPolicy`.
 

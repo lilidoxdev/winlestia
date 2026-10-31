@@ -7,7 +7,7 @@
 ;   - déjà installé    → une page propose « Mettre à jour » ou « Désinstaller ».
 
 #define AppName        "Winlestia"
-#define AppVersion     "0.8.0"
+#define AppVersion     "0.9.0"
 #define AppPublisher   "dj"
 #define AppExe         "Panneaux.Glass.exe"
 #define AppId          "{{8E2B7C41-5F1A-4F7B-9C3D-6A2E0D5B7C18}"
@@ -116,7 +116,7 @@ Filename: "{app}\Caelestia-Windows\.venv\Scripts\python.exe"; Parameters: """{ap
 ; L'application est arrêtée avant que ses fichiers disparaissent…
 ; Graceful shutdown and path-scoped fallback handled above.
 ; …puis la barre des tâches Windows revient, même si le shell est déjà mort.
-Filename: "{app}\Glass-v5\RETABLIR_BARRE_WINDOWS.exe"; Flags: runhidden waituntilterminated; RunOnceId: "RestoreTaskbar"
+Filename: "{app}\Glass-v5\RETABLIR_BARRE_WINDOWS.exe"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "RestoreTaskbar"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"

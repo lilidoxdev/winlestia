@@ -128,4 +128,4 @@ if (-not $iscc) { throw 'Inno Setup 6 introuvable : winget install JRSoftware.In
 & $iscc /Qp (Join-Path $PSScriptRoot 'Winlestia.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Compilation Inno Setup échouée.' }
 
-Write-Host "`nTerminé : build\out\Winlestia-Setup-0.8.0.exe" -ForegroundColor Green
+Write-Host "`nTerminé : build\out\Winlestia-Setup-0.9.0.exe" -ForegroundColor Green
