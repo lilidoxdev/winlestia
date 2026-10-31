@@ -159,7 +159,7 @@ CustomMouseArea {
                 anchors.fill: parent
 
                 spacing: 3
-                locale: Qt.locale()
+                locale: Qt.locale(Bridge.language || "en")
 
                 delegate: Item {
                     id: dayItem

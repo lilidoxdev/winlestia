@@ -331,3 +331,172 @@ Ta session sera verrouillée.|Your session will be locked.|Tu sesión se bloquea
 Ses commandes audio apparaîtront ici.|Its audio controls will appear here.|Sus controles de audio aparecerán aquí.
 %1 ?|%1?|¿%1?""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}
+for row in """Bureau et dock|Desktop and dock|Escritorio y dock
+Explorateur et fichiers|Explorer and files|Explorador y archivos
+Au quotidien|Everyday|Día a día
+Réseaux sociaux|Social networks|Redes sociales
+Favoris|Favorites|Favoritos
+Rétablir la barre Windows|Restore the Windows taskbar|Restablecer la barra de Windows
+Les couleurs de tout le shell|Colours for the whole shell|Los colores de todo el shell
+Porcelaine|Porcelain|Porcelana
+Nuit|Night|Noche
+Personnalisé|Custom|Personalizado
+Couleurs tirées de ton fond d’écran|Colours taken from your wallpaper|Colores tomados de tu fondo de pantalla
+Porcelaine : thème clair et chaleureux, fixe, indépendant du fond d’écran.|Porcelain: a bright, warm theme, fixed and independent of the wallpaper.|Porcelana: tema claro y cálido, fijo e independiente del fondo de pantalla.
+Nuit : thème sombre et reposant, fixe, indépendant du fond d’écran.|Night: a dark, restful theme, fixed and independent of the wallpaper.|Noche: tema oscuro y relajante, fijo e independiente del fondo de pantalla.
+Personnalisé : tes propres couleurs, avec option de verre transparent.|Custom: your own colours, with an optional transparent glass.|Personalizado: tus propios colores, con vidrio transparente opcional.
+Automatique : les couleurs suivent ton fond d’écran, la transparence du verre est réglable.|Automatic: colours follow your wallpaper, and glass transparency is adjustable.|Automático: los colores siguen tu fondo de pantalla y la transparencia del vidrio es ajustable.
+Modifier ma palette|Edit my palette|Editar mi paleta
+Liseré sur les applications|Rim on applications|Borde en las aplicaciones
+La couleur du thème autour des fenêtres du Bureau|Theme colour around Desktop windows|El color del tema alrededor de las ventanas del Escritorio
+Rendu|Rendering|Renderizado
+Transparence, animations et liseré|Transparency, animations and rim|Transparencia, animaciones y borde
+Plus la valeur est haute, plus le fond transparaît|The higher the value, the more the background shows through|Cuanto más alto el valor, más se transparenta el fondo
+Réglable avec le thème Automatique|Adjustable with the Automatic theme|Ajustable con el tema Automático
+Vitesse des transitions du shell|Shell transition speed|Velocidad de las transiciones del shell
+Rendu plus léger pour les petites configurations|Lighter rendering for modest hardware|Renderizado más ligero para equipos modestos
+Fenêtres et écran|Windows and screen|Ventanas y pantalla
+Organisation et cadre autour du Bureau|Layout and frame around the Desktop|Organización y marco alrededor del Escritorio
+Logo Winlestia|Winlestia logo|Logotipo de Winlestia
+Un repère discret dans le coin de l’écran|A discreet mark in the screen corner|Una marca discreta en la esquina de la pantalla
+Un contour arrondi coloré autour du Bureau|A rounded coloured outline around the Desktop|Un contorno redondeado de color alrededor del Escritorio
+Largeur du cadre de l’écran|Screen frame width|Anchura del marco de la pantalla
+Dock et accès rapide|Dock and quick access|Dock y acceso rápido
+Barre des tâches et zone du haut de l’écran|Taskbar and top-of-screen area|Barra de tareas y zona superior de la pantalla
+Barre des tâches Winlestia|Winlestia taskbar|Barra de tareas Winlestia
+Remplace la barre Windows par le dock|Replaces the Windows taskbar with the dock|Sustituye la barra de Windows por el dock
+Icônes du dock et de la barre des tâches|Dock and taskbar icons|Iconos del dock y de la barra de tareas
+bande en haut de l’écran qui ouvre le panneau|strip at the top of the screen that opens the panel|franja en la parte superior de la pantalla que abre el panel
+Explorateur Windows|Windows Explorer|Explorador de Windows
+Les dossiers prennent tes couleurs|Folders take your colours|Las carpetas adoptan tus colores
+Icônes et contours assortis|Matching icons and outlines|Iconos y contornos a juego
+Dossiers personnels et sous-dossiers à tes couleurs (aperçu ci-dessus)|Personal folders and subfolders in your colours (preview above)|Carpetas personales y subcarpetas con tus colores (vista previa arriba)
+Icônes locales adaptatives. Le contenu et les menus restent ceux de Windows ; leur transparence ne change pas.|Adaptive local icons. Content and menus stay Windows' own; their transparency does not change.|Iconos locales adaptables. El contenido y los menús siguen siendo los de Windows; su transparencia no cambia.
+Prêt à personnaliser|Ready to customize|Listo para personalizar
+Ajouter un dossier|Add a folder|Añadir una carpeta
+Ouvrir l’Explorateur|Open Explorer|Abrir el Explorador
+Restaurer|Restore|Restaurar
+Winlestia Fichiers|Winlestia Files|Winlestia Archivos
+Le gestionnaire de fichiers du shell|The shell's file manager|El administrador de archivos del shell
+Ouvrir les dossiers avec Winlestia Fichiers|Open folders with Winlestia Files|Abrir las carpetas con Winlestia Archivos
+Explorer reste disponible ; désactivable à tout moment|Explorer stays available; can be turned off at any time|El Explorador sigue disponible; se puede desactivar en cualquier momento
+Précharger Winlestia Fichiers|Preload Winlestia Files|Precargar Winlestia Archivos
+Garde une instance cachée (~70 Mo de mémoire) pour ouvrir les dossiers plus vite ; l’arrêt prend effet au prochain démarrage|Keeps a hidden instance (~70 MB of memory) to open folders faster; turning it off takes effect at next start|Mantiene una instancia oculta (~70 MB de memoria) para abrir las carpetas más rápido; al desactivarlo se aplica en el próximo inicio
+Raccourcis|Shortcuts|Atajos
+Clique sur une touche pour la changer|Click a key to change it|Haz clic en una tecla para cambiarla
+Ouvrir le panneau|Open the panel|Abrir el panel
+Affiche ou masque le tableau de bord|Shows or hides the dashboard|Muestra u oculta el panel
+Recherche et lance tout depuis un champ|Search and launch anything from one field|Busca y lanza todo desde un campo
+Dictée vocale|Voice dictation|Dictado por voz
+Appuyer pour parler, le texte est saisi là où tu écris|Press to talk, the text is typed where you write|Pulsa para hablar, el texto se escribe donde escribes
+Activer la dictée|Turn on dictation|Activar el dictado
+Transcription locale, sans envoyer ta voix sur Internet|Local transcription, your voice never leaves this PC|Transcripción local, sin enviar tu voz a Internet
+Touche de dictée|Dictation key|Tecla de dictado
+Maintenez la touche pour dicter (français, anglais, espagnol, détection auto)|Hold the key to dictate (French, English, Spanish, auto-detect)|Mantén la tecla para dictar (francés, inglés, español, detección automática)
+Démarrage et données|Startup and data|Inicio y datos
+Lancement et historique|Launch and history|Inicio e historial
+Winlestia s’ouvre à ta connexion|Winlestia opens when you sign in|Winlestia se abre al iniciar sesión
+Historique du presse-papiers|Clipboard history|Historial del portapapeles
+Garde les éléments copiés pour les recoller|Keeps copied items so you can paste them again|Guarda los elementos copiados para volver a pegarlos
+Langue et services|Language and services|Idioma y servicios
+Langue de l’interface, météo et applications|Interface language, weather and applications|Idioma de la interfaz, tiempo y aplicaciones
+Langue de l’interface de Winlestia|Winlestia interface language|Idioma de la interfaz de Winlestia
+Ville de la météo|Weather city|Ciudad del tiempo
+Pour la météo du tableau de bord|For the dashboard weather|Para el tiempo del panel
+Liste des applications|Application list|Lista de aplicaciones
+Relit les applications installées|Rescans installed applications|Vuelve a leer las aplicaciones instaladas
+Actualiser|Refresh|Actualizar
+Le panneau caché au bord droit de l’écran|The panel hidden at the right edge of the screen|El panel oculto en el borde derecho de la pantalla
+Le panneau caché au bord gauche de l’écran|The panel hidden at the left edge of the screen|El panel oculto en el borde izquierdo de la pantalla
+Chargement…|Loading…|Cargando…
+Non connecté|Not connected|No conectado
+Afficher|Show|Mostrar
+Ouvrir|Open|Abrir
+Muet|Mute|Silenciar
+Déconnecter|Disconnect|Desconectar
+La connexion se fait toi-même dans la fenêtre du service. Snapchat Web peut être limité.|You sign in yourself in the service window. Snapchat Web may be limited.|Inicias sesión tú mismo en la ventana del servicio. Snapchat Web puede estar limitado.
+Son et sourdine|Sound and mute|Sonido y silencio
+Couper toutes les notifications|Turn off all notifications|Silenciar todas las notificaciones
+Plus de son ; les compteurs continuent|No more sound; counters keep running|Sin sonido; los contadores siguen funcionando
+Son de notification|Notification sound|Sonido de notificación
+Joue un son à chaque nouveau message|Plays a sound for each new message|Reproduce un sonido con cada mensaje nuevo
+Volume|Volume|Volumen
+Volume du son de notification|Notification sound volume|Volumen del sonido de notificación
+Tester|Test|Probar
+ (navigateur par défaut)| (default browser)| (navegador predeterminado)
+Utilisé|In use|En uso
+Utiliser|Use|Usar
+Aucun navigateur pris en charge n’a été détecté.|No supported browser was detected.|No se detectó ningún navegador compatible.
+Réafficher les favoris retirés (%1)|Show removed favorites again (%1)|Volver a mostrar los favoritos quitados (%1)
+Ceux retirés de Winlestia uniquement, pas du navigateur|Only those removed from Winlestia, not from the browser|Solo los quitados de Winlestia, no del navegador
+Réafficher|Show again|Volver a mostrar
+Choisir|Choose|Elegir
+le navigateur|the browser|el navegador
+Fermez %1 pour supprimer un favori.|Close %1 to delete a favorite.|Cierra %1 para eliminar un favorito.
+Suppression non prise en charge pour ce navigateur.|Deletion is not supported for this browser.|La eliminación no es compatible con este navegador.
+Favori introuvable.|Favorite not found.|Favorito no encontrado.
+Chargement des favoris…|Loading favorites…|Cargando favoritos…
+Aucun favori|No favorites|Sin favoritos
+Retirer de Winlestia|Remove from Winlestia|Quitar de Winlestia
+Supprimer dans %1…|Delete in %1…|Eliminar en %1…
+La synchronisation de %1 est active : la suppression sera répliquée sur vos autres appareils.|%1 sync is on: the deletion will be replicated to your other devices.|La sincronización de %1 está activa: la eliminación se replicará en tus otros dispositivos.
+Supprimer ce favori dans %1 ? Une sauvegarde du fichier est faite avant. %1 doit être fermé.|Delete this favorite in %1? The file is backed up first. %1 must be closed.|¿Eliminar este favorito en %1? Antes se hace una copia de seguridad del archivo. %1 debe estar cerrado.
+Supprimer quand même|Delete anyway|Eliminar de todos modos
+Copier|Copy|Copiar
+Fond|Background|Fondo
+Texte|Text|Texto
+Principal|Primary|Principal
+Secondaire|Secondary|Secundario
+Troisième accent|Third accent|Tercer acento
+Ma palette|My palette|Mi paleta
+Cinq couleurs, tout ton espace|Five colours, your whole space|Cinco colores, todo tu espacio
+Ton espace|Your space|Tu espacio
+Verre transparent|Transparent glass|Vidrio transparente
+Appliquer ma palette|Apply my palette|Aplicar mi paleta
+Échap · annuler|Esc · cancel|Esc · cancelar
+Appuie sur une touche…|Press a key…|Pulsa una tecla…
+Appuyez sur une touche…|Press a key…|Pulsa una tecla…
+(Échap pour annuler)|(Esc to cancel)|(Esc para cancelar)
+Transcription|Transcription|Transcripción
+Préparation du modèle…|Preparing the model…|Preparando el modelo…
+Dictée impossible|Dictation unavailable|Dictado no disponible
+Terminal Winlestia|Winlestia Terminal|Terminal Winlestia
+Fermer Winlestia|Close Winlestia|Cerrar Winlestia
+Arrêter cette application ?|Stop this application?|¿Detener esta aplicación?
+« |“|“
+ » sera arrêté. Les modifications non enregistrées seront perdues.|” will be stopped. Unsaved changes will be lost.|” se detendrá. Se perderán los cambios sin guardar.
+Appuie sur le nouveau raccourci|Press the new shortcut|Pulsa el nuevo atajo
+Ctrl + une touche|Ctrl + a key|Ctrl + una tecla
+Le raccourci est enregistré automatiquement.|The shortcut is saved automatically.|El atajo se guarda automáticamente.
+Échap pour annuler|Esc to cancel|Esc para cancelar
+à l’instant|Just now|Ahora mismo
+il y a %1 min|%1 min ago|hace %1 min
+Aucune notification depuis l’ouverture de session|No notifications since you signed in|Ninguna notificación desde que iniciaste sesión
+Capture|Capture|Captura
+Barre Windows|Windows taskbar|Barra de Windows
+Quitter Panneaux|Quit Winlestia|Salir de Winlestia
+Autres|Other|Otros
+Dossiers et projets|Folders and projects|Carpetas y proyectos
+Outils Windows|Windows tools|Herramientas de Windows
+Ajouter aux favoris|Add to favorites|Añadir a favoritos
+Ouvrir l’emplacement|Open location|Abrir ubicación
+Ranger dans Applications|Move to Applications|Mover a Aplicaciones
+Ranger dans Jeux|Move to Games|Mover a Juegos
+Ranger dans Projets|Move to Projects|Mover a Proyectos
+Ranger dans Documents|Move to Documents|Mover a Documentos
+accès · Clique pour ouvrir, clic droit pour organiser|shortcuts · Click to open, right-click to organise|accesos · Haz clic para abrir, clic derecho para organizar
+Aucun accès ne correspond à cette recherche|No shortcut matches this search|Ningún acceso coincide con esta búsqueda
+Cet espace est prêt à accueillir tes accès|This space is ready for your shortcuts|Este espacio está listo para tus accesos
+Ajoute une application, un dossier ou un document pour le retrouver ici.|Add an application, folder or document to find it here.|Añade una aplicación, una carpeta o un documento para encontrarlo aquí.
+Effacer la recherche|Clear search|Borrar búsqueda
+Ajouter un accès|Add a shortcut|Añadir un acceso
+Bonne nuit|Good night|Buenas noches
+Bonjour|Good morning|Buenos días
+Bon après-midi|Good afternoon|Buenas tardes
+Bonsoir|Good evening|Buenas noches
+accès|shortcuts|accesos
+Ajoute des favoris depuis le clic droit d’un accès|Add favorites from a shortcut's right-click menu|Añade favoritos desde el clic derecho de un acceso
+Ajouter|Add|Añadir
+Voir|View|Ver
+Tes derniers accès apparaîtront ici|Your latest shortcuts will appear here|Tus últimos accesos aparecerán aquí""".splitlines():
+ fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}

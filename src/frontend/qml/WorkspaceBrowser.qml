@@ -300,7 +300,7 @@ Item {
                         StyledRect{implicitWidth:40;implicitHeight:40;radius:Appearance.rounding.full;color:Colours.palette.m3primaryContainer
                             MaterialIcon{anchors.centerIn:parent;text:qsTr("space_dashboard");fill:1;font.pointSize:Appearance.font.size.larger;color:Colours.palette.m3onPrimaryContainer}}
                         Column{StyledText{text:qsTr("Ton espace");font.pointSize:Appearance.font.size.large;font.weight:Font.Medium}
-                            StyledText{text:browser.counts.all+" accès";font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}}
+                            StyledText{text:browser.counts.all+" "+qsTr("accès");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}}
                     }
                     Item {
                         Layout.fillWidth:true;implicitHeight:browser.navY(6)+48
