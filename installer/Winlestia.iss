@@ -43,8 +43,8 @@ Compression=lzma2/max
 SolidCompression=yes
 LZMANumBlockThreads=4
 MinVersion=10.0.22000
-; Le shell de l'utilisateur est fermé proprement avant toute mise à jour de fichiers.
-AppMutex=Local\PanneauxGlassV5
+; Pas d'AppMutex : il ferait échouer Setup et le désinstalleur avant PrepareToInstall / [UninstallRun].
+; Le shell est fermé par Close-Winlestia.ps1 avant toute mise à jour ou désinstallation.
 CloseApplications=yes
 RestartApplications=no
 UsePreviousAppDir=yes
