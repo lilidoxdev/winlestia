@@ -1,6 +1,6 @@
 // Which monitors currently show a fullscreen foreground window (YouTube fullscreen, video player, borderless game): the shell chrome must hide there.
 // Event-driven: SetWinEventHook (WINEVENT_OUTOFCONTEXT) for EVENT_SYSTEM_FOREGROUND, MINIMIZESTART and EVENT_OBJECT_LOCATIONCHANGE (foreground process) arms a one-shot 40 ms debounce timer (re-arming = debounce)
-// plus a settle chain of re-checks (see SettleDelays); while a monitor is fullscreen a 750 ms watch timer also re-checks. The recompute runs on a thread-pool thread.
+// plus a settle chain of re-checks (see SettleDelays); while a monitor is fullscreen a 1 s safety-net timer also re-checks. The recompute runs on a thread-pool thread.
 // OUTOFCONTEXT hooks deliver through the message loop of the thread that installed them: they live on a dedicated hook thread blocked in GetMessage; Start() may be called from any thread.
 // Fullscreen = foreground, visible, non-iconic window (not ours, not shell windows) whose DWM frame or window rect covers its whole monitor and which has no caption (a maximized window keeps its caption).
 // Optionally QUNS_RUNNING_D3D_FULL_SCREEN (exclusive D3D) is mapped to the foreground window's monitor. Current = monitor device names (\\.\DISPLAY1), raised through Changed only when the set changes.
@@ -19,6 +19,7 @@ internal static class FullscreenWatcher {
     static Timer? debounce, settle, watch;
     // Browsers enter fullscreen seconds after the events that announced it (observed up to ~5 s with Edge, no event at the end): settle re-checks at +1.5 s, +3 s, +6 s after the last event.
     static readonly int[] SettleDelays = { 300, 600, 1000, 1500, 3000, 6000 };
+    const int SafetyNetMs = 1000;   // only armed while a monitor is fullscreen; events (foreground, minimize, location) drive the normal exit
     static int settleStep;
     static bool started;
     // Hook handles belong to the hook thread that created them (thread-static: an old thread's tail never touches a newer run's handles).
@@ -133,10 +134,10 @@ internal static class FullscreenWatcher {
         lock (computeGate) {   // serialized: an older computation can never overwrite a newer one
             try { changed = SetSet(Compute()); } catch { /* keep the previous value */ }
         }
-        // While a monitor is fullscreen, re-check every 750 ms so the exit is caught even if no event announces it (no cost otherwise).
+        // While a monitor is fullscreen, a slow safety net (SafetyNetMs) catches an exit no event announced, e.g. a crash (no cost otherwise).
         lock (gate) {
             if (!started) return;
-            watch?.Change(current.Length > 0 ? 750 : Timeout.Infinite, Timeout.Infinite);
+            watch?.Change(current.Length > 0 ? SafetyNetMs : Timeout.Infinite, Timeout.Infinite);
             // Self-heal: if the location hook is not on the active window's process, ask the hook thread to move it.
             if (hookThreadId != 0 && ForegroundRootPid() is var fpid && fpid != 0 && fpid != hookedPid) PostThreadMessageW(hookThreadId, WM_APP_REHOOK, IntPtr.Zero, IntPtr.Zero);
         }
@@ -256,8 +257,7 @@ internal static class FullscreenWatcher {
     }
 
     // Chromium fullscreen leaves the bottom row free (3440x1439 on a 3440x1440 monitor): tolerate a few px.
-    const int Slack = 2;
-    static bool Covers(RECT r, RECT m) => r.Left <= m.Left + Slack && r.Top <= m.Top + Slack && r.Right >= m.Right - Slack && r.Bottom >= m.Bottom - Slack;
+    static bool Covers(RECT r, RECT m) => QuietPolicy.Covers(r.Left, r.Top, r.Right, r.Bottom, m.Left, m.Top, m.Right, m.Bottom);
 
     const uint EVENT_SYSTEM_FOREGROUND = 3, EVENT_SYSTEM_MINIMIZESTART = 0x16, PROCESS_QUERY_LIMITED_INFORMATION = 0x1000, EVENT_OBJECT_LOCATIONCHANGE = 0x800B, WINEVENT_OUTOFCONTEXT = 0;
     const int OBJID_WINDOW = 0, GWL_STYLE = -16, DWMWA_CLOAKED = 14, DWMWA_EXTENDED_FRAME_BOUNDS = 9, QUNS_RUNNING_D3D_FULL_SCREEN = 3;

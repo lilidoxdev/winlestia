@@ -239,6 +239,8 @@ Ajuster avec le repère à l’écran|Adjust using the on-screen guide|Ajustar c
 Langue et raccourcis|Language and shortcuts|Idioma y atajos
 Un rendu plus léger pour les petites configurations|Lighter rendering for modest hardware|Renderizado ligero para equipos modestos
 Afficher l’OSD|Show the OSD|Mostrar el OSD
+Masquer le dock et l’OSD en plein écran|Hide the dock and OSD in fullscreen|Ocultar el dock y el OSD en pantalla completa
+L’OSD, le visualiseur et les animations sont coupés sur tous les écrans dès qu’un écran est en plein écran|The OSD, visualizer and animations are stopped on all screens as soon as one screen is fullscreen|El OSD, el visualizador y las animaciones se detienen en todas las pantallas en cuanto una está a pantalla completa
 Indicateur de bureaux virtuels|Virtual desktop indicator|Indicador de escritorios virtuales
 Une pastille par bureau Windows dans le dock|One dot per Windows desktop in the dock|Un punto por escritorio de Windows en el dock
 Bureaux virtuels|Virtual desktops|Escritorios virtuales

@@ -73,7 +73,7 @@ JsonObject {
 
     component AnimDurations: JsonObject {
         // "Effets allégés": near-instant transitions (scale also applies to every duration below).
-        property real scale: Bridge.reducedEffects ? 0.1 : 1
+        property real scale: Bridge.reducedEffects || Bridge.quiet ? 0.1 : 1
         property int small: 200 * scale
         property int normal: 400 * scale
         property int large: 600 * scale

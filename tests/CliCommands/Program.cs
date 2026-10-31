@@ -73,5 +73,22 @@ r["animatedExeSuffixAndCase"]=WallpaperLogic.Animated(new string?[]{"LIVELY.EXE"
 r["animatedDesktopHutDeduped"]=WallpaperLogic.Animated(new string?[]{"DesktopHut Studio","DesktopHut Studio","wallpaper32"}).SequenceEqual(new[]{"DesktopHut","Wallpaper Engine"});
 r["animatedNoPartialMatch"]=WallpaperLogic.Animated(new string?[]{"mylively","wallpaper"}).Length==0;
 r["displayNamePrimary"]=WallpaperLogic.DisplayName(1,1920,1080,true)=="Display 1 (1920x1080) primary";
+r["quietParses"]=P("quiet",out c)&&c!.Kind==CliKind.Quiet&&c.Arg=="";
+r["quietOn"]=P("quiet on",out c)&&c!.Kind==CliKind.Quiet&&c.Arg=="on";
+r["quietOffCaseInsensitive"]=P("QUIET OFF",out c)&&c!.Kind==CliKind.Quiet&&c.Arg=="off";
+r["quietAuto"]=P("quiet auto",out c)&&c!.Kind==CliKind.Quiet&&c.Arg=="auto";
+r["quietBadArgRefused"]=!P("quiet maybe",out _)&&!P("quiet on off",out _);
+r["quietHelpListed"]=CliCommands.HelpText.Contains("quiet on|off|auto")&&CliCommands.HelpText.Contains("not saved");
+r["quietCoversExact"]=QuietPolicy.Covers(0,0,1920,1080,0,0,1920,1080);
+r["quietCoversSlack"]=QuietPolicy.Covers(0,0,3440,1439,0,0,3440,1440);
+r["quietCoversOvershoot"]=QuietPolicy.Covers(-8,-8,1928,1088,0,0,1920,1080);
+r["quietNotCoversMaximized"]=!QuietPolicy.Covers(0,0,1920,1040,0,0,1920,1080);
+r["quietNotCoversSecondMonitor"]=!QuietPolicy.Covers(0,0,1920,1080,1920,0,3840,1080);
+r["quietNotCoversEmptyMonitor"]=!QuietPolicy.Covers(0,0,10,10,5,5,5,5);
+r["quietForcedOnWins"]=QuietPolicy.Effective(QuietForce.On,false);
+r["quietForcedOffWins"]=!QuietPolicy.Effective(QuietForce.Off,true);
+r["quietAutoFollows"]=QuietPolicy.Effective(QuietForce.Auto,true)&&!QuietPolicy.Effective(QuietForce.Auto,false);
+r["quietDetectedNeedsPref"]=!QuietPolicy.Detected(false,1)&&!QuietPolicy.Detected(true,0)&&QuietPolicy.Detected(true,2);
+r["quietParseForce"]=QuietPolicy.TryParse("ON",out var qf)&&qf==QuietForce.On&&!QuietPolicy.TryParse("x",out _)&&QuietPolicy.Label(QuietForce.Auto)=="auto";
 int ok=0;foreach(var v in r.Values)if(v)ok++;foreach(var k in r)if(!k.Value)Console.WriteLine("FAIL "+k.Key);Console.WriteLine("TOTAL "+ok+"/"+r.Count);return ok==r.Count?0:1;}
 }

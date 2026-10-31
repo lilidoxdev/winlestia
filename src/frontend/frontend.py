@@ -63,7 +63,7 @@ def message_handler(kind,context,message):
 class PipeClient(QThread):
     received=Signal(dict)
     def __init__(self,name):
-        super().__init__();self.path='\\\\.\\pipe\\'+name;self.commands=queue.Queue();self.subscription={};self.stopping=False;self.handle=None;self.updates={};self.update_lock=threading.Lock();self.last_state=0;self.bars_seq=0;self.bars_idle=True
+        super().__init__();self.path='\\\\.\\pipe\\'+name;self.commands=queue.Queue();self.subscription={};self.stopping=False;self.handle=None;self.updates={};self.update_lock=threading.Lock();self.last_state=0;self.bars_seq=0;self.bars_idle=True;self.quiet=False
         self.wakeup=kernel32.CreateEventW(None,False,False,'Local\\PanneauxCaelestiaWake')
     def run(self):
         while not self.stopping:
@@ -86,7 +86,7 @@ class PipeClient(QThread):
                         data=reader.readline(8*1024*1024)
                         if not data: break
                         self.received.emit(json.loads(data))
-                        if request['command'] in ('state','visualizer','audioBars'):kernel32.WaitForSingleObject(self.wakeup,55 if self.subscription.get('visible') and self.subscription.get('page')==1 else 33 if request['command']=='audioBars' and not self.bars_idle else 180 if self.subscription.get('visible') else 500)
+                        if request['command'] in ('state','visualizer','audioBars'):kernel32.WaitForSingleObject(self.wakeup,55 if self.subscription.get('visible') and self.subscription.get('page')==1 else 33 if request['command']=='audioBars' and not self.bars_idle else 180 if self.subscription.get('visible') else 1000 if self.quiet else 500)
             except (OSError,ValueError,json.JSONDecodeError):self.msleep(300)
             finally:self.handle=None
     def stop(self):
@@ -141,7 +141,7 @@ class Bridge(QObject):
         self.pointer=QTimer(self);self.pointer.setInterval(90);self.pointer.timeout.connect(self.poll_pointer);self.pointer.start()
         self._weather={};self.weather_busy=False;self.weather_at=0;self.modal=False;self.weatherResult.connect(self.weather_ready)
         self.edge_policy=EdgePolicy();self._results=[];self.query='';self.opening_until=0;self.mode='dashboard';self.workspace_board='apps';self.health_at=0
-        self._notice='';self.navigation_epoch=0;self.recording_kind=None;self.walltheme=WallpaperTheme(self);self.walltheme.changed.connect(self.theme_ready);self.fullscreen_names=();self._theme_revision=0;QApplication.instance().screenAdded.connect(self.screen_list_changed);QApplication.instance().screenRemoved.connect(self.screen_list_changed)
+        self._notice='';self.navigation_epoch=0;self.recording_kind=None;self.walltheme=WallpaperTheme(self);self.walltheme.changed.connect(self.theme_ready);self.fullscreen_names=();self.quiet_on=False;self.quiet_forced='auto';self._bars_want=False;self._theme_revision=0;QApplication.instance().screenAdded.connect(self.screen_list_changed);QApplication.instance().screenRemoved.connect(self.screen_list_changed)
         for display in QApplication.screens():display.geometryChanged.connect(lambda rect:self.screensChanged.emit())
         try:self.city=json.loads((CONFIG/'weather.json').read_text(encoding='utf-8')).get('city','')
         except (OSError,ValueError):self.city=''
@@ -521,7 +521,7 @@ class Bridge(QObject):
         finally:self.modal=False
     @Slot(bool)
     def setAudioBars(self,wanted):
-        wanted=bool(wanted) and not self.reducedEffects
+        self._bars_want=bool(wanted);wanted=self._bars_want and not self.reducedEffects and not self.quiet_on
         if wanted==bool(self.client.subscription.get('bars')):return
         self.client.subscription={**self.client.subscription,'bars':wanted};self.client.bars_seq=0;self.client.bars_idle=True
         if not wanted and getattr(self,'_audio_bars',None):self._audio_bars=[];self.audioBarsChanged.emit()
@@ -639,6 +639,10 @@ class Bridge(QObject):
         if 'state' in message and isinstance(message['state'].get('fullscreenMonitors'),list):
             self._backend_fullscreen=True;names=tuple(sorted(self.screen_names(message['state']['fullscreenMonitors'])))
             if names!=self.fullscreen_names:self.fullscreen_names=names;self.frameChanged.emit()
+        if 'state' in message:
+            quiet=bool(message['state'].get('quiet',False));forced=str(message['state'].get('quietForced','auto'))
+            if quiet!=self.quiet_on or forced!=self.quiet_forced:self.quiet_on=quiet;self.quiet_forced=forced;self.frameChanged.emit()
+            self.quiet_apply()
         if 'wallpaperCapture' in message:self.walltheme.captured(message['wallpaperCapture'])
         if isinstance(message.get('wallpaperPicker'),dict):self._wpicker=dict(self._wpicker,**message['wallpaperPicker']);self.wallpaperPickerChanged.emit()
         if isinstance(message.get('windows'),list) and self.mode=='palette':self._windows=message['windows'];self.searchPalette(self.query)
@@ -690,6 +694,7 @@ class Bridge(QObject):
         if bm_version is not None and bm_version!=getattr(self,'_bm_items_version',None) and bm_version!=getattr(self,'_bm_requested',None):
             self._bm_requested=bm_version;self.action('bookmarksItems',{})
         for event in message.get('events',[]):
+            if self.quiet_on and event.startswith('osd'):continue   # quiet mode: no OSD, so nothing takes focus or animates over the game
             if event.startswith('shortcut-key:'):
                 if self.recording_kind:
                     _,modifiers,key=event.split(':');self.action('shortcut',{'kind':self.recording_kind,'key':int(key),'modifiers':int(modifiers)})
@@ -707,6 +712,18 @@ class Bridge(QObject):
         was=getattr(self,'_menu_down',False);self._menu_down=down;p=QCursor.pos()
         return down and not was and not (x<=p.x()<x+w and y<=p.y()<y+h)
     screenFullscreen=Property(bool,lambda s:s._screen.name() in s.fullscreen_names,notify=frameChanged)
+    quiet=Property(bool,lambda s:s.quiet_on,notify=frameChanged)
+    dockQuiet=Property(bool,lambda s:s.dock_quiet(s._screen),notify=frameChanged)
+    def dock_quiet(self,screen):
+        # Dock and edge chrome are cut on a fullscreen screen only (per screen), or everywhere when quiet is forced on.
+        return self.quiet_on and (self.quiet_forced=='on' or screen.name() in self.fullscreen_names)
+    def quiet_slow(self):
+        # Timers drop to their slowest safe pace only when every screen is quiet; the shell shortcut and exit detection are event-driven in the backend.
+        return self.quiet_on and (self.quiet_forced=='on' or all(s.name() in self.fullscreen_names for s in QApplication.screens()))
+    def quiet_apply(self):
+        slow=self.quiet_slow()
+        if slow!=self.client.quiet:self.client.quiet=slow;self.pointer_pace()
+        self.setAudioBars(self._bars_want)
     def fullscreen(self,screen=None):
         screen=screen or self._screen
         hwnd=user32.GetForegroundWindow();pid=ctypes.c_ulong();user32.GetWindowThreadProcessId(hwnd,ctypes.byref(pid))
@@ -764,10 +781,14 @@ class Bridge(QObject):
         point=QCursor.pos();screen=QApplication.screenAt(point) or QApplication.primaryScreen()
         if screen!=self._screen:self._screen=screen;self.geometryChanged.emit();self.frameChanged.emit();self.changed.emit()
         now=time.monotonic();geometry=screen.geometry()
+        if self.quiet_slow() and not (self.top and self.top.isVisible()):   # quiet everywhere and no panel open: no edge tracking, no peek, no rail
+            self.edge_policy.away_since=0;self.away_top=self.away_social=self.away_bookmarks=0;return
         backend_full=getattr(self,'_backend_fullscreen',False)
         full=screen.name() in self.fullscreen_names if backend_full else self.fullscreen()
         fullscreen_names=self.fullscreen_names if backend_full else tuple(s.name() for s in QApplication.screens() if self.fullscreen(s))
         if fullscreen_names!=self.fullscreen_names:self.fullscreen_names=fullscreen_names;self.frameChanged.emit()
+        dock_full=self.dock_quiet(screen) if backend_full else full   # preference off: the dock keeps its normal edge behaviour in fullscreen
+        full=full or (self.quiet_on and self.quiet_forced=='on')
         panel_width=float(self.top.property('panelWidth') or self.top.width());panel_height=float(self.top.property('panelHeight') or self.top.height())
         panel_rect=QRect(round(self.top.x()+(self.top.width()-panel_width)/2),self.top.y(),round(panel_width),round(panel_height))
         top_inside=self.top.isVisible() and panel_rect.adjusted(-12,-2,12,16).contains(point)
@@ -782,17 +803,20 @@ class Bridge(QObject):
             if now-self.away_top>.55 and not self.args.preview:self.navigate('close')
         if self.social_win:self.edge_rail(self.social_win,'right',point,geometry,full,now)
         if self.bookmarks_win:self.edge_rail(self.bookmarks_win,'left',point,geometry,full,now)
-        if self.dock and self.taskbarEnabled and full:self.edge_policy.away_since=0   # fullscreen: chrome stays hidden, no reveal and no timers; idle state resumes on exit
+        if self.dock and self.taskbarEnabled and dock_full:self.edge_policy.away_since=0   # fullscreen: chrome stays hidden, no reveal and no timers; idle state resumes on exit
         elif self.dock and self.taskbarEnabled:
             self.client.subscription['dock']=bool(self.dock.property('shown'))
             dock_inside=self.dock.isVisible() and self.dock.geometry().adjusted(-8,-10,8,4).contains(point)
             menu_open=bool(self.dock.property('menuOpen'))
             if menu_open:dock_inside=True
             bottom=point.y()>=geometry.bottom()-7
-            decision=self.edge_policy.update(now,bottom,dock_inside,full,now<self.force_dock)
+            decision=self.edge_policy.update(now,bottom,dock_inside,dock_full,now<self.force_dock)
             if decision is True:self.shellEvent.emit('dock')
             elif decision is False and not self.args.preview:self.shellEvent.emit('dockHide')
     def pointer_pace(self):
+        if self.quiet_slow() and not (self.top and self.top.isVisible()):
+            if self.pointer.interval()!=500:self.pointer.setInterval(500)
+            return
         point=QCursor.pos();geometry=(QApplication.screenAt(point) or QApplication.primaryScreen()).geometry();now=time.monotonic()
         # Adaptive pace: 90 ms while a reveal is active, the button is down (file drag) or the pointer is within 48 px of a screen edge; 250 ms otherwise.
         near=min(point.y()-geometry.top(),geometry.bottom()-point.y(),point.x()-geometry.left(),geometry.right()-point.x())<=48
