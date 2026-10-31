@@ -73,6 +73,8 @@ Type: filesandordirs; Name: "{app}\Caelestia-Windows"
 Type: files; Name: "{app}\Glass-v5\winlestia.dll"
 Type: files; Name: "{app}\Glass-v5\winlestia.deps.json"
 Type: files; Name: "{app}\Glass-v5\winlestia.runtimeconfig.json"
+; Les anciens fonds d'écran fournis sont remplacés par les nouveaux (le dossier utilisateur %LOCALAPPDATA%\Panneaux\Wallpapers n'est jamais touché).
+Type: files; Name: "{app}\wallpapers\*"
 
 [Files]
 Source: "Close-Winlestia.ps1"; Flags: dontcopy

@@ -12,7 +12,7 @@ internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0,
 internal static class CliCommands {
     // Explicit allow-list. Nothing here shuts down, restarts, signs out or deletes anything.
     internal static readonly string[] Panels = { "settings", "clipboard", "tools", "audio", "mixer", "capture", "palette", "dashboard" };
-    internal static readonly string[] ImageExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
+    internal static readonly string[] ImageExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp" };
     internal const int MaxArgs = 4;
 
     internal const string HelpText =
@@ -97,7 +97,7 @@ internal static class CliCommands {
         error = "";
         if (string.IsNullOrWhiteSpace(path) || path.Length > 259) { error = "Wallpaper path is empty or too long."; return false; }
         if (path.StartsWith(@"\\") || path.StartsWith("//") || path.IndexOf('\0') >= 0 || path.IndexOf(':', 2) >= 0 || !Path.IsPathFullyQualified(path)) { error = "Wallpaper path must be a local absolute path."; return false; }
-        if (Array.IndexOf(ImageExtensions, Path.GetExtension(path).ToLowerInvariant()) < 0) { error = "Wallpaper must be a .jpg, .jpeg, .png, .bmp or .gif file."; return false; }
+        if (Array.IndexOf(ImageExtensions, Path.GetExtension(path).ToLowerInvariant()) < 0) { error = "Wallpaper must be a .jpg, .jpeg, .png, .bmp, .gif or .webp file."; return false; }
         if (!fileExists(path)) { error = "Wallpaper file not found."; return false; }
         return true;
     }

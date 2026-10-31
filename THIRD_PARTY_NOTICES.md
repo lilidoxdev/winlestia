@@ -17,7 +17,7 @@
 - **Pillow 13.0.0** : licence MIT-CMU/HPND (texte vérifié dans `src/frontend/licenses/Pillow/licenses/LICENSE`).
 - **material-color-utilities 0.2.6** : Apache 2.0 (texte vérifié dans `src/frontend/licenses/MaterialColorUtilities/licenses/LICENSE`).
 - **PySide6 / Qt** (PySide6, PySide6-Essentials, PySide6-Addons, Shiboken6 6.10.3) : licence LGPL-3.0 / GPL-3.0 au choix, ou licence commerciale Qt (non utilisée) ; textes dans `src/frontend/licenses/` (`LGPL-3.0.txt`, `GPL-3.0.txt`).
-- **Fonds d'écran** (`assets/wallpapers/`) : NON couverts par la GPL. Ils restent soumis à la licence indiquée pour chacun dans `assets/wallpapers/CREDITS.txt` (Unsplash License pour les 36 entrées actuelles) ; auteurs et liens dans ce fichier.
+- **Fonds d'écran** (`assets/wallpapers/`) : NON couverts par la GPL. Les 9 images fournies par le mainteneur de Winlestia appartiennent à leurs ayants droit respectifs ; leur licence n'est pas établie. Les ayants droit peuvent demander le retrait d'une image via une issue GitHub (voir `assets/wallpapers/CREDITS.txt`).
 - **Open-Meteo** : données météo attribuées à Open-Meteo et ses fournisseurs, https://open-meteo.com/ .
 
 **Licence de Winlestia** : GPL-3.0 (`LICENSE`). Les sources correspondant à une version publiée sont celles du tag git de cette version. Les binaires de `src/backend/native/` sont construits à partir de `src/backend/*.cpp` par les scripts `src/backend/build-*.cmd`.
