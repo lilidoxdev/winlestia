@@ -5,20 +5,20 @@ using System.Linq;
 
 namespace PanneauxGlass;
 
-internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, Palette, FindWindows, FindFiles, Brightness, BrightnessSet }
+internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, Palette, FindWindows, FindFiles, Brightness, BrightnessSet, Visualizer }
 
 internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0, int Value = 0);
 
 internal static class CliCommands {
     // Explicit allow-list. Nothing here shuts down, restarts, signs out or deletes anything.
-    internal static readonly string[] Panels = { "settings", "clipboard", "tools", "audio", "mixer", "capture", "palette" };
+    internal static readonly string[] Panels = { "settings", "clipboard", "tools", "audio", "mixer", "capture", "palette", "dashboard" };
     internal static readonly string[] ImageExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
     internal const int MaxArgs = 4;
 
     internal const string HelpText =
         "Usage: winlestia <command>\n" +
         "  status                       print the shell state as JSON\n" +
-        "  panel <name>                 open a panel: settings, clipboard, tools, audio, mixer, capture, palette\n" +
+        "  panel <name>                 open a panel: settings, clipboard, tools, audio, mixer, capture, palette, dashboard\n" +
         "  desktop next|prev|new|<n>    switch virtual desktop (n starts at 1) or create one\n" +
         "  wallpaper <path>             set the wallpaper to an existing image file\n" +
         "  palette                      open the quick command palette\n" +
@@ -26,6 +26,7 @@ internal static class CliCommands {
         "  find files <term>            print {\"count\":n,\"indexAvailable\":b} for the Windows index (no paths)\n" +
         "  brightness                   print the displays as JSON [{\"id\":n,\"name\":s,\"value\":0-100,\"available\":b}]\n" +
         "  brightness <id> <0-100>      set the brightness of one display (DDC/CI)\n" +
+        "  visualizer                   print {\"running\":b,\"frames\":n,\"panelOpen\":b,\"wanted\":b} for the dashboard audio bars (frames since the last start)\n" +
         "  help                         show this text\n" +
         "Exit codes: 0 success, 1 refused by the shell, 2 unknown command or bad argument, 3 shell not running.";
 
@@ -37,6 +38,7 @@ internal static class CliCommands {
         switch (name) {
             case "help" or "--help" or "-h" or "/?" when args.Length == 1: command = new(CliKind.Help); return true;
             case "status" when args.Length == 1: command = new(CliKind.Status); return true;
+            case "visualizer" when args.Length == 1: command = new(CliKind.Visualizer); return true;
             case "palette" when args.Length == 1: command = new(CliKind.Palette); return true;
             case "panel" when args.Length == 2: {
                 string panel = (args[1] ?? "").ToLowerInvariant();

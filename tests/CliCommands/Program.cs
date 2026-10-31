@@ -37,6 +37,12 @@ r["brightnessNegativeRefused"]=!P("brightness 1 -5",out _)&&!P("brightness -1 5"
 r["brightnessIdRefused"]=!P("brightness 0 50",out _)&&!P("brightness x 50",out _)&&!P("brightness 100 50",out _);
 r["brightnessValueNotNumber"]=!P("brightness 1 abc",out _)&&!P("brightness 1 5.5",out _);
 r["brightnessArityRefused"]=!P("brightness 1",out _)&&!P("brightness 1 2 3",out _);
+r["visualizerParses"]=P("visualizer",out c)&&c!.Kind==CliKind.Visualizer;
+r["visualizerCaseInsensitive"]=P("VISUALIZER",out c)&&c!.Kind==CliKind.Visualizer;
+r["visualizerExtraArgRefused"]=!P("visualizer on",out _);
+r["visualizerHelpListed"]=CliCommands.HelpText.Contains("visualizer")&&CliCommands.HelpText.Contains("frames");
+r["panelDashboardParses"]=P("panel dashboard",out c)&&c!.Kind==CliKind.Panel&&c.Arg=="dashboard";
+r["panelDashboardHelpListed"]=CliCommands.HelpText.Contains("palette, dashboard");
 r["brightnessHelpListed"]=CliCommands.HelpText.Contains("brightness <id> <0-100>");
 r["tooManyArgsRefused"]=!P("desktop 1 2 3 4 5",out _);
 r["nullIsHelp"]=CliCommands.TryParse(null,out c,out _)&&c!.Kind==CliKind.Help;

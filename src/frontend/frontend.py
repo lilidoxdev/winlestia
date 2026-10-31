@@ -63,7 +63,7 @@ def message_handler(kind,context,message):
 class PipeClient(QThread):
     received=Signal(dict)
     def __init__(self,name):
-        super().__init__();self.path='\\\\.\\pipe\\'+name;self.commands=queue.Queue();self.subscription={};self.stopping=False;self.handle=None;self.updates={};self.update_lock=threading.Lock();self.last_state=0
+        super().__init__();self.path='\\\\.\\pipe\\'+name;self.commands=queue.Queue();self.subscription={};self.stopping=False;self.handle=None;self.updates={};self.update_lock=threading.Lock();self.last_state=0;self.bars_seq=0;self.bars_idle=True
         self.wakeup=kernel32.CreateEventW(None,False,False,'Local\\PanneauxCaelestiaWake')
     def run(self):
         while not self.stopping:
@@ -77,7 +77,8 @@ class PipeClient(QThread):
                             with self.update_lock:request=self.updates.pop(next(iter(self.updates)),None) if self.updates else None
                             if request is None:
                                 visual=self.subscription.get('visible') and self.subscription.get('page')==1 and time.monotonic()-self.last_state<.6
-                                request={'command':'visualizer' if visual else 'state','args':{**self.subscription,'pid':os.getpid()}}
+                                bars=self.subscription.get('bars') and self.subscription.get('visible') and self.subscription.get('page')==0 and time.monotonic()-self.last_state<.6
+                                request={'command':'visualizer' if visual else 'audioBars' if bars else 'state','args':{**self.subscription,'pid':os.getpid(),'seq':self.bars_seq}}
                         if request['command']=='state':self.last_state=time.monotonic()
                         request={'command':request['command'],'args':{**self.subscription,**request['args'],'pid':os.getpid(),'epoch':self.subscription.get('epoch',0)}}
                         payload=(json.dumps(request,ensure_ascii=False)+'\n').encode('utf-8')
@@ -85,7 +86,7 @@ class PipeClient(QThread):
                         data=reader.readline(8*1024*1024)
                         if not data: break
                         self.received.emit(json.loads(data))
-                        if request['command'] in ('state','visualizer'):kernel32.WaitForSingleObject(self.wakeup,55 if self.subscription.get('visible') and self.subscription.get('page')==1 else 180 if self.subscription.get('visible') else 500)
+                        if request['command'] in ('state','visualizer','audioBars'):kernel32.WaitForSingleObject(self.wakeup,55 if self.subscription.get('visible') and self.subscription.get('page')==1 else 33 if request['command']=='audioBars' and not self.bars_idle else 180 if self.subscription.get('visible') else 500)
             except (OSError,ValueError,json.JSONDecodeError):self.msleep(300)
             finally:self.handle=None
     def stop(self):
@@ -129,7 +130,7 @@ class WindowsPlayer(QObject):
     def quit(self):pass
 
 class Bridge(QObject):
-    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperThumbReady=Signal(str,str);
+    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();audioBarsChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperThumbReady=Signal(str,str);
     # Palette sources: open windows (asked on opening, dropped on closing) and the file index (debounced, newest request wins by generation number).
     fileChanged=Signal();_windows=[];_file_gen=0;_file_term='';_file_items=[];_file_status='idle';_file_sent=False;_file_timer=None
     def __init__(self,args):
@@ -279,6 +280,7 @@ class Bridge(QObject):
     dictationText=Property(str,lambda s:s._dict['text'],notify=dictationChanged)
     dictationError=Property(str,lambda s:s._dict['error'],notify=dictationChanged)
     dictationArea=Property('QVariantMap',lambda s:s._dict_area,notify=dictationChanged)
+    audioBars=Property('QVariantList',lambda s:getattr(s,'_audio_bars',[]),notify=audioBarsChanged)
     spectrum=Property('QVariantList',lambda s:getattr(s,'_spectrum',[0.0]*48),notify=spectrumChanged)
     iconRevision=Property(int,lambda s:int(s._state.get('iconRevision',0)),notify=changed)
     assetRoot=Property(str,lambda s:(ROOT/'assets').as_posix(),constant=True)
@@ -503,6 +505,13 @@ class Bridge(QObject):
             path,_=QFileDialog.getOpenFileName(None,'Icône de cet accès','','Images (*.png *.ico *.jpg *.jpeg *.webp)')
             if path:self.action('entryIcon',{'id':key,'path':path})
         finally:self.modal=False
+    @Slot(bool)
+    def setAudioBars(self,wanted):
+        wanted=bool(wanted) and not self.reducedEffects
+        if wanted==bool(self.client.subscription.get('bars')):return
+        self.client.subscription={**self.client.subscription,'bars':wanted};self.client.bars_seq=0;self.client.bars_idle=True
+        if not wanted and getattr(self,'_audio_bars',None):self._audio_bars=[];self.audioBarsChanged.emit()
+        kernel32.SetEvent(self.client.wakeup)
     @Slot(bool,int)
     def subscribe(self,visible,page):
         visible=visible or bool(self.recording_kind)
@@ -620,6 +629,9 @@ class Bridge(QObject):
         if isinstance(message.get('windows'),list) and self.mode=='palette':self._windows=message['windows'];self.searchPalette(self.query)
         if message.get('fileResults'):self.files_arrived(message['fileResults'])
         if message.get('notice'):self._notice=message['notice'];self.noticeChanged.emit()
+        if isinstance(message.get('audioBars'),dict):
+            frame=message['audioBars'];self.client.bars_seq=frame.get('seq',0);self.client.bars_idle=bool(frame.get('idle',True))
+            if isinstance(frame.get('bars'),list) and frame['bars']!=getattr(self,'_audio_bars',None):self._audio_bars=frame['bars'];self.audioBarsChanged.emit()
         if 'spectrum' in message and message['spectrum']!=getattr(self,'_spectrum',None):self._spectrum=message['spectrum'];self.spectrumChanged.emit()
         if 'state' in message:
             self.last_reply=time.monotonic()

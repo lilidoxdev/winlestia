@@ -47,6 +47,7 @@ internal sealed partial class QtShellBridge:IDisposable {
     readonly ExplorerAppearance explorer=new();readonly WindowTiler tiler=new();readonly ScreenFrameReservations frame=new();readonly WindowsWallpaper wallpaper=new();readonly AudioMixerHost mixer=new();bool mixerVisible;readonly WindowsSpectrum spectrum=new();readonly MediaController media=new();readonly SystemAudio audio=new();readonly WindowsConnections connections=new();bool wifiSettingsOpened,bluetoothSettingsOpened;readonly PcTelemetry telemetry=new();readonly DictationService dictation;readonly FileSearch fileSearch=new();
 
     CliServer? cli;
+    readonly AudioBarsHost bars=new();bool barsVisible;
     readonly DispatcherTimer timer=new(){Interval=TimeSpan.FromMilliseconds(500)};
 
     readonly Dictionary<string,string> icons=new();readonly HashSet<string> requested=new();readonly Dictionary<string,Entry> dockEntries=new();
@@ -130,8 +131,9 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     async Task<string> Handle(JsonElement request){string? notice=null;object? wallpaperCapture=null;object? bookmarksItems=null;object? windowItems=null;object? fileItems=null;try{string command=Text(request,"command");var args=request.TryGetProperty("args",out var a)?a:default;string id=args.ValueKind==JsonValueKind.Object?Text(args,"id"):"";
 
-        if(args.ValueKind==JsonValueKind.Object&&args.TryGetProperty("epoch",out _)){long epoch=(long)Number(args,"epoch");bool navigationChanged=epoch!=frontendEpoch;if(navigationChanged){DesktopRecents.RefreshSoon();dockPreview.Close();}frontendEpoch=epoch;frontendWindowPid=(uint)Number(args,"pid");bool shown=Flag(args,"visible");tiler.ExcludedProcess=frontendWindowPid;explorer.ExcludedProcess=frontendWindowPid;tiler.SetEnabled(Store.State.AutoTile&&!Program.QtReview&&!Program.QtVerify&&!Program.QtVerifyTools);if(Store.State.ScreenFrame&&!Program.QtVerifyTools)frame.Enable();else frame.Disable();if(!shown)CapturingShortcut=false;page=(int)Number(args,"page");dockVisible=Flag(args,"dock");controls=Flag(args,"controls");mixerVisible=Flag(args,"mixer");if(active!=shown||navigationChanged){active=shown;dismissal.SetActive(active);}lastReply=DateTime.UtcNow;UpdateSampling();}
+        if(args.ValueKind==JsonValueKind.Object&&args.TryGetProperty("epoch",out _)){long epoch=(long)Number(args,"epoch");bool navigationChanged=epoch!=frontendEpoch;if(navigationChanged){DesktopRecents.RefreshSoon();dockPreview.Close();}frontendEpoch=epoch;frontendWindowPid=(uint)Number(args,"pid");bool shown=Flag(args,"visible");tiler.ExcludedProcess=frontendWindowPid;explorer.ExcludedProcess=frontendWindowPid;tiler.SetEnabled(Store.State.AutoTile&&!Program.QtReview&&!Program.QtVerify&&!Program.QtVerifyTools);if(Store.State.ScreenFrame&&!Program.QtVerifyTools)frame.Enable();else frame.Disable();if(!shown)CapturingShortcut=false;page=(int)Number(args,"page");dockVisible=Flag(args,"dock");controls=Flag(args,"controls");mixerVisible=Flag(args,"mixer");barsVisible=Flag(args,"bars");if(active!=shown||navigationChanged){active=shown;dismissal.SetActive(active);}lastReply=DateTime.UtcNow;UpdateSampling();}
         if(command=="dictation"){var d=dictation.Snapshot();return JsonSerializer.Serialize(new{dictation=new{state=d.State,level=d.Level,levels=d.Levels,lang=d.Lang,text=d.Text,error=d.Error}},Json);}
+        if(command=="audioBars"){var head=bars.Snapshot(false);var v=head.Seq==(int)Number(args,"seq")?head:bars.Snapshot(true);return JsonSerializer.Serialize(new{audioBars=new{seq=v.Seq,idle=v.Idle,bars=v.Bars.Length>0?v.Bars:null}},Json);}
         if(command=="visualizer")return JsonSerializer.Serialize(new{spectrum=spectrum.Values},Json);
 
         switch(command){
@@ -285,7 +287,8 @@ internal sealed partial class QtShellBridge:IDisposable {
         switch(c.Kind){
             case CliKind.Help:return(0,CliCommands.HelpText);
             case CliKind.Status:{var snap=VirtualDesktops.Current;return(0,JsonSerializer.Serialize(new{version=typeof(QtShellBridge).Assembly.GetName().Version?.ToString(3)??"",desktops=snap.Count,currentDesktop=snap.Current+1,theme=Store.State.Theme,wallpaper=wallpaper.Monitors.FirstOrDefault()?.path??"",reducedEffects=LightRendering,autoOrganize=Store.State.AutoTile,activeBorderOnly=Store.State.ActiveBorderOnly},Json));}
-            case CliKind.Panel:Send(c.Arg);return(0,"ok");
+            case CliKind.Panel:Send(c.Arg=="dashboard"?"toggle":c.Arg);return(0,"ok");
+            case CliKind.Visualizer:{var v=bars.Snapshot(false);return(0,JsonSerializer.Serialize(new{running=v.Running,frames=v.Frames,panelOpen=active,wanted=barsVisible},Json));}
             case CliKind.Palette:Send("palette");return(0,"ok");
             case CliKind.DesktopNext:_=Task.Run(()=>VirtualDesktops.SwitchTo(0,1));return(0,"ok");
             case CliKind.DesktopPrev:_=Task.Run(()=>VirtualDesktops.SwitchTo(0,-1));return(0,"ok");
@@ -330,11 +333,11 @@ internal sealed partial class QtShellBridge:IDisposable {
     void WithDialog(Action action){DialogOpen=true;try{action();}finally{DialogOpen=false;}}
 
     static bool LightRendering=>Store.State.ReducedEffects??GC.GetGCMemoryInfo().TotalAvailableMemoryBytes<=8L*1024*1024*1024;
-    void UpdateSampling(){mixer.SetActive(active&&(page==1||page==7||mixerVisible));if(!active||page!=1)spectrum.Stop();bool need=active&&page is 0 or 2;if(need){if(!telemetry.Running)telemetry.Start(value=>dispatcher.BeginInvoke((Action)(()=>reading=value)),LightRendering?2000:1000,quick:true);}else if(telemetry.Running)_=telemetry.StopAsync();pageMusic=active&&page is 0 or 1||controls;if(pageMusic&&!startingMedia){startingMedia=true;_ =StartMedia();}else if(!pageMusic&&startingMedia){media.Stop();startingMedia=false;}}
+    void UpdateSampling(){bars.SetActive(active&&barsVisible&&page==0&&Store.State.ReducedEffects!=true);mixer.SetActive(active&&(page==1||page==7||mixerVisible));if(!active||page!=1)spectrum.Stop();bool need=active&&page is 0 or 2;if(need){if(!telemetry.Running)telemetry.Start(value=>dispatcher.BeginInvoke((Action)(()=>reading=value)),LightRendering?2000:1000,quick:true);}else if(telemetry.Running)_=telemetry.StopAsync();pageMusic=active&&page is 0 or 1||controls;if(pageMusic&&!startingMedia){startingMedia=true;_ =StartMedia();}else if(!pageMusic&&startingMedia){media.Stop();startingMedia=false;}}
 
     async Task StartMedia(){try{await media.StartAsync();}catch(Exception ex){Store.Log("Musique Qt: "+ex.Message);}}
 
-    void StopSampling(){displaysOpen=false;mixer.SetActive(false);spectrum.Stop();_=telemetry.StopAsync();media.Stop();startingMedia=false;}
+    void StopSampling(){displaysOpen=false;bars.SetActive(false);mixer.SetActive(false);spectrum.Stop();_=telemetry.StopAsync();media.Stop();startingMedia=false;}
 
     async void Tick(object? sender,EventArgs e){if(disposed||busy)return;if(active&&(DateTime.UtcNow-lastReply).TotalSeconds>5){active=false;StopSampling();dismissal.SetActive(false);}if(!active)return;busy=true;try{if(mixer.Running)RefreshMixer();if(pageMusic){var snapshot=await media.ReadAsync();if(snapshot!=null){player=snapshot;mixer.MediaApp=snapshot.App;var stem=snapshot.App switch{"Microsoft Edge"=>"msedge","Google Chrome"=>"chrome",_=>snapshot.App};spectrum.SetTarget(active&&page==1&&snapshot.Playing?mixer.Applications.FirstOrDefault(a=>Path.GetFileNameWithoutExtension(a.path).Equals(stem,StringComparison.OrdinalIgnoreCase))?.pid??0:0);string key=snapshot.Title+snapshot.Artist;if(snapshot.Artwork!=null&&key!=artworkKey){artworkKey=key;artworkPath=Path.Combine(cache,"cover-"+Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))[..16]+".png");SaveImage(snapshot.Artwork,artworkPath);}}}if(controls||page==7){sound=audio.Read();if(DateTime.UtcNow>=nextConnections){nextConnections=DateTime.UtcNow.AddSeconds(5);connection=await connections.ReadAsync();}if(!displaysOpen){displaysOpen=true;MonitorBrightness.NewSession();nextBrightness=DateTime.MinValue;}if(!readingDisplays&&DateTime.UtcNow>=nextBrightness){nextBrightness=DateTime.UtcNow.AddSeconds(BrightnessPolicy.RefreshSeconds);_=ReadDisplays();}}else displaysOpen=false;}catch(Exception ex){Store.Log("Services Qt: "+ex.Message);}finally{busy=false;}}
 
@@ -358,7 +361,7 @@ internal sealed partial class QtShellBridge:IDisposable {
 
     }
 
-    public void Dispose(){if(disposed)return;disposed=true;timer.Stop();dictation.Dispose();osdWatcher?.Dispose();dockPreview.Dispose();social.Dispose();bookmarks.Dispose();explorer.Dispose();dismissal.Dispose();cli?.Dispose();fileSearch.Dispose();cancellation.Cancel();pipe?.Dispose();tiler.Dispose();frame.Dispose();wallpaper.Dispose();mixer.Dispose();spectrum.Dispose();media.Dispose();telemetry.Dispose();NetworkKindWatcher.Changed-=networkChanged;NetworkKindWatcher.Stop();VirtualDesktops.Changed-=networkChanged;VirtualDesktops.Stop();FullscreenWatcher.Changed-=networkChanged;FullscreenWatcher.Stop();audio.Dispose();if(frontend is {HasExited:false}){try{frontend.Kill();frontend.WaitForExit(2000);}catch{}}frontend?.Dispose();wake.Dispose();cancellation.Dispose();}
+    public void Dispose(){if(disposed)return;disposed=true;timer.Stop();bars.Dispose();dictation.Dispose();osdWatcher?.Dispose();dockPreview.Dispose();social.Dispose();bookmarks.Dispose();explorer.Dispose();dismissal.Dispose();cli?.Dispose();fileSearch.Dispose();cancellation.Cancel();pipe?.Dispose();tiler.Dispose();frame.Dispose();wallpaper.Dispose();mixer.Dispose();spectrum.Dispose();media.Dispose();telemetry.Dispose();NetworkKindWatcher.Changed-=networkChanged;NetworkKindWatcher.Stop();VirtualDesktops.Changed-=networkChanged;VirtualDesktops.Stop();FullscreenWatcher.Changed-=networkChanged;FullscreenWatcher.Stop();audio.Dispose();if(frontend is {HasExited:false}){try{frontend.Kill();frontend.WaitForExit(2000);}catch{}}frontend?.Dispose();wake.Dispose();cancellation.Dispose();}
 
 }
 

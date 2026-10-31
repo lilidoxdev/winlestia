@@ -209,11 +209,22 @@ Item {
         }
     }
 
+    AudioBars {
+        id: visualizer
+
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.leftMargin: Appearance.padding.large * 2
+        anchors.rightMargin: Appearance.padding.large * 2
+        anchors.bottomMargin: Appearance.padding.large
+    }
+
     AnimatedImage {
         id: bongocat
 
         anchors.top: controls.bottom
-        anchors.bottom: parent.bottom
+        anchors.bottom: visualizer.shown ? visualizer.top : parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.topMargin: Appearance.spacing.small

@@ -1,4 +1,5 @@
 module qs.modules.dashboard.dash
+AudioBars AudioBars.qml
 Calendar Calendar.qml
 DateTime DateTime.qml
 Media Media.qml
