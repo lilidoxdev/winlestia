@@ -70,6 +70,13 @@ Item {
             StyledText {text:qsTr("Ajoute des images dans ton dossier Images");color:Colours.palette.m3onSurfaceVariant;font.pointSize:Appearance.font.size.small}
         }
     }
+    Row {
+        anchors.centerIn:parent
+        spacing:Appearance.spacing.normal
+        visible:!root.showWallpapers&&!root.showEmoji&&!root.showFiles&&search.text.length>0&&list.count===0
+        MaterialIcon {anchors.verticalCenter:parent.verticalCenter;text:"search_off";color:Colours.palette.m3onSurfaceVariant;font.pointSize:Appearance.font.size.extraLarge}
+        StyledText {anchors.verticalCenter:parent.verticalCenter;text:qsTr("Aucun résultat");color:Colours.palette.m3onSurfaceVariant;font.pointSize:Appearance.font.size.larger;font.weight:Font.Medium}
+    }
     Behavior on implicitWidth {enabled:!Appearance.reducedEffects&&root.visibilities.launcher;Anim {}}
     Behavior on implicitHeight {enabled:!Appearance.reducedEffects&&root.visibilities.launcher;Anim {}}
 }

@@ -10,8 +10,8 @@ import qs.config
 Item {
     id:root;property bool microphone:false
     implicitHeight:Math.min(640,Bridge.screenHeight-90)
-    ColumnLayout{anchors.fill:parent;spacing:18
-        RowLayout{Layout.fillWidth:true;spacing:12
+    ColumnLayout{anchors.fill:parent;spacing:Appearance.spacing.large
+        RowLayout{Layout.fillWidth:true;spacing:Appearance.spacing.normal
             MaterialIcon{text:root.microphone?"mic":"speaker";font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
             ColumnLayout{spacing:3
                 StyledText{text:root.microphone?"Microphones":"Sortie audio";font.pointSize:Appearance.font.size.title}
@@ -27,10 +27,10 @@ Item {
             IconTextButton{text:qsTr("Mixeur");icon:"instant_mix";type:IconTextButton.Text;onClicked:Bridge.navigate("mixer")}
         }
         StyledListView{
-            id:list;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:10;model:root.microphone?Bridge.audioInputs:Bridge.audioOutputs
+            id:list;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:Appearance.spacing.smaller;model:root.microphone?Bridge.audioInputs:Bridge.audioOutputs
             delegate:StyledRect{
                 id:row;required property var modelData;width:list.width;implicitHeight:126;radius:Appearance.rounding.large;color:row.modelData.selected?Colours.palette.m3secondaryContainer:Colours.palette.m3surfaceContainer
-                ColumnLayout{anchors.fill:parent;anchors.margins:16;spacing:10
+                ColumnLayout{anchors.fill:parent;anchors.margins:Appearance.padding.large;spacing:Appearance.spacing.smaller
                     RowLayout{Layout.fillWidth:true;spacing:12
                         IconButton{icon:row.modelData.selected?"check_circle":root.microphone?"mic":"speaker";type:IconButton.Text;onClicked:Bridge.action("deviceSelect",{id:row.modelData.id})}
                         ColumnLayout{Layout.fillWidth:true;spacing:4

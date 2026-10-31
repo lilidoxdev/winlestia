@@ -283,5 +283,7 @@ Lâcher une fenêtre sur une autre tuile les échange|Dropping a window on anoth
 Applications exclues|Excluded applications|Aplicaciones excluidas
 Aucune application exclue|No excluded application|Ninguna aplicación excluida
 Seulement la fenêtre active|Active window only|Solo la ventana activa
-Le liseré suit la fenêtre au premier plan|The border follows the foreground window|El borde sigue a la ventana en primer plano""".splitlines():
+Le liseré suit la fenêtre au premier plan|The border follows the foreground window|El borde sigue a la ventana en primer plano
+Aucun résultat|No results|Sin resultados
+%1 ?|%1?|¿%1?""".splitlines():
  fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}

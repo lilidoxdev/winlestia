@@ -31,7 +31,8 @@ Window {
     // Closes when another window takes focus (event-driven); the pointer poll below only covers clicks that never change focus (e.g. the dock itself).
     property bool wasActive:false
     onActiveChanged:{if(active)wasActive=true;else if(visible&&wasActive){wasActive=false;visible=false}}
-    onVisibleChanged:if(!visible)wasActive=false
+    onVisibleChanged:if(!visible){wasActive=false;powerChoice=""}
+    function powerLabel(id){return id==="logout"?qsTr("Se déconnecter"):id==="sleep"?qsTr("Mettre en veille"):id==="hibernate"?qsTr("Hibernation"):id==="restart"?qsTr("Redémarrer"):id==="shutdown"?qsTr("Éteindre"):""}
     function closeDesktop(){const index=(entry.index??0)+1;visible=false;Bridge.action("desktopClose",{index:index})}
     onConfirmStopChanged:confirmDialog.open=confirmStop
     Timer{id:focusCheck;objectName:"outsideClickTimer";interval:100;repeat:true;running:menu.visible;onTriggered:if(Bridge.menuOutsideClick(menu.x,menu.y,menu.width,menu.height))menu.visible=false}
@@ -77,9 +78,10 @@ Window {
                     IconTextButton{text:qsTr("En cours");checked:!menu.backgroundTab;onClicked:menu.backgroundTab=false}
                     IconTextButton{text:qsTr("Arrière-plan");checked:menu.backgroundTab;onClicked:menu.backgroundTab=true}
                 }
+                StyledText {visible:menu.kind==="power"&&menu.powerChoice!=="";width:parent.width-12;x:6;text:qsTr("%1 ?").arg(menu.powerLabel(menu.powerChoice));font.pointSize:Appearance.font.size.small;color:Colours.palette.m3onSurfaceVariant;bottomPadding:6}
                 Repeater {model:menu.kind==="power"?(menu.powerChoice===""?[{id:"lock",text:qsTr("Verrouiller"),icon:"lock"},{id:"logout",text:qsTr("Se déconnecter"),icon:"logout"},{id:"sleep",text:qsTr("Mettre en veille"),icon:"bedtime"},{id:"hibernate",text:qsTr("Hibernation"),icon:"downloading"},{id:"restart",text:qsTr("Redémarrer"),icon:"restart_alt"},{id:"shutdown",text:qsTr("Éteindre"),icon:"power_settings_new"},{id:"quitWinlestia",text:qsTr("Fermer Winlestia"),icon:"exit_to_app"}].filter(item=>item.id!=="hibernate"||Bridge.hibernateAvailable):[{id:"confirm",text:qsTr("Confirmer"),icon:"check"},{id:"cancel",text:qsTr("Annuler"),icon:"close"}]):[]
                     StyledRect{required property var modelData;objectName:"power-"+modelData.id;width:body.width;height:54;radius:Appearance.rounding.normal;color:Colours.palette.m3surfaceContainer
-                        StateLayer{function onClicked(){if(parent.modelData.id==="quitWinlestia"){Bridge.action("quit",{});menu.visible=false}else if(["lock"].indexOf(parent.modelData.id)>=0){Bridge.action("systemAction",{id:parent.modelData.id});menu.visible=false}else if(parent.modelData.id==="cancel")menu.powerChoice="";else if(parent.modelData.id==="confirm"){Bridge.action("systemAction",{id:menu.powerChoice});menu.visible=false}else menu.powerChoice=parent.modelData.id}}
+                        StateLayer{function onClicked(){if(parent.modelData.id==="quitWinlestia"){Bridge.action("quit",{});menu.visible=false}else if(["lock"].indexOf(parent.modelData.id)>=0){Bridge.action("systemAction",{id:parent.modelData.id});menu.visible=false}else if(parent.modelData.id==="cancel")menu.powerChoice="";else if(parent.modelData.id==="confirm"){Bridge.action("systemAction",{id:menu.powerChoice,confirmed:true});menu.visible=false}else menu.powerChoice=parent.modelData.id}}
                         RowLayout{anchors.fill:parent;anchors.margins:14;spacing:14;MaterialIcon{text:parent.parent.modelData.icon;font.pointSize:Appearance.font.size.title;color:Colours.palette.m3primary}StyledText{Layout.fillWidth:true;text:parent.parent.modelData.text;font.pointSize:Appearance.font.size.normal}}
                     }
                 }

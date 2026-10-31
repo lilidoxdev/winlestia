@@ -8,12 +8,12 @@ import qs.modules.launcher as Launcher
 import Quickshell
 Column {
     id:root
-    spacing:14
+    spacing:Appearance.spacing.larger
     PersistentProperties {id:vis;property bool launcher:true;property bool session:false}
     RowLayout {
-        id:heading;width:parent.width
-        MaterialIcon {text:qsTr("search");font.pointSize:Appearance.font.size.title;color:Colours.palette.m3primary}
-        StyledText {text:qsTr("Commande rapide");font.pointSize:Appearance.font.size.large;Layout.fillWidth:true}
+        id:heading;width:parent.width;spacing:Appearance.spacing.normal
+        MaterialIcon {text:qsTr("search");font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
+        StyledText {text:qsTr("Commande rapide");font.pointSize:Appearance.font.size.title;Layout.fillWidth:true}
         StyledText {text:Bridge.settings.paletteShortcut||"Ctrl + F2";font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
         IconButton {icon:"close";type:IconButton.Text;onClicked:Bridge.closePanel()}
     }

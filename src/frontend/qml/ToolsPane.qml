@@ -26,8 +26,8 @@ Item {
         {category:"Fichiers",icon:"workspaces",name:"Profils d’espace",description:"Retrouver une disposition de travail",target:"profiles"},
         {category:"Confort",icon:"keyboard",name:"Aide et raccourcis",description:"Les gestes et touches de Panneaux",target:"help"}
     ]
-    ColumnLayout{anchors.fill:parent;spacing:18
-        RowLayout{Layout.fillWidth:true;spacing:12
+    ColumnLayout{anchors.fill:parent;spacing:Appearance.spacing.large
+        RowLayout{Layout.fillWidth:true;spacing:Appearance.spacing.normal
             MaterialIcon{text:qsTr("construction");font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
             ColumnLayout{spacing:3;StyledText{text:qsTr("L’atelier");font.pointSize:Appearance.font.size.title} StyledText{text:qsTr("Des outils à portée de main");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}}
             Item{Layout.fillWidth:true}
@@ -36,11 +36,11 @@ Item {
         RowLayout{spacing:6;Repeater{model:["Tout","Écran","Audio","Fichiers","Confort"];IconTextButton{required property string modelData;text:qsTr(modelData);toggle:true;checked:root.filter===modelData;type:IconTextButton.Tonal;onClicked:root.filter=modelData}} Item{Layout.fillWidth:true}}
         StyledFlickable{id:scroll;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;contentWidth:width;contentHeight:cardsGrid.implicitHeight;flickableDirection:Flickable.VerticalFlick
             C.ScrollBar.vertical:StyledScrollBar{flickable:scroll}
-            GridLayout{id:cardsGrid;width:scroll.width-10;columns:2;columnSpacing:12;rowSpacing:12
+            GridLayout{id:cardsGrid;width:scroll.width-10;columns:2;columnSpacing:Appearance.spacing.normal;rowSpacing:Appearance.spacing.normal
                 Repeater{model:root.cards.filter(c=>root.filter==="Tout"||c.category===root.filter)
                     StyledRect{id:card;required property var modelData;Layout.fillWidth:true;implicitHeight:112;radius:Appearance.rounding.large;color:Colours.palette.m3surfaceContainer
                         StateLayer{function onClicked(){if(card.modelData.nav)Bridge.navigate(card.modelData.target);else Bridge.action("toolRun",{id:card.modelData.target})}}
-                        RowLayout{anchors.fill:parent;anchors.margins:18;spacing:14
+                        RowLayout{anchors.fill:parent;anchors.margins:Appearance.padding.large;spacing:Appearance.spacing.larger
                             MaterialIcon{text:card.modelData.icon;font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
                             ColumnLayout{Layout.fillWidth:true;spacing:6;StyledText{Layout.fillWidth:true;text:qsTr(card.modelData.name);font.pointSize:Appearance.font.size.normal;elide:Text.ElideRight} StyledText{Layout.fillWidth:true;text:qsTr(card.modelData.description);font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline;wrapMode:Text.Wrap}}
                             MaterialIcon{text:qsTr("chevron_right");font.pointSize:Appearance.font.size.larger;color:Colours.palette.m3outline}

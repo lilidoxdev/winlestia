@@ -92,7 +92,8 @@ internal sealed partial class QtShellBridge {
         }
         return null;
     }
-    void DockSystem(string id){
+    void DockSystem(string id,bool confirmed=false){
+        if(!confirmed&&id is "shutdown" or "restart" or "logout" or "hibernate" or "sleep")return;
         string target,arguments="";bool admin=false;
         switch(id){
             case "shutdown":target="shutdown.exe";arguments="/s /t 0";break;

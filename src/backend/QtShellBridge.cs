@@ -157,7 +157,7 @@ internal sealed partial class QtShellBridge:IDisposable {
             case "dockApp":notice=DockAction(args);nextTasks=DateTime.MinValue;break;
             case "dockPreview":DockPreviewOpen(args);break;
             case "dockPreviewEnd":DockPreviewEnd(args);break;
-            case "systemAction":DockSystem(Text(args,"id"));break;
+            case "systemAction":DockSystem(Text(args,"id"),Flag(args,"confirmed"));break;
             case "dictationCapture":if(Flag(args,"enabled"))dictation.BeginCapture();else dictation.EndCapture();break;
             case "captureShortcutMode":CapturingShortcut=Flag(args,"enabled");break;
 
