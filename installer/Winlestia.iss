@@ -77,6 +77,9 @@ Type: files; Name: "{app}\Glass-v5\winlestia.runtimeconfig.json"
 [Files]
 Source: "Close-Winlestia.ps1"; Flags: dontcopy
 Source: "Close-Winlestia.ps1"; DestDir: "{app}"; Flags: ignoreversion
+; Licence et notices tierces accessibles a l'utilisateur installe
+Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Backend C# auto-suffisant (.NET 8 embarque)
 Source: "..\build\payload\Glass-v5\*"; DestDir: "{app}\Glass-v5"; Flags: ignoreversion recursesubdirs createallsubdirs
