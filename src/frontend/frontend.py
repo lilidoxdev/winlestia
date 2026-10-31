@@ -191,7 +191,7 @@ class Bridge(QObject):
     wallpaperInfo=Property('QVariantMap',lambda s:s.current_theme(),notify=changed)
     _wpicker={}
     wallpaperPicker=Property('QVariantMap',lambda s:s._wpicker,notify=wallpaperPickerChanged)
-    glassOpacity=Property(float,lambda s:max(.02,min(.95,float(s.settings.get('customGlassOpacity',.12) if s.themeMode=='custom' else s.settings.get('glassOpacity',.12)))),notify=changed)
+    glassOpacity=Property(float,lambda s:max(.02,min(.95,float(s.settings.get('customGlassOpacity',.12) if s.themeMode=='custom' else s.settings.get('glassOpacity',.95)))),notify=changed)
     # Auto theme, dark scheme on a bright wallpaper: pale text needs a denser tint to stay legible. Wallpapers at L* 40 or below render exactly as before.
     glassTintOpacity=Property(float,lambda s:min(.95,s.glassOpacity*.75/(1-s.glassOpacity*.25)+(max(0.,float(s.current_theme().get('luminance',0))-.4)*3 if s.themeMode=='auto' and s.dark else 0.)),notify=changed)
     surfaceRevision=Property(int,lambda s:s.surface_scene.revision if s.surface_scene else 0,notify=surfaceChanged)
@@ -345,7 +345,7 @@ class Bridge(QObject):
             self.changed.emit();self.frameChanged.emit()
         if name=='preference' and args.get('key')=='dictationKey':self._state.setdefault('settings',{})['dictationKey']=int(args.get('value',0xA5));self.changed.emit()
         if name=='preference' and args.get('key') in ('glassOpacity','frameThickness'):
-            key=args['key'];value=max(4,min(40,round(float(args.get('value',16))))) if key=='frameThickness' else max(.02,min(.95,float(args.get('value',.12))))
+            key=args['key'];value=max(4,min(40,round(float(args.get('value',16))))) if key=='frameThickness' else max(.02,min(.95,float(args.get('value',.95))))
             self._state.setdefault('settings',{})[key]=value;self.changed.emit();self.frameChanged.emit()
         if name in ('sessionVolume','deviceVolume'):
             self._pending_audio[(name,args.get('id',''))]=(float(args.get('value',0)),time.monotonic()+1.5)
