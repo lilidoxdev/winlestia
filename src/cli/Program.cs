@@ -18,10 +18,10 @@ static class Program {
     static int Main(string[] args) {
         if (!CliCommands.TryParse(args, out var command, out var error)) { Console.Error.WriteLine("winlestia: " + error); return 2; }
         if (command!.Kind == CliKind.Help) { Console.WriteLine(CliCommands.HelpText); return 0; }
-        if (command.Kind == CliKind.Wallpaper) {
+        if (command.Kind == CliKind.Wallpaper) {   // `wallpaper list` is WallpaperList and never reaches this path resolution
             string full; try { full = Path.GetFullPath(command.Arg); } catch (Exception) { Console.Error.WriteLine("winlestia: invalid wallpaper path."); return 2; }
             if (!CliCommands.ValidWallpaper(full, File.Exists, out error)) { Console.Error.WriteLine("winlestia: " + error); return 2; }
-            args = new[] { "wallpaper", full };
+            args = command.Number > 0 ? new[] { "wallpaper", full, "--display", command.Number.ToString() } : new[] { "wallpaper", full };
         }
         try {
             using var client = new NamedPipeClientStream(".", "WinlestiaCli", PipeDirection.InOut, PipeOptions.CurrentUserOnly | PipeOptions.Asynchronous);   // Asynchronous: otherwise the 8 s read limit cannot interrupt the read

@@ -1,5 +1,5 @@
 // C#12 / CliCommands: parsing and allow-list of the `winlestia` command line (pure functions).
-using System;using System.Collections.Generic;using PanneauxGlass;
+using System;using System.Collections.Generic;using System.Linq;using PanneauxGlass;
 class Test{
 static bool P(string a,out CliCommand? c){return CliCommands.TryParse(a.Length==0?new string[0]:a.Split(' '),out c,out _);}
 static int Main(){var r=new Dictionary<string,bool>();CliCommand? c;
@@ -56,5 +56,22 @@ r["wallpaperExeRefused"]=!CliCommands.ValidWallpaper(@"C:\Windows\notepad.exe",y
 r["wallpaperStreamRefused"]=!CliCommands.ValidWallpaper(@"C:\a.txt:x.png",yes,out _);
 r["wallpaperEmptyRefused"]=!CliCommands.ValidWallpaper("",yes,out _);
 r["wallpaperTooLongRefused"]=!CliCommands.ValidWallpaper(@"C:\"+new string('a',300)+".png",yes,out _);
+r["displayNoValueRefused"]=!CliCommands.TryParse("wallpaper C:\a.png --display".Split(' '),out _,out var e1)&&e1.Contains("needs a display id");
+r["displayNonNumericRefused"]=!CliCommands.TryParse("wallpaper C:\a.png --display x".Split(' '),out _,out var e2)&&e2.Contains("number");
+r["displayBeforePathRefused"]=!CliCommands.TryParse("wallpaper --display 2 C:\a.png".Split(' '),out _,out var e3)&&e3.Contains("after the image path");
+r["displayOnlyRefused"]=!CliCommands.TryParse("wallpaper --display".Split(' '),out _,out var e4)&&e4.Contains("--display");
+r["wallpaperListParses"]=P("wallpaper list",out c)&&c!.Kind==CliKind.WallpaperList;
+r["wallpaperPathAllDisplays"]=P("wallpaper C:\a.png",out c)&&c!.Kind==CliKind.Wallpaper&&c.Number==0&&c.Arg==@"C:.png";
+r["wallpaperDisplayParses"]=CliCommands.TryParse(new[]{"wallpaper",@"C:.png","--display","2"},out c,out _)&&c!.Kind==CliKind.Wallpaper&&c.Number==2&&c.Arg==@"C:.png";
+r["wallpaperDisplayZeroRefused"]=!CliCommands.TryParse(new[]{"wallpaper",@"C:.png","--display","0"},out _,out _);
+r["wallpaperDisplayWordRefused"]=!CliCommands.TryParse(new[]{"wallpaper",@"C:.png","--display","x"},out _,out _);
+r["wallpaperDisplayFlagTypoRefused"]=!CliCommands.TryParse(new[]{"wallpaper",@"C:.png","--screen","1"},out _,out _);
+r["wallpaperListHelpListed"]=CliCommands.HelpText.Contains("wallpaper list")&&CliCommands.HelpText.Contains("--display");
+r["animatedNone"]=WallpaperLogic.Animated(new string?[]{"explorer","chrome",null,""}).Length==0;
+r["animatedEngine"]=WallpaperLogic.Animated(new string?[]{"Wallpaper64"}).SequenceEqual(new[]{"Wallpaper Engine"});
+r["animatedExeSuffixAndCase"]=WallpaperLogic.Animated(new string?[]{"LIVELY.EXE","wallpaper.service.exe"}).SequenceEqual(new[]{"Lively Wallpaper","Wallpaper X"});
+r["animatedDesktopHutDeduped"]=WallpaperLogic.Animated(new string?[]{"DesktopHut Studio","DesktopHut Studio","wallpaper32"}).SequenceEqual(new[]{"DesktopHut","Wallpaper Engine"});
+r["animatedNoPartialMatch"]=WallpaperLogic.Animated(new string?[]{"mylively","wallpaper"}).Length==0;
+r["displayNamePrimary"]=WallpaperLogic.DisplayName(1,1920,1080,true)=="Display 1 (1920x1080) primary";
 int ok=0;foreach(var v in r.Values)if(v)ok++;foreach(var k in r)if(!k.Value)Console.WriteLine("FAIL "+k.Key);Console.WriteLine("TOTAL "+ok+"/"+r.Count);return ok==r.Count?0:1;}
 }

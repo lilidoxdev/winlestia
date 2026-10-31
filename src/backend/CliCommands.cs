@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace PanneauxGlass;
 
-internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, Palette, FindWindows, FindFiles, Brightness, BrightnessSet, Visualizer }
+internal enum CliKind { Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, WallpaperList, Palette, FindWindows, FindFiles, Brightness, BrightnessSet, Visualizer }
 
 internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0, int Value = 0);
 
@@ -21,6 +21,8 @@ internal static class CliCommands {
         "  panel <name>                 open a panel: settings, clipboard, tools, audio, mixer, capture, palette, dashboard\n" +
         "  desktop next|prev|new|<n>    switch virtual desktop (n starts at 1) or create one\n" +
         "  wallpaper <path>             set the wallpaper to an existing image file\n" +
+        "  wallpaper <path> --display <id>  set it on one display only (ids from 'wallpaper list')\n" +
+        "  wallpaper list               print {\"displays\":[{\"id\":n,\"name\":s,\"path\":s}],\"animated\":[s]} (animated wallpaper software running)\n" +
         "  palette                      open the quick command palette\n" +
         "  find windows                 print {\"count\":n} for the open windows (no titles)\n" +
         "  find files <term>            print {\"count\":n,\"indexAvailable\":b} for the Windows index (no paths)\n" +
@@ -68,7 +70,15 @@ internal static class CliCommands {
                 if (value.Length is < 1 or > 3 || !value.All(char.IsAsciiDigit) || int.Parse(value) > 100) { error = "Brightness must be a whole number from 0 to 100."; return false; }
                 command = new(CliKind.BrightnessSet, "", int.Parse(id), int.Parse(value)); return true;
             }
+            case "wallpaper" when args.Length == 2 && (args[1] ?? "").ToLowerInvariant() == "list": command = new(CliKind.WallpaperList); return true;
+            case "wallpaper" when args.Length >= 2 && (args[1] ?? "").ToLowerInvariant() == "--display": error = args.Length == 2 ? "--display needs an image path first, then a display id: wallpaper <path> --display <id>." : "--display must come after the image path: wallpaper <path> --display <id>."; return false;
+            case "wallpaper" when args.Length == 3 && (args[2] ?? "").ToLowerInvariant() == "--display": error = "--display needs a display id (see 'winlestia wallpaper list')."; return false;
             case "wallpaper" when args.Length == 2: command = new(CliKind.Wallpaper, args[1] ?? ""); return true;
+            case "wallpaper" when args.Length == 4 && (args[2] ?? "").ToLowerInvariant() == "--display": {
+                string id = args[3] ?? "";
+                if (id.Length is < 1 or > 2 || !id.All(char.IsAsciiDigit) || int.Parse(id) < 1) { error = "Display id must be a number from 1 to 99 (see 'winlestia wallpaper list')."; return false; }
+                command = new(CliKind.Wallpaper, args[1] ?? "", int.Parse(id)); return true;
+            }
         }
         error = "Unknown command or wrong arguments: '" + Clip(name) + "'. Try 'winlestia help'."; return false;
     }

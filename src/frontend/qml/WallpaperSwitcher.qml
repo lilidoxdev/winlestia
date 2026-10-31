@@ -23,6 +23,10 @@ Window{
  property string wantPath:""
  property bool seenActive:false
  property int front:0
+ property int target:0   // 0 = all displays, else the display id from the backend (only offered with more than one display)
+ readonly property var displays:(Bridge.wallpaperPicker||{}).displays||[]
+ readonly property var animated:(Bridge.wallpaperPicker||{}).animated||[]
+ readonly property bool multi:displays.length>1
  property int pending:-1
  readonly property string currentPath:current>=0&&current<items.count?items.get(current).path:""
  readonly property string currentUrl:current>=0&&current<items.count?items.get(current).url:""
@@ -31,6 +35,7 @@ Window{
  readonly property bool currentRemovable:currentOrigin==="user"||currentOrigin==="bundled"
 
  ListModel{id:items}
+ onDisplaysChanged:{if(target!==0&&!displays.some(function(d){return d.id===target}))target=0}
  function norm(value){return String(value||"").toLowerCase().split("\\").join("/").replace("file:///","")}
  function load(){
   var keep=wantPath||currentPath,choices=Bridge.wallpaperChoices(""),want=keep||norm((Bridge.wallpaperInfo||{}).source);wantPath="";confirmDelete=false;notRemovable=false;hiddenCount=Bridge.hiddenWallpaperCount()
@@ -45,7 +50,9 @@ Window{
  }
  function move(step){if(items.count<1)return;confirmDelete=false;notRemovable=false;current=(current+step+items.count)%items.count;list.currentIndex=current;show(currentUrl)}
  function select(index){if(index<0||index>=items.count)return;confirmDelete=false;notRemovable=false;current=index;list.currentIndex=index;show(currentUrl)}
- function apply(){if(currentPath!==""&&Bridge.wallpaperChoices("").some(function(w){return w.path===currentPath}))Bridge.setWallpaper(currentPath);closeRequested()}
+ function apply(){if(currentPath!==""&&Bridge.wallpaperChoices("").some(function(w){return w.path===currentPath}))Bridge.applyWallpaper(currentPath,multi?target:0);closeRequested()}
+ function cycleTarget(){if(multi)target=(target+1)%(displays.length+1)}
+ function displayLabel(d){return d.primary?qsTr("Écran %1 (principal) · %2×%3").arg(d.id).arg(d.width).arg(d.height):qsTr("Écran %1 · %2×%3").arg(d.id).arg(d.width).arg(d.height)}
  // The native dialog cannot sit above this topmost frameless window: hide it while the dialog is open (no auto-close meanwhile), then come back with focus.
  function addImages(){if(dialogOpen)return;confirmDelete=false;dialogOpen=true;visible=false;addTimer.start()}
  function finishAdd(){
@@ -70,7 +77,7 @@ Window{
  }
  function layerReady(index){if(pending===index){front=index;pending=-1}}
 
- Component.onCompleted:{Bridge.refreshWallpapersNow();load();requestActivate();keys.forceActiveFocus()}
+ Component.onCompleted:{Bridge.requestWallpaperPicker();Bridge.refreshWallpapersNow();load();requestActivate();keys.forceActiveFocus()}
  onVisibleChanged:if(visible){requestActivate();keys.forceActiveFocus()}
  onActiveChanged:{if(active)seenActive=true;else if(seenActive&&!dialogOpen)closeRequested()}
  onClosing:event=>{event.accepted=false;closeRequested()}
@@ -91,6 +98,7 @@ Window{
    else if(event.key===Qt.Key_Right)root.move(1)
    else if(event.key===Qt.Key_Return||event.key===Qt.Key_Enter)root.apply()
    else if(event.key===Qt.Key_Escape)root.closeRequested()
+   else if(event.key===Qt.Key_Tab&&root.multi)root.cycleTarget()
    else if(event.key===Qt.Key_O&&(event.modifiers&Qt.ControlModifier))root.addImages()
    else if(event.key===Qt.Key_Delete){if(root.currentRemovable)root.confirmDelete=true;else if(root.currentPath!=="")root.notRemovable=true}
    else return
@@ -144,6 +152,16 @@ Window{
     anchors.horizontalCenter:parent.horizontalCenter;spacing:Appearance.spacing.normal
     StyledText{text:root.currentName;font.pointSize:Appearance.font.size.normal;color:Colours.palette.m3onSurface;elide:Text.ElideRight;width:Math.min(implicitWidth,root.width*.6)}
     StyledText{visible:items.count>0;text:(root.current+1)+" / "+items.count;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3onSurfaceVariant}
+   }
+   StyledText{
+    visible:root.animated.length>0;anchors.horizontalCenter:parent.horizontalCenter;text:qsTr("%1 masque le fond choisi tant qu’il tourne").arg(root.animated.join(", "));font.pointSize:Appearance.font.size.small;color:Colours.palette.m3tertiary
+   }
+   Row{
+    visible:root.multi;anchors.horizontalCenter:parent.horizontalCenter;spacing:Appearance.spacing.small
+    StyledText{anchors.verticalCenter:parent.verticalCenter;text:qsTr("Tab changer d’écran");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+    IconTextButton{text:qsTr("Tous les écrans");icon:"desktop_windows";type:root.target===0?IconTextButton.Tonal:IconTextButton.Text;onClicked:root.target=0}
+    Repeater{model:root.displays
+     IconTextButton{required property var modelData;text:root.displayLabel(modelData);icon:"monitor";type:root.target===modelData.id?IconTextButton.Tonal:IconTextButton.Text;onClicked:root.target=modelData.id}}
    }
    Row{
     anchors.horizontalCenter:parent.horizontalCenter;spacing:Appearance.spacing.normal

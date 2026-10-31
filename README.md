@@ -34,6 +34,7 @@ The interface is a port of Caelestia; a .NET service handles the system side and
 - Command palette (Ctrl+F2): open windows, Windows Settings pages and, with `>file `, files from the Windows index (`winlestia find windows|files <term>` returns counts only).
 - Command line `winlestia` (status, panel, desktop, wallpaper, palette, help) to drive the running shell from scripts, through a pipe reserved to the current user. Optional PATH entry at setup.
 - Color palette generated from the wallpaper, with an automatic theme option.
+- Wallpaper switcher (Ctrl+Alt+W): with several displays, Tab picks all displays or one; a line warns when DesktopHut, Wallpaper Engine, Lively or Wallpaper X is running. `winlestia wallpaper list` and `wallpaper <path> --display <id>` do the same from a script.
 - Real blur and rounded corners provided by Windows itself.
 - Enhanced Command Prompt powered by Clink (installed automatically), with colors synchronized to the same palette.
 - Two shells in one install: the Caelestia (Qt Quick) shell and a legacy Glass (WPF) shell.

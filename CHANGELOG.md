@@ -2,6 +2,8 @@
 
 ## Non publié
 
+- Fonds d'écran : le fond est appliqué par `IDesktopWallpaper` (transition du système, sans fenêtre ajoutée ; en effets allégés, ancien appel sans transition demandée). Avec plusieurs écrans, le sélecteur propose « Tous les écrans » ou un écran (Tab). Une ligne signale DesktopHut, Wallpaper Engine, Lively ou Wallpaper X s'il tourne (nom de processus, lu à l'ouverture et à l'application seulement). `winlestia wallpaper list` renvoie `{"displays":[...],"animated":[...]}` ; `winlestia wallpaper <chemin> --display <id>` cible un écran.
+
 - Tableau de bord, panneau Média : barres audio (28 bandes, échelle logarithmique) issues de la capture WASAPI en boucle du périphérique de sortie par défaut. La capture et son thread n'existent que panneau visible (arrêt en moins de 500 ms) et sont absents en plein écran ou avec « Effets allégés » ; en silence les barres retombent à zéro puis les mises à jour cessent ; au plus 30 images/s par le tube nommé, hors du gros état. Aucun son n'est enregistré. `winlestia visualizer` renvoie `{"running":b,"frames":n}` ; `winlestia panel dashboard` bascule le tableau de bord.
 
 - Commandes rapides : un curseur de luminosité par écran, externes compris (DDC/CI) ; lecture à l'ouverture puis toutes les 30 s panneau ouvert, écran sans DDC/CI grisé. `winlestia brightness` liste les écrans en JSON et `winlestia brightness <id> <0-100>` règle l'un d'eux (OSD affiché, écriture limitée à une toutes les 120 ms par écran).

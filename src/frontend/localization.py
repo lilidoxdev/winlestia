@@ -260,6 +260,11 @@ Ouvrir le dossier|Open folder|Abrir carpeta
 Masquer ce fond par défaut ? Entrée pour confirmer · Échap annuler|Hide this default wallpaper? Enter to confirm · Esc cancel|¿Ocultar este fondo predeterminado? Intro para confirmar · Esc cancelar
 Les images du dossier Images ne sont pas supprimées ici|Images from the Pictures folder are not deleted here|Las imágenes de la carpeta Imágenes no se eliminan aquí
 Restaurer les fonds par défaut|Restore default wallpapers|Restaurar los fondos predeterminados
+Tous les écrans|All displays|Todas las pantallas
+Écran %1 · %2×%3|Display %1 · %2×%3|Pantalla %1 · %2×%3
+Écran %1 (principal) · %2×%3|Display %1 (primary) · %2×%3|Pantalla %1 (principal) · %2×%3
+%1 masque le fond choisi tant qu’il tourne|%1 hides the chosen wallpaper while it is running|%1 oculta el fondo elegido mientras se ejecuta
+Tab changer d’écran|Tab switch display|Tab cambiar de pantalla
 Supprimer ce fond de votre dossier ? Entrée confirmer · Échap annuler|Delete this wallpaper from your folder? Enter confirm · Esc cancel|¿Eliminar este fondo de tu carpeta? Intro confirmar · Esc cancelar
 ← → choisir · Entrée appliquer · Ctrl+O ajouter · Suppr retirer · Échap fermer|← → choose · Enter apply · Ctrl+O add · Del remove · Esc close|← → elegir · Intro aplicar · Ctrl+O añadir · Supr quitar · Esc cerrar
 Organisation automatique|Automatic tiling|Organización automática

@@ -130,7 +130,7 @@ class WindowsPlayer(QObject):
     def quit(self):pass
 
 class Bridge(QObject):
-    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();audioBarsChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperThumbReady=Signal(str,str);
+    colorPicked=Signal(str);surfaceChanged=Signal();changed=Signal();perfChanged=Signal();frameChanged=Signal();screensChanged=Signal();spectrumChanged=Signal();audioBarsChanged=Signal();catalogChanged=Signal();dockChanged=Signal();clipboardChanged=Signal();noticeChanged=Signal();searchChanged=Signal();navigationRequested=Signal(str);weatherResult=Signal(dict);windowChanged=Signal();geometryChanged=Signal();shellEvent=Signal(str);tabRequested=Signal(int);dictationChanged=Signal();dictationKeyCaptured=Signal(int);wallpapersReady=Signal();wallpaperPickerChanged=Signal();wallpaperThumbReady=Signal(str,str);
     # Palette sources: open windows (asked on opening, dropped on closing) and the file index (debounced, newest request wins by generation number).
     fileChanged=Signal();_windows=[];_file_gen=0;_file_term='';_file_items=[];_file_status='idle';_file_sent=False;_file_timer=None
     def __init__(self,args):
@@ -189,6 +189,8 @@ class Bridge(QObject):
     themeMode=Property(str,lambda s:s._state.get('settings',{}).get('themeMode','dark' if s._dark else 'light'),notify=changed)
     adaptivePalette=Property('QVariantMap',lambda s:make_palette(s.settings.get('customPalette'))['palette'] if s.themeMode=='custom' else s.current_theme().get('palette',{}) if s.themeMode=='auto' else {},notify=changed)
     wallpaperInfo=Property('QVariantMap',lambda s:s.current_theme(),notify=changed)
+    _wpicker={}
+    wallpaperPicker=Property('QVariantMap',lambda s:s._wpicker,notify=wallpaperPickerChanged)
     glassOpacity=Property(float,lambda s:max(.02,min(.95,float(s.settings.get('customGlassOpacity',.12) if s.themeMode=='custom' else s.settings.get('glassOpacity',.12)))),notify=changed)
     glassTintOpacity=Property(float,lambda s:s.glassOpacity*.75/(1-s.glassOpacity*.25),notify=changed)
     surfaceRevision=Property(int,lambda s:s.surface_scene.revision if s.surface_scene else 0,notify=surfaceChanged)
@@ -429,14 +431,26 @@ class Bridge(QObject):
                 made=thumb_for(path)
                 if made:self.wallpaperThumbReady.emit(path,Path(made).as_uri())
         threading.Thread(target=run,daemon=True).start()
+    @Slot()
+    def requestWallpaperPicker(self):
+        # Displays and running animated-wallpaper software, asked once when the switcher opens (the backend reads process names only; no timer).
+        self._wpicker={};self.wallpaperPickerChanged.emit()   # nothing from the previous session (warning, unplugged displays) while the answer is pending
+        if self.client is not None:self.client.commands.put({'command':'wallpaperPicker','args':{}});kernel32.SetEvent(self.client.wakeup)
     @Slot(str)
-    def setWallpaper(self,path):
-        # Only files from the last scan; the backend sees the Windows change event and the palette is re-derived by WallpaperTheme.
+    def setWallpaper(self,path):self.applyWallpaper(path,0)
+    @Slot(str,int)
+    def applyWallpaper(self,path,display):
+        # Only files from the last scan. The backend applies it (IDesktopWallpaper, display 0 = all displays), nudges its own revision and answers with the animated-software list for the switcher line.
         if not wallpaper_known(path):return
+        if self.client is None or self.client.handle is None:return self.applyWallpaperLocally(path,int(display))
+        self.client.commands.put({'command':'wallpaperApply','args':{'path':path,'display':int(display)}});kernel32.SetEvent(self.client.wakeup)
+    def applyWallpaperLocally(self,path,display):
+        # Backend absent or pipe not connected: former direct SPI call (all displays only). The queued wallpaperChanged reaches the backend on reconnection and re-derives the palette and console colours.
         def apply():
-            # SPI alone does not always move the backend revision (a live-wallpaper host or an unchanged registry value): tell it explicitly, the watcher stays for external changes.
-            if ctypes.windll.user32.SystemParametersInfoW(0x14,0,path,3) and self.client is not None:
-                self.client.commands.put({'command':'wallpaperChanged','args':{}});kernel32.SetEvent(self.client.wakeup)
+            ok=display<=0 and bool(ctypes.windll.user32.SystemParametersInfoW(0x14,0,path,3))
+            if ok:
+                if self.client is not None:self.client.commands.put({'command':'wallpaperChanged','args':{}});kernel32.SetEvent(self.client.wakeup)
+            else:self._notice='Le fond d’écran n’a pas pu être appliqué.' if display<=0 else 'Fond d’écran par écran indisponible pour le moment.';self.noticeChanged.emit()
         threading.Thread(target=apply,daemon=True).start()
     @Slot('QVariant')
     def executeResult(self,value):
@@ -626,6 +640,7 @@ class Bridge(QObject):
             self._backend_fullscreen=True;names=tuple(sorted(self.screen_names(message['state']['fullscreenMonitors'])))
             if names!=self.fullscreen_names:self.fullscreen_names=names;self.frameChanged.emit()
         if 'wallpaperCapture' in message:self.walltheme.captured(message['wallpaperCapture'])
+        if isinstance(message.get('wallpaperPicker'),dict):self._wpicker=dict(self._wpicker,**message['wallpaperPicker']);self.wallpaperPickerChanged.emit()
         if isinstance(message.get('windows'),list) and self.mode=='palette':self._windows=message['windows'];self.searchPalette(self.query)
         if message.get('fileResults'):self.files_arrived(message['fileResults'])
         if message.get('notice'):self._notice=message['notice'];self.noticeChanged.emit()
