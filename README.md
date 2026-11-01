@@ -6,11 +6,13 @@
 
 **A free, open-source desktop shell for Windows 11.**
 
+<a href="https://discord.gg/5jXv7NRj3Q"><img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join the Winlestia Discord server" height="40"></a>
+
 [![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0)
 [![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
 
-[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
 
 <img src="docs/illustrations/desktop.webp" alt="Winlestia on a Windows 11 desktop" width="100%">
 
