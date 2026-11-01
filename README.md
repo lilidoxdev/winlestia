@@ -1,129 +1,150 @@
 <div align="center">
 
-<img src="docs/media/banner.png" alt="Winlestia, Windows beautifully reimagined" width="100%">
+<img src="src/frontend/assets/winlestia-mark.png" alt="Winlestia logo" width="128">
 
-[![Release](https://img.shields.io/badge/release-v0.8.0-5e81ac?style=flat-square)](../../releases/latest)
-[![Platform](https://img.shields.io/badge/platform-Windows%2011-3b4252?style=flat-square)](#installation)
-[![License](https://img.shields.io/badge/license-GPL--3.0-d6405e?style=flat-square)](LICENSE)
+# Winlestia
+
+**A free, open-source desktop shell for Windows 11.**
+
+[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?include_prereleases&style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0)
+[![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
+[![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
+
+[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) · [Watch the demo](#video-showcase) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+
+<img src="docs/screenshots/desktop.png" alt="Winlestia on a Windows 11 desktop" width="100%">
 
 </div>
 
 ## What is Winlestia
 
-Winlestia is a desktop shell for Windows 11. It replaces the surface of Windows, not the system: the taskbar is swapped for a dock, and a dashboard and glass panels sit on top of your normal desktop. Files, windows and wallpaper stay where they are.
+Winlestia is a free, open-source desktop shell for Windows 11, bringing a Caelestia-inspired interface, dynamic themes, glass effects, a customizable dock and powerful desktop tools.
 
-The interface is a port of Caelestia; a .NET service handles the system side and Windows' own glass effect. The colors of the panels are derived from your wallpaper.
+It replaces the surface of Windows, not the system. The taskbar is swapped for a dock, and a dashboard and glass panels sit on top of your normal desktop. Your files, windows and wallpaper stay where they are. The interface is a port of [Caelestia](https://github.com/caelestia-dots/shell) (Qt Quick), and a .NET 8 service handles the Windows side. Panel colours can be derived from your wallpaper (see [Wallpaper and dynamic theme](#wallpaper-and-dynamic-theme)).
 
 ## Features
 
-- Dashboard with media, performance and workspaces pages.
-- Media page showing the track currently playing in Windows.
-- Performance page with CPU, GPU, memory and network readings.
-- Workspaces page listing installed applications, with search.
-- Dock that replaces the Windows taskbar, with a quick command palette.
-- Toolbox: screen capture, text recognition (OCR) on a captured area, color picker, clipboard history, focus timer and notes.
-- Settings for theme, glass opacity, screen frame thickness, taskbar replacement, autostart and global shortcuts. Autostart is a per-user scheduled task named `WinlestiaShell` (logon trigger, `--qt-shell`, no admin); the old `Run` registry value is migrated to it at launch and kept as a fallback if the task cannot be created. Messaging apps are kept loaded in the background by default (option in Settings).
-- Search field in the settings panel: finds a setting by title or description, ignoring case and accents, across all pages, then scrolls to it and highlights it.
-- Quick controls panel: a "Reduced effects" switch; if Windows refuses a Wi-Fi or Bluetooth toggle, the matching Windows Settings page opens.
-- Virtual desktop indicator in the dock: one dot per Windows desktop, the current one highlighted; click a dot or scroll to switch. It reads the desktop list from the registry and switches with the Win+Ctrl+arrow shortcut. It can be turned off in Settings. A "+" button next to the dots creates a new desktop (Win+Ctrl+D); right-click a dot to close that desktop (its windows move to the neighbouring one).
-- Brightness of every display, external ones included (DDC/CI), in the quick controls panel; `winlestia brightness` lists them and `winlestia brightness <id> <0-100>` sets one.
-- Wi-Fi in the quick controls panel: the arrow next to the Wi-Fi switch opens the network list (strength, lock, connected, remembered) with password entry, connect and forget. It uses Native Wifi (`wlanapi.dll`), scans only while the list is open (on opening, then every 15 s) and keeps no WLAN handle at rest. Winlestia never stores or shows passwords: the typed password is passed once to Windows, which remembers the network in your user WLAN profile (never a machine-wide profile, except if Windows itself rejects the per-user scope). The .NET strings that carried it cannot be wiped before garbage collection; only the character buffer and the native copy are cleared. A profile created for a failed attempt is deleted; an existing one is never deleted. Open, WPA2-Personal, WPA3-SAE (transition included) and WPA-Personal networks are handled; enterprise (802.1X) and hidden networks are not (button to Windows settings). `winlestia wifi` prints `{"available","connected","networks","reason"}` without any network name.
-- Audio bars in the dashboard Media panel (WASAPI loopback of the default output, captured only while the panel is visible, nothing recorded); `winlestia visualizer` (the dashboard bars, i.e. the Media widget of the main tab) prints `{"running":b,"frames":n,"panelOpen":b,"wanted":b}` and `winlestia panel dashboard` toggles the dashboard.
-- Fullscreen quiet mode (video, game, borderless window): the dock, OSD, audio bars, animations and edge tracking are switched off and the timers slow down, until the window leaves fullscreen; option in Settings, `winlestia quiet [on|off|auto]` to test.
-- On-screen indicator (OSD) for volume, screen brightness and microphone mute, driven by system events. The native Windows volume popup is left as is.
-- Accent border on applications (on by default), with an optional "Active window only" mode that colours only the foreground window.
-- Automatic tiling (off by default): stable tile order, keyboard focus, swap, resize and float shortcuts (Ctrl+Alt+arrows, listed in Settings), drag-to-swap, and a per-application exclusion list. A dock button turns it on or off, same as the Settings toggle; it sits in a group next to the desktop dots that a small arrow shows or tucks away (state remembered).
-- Command palette (Ctrl+F2): open windows, Windows Settings pages and, with `>file `, files from the Windows index (`winlestia find windows|files <term>` returns counts only). A shortcut added to the Start menu is listed a few seconds later, without restarting the shell.
-- Command line `winlestia` (status, panel, desktop, wallpaper, palette, help) to drive the running shell from scripts, through a pipe reserved to the current user. Optional PATH entry at setup.
-- Color palette generated from the wallpaper, with an automatic theme option.
-- Wallpaper switcher (Ctrl+Alt+W): with several displays, Tab picks all displays or one; a line warns when DesktopHut, Wallpaper Engine, Lively or Wallpaper X is running. `winlestia wallpaper list` and `wallpaper <path> --display <id>` do the same from a script.
-- Real blur and rounded corners provided by Windows itself.
-- Enhanced Command Prompt powered by Clink (installed automatically), with colors synchronized to the same palette.
-- Two shells in one install: the Caelestia (Qt Quick) shell and a legacy Glass (WPF) shell.
+### Dashboard
+<img src="docs/screenshots/dashboard.png" alt="Dashboard" width="100%">
 
-## Screenshots
+Press **Ctrl+F1**. The dashboard has four pages: **Dashboard** (clock, calendar, weather, media), **Media**, **Performance** and **Workspaces**.
 
-| | |
-|---|---|
-| ![Dashboard](docs/screenshots/01-dashboard.png)<br>Dashboard | ![Media](docs/screenshots/02-media.png)<br>Media player |
-| ![Performance](docs/screenshots/03-performance.png)<br>Performance monitor | ![Workspaces](docs/screenshots/04-espaces.png)<br>Workspaces |
-| ![Dock and quick command](docs/screenshots/05-dock-commande-rapide.png)<br>Dock and quick command | ![Toolbox](docs/screenshots/06-boite-a-outils.png)<br>Toolbox |
-| ![Settings](docs/screenshots/07-reglages.png)<br>Settings | ![Terminal](docs/screenshots/08-terminal.png)<br>Terminal with synchronized palette |
+- Media: the track playing in Windows, with audio bars that run only while the panel is visible. Nothing is recorded.
+- Performance: CPU, GPU, memory and storage readings.
+- Workspaces: your applications, games, projects and documents, with search.
 
-## Demo
+### Dock and command palette
+<img src="docs/screenshots/dock-palette.png" alt="Dock and command palette" width="100%">
 
-<a href="docs/media/winlestia-github.mp4"><img src="docs/media/demo-preview.webp" alt="Winlestia demo" width="100%"></a>
+- A dock instead of the Windows taskbar, with window previews on hover and a virtual-desktop indicator. The dock auto-hides: it slides away a fraction of a second (about 0.45 s) after the pointer leaves it, and appears when the pointer reaches the bottom edge of the screen. The Windows key opens the normal Windows Start menu.
+- **Ctrl+F2** opens the palette: calculator, `>emoji`, `>wallpaper`, `>file ` for indexed files, open windows, Windows Settings pages and session actions (each asks for confirmation).
 
-Click the animation to open the full-quality video (1080p, 22 s).
+### Media and quick controls
+<img src="docs/screenshots/media.png" alt="Media panel" width="100%">
 
-A vertical version for mobile viewing is available at [docs/media/winlestia-tiktok.mp4](docs/media/winlestia-tiktok.mp4).
+Quick controls include a Wi-Fi network list, per-display brightness (DDC/CI, external displays too) and a "Reduced effects" switch. Audio and per-application mixer panels are included.
 
-## Installation
+### Performance
+<img src="docs/screenshots/performance.png" alt="Performance panel" width="100%">
 
-Requirements:
+### Tools
+<img src="docs/screenshots/tools.png" alt="Tools panel" width="100%">
 
-- From the release setup: Windows 11 on a 64-bit (x64) PC, nothing else to install. The setup embeds the .NET 8 runtime (self-contained) and an embedded Python 3.12 with the Qt libraries. An Internet connection is needed during setup for Clink.
-- From source: Windows 11 x64, the .NET 8 SDK (or the .NET 8 Desktop Runtime to run a build), Python 3.12 only for the Qt frontend, and Internet for Clink.
-- The terminal component downloads Clink 1.9.35 from its official GitHub page (github.com/chrisant996/clink), checks the archive against a known SHA256 fingerprint before extracting it, then checks each extracted Clink binary against its own fingerprint.
+Screen capture with annotation (**Ctrl+F3**), text recognition (OCR) on a captured area, colour picker, pixel ruler, clipboard history, focus timer, notes, pin a window on top (**Ctrl+F8**), a large-files view, and a recycle-bin / clipboard / zip drop zone that appears when you drag a file toward the top of the screen.
 
-1. Download `Winlestia-Setup-0.8.0.exe` from the [latest release](../../releases/latest). To check the download is intact, compare the output of `Get-FileHash .\Winlestia-Setup-0.8.0.exe` in PowerShell with the line for that file in `SHA256SUMS-0.7.6.txt`, published next to it.
-2. Double-click the setup. It installs into `%LOCALAPPDATA%\Programs\Winlestia` (your own user folder), so it does not ask for administrator rights.
-3. Answer the prompts: the display name, whether Winlestia starts with Windows, and whether to add a desktop shortcut.
-4. Winlestia starts when the setup finishes, and the dock replaces the Windows taskbar.
+### Wallpaper and dynamic theme
+<img src="docs/screenshots/wallpaper.png" alt="Wallpaper switcher" width="100%">
 
-If the terminal theme cannot be applied (for example, no Internet during setup), the setup shows a message and the rest of Winlestia still works. The details are in `Winlestia-Terminal\install-result.json` inside the install folder. Run the setup again once you are online.
+**Win+Alt+W** opens a full-screen wallpaper switcher with live preview and per-display targeting. A fresh install uses the **Porcelain** theme (light, warm), which is fixed and does **not** follow the wallpaper; the **Automatic** theme does. To get colours from the wallpaper, open Settings (Customize), then Appearance, then Theme, and select **Automatic**. Glass blur comes from Windows itself. The Automatic theme starts with a glass transparency of 5 %, adjustable in Settings.
 
-The setup is not code-signed, so Windows SmartScreen may warn on first launch: choose "More info", then "Run anyway".
+### Settings
+<img src="docs/screenshots/settings.png" alt="Settings" width="100%">
 
-To update or uninstall, run the setup again: it detects the installed version and offers both options. Uninstalling restores the Windows taskbar. You can also uninstall from Settings, Apps. Your settings are kept.
+Six pages with a search field: appearance, desktop and dock, file explorer, daily use, messengers and bookmarks. Screen frame, accent border on windows, desktop logo, quiet mode (dock and OSD hidden during fullscreen), on-screen indicators for volume, brightness and microphone, and optional automatic tiling (off by default; Ctrl+Alt+arrows).
+
+### Terminal
+<img src="docs/screenshots/terminal.png" alt="Terminal with the Winlestia palette" width="100%">
+
+Opt-in at setup: Command Prompt through [Clink](https://github.com/chrisant996/clink), with colours synchronized to the wallpaper palette. Reversible. Clink is downloaded at install time, so this option needs an Internet connection.
+
+### Panels
+<img src="docs/screenshots/panels.png" alt="Winlestia panels" width="100%">
+
+Also: a Files explorer, messenger and bookmark side rails, an optional push-to-talk dictation (hold AltGr, off by default), and a `winlestia` command line to script the running shell.
+
+## Video showcase
+
+[![Showcase 16:9](docs/screenshots/video-16x9.jpg)](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-showcase-16x9.mp4)
+
+[![Vertical 9:16](docs/screenshots/video-9x16.jpg)](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-vertical-9x16.mp4)
+
+Click a picture to open the video: [16:9](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-showcase-16x9.mp4), [9:16](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-vertical-9x16.mp4), [9:16 in French](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-vertical-9x16-fr.mp4). These are real screen recordings; only titles, crops and fades were added in editing.
+
+## Install
+
+Requires **Windows 11 (64-bit)**. No administrator rights needed.
+
+1. Download [`Winlestia-Setup-0.9.0.exe`](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-Setup-0.9.0.exe) and `SHA256SUMS-0.9.0.txt` from the [release](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
+2. Check it: `Get-FileHash .\Winlestia-Setup-0.9.0.exe` in PowerShell must match the checksum file.
+3. Run it. The binaries are **not code-signed**, so SmartScreen will likely warn: choose **More info**, then **Run anyway**.
+
+After installing, move the pointer to the bottom edge of the screen to reveal the dock. The setup wizard is in French only. Full guide, options, updating and uninstalling: [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Usage
 
-**Launch.** Start Winlestia from the Start menu or desktop shortcut, or run `Glass-v5\Panneaux.Glass.exe` (the main program) from the install folder (`%LOCALAPPDATA%\Programs\Winlestia`). Running it again while it is already open shows the shell instead of starting a second copy. `Panneaux.Glass.exe --quit` closes it.
-
-**Which shell starts.** By default the Caelestia interface starts; to use the older Glass interface, delete `caelestia.enabled` in the `Glass-v5` folder. `--qt-shell` / `--legacy-shell` force one or the other.
-
-**Global shortcuts** (defaults, reassignable in Settings):
-
 | Shortcut | Action |
 |---|---|
-| Ctrl+F1 | Open the panel |
-| Ctrl+F2 | Quick command: type `25/2`, `25:2` or `25 divisé par 2` to calculate (decimal comma in French and Spanish), `>emoji cat` (or `>emoji chat`) for a searchable emoji grid copied on Enter, `>wallpaper` to switch wallpaper |
+| Ctrl+F1 | Dashboard |
+| Ctrl+F2 | Command palette |
 | Ctrl+F3 | Screen capture |
-| Ctrl+F8 | Pin a window on top |
-| Win+Alt+W | Wallpaper switcher: Left/Right to preview, Enter to apply, Esc to close (falls back to Ctrl+Alt+W if Windows refuses it; configurable in Settings) |
-| Ctrl+Alt+Backspace | Emergency desktop restore (see Troubleshooting) |
+| Ctrl+F8 | Pin window on top |
+| Win+Alt+W | Wallpaper switcher (Ctrl+Alt+W if Windows refuses it) |
+| Ctrl+Alt+Backspace | Emergency rescue |
 
-## Configuration
+All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` command: [docs/SHORTCUTS.md](docs/SHORTCUTS.md).
 
-The data folders are named `Panneaux`, the project's former name.
+## FAQ
 
-| File | Purpose |
-|---|---|
-| `%LOCALAPPDATA%\Panneaux\preferences-glass.json` | Shell preferences. Change these options in Settings instead; the file is for advanced users. |
-| `%LOCALAPPDATA%\Panneaux\Caelestia\weather.json` | Weather city, as `{"city": "..."}`. |
-| `%LOCALAPPDATA%\Panneaux\glass.log` | Backend log. |
+**The Windows taskbar is missing.** Wait a few seconds (a watchdog restores it), press Ctrl+Alt+Backspace, use the Start menu shortcut "Restaurer la barre des tâches Windows", or run `Panneaux.Glass.exe --restore-taskbar` or `RETABLIR_BARRE_WINDOWS.exe` in the `Glass-v5` folder of the install. See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
-Advanced: the keys of `preferences-glass.json` include `ReplaceTaskbar`, `AutoTheme`, `ScreenFrame`, `FrameThickness`, `GlassOpacity`, `AutoTile`, `DesktopLogo`, `TaskbarPins` and the shortcuts `Shortcut`, `PaletteShortcut`, `CaptureShortcut`, `PinShortcut` (each with `Modifiers` and `Key`).
+**Why does Windows warn me about the installer?** The installer and the programs it installs are not code-signed, so SmartScreen cannot show a publisher. Verify the SHA-256, then use "More info", "Run anyway". A matching checksum shows the file is the published one; it does not replace a signature.
 
-Command-line flags of `Panneaux.Glass.exe`:
+**Is there a notification centre?** No. Only on-screen indicators and toasts.
 
-| Flag | Effect |
-|---|---|
-| `--qt-shell` | Start the Caelestia (Qt Quick) shell. |
-| `--legacy-shell` | Start the legacy Glass (WPF) shell, overriding `caelestia.enabled`. |
-| `--restore-taskbar` | Restore the Windows taskbar and exit. |
-| `--taskbar-guard <pid> <file>` | Internal use, do not run manually. |
-| `--quit` | Close the running instance. |
+**Where are my settings and logs?** In `%LOCALAPPDATA%\Panneaux`. The name is the project's former name, kept on purpose. Uninstalling keeps this folder; see Privacy and data below to remove it.
 
-## Troubleshooting
+**Why "Panneaux" in some file names?** Same reason: legacy name.
 
-- **The Windows taskbar is missing.** Run `RETABLIR_BARRE_WINDOWS.exe` from the `Glass-v5` folder of the install, or run `Panneaux.Glass.exe --restore-taskbar`. A watchdog also restores the taskbar if Winlestia stops unexpectedly. You can disable the replacement with the taskbar option in Settings ("Barre des tâches Panneaux").
-- **The desktop looks broken or icons are hidden.** Press Ctrl+Alt+Backspace. It runs `SECOURS_BUREAU.exe`, which brings back the Windows desktop icons, stops Winlestia and disables its autostart (the `WinlestiaShell` task is removed once `SECOURS_BUREAU.exe` is rebuilt from `Secours.cpp`). The executable can also be launched directly from the install folder.
-- **The Caelestia shell does not start.** Start with `Panneaux.Glass.exe --legacy-shell` to use the Glass shell, and check `%LOCALAPPDATA%\Panneaux\glass.log`.
-- **A shortcut does not work.** Another application may already own the combination. Pick a different one in Settings.
-- **Windows protected your PC when launching the setup.** See the SmartScreen note under Installation.
+## Known limitations
 
-## License
+- The installer wizard is in French only.
+- The shell panels are translated into English and Spanish; some rarer labels derived from the system may still appear in French. The language is chosen automatically from the Windows display language. To force it, set the `language` key (`auto`, `fr`, `en` or `es`) in `%LOCALAPPDATA%\Panneaux\Caelestia\language.json`. Fallback text is French.
+- Not tested on a clean machine or virtual machine, and not tested after a real reboot or sign-in (the start-up scheduled task was launched manually).
+- Binaries are unsigned, so SmartScreen may warn.
+- Windows 11 x64 only.
+- Temperature is shown in Celsius only.
+- Not a notification centre.
+- The optional terminal integration prints a welcome banner in French, with your session and computer names.
+- When you confirm a wallpaper in the switcher, the previous one can flash briefly before the new one appears.
 
-Winlestia is released under the GNU General Public License v3.0. See [LICENSE](LICENSE). Third-party components and their licenses are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+## Privacy and data
+
+- Weather: when no city is set, your approximate location is found from your IP address through wttr.in (which therefore sees your IP address); the forecast comes from Open-Meteo. Set a city to avoid the IP lookup. Temperature is in °C only.
+- Start-up: the installer writes a Run value named `Panneaux` under `HKCU`. On the first shell start it is migrated to a per-user scheduled task, `WinlestiaShell`, and the Run value is removed.
+- After uninstalling, the registry value `HKCU\Software\Winlestia\DisplayName` and the profile folder `%LOCALAPPDATA%\Panneaux` are kept so a later update can reuse them. To remove them, delete the folder and run `Remove-Item -Path HKCU:\Software\Winlestia -Recurse` in PowerShell.
+
+## Roadmap
+
+**Shipped in 0.9.0:** Wi-Fi panel, per-display brightness, dashboard audio bars, fullscreen quiet mode, full-screen wallpaper switcher, richer command palette, settings search, tiling shortcuts, `winlestia` command line. See [CHANGELOG.md](CHANGELOG.md).
+
+**Ideas, not promises:** a notification centre, support for enterprise and hidden Wi-Fi networks, more testing on other display layouts, and a code-signed installer.
+
+## Contributing
+
+Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems privately: [SECURITY.md](SECURITY.md).
+
+## Licence and credits
+
+Winlestia is released under the [GNU GPL v3.0](LICENSE). It is a port of and is inspired by [Caelestia](https://github.com/caelestia-dots/shell) by caelestia-dots and contributors (GPL-3.0). The optional terminal integration uses [Clink](https://github.com/chrisant996/clink) (GPL-3.0), fetched at install time. Qt/PySide6, .NET, NAudio, LibreHardwareMonitor and other components, are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+**Bundled wallpapers.** The 10 images in `assets/wallpapers` were supplied by the maintainer and are shipped as unmodified original files. They are **not** covered by the GPL-3.0 licence: rights remain with their owners and their licence has not been established. See [assets/wallpapers/CREDITS.txt](assets/wallpapers/CREDITS.txt). A rights holder can ask for an image to be removed by opening a [GitHub issue](https://github.com/lilidoxdev/winlestia/issues).

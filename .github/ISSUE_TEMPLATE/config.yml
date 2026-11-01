@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/lilidoxdev/winlestia/security/advisories/new
+    about: Report privately. Do not open a public issue.
+  - name: Troubleshooting guide
+    url: https://github.com/lilidoxdev/winlestia/blob/main/docs/TROUBLESHOOTING.md
+    about: Taskbar not back, SmartScreen, logs, resetting the profile.

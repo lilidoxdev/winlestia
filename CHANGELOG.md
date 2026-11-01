@@ -1,33 +1,52 @@
-# Journal des modifications
+# Changelog
 
-## 0.9.0 — 2026-10-31
+Earlier releases are described in `docs/RELEASE-*.md`. Release notes for each version are also published on the GitHub Releases page.
 
-- Commandes rapides : une flèche à côté de l'interrupteur Wi-Fi ouvre la liste des réseaux (nom, force, verrou, connecté, mémorisé), avec saisie du mot de passe, connexion et oubli d'un réseau. Lecture et connexion par Native Wifi (`wlanapi.dll`) hors thread d'interface ; balayage seulement liste ouverte (à l'ouverture puis toutes les 15 s), rien au repos ni en plein écran, poignée WLAN fermée après chaque opération. Le mot de passe ne va que du champ au profil WLAN créé par Windows (utilisateur courant ; tous les utilisateurs seulement si Windows rejette la portée utilisateur elle-même) ; un mot de passe tapé pour un réseau mémorisé remplace le profil, l'ancien étant restauré en cas d'échec : ni journal, ni état renvoyé, ni préférences, ni commande `winlestia`. Un profil créé pour une connexion échouée est supprimé ; un profil existant n'est jamais supprimé. Réseaux d'entreprise (802.1X) et réseaux masqués non gérés (bouton « Ouvrir dans Windows »). Messages dédiés si la localisation est refusée, si le Wi-Fi est absent ou arrêté, et bouton vers la page de connexion quand l'accès est restreint. `winlestia wifi` (lecture seule, sans nom de réseau). Tests : `tests/WifiPolicy`.
+## 0.9.0 - 2026-10-31
 
-- Applications récentes : un raccourci ajouté au menu Démarrer (utilisateur ou commun) apparaît dans la palette Ctrl+F2 environ 3 s plus tard, sans attendre l'inventaire complet ; les applications du Store sont relues à l'ouverture de la palette si le catalogue a plus de 5 minutes. Une relecture demandée pendant une autre est rejouée à la fin. Dock : les fenêtres d'un programme élevé sont listées (chemin lu par `QueryFullProcessImageName`, sinon icône de la fenêtre) ; elles peuvent être activées ou fermées, pas lancées ni épinglées. Une icône de secours n'est plus gardée : l'extraction est retentée quatre fois au plus (5 s à 2 min), puis à chaque relecture du catalogue ; pour un raccourci dont l'icône est une bibliothèque, l'icône du raccourci est utilisée.
+Changes since 0.8.0.
 
-- Démarrage et Bureau : lancement par une tâche planifiée utilisateur `WinlestiaShell` à l'ouverture de session (`--qt-shell`, sans administrateur, sans délai), la valeur Run est migrée au lancement et gardée en repli ; les icônes du Bureau sont réaffirmées sur événement Explorer (anti-rebond, au plus une fois par 2 s, après redémarrage d'Explorer) ; la barre Windows attend `TaskbarCreated` si Explorer n'est pas prêt ; les messageries restent chargées en arrière-plan par défaut ; `glass.log` note le premier affichage Qt.
+### Added
 
-- Lanceur Ctrl+F2 : entrées Éteindre, Redémarrer, Se déconnecter, Verrouiller, Mettre en veille et Hibernation (confirmation avant chaque action) ; textes vides des panneaux Audio, Mélangeur et Presse-papiers traduits.
+- **Command line.** `winlestia` drives the running shell from scripts through a named pipe reserved to the current user, with an allow-list of commands and no stop or delete command: `status`, `panel`, `palette`, `desktop`, `wallpaper`, `find`, `brightness`, `visualizer`, `quiet`, `wifi`, `help`. Optional PATH entry at setup.
+- **Wi-Fi panel** in the quick controls: network list (name, strength, lock, connected, remembered), connect with password, forget. Uses Native Wifi, scans only while the list is open, never stores or logs the password. Enterprise (802.1X) and hidden networks are not handled; a button opens Windows settings instead.
+- **Brightness per display**, external displays included (DDC/CI), in the quick controls and through `winlestia brightness`. Brightness and microphone mute/level also appear in the on-screen indicator (OSD), next to volume.
+- **Audio bars** in the dashboard Media panel, from a loopback capture of the default output that runs only while the panel is visible. Nothing is recorded.
+- **Fullscreen quiet mode**: when a window covers a whole display, the dock, OSD, audio bars, animations and edge tracking are switched off and timers slow down, then everything returns on exit. Option in Settings (on by default); `winlestia quiet` to test.
+- **Wallpaper switcher** (Win+Alt+W, fallback Ctrl+Alt+W): full-screen, live preview, bundled collection of 10 images, add, open and remove images. Per-display targeting with Tab, and a notice when DesktopHut, Wallpaper Engine, Lively or Wallpaper X is running.
+- **Command palette** (Ctrl+F2): open windows, about thirty Windows Settings pages, indexed file search with the `>file ` prefix, `>emoji` picker, `>wallpaper` picker, calculator with an operator (including French words and locale decimals), and session actions (shut down, restart, sign out, lock, sleep, hibernate) that ask for confirmation.
+- **Settings search** across the six pages by title and description, ignoring case and accents; the result opens the page and highlights the row.
+- **Virtual desktops in the dock**: indicator, `+` button to create a desktop, right-click to close one, Win+Ctrl+arrow switching.
+- **Automatic tiling** controls: stable order, keyboard focus, swap, resize and float, drag-to-swap, per-application exclusions; dock button to turn it on or off. Still off by default.
+- **Accent border**: optional "active window only" mode.
+- **"Reduced effects"** switch in the quick controls.
+- **Terminal integration** is now optional (unchecked at setup) and reversible.
 
-- Menu de session : extinction, redémarrage, déconnexion, veille et hibernation exigent la confirmation, vérifiée aussi côté C# ; la fermeture du menu annule le choix. Panneaux secondaires : marges et espacements sur les jetons `Appearance`, en-têtes alignés, message « Aucun résultat » dans la commande rapide.
+### Changed
 
-- Mode plein écran : quand une fenêtre couvre tout un écran (vidéo, jeu, fenêtre sans bordure), le dock, l'OSD, les barres audio, les animations et le suivi des bords sont coupés et les minuteurs du frontend ralentissent ; tout revient à la sortie, sans redémarrage. L'état suit les événements de fenêtre au premier plan, avec un contrôle de secours toutes les 10 s pendant ce mode seulement. Option « Masquer le dock et l'OSD en plein écran » (activée par défaut), `winlestia quiet [on|off|auto]` pour le tester sans fenêtre plein écran (non enregistré), `quiet` dans `winlestia status`. Le watchdog, les outils de secours et le raccourci du panneau ne sont pas touchés.
+- **Data folder** moved to `%LOCALAPPDATA%\Panneaux`, migrated at first launch. The name is the project's former name and is kept on purpose.
+- **Start-up** uses a per-user scheduled task, `WinlestiaShell`, instead of only the Run registry value. The installer still writes the Run value; the first shell start creates the task and then removes the Run value (if the task cannot be created, the Run value stays as a fallback). Desktop icons are re-applied after Explorer events and restarts; the Windows taskbar waits for Explorer if it is not ready.
+- **Wallpaper** is applied through the Windows desktop wallpaper interface (system transition, no extra window).
+- **Dock**: collapsible group of buttons behind an arrow; windows of elevated programs are listed (activate or close only).
+- **Recent applications**: a Start menu shortcut appears in the palette about three seconds after being added; Store apps are re-read when the palette opens if the catalogue is stale; icon extraction is retried a limited number of times.
+- **Messengers** load on first opening and are released after being hidden unless background mode is on.
+- **Performance**: panels are loaded on first opening then kept, rarely used windows on demand, the terminal and interface palettes are computed in short-lived sub-processes, the clock updates once a minute, ACPI and PDH probes stop after three failures, the Explorer appearance hook is event-driven, pointer and glass sync intervals adapt, and the recycle-bin drop zone loads on the first file drag.
+- **Interface**: theme tokens, rounded corners from `Appearance`, spacing tokens in secondary panels, grouped inks; translated interface strings (French, English and Spanish), localized units (GB/MB/KB or Go/Mo/Ko), empty states, display name in the dashboard.
+- **Wallpaper collection** replaced by 10 images supplied by the maintainer, shipped as unmodified original files (not re-encoded or resized). They are not covered by the GPL-3.0 licence; rights remain with their owners and their licence has not been established. See `assets/wallpapers/CREDITS.txt`; removal can be requested through a GitHub issue. Existing copies of the previous bundled images are purged on upgrade.
+- **Automatic theme glass transparency** now defaults to 5 %. Profiles still holding the old default value are migrated once.
+- **Terminal**: translucent dark console background, text and accent from the palette; palette sync differential on restore.
+- Session menu actions require confirmation, checked on the backend as well.
 
-- Fonds d'écran : le fond est appliqué par `IDesktopWallpaper` (transition du système, sans fenêtre ajoutée ; en effets allégés, ancien appel sans transition demandée). Avec plusieurs écrans, le sélecteur propose « Tous les écrans » ou un écran (Tab). Une ligne signale DesktopHut, Wallpaper Engine, Lively ou Wallpaper X s'il tourne (nom de processus, lu à l'ouverture et à l'application seulement). `winlestia wallpaper list` renvoie `{"displays":[...],"animated":[...]}` ; `winlestia wallpaper <chemin> --display <id>` cible un écran.
+### Fixed
 
-- Tableau de bord, panneau Média : barres audio (28 bandes, échelle logarithmique) issues de la capture WASAPI en boucle du périphérique de sortie par défaut. La capture et son thread n'existent que panneau visible (arrêt en moins de 500 ms) et sont absents en plein écran ou avec « Effets allégés » ; en silence les barres retombent à zéro puis les mises à jour cessent ; au plus 30 images/s par le tube nommé, hors du gros état. Aucun son n'est enregistré. `winlestia visualizer` renvoie `{"running":b,"frames":n}` ; `winlestia panel dashboard` bascule le tableau de bord.
-
-- Commandes rapides : un curseur de luminosité par écran, externes compris (DDC/CI) ; lecture à l'ouverture puis toutes les 30 s panneau ouvert, écran sans DDC/CI grisé. `winlestia brightness` liste les écrans en JSON et `winlestia brightness <id> <0-100>` règle l'un d'eux (OSD affiché, écriture limitée à une toutes les 120 ms par écran).
-- Réglages : champ de recherche (titre et description, sans tenir compte de la casse ni des accents) sur les six pages ; le résultat choisi ouvre la page, défile jusqu'à la ligne et la met en évidence brièvement.
-- Commandes rapides : interrupteur « Effets allégés ». Si Windows refuse la bascule Wi-Fi ou Bluetooth, la page correspondante des Paramètres Windows s'ouvre en plus du message d'erreur.
-- Palette Ctrl+F2 : fenêtres ouvertes (5 au plus, listées à l'ouverture et oubliées à la fermeture), une trentaine de pages des Paramètres Windows (FR/EN/ES) et préfixe `>file ` pour chercher des fichiers du profil dans l'index Windows (requête hors thread UI, 2 s, 200 ms d'anti-rebond, message si l'index est indisponible ; ni saisie ni chemins journalisés). `winlestia find windows` et `winlestia find files <terme>` ne renvoient que des comptes.
-
-- Réglage « Seulement la fenêtre active » (sous « Liseré sur les applications », désactivé par défaut) : le liseré ne colore que la fenêtre au premier plan ; `winlestia status` expose `activeBorderOnly`.
-- Commande `winlestia` (status, panel, desktop, wallpaper, palette, help) pour piloter le shell déjà lancé depuis un script ; tube nommé local réservé à l'utilisateur courant, liste blanche de commandes, aucune commande d'arrêt ni de suppression. Entrée PATH facultative à l'installation.
-- Dock : bouton « + » pour créer un bureau virtuel ; clic droit sur une pastille pour fermer ce bureau ; une petite flèche affiche ou range, dans la barre, les boutons d'organisation automatique et d'applications ouvertes (état mémorisé).
-- Le dossier de données passe à %LOCALAPPDATA%\Panneaux (L2).
-- L'intégration du terminal est désormais facultative et réversible (L3).
-- Préchargement de Files plus rapide ; correction du journal de démarrage (L4).
-- Messageries : chargement à la première ouverture, fermeture après 10 min masquées. L'option d'arrière-plan est désactivée par défaut ; les compteurs de non-lus n'existent que lorsqu'elle est activée (L5).
-- Textes FR/EN/ES : unités localisées (Go/Mo/Ko en français, GB/MB/KB sinon), état vide « Aucun média en lecture », jauges masquées quand la mesure est absente, nom d'utilisateur Windows affiché dans le tableau de bord à la place de « Panneaux », textes de l'atelier, de la corbeille et du dock traduits (L6).
+- Panel text on bright wallpapers in the Automatic theme: with a dark scheme, the glass tint is denser when the wallpaper is bright so pale text stays legible. Darker wallpapers render as before.
+- Desktop indicator refresh, OSD icon and tooltips.
+- Settings theme tile read after its delegate was destroyed.
+- Wallpaper palette not following a static wallpaper when a live-wallpaper configuration existed.
+- Binding loop in the Media panel; missing `shortcutText` slot.
+- Start-up log errors.
+- Non-breaking space between a value and its unit.
+- Setup no longer blocked by messengers still loaded in the background.
+- Upgrading no longer aborts while the shell is running.
+- The dashboard now shows the display name chosen at install (it used to show the Windows account name).
+- Interface strings completed in English and Spanish; the dashboard calendar follows the app language.

@@ -1,0 +1,48 @@
+name: Bug report
+description: Something does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. If the Windows taskbar is missing, see [TROUBLESHOOTING.md](https://github.com/lilidoxdev/winlestia/blob/main/docs/TROUBLESHOOTING.md) first (Ctrl+Alt+Backspace restores it).
+        For a security problem, do not use this form: see SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Winlestia version
+      placeholder: "0.9.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows build
+      description: Run `winver` and give the version and build.
+      placeholder: "Windows 11 24H2, build 26100"
+    validations:
+      required: true
+  - type: input
+    id: displays
+    attributes:
+      label: Displays
+      description: Number, resolution and scaling.
+      placeholder: "1 x 3440x1440, 100%"
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines
+      description: From `%LOCALAPPDATA%\Panneaux\Caelestia\frontend.log` or `%LOCALAPPDATA%\Panneaux\glass.log`. Remove personal data (user name in paths, etc.) first.
+      render: text

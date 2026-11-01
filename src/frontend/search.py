@@ -137,7 +137,8 @@ def palette_search(query,state,language='fr',windows=None):
             if not any(r['id']==entry['id'] for r in results):results.append({**entry,'kind':'app','icon':'apps','comment':tr('Récents',language)})
     if not raw.startswith('>'):
         for tab in state.get('quickTabs',[]):
-            if not raw or all(w in fold(tab['name']) for w in words):results.append({**tab,'kind':'quickTab','icon':'bolt','comment':tr('Onglet rapide',language)})
+            name=tr(tab['name'],language)
+            if not raw or all(w in fold(tab['name']) or w in fold(name) for w in words):results.append({**tab,'name':name,'kind':'quickTab','icon':'bolt','comment':tr('Onglet rapide',language)})
         if raw:results.extend(window_results(needle,windows,language=language))
         entries=state.get('apps',[]) if raw else []
         ranked=[]
