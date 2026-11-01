@@ -1,0 +1,51 @@
+<style>
+.w-wrap{display:flex;flex-direction:column;gap:15px;height:100%;padding:2px 14px 6px}
+.w-h{display:flex;align-items:center}
+.w-h .t{flex:1;font-size:25.33px}
+.w-h .t2{flex:1;font-size:var(--fs-normal)}
+.w-spaces{display:flex;gap:12px}
+.w-space{flex:1;height:134px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.w-space .ic{font-size:36px;color:var(--primary);display:flex;height:36px}
+.w-space .ic svg{width:36px;height:36px}
+.w-space .n{font-size:var(--fs-smaller)}
+.w-space .k{font-size:13.33px;color:var(--outline)}
+.w-fav{display:flex;gap:7px}
+.w-tile{width:116px;height:100px;border-radius:18px;display:flex;flex-direction:column;align-items:center;padding-top:10px;gap:11px;font-size:12px;color:var(--on-surface)}
+.w-tile.sel{background:color-mix(in srgb,var(--on-surface) 8%,transparent)}
+.w-foot{display:flex;align-items:center;margin-top:auto;padding-bottom:2px}
+.w-tag{font-size:11px;color:var(--on-primary);background:var(--primary);border-radius:var(--r-full);padding:1px 8px;margin-left:10px}
+</style>
+<main class="panel tabbed">
+  <nav class="tabs"><div class="ind p3"></div>
+    <div class="tab"><svg><use href="#i-dash"/></svg>Tableau de bord</div>
+    <div class="tab"><svg><use href="#i-music"/></svg>Média</div>
+    <div class="tab"><svg><use href="#i-speed"/></svg>Performance</div>
+    <div class="tab on"><svg><use href="#i-work"/></svg>Workspaces</div>
+  </nav>
+  <div class="view"><div class="w-wrap">
+    <div class="w-h"><span class="t">Reprendre ton espace</span><span class="btn">Tout afficher<svg><use href="#i-arrow"/></svg></span></div>
+    <div class="w-spaces">
+      <div class="card strong w-space"><span class="ic"><svg><use href="#i-grid"/></svg></span><span class="n">Applications</span><span class="k">14 accès</span></div>
+      <div class="card strong w-space"><span class="ic"><svg><use href="#i-game"/></svg></span><span class="n">Jeux</span><span class="k">6 accès</span></div>
+      <div class="card strong w-space"><span class="ic"><svg><use href="#i-code"/></svg></span><span class="n">Projets</span><span class="k">5 accès</span></div>
+      <div class="card strong w-space"><span class="ic"><svg><use href="#i-folder"/></svg></span><span class="n">Documents</span><span class="k">9 accès</span></div>
+    </div>
+    <div class="w-h"><span class="t2">Tes favoris</span><span class="btn"><svg><use href="#i-history"/></svg>Récents</span></div>
+    <div class="w-fav">
+      <div class="w-tile sel"><span class="tile-ico g1"><svg><use href="#i-note"/></svg></span>Bloc-notes</div>
+      <div class="w-tile"><span class="tile-ico g2"><svg><use href="#i-photo"/></svg></span>Photos</div>
+      <div class="w-tile"><span class="tile-ico g5"><svg><use href="#i-terminal"/></svg></span>Terminal</div>
+      <div class="w-tile"><span class="tile-ico g4"><svg><use href="#i-music2"/></svg></span>Lecteur multimédia</div>
+      <div class="w-tile"><span class="tile-ico g6"><svg><use href="#i-calc"/></svg></span>Calculatrice</div>
+      <div class="w-tile"><span class="tile-ico g3"><svg><use href="#i-folder"/></svg></span>Explorateur de fichiers</div>
+      <div class="w-tile"><span class="tile-ico g7"><svg><use href="#i-link"/></svg></span>Edge</div>
+    </div>
+    <div class="w-foot">
+      <span class="btn"><svg><use href="#i-paste"/></svg>Presse-papiers</span>
+      <span class="btn"><svg><use href="#i-search"/></svg>Commande rapide</span>
+      <span class="btn"><svg><use href="#i-link"/></svg>Ajouter un site</span>
+      <span class="grow"></span>
+      <span class="btn"><svg><use href="#i-tune"/></svg>Personnaliser</span>
+    </div>
+  </div></div>
+</main>

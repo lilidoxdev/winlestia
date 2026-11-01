@@ -1,0 +1,29 @@
+<style>
+.tp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:760px;padding:var(--pad-large) 20px 20px;overflow:hidden;display:flex;flex-direction:column;gap:12px}
+.tp-h{display:flex;align-items:center}.tp-h .grow{flex:1}
+.tp-h .t{font-size:var(--fs-xl);line-height:1.1;font-weight:500}
+.tp-h .s{font-size:var(--fs-small);color:var(--outline);margin-top:3px}
+.chips{display:flex;gap:7px}
+.chip{height:34px;padding:0 15px;border-radius:var(--r-full);display:inline-flex;align-items:center;font-size:var(--fs-small);background:var(--surface-container-high);color:var(--on-surface)}
+.chip.on{background:var(--secondary-container)}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tc{height:112px;border-radius:var(--r-large);background:var(--surface-container);display:flex;align-items:center;gap:15px;padding:0 20px}
+.tci{width:52px;height:52px;border-radius:17px;background:var(--secondary-container);display:flex;align-items:center;justify-content:center;flex:none;color:var(--primary)}
+.tci svg{width:28px;height:28px}
+.tc .tt{flex:1;min-width:0}.tc .n{font-size:var(--fs-normal)}.tc .d{font-size:var(--fs-small);color:var(--outline);margin-top:6px}
+.tc .cv{width:20px;height:20px;color:var(--on-surface-variant);flex:none}
+</style>
+<section class="panel tp">
+  <div class="tp-h"><div><div class="t">Tools</div><div class="s">Tools at your fingertips</div></div><span class="grow"></span><span class="ibtn"><svg><use href="#i-close"/></svg></span></div>
+  <div class="chips"><span class="chip on">All</span><span class="chip">Screen</span><span class="chip">Audio</span><span class="chip">Files</span><span class="chip">Comfort</span></div>
+  <div class="tgrid">
+<div class="tc"><span class="tci"><svg><use href="#i-shot"/></svg></span><div class="tt"><div class="n">Capture and annotate</div><div class="d">Selection, annotation and export</div></div><svg class="cv"><use href="#i-chev"/></svg></div>
+<div class="tc"><span class="tci"><svg><use href="#i-ocr"/></svg></span><div class="tt"><div class="n">Text from an image</div><div class="d">Windows text recognition</div></div><svg class="cv"><use href="#i-chev"/></svg></div>
+<div class="tc"><span class="tci"><svg><use href="#i-pipette"/></svg></span><div class="tt"><div class="n">Colour picker</div><div class="d">Copy a colour from the screen</div></div><svg class="cv"><use href="#i-chev"/></svg></div>
+<div class="tc"><span class="tci"><svg><use href="#i-ruler"/></svg></span><div class="tt"><div class="n">Pixel ruler</div><div class="d">Measure a distance on screen</div></div><svg class="cv"><use href="#i-chev"/></svg></div>
+<div class="tc"><span class="tci"><svg><use href="#i-vol"/></svg></span><div class="tt"><div class="n">Audio output</div><div class="d">Headphones, speakers and devices</div></div><svg class="cv"><use href="#i-chev"/></svg></div>
+<div class="tc"><span class="tci"><svg><use href="#i-mic"/></svg></span><div class="tt"><div class="n">Microphones</div><div class="d">Input, level and mute button</div></div><svg class="cv"><use href="#i-chev"/></svg></div>
+<div class="tc"><span class="tci"><svg><use href="#i-tune"/></svg></span><div class="tt"><div class="n">Application mixer</div><div class="d">A volume for each app</div></div><svg class="cv"><use href="#i-chev"/></svg></div>
+<div class="tc"><span class="tci"><svg><use href="#i-paste"/></svg></span><div class="tt"><div class="n">History</div><div class="d">Find copied items again</div></div><svg class="cv"><use href="#i-chev"/></svg></div>
+  </div>
+</section>

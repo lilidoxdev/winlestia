@@ -1,0 +1,43 @@
+<style>
+.sp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:900px;padding:var(--pad-large) 20px 20px;display:flex;flex-direction:column;gap:14px}
+.sp-h{display:flex;align-items:center}.sp-h .grow{flex:1}
+.sp-h .t{font-size:var(--fs-xl);line-height:1.1;font-weight:500}.sp-h .s{font-size:var(--fs-small);color:var(--outline);margin-top:3px}
+.sp-in{display:flex;align-items:center;gap:10px;height:44px;border-radius:var(--r-full);padding:0 18px;background:var(--surface-container-high);color:var(--on-surface-variant);font-size:var(--fs-normal)}
+.sp-in svg{width:22px;height:22px}
+.stabs{display:flex;gap:7px}
+.stab{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:var(--r-full);font-size:var(--fs-small);background:var(--surface-container)}
+.stab svg{width:20px;height:20px}.stab.on{background:var(--secondary-container);color:var(--primary)}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sc{border-radius:var(--r-large);padding:18px 20px;background:color-mix(in srgb,var(--surface-container) 76%,transparent);display:flex;flex-direction:column;gap:12px}
+.sc .ct{font-size:var(--fs-larger);font-weight:500}.sc .cs{font-size:var(--fs-small);color:var(--outline);margin-top:2px}
+.themes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.th{border-radius:var(--r-normal);background:var(--surface-container-high);padding:9px;display:flex;flex-direction:column;gap:7px;align-items:center;font-size:var(--fs-small);border:2px solid transparent}
+.th.on{border-color:var(--primary);background:var(--secondary-container)}
+.th .sw{width:100%;height:46px;border-radius:12px;border:1px solid var(--outline-variant)}
+.dsc{font-size:var(--fs-small);color:var(--on-surface-variant);line-height:1.35}
+.row{display:flex;align-items:center;gap:12px}.row .grow{flex:1}.row .l{font-size:var(--fs-normal)}.row .m{font-size:var(--fs-small);color:var(--outline);margin-top:2px}
+.seg{display:flex;border:1px solid var(--outline);border-radius:var(--r-full);overflow:hidden;height:36px}
+.seg span{padding:0 16px;display:flex;align-items:center;font-size:var(--fs-small)}
+.seg span.on{background:var(--secondary-container);color:var(--on-surface)}
+.seg span+span{border-left:1px solid var(--outline)}
+</style>
+<section class="panel sp">
+  <div class="sp-h"><div><div class="t">Customize</div><div class="s">A space of your own</div></div><span class="grow"></span><span class="ibtn"><svg><use href="#i-close"/></svg></span></div>
+  <div class="sp-in"><svg><use href="#i-search"/></svg>Search settings</div>
+  <div class="stabs"><span class="stab on"><svg><use href="#i-palette"/></svg>Appearance</span><span class="stab"><svg><use href="#i-desktop"/></svg>Desktop and dock</span><span class="stab"><svg><use href="#i-folder"/></svg>Explorer and files</span><span class="stab"><svg><use href="#i-tune"/></svg>Everyday</span><span class="stab"><svg><use href="#i-social"/></svg>Social networks</span><span class="stab"><svg><use href="#i-bookmark"/></svg>Favorites</span></div>
+  <div class="sg">
+    <div class="sc">
+      <div><div class="ct">Theme</div><div class="cs">Colours for the whole shell</div></div>
+      <div class="themes"><div class="th"><span class="sw" style="background:#f3eef2"></span>Porcelain</div><div class="th"><span class="sw" style="background:#1b1620"></span>Night</div><div class="th"><span class="sw" style="background:linear-gradient(135deg,#ffb347,#c458fa)"></span>Custom</div><div class="th on"><span class="sw" style="background:linear-gradient(135deg,#4bf4fa,#fa5a41)"></span>Automatic</div></div>
+      <div class="row"><div class="grow"><div class="l">Rim on applications</div><div class="m">Theme colour around Desktop windows</div></div><span class="switch on"></span></div>
+      <div class="row"><div class="grow"><div class="l">Active window only</div></div><span class="switch"></span></div>
+    </div>
+    <div class="sc">
+      <div><div class="ct">Rendering</div><div class="cs">Transparency, animations and rim</div></div>
+      <div><div class="row"><div class="grow"><div class="l">Glass transparency</div><div class="m">Adjustable with the Automatic theme</div></div></div>
+        <div class="slider" style="margin-top:10px"><div class="t"></div><div class="f" style="width:49%"></div><div class="h" style="left:49%"></div></div></div>
+      <div class="row"><div class="grow"><div class="l">Animations</div></div><div class="seg"><span>Off</span><span>Fast</span><span class="on">Caelestia</span></div></div>
+      <div class="row"><div class="grow"><div class="l">Reduced effects</div><div class="m">Lighter rendering for modest hardware</div></div><span class="switch"></span></div>
+    </div>
+  </div>
+</section>

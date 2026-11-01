@@ -1,0 +1,112 @@
+<style>
+.panel.tabbed.wsp{width:930px}
+.panel.wsp .view{height:450px}
+.w-wrap{display:flex;flex-direction:column;gap:var(--sp-normal);height:100%}
+.w-top{display:flex;align-items:center;gap:var(--sp-normal)}
+.w-blob{position:relative;width:52px;height:52px;flex:none}
+.w-blob svg.bl{position:absolute;inset:0;width:100%;height:100%}
+.w-blob svg.i{position:absolute;left:50%;top:50%;width:27px;height:27px;margin:-13.5px 0 0 -13.5px;color:var(--on-primary-container)}
+.w-hi{font-size:14.67px;font-weight:500;color:var(--primary);line-height:1.2}
+.w-ti{font-size:25.33px;font-weight:600;line-height:1.15}
+.w-pill{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 15px;border-radius:var(--r-full);font-size:var(--fs-normal);background:var(--surface-container-high)}
+.w-pill svg{width:17px;height:17px;color:var(--primary)}
+.w-pill.f{background:var(--primary-container);color:var(--on-primary-container)}.w-pill.f svg{color:var(--on-primary-container)}
+.w-pill.s{height:28px;padding:0 12px;font-size:14.67px}
+.grow{flex:1}
+.w-spaces{display:flex;gap:var(--sp-normal)}
+.w-space{flex:1;height:118px;position:relative;border-radius:var(--r-large);background:var(--surface-container)}
+.w-space .bl{position:absolute;left:10px;top:10px;width:62px;height:62px}
+.w-space .bl svg.sh{position:absolute;inset:0;width:100%;height:100%}
+.w-space .bl svg.i{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px}
+.w-space .cnt{position:absolute;right:15px;top:10px;text-align:right}
+.w-space .cnt b{display:block;font-size:30px;font-weight:600;line-height:1.1}
+.w-space .cnt span{font-size:14.67px;color:var(--on-surface-variant)}
+.w-space .nm{position:absolute;left:22px;bottom:10px;font-size:var(--fs-normal);font-weight:500}
+.w-space .stk{position:absolute;right:10px;bottom:10px;height:26px}
+.w-space .stk i{position:absolute;top:0;width:26px;height:26px;border-radius:50%;background:var(--surface-container-high);border:2px solid var(--surface-container);display:flex;align-items:center;justify-content:center}
+.w-space .stk i b{display:block;width:18px;height:18px;border-radius:5px}
+.t-apps{--tn:var(--primary-container);--on:var(--on-primary-container)}
+.t-games{--tn:var(--secondary-container);--on:var(--on-primary-container)}
+.t-proj{--tn:color-mix(in srgb,var(--tertiary) 30%,var(--surface-container-high));--on:var(--tertiary)}
+.t-docs{--tn:color-mix(in srgb,var(--error) 24%,var(--surface-container-high));--on:var(--error)}
+.w-mid{display:flex;gap:var(--sp-normal);flex:1;min-height:0}
+.w-fav{flex:5;border-radius:var(--r-large);background:var(--surface-container);padding:15px;display:flex;flex-direction:column;gap:7px}
+.w-rec{flex:3;border-radius:var(--r-large);background:var(--surface-container);padding:15px;display:flex;flex-direction:column;gap:7px}
+.w-hd{display:flex;align-items:center;gap:7px;font-size:var(--fs-normal);font-weight:500}
+.w-hd svg{width:24px;height:24px;color:var(--primary)}
+.w-hd .w-pill svg{width:17px;height:17px}
+.w-tiles{display:flex;gap:7px;flex:1}
+.w-tile{flex:1;max-width:120px;border-radius:var(--r-normal);background:var(--surface-container-high);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-size:14.67px}
+.w-tile .tile-ico{width:48px;height:48px;border-radius:13px}.w-tile .tile-ico svg{width:27px;height:27px}
+.w-add{border:2px solid var(--outline-variant);background:transparent;color:var(--on-surface-variant)}
+.w-add .ab{position:relative;width:48px;height:48px}.w-add .ab svg.bl{position:absolute;inset:0;width:100%;height:100%}
+.w-add .ab svg.i{position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;color:var(--on-primary-container)}
+.w-r{display:flex;align-items:center;gap:7px;height:34px;padding:0 7px}
+.w-r .tile-ico{width:28px;height:28px;border-radius:8px}.w-r .tile-ico svg{width:17px;height:17px}
+.w-r .n{font-size:var(--fs-normal);line-height:1.1}
+.w-r .bd{display:flex;align-items:center;gap:4px;font-size:14.67px;color:var(--outline);line-height:1.1}
+.w-r .bd svg{width:13px;height:13px}
+.w-q{height:56px;border-radius:var(--r-large);background:var(--surface-container);display:flex;align-items:center;gap:7px;padding:0 10px;flex:none}
+</style>
+<main class="panel tabbed wsp">
+  <nav class="tabs"><div class="ind p3"></div>
+    <div class="tab"><svg><use href="#i-dash"/></svg>Dashboard</div>
+    <div class="tab"><svg><use href="#i-music"/></svg>Media</div>
+    <div class="tab"><svg><use href="#i-speed"/></svg>Performance</div>
+    <div class="tab on"><svg><use href="#i-work"/></svg>Workspaces</div>
+  </nav>
+  <div class="view"><div class="w-wrap">
+    <div class="w-top">
+      <div class="w-blob"><svg class="bl" data-blob="9,.06" style="fill:var(--primary-container)"></svg><svg class="i"><use href="#i-twilight"/></svg></div>
+      <div><div class="w-hi">Good morning</div><div class="w-ti">Resume your workspace</div></div>
+      <span class="grow"></span>
+      <span class="w-pill f">Show all<svg><use href="#i-arrow"/></svg></span>
+    </div>
+    <div class="w-spaces">
+      <div class="w-space t-apps"><span class="bl"><svg class="sh" data-blob="8,.09" style="fill:var(--tn)"></svg><svg class="i" style="color:var(--on)"><use href="#i-grid"/></svg></span>
+        <span class="cnt"><b>14</b><span>shortcuts</span></span><span class="nm">Applications</span>
+        <span class="stk" style="width:56px"><i style="left:30px"><b class="g1"></b></i><i style="left:15px"><b class="g2"></b></i><i style="left:0"><b class="g5"></b></i></span></div>
+      <div class="w-space t-games"><span class="bl"><svg class="sh" data-blob="4,.17" style="fill:var(--tn)"></svg><svg class="i" style="color:var(--on)"><use href="#i-game"/></svg></span>
+        <span class="cnt"><b>6</b><span>shortcuts</span></span><span class="nm">Games</span>
+        <span class="stk" style="width:41px"><i style="left:15px"><b class="g7"></b></i><i style="left:0"><b class="g4"></b></i></span></div>
+      <div class="w-space t-proj"><span class="bl"><svg class="sh" data-blob="6,.13" style="fill:var(--tn)"></svg><svg class="i" style="color:var(--on)"><use href="#i-code"/></svg></span>
+        <span class="cnt"><b>5</b><span>shortcuts</span></span><span class="nm">Projects</span>
+        <span class="stk" style="width:41px"><i style="left:15px"><b class="g3"></b></i><i style="left:0"><b class="g5"></b></i></span></div>
+      <div class="w-space t-docs"><span class="bl"><svg class="sh" data-blob="5,.12" style="fill:var(--tn)"></svg><svg class="i" style="color:var(--on)"><use href="#i-folder"/></svg></span>
+        <span class="cnt"><b>9</b><span>shortcuts</span></span><span class="nm">Documents</span>
+        <span class="stk" style="width:56px"><i style="left:30px"><b class="g6"></b></i><i style="left:15px"><b class="g1"></b></i><i style="left:0"><b class="g2"></b></i></span></div>
+    </div>
+    <div class="w-mid">
+      <div class="w-fav">
+        <div class="w-hd"><svg><use href="#i-star"/></svg>Favorites</div>
+        <div class="w-tiles">
+          <div class="w-tile"><span class="tile-ico g1"><svg><use href="#i-note"/></svg></span>Notepad</div>
+          <div class="w-tile"><span class="tile-ico g2"><svg><use href="#i-photo"/></svg></span>Photos</div>
+          <div class="w-tile"><span class="tile-ico g5"><svg><use href="#i-terminal"/></svg></span>Terminal</div>
+          <div class="w-tile"><span class="tile-ico g6"><svg><use href="#i-calc"/></svg></span>Calculator</div>
+          <div class="w-tile"><span class="tile-ico g3"><svg><use href="#i-folder"/></svg></span>Files</div>
+          <div class="w-tile w-add"><span class="ab"><svg class="bl" data-blob="8,.07" style="fill:var(--primary-container)"></svg><svg class="i"><use href="#i-add"/></svg></span>Add</div>
+        </div>
+      </div>
+      <div class="w-rec">
+        <div class="w-hd"><svg><use href="#i-history"/></svg><span class="grow">Recent</span><span class="w-pill s">View<svg><use href="#i-arrow"/></svg></span></div>
+        <div class="w-r"><span class="tile-ico g5"><svg><use href="#i-terminal"/></svg></span><div><div class="n">Terminal</div><div class="bd t-proj"><svg style="color:var(--on)"><use href="#i-code"/></svg>Projects</div></div></div>
+        <div class="w-r"><span class="tile-ico g1"><svg><use href="#i-note"/></svg></span><div><div class="n">Notepad</div><div class="bd t-apps"><svg style="color:var(--on)"><use href="#i-grid"/></svg>Applications</div></div></div>
+        <div class="w-r"><span class="tile-ico g2"><svg><use href="#i-photo"/></svg></span><div><div class="n">Photos</div><div class="bd t-docs"><svg style="color:var(--on)"><use href="#i-folder"/></svg>Documents</div></div></div>
+      </div>
+    </div>
+    <div class="w-q">
+      <span class="w-pill"><svg><use href="#i-paste"/></svg>Clipboard</span>
+      <span class="w-pill"><svg><use href="#i-search"/></svg>Quick command</span>
+      <span class="w-pill"><svg><use href="#i-link"/></svg>Add website</span>
+      <span class="grow"></span>
+      <span class="w-pill"><svg><use href="#i-tune"/></svg>Customize</span>
+    </div>
+  </div></div>
+</main>
+<script>
+(function(){var els=document.querySelectorAll('svg[data-blob]');
+for(var k=0;k<els.length;k++){var a=els[k].getAttribute('data-blob').split(','),n=+a[0],amp=+a[1],d='';
+ for(var i=0;i<=120;i++){var t=i/120*Math.PI*2,r=(1+amp*Math.cos(n*t))/(1+amp)*46,x=50+Math.cos(t)*r,y=50+Math.sin(t)*r;d+=(i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2);}
+ els[k].setAttribute('viewBox','0 0 100 100');els[k].innerHTML='<path d="'+d+'Z"/>';}})();
+</script>

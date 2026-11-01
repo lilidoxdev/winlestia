@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="src/frontend/assets/winlestia-mark.png" alt="Winlestia logo" width="128">
+<img src="docs/media/banner.webp" alt="Winlestia: a port of Caelestia for Windows 11" width="100%">
 
 # Winlestia
 
@@ -10,11 +10,19 @@
 [![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
 
-[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
-<img src="docs/screenshots/desktop.png" alt="Winlestia on a Windows 11 desktop" width="100%">
+<img src="docs/illustrations/desktop.webp" alt="Winlestia on a Windows 11 desktop" width="100%">
 
 </div>
+
+## Demo
+
+<a href="docs/media/winlestia-showcase-16x9.mp4"><img src="docs/media/demo-preview.webp" alt="Winlestia demo: dashboard, workspaces, dock, tools, settings and a wallpaper change that recolours the shell" width="100%"></a>
+
+[Watch the 16:9 video](docs/media/winlestia-showcase-16x9.mp4) · [Vertical 9:16 version](docs/media/winlestia-vertical-9x16.mp4)
+
+These visuals are motion-design illustrations made in HTML/CSS. They are not screen captures.
 
 ## What is Winlestia
 
@@ -24,8 +32,10 @@ It replaces the surface of Windows, not the system. The taskbar is swapped for a
 
 ## Features
 
+The images in this section are motion-design illustrations made in HTML/CSS, not screen captures (see [docs/illustrations](docs/illustrations/README.md)).
+
 ### Dashboard
-<img src="docs/screenshots/dashboard.png" alt="Dashboard" width="100%">
+<img src="docs/illustrations/dashboard.webp" alt="Dashboard" width="100%">
 
 Press **Ctrl+F1**. The dashboard has four pages: **Dashboard** (clock, calendar, weather, media), **Media**, **Performance** and **Workspaces**.
 
@@ -33,42 +43,47 @@ Press **Ctrl+F1**. The dashboard has four pages: **Dashboard** (clock, calendar,
 - Performance: CPU, GPU, memory and storage readings.
 - Workspaces: your applications, games, projects and documents, with search.
 
+### Workspaces
+<img src="docs/illustrations/workspaces.webp" alt="Workspaces page of the dashboard" width="100%">
+
+Applications, Games, Projects and Documents boards, your favorites, recent shortcuts and quick actions (Clipboard, Quick command, Add website, Customize).
+
 ### Dock and command palette
-<img src="docs/screenshots/dock-palette.png" alt="Dock and command palette" width="100%">
+<img src="docs/illustrations/dock-palette.webp" alt="Dock and command palette" width="100%">
 
 - A dock instead of the Windows taskbar, with window previews on hover and a virtual-desktop indicator. The dock auto-hides: it slides away a fraction of a second (about 0.45 s) after the pointer leaves it, and appears when the pointer reaches the bottom edge of the screen. The Windows key opens the normal Windows Start menu.
 - **Ctrl+F2** opens the palette: calculator, `>emoji`, `>wallpaper`, `>file ` for indexed files, open windows, Windows Settings pages and session actions (each asks for confirmation).
 
 ### Media and quick controls
-<img src="docs/screenshots/media.png" alt="Media panel" width="100%">
+<img src="docs/illustrations/media.webp" alt="Media panel" width="100%">
 
 Quick controls include a Wi-Fi network list, per-display brightness (DDC/CI, external displays too) and a "Reduced effects" switch. Audio and per-application mixer panels are included.
 
 ### Performance
-<img src="docs/screenshots/performance.png" alt="Performance panel" width="100%">
+<img src="docs/illustrations/performance.webp" alt="Performance panel" width="100%">
 
 ### Tools
-<img src="docs/screenshots/tools.png" alt="Tools panel" width="100%">
+<img src="docs/illustrations/tools.webp" alt="Tools panel" width="100%">
 
 Screen capture with annotation (**Ctrl+F3**), text recognition (OCR) on a captured area, colour picker, pixel ruler, clipboard history, focus timer, notes, pin a window on top (**Ctrl+F8**), a large-files view, and a recycle-bin / clipboard / zip drop zone that appears when you drag a file toward the top of the screen.
 
 ### Wallpaper and dynamic theme
-<img src="docs/screenshots/wallpaper.png" alt="Wallpaper switcher" width="100%">
+<img src="docs/illustrations/wallpaper.webp" alt="Wallpaper switcher" width="100%">
 
 **Win+Alt+W** opens a full-screen wallpaper switcher with live preview and per-display targeting. A fresh install uses the **Porcelain** theme (light, warm), which is fixed and does **not** follow the wallpaper; the **Automatic** theme does. To get colours from the wallpaper, open Settings (Customize), then Appearance, then Theme, and select **Automatic**. Glass blur comes from Windows itself. The Automatic theme starts with a glass transparency of 5 %, adjustable in Settings.
 
 ### Settings
-<img src="docs/screenshots/settings.png" alt="Settings" width="100%">
+<img src="docs/illustrations/settings.webp" alt="Settings" width="100%">
 
 Six pages with a search field: appearance, desktop and dock, file explorer, daily use, messengers and bookmarks. Screen frame, accent border on windows, desktop logo, quiet mode (dock and OSD hidden during fullscreen), on-screen indicators for volume, brightness and microphone, and optional automatic tiling (off by default; Ctrl+Alt+arrows).
 
 ### Terminal
-<img src="docs/screenshots/terminal.png" alt="Terminal with the Winlestia palette" width="100%">
+<img src="docs/illustrations/terminal.webp" alt="Terminal with the Winlestia palette" width="100%">
 
 Opt-in at setup: Command Prompt through [Clink](https://github.com/chrisant996/clink), with colours synchronized to the wallpaper palette. Reversible. Clink is downloaded at install time, so this option needs an Internet connection.
 
 ### Panels
-<img src="docs/screenshots/panels.png" alt="Winlestia panels" width="100%">
+<img src="docs/illustrations/panels.webp" alt="Winlestia panels" width="100%">
 
 Also: a Files explorer, messenger and bookmark side rails, an optional push-to-talk dictation (hold AltGr, off by default), and a `winlestia` command line to script the running shell.
 

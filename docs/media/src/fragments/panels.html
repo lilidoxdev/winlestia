@@ -1,0 +1,30 @@
+<style>
+.qc{position:absolute;left:calc(50% - 365px);top:50%;transform:translateY(-50%);width:410px;padding:var(--pad-large) 20px 20px;display:flex;flex-direction:column;gap:14px}
+.wf{position:absolute;left:calc(50% + 65px);top:50%;transform:translateY(-50%);width:300px;padding:var(--pad-large) 20px 20px;display:flex;flex-direction:column;gap:10px}
+.qh{display:flex;align-items:center;font-size:var(--fs-larger);font-weight:500}.grow{flex:1}
+.q-r{display:flex;align-items:center;gap:8px}
+.q-r .btn{height:40px}.q-r .btn.grow{flex:1;justify-content:flex-start}
+.q-l{display:flex;align-items:center;gap:10px}.q-l svg{width:24px;height:24px;color:var(--primary)}.q-l .pc{font-size:var(--fs-small);width:40px;text-align:right}
+.q-s{font-size:var(--fs-small);color:var(--outline)}
+.wr{display:flex;align-items:center;gap:12px;height:48px;padding:0 12px;border-radius:var(--r-normal)}
+.wr.on{background:var(--secondary-container)}
+.wr .l{font-size:var(--fs-normal)}.wr .m{font-size:var(--fs-small);color:var(--primary)}
+.sig{display:flex;align-items:flex-end;gap:2px;height:13px}.sig i{display:block;width:3px;background:var(--on-surface);border-radius:1px}
+.wf .t{font-size:var(--fs-larger);font-weight:500}.wf .s{font-size:var(--fs-small);color:var(--outline);margin-bottom:6px}
+.sw-r{display:flex;align-items:center;gap:10px;font-size:var(--fs-normal)}.sw-r svg{width:22px;height:22px;color:var(--primary)}
+.switch.sm{transform:scale(.8);margin:-4px -6px -4px 0}
+</style>
+<section class="panel qc">
+  <div class="qh"><span class="grow">Quick controls</span><span class="ibtn"><svg><use href="#i-close"/></svg></span></div>
+  <div class="q-r"><span class="btn tonal grow"><svg><use href="#i-wifi"/></svg>Home network</span><span class="ibtn tonal"><svg><use href="#i-chev"/></svg></span><span class="ibtn tonal"><svg><use href="#i-bt"/></svg></span></div>
+  <div class="q-l"><svg><use href="#i-vol"/></svg><div class="slider grow"><div class="t"></div><div class="f" style="width:62%"></div><div class="h" style="left:62%"></div></div><span class="pc">62%</span><span class="ibtn"><svg><use href="#i-chev"/></svg></span></div>
+  <div class="q-l"><svg><use href="#i-bright"/></svg><div class="slider grow"><div class="t"></div><div class="f" style="width:78%"></div><div class="h" style="left:78%"></div></div></div>
+  <div class="q-r"><span class="btn tonal grow"><svg><use href="#i-vol"/></svg>Audio output</span><span class="btn tonal grow"><svg><use href="#i-mic"/></svg>Microphones</span></div>
+  <div class="q-r"><span class="btn"><svg><use href="#i-shot"/></svg>Capture</span><span class="btn"><svg><use href="#i-paste"/></svg>History</span></div>
+  <div class="sw-r"><svg><use href="#i-speed"/></svg><span class="grow">Reduced effects</span><span class="switch sm"></span><span class="ibtn"><svg><use href="#i-moon"/></svg></span></div>
+  <div class="q-r"><span class="btn grow"><svg><use href="#i-tune"/></svg>Customize</span><span class="btn grow"><svg><use href="#i-apps"/></svg>Tools</span></div>
+</section>
+<section class="panel wf">
+  <div class="t">Wi-Fi networks</div><div class="s">Choose a network to connect</div>
+  <div class="wr on"><span class="sig"><i style="height:4px;"></i><i style="height:7px;"></i><i style="height:10px;"></i><i style="height:13px;"></i></span><div class="grow"><div class="l">Home network</div><div class="m">Connected</div></div></div><div class="wr"><span class="sig"><i style="height:4px;"></i><i style="height:7px;"></i><i style="height:10px;"></i><i style="height:13px;opacity:.3"></i></span><div class="grow"><div class="l">Guest</div></div></div><div class="wr"><span class="sig"><i style="height:4px;"></i><i style="height:7px;"></i><i style="height:10px;opacity:.3"></i><i style="height:13px;opacity:.3"></i></span><div class="grow"><div class="l">Office</div></div></div><div class="wr"><span class="sig"><i style="height:4px;"></i><i style="height:7px;opacity:.3"></i><i style="height:10px;opacity:.3"></i><i style="height:13px;opacity:.3"></i></span><div class="grow"><div class="l">Workshop</div></div></div>
+</section>

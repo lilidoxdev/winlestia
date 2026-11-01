@@ -1,0 +1,20 @@
+<style>
+.wsc{position:absolute;left:0;right:0;bottom:0;height:420px;background:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,0))}
+.fs{position:absolute;left:0;right:0;bottom:200px;display:flex;justify-content:center;align-items:flex-end;gap:14px}
+.th2{width:150px;height:96px;border-radius:var(--r-normal);background:center/cover;border:0 solid var(--primary);opacity:.9}
+.th2.sel{width:224px;height:140px;border:3px solid var(--primary);opacity:1}
+.wi{position:absolute;left:0;right:0;bottom:152px;text-align:center;font-size:var(--fs-larger);font-weight:500;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.wi span{color:var(--on-surface-variant);font-weight:400;margin-left:10px;font-size:var(--fs-normal)}
+.wb{position:absolute;left:0;right:0;bottom:92px;display:flex;justify-content:center;gap:10px}
+.wb .btn{height:40px;padding:0 18px;background:rgba(20,16,22,.55)}.wb .btn.tonal{background:var(--secondary-container)}
+.wh{position:absolute;left:0;right:0;bottom:42px;text-align:center;font-size:var(--fs-small);color:var(--on-surface-variant);text-shadow:0 1px 6px rgba(0,0,0,.6)}
+</style>
+<div class="wsc"></div>
+<div class="fs">
+  <div class="th2" style="background-image:url(wallpaper-warm.svg)"></div>
+  <div class="th2 sel" style="background-image:url(wallpaper-aurora.svg)"></div>
+  <div class="th2" style="background-image:url(wallpaper-teal.svg)"></div>
+</div>
+<div class="wi">Aurora<span>2 / 3</span></div>
+<div class="wb"><span class="btn tonal"><svg><use href="#i-add"/></svg>Add images</span><span class="btn"><svg><use href="#i-folder"/></svg>Open folder</span></div>
+<div class="wh">&larr; &rarr; choose &middot; Enter apply &middot; Ctrl+O add &middot; Del remove &middot; Esc close</div>

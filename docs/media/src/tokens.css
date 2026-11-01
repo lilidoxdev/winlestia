@@ -1,0 +1,65 @@
+/* Winlestia design tokens — single source for screenshots and videos.
+   Every value comes from the shell's QML (src/frontend/qml/qs, Caelestia-Windows)
+   unless marked ESTIMATED (the glass blur lives in a native DLL and is not readable).
+   Qt point sizes are converted at 96 dpi: px = pt * 4/3. */
+
+@font-face { font-family: "Rubik"; src: url("fonts/Rubik.ttf"); font-weight: 300 900; }
+
+:root {
+  /* ---- Palette: Material You, dark, derived from the wallpaper (chromatic_palette.py:42)
+     Source colour of this wallpaper: HSV(280deg, .65, .98). primary = secondary = tertiary. */
+  --primary:            #c458fa;
+  --secondary:          #c458fa;
+  --tertiary:           #c458fa;
+  --on-primary:         #130d0e;   /* chromatic_palette.py */
+  --background:         #0f0c10;   /* HSV(h, .28, .063) */
+  --surface:            #0f0c10;
+  --surface-container-low:     #161218;  /* (.24, .095) */
+  --surface-container:         #1f1a21;  /* (.23, .13)  */
+  --surface-container-high:    #28222b;  /* (.22, .17)  */
+  --surface-container-highest: #342d38;  /* (.20, .22)  */
+  --outline-variant:    #473d4d;   /* (.20, .30) */
+  --outline:            #9a8f9c;   /* ESTIMATED: material_color_utilities role */
+  --on-surface:         #f7f3f4;
+  --on-surface-variant: #d3c9cc;
+
+  /* ---- Glass (Colours.qml:37) glassLayer(c,k) = alpha(c, min(.06, GlassOpacity*.2*k)), GlassOpacity .49 */
+  --glass-card-alpha: .06;
+  --glass-panel-blur: 30px;          /* ESTIMATED (native DLL) */
+  --glass-panel-dim:  .45;           /* ESTIMATED backdrop brightness */
+  --glass-panel-fill: rgba(15,12,16,.55); /* ESTIMATED surfaceOpacity */
+  --frame-thickness: 22px;           /* preferences-glass.json FrameThickness */
+
+  /* ---- Type (AppearanceConfig.qml:37-57) */
+  --font-sans: "Rubik", system-ui, sans-serif;
+  --fs-small: 14.67px;   /* 11pt */
+  --fs-smaller: 16px;    /* 12pt */
+  --fs-normal: 17.33px;  /* 13pt */
+  --fs-larger: 20px;     /* 15pt */
+  --fs-large: 24px;      /* 18pt */
+  --fs-xl: 37.33px;      /* 28pt */
+  --fw-clock: 600;  --fw-temp: 500;
+
+  /* ---- Rounding / spacing / padding (AppearanceConfig.qml:11-35) */
+  --r-small: 12px; --r-normal: 17px; --r-large: 25px; --r-full: 1000px;
+  --sp-small: 7px; --sp-smaller: 10px; --sp-normal: 12px; --sp-larger: 15px; --sp-large: 20px;
+  --pad-small: 5px; --pad-smaller: 7px; --pad-normal: 10px; --pad-larger: 12px; --pad-large: 15px;
+  --border: 1px;
+
+  /* ---- Dashboard geometry (Dash.qml, Content.qml, Tabs.qml, DashboardConfig.qml) */
+  --dash-gap: 12px;
+  --weather-w: 250px; --weather-r: 37.5px;
+  --datetime-w: 110px;
+  --media-w: 200px; --media-r: 50px;
+  --cover: 150px; --ring: 8px;
+  --tab-indicator-h: 3px; --tab-indicator-gap: 5px;
+  --info-icon: 25px; --bar-w: 10px;
+
+  /* ---- Motion (AppearanceConfig.qml:59-85, Anim.qml) — reused by the videos */
+  --dur-small: 200ms; --dur-normal: 400ms; --dur-large: 600ms; --dur-xl: 1000ms;
+  --ease-standard: cubic-bezier(.2,0,0,1);
+  --ease-emphasized-decel: cubic-bezier(.05,.7,.1,1);
+  --ease-standard-accel: cubic-bezier(.3,0,1,1);
+  --ease-spatial-fast: cubic-bezier(.42,1.67,.21,.9);
+  --ease-spatial-default: cubic-bezier(.38,1.21,.22,1);
+}
