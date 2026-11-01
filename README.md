@@ -6,11 +6,11 @@
 
 **A free, open-source desktop shell for Windows 11.**
 
-[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?include_prereleases&style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0)
+[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0)
 [![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
 
-[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) · [Watch the demo](#video-showcase) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 <img src="docs/screenshots/desktop.png" alt="Winlestia on a Windows 11 desktop" width="100%">
 
@@ -72,20 +72,12 @@ Opt-in at setup: Command Prompt through [Clink](https://github.com/chrisant996/c
 
 Also: a Files explorer, messenger and bookmark side rails, an optional push-to-talk dictation (hold AltGr, off by default), and a `winlestia` command line to script the running shell.
 
-## Video showcase
-
-[![Showcase 16:9](docs/screenshots/video-16x9.jpg)](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-showcase-16x9.mp4)
-
-[![Vertical 9:16](docs/screenshots/video-9x16.jpg)](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-vertical-9x16.mp4)
-
-Click a picture to open the video: [16:9](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-showcase-16x9.mp4), [9:16](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-vertical-9x16.mp4), [9:16 in French](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-vertical-9x16-fr.mp4). These are real screen recordings; only titles, crops and fades were added in editing.
-
 ## Install
 
 Requires **Windows 11 (64-bit)**. No administrator rights needed.
 
-1. Download [`Winlestia-Setup-0.9.0.exe`](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-Setup-0.9.0.exe) and `SHA256SUMS-0.9.0.txt` from the [release](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
-2. Check it: `Get-FileHash .\Winlestia-Setup-0.9.0.exe` in PowerShell must match the checksum file.
+1. Download [`Winlestia-Setup-0.9.0.exe`](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-Setup-0.9.0.exe) from the [release](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
+2. Check it: run `Get-FileHash .\Winlestia-Setup-0.9.0.exe -Algorithm SHA256` in PowerShell and compare the result with the SHA-256 printed in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
 3. Run it. The binaries are **not code-signed**, so SmartScreen will likely warn: choose **More info**, then **Run anyway**.
 
 After installing, move the pointer to the bottom edge of the screen to reveal the dock. The setup wizard is in French only. Full guide, options, updating and uninstalling: [docs/INSTALL.md](docs/INSTALL.md).

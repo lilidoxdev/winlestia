@@ -40,7 +40,7 @@ Press Ctrl+Alt+Backspace (see step 2 above). It re-shows the Desktop icons and s
 
 ## SmartScreen blocks the installer
 
-The installer and the programs it installs are not code-signed, so SmartScreen warns on a file it does not know. Check the SHA-256 against `SHA256SUMS-0.9.0.txt` (`Get-FileHash .\Winlestia-Setup-0.9.0.exe`), then choose **More info**, **Run anyway**. Details in [INSTALL.md](INSTALL.md#3-smartscreen-will-probably-warn-you).
+The installer and the programs it installs are not code-signed, so SmartScreen warns on a file it does not know. Check the SHA-256 against the one in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) (`Get-FileHash .\Winlestia-Setup-0.9.0.exe`), then choose **More info**, **Run anyway**. Details in [INSTALL.md](INSTALL.md#3-smartscreen-will-probably-warn-you).
 
 ## Where the logs are
 

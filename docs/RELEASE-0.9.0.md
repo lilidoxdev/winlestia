@@ -29,8 +29,8 @@ Full list: [CHANGELOG.md](../CHANGELOG.md).
 
 ## Install
 
-1. Download `Winlestia-Setup-0.9.0.exe` and `SHA256SUMS-0.9.0.txt` from the assets below.
-2. In PowerShell: `Get-FileHash .\Winlestia-Setup-0.9.0.exe -Algorithm SHA256`. The value must match the line for that file in `SHA256SUMS-0.9.0.txt`.
+1. Download `Winlestia-Setup-0.9.0.exe` from the assets below.
+2. In PowerShell: `Get-FileHash .\Winlestia-Setup-0.9.0.exe -Algorithm SHA256`. The value must match the installer SHA-256: `c9c406669bd9e7205aba2c3458fb23b727cd53b74b1991bc0456d06152442834`.
 3. Run the setup (its wizard is in French only). Updating from an older version works the same way: the setup closes the running shell itself and keeps your settings.
 
 **SmartScreen.** The binaries are not code-signed, so Windows SmartScreen will probably show "Windows protected your PC". After checking the SHA-256, choose **More info**, then **Run anyway**.
@@ -78,15 +78,6 @@ Tested by hand and by script on one Windows 11 Home machine (single 3440x1440 di
 | Other display layouts and scalings | Not run |
 
 These tests ran from an MSIX-packaged parent process, which redirects `%LOCALAPPDATA%` writes for its child processes; autostart was exercised from Task Scheduler, outside that redirection.
-
-## Demos
-
-- [Showcase, 16:9, 1920x1080, 60 fps](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-showcase-16x9.mp4)
-- [Vertical, 9:16, English](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-vertical-9x16.mp4)
-- [Vertical, 9:16, French](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-vertical-9x16-fr.mp4)
-- [Full-resolution screenshots (zip)](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-0.9.0-screenshots.zip)
-
-All footage is real screen recording of the shell at 3440x1440, driven by real mouse and keyboard input; only titles, crops and fades were added in editing. The media player shows an original synthesised track, which is also the soundtrack. The wallpaper switcher was filmed with an empty test home folder and three bundled images hidden, so your list will differ. The screenshots in the README are scaled to 2560 pixels wide; the zip holds the native captures.
 
 ## Reporting a bug
 

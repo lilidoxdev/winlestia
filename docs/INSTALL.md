@@ -11,10 +11,7 @@ This guide is for people who just want Winlestia running, with no technical back
 
 ## 1. Download
 
-Go to the [Releases page](https://github.com/lilidoxdev/winlestia/releases/latest) and download two files:
-
-- `Winlestia-Setup-0.9.0.exe`, the installer.
-- `SHA256SUMS-0.9.0.txt`, the checksum list used to verify it.
+Go to the [Releases page](https://github.com/lilidoxdev/winlestia/releases/latest) and download `Winlestia-Setup-0.9.0.exe`, the installer. The SHA-256 used to verify it is in the [v0.9.0 release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
 
 ## 2. Verify the download (recommended)
 
@@ -27,7 +24,7 @@ The installer is not code-signed (see the next section). A checksum lets you con
    Get-FileHash "$env:USERPROFILE\Downloads\Winlestia-Setup-0.9.0.exe" -Algorithm SHA256
    ```
 
-3. Open `SHA256SUMS-0.9.0.txt` and find the line for `Winlestia-Setup-0.9.0.exe`. The `Hash` shown by PowerShell must match it exactly (letter case does not matter).
+3. Compare the `Hash` shown by PowerShell with the SHA-256 in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0). It must match exactly (letter case does not matter).
 
 If the values differ, do not run the file. Download it again, and open an issue if it still differs.
 
