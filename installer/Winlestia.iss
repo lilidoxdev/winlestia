@@ -1,4 +1,4 @@
-; Winlestia — installateur Inno Setup 6
+﻿; Winlestia — installateur Inno Setup 6
 ; Cible : Windows 11 x64, installation par utilisateur, sans élévation.
 ; Compilation : ISCC.exe installer\Winlestia.iss  (ou installer\build.ps1)
 ;
@@ -23,7 +23,7 @@ AppPublisher={#AppPublisher}
 VersionInfoVersion={#AppVersion}
 VersionInfoProductName={#AppName}
 VersionInfoCompany={#AppPublisher}
-VersionInfoDescription=Installateur {#AppName}
+VersionInfoDescription={#AppName} Setup
 DefaultDirName={localappdata}\Programs\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
@@ -52,16 +52,98 @@ UsePreviousTasks=yes
 UsePreviousGroup=yes
 AllowNoIcons=yes
 LicenseFile=..\LICENSE
+LanguageDetectionMethod=uilanguage
+ShowLanguageDialog=auto
 
 [Languages]
+; Anglais en premier : c'est la langue de repli pour toute langue Windows non prise en charge.
+; uilanguage : on suit la langue d'affichage de Windows (pas celle des formats régionaux).
+; ShowLanguageDialog=auto : la boîte de choix n'apparaît que si la détection est ambiguë
+; (aucune langue ne correspond à Windows) ; sinon la langue détectée est utilisée directement.
+Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
+Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"
+
+[CustomMessages]
+en.TaskGroup=Options:
+fr.TaskGroup=Options :
+es.TaskGroup=Opciones:
+en.TaskAutostart=Start {#AppName} at sign-in
+fr.TaskAutostart=Démarrer {#AppName} à l'ouverture de session
+es.TaskAutostart=Iniciar {#AppName} al iniciar sesión
+en.TaskDesktopIcon=Create a desktop shortcut
+fr.TaskDesktopIcon=Créer un raccourci sur le Bureau
+es.TaskDesktopIcon=Crear un acceso directo en el Escritorio
+en.TaskStartMenu=Create a Start menu entry
+fr.TaskStartMenu=Créer une entrée dans le menu Démarrer
+es.TaskStartMenu=Crear una entrada en el menú Inicio
+en.TaskCli=Add the "winlestia" command to the user PATH (scripts and tests)
+fr.TaskCli=Ajouter la commande « winlestia » au PATH de l'utilisateur (scripts et tests)
+es.TaskCli=Añadir el comando «winlestia» al PATH del usuario (scripts y pruebas)
+en.TaskTerminal=Integrate {#AppName} with the terminal (colours, clink, PowerShell profiles) - reversible
+fr.TaskTerminal=Intégrer {#AppName} au terminal (couleurs, clink, profils PowerShell) — réversible
+es.TaskTerminal=Integrar {#AppName} con el terminal (colores, clink, perfiles de PowerShell): reversible
+en.IconRestoreTaskbar=Restore the Windows taskbar
+fr.IconRestoreTaskbar=Restaurer la barre des tâches Windows
+es.IconRestoreTaskbar=Restaurar la barra de tareas de Windows
+en.IconUninstall=Uninstall {#AppName}
+fr.IconUninstall=Désinstaller {#AppName}
+es.IconUninstall=Desinstalar {#AppName}
+en.RunLaunch=Launch {#AppName} now
+fr.RunLaunch=Lancer {#AppName} maintenant
+es.RunLaunch=Iniciar {#AppName} ahora
+en.InstalledCaption={#AppName} is already installed
+fr.InstalledCaption={#AppName} est déjà installé
+es.InstalledCaption={#AppName} ya está instalado
+en.InstalledDesc=Version %1 detected in %2.
+fr.InstalledDesc=Version %1 détectée dans %2.
+es.InstalledDesc=Versión %1 detectada en %2.
+en.InstalledHint=Choose what you want to do. Nothing will be changed until you confirm.
+fr.InstalledHint=Choisis ce que tu veux faire. Rien ne sera modifié avant que tu valides.
+es.InstalledHint=Elige lo que quieres hacer. No se modificará nada hasta que confirmes.
+en.ModeReinstall=Reinstall {#AppName} {#AppVersion}
+fr.ModeReinstall=Réinstaller {#AppName} {#AppVersion}
+es.ModeReinstall=Reinstalar {#AppName} {#AppVersion}
+en.ModeUpdate=Update to {#AppName} {#AppVersion}
+fr.ModeUpdate=Mettre à jour vers {#AppName} {#AppVersion}
+es.ModeUpdate=Actualizar a {#AppName} {#AppVersion}
+en.ModeUninstall=Uninstall {#AppName} (profile and settings are kept)
+fr.ModeUninstall=Désinstaller {#AppName} (profil et réglages conservés)
+es.ModeUninstall=Desinstalar {#AppName} (se conservan el perfil y los ajustes)
+en.ConfirmUninstall=Uninstall {#AppName} %1?%n%nThe software will be removed. Your profile and settings in %2 are kept.%n%nThe uninstall window will open, then this setup will close.
+fr.ConfirmUninstall=Désinstaller {#AppName} %1 ?%n%nLe logiciel sera retiré. Ton profil et tes réglages dans %2 sont conservés.%n%nLa fenêtre de désinstallation va s'ouvrir, ce setup se fermera ensuite.
+es.ConfirmUninstall=¿Desinstalar {#AppName} %1?%n%nSe eliminará el software. Tu perfil y tus ajustes en %2 se conservan.%n%nSe abrirá la ventana de desinstalación y este instalador se cerrará después.
+en.UninstallerMissing=The uninstaller could not be found:%n%1
+fr.UninstallerMissing=Le désinstalleur est introuvable :%n%1
+es.UninstallerMissing=No se encuentra el desinstalador:%n%1
+en.ProfileCaption=Your profile
+fr.ProfileCaption=Ton profil
+es.ProfileCaption=Tu perfil
+en.ProfileDesc=Which nickname should {#AppName} display?
+fr.ProfileDesc=Quel pseudo afficher dans {#AppName} ?
+es.ProfileDesc=¿Qué apodo mostrar en {#AppName}?
+en.ProfileHint=This name stays on this computer. You can change it later by editing the profile file.
+fr.ProfileHint=Ce nom reste sur cet ordinateur. Tu pourras le changer plus tard en éditant le fichier de profil.
+es.ProfileHint=Este nombre se queda en este equipo. Podrás cambiarlo más tarde editando el archivo de perfil.
+en.ProfileLabel=Nickname:
+fr.ProfileLabel=Pseudo :
+es.ProfileLabel=Apodo:
+en.TerminalApplyFailed=The terminal theme could not be applied. See Winlestia-Terminal\install-result.json.
+fr.TerminalApplyFailed=Le thème du terminal n'a pas pu être appliqué. Consulte Winlestia-Terminal\install-result.json.
+es.TerminalApplyFailed=No se pudo aplicar el tema del terminal. Consulta Winlestia-Terminal\install-result.json.
+en.TerminalRestoreFailed=The terminal integration could not be removed. Run the setup again or uninstall {#AppName} to remove it.
+fr.TerminalRestoreFailed=L'intégration du terminal n'a pas pu être retirée. Relance l'installation ou désinstalle {#AppName} pour la retirer.
+es.TerminalRestoreFailed=No se pudo quitar la integración del terminal. Vuelve a ejecutar el instalador o desinstala {#AppName} para quitarla.
+en.CloseFailed=Could not close {#AppName} cleanly.
+fr.CloseFailed=Impossible de fermer {#AppName} proprement.
+es.CloseFailed=No se pudo cerrar {#AppName} correctamente.
 
 [Tasks]
-Name: "autostart";  Description: "Démarrer {#AppName} à l'ouverture de session"; GroupDescription: "Options :"; Flags: checkedonce
-Name: "desktopicon"; Description: "Créer un raccourci sur le Bureau"; GroupDescription: "Options :"; Flags: checkedonce
-Name: "startmenu";  Description: "Créer une entrée dans le menu Démarrer"; GroupDescription: "Options :"; Flags: checkedonce
-Name: "cli";        Description: "Ajouter la commande « winlestia » au PATH de l'utilisateur (scripts et tests)"; GroupDescription: "Options :"; Flags: checkedonce
-Name: "terminal";   Description: "Intégrer Winlestia au terminal (couleurs, clink, profils PowerShell) — réversible"; GroupDescription: "Options :"; Flags: unchecked
+Name: "autostart";  Description: "{cm:TaskAutostart}"; GroupDescription: "{cm:TaskGroup}"; Flags: checkedonce
+Name: "desktopicon"; Description: "{cm:TaskDesktopIcon}"; GroupDescription: "{cm:TaskGroup}"; Flags: checkedonce
+Name: "startmenu";  Description: "{cm:TaskStartMenu}"; GroupDescription: "{cm:TaskGroup}"; Flags: checkedonce
+Name: "cli";        Description: "{cm:TaskCli}"; GroupDescription: "{cm:TaskGroup}"; Flags: checkedonce
+Name: "terminal";   Description: "{cm:TaskTerminal}"; GroupDescription: "{cm:TaskGroup}"; Flags: unchecked
 
 
 [InstallDelete]
@@ -96,8 +178,8 @@ Source: "..\build\payload\Winlestia-Terminal\*"; DestDir: "{app}\Winlestia-Termi
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDir: "{app}\Glass-v5"; IconFilename: "{app}\Glass-v5\{#AppExe}"; Tasks: startmenu
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDir: "{app}\Glass-v5"; IconFilename: "{app}\Glass-v5\{#AppExe}"; Tasks: desktopicon
-Name: "{autoprograms}\Restaurer la barre des tâches Windows"; Filename: "{app}\Glass-v5\RETABLIR_BARRE_WINDOWS.exe"; Tasks: startmenu
-Name: "{autoprograms}\Désinstaller {#AppName}"; Filename: "{uninstallexe}"; Tasks: startmenu
+Name: "{autoprograms}\{cm:IconRestoreTaskbar}"; Filename: "{app}\Glass-v5\RETABLIR_BARRE_WINDOWS.exe"; Tasks: startmenu
+Name: "{autoprograms}\{cm:IconUninstall}"; Filename: "{uninstallexe}"; Tasks: startmenu
 
 [Registry]
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\Glass-v5"; Check: PathMissing() and not PathIsEmpty(); Tasks: cli
@@ -106,7 +188,7 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 
-Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDir: "{app}\Glass-v5"; Description: "Lancer {#AppName} maintenant"; Flags: nowait postinstall skipifsilent runasoriginaluser
+Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDir: "{app}\Glass-v5"; Description: "{cm:RunLaunch}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [UninstallRun]
 ; Tâche de session créée par le backend (migration de la clé Run) : retirée avant tout le reste.
@@ -219,23 +301,23 @@ begin
   if Installed then
   begin
     ModePage := CreateInputOptionPage(wpWelcome,
-      'Winlestia est déjà installé',
-      'Version ' + PrevVersion + ' détectée dans ' + PrevDir + '.',
-      'Choisis ce que tu veux faire. Rien ne sera modifié avant que tu valides.',
+      CustomMessage('InstalledCaption'),
+      FmtMessage(CustomMessage('InstalledDesc'), [PrevVersion, PrevDir]),
+      CustomMessage('InstalledHint'),
       True, False);
     if CompareText(PrevVersion, '{#AppVersion}') = 0 then
-      ModePage.Add('Réinstaller Winlestia {#AppVersion}')
+      ModePage.Add(CustomMessage('ModeReinstall'))
     else
-      ModePage.Add('Mettre à jour vers Winlestia {#AppVersion}');
-    ModePage.Add('Désinstaller Winlestia (profil et réglages conservés)');
+      ModePage.Add(CustomMessage('ModeUpdate'));
+    ModePage.Add(CustomMessage('ModeUninstall'));
     ModePage.SelectedValueIndex := 0;
   end;
 
   ProfilePage := CreateInputQueryPage(wpSelectTasks,
-    'Ton profil',
-    'Quel pseudo afficher dans Winlestia ?',
-    'Ce nom reste sur cet ordinateur. Tu pourras le changer plus tard en éditant le fichier de profil.');
-  ProfilePage.Add('Pseudo :', False);
+    CustomMessage('ProfileCaption'),
+    CustomMessage('ProfileDesc'),
+    CustomMessage('ProfileHint'));
+  ProfilePage.Add(CustomMessage('ProfileLabel'), False);
   Pseudo := ExistingPseudo();
   if Pseudo = '' then
     Pseudo := GetUserNameString();
@@ -256,10 +338,8 @@ begin
   Result := True;
   if Installed and (CurPageID = ModePage.ID) and (ModePage.SelectedValueIndex = 1) then
   begin
-    if MsgBox('Désinstaller Winlestia ' + PrevVersion + ' ?' + #13#10 + #13#10 +
-              'Le logiciel sera retiré. Ton profil et tes réglages dans ' +
-              ExpandConstant('{localappdata}\Panneaux') + ' sont conservés.' + #13#10 + #13#10 +
-              'La fenêtre de désinstallation va s''ouvrir, ce setup se fermera ensuite.',
+    if MsgBox(FmtMessage(CustomMessage('ConfirmUninstall'), [PrevVersion,
+              ExpandConstant('{localappdata}\Panneaux')]),
               mbConfirmation, MB_YESNO) <> IDYES then
     begin
       Result := False;
@@ -269,7 +349,7 @@ begin
     if not Exec(UninstallerPath(), '/SILENT', '', SW_SHOWNORMAL, ewNoWait, Code) then
     begin
       LeavingToUninstall := False;
-      MsgBox('Le désinstalleur est introuvable :' + #13#10 + UninstallerPath(), mbError, MB_OK);
+      MsgBox(FmtMessage(CustomMessage('UninstallerMissing'), [UninstallerPath()]), mbError, MB_OK);
       Result := False;
       Exit;
     end;
@@ -291,6 +371,33 @@ end;
 function ProfilePath(): String;
 begin
   Result := ExpandConstant('{localappdata}\Panneaux\profil.json');
+end;
+
+{ Première installation uniquement : la langue n'est mémorisée pour l'app (mode explicite fr/en/es) que si elle
+  diffère de celle que le mode 'auto' de l'app choisirait de toute façon (langue d'affichage de Windows, repli en),
+  c'est-à-dire si l'utilisateur a choisi une autre langue à la main. Sinon on n'épingle rien : 'auto' continue de
+  suivre Windows. Un fichier existant n'est jamais écrasé, la préférence de l'utilisateur est conservée. }
+function AutoLanguage(): String;
+begin
+  case GetUILanguage and $3FF of
+    $0C: Result := 'fr';
+    $0A: Result := 'es';
+  else
+    Result := 'en';
+  end;
+end;
+
+procedure SaveLanguage();
+var
+  Path: String;
+begin
+  if ActiveLanguage() = AutoLanguage() then
+    Exit;
+  Path := ExpandConstant('{localappdata}\Panneaux\Caelestia\language.json');
+  if FileExists(Path) then
+    Exit;
+  ForceDirectories(ExtractFileDir(Path));
+  SaveStringToFile(Path, '{"language": "' + ActiveLanguage() + '"}', False);
 end;
 
 procedure SaveProfile();
@@ -332,20 +439,21 @@ begin
   if CurStep = ssPostInstall then
   begin
     SaveProfile();
+    SaveLanguage();
     // Comportement : intégrer si la tâche est cochée ; en mode silencieux (page non affichée) une intégration existante est
     // conservée même sans /TASKS. Le retrait n'a lieu qu'en mode interactif (case décochée), jamais en silencieux.
     if WizardIsTaskSelected('terminal') or (WizardSilent and TerminalIntegrated()) then
     begin
       if (not Exec(ExpandConstant('{app}\Caelestia-Windows\.venv\Scripts\python.exe'),
           '"' + ExpandConstant('{app}\Winlestia-Terminal\install.py') + '"', '', SW_HIDE, ewWaitUntilTerminated, Code)) or (Code <> 0) then
-        MsgBox('Le theme du terminal n''a pas pu etre applique. Consulte Winlestia-Terminal\install-result.json.', mbError, MB_OK);
+        MsgBox(CustomMessage('TerminalApplyFailed'), mbError, MB_OK);
     end
     else if (not WizardSilent) and TerminalIntegrated() then
     begin
       // Case décochée lors d'une mise à jour : on rend le terminal à son état d'origine.
       if (not Exec(ExpandConstant('{app}\Caelestia-Windows\.venv\Scripts\python.exe'),
           '"' + ExpandConstant('{app}\Winlestia-Terminal\install.py') + '" --restore', '', SW_HIDE, ewWaitUntilTerminated, Code)) or (Code <> 0) then
-        MsgBox('L''integration du terminal n''a pas pu etre retiree. Relance l''installation ou desinstalle Winlestia pour la retirer.', mbError, MB_OK);
+        MsgBox(CustomMessage('TerminalRestoreFailed'), mbError, MB_OK);
     end;
   end;
 end;
@@ -403,5 +511,5 @@ begin
   ExtractTemporaryFile('Close-Winlestia.ps1');
   if (not Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
     '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{tmp}\Close-Winlestia.ps1') + '" -AppRoot "' + ExpandConstant('{app}') + '"', '', SW_HIDE, ewWaitUntilTerminated, Code)) or (Code <> 0) then
-    Result := 'Impossible de fermer Winlestia proprement.';
+    Result := CustomMessage('CloseFailed');
 end;
