@@ -39,17 +39,8 @@ static class CatalogueWatchRules {
         IconRetryDelay(failures) is TimeSpan delay && nowUtc - failedAtUtc >= delay - TimeSpan.FromMilliseconds(500);
 
     // Same naming and filtering as Inventory.ps1 (Clean-Name, exclusion list, identity of a .lnk).
-    internal static string CleanName(string name) {
-        string n = Regex.Replace(name ?? "", @"\.exe\s*-\s*Raccourci$", "", Ci);
-        n = Regex.Replace(n, @"\s*-\s*Raccourci$", "", Ci);
-        n = Regex.Replace(n, @"^Lancer\s+", "", Ci);
-        n = Regex.Replace(n, @"^VLC Media Player\.exe$", "VLC Media Player", Ci);
-        n = Regex.Replace(n, "Â?®|™", "", Ci);
-        n = Regex.Replace(n, @"\s*-\s*Windows10$", "", Ci);
-        n = Regex.Replace(n, "^CrimsonDesert$", "Crimson Desert", Ci);
-        n = Regex.Replace(n, "^HogwartsLegacy$", "Hogwarts Legacy", Ci);
-        return n.Trim();
-    }
+    // Thin wrapper kept for callers; the rules live in AppNameNormalizer.cs.
+    internal static string CleanName(string name) => AppNameNormalizer.Normalize(name);
     static readonly Regex Excluded = new(@"uninstall|désinstall|documentation|\bhelp\b|\baide\b|release notes|changelog|readme|licen[cs]e|manuels?|pydoc|module docs|online documentation|Install Additional|update|mises? à jour|disponibilité de mises|Panneaux|^Secours -|Swish Panel|Navigation privée|Windows Kits Feedback|Donate|Support Center|EA Error Reporter", Ci);
     internal static bool IsExcludedName(string name) => Excluded.IsMatch(name);
     static readonly Regex Squirrel = new(@"^(Discord|Wand|Wand \(WeMod\)|Vyra( \(2\))?|Firefox|WinRAR|Ubisoft Connect|Steam|Content Manager)$", Ci);
