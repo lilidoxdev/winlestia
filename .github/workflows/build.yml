@@ -1,0 +1,32 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build src projects
+        shell: pwsh
+        run: |
+          foreach ($p in 'src/backend/Panneaux.Glass.csproj','src/files/Winlestia.Files.csproj','src/cli/winlestia.csproj') {
+            dotnet build $p -c Release --nologo
+            if ($LASTEXITCODE -ne 0) { throw "Build failed: $p" }
+          }
+      - name: Run pure-logic tests
+        shell: pwsh
+        run: |
+          $tests = 'AppCatalogueWatch','AppNameNormalizer','AtomicFile','AudioBars','AutostartPolicy','BrightnessPolicy','CliCommands','DesktopReassert','FileSearch','FilesHandler','FilesPinMigration','FilesPreloadPolicy','FramePolicy','MediaIdentity','SecurityHardening','SocialPolicy','StoreRecovery','WifiPolicy'
+          $failed = @()
+          foreach ($t in $tests) {
+            dotnet run --project "tests/$t/$t.csproj" -c Release --nologo
+            if ($LASTEXITCODE -ne 0) { $failed += $t }
+          }
+          if ($failed.Count -gt 0) { throw "Failed: $($failed -join ', ')" }

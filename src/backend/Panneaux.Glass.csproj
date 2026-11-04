@@ -11,7 +11,6 @@
   </PropertyGroup>
   <ItemGroup><None Include="native/ProcessAudio.dll" Link="ProcessAudio.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><Compile Remove="checkpoint-*/**/*.cs" /><None Remove="checkpoint-*/**/*" /><None Update="GlassBackdrop.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /><None Update="assets/web/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /></ItemGroup>
-  <ItemGroup><None Include="native/ProcessAudio.dll" Link="ProcessAudio.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup>
     <None Update="RETABLIR_BARRE_WINDOWS.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />

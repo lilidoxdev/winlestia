@@ -50,7 +50,7 @@ internal static class WgcCapture {
         IntPtr d3d=IntPtr.Zero,context=IntPtr.Zero,dxgi=IntPtr.Zero,graphics=IntPtr.Zero;IDirect3DDevice? device=null;Direct3D11CaptureFramePool? pool=null;GraphicsCaptureSession? session=null;int written=0;
         try{
             if(D3D11CreateDevice(IntPtr.Zero,1,IntPtr.Zero,0x20,IntPtr.Zero,0,7,out d3d,out _,out context)!=0)return 0;
-            var dxgiIid=DxgiDeviceIid;if(Marshal.QueryInterface(d3d,ref dxgiIid,out dxgi)!=0||CreateDirect3D11DeviceFromDXGIDevice(dxgi,out graphics)!=0)return 0;
+            var dxgiIid=DxgiDeviceIid;if(Marshal.QueryInterface(d3d,in dxgiIid,out dxgi)!=0||CreateDirect3D11DeviceFromDXGIDevice(dxgi,out graphics)!=0)return 0;
             device=WinRT.MarshalInterface<IDirect3DDevice>.FromAbi(graphics);
             foreach(var window in candidates){
                 var item=ItemFor(window);if(item==null||item.Size.Width<16||item.Size.Height<16)continue;
