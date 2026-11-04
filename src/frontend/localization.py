@@ -599,3 +599,9 @@ Photo de profil|Profile picture|Foto de perfil
 Ville, pays|City, country|Ciudad, país
 Météo · Open-Meteo|Weather · Open-Meteo|Tiempo · Open-Meteo""".splitlines():
  fr,en,es=row.split('|');TABLE.setdefault(fr,{'fr':fr,'en':en,'es':es})
+# Media player source names and audio-session messages raised by the backend.
+for row in """Navigateur|Browser|Navegador
+Lecteur Windows|Windows player|Reproductor de Windows
+Aucune session audio pour ce lecteur.|No audio session for this player.|Ninguna sesión de audio para este reproductor.
+Cette application n’a plus de session audio. Relance sa lecture.|This application no longer has an audio session. Restart its playback.|Esta aplicación ya no tiene sesión de audio. Reinicia su reproducción.""".splitlines():
+ fr,en,es=row.split('|');TABLE.setdefault(fr,{'fr':fr,'en':en,'es':es})

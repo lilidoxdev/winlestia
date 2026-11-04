@@ -98,15 +98,35 @@ class PipeClient(QThread):
 
 class WindowsPlayer(QObject):
     changed=Signal()
-    def __init__(self,bridge):super().__init__();self.bridge=bridge;self.data={}
+    # Emitted by the dashboard timer (positionChanged) and on every backend update: only the progress bindings listen.
+    positionUpdated=Signal()
+    # Longest stretch (seconds) the position is extrapolated without a fresh backend snapshot.
+    MAX_EXTRAPOLATION=3.0
+    def __init__(self,bridge):
+        super().__init__();self.bridge=bridge;self.data={}
+        # Monotonic time at which self.data was last replaced by a different backend snapshot.
+        self.stamp=time.monotonic()
+        self.changed.connect(self.positionUpdated)
+    def seek(self,value):
+        # A seek invalidates the extrapolation base: restart the stamp so the old offset is not added to the new position.
+        self.stamp=time.monotonic();self.bridge.action('media',{'action':'seek','value':value})
+    def current_position(self):
+        # Between backend snapshots the position advances locally (elapsed time x rate) while playing with a known duration.
+        reported=float(self.data.get('position',0))
+        duration=float(self.data.get('duration',0))
+        if not self.data.get('playing') or not self.data.get('durationKnown',True) or duration<=0:return reported
+        rate=float(self.data.get('rate',1) or 1)
+        elapsed=min(max(0.0,time.monotonic()-self.stamp),self.MAX_EXTRAPOLATION)
+        return min(reported+elapsed*rate,duration)
     available=Property(bool,lambda s:bool(s.data.get('available')),notify=changed)
     trackTitle=Property(str,lambda s:s.data.get('title',''),notify=changed)
     trackArtist=Property(str,lambda s:s.data.get('artist',''),notify=changed)
     trackAlbum=Property(str,lambda s:s.data.get('album',''),notify=changed)
     trackArtUrl=Property(str,lambda s:s.data.get('art',''),notify=changed)
-    identity=Property(str,lambda s:s.data.get('app','Lecteur Windows'),notify=changed)
+    identity=Property(str,lambda s:QCoreApplication.translate('',s.data.get('app') or 'Lecteur Windows'),notify=changed)
     isPlaying=Property(bool,lambda s:bool(s.data.get('playing')),notify=changed)
     length=Property(float,lambda s:float(s.data.get('duration',0)),notify=changed)
+    lengthKnown=Property(bool,lambda s:bool(s.data.get('durationKnown',True)) and float(s.data.get('duration',0))>0,notify=changed)
     volume=Property(float,lambda s:float(s.data.get('volume',70)),notify=changed)
     canGoNext=Property(bool,lambda s:bool(s.data.get('canNext')),notify=changed)
     canGoPrevious=Property(bool,lambda s:bool(s.data.get('canPrevious')),notify=changed)
@@ -115,9 +135,11 @@ class WindowsPlayer(QObject):
     positionSupported=Property(bool,lambda s:bool(s.data.get('canSeek')),notify=changed)
     canRaise=Property(bool,lambda s:bool(s.data.get('available')),notify=changed)
     canQuit=Property(bool,lambda s:False,constant=True)
-    position=Property(float,lambda s:float(s.data.get('position',0)),lambda s,v:s.bridge.action('media',{'action':'seek','value':v}),notify=changed)
+    position=Property(float,lambda s:s.current_position(),lambda s,v:s.seek(v),notify=positionUpdated)
     @Slot()
-    def positionChanged(self):pass
+    def positionChanged(self):
+        # Called by the visible dashboard timer only: re-evaluates the progress without any backend polling.
+        if self.data.get('playing'):self.positionUpdated.emit()
     @Slot()
     def togglePlaying(self):self.bridge.action('media',{'action':'toggle'})
     @Slot()
@@ -684,6 +706,7 @@ class Bridge(QObject):
             core_changed=any(value!=self._state.get(key) for key,value in message['state'].items() if key not in quiet)
             perf_changed=any(self._state.get(key)!=message['state'].get(key) for key in ('performance','sysInfo'))
             self._state=message['state'];self._dark=bool(self._state.get('dark'));self._player.data=self._state.get('media',{})
+            self._player.stamp=time.monotonic()
             if core_changed:self.changed.emit()
             if perf_changed:self.perfChanged.emit()
             if media_changed:self._player.changed.emit()

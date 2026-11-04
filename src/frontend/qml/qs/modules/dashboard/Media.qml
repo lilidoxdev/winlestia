@@ -300,7 +300,7 @@ Item {
 
                 anchors.right: parent.right
 
-                text: root.lengthStr(Players.active?.length ?? -1)
+                text: Players.active?.lengthKnown === false ? "--:--" : root.lengthStr(Players.active?.length ?? -1)
                 color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.small
             }
