@@ -1,4 +1,4 @@
-// Server side of the single-instance pipe (see backend/FilesPipe.cs for the protocol). One awaiting accept loop, no timer, no polling:
+// Server side of the single-instance pipe (see backend/Shared/FilesPipe.cs for the protocol). One awaiting accept loop, no timer, no polling:
 // an idle server is one pending overlapped ConnectNamedPipe. A broken message never reaches the UI and never ends the process.
 using System;
 using System.IO;

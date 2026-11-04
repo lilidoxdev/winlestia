@@ -82,7 +82,7 @@ static class ShellProbe
 
     static void Draw(string path, string hex)
     {
-        var t = typeof(PanneauxGlass.Entry).Assembly.GetType("PanneauxGlass.ExplorerAppearance")!;
+        var t = typeof(PanneauxGlass.Entry).Assembly.GetType("PanneauxGlass.Explorer.ExplorerAppearance")!;
         string tmp = path + ".tmp";
         t.GetMethod("DrawIcon", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
             .Invoke(null, new object[] { tmp, hex, "folder" });

@@ -8,7 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace PanneauxGlass;
+namespace PanneauxGlass.Views;
 
 internal sealed class ThemeDefinition
 {

@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using PanneauxGlass;
+using PanneauxGlass.Views;
 using Winlestia.Shared;
 
 namespace WinlestiaFiles;

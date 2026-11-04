@@ -31,7 +31,7 @@ function Add-Entry([string]$Name,[string]$Target,[string]$Section,[string]$Categ
     $seen[$Key] = $true
     $catalog.Add([pscustomobject]@{Id=$Key;Name=$Name;Target=$Target;Section=$Section;Category=$Category;IconPath=$IconPath;SearchText=($Name+' '+$Category+' '+$Target)})
 }
-# Keep in sync with src/backend/AppNameNormalizer.cs (tests/AppNameNormalizer/parity.ps1 compares both).
+# Keep in sync with src/backend/Platform/AppNameNormalizer.cs (tests/AppNameNormalizer/parity.ps1 compares both).
 function Clean-Name([string]$Name) {
     return ($Name -replace '(?i)\.exe\s*-\s*Raccourci$','' -replace '(?i)\s*-\s*Raccourci$','' -replace '(?i)^Lancer\s+','' -replace '(?i)^VLC Media Player\.exe$','VLC Media Player' -replace 'Â?®|™','' -replace '(?i)\s*-\s*Windows10$','' -replace '^CrimsonDesert$','Crimson Desert' -replace '^HogwartsLegacy$','Hogwarts Legacy').Trim()
 }

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Markup;
 using System.Windows.Media;
 using PanneauxGlass;
+using PanneauxGlass.Views;
 
 namespace WinlestiaFiles;
 

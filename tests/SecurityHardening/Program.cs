@@ -3,6 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using PanneauxGlass;
+using PanneauxGlass.Explorer;
+using PanneauxGlass.Platform;
+using PanneauxGlass.Tools;
 
 class Test
 {

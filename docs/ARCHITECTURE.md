@@ -48,7 +48,7 @@ A second launch signals the first instance through the `Local\PanneauxGlassV5` m
 Renaming any of these breaks existing installs or the other side of an IPC boundary.
 
 - **Preferences JSON.** `preferences-glass.json` is `Store.State`, serialized from `Preferences` in
-  `src/backend/Models.cs` (`Store.Json`: case-insensitive read, indented). Property names are the file keys
+  `src/backend/Storage/Models.cs` (`Store.Json`: case-insensitive read, indented). Property names are the file keys
   (for example `ReplaceTaskbar`, `ShortcutPreferences.Modifiers/Key/View`). Add properties with defaults; never rename.
 - **Pipes, events, mutexes.** `PanneauxCaelestia` (`QtShellBridge.cs` server, `frontend.py` client; one JSON object per
   line, 128 KiB cap, current user only); `Local\PanneauxCaelestiaWake`; `WinlestiaCli` (`CliServer.cs`; allow-list in
@@ -96,3 +96,7 @@ Every way back to the Windows taskbar must keep working. User instructions: `doc
 | `RETABLIR_BARRE_WINDOWS.exe` | `src/backend/native/`, copied to `Glass-v5` by `installer/build.ps1` |
 | `SECOURS_BUREAU.exe` | `src/backend/Secours.cpp`, `build-rescue.cmd` |
 | Ctrl+Alt+Backspace | `GlobalShortcut.cs` (`RegisterHotKey`, modifiers 0x4003, key 0x08) |
+
+## Backend namespaces
+
+`src/backend` is split into one folder per area, each with its own namespace `PanneauxGlass.<Area>` (listed as global usings in `src/backend/GlobalUsings.cs`): Shell (coordinator, Qt bridge, CLI server), Media, Social, Explorer, Desktop (tiling, virtual desktops, wallpaper, fullscreen), Platform (network, power, telemetry, autostart, app catalogue), Storage (Store, Preferences, models), Interop (P/Invoke), Views (WPF windows and visual tokens), Tools (clipboard, capture, dictation, palette, bookmarks), SelfTest (verification harnesses) and Shared (`Winlestia.Shared`, also linked by `src/files`). `Program.cs` stays at the root.

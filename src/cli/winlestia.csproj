@@ -6,5 +6,5 @@
     <!-- One self-contained file, no shared DLL: it lives next to the backend, whose DLLs have other versions. -->
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
-  <ItemGroup><Compile Include="../backend/CliCommands.cs" Link="CliCommands.cs" /><Compile Include="../backend/QuietPolicy.cs" Link="QuietPolicy.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../backend/Shell/CliCommands.cs" Link="CliCommands.cs" /><Compile Include="../backend/Shell/QuietPolicy.cs" Link="QuietPolicy.cs" /></ItemGroup>
 </Project>

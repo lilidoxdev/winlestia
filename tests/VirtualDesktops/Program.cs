@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using PanneauxGlass;
+using PanneauxGlass.Desktop;
 
 class Probe
 {

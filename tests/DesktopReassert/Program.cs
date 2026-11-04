@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;
+using PanneauxGlass.Desktop;
 
 class Test
 {

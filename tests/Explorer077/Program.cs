@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using PanneauxGlass;
+using PanneauxGlass.Storage;
 
 class Test
 {
@@ -40,7 +41,7 @@ class Test
         var results = new Dictionary<string, bool>();
         string root = Path.Combine(Path.GetTempPath(), "WinlestiaExplorer-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
-        var t = typeof(Entry).Assembly.GetType("PanneauxGlass.ExplorerAppearance");
+        var t = typeof(Entry).Assembly.GetType("PanneauxGlass.Explorer.ExplorerAppearance");
         var f = BindingFlags.NonPublic | BindingFlags.Instance;
         var sf = BindingFlags.NonPublic | BindingFlags.Static;
         var service = Activator.CreateInstance(t, f, null, new object[] { Path.Combine(root, "state") }, null);

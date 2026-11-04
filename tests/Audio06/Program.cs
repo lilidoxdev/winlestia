@@ -6,12 +6,13 @@ using System.Threading;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using PanneauxGlass;
+using PanneauxGlass.Storage;
 
 class Test
 {
     static int Main()
     {
-        var type = typeof(Entry).Assembly.GetType("PanneauxGlass.WindowsSpectrum");
+        var type = typeof(Entry).Assembly.GetType("PanneauxGlass.Media.WindowsSpectrum");
         var spectrum = Activator.CreateInstance(type, true);
         var flags = BindingFlags.NonPublic | BindingFlags.Instance;
         double[] Read() => (double[])type.GetProperty("Values", flags).GetValue(spectrum);

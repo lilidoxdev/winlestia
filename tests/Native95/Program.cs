@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using PanneauxGlass;
+using PanneauxGlass.Storage;
 using Forms = System.Windows.Forms;
 
 class Program
@@ -46,7 +47,7 @@ class Program
         fixture.WindowState = Forms.FormWindowState.Maximized;
         Forms.Application.DoEvents();
         System.Threading.Thread.Sleep(200);
-        var type = asm.GetType("PanneauxGlass.ScreenFrameReservations");
+        var type = asm.GetType("PanneauxGlass.Desktop.ScreenFrameReservations");
         var frame = Activator.CreateInstance(type, true);
         try
         {
@@ -77,13 +78,13 @@ class Program
             ((IDisposable)frame).Dispose();
             fixture.Close();
         }
-        var store = asm.GetType("PanneauxGlass.Store");
+        var store = asm.GetType("PanneauxGlass.Storage.Store");
         var root = Environment.GetEnvironmentVariable("WINLESTIA_DATA_DIR");
         Directory.CreateDirectory(root);
         store.GetField("Root").SetValue(null, root);
         var prefs = (Preferences)store.GetField("State").GetValue(null);
         prefs.TaskbarPins.AddRange(new[] { "a", "b", "c" });
-        var bridgeType = asm.GetType("PanneauxGlass.QtShellBridge");
+        var bridgeType = asm.GetType("PanneauxGlass.Shell.QtShellBridge");
         var bridge = RuntimeHelpers.GetUninitializedObject(bridgeType);
         bridgeType
             .GetField("dockEntries", flags)
@@ -116,8 +117,8 @@ class Program
         results["reorderMovesExistingPin"] = string.Join(",", prefs.TaskbarPins) == "b,c,a";
         var saved = File.ReadAllText(Path.Combine(root, "preferences-glass.json"));
         results["pinOrderSaved"] = saved.IndexOf("\"b\"") < saved.IndexOf("\"a\"");
-        var recentType = asm.GetType("PanneauxGlass.DesktopRecents+Recent");
-        var orderType = asm.GetType("PanneauxGlass.RecentOrdering");
+        var recentType = asm.GetType("PanneauxGlass.Desktop.DesktopRecents+Recent");
+        var orderType = asm.GetType("PanneauxGlass.Desktop.RecentOrdering");
         var rows = Array.CreateInstance(recentType, 5);
         string[] names = { "ChatGPT", "OpenCode", "Freebuff", "Canada", "ChatGPT" };
         for (int i = 0; i < 5; i++)
@@ -186,7 +187,7 @@ class Program
             reloaded.TaskbarPins.Count == 1
             && reloaded.TaskbarPins[0] == pinned.Id
             && reloaded.Custom.Exists(e => e.Id == pinned.Id && e.Target == Environment.ProcessPath);
-        var recycle = asm.GetType("PanneauxGlass.RecycleActions");
+        var recycle = asm.GetType("PanneauxGlass.Explorer.RecycleActions");
         string za = Path.Combine(root, "a"),
             zb = Path.Combine(root, "b");
         Directory.CreateDirectory(za);

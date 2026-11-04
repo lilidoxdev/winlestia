@@ -1,6 +1,6 @@
 # Shortcuts and command line
 
-Everything below was checked against the source (`src/backend/GlobalShortcut.cs`, `src/backend/Models.cs`, `src/frontend/qml`, `src/backend/CliCommands.cs`). Global shortcuts can be reassigned in Settings; the values shown are the defaults. If another application already owns a combination, Windows refuses it and Winlestia reports the conflict.
+Everything below was checked against the source (`src/backend/Tools/GlobalShortcut.cs`, `src/backend/Storage/Models.cs`, `src/frontend/qml`, `src/backend/Shell/CliCommands.cs`). Global shortcuts can be reassigned in Settings; the values shown are the defaults. If another application already owns a combination, Windows refuses it and Winlestia reports the conflict.
 
 ## Global shortcuts
 

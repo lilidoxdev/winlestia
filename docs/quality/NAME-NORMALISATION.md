@@ -1,6 +1,6 @@
 # App display-name normalisation
 
-Single C# source of truth: `src/backend/AppNameNormalizer.cs` (`Normalize`). `CatalogueWatchRules.CleanName` is a thin wrapper.
+Single C# source of truth: `src/backend/Platform/AppNameNormalizer.cs` (`Normalize`). `CatalogueWatchRules.CleanName` is a thin wrapper.
 PowerShell twin: `Clean-Name` in `src/backend/Inventory.ps1` (keep in sync; `tests/AppNameNormalizer/parity.ps1` compares both).
 
 Rules apply in this order (all case-insensitive, culture-invariant), then the result is trimmed. Null gives "".

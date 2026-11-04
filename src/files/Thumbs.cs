@@ -15,6 +15,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using PanneauxGlass;
+using PanneauxGlass.Views;
 
 namespace WinlestiaFiles;
 

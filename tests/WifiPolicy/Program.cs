@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using PanneauxGlass;
+using PanneauxGlass.Platform;
 
 class Test
 {

@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using PanneauxGlass;
+using PanneauxGlass.Shell;
 
 namespace WinlestiaCli;
 

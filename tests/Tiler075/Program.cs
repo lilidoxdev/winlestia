@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using PanneauxGlass;
+using PanneauxGlass.Interop;
+using PanneauxGlass.Storage;
 using Forms = System.Windows.Forms;
 
 class Test
@@ -29,7 +31,7 @@ class Test
     static int Main()
     {
         var asm = typeof(Entry).Assembly;
-        var type = asm.GetType("PanneauxGlass.WindowTiler");
+        var type = asm.GetType("PanneauxGlass.Desktop.WindowTiler");
         var flags = BindingFlags.Instance | BindingFlags.NonPublic;
         var result = new Dictionary<string, bool>();
         var windows = new List<Forms.Form>();
@@ -147,7 +149,7 @@ class Test
                     return r.Rect == original[w.Handle];
                 });
             // Pure partition properties on a physical monitor with negative coordinates.
-            var nativeRect = asm.GetType("PanneauxGlass.Native+Rect");
+            var nativeRect = asm.GetType("PanneauxGlass.Interop.Native+Rect");
             var box = Activator.CreateInstance(nativeRect);
             foreach (var pair in new[] { ("Left", -1920), ("Top", -1080), ("Right", 0), ("Bottom", 0) })
                 nativeRect.GetField(pair.Item1).SetValue(box, pair.Item2);

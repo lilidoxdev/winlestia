@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using PanneauxGlass;
+using PanneauxGlass.Views;
 
 namespace WinlestiaFiles;
 

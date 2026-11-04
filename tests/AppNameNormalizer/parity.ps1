@@ -1,5 +1,5 @@
 # Test-time parity helper: extracts ONLY the Clean-Name function text from Inventory.ps1 (never runs the script) and
-# applies it to the inputs. Keep in sync with src/backend/AppNameNormalizer.cs.
+# applies it to the inputs. Keep in sync with src/backend/Platform/AppNameNormalizer.cs.
 param([Parameter(Mandatory)][string]$InventoryPath,[Parameter(Mandatory)][string]$InputPath,[Parameter(Mandatory)][string]$OutputPath)
 $ErrorActionPreference='Stop'
 $text=[IO.File]::ReadAllText($InventoryPath,[Text.Encoding]::UTF8)

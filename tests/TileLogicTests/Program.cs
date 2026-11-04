@@ -2,6 +2,8 @@
 using System;
 using System.Linq;
 using PanneauxGlass;
+using PanneauxGlass.Desktop;
+using PanneauxGlass.Interop;
 
 static class T
 {

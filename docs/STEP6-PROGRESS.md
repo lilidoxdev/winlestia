@@ -1,5 +1,5 @@
 # Step 6 (folder handler, guard, toggles, live palette) - DONE, not deployed
-- Owner: src/backend/FilesHandler.cs + FilesHandlerGuard.cs (pure .NET), linked into src/files, backend and tests/FilesHandler. CLI lives in Winlestia.Files.exe (`--register "<exe>"`, `--restore`; exit 0/1, log %LOCALAPPDATA%\Winlestia\Files\handler.log).
+- Owner: src/backend/Shared/FilesHandler.cs + FilesHandlerGuard.cs (pure .NET), linked into src/files, backend and tests/FilesHandler. CLI lives in Winlestia.Files.exe (`--register "<exe>"`, `--restore`; exit 0/1, log %LOCALAPPDATA%\Winlestia\Files\handler.log).
 - Registry root is configurable (HandlerOptions). Test override: WINLESTIA_FILES_HANDLER_ROOT=Software\WinlestiaTest\<x> (refused elsewhere; no SHChangeNotify; own backup file, WINLESTIA_FILES_HANDLER_BACKUP).
 - Backend: FilesDefaultHandler.cs (toggle, startup guard, FileSystemWatcher on handler-tripped.flag), Preferences.FilesDefaultHandler, bridge keys filesDefaultHandler / filesPreload (+ settings fields), FilesPreload.NotifyPalette (called by Theme.Use, 600 ms debounce, never launches).
 - Files: startup crash counter (startup-crashes.txt; 3 in 60 s -> restore + handler-tripped.flag), "palette" pipe cmd -> PaletteLoader.Refresh, selftest `palette`.

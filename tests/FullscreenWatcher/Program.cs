@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using PanneauxGlass;
+using PanneauxGlass.Desktop;
 
 class Probe
 {

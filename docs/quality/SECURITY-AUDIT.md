@@ -1,7 +1,7 @@
 # Security audit - lot 4 (2026-11-04)
 
 ## Scope
-C# backend (`src/backend`), file manager IPC (`src/files/SingleInstance.cs`, `src/backend/FilesPipe.cs`), Python frontend IPC client (`src/frontend/frontend.py`), terminal installer (`src/terminal/install.py`), backend installer script (`src/backend/Install.ps1`), and the community claim of "SQL injection".
+C# backend (`src/backend`), file manager IPC (`src/files/SingleInstance.cs`, `src/backend/Shared/FilesPipe.cs`), Python frontend IPC client (`src/frontend/frontend.py`), terminal installer (`src/terminal/install.py`), backend installer script (`src/backend/Install.ps1`), and the community claim of "SQL injection".
 
 ## Method
 Manual reading of the cited code (line numbers re-located with `rg`), targeted pure-function tests (`tests/SecurityHardening`), Release build of the backend. No dynamic testing, no fuzzing, no scheduled task or schtasks call was run. This is a point-in-time review; it does not prove the absence of other issues.

@@ -3,6 +3,7 @@ using System;
 using System.Net.NetworkInformation;
 using System.Threading;
 using PanneauxGlass;
+using PanneauxGlass.Platform;
 
 class Probe
 {

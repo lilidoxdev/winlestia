@@ -6,7 +6,7 @@ restores it when the shell stops or crashes. If it is still missing, try these i
 
 1. Wait a few seconds for the watchdog.
 2. Press **Ctrl+Alt+Backspace**. The independent rescue tool stops Winlestia and brings the desktop back
-   (`src/backend/GlobalShortcut.cs`, `src/backend/Secours.cpp`).
+   (`src/backend/Tools/GlobalShortcut.cs`, `src/backend/Secours.cpp`).
 3. Run `RETABLIR_BARRE_WINDOWS.exe` from `%LOCALAPPDATA%\Programs\Winlestia\Glass-v5`.
 4. From a terminal:
    `"%LOCALAPPDATA%\Programs\Winlestia\Glass-v5\Panneaux.Glass.exe" --restore-taskbar`

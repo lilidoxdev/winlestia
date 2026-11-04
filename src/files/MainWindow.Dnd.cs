@@ -19,6 +19,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using PanneauxGlass;
+using PanneauxGlass.Views;
 using ComIDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
 
 namespace WinlestiaFiles;

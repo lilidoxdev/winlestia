@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using PanneauxGlass;
+using PanneauxGlass.Platform;
 
 class Test
 {

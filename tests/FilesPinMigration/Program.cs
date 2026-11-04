@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using PanneauxGlass;
+using PanneauxGlass.Explorer;
 
 // Mirrors the three Preferences members the migration touches (Models.cs itself drags half the backend); Entry is the same shape as Models.cs.
 namespace PanneauxGlass

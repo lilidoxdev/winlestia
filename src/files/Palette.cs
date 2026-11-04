@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using PanneauxGlass;
+using PanneauxGlass.Views;
 
 namespace WinlestiaFiles;
 

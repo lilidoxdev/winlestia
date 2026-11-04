@@ -13,7 +13,15 @@ class Test
     {
         string py =
             Environment.GetEnvironmentVariable("WINLESTIA_TEST_PYTHON")
-            ?? System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Winlestia\Caelestia-Windows\.venv\Scripts\python.exe");
+            ?? Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Programs",
+                "Winlestia",
+                "Caelestia-Windows",
+                ".venv",
+                "Scripts",
+                "python.exe"
+            );
         if (!File.Exists(py))
             return null;
         var psi = new ProcessStartInfo(py)
