@@ -39,7 +39,7 @@ No behaviour change except where listed above.
 1. Download `Winlestia-Setup-0.9.1.exe` from the assets below.
 2. In PowerShell: `Get-FileHash .\Winlestia-Setup-0.9.1.exe -Algorithm SHA256`. The value must match the installer SHA-256 below.
 
-SHA-256: (filled in at publish)
+SHA-256 of `Winlestia-Setup-0.9.1.exe`: `93293e815af688fd6135e6f1cd271b5481475bd3d4ba2b90fdaebd294c208c51`
 3. Run it. See the SmartScreen note above.
 
 Full guide: [INSTALL.md](INSTALL.md).

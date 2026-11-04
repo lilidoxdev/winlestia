@@ -66,7 +66,7 @@ JSON flags all true: Explorer077, Native95, Tiler075. Audio06: variation=True, s
 
 Installer artefact (0.9.0, historical): build/out/Winlestia-Setup-0.9.0.exe (rebuilt on .NET 10; 196,046,165 bytes, SHA256 64c53b17f2c49b08d96f7201b111caea6c7b58857b3c7d77bba516fa02ad4ce2)
 
-0.9.1 artefact: (filled in at publish)
+0.9.1 artefact: `Winlestia-Setup-0.9.1.exe`, 196,088,088 bytes, SHA-256 `93293e815af688fd6135e6f1cd271b5481475bd3d4ba2b90fdaebd294c208c51`, built from 506cee3 in a neutral path (no personal path in the payload).
 
 ## Not executed
 
