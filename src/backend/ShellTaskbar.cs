@@ -27,7 +27,7 @@ internal sealed class ShellTaskbar:IDisposable {
         try{
             lease=TaskbarNative.Snapshot();string suffix=Environment.ProcessId+"-"+Guid.NewGuid().ToString("N");lease.Ready="Local\\PanneauxGuardReady-"+suffix;lease.Release="Local\\PanneauxGuardRelease-"+suffix;
             ready=new(false,EventResetMode.ManualReset,lease.Ready);release=new(false,EventResetMode.ManualReset,lease.Release);
-            File.WriteAllText(TaskbarNative.LeasePath,JsonSerializer.Serialize(lease,Store.Json));
+            Winlestia.Shared.AtomicFile.WriteAllText(TaskbarNative.LeasePath,JsonSerializer.Serialize(lease,Store.Json));
             string nativeGuard=Path.Combine(Store.Root,"RETABLIR_BARRE_WINDOWS.exe");bool native=File.Exists(nativeGuard);var start=new ProcessStartInfo(native?nativeGuard:Environment.ProcessPath!){UseShellExecute=false,CreateNoWindow=true};start.ArgumentList.Add(native?"--watch-parent":"--taskbar-guard");start.ArgumentList.Add(Environment.ProcessId.ToString());if(native){start.ArgumentList.Add(lease.Ready);start.ArgumentList.Add(lease.Release);}else start.ArgumentList.Add(TaskbarNative.LeasePath);guard=Process.Start(start);
             if(guard==null||!ready.WaitOne(4000))throw new InvalidOperationException("Le secours de la barre n’a pas démarré.");
             enabled=true;CreateBars();TaskbarNative.HideExplorer();if(owner.QtShell==null)foreach(var bar in bars)bar.Register();windowsKey=new WindowsDockKey(RevealDock);foreach(var bar in bars)bar.Conceal(true);

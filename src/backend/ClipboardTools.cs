@@ -78,7 +78,7 @@ internal sealed class ClipboardService:IDisposable {
         catch(Exception ex){Store.Log("Presse-papiers chargement: "+ex.Message);}
     }
     void Save(){
-        try{File.WriteAllText(Path.Combine(folder,"history.json"),JsonSerializer.Serialize(items,Store.Json));}catch(Exception ex){Store.Log("Presse-papiers sauvegarde: "+ex.Message);}
+        try{Winlestia.Shared.AtomicFile.WriteAllText(Path.Combine(folder,"history.json"),JsonSerializer.Serialize(items,Store.Json));}catch(Exception ex){Store.Log("Presse-papiers sauvegarde: "+ex.Message);}
     }
     public void Dispose(){disposed=true;timer.Stop();Save();}
 }

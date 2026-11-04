@@ -64,7 +64,7 @@ internal sealed partial class ExplorerAppearance:IDisposable{
  [DllImport("user32.dll")]static extern bool UnhookWinEvent(IntPtr hook);
  string Manifest=>Path.Combine(root,"manifest.json");
  List<Backup> Read()=>File.Exists(Manifest)?JsonSerializer.Deserialize<List<Backup>>(File.ReadAllText(Manifest))??new():new();
- void Save(List<Backup> data){Directory.CreateDirectory(root);string temp=Manifest+".tmp";File.WriteAllText(temp,JsonSerializer.Serialize(data));File.Move(temp,Manifest,true);}
+ void Save(List<Backup> data){Directory.CreateDirectory(root);Winlestia.Shared.AtomicFile.WriteAllText(Manifest,JsonSerializer.Serialize(data));}
  static string Hash(string path)=>Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
  internal static string Known(string guid){var id=new Guid(guid);if(SHGetKnownFolderPath(ref id,0,IntPtr.Zero,out var pointer)!=0)return "";try{return Marshal.PtrToStringUni(pointer)??"";}finally{Marshal.FreeCoTaskMem(pointer);}}
  internal static (string path,string kind)[] PersonalFolders()=>new[]{(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),"desktop"),(Known("374DE290-123F-4565-9164-39C4925E467B"),"download"),(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),"document"),(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),"picture"),(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic),"music"),(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),"video")};

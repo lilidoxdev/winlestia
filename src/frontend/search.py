@@ -1,6 +1,7 @@
 # Python 3.12 / Windows 11. Local launcher matching and bounded arithmetic; no eval or shell execution.
 import ast, json, math, operator, os, re, shutil, threading, time, unicodedata
 from pathlib import Path
+from atomicfile import write_text as atomic_write_text
 
 def tr(text,language='fr'):
     # Same table as the QML qsTr(); French stays the source text. Matching always uses the French originals.
@@ -222,7 +223,7 @@ def wallpaper_hidden():
 def _hidden_write(names):
     f=hidden_wallpaper_file()
     try:
-        if names:f.parent.mkdir(parents=True,exist_ok=True);f.write_text(json.dumps(sorted(names),ensure_ascii=False),encoding='utf-8')
+        if names:f.parent.mkdir(parents=True,exist_ok=True);atomic_write_text(f,json.dumps(sorted(names),ensure_ascii=False))
         elif f.exists():f.unlink()
     except OSError:return False
     return True

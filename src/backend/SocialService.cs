@@ -516,9 +516,7 @@ internal sealed class SocialService:IDisposable {
             try{
                 if(snapshot!=null){
                     Directory.CreateDirectory(folder);
-                    string temp=CountsFile+".tmp";
-                    File.WriteAllText(temp,JsonSerializer.Serialize(snapshot));
-                    File.Move(temp,CountsFile,true);
+                    Winlestia.Shared.AtomicFile.WriteAllText(CountsFile,JsonSerializer.Serialize(snapshot));
                 }
             }catch(Exception ex){Store.Log("Social écriture: "+ex.Message);}
         }
@@ -531,8 +529,8 @@ internal sealed class SocialService:IDisposable {
         lock(saveLock){
             try{
                 Directory.CreateDirectory(folder);
-                File.WriteAllText(CountsFile,JsonSerializer.Serialize(MakeFile()));
-            }catch{}
+                Winlestia.Shared.AtomicFile.WriteAllText(CountsFile,JsonSerializer.Serialize(MakeFile()));
+            }catch(Exception ex){Store.Log("Social écriture finale: "+ex.Message);}
         }
         environment=null;
     }

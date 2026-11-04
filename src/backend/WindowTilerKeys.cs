@@ -55,7 +55,7 @@ internal sealed partial class WindowTiler{
  // ---- User exclusions: process names, one per line, in the Panneaux data folder.
  string ExclusionPath=>Path.Combine(Store.DataDir,"tile-exclusions.txt");
  void LoadExclusions(){if(excluded!=null)return;try{excluded=new(TileLogic.ParseExclusions(File.Exists(ExclusionPath)?File.ReadAllText(ExclusionPath):""));}catch(Exception ex){excluded=new();Store.Log("Tuilage · exclusions illisibles : "+ex.Message);}}
- void SaveExclusions(){try{Directory.CreateDirectory(Store.DataDir);File.WriteAllText(ExclusionPath,string.Join("\n",excluded!.OrderBy(s=>s,StringComparer.Ordinal)));}catch(Exception ex){Store.Log("Tuilage · exclusions non enregistrées : "+ex.Message);}}
+ void SaveExclusions(){try{Directory.CreateDirectory(Store.DataDir);Winlestia.Shared.AtomicFile.WriteAllText(ExclusionPath,string.Join("\n",excluded!.OrderBy(s=>s,StringComparer.Ordinal)));}catch(Exception ex){Store.Log("Tuilage · exclusions non enregistrées : "+ex.Message);}}
  internal IReadOnlyList<string> Exclusions{get{LoadExclusions();return excluded!.OrderBy(s=>s,StringComparer.Ordinal).ToList();}}
  internal void RemoveExclusion(string name){LoadExclusions();if(excluded!.Remove(TileLogic.Normalize(name))){SaveExclusions();RequestTick();}}
  string ProcessNameOf(uint pid){if(processNames.TryGetValue(pid,out var cached))return cached;string name="";try{using var p=Process.GetProcessById((int)pid);name=TileLogic.Normalize(p.ProcessName);}catch{}processNames[pid]=name;return name;}

@@ -15,6 +15,7 @@
     <Compile Include="..\backend\Tokens.cs" Link="Shared\Tokens.cs" />
     <Compile Include="..\backend\UiTokens.cs" Link="Shared\UiTokens.cs" />
     <Compile Include="..\backend\FilesPipe.cs" Link="Shared\FilesPipe.cs" />
+    <Compile Include="..\backend\AtomicFile.cs" Link="Shared\AtomicFile.cs" />
     <Compile Include="..\backend\FilesHandler.cs" Link="Shared\FilesHandler.cs" />
     <Compile Include="..\backend\FilesHandlerGuard.cs" Link="Shared\FilesHandlerGuard.cs" />
   </ItemGroup>

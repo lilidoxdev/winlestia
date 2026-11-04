@@ -14,7 +14,7 @@ internal sealed partial class ExplorerAppearance{
  internal string StableIcon(string kind)=>Path.Combine(IconsDir,(IconKinds.Contains(kind)?kind:"folder")+"-current.ico");
  void Shell(uint kind,uint flags,string? path){if(NotifySink!=null)NotifySink(kind,flags,path);else SHChangeNotify(kind,flags,path,IntPtr.Zero);}
  IconState LoadState(){lock(iconGate){if(iconState!=null)return iconState;try{iconState=File.Exists(StatePath)?JsonSerializer.Deserialize<IconState>(File.ReadAllText(StatePath)):null;}catch{}return iconState??=new();}}
- void SaveState(){lock(iconGate){Directory.CreateDirectory(IconsDir);string temp=StatePath+".tmp";File.WriteAllText(temp,JsonSerializer.Serialize(iconState??new()));File.Move(temp,StatePath,true);}}
+ void SaveState(){lock(iconGate){Directory.CreateDirectory(IconsDir);Winlestia.Shared.AtomicFile.WriteAllText(StatePath,JsonSerializer.Serialize(iconState??new()));}}
  // Draws to a temp file then swaps it in: readers (Explorer) never see a half-written .ico.
  static void DrawAtomic(string path,string hex,string kind){Directory.CreateDirectory(Path.GetDirectoryName(path)!);string temp=path+"."+Environment.ProcessId+".tmp";try{DrawIcon(temp,hex,kind);if(File.Exists(path))File.Replace(temp,path,null);else File.Move(temp,path,true);}finally{try{File.Delete(temp);}catch{}}}
  // Stable icon path for a kind; drawn on demand (current accent) if it does not exist yet.

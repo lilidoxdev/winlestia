@@ -214,9 +214,7 @@ internal static class FilesHandler {
 
     static void WriteBackup(string path, Backup b) {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        string temp = path + ".tmp";
-        File.WriteAllText(temp, JsonSerializer.Serialize(b, new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
-        File.Move(temp, path, true);           // atomic replace on the same volume
+        AtomicFile.WriteAllText(path, JsonSerializer.Serialize(b, new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));   // tmp + flush + atomic replace
     }
 
     // ---- CLI (Winlestia.Files.exe --register "<exe>" | --restore): exit code 0 = ok, 1 = failure. One line appended to handler.log. -----------------

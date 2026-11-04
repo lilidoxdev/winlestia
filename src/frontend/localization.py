@@ -1,6 +1,7 @@
 # Python 3.12 / localization.py / Qt application translations and Windows UI language detection.
 import ctypes,json
 from pathlib import Path
+from atomicfile import write_text as atomic_write_text
 from PySide6.QtCore import QTranslator
 ROWS='''Paramètres|Settings|Ajustes
 Personnaliser|Customize|Personalizar
@@ -260,7 +261,7 @@ class Translator(QTranslator):
  def isEmpty(self):return False
  def translate(self,context,source,disambiguation=None,n=-1):return TABLE.get(source,{}).get(self.language,source)
  def select(self,mode):
-  self.mode=mode if mode in ('auto','fr','en','es') else 'auto';self.path.write_text(json.dumps({'language':self.mode}),encoding='utf-8')
+  self.mode=mode if mode in ('auto','fr','en','es') else 'auto';atomic_write_text(self.path,json.dumps({'language':self.mode}))
 
 for row in """Un espace qui te ressemble|A space of your own|Un espacio a tu medida
 Couleurs et transparence|Colours and transparency|Colores y transparencia
