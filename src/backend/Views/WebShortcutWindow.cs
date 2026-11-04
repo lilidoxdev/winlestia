@@ -22,7 +22,7 @@ internal sealed class WebShortcutWindow : GlassWindow
         Stretch = Stretch.Uniform,
     };
     readonly TextBlock status = UI.Text("Choisis ton image ou conserve le logo actuel.", 12, UI.Dim);
-    readonly CheckBox glass = new() { Content = "Afficher un carré de verre derrière le logo" };
+    readonly CheckBox glass = new() { Content = Strings.ShowAGlassSquareBehindThe };
     readonly Button recrop;
     string sourcePath = "";
     LogoCrop? crop;
@@ -44,14 +44,14 @@ internal sealed class WebShortcutWindow : GlassWindow
         var form = new StackPanel();
         ContentHost.Children.Add(form);
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", "Fermer", Close);
+        var close = UI.IconButton("\uE711", Strings.Close, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         header.Children.Add(
-            UI.Text(original == null ? "Un site. Ton icône." : "Ton raccourci, à ta façon.", 25, null, true)
+            UI.Text(original == null ? Strings.ASiteYourIcon : Strings.YourShortcutYourWay, 25, null, true)
         );
         form.Children.Add(header);
-        var intro = UI.Text("Le logo reste seul à l’écran. Son nom apparaît au survol.", 13, UI.Dim);
+        var intro = UI.Text(Strings.TheLogoStaysAloneOnScreen, 13, UI.Dim);
         intro.Margin = new Thickness(0, 9, 0, 22);
         form.Children.Add(intro);
         void Label(string text)
@@ -203,13 +203,13 @@ internal sealed class WebShortcutWindow : GlassWindow
                 selected = dialog.Output;
                 preview.Source = selected;
                 recrop.IsEnabled = true;
-                status.Text = "Image prête · recadrage enregistré lors de la validation du site.";
+                status.Text = Strings.ImageReadyCropSavedWhenThe;
                 status.Foreground = UI.Brush("#ACE8CC");
             }
         }
         catch (Exception ex)
         {
-            status.Text = "Cette image ne peut pas être ouverte : " + ex.Message;
+            status.Text = Strings.ThisImageCannotBeOpened + ex.Message;
             status.Foreground = UI.Brush("#F1C7A5");
         }
     }
@@ -220,9 +220,9 @@ internal sealed class WebShortcutWindow : GlassWindow
         {
             var uri = WebIcons.Parse(url.Text);
             if (string.IsNullOrWhiteSpace(name.Text))
-                throw new FormatException("Donne un nom à ce raccourci.");
+                throw new FormatException(Strings.GiveThisShortcutAName);
             if (Store.State.Websites.Any(x => x.Url == uri.AbsoluteUri && x != original))
-                throw new FormatException("Ce site est déjà présent.");
+                throw new FormatException(Strings.ThisSiteIsAlreadyPresent);
             var site = original ?? new WebShortcut();
             string path = site.IconPath;
             bool fallback = site.Fallback;

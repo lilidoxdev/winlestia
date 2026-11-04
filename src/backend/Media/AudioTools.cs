@@ -101,7 +101,7 @@ internal static class AudioSwitch
             {
                 int hr = config.SetDefaultEndpoint(id, role);
                 if (hr != 0 && role == 0)
-                    throw new COMException("Windows a refusé le changement de sortie.", hr);
+                    throw new COMException(Strings.WindowsRefusedOutputChange, hr);
             }
         }
         finally
@@ -158,12 +158,12 @@ internal sealed class AudioWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", "Fermer", Close);
+        var close = UI.IconButton("\uE711", Strings.Close, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
         titles.Children.Add(UI.Text("Le bon son, tout de suite.", 25, null, true));
-        var sub = UI.Text("Change de casque, de micro ou coupe le micro sans passer par les réglages", 11, UI.Dim);
+        var sub = UI.Text(Strings.SwitchHeadsetMicrophoneOrMuteThe, 11, UI.Dim);
         sub.TextWrapping = TextWrapping.Wrap;
         sub.Margin = new Thickness(0, 6, 0, 0);
         titles.Children.Add(sub);
@@ -203,26 +203,26 @@ internal sealed class AudioWindow : GlassWindow
             var inputs = AudioSwitch.Devices(1);
             body.Children.Add(UI.Text("SORTIE", 10, UI.Brush("#ABD2E4F1"), true));
             if (outputs.Count == 0)
-                body.Children.Add(Note("Aucune sortie active détectée."));
+                body.Children.Add(Note(Strings.NoActiveOutputDetected));
             foreach (var device in outputs)
                 body.Children.Add(Row(device, "\uE7F5", () => Apply(device, false)));
             body.Children.Add(UI.Text("MICRO", 10, UI.Brush("#ABD2E4F1"), true));
             if (inputs.Count == 0)
-                body.Children.Add(Note("Aucun microphone actif détecté."));
+                body.Children.Add(Note(Strings.NoActiveMicrophoneDetected));
             foreach (var device in inputs)
                 body.Children.Add(Row(device, "\uE720", () => Apply(device, true)));
             if (inputs.Count > 0)
             {
                 var muted = inputs.FirstOrDefault(d => d.Default)?.Muted == true;
                 var toggle = UI.Button(
-                    muted ? "Réactiver le micro" : "Couper le micro",
+                    muted ? Strings.UnmuteMicrophone : "Couper le micro",
                     () =>
                     {
                         try
                         {
                             AudioSwitch.SetMicMute(!muted);
                             Rebuild();
-                            owner.ShowToast(!muted ? "Micro coupé" : "Micro réactivé");
+                            owner.ShowToast(!muted ? Strings.MicrophoneMuted : Strings.MicrophoneUnmuted);
                         }
                         catch (Exception ex)
                         {
@@ -235,18 +235,18 @@ internal sealed class AudioWindow : GlassWindow
                 body.Children.Add(toggle);
             }
             var settings = UI.Button(
-                "Ouvrir les réglages Windows",
+                Strings.OpenWindowsSettings,
                 () => owner.LaunchWindowsShortcut(new WindowsShortcut { Name = "Son", Target = "ms-settings:sound" })
             );
             settings.HorizontalAlignment = HorizontalAlignment.Left;
             settings.Margin = new Thickness(0, 14, 0, 0);
             body.Children.Add(settings);
-            status.Text = "Le changement est immédiat pour toutes les applications.";
+            status.Text = Strings.TheChangeAppliesImmediatelyToAll;
         }
         catch (Exception ex)
         {
-            status.Text = "Réglage audio indisponible : " + ex.Message;
-            body.Children.Add(Note("Windows a refusé l’accès. Ouvre les réglages Windows pour changer de sortie."));
+            status.Text = Strings.AudioSettingUnavailable + ex.Message;
+            body.Children.Add(Note(Strings.WindowsRefusedAccessOpenWindowsSettings));
         }
     }
 

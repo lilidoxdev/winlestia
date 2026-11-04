@@ -27,11 +27,11 @@ internal sealed class ControlEditorWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel { Margin = new Thickness(0, 0, 0, 22) };
-        var close = UI.IconButton("\uE711", "Fermer la personnalisation", Close);
+        var close = UI.IconButton("\uE711", Strings.CloseCustomization, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var title = new StackPanel();
-        title.Children.Add(UI.Text("Les commandes, à ta façon", 24, null, true));
+        title.Children.Add(UI.Text(Strings.TheControlsYourWay, 24, null, true));
         var sub = UI.Text("Afficher, ranger et ajouter · enregistrement automatique", 12, UI.Dim);
         sub.Margin = new Thickness(0, 7, 0, 0);
         title.Children.Add(sub);
@@ -141,7 +141,7 @@ internal sealed class ControlEditorWindow : GlassWindow
         {
             var check = new CheckBox
             {
-                Content = isVolume ? "Curseur volume" : "Curseur luminosité",
+                Content = isVolume ? "Curseur volume" : Strings.BrightnessSlider,
                 IsChecked = isVolume ? prefs.ShowVolume : prefs.ShowBrightness,
                 Margin = new Thickness(0, 0, 20, 0),
             };
@@ -246,7 +246,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
         var stack = new StackPanel();
         ContentHost.Children.Add(stack);
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", "Fermer", Close);
+        var close = UI.IconButton("\uE711", Strings.Close, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         header.Children.Add(
@@ -282,7 +282,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
         System.Windows.Automation.AutomationProperties.SetName(arguments, "Arguments de l’application");
         stack.Children.Add(arguments);
         iconButton = UI.Button("", OpenIcons);
-        iconButton.Content = ControlCenterWindow.IconLabel(glyph, "Choisir l’icône", 13);
+        iconButton.Content = ControlCenterWindow.IconLabel(glyph, Strings.ChooseTheIcon, 13);
         iconButton.HorizontalAlignment = HorizontalAlignment.Left;
         iconButton.Padding = new Thickness(16, 11, 16, 11);
         iconButton.Margin = new Thickness(0, 20, 0, 15);
@@ -337,7 +337,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
                         target.Text = s.Target;
                         arguments.Text = s.Arguments;
                         glyph = s.Glyph;
-                        iconButton.Content = ControlCenterWindow.IconLabel(glyph, "Choisir l’icône", 13);
+                        iconButton.Content = ControlCenterWindow.IconLabel(glyph, Strings.ChooseTheIcon, 13);
                     }
                 ))
                 .ToArray()
@@ -347,18 +347,18 @@ internal sealed class WindowsShortcutEditor : GlassWindow
     {
         var icons = new[]
         {
-            ("Réglages", "\uE713"),
+            (Strings.Settings, "\uE713"),
             ("Volume", "\uE767"),
             ("Wi-Fi", "\uE701"),
             ("Bluetooth", "\uE702"),
-            ("Écran", "\uE7F4"),
+            (Strings.Screen, "\uE7F4"),
             ("Capture", "\uE722"),
             ("Musique", "\uE8D6"),
             ("Dossier", "\uE8B7"),
             ("Calculatrice", "\uE8EF"),
             ("Horloge", "\uE917"),
             ("Applications", "\uE71D"),
-            ("Réseau", "\uE839"),
+            (Strings.Network, "\uE839"),
             ("Alimentation", "\uE7E8"),
             ("Personnalisation", "\uE790"),
         };
@@ -366,7 +366,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
             owner,
             this,
             iconButton,
-            "Icône du raccourci",
+            Strings.ShortcutIcon,
             icons
                 .Select(i => new MenuAction(
                     i.Item1,
@@ -374,7 +374,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
                     () =>
                     {
                         glyph = i.Item2;
-                        iconButton.Content = ControlCenterWindow.IconLabel(glyph, "Choisir l’icône", 13);
+                        iconButton.Content = ControlCenterWindow.IconLabel(glyph, Strings.ChooseTheIcon, 13);
                     },
                     glyph == i.Item2
                 ))
@@ -419,7 +419,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
         }
         if (!ValidTarget(destination))
         {
-            status.Text = "Choisis une application ou une adresse de paramètre Windows valide.";
+            status.Text = Strings.ChooseAnApplicationOrAValid;
             return;
         }
         var shortcut = original ?? new WindowsShortcut();

@@ -149,7 +149,7 @@ internal sealed class DockPreviewForm : Form
         faultLogged = true;
         try
         {
-            Store.Log("Aperçu du dock (" + where + "): " + ex.Message);
+            Store.Log("Dock preview (" + where + "): " + ex.Message);
         }
         catch { }
     }
@@ -518,7 +518,7 @@ internal sealed class DockPreviewForm : Form
         if (OverflowCount > 0)
             TextRenderer.DrawText(
                 g,
-                OverflowCount == 1 ? "+1 autre fenêtre" : "+" + OverflowCount + " autres fenêtres",
+                OverflowCount == 1 ? Strings.N1OtherWindow : "+" + OverflowCount + Strings.OtherWindows,
                 font,
                 overflowArea,
                 p.OnSurfaceVariant,

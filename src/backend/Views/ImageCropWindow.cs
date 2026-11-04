@@ -210,7 +210,7 @@ internal sealed class ImageCropWindow : GlassWindow
         title.Children.Add(close);
         title.Children.Add(UI.Text("Ton logo, ton cadrage.", 25, null, true));
         form.Children.Add(title);
-        var hint = UI.Text("Glisse l’image pour la déplacer. Molette ou curseur pour zoomer.", 13, UI.Dim);
+        var hint = UI.Text(Strings.DragTheImageToMoveIt, 13, UI.Dim);
         hint.Margin = new Thickness(0, 10, 0, 19);
         form.Children.Add(hint);
         viewport = new CropViewport(LoadImage(path), original);
@@ -255,7 +255,7 @@ internal sealed class ImageCropWindow : GlassWindow
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Center,
         };
-        var fit = UI.Button("Image entière", viewport.Fit);
+        var fit = UI.Button(Strings.WholeImage, viewport.Fit);
         fit.Margin = new Thickness(0, 0, 8, 0);
         tools.Children.Add(fit);
         var fill = UI.Button("Remplir", viewport.Fill);
@@ -263,7 +263,7 @@ internal sealed class ImageCropWindow : GlassWindow
         tools.Children.Add(fill);
         tools.Children.Add(UI.Button("Centrer", viewport.Center));
         form.Children.Add(tools);
-        var note = UI.Text("PNG 256 × 256 · le damier reste transparent dans l’image enregistrée.", 12, UI.Dim);
+        var note = UI.Text(Strings.N256256PNGTheCheckerboardStays, 12, UI.Dim);
         note.Margin = new Thickness(0, 18, 0, 18);
         note.TextAlignment = TextAlignment.Center;
         form.Children.Add(note);

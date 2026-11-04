@@ -44,7 +44,7 @@ internal static class RecycleActions
             return null;
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
-            Title = "Créer une archive ZIP",
+            Title = Strings.CreateAZIPArchive,
             Filter = "Archive ZIP|*.zip",
             DefaultExt = ".zip",
             FileName = "Winlestia-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".zip",

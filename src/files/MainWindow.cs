@@ -435,7 +435,7 @@ public sealed partial class MainWindow : Window
         viewToggle = UI.Flat(UI.Glyph("", 16), 36, new CornerRadius(18));
         viewToggle.Width = 36;
         viewToggle.Margin = new Thickness(M3.Sp2, 0, 0, 0);
-        viewToggle.ToolTip = "Grandes icônes (Ctrl+Maj+2)";
+        viewToggle.ToolTip = Strings.LargeIconsCtrlShift2;
         viewToggle.Click += (_, _) => SetView(!gridMode);
         var right = new StackPanel { Orientation = Orientation.Horizontal };
         right.Children.Add(BuildFilter());
@@ -443,7 +443,7 @@ public sealed partial class MainWindow : Window
         right.Children.Add(viewToggle);
         Grid.SetColumn(right, 2);
         var nav = new StackPanel { Orientation = Orientation.Horizontal };
-        back = NavButton("", "Précédent (Alt+Gauche)", () => Active.Back());
+        back = NavButton("", Strings.BackAltLeft, () => Active.Back());
         forward = NavButton("", "Suivant (Alt+Droite)", () => Active.Forward());
         up = NavButton("", "Dossier parent (Alt+Haut)", () => Active.Up());
         nav.Children.Add(back);
@@ -672,7 +672,7 @@ public sealed partial class MainWindow : Window
             grid.Children.Add(cell);
         }
         Cell(SortColumn.Name, "Nom", 0, 2, false, new Thickness(M3.Sp2 + 4, 0, 0, 0));
-        Cell(SortColumn.Modified, "Modifié", 2, 1, false, new Thickness(8, 0, 0, 0));
+        Cell(SortColumn.Modified, Strings.Modified2, 2, 1, false, new Thickness(8, 0, 0, 0));
         Cell(SortColumn.Type, "Type", 3, 1, false, new Thickness(8, 0, 0, 0));
         Cell(SortColumn.Size, "Taille", 4, 1, true, new Thickness(0, 0, 12, 0));
         return grid;
@@ -734,7 +734,7 @@ public sealed partial class MainWindow : Window
         list.ItemContainerStyle = (Style)Resources[grid ? "TileStyle" : "RowStyle"];
         if (viewToggle.Content is TextBlock glyph)
             glyph.Text = grid ? "" : "";
-        viewToggle.ToolTip = grid ? "Détails (Ctrl+Maj+1)" : "Grandes icônes (Ctrl+Maj+2)";
+        viewToggle.ToolTip = grid ? Strings.DetailsCtrlShift1 : Strings.LargeIconsCtrlShift2;
     }
 
     protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
@@ -760,7 +760,7 @@ public sealed partial class MainWindow : Window
         var close = UI.Flat(UI.Glyph("", 10), 22, new CornerRadius(11));
         close.Width = 22;
         close.Margin = new Thickness(M3.Pad1, 0, 0, 0);
-        close.ToolTip = "Fermer (Ctrl+W)";
+        close.ToolTip = Strings.CloseCtrlW;
         close.Click += (_, _) => CloseTab(view);
         var icon = UI.Symbol("", "", 16);
         icon.Foreground = UI.Accent;
@@ -937,9 +937,9 @@ public sealed partial class MainWindow : Window
             LoadState.Denied => UI.EmptyState(
                 "",
                 "",
-                "Accès refusé",
+                Strings.AccessDenied,
                 "Vous n'avez pas l'autorisation d'ouvrir ce dossier.",
-                "Ouvrir dans Explorer",
+                Strings.OpenInExplorer,
                 explorer
             ),
             LoadState.NotFound => UI.EmptyState(
@@ -953,12 +953,12 @@ public sealed partial class MainWindow : Window
             LoadState.Failed => UI.EmptyState(
                 "",
                 "",
-                "Impossible d'ouvrir ce dossier",
+                Strings.UnableToOpenThisFolder,
                 tab.Error,
-                "Ouvrir dans Explorer",
+                Strings.OpenInExplorer,
                 explorer
             ),
-            _ => UI.EmptyState("", "", "Ce dossier est vide", "Ce dossier ne contient aucun élément."),
+            _ => UI.EmptyState("", "", "Ce dossier est vide", Strings.ThisFolderContainsNoItems),
         };
     }
 
@@ -966,11 +966,7 @@ public sealed partial class MainWindow : Window
     {
         int n = Active.Items.Count,
             m = list.SelectedItems.Count;
-        string count =
-            Active.Filter.Length > 0
-                ? $"{n} sur {Active.Total} élément{(Active.Total > 1 ? "s" : "")}"
-                : $"{n} élément{(n > 1 ? "s" : "")}";
-        status.Text = $"{count} · {m} sélectionné{(m > 1 ? "s" : "")}";
+        status.Text = Strings.StatusLine(n, Active.Total, Active.Filter.Length > 0, m);
     }
 
     // ---- address ---------------------------------------------------------------------------------------------

@@ -30,7 +30,7 @@ internal static class SystemActions
     {
         owner.CollapseImmediately();
         if (!SetSuspendState(false, false, false))
-            owner.Message("La mise en veille n’a pas pu être déclenchée sur ce PC.");
+            owner.Message(Strings.SleepCouldNotBeTriggeredOn);
     }
 
     internal static void Screenshot(Coordinator owner) =>
@@ -44,19 +44,15 @@ internal static class SystemActions
 
     internal static void EmptyBin(Coordinator owner)
     {
-        if (
-            !owner.Confirm(
-                "Vider la corbeille ?\n\nLes fichiers qu’elle contient seront supprimés définitivement, sans passer par le Bureau."
-            )
-        )
+        if (!owner.Confirm(Strings.EmptyTheRecycleBinTheFiles))
             return;
         int code = SHEmptyRecycleBin(IntPtr.Zero, null, 0x1 | 0x2 | 0x4);
-        owner.ShowToast(code == 0 ? "Corbeille vidée" : "La corbeille est déjà vide");
+        owner.ShowToast(code == 0 ? Strings.RecycleBinEmptied : Strings.TheRecycleBinIsAlreadyEmpty);
     }
 
     internal static void Power(Coordinator owner, bool restart)
     {
-        string verb = restart ? "Redémarrer" : "Éteindre";
+        string verb = restart ? Strings.Restart : Strings.ShutDown;
         if (!owner.Confirm(verb + " le PC maintenant ?\n\nEnregistre ton travail avant de continuer."))
             return;
         owner.CollapseImmediately();
@@ -70,7 +66,7 @@ internal static class SystemActions
             if (string.IsNullOrEmpty(text))
                 return;
             Clipboard.SetText(text);
-            owner.ShowToast(label + " copié");
+            owner.ShowToast(label + Strings.Copied);
         }
         catch (Exception ex)
         {
@@ -93,7 +89,7 @@ internal static class SystemActions
         }
         catch (Exception ex)
         {
-            owner.Message("La commande « " + command + " » n’a pas pu être lancée.\n" + ex.Message);
+            owner.Message("La commande « " + command + Strings.CouldNotBeLaunched + ex.Message);
         }
     }
 }

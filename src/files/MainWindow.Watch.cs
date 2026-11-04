@@ -413,7 +413,7 @@ public sealed partial class MainWindow
             VerticalAlignment = VerticalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
             Template = AddressTemplate(),
-            ToolTip = "Filtrer (Ctrl+F, Échap pour effacer)",
+            ToolTip = Strings.FilterCtrlFEscToClear,
         };
         filterBox.TextChanged += (_, _) =>
         {
@@ -448,7 +448,7 @@ public sealed partial class MainWindow
         var close = UI.Flat(UI.Glyph("", 10), 24, new CornerRadius(12));
         close.Width = 24;
         close.Margin = new Thickness(0, 0, M3.Pad1, 0);
-        close.ToolTip = "Effacer le filtre (Échap)";
+        close.ToolTip = Strings.ClearTheFilterEsc;
         close.Click += (_, _) => ClearFilter(true);
         var row = new StackPanel { Orientation = Orientation.Horizontal };
         row.Children.Add(icon);
@@ -529,5 +529,5 @@ public sealed partial class MainWindow
     }
 
     FrameworkElement NoResult(FolderTab tab) =>
-        UI.EmptyState("", "", "Aucun résultat", "Aucun élément ne correspond à « " + tab.Filter + " ».");
+        UI.EmptyState("", "", Strings.NoResults, Strings.NoItemMatches2 + tab.Filter + " ».");
 }

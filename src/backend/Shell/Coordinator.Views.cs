@@ -59,7 +59,7 @@ internal sealed partial class Coordinator
         Native.Raise(focus);
         PinWindow.EnsureAbove();
         dismissal.SetActive(true);
-        Store.Log(full ? "Ouverture · complète" : "Ouverture · accueil");
+        Store.Log(full ? "Open · full" : "Open · home");
     }
 
     internal void ShowHome()
@@ -119,7 +119,7 @@ internal sealed partial class Coordinator
         var active = full ? (Window?)Boards.FirstOrDefault(b => b.Model.Id == board) ?? toolbar : home;
         active.Activate();
         dismissal.SetActive(true);
-        Store.Log(full ? "Vue complète" : "Vue accueil");
+        Store.Log(full ? "Full view" : "Vue accueil");
     }
 
     internal void ToggleControls()
@@ -148,7 +148,7 @@ internal sealed partial class Coordinator
             Keyboard.Focus(controls.ContentHost);
         }
         dismissal.SetActive(true);
-        Store.Log(controlsExpanded ? "Commandes Windows ouvertes" : "Commandes Windows repliées");
+        Store.Log(controlsExpanded ? "Windows controls open" : "Windows controls collapsed");
     }
 
     internal void ControlsChanged() => controls.Rebuild();
@@ -185,7 +185,7 @@ internal sealed partial class Coordinator
             Keyboard.Focus(pc.ContentHost);
         }
         dismissal.SetActive(true);
-        Store.Log(pcExpanded ? "État PC ouvert" : "État PC replié");
+        Store.Log(pcExpanded ? "PC status open" : "PC status collapsed");
     }
 
     internal (long samples, bool running) PcActivity => (pc.Samples, pc.Sampling);
@@ -322,7 +322,7 @@ internal sealed partial class Coordinator
             if (leftArrow.ContentHost.Children[0] is Button leftButton)
             {
                 leftButton.Content = UI.Glyph(pcExpanded ? "\uE76C" : "\uE76B");
-                leftButton.ToolTip = pcExpanded ? "Replier l’état du PC" : "Afficher l’état du PC";
+                leftButton.ToolTip = pcExpanded ? Strings.CollapsePCStatus : Strings.ShowPCStatus;
                 System.Windows.Automation.AutomationProperties.SetName(leftButton, leftButton.ToolTip.ToString());
             }
             if (rightArrow.ContentHost.Children[0] is Button arrow)
@@ -461,7 +461,7 @@ internal sealed partial class Coordinator
         PinWindow.SpaceOpen(false, ToolbarHandle);
         awaySince = edgeSince = DateTime.MinValue;
         railAway = DateTime.UtcNow;
-        Store.Log("Repli immédiat · clic extérieur ou changement d’application");
+        Store.Log("Immediate collapse · outside click or application change");
     }
 
     void Tick()
@@ -476,7 +476,7 @@ internal sealed partial class Coordinator
             if (Program.QuitSignal.WaitOne(0))
             {
                 Store.Log(
-                    "QuitSignal reçu : arrêt demandé par un second processus --quit (voir la ligne 'Args' correspondante)"
+                    "QuitSignal received: stop requested by a second --quit process (see the matching 'Args' line)"
                 );
                 System.Windows.Application.Current.Shutdown();
                 return;
@@ -695,7 +695,7 @@ internal sealed partial class Coordinator
             encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
             using var stream = File.Create(Path.Combine(Store.Root, file));
             encoder.Save(stream);
-            Store.Log("Export aperçu · icônes=" + Icons.LoadedCount + " · génériques=" + Icons.Failures);
+            Store.Log("Preview export · icons=" + Icons.LoadedCount + " · generic=" + Icons.Failures);
         }
         catch (Exception ex)
         {

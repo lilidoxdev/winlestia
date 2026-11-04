@@ -103,7 +103,7 @@ internal sealed class ShellTaskbar : IDisposable
                 start.ArgumentList.Add(TaskbarNative.LeasePath);
             guard = Process.Start(start);
             if (guard == null || !ready.WaitOne(4000))
-                throw new InvalidOperationException("Le secours de la barre n’a pas démarré.");
+                throw new InvalidOperationException("The taskbar rescue did not start.");
             enabled = true;
             CreateBars();
             TaskbarNative.HideExplorer();
@@ -314,7 +314,7 @@ internal sealed class ShellDockWindow : Window
         owner = coordinator;
         manager = taskbar;
         screen = target;
-        Title = "Panneaux — barre des tâches";
+        Title = Strings.PanneauxTaskbar;
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
         ResizeMode = ResizeMode.NoResize;
@@ -374,7 +374,7 @@ internal sealed class ShellDockWindow : Window
             VerticalAlignment = VerticalAlignment.Center,
         };
         row.Children.Add(left);
-        left.Children.Add(Icon("windows", "Mes applications et mes récents", () => owner.ShowShellPage("access")));
+        left.Children.Add(Icon("windows", Strings.MyApplicationsAndRecents, () => owner.ShowShellPage("access")));
         left.Children.Add(Icon("search", "Rechercher · " + owner.PaletteLabel, owner.TogglePalette));
         var scroller = new ScrollViewer
         {
@@ -401,7 +401,7 @@ internal sealed class ShellDockWindow : Window
         Grid.SetColumn(right, 2);
         row.Children.Add(right);
         right.Children.Add(Icon("volume", "Son et commandes rapides", owner.ToggleControls));
-        right.Children.Add(Icon("wifi", "Réseau", () => owner.LaunchTarget("ms-settings:network-status")));
+        right.Children.Add(Icon("wifi", Strings.Network, () => owner.LaunchTarget("ms-settings:network-status")));
         right.Children.Add(
             Icon(
                 "bell",
@@ -586,7 +586,7 @@ internal sealed class ShellDockWindow : Window
         var data = TaskbarNative.Data(handle);
         data.Callback = message;
         if (TaskbarNative.SHAppBarMessage(0, ref data) == UIntPtr.Zero)
-            throw new InvalidOperationException("Windows a refusé la réservation du bord.");
+            throw new InvalidOperationException("Windows refused the edge reservation.");
         registered = true;
         Position();
     }

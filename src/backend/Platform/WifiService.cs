@@ -358,7 +358,7 @@ internal sealed class WifiHost : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Wi-Fi: réglages: " + ex.GetType().Name);
+            Store.Log("Wi-Fi: settings: " + ex.GetType().Name);
         }
     }
 

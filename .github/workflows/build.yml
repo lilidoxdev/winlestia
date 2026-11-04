@@ -23,7 +23,7 @@ jobs:
       - name: Run pure-logic tests
         shell: pwsh
         run: |
-          $tests = 'AppCatalogueWatch','AppNameNormalizer','AtomicFile','AudioBars','AutostartPolicy','BrightnessPolicy','CliCommands','DesktopReassert','FileSearch','FilesHandler','FilesPinMigration','FilesPreloadPolicy','FramePolicy','MediaIdentity','SecurityHardening','SocialPolicy','StoreRecovery','WifiPolicy'
+          $tests = 'AppCatalogueWatch','AppNameNormalizer','AtomicFile','AudioBars','AutostartPolicy','BrightnessPolicy','CliCommands','DesktopReassert','FileSearch','FilesHandler','FilesPinMigration','FilesPreloadPolicy','FramePolicy','MediaIdentity','SecurityHardening','SocialPolicy','StoreRecovery','StringsTable','WifiPolicy'
           $failed = @()
           foreach ($t in $tests) {
             dotnet run --project "tests/$t/$t.csproj" -c Release --nologo

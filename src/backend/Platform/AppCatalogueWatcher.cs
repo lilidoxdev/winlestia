@@ -45,7 +45,7 @@ internal sealed class AppCatalogueWatcher : IDisposable
                 string root = Environment.GetFolderPath(folder);
                 if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
                 {
-                    Store.Log("Veille du menu Démarrer : dossier absent (" + folder + ").");
+                    Store.Log("Start menu watcher: folder missing (" + folder + ").");
                     continue;
                 }
                 var watcher = new FileSystemWatcher(root)
@@ -68,7 +68,7 @@ internal sealed class AppCatalogueWatcher : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Veille du menu Démarrer : " + ex.Message);
+                Store.Log("Start menu watcher: " + ex.Message);
             }
         }
     }
@@ -76,7 +76,7 @@ internal sealed class AppCatalogueWatcher : IDisposable
     // Buffer overflow or lost folder: a full inventory covers whatever was missed, then the watcher is re-armed if it can be.
     void Failed(FileSystemWatcher watcher, Exception? error)
     {
-        Store.Log("Veille du menu Démarrer : " + (error?.Message ?? "erreur"));
+        Store.Log("Start menu watcher: " + (error?.Message ?? "error"));
         lock (gate)
         {
             if (!disposed)
@@ -94,7 +94,7 @@ internal sealed class AppCatalogueWatcher : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Veille du menu Démarrer arrêtée : " + ex.Message);
+            Store.Log("Start menu watcher stopped: " + ex.Message);
         }
     }
 
@@ -300,7 +300,7 @@ internal sealed class AppCatalogueWatcher : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Veille du menu Démarrer : " + ex.Message);
+            Store.Log("Start menu watcher: " + ex.Message);
             return null;
         }
     }

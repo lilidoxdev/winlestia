@@ -22,7 +22,7 @@ internal static class ColorTools
 
     internal static void OpenPicker(Coordinator owner)
     {
-        Store.Log("Pipette: ouverture demandée");
+        Store.Log("Eyedropper: open requested");
         if (picker != null)
         {
             picker.Activate();
@@ -32,7 +32,7 @@ internal static class ColorTools
         picker.Closed += (_, _) => picker = null;
         picker.Show();
         Native.Raise(picker);
-        Store.Log("Pipette: fenêtre affichée");
+        Store.Log("Eyedropper: window shown");
     }
 
     internal static void OpenRuler(Coordinator owner)
@@ -100,7 +100,7 @@ internal sealed class ColorPickerWindow : Window
         var heading = UI.Text("Pipette", 12, UI.White, true);
         heading.VerticalAlignment = VerticalAlignment.Center;
         head.Children.Add(heading);
-        var shut = UI.IconButton("\uE711", "Fermer la pipette", Close);
+        var shut = UI.IconButton("\uE711", Strings.CloseTheEyedropper, Close);
         shut.Width = 22;
         shut.Height = 22;
         shut.Padding = new Thickness(0);
@@ -368,7 +368,7 @@ internal sealed class ColorPickerWindow : Window
         Store.State.ColorHistory.Insert(0, value);
         Store.State.ColorHistory = Store.State.ColorHistory.Take(24).ToList();
         Store.Save();
-        owner.ShowToast(value + " copié");
+        owner.ShowToast(value + Strings.Copied);
         Close();
     }
 }
@@ -382,7 +382,7 @@ internal sealed class RulerOverlay : Window
         Stroke = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 226, 120)),
         StrokeThickness = 2,
     };
-    readonly TextBlock hint = UI.Text("Clique un premier point · Échap pour fermer", 12, UI.White);
+    readonly TextBlock hint = UI.Text(Strings.ClickAFirstPointEscTo, 12, UI.White);
     bool started,
         finished;
     System.Windows.Point origin,
@@ -437,7 +437,7 @@ internal sealed class RulerOverlay : Window
             {
                 finished = true;
                 corner = point;
-                hint.Text = "Mesure terminée · Échap pour fermer";
+                hint.Text = Strings.MeasurementDoneEscToClose;
             }
             Update(point);
         };
@@ -450,7 +450,7 @@ internal sealed class RulerOverlay : Window
         {
             started = finished = false;
             line.Visibility = Visibility.Collapsed;
-            hint.Text = "Clique un premier point · Échap pour fermer";
+            hint.Text = Strings.ClickAFirstPointEscTo;
             var box = canvas.Children.OfType<Border>().FirstOrDefault(b => b.Name == "box");
             if (box != null)
                 box.Visibility = Visibility.Collapsed;

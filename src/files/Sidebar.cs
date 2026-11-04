@@ -76,14 +76,14 @@ internal sealed class Sidebar
         try
         {
             var (places, drives) = await Task.Run(Gather);
-            host.Children.Add(Header("Accès rapide", false));
+            host.Children.Add(Header(Strings.QuickAccess, false));
             foreach (var p in places)
                 host.Children.Add(Add(p.Path, p.Label, null, p.Material, p.Fluent));
-            host.Children.Add(Header("Lecteurs", true));
+            host.Children.Add(Header(Strings.Drives, true));
             foreach (var d in drives)
             {
-                string sub = d.Total > 0 ? $"{Size(d.Free)} libres sur {Size(d.Total)}" : "";
-                string name = (d.Label.Length > 0 ? d.Label : "Disque local") + " (" + d.Root.TrimEnd('\\') + ")";
+                string sub = d.Total > 0 ? Strings.FreeOf(Size(d.Free), Size(d.Total)) : "";
+                string name = (d.Label.Length > 0 ? d.Label : Strings.LocalDisk) + " (" + d.Root.TrimEnd('\\') + ")";
                 host.Children.Add(Add(d.Root, name, sub, "", ""));
             }
             Highlight(current);
@@ -102,12 +102,27 @@ internal sealed class Sidebar
             if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
                 places.Add(new Place(label, path, material, fluent));
         }
-        Known("Bureau", Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "", "");
-        Known("Documents", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "", "");
-        Known("Téléchargements", DownloadsPath(), "", "");
-        Known("Images", Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "", "");
-        Known("Musique", Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "", "");
-        Known("Vidéos", Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "", "");
+        Known(
+            Strings.KnownFolder("Desktop"),
+            Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+            "",
+            ""
+        );
+        Known(
+            Strings.KnownFolder("Documents"),
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "",
+            ""
+        );
+        Known(Strings.KnownFolder("Downloads"), DownloadsPath(), "", "");
+        Known(
+            Strings.KnownFolder("Pictures"),
+            Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
+            "",
+            ""
+        );
+        Known(Strings.KnownFolder("Music"), Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "", "");
+        Known(Strings.KnownFolder("Videos"), Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "", "");
         var drives = new List<Drive>();
         foreach (var d in DriveInfo.GetDrives())
         {

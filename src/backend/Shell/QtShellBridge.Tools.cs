@@ -97,14 +97,14 @@ internal sealed partial class QtShellBridge
             if (Text(args, "action") == "pin")
             {
                 PinWindow.Open(owner, image);
-                return "Capture épinglée";
+                return Strings.CapturePinned;
             }
             string text = await OcrService.RecognizeAsync(image);
             if (!string.IsNullOrWhiteSpace(text))
             {
                 System.Windows.Clipboard.SetText(text);
                 Send("clipboard");
-                return "Texte copié dans le presse-papiers";
+                return Strings.TextCopiedToTheClipboard;
             }
             Send("capture");
             return "Aucun texte lisible dans cette zone";

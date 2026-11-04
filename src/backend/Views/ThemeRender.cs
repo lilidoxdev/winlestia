@@ -27,7 +27,7 @@ internal static class ThemeRender
             if (index >= 0 && index < ids.Count)
             {
                 coordinator.ExportPreview("render-" + ids[index] + ".png");
-                Store.Log("Rendu hors écran · " + ids[index]);
+                Store.Log("Off-screen render · " + ids[index]);
             }
             index++;
             if (index >= ids.Count)
@@ -49,7 +49,7 @@ internal static class ThemeRender
         {
             timer.Stop();
             coordinator.ExportPreview("render-palette.png");
-            Store.Log("Rendu hors écran · palette");
+            Store.Log("Off-screen render · palette");
             Application.Current.Shutdown();
         };
         timer.Start();

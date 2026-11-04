@@ -253,7 +253,7 @@ internal sealed class SocialService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Social démarrage: " + ex.Message);
+            Store.Log("Social startup: " + ex.Message);
         }
     }
 
@@ -312,7 +312,7 @@ internal sealed class SocialService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Social ouverture: " + ex.Message);
+            Store.Log("Social open: " + ex.Message);
         }
     }
 
@@ -383,7 +383,7 @@ internal sealed class SocialService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Social déconnexion: " + ex.Message);
+            Store.Log("Social disconnect: " + ex.Message);
         }
         n.U.Reset();
         SetConnected(n, false);
@@ -522,7 +522,7 @@ internal sealed class SocialService : IDisposable
                 n.HiddenSince = DateTime.UtcNow;
             if (!slowTimer.IsEnabled)
                 slowTimer.Start();
-            Store.Log("Social WebView2 créé · raison=" + reason + " · réseau=" + n.Id);
+            Store.Log("Social WebView2 created · reason=" + reason + " · network=" + n.Id);
             if (navigate)
                 n.Wv.Navigate(n.Url);
         }
@@ -650,7 +650,7 @@ internal sealed class SocialService : IDisposable
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
-        Store.Log("Social environnement WebView2 libéré");
+        Store.Log("Social WebView2 environment released");
     }
 
     // Ferme la vue et sa fenêtre (désabonne tout, libère le contrôleur). Le profil sur disque reste sauf déconnexion.
@@ -1145,7 +1145,7 @@ internal sealed class SocialService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Social détection " + n.Id + ": " + ex.Message);
+            Store.Log("Social detection " + n.Id + ": " + ex.Message);
         }
     }
 
@@ -1174,7 +1174,7 @@ internal sealed class SocialService : IDisposable
             {
                 n.Wanted = false;
                 CloseView(n);
-                Store.Log("Social WebView2 libéré · réseau=" + n.Id);
+                Store.Log("Social WebView2 released · network=" + n.Id);
                 n.Count = 0;
                 countsDirty = true;
                 Changed();
@@ -1209,7 +1209,7 @@ internal sealed class SocialService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Social mémoire: " + ex.Message);
+            Store.Log("Social memory: " + ex.Message);
         }
     }
 
@@ -1308,9 +1308,9 @@ internal sealed class SocialService : IDisposable
                 nextSeq = Math.Max(Math.Max(1, data.NextSeq), history.Select(h => h.Seq).DefaultIfEmpty(0).Max() + 1);
             }
             Store.Log(
-                "Social historique chargé : "
+                "Social history loaded: "
                     + history.Count
-                    + " entrée(s), prochain seq "
+                    + " entry(ies), next seq "
                     + nextSeq
                     + (data.History == null ? " (fichier sans historique)" : "")
             );
@@ -1366,7 +1366,7 @@ internal sealed class SocialService : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Social écriture: " + ex.Message);
+                Store.Log("Social write: " + ex.Message);
             }
         }
     }
@@ -1389,7 +1389,7 @@ internal sealed class SocialService : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Social écriture finale: " + ex.Message);
+                Store.Log("Social final write: " + ex.Message);
             }
         }
         environment = null;

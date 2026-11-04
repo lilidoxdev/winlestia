@@ -440,7 +440,7 @@ internal sealed partial class QtShellBridge
             CatalogueWatchRules.IsPseudoPath(path)
             && action is "open" or "admin" or "pin" or "favorite" or "reveal" or "stop"
         )
-            return "Cette fenêtre n’a pas de programme lançable.";
+            return Strings.ThisWindowHasNoLaunchableProgram;
         switch (action)
         {
             case "reorder":
@@ -478,12 +478,12 @@ internal sealed partial class QtShellBridge
                 break;
             case "close":
                 if (selected != null && !PostMessageW(selected.Handle, 0x10, IntPtr.Zero, IntPtr.Zero))
-                    return "Windows a refusé la fermeture de cette fenêtre.";
+                    return Strings.WindowsRefusedToCloseThisWindow;
                 break;
             case "closeAll":
                 foreach (var window in matches)
                     if (!PostMessageW(window.Handle, 0x10, IntPtr.Zero, IntPtr.Zero))
-                        return "Certaines fenêtres n’ont pas pu être fermées.";
+                        return Strings.SomeWindowsCouldNotBeClosed;
                 break;
             case "pin":
                 var pin = PersistDockEntry(entry);
@@ -513,7 +513,7 @@ internal sealed partial class QtShellBridge
                 break;
             case "stop":
                 if (!Flag(args, "confirmed") || !CanStop(path))
-                    return "Arrêt refusé pour ce processus.";
+                    return Strings.StopRefusedForThisProcess;
                 int session = Process.GetCurrentProcess().SessionId;
                 foreach (var p in Process.GetProcesses())
                     using (p)

@@ -92,7 +92,7 @@ internal sealed class PanelInteraction
         window = panel;
         owner = coordinator;
         var move = Make("move", Cursors.SizeAll);
-        move.ToolTip = "Glisser pour déplacer ce panneau";
+        move.ToolTip = Strings.DragToMoveThisPanel;
         header.Children.Add(move);
         foreach (string edge in new[] { "n", "s", "e", "w", "nw", "ne", "sw", "se" })
         {
@@ -150,7 +150,7 @@ internal sealed class PanelInteraction
         t.Template = new ControlTemplate(typeof(Thumb)) { VisualTree = factory };
         System.Windows.Automation.AutomationProperties.SetName(
             t,
-            edge == "move" ? "Déplacer " + window.Model.Title : "Redimensionner " + window.Model.Title + " " + edge
+            edge == "move" ? Strings.Move + window.Model.Title : "Redimensionner " + window.Model.Title + " " + edge
         );
         t.DragStarted += (_, _) =>
         {

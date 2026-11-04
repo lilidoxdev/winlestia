@@ -438,15 +438,15 @@ internal static class Native
                         if (AutostartPolicy.DropRunAfter(AutostartTask.Create()))
                         {
                             DropRun();
-                            Store.Log("Démarrage migré de la clé Run vers la tâche WinlestiaShell.");
+                            Store.Log("Startup migrated from the Run key to the WinlestiaShell task.");
                         }
                         else
-                            Store.Log("Démarrage: clé Run conservée (tâche indisponible).");
+                            Store.Log("Startup: Run key kept (task unavailable).");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Store.Log("Migration du démarrage: " + ex.Message);
+                    Store.Log("Startup migration: " + ex.Message);
                 }
             }
         });
@@ -468,7 +468,7 @@ internal static class Native
                             DropRun();
                         else
                         {
-                            Store.Log("Démarrage: tâche indisponible, repli sur la clé Run.");
+                            Store.Log("Startup: task unavailable, falling back to the Run key.");
                             using var key = Registry.CurrentUser.CreateSubKey(
                                 @"Software\Microsoft\Windows\CurrentVersion\Run"
                             );
@@ -483,7 +483,7 @@ internal static class Native
                 }
                 catch (Exception ex)
                 {
-                    Store.Log("Démarrage: " + ex.Message);
+                    Store.Log("Startup: " + ex.Message);
                 }
                 finally
                 {
@@ -503,7 +503,7 @@ internal static class Native
     {
         string helper = Path.Combine(Store.Root, "SECOURS_BUREAU.exe");
         if (!File.Exists(helper))
-            throw new FileNotFoundException("Le composant natif du Bureau est absent.");
+            throw new FileNotFoundException(Strings.DesktopComponentMissing);
         using var process = System.Diagnostics.Process.Start(
             new System.Diagnostics.ProcessStartInfo(helper, hidden ? "--hide --silent" : "--show-only --silent")
             {
@@ -512,9 +512,9 @@ internal static class Native
             }
         );
         if (process == null || !process.WaitForExit(3000) || process.ExitCode != 0)
-            throw new InvalidOperationException("Le Bureau Windows n’a pas appliqué le réglage.");
+            throw new InvalidOperationException(Strings.DesktopSettingNotApplied);
         if (DesktopHidden() != hidden)
-            throw new InvalidOperationException("Le Bureau Windows n’a pas retenu le réglage.");
+            throw new InvalidOperationException(Strings.DesktopSettingNotKept);
     }
 }
 
@@ -673,7 +673,7 @@ internal sealed class IconLoader : IDisposable
         placeholders.Add(plate, new object());
         failed[key] = (DateTime.UtcNow, count + 1, plate, entry, SourceStamp(entry));
         if (logged.TryAdd(key, 0))
-            Store.Log("Icône de secours: " + entry.Name);
+            Store.Log("Fallback icon: " + entry.Name);
         return plate;
     }
 
@@ -775,7 +775,7 @@ internal sealed class IconLoader : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Icône " + path + ": " + ex.Message);
+                Store.Log("Icon " + path + ": " + ex.Message);
             }
         }
         return null;

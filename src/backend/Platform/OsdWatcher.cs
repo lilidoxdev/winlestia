@@ -166,7 +166,7 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
         catch (Exception ex)
         {
             brightnessWatcher = null;
-            Store.Log("OSD: luminosité WMI indisponible: " + ex.Message);
+            Store.Log("OSD: WMI brightness unavailable: " + ex.Message);
         }
     }
 

@@ -107,7 +107,7 @@ internal sealed class DesktopIconsGuard : IDisposable
         uint pid = 0;
         if (shell == IntPtr.Zero || GetWindowThreadProcessId(shell, out pid) == 0 || pid == 0)
         {
-            Store.Log("Surveillance du Bureau: Explorateur pas prêt.");
+            Store.Log("Desktop watcher: Explorer not ready.");
             return false;
         }
         using var ready = new ManualResetEventSlim(false);
@@ -161,7 +161,7 @@ internal sealed class DesktopIconsGuard : IDisposable
             active = true;
             policy.Reset();
         }
-        Store.Log("Surveillance du Bureau installée (Explorateur pid " + pid + ").");
+        Store.Log("Desktop watcher installed (Explorer pid " + pid + ").");
         return true;
     }
 
@@ -244,7 +244,7 @@ internal sealed class DesktopIconsGuard : IDisposable
             if (!intent && !DesktopReassertPolicy.StillWanted(Native.DesktopHidden() ? 1 : 0))
             {
                 gaveUp = true;
-                Store.Log("Icônes du Bureau rétablies par ailleurs : surveillance retirée.");
+                Store.Log("Desktop icons restored elsewhere: watcher removed.");
                 relinquished();
                 Uninstall();
                 return;
@@ -253,12 +253,12 @@ internal sealed class DesktopIconsGuard : IDisposable
             lock (gate)
                 forced = false;
             if (logged++ < 20)
-                Store.Log("Icônes du Bureau réaffirmées (Explorateur).");
+                Store.Log("Desktop icons re-asserted (Explorer).");
         }
         catch (Exception ex)
         {
             if (logged++ < 20)
-                Store.Log("Réaffirmation du Bureau: " + ex.Message);
+                Store.Log("Desktop re-assert: " + ex.Message);
         }
         finally
         {

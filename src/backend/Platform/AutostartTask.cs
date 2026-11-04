@@ -44,7 +44,7 @@ internal static class AutostartTask
                     process.Kill();
                 }
                 catch { }
-                text = "délai dépassé";
+                text = "timed out";
                 return -1;
             }
             text = (output.Result + " " + error.Result).Trim();
@@ -71,7 +71,7 @@ internal static class AutostartTask
             string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             if (string.IsNullOrEmpty(local))
             {
-                Store.Log("Tâche de démarrage: dossier LocalApplicationData introuvable.");
+                Store.Log("Startup task: LocalApplicationData folder not found.");
                 return false;
             }
             xml = AutostartPolicy.PrivateTaskFile(local);
@@ -85,16 +85,16 @@ internal static class AutostartTask
             int code = Run("/create /tn " + AutostartPolicy.TaskName + " /xml \"" + xml + "\" /f", out var text);
             if (code != 0)
             {
-                Store.Log("Tâche de démarrage non créée (code " + code + "): " + text);
+                Store.Log("Startup task not created (code " + code + "): " + text);
                 return false;
             }
             Volatile.Write(ref state, 1);
-            Store.Log("Tâche de démarrage WinlestiaShell créée.");
+            Store.Log("WinlestiaShell startup task created.");
             return true;
         }
         catch (Exception ex)
         {
-            Store.Log("Tâche de démarrage: " + ex.Message);
+            Store.Log("Startup task: " + ex.Message);
             return false;
         }
         finally

@@ -34,7 +34,7 @@ static class ShellProbe
     internal static D.Color Sample(string folder)
     {
         var psi = new System.Diagnostics.ProcessStartInfo(
-            Path.ChangeExtension(typeof(PanneauxGlass.Entry).Assembly.Location, null) == null
+            Path.ChangeExtension(typeof(PanneauxGlass.Storage.Entry).Assembly.Location, null) == null
                 ? ""
                 : System.IO.Path.Combine(AppContext.BaseDirectory, "FolderIcons.exe"),
             "sample \"" + folder + "\""
@@ -82,7 +82,7 @@ static class ShellProbe
 
     static void Draw(string path, string hex)
     {
-        var t = typeof(PanneauxGlass.Entry).Assembly.GetType("PanneauxGlass.Explorer.ExplorerAppearance")!;
+        var t = typeof(PanneauxGlass.Storage.Entry).Assembly.GetType("PanneauxGlass.Explorer.ExplorerAppearance")!;
         string tmp = path + ".tmp";
         t.GetMethod("DrawIcon", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
             .Invoke(null, new object[] { tmp, hex, "folder" });

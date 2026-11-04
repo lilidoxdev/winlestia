@@ -171,7 +171,7 @@ internal sealed partial class ExplorerAppearance
                         }
                         catch (Exception ex)
                         {
-                            Store.Log("Migration icônes: " + ex.Message);
+                            Store.Log("Icon migration: " + ex.Message);
                         }
                     });
                 }
@@ -179,7 +179,7 @@ internal sealed partial class ExplorerAppearance
         }
         catch (Exception ex)
         {
-            Store.Log("Icônes dossier: " + ex.Message);
+            Store.Log("Folder icons: " + ex.Message);
         }
     }
 
@@ -197,7 +197,7 @@ internal sealed partial class ExplorerAppearance
         }
         catch (Exception ex)
         {
-            Store.Log("Icônes dossier régénération: " + ex.Message);
+            Store.Log("Folder icons regeneration: " + ex.Message);
             if (!disposed && ++iconRetry <= 3)
                 lock (iconGate)
                     iconTimer?.Change(5000, Timeout.Infinite);
@@ -288,7 +288,7 @@ internal sealed partial class ExplorerAppearance
                     catch (Exception ex)
                     {
                         failed++;
-                        Store.Log("Migration icône ignorée: " + folder + ": " + ex.Message);
+                        Store.Log("Icon migration skipped: " + folder + ": " + ex.Message);
                     }
                 }
                 if (dirty)
@@ -354,7 +354,7 @@ internal sealed partial class ExplorerAppearance
         }
         catch (Exception ex)
         {
-            Store.Log("Nettoyage icônes: " + ex.Message);
+            Store.Log("Icon cleanup: " + ex.Message);
         }
         return removed;
     }
@@ -391,7 +391,7 @@ internal sealed partial class ExplorerAppearance
         }
         catch (Exception ex)
         {
-            Store.Log("Dossier affiché: " + ex.Message);
+            Store.Log("Folder shown: " + ex.Message);
         }
     }
 

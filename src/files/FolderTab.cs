@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using PanneauxGlass.Views;
 
 namespace WinlestiaFiles;
 
@@ -447,7 +448,7 @@ internal sealed class FolderTab
                     {
                         if (parent != null)
                         {
-                            Notice?.Invoke(this, "Dossier supprimé ou renommé : retour au dossier parent");
+                            Notice?.Invoke(this, Strings.FolderDeletedOrRenamedBackTo);
                             Go(parent);
                         }
                         else

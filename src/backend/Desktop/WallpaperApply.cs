@@ -43,7 +43,7 @@ internal static class WallpaperApply
             }
             catch (Exception ex)
             {
-                Store.Log("Fond d’écran: " + ex.Message);
+                Store.Log("Wallpaper: " + ex.Message);
             }
         })
         {
@@ -173,13 +173,13 @@ internal static class WallpaperApply
             out bool expired
         );
         if (expired)
-            return (1, "Windows n’a pas répondu.");
+            return (1, Strings.WindowsDidNotRespond);
         if (code == 0)
             return (0, "ok");
         if (code == 2)
             return (2, "Display not found (see 'winlestia wallpaper list').");
         if (code == 3)
-            return (1, "Windows n’a pas répondu.");
+            return (1, Strings.WindowsDidNotRespond);
         if (display <= 0 && SystemParametersInfo(0x14, 0, path, 3))
             return (0, "ok"); // COM unavailable: keep the former behaviour
         return (1, "Windows refused the wallpaper.");

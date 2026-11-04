@@ -91,12 +91,12 @@ internal sealed class LargeFilesWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", "Fermer", Close);
+        var close = UI.IconButton("\uE711", Strings.Close, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
         titles.Children.Add(UI.Text("Ce qui remplit le disque.", 25, null, true));
-        var sub = UI.Text("Les fichiers de plus de 200 Mo, classés du plus lourd au plus léger", 11, UI.Dim);
+        var sub = UI.Text(Strings.FilesOver200MBFromLargest, 11, UI.Dim);
         sub.Margin = new Thickness(0, 6, 0, 0);
         titles.Children.Add(sub);
         header.Children.Add(titles);
@@ -116,7 +116,7 @@ internal sealed class LargeFilesWindow : GlassWindow
             "",
             "",
             "Aucun dossier choisi",
-            "Choisis un dossier pour voir ses fichiers de plus de 200 Mo, du plus lourd au plus léger.",
+            Strings.ChooseAFolderToSeeIts,
             "Choisir un dossier…",
             Choose
         );
@@ -130,11 +130,7 @@ internal sealed class LargeFilesWindow : GlassWindow
         };
         Grid.SetRow(scroll, 2);
         ContentHost.Children.Add(scroll);
-        var note = UI.Text(
-            "Rien n’est supprimé depuis Panneaux : chaque ligne ouvre l’Explorateur sur le fichier.",
-            10,
-            UI.Dim
-        );
+        var note = UI.Text(Strings.NothingIsDeletedFromPanneauxEach, 10, UI.Dim);
         note.TextWrapping = TextWrapping.Wrap;
         Grid.SetRow(note, 3);
         ContentHost.Children.Add(note);
@@ -151,7 +147,7 @@ internal sealed class LargeFilesWindow : GlassWindow
     {
         using var picker = new System.Windows.Forms.FolderBrowserDialog
         {
-            Description = "Choisir le dossier à analyser",
+            Description = Strings.ChooseTheFolderToAnalyze,
             UseDescriptionForTitle = true,
             ShowNewFolderButton = false,
         };
@@ -204,7 +200,7 @@ internal sealed class LargeFilesWindow : GlassWindow
         }
         catch (OperationCanceledException)
         {
-            status.Text = "Analyse annulée";
+            status.Text = Strings.AnalysisCancelled;
         }
         catch (Exception ex)
         {

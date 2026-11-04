@@ -38,7 +38,7 @@ internal static class Verification
             }
             Check(rejected, "Refus du protocole ou des identifiants : " + invalid.Split(':')[0]);
         }
-        Check(WebIcons.Parse("github.com").AbsoluteUri == "https://github.com/", "HTTPS ajouté aux adresses courtes");
+        Check(WebIcons.Parse("github.com").AbsoluteUri == "https://github.com/", "HTTPS added to short addresses");
         foreach (string address in new[] { "https://mail.google.com", "https://github.com" })
         {
             var result = Task.Run(() => WebIcons.Resolve(WebIcons.Parse(address), CancellationToken.None))
@@ -68,13 +68,13 @@ internal static class Verification
         try
         {
             var fixture = Task.Run(WebFixture.Run).GetAwaiter().GetResult();
-            Check(fixture.discovered, "Découverte HTML, titre et icône relative sur un site de test local");
-            Check(fixture.offline, "Site indisponible : création automatique du PNG de secours");
+            Check(fixture.discovered, "HTML discovery, title and relative icon on a local test site");
+            Check(fixture.offline, "Site unavailable: automatic fallback PNG creation");
         }
         catch (Exception ex)
         {
             Store.Log("Fixture web: " + ex);
-            Check(false, "Découverte et secours hors ligne");
+            Check(false, "Discovery and offline fallback");
         }
         var input = new Preferences
         {
@@ -101,7 +101,7 @@ internal static class Verification
         input.Normalize();
         Check(
             input.Websites != null && input.LauncherTools != null,
-            "Migration des préférences antérieures aux deux bandes"
+            "Migration of preferences predating the two bands"
         );
         File.WriteAllText(
             Path.Combine(Store.Root, "verification-web.json"),
@@ -145,7 +145,7 @@ internal static class Verification
         Check(entries.Any(e => e.Name == "Canada" && Store.BoardFor(e) == "documents"), "Canada est dans Documents");
         Check(
             entries.Any(e => e.Name == "Cheats et scripts" && Store.BoardFor(e) == "projects"),
-            "Les projets sont classés"
+            "Projects are sorted"
         );
         string[] games =
         {
@@ -163,7 +163,7 @@ internal static class Verification
                 && installedGames.All(e =>
                     File.Exists(e.IconPath) && Path.GetExtension(e.IconPath).ToLowerInvariant() is ".png" or ".ico"
                 ),
-            "Logos des jeux présents extraits des ressources installées"
+            "Logos of installed games extracted from installed resources"
         );
         Check(
             Store
@@ -192,7 +192,7 @@ internal static class Verification
         invalid.Normalize();
         Check(
             invalid.Tint == .2 && invalid.IconSize == 80 && invalid.Boards.Count == 4,
-            "Paramètres invalides bornés et récupérés"
+            "Invalid settings bounded and recovered"
         );
         Check(
             Calculator.TryEvaluate("12*7", out double product) && Math.Abs(product - 84) < 1e-9,
@@ -203,15 +203,15 @@ internal static class Verification
                 && Math.Abs(share - 6) < 1e-9
                 && Calculator.TryEvaluate("2 400 / 60", out double minutes)
                 && Math.Abs(minutes - 40) < 1e-9,
-            "Priorités, parenthèses et espaces du calcul"
+            "Priorities, parentheses and spaces in the calculation"
         );
         Check(
             !Calculator.TryEvaluate("chrome", out _) && !Calculator.TryEvaluate("https://github.com", out _),
-            "Une recherche ordinaire n’est jamais évaluée"
+            "An ordinary search is never evaluated"
         );
         var palette = CommandPalette.Match("chrome", 8);
         Check(palette.Any(e => e.Name == "Google Chrome"), "Palette : la recherche retrouve Chrome");
-        Check(CommandPalette.Match("", 5).Count() == 5, "Palette : la liste vide reste bornée");
+        Check(CommandPalette.Match("", 5).Count() == 5, "Palette: the empty list stays bounded");
         Check(
             ClockWindow.Greeting(new DateTime(2026, 10, 24, 22, 0, 0)).Contains("Bonsoir")
                 && ClockWindow.Greeting(new DateTime(2026, 10, 24, 9, 0, 0)).Contains("Bonjour"),
@@ -223,25 +223,25 @@ internal static class Verification
             reader.Read(header, 0, 4);
         Check(
             System.Text.Encoding.ASCII.GetString(header) == "RIFF" && new FileInfo(alarm).Length > 40000,
-            "Sonnerie de fin : WAV PCM local généré"
+            "End chime: local PCM WAV generated"
         );
         var themed = new Preferences { Theme = "sakura" };
         themed.Normalize();
-        Check(themed.Theme == "sakura", "Le thème choisi survit à la normalisation");
+        Check(themed.Theme == "sakura", "The chosen theme survives normalization");
         var broken = new Preferences { Theme = "inexistant" };
         broken.Normalize();
-        Check(broken.Theme == "nuit", "Un thème inconnu revient à Nuit boréale à l’ouverture");
+        Check(broken.Theme == "nuit", "An unknown theme reverts to Nuit boréale on opening");
         Check(
             FocusTimer.DurationText(3600) == "1 h 00 min"
                 && FocusTimer.DurationText(90) == "1 min 30 s"
                 && FocusTimer.DurationText(25) == "25 s",
-            "Durées libres lisibles en heures, minutes et secondes"
+            "Free durations readable in hours, minutes and seconds"
         );
         var noteState = JsonSerializer.Deserialize<Preferences>(
             JsonSerializer.Serialize(new Preferences { Scratch = "ligne 1\nligne 2" }, Store.Json),
             Store.Json
         )!;
-        Check(noteState.Scratch == "ligne 1\nligne 2", "La note rapide survit à l’enregistrement JSON");
+        Check(noteState.Scratch == "ligne 1\nligne 2", "The quick note survives JSON saving");
         string rescue = Path.Combine(Store.Root, "SECOURS_BUREAU.exe"),
             copy = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SECOURS_BUREAU.exe");
         Check(File.Exists(rescue) && File.Exists(copy), "Deux copies du secours sont disponibles");
@@ -255,12 +255,9 @@ internal static class Verification
             reader.BaseStream.Position = 0x3c;
             int pe = reader.ReadInt32();
             reader.BaseStream.Position = pe + 24 + 112 + 14 * 8;
-            Check(reader.ReadUInt32() == 0, "Secours natif indépendant du runtime .NET");
+            Check(reader.ReadUInt32() == 0, "Native rescue independent of the .NET runtime");
         }
-        Check(
-            File.Exists(Path.Combine(Store.Root, "bureau-avant-glass.tsv")),
-            "Sauvegarde originale des positions conservée"
-        );
+        Check(File.Exists(Path.Combine(Store.Root, "bureau-avant-glass.tsv")), "Original backup of positions kept");
         var report = new
         {
             At = DateTimeOffset.Now,

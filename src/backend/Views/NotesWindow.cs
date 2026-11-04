@@ -29,12 +29,12 @@ internal sealed class NotesWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel { Margin = new Thickness(0, 0, 0, 18) };
-        var close = UI.IconButton("\uE711", "Fermer la note", Close);
+        var close = UI.IconButton("\uE711", Strings.CloseTheNote, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
         titles.Children.Add(UI.Text("Ta note rapide.", 26, null, true));
-        var sub = UI.Text("Tout ce qui ne mérite pas un fichier · enregistré automatiquement", 12, UI.Dim);
+        var sub = UI.Text(Strings.EverythingThatDoesNotDeserveA, 12, UI.Dim);
         sub.Margin = new Thickness(0, 7, 0, 0);
         titles.Children.Add(sub);
         header.Children.Add(titles);
@@ -82,7 +82,7 @@ internal sealed class NotesWindow : GlassWindow
                 return;
             save.Stop();
             save.Start();
-            status.Text = "Modifié …";
+            status.Text = Strings.Modified;
         };
         editor.PreviewKeyDown += (_, e) =>
         {
@@ -96,7 +96,7 @@ internal sealed class NotesWindow : GlassWindow
         {
             editor.Focus();
             editor.CaretIndex = editor.Text.Length;
-            status.Text = editor.Text.Length == 0 ? "Une idée, une commande, un lien : tout reste ici." : "Enregistré";
+            status.Text = editor.Text.Length == 0 ? Strings.AnIdeaACommandALink : Strings.Saved;
         };
         Closed += (_, _) =>
         {
@@ -113,7 +113,7 @@ internal sealed class NotesWindow : GlassWindow
                 return;
             Store.State.Scratch = editor.Text;
             Store.Save();
-            status.Text = "Enregistré à " + DateTime.Now.ToString("HH:mm");
+            status.Text = Strings.SavedAt + DateTime.Now.ToString("HH:mm");
         }
         catch (Exception ex)
         {
@@ -129,6 +129,6 @@ internal sealed class NotesWindow : GlassWindow
             return;
         editor.Text = "";
         Persist();
-        status.Text = "Note effacée";
+        status.Text = Strings.NoteCleared;
     }
 }

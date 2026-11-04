@@ -172,11 +172,11 @@ internal sealed partial class QtShellBridge : IDisposable
         System.Windows.Application.Current?.Dispatcher.Invoke(() =>
         {
             System.Windows.MessageBox.Show(
-                "Winlestia n'a pas pu démarrer son interface.\n\n"
-                    + "Le détail de l'incident est dans :\n"
+                Strings.WinlestiaCouldNotStartItsInterface
+                    + Strings.TheIncidentDetailsAreIn
                     + FrontendLog
                     + "\n\n"
-                    + "La barre des tâches Windows a été rétablie. Réinstalle Winlestia si cela se reproduit.",
+                    + Strings.TheWindowsTaskbarHasBeenRestored,
                 "Winlestia",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Error
@@ -262,9 +262,9 @@ internal sealed partial class QtShellBridge : IDisposable
             start.ArgumentList.Add("--verify");
         else if (Program.QtReview)
             start.ArgumentList.Add("--preview");
-        frontend = Process.Start(start) ?? throw new InvalidOperationException("Le moteur Qt n'a pas pu être lancé.");
+        frontend = Process.Start(start) ?? throw new InvalidOperationException("The Qt engine could not be launched.");
         Store.Log(
-            "Frontend lancé · t+"
+            "Frontend launched · t+"
                 + (int)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds
                 + " ms"
         );
@@ -284,11 +284,7 @@ internal sealed partial class QtShellBridge : IDisposable
                         if (disposed)
                             return;
                         bool crashed = !active && (DateTime.UtcNow - launched).TotalSeconds < 10;
-                        Store.Log(
-                            crashed
-                                ? "Le moteur Qt n'a pas démarré. La barre Windows est rétablie."
-                                : "Le moteur Qt s'est arrêté. La barre Windows est rétablie."
-                        );
+                        Store.Log(crashed ? Strings.TheQtEngineDidNotStart : Strings.TheQtEngineStoppedTheWindows);
                         dockPreview.Close();
                         tiler.SetEnabled(false);
                         frame.Disable();

@@ -32,22 +32,22 @@ internal sealed class ToolsWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", "Fermer l’atelier", Close);
+        var close = UI.IconButton("\uE711", Strings.CloseTheWorkshop, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
         titles.Children.Add(UI.Text("L’atelier.", 27, null, true));
-        var sub = UI.Text("Les gestes utiles du quotidien, réunis au même endroit", 12, UI.Dim);
+        var sub = UI.Text(Strings.TheUsefulEverydayGesturesGatheredIn, 12, UI.Dim);
         sub.Margin = new Thickness(0, 7, 0, 0);
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
         var chips = new WrapPanel { Margin = new Thickness(0, 16, 0, 14) };
-        foreach (string category in new[] { "Tout", "Écran", "Système", "Fichiers", "Confort" })
+        foreach (string category in new[] { "Tout", Strings.Screen, "Système", "Fichiers", "Confort" })
         {
             string local = category;
             var chip = UI.Button(
-                category,
+                Strings.CategoryLabel(category),
                 () =>
                 {
                     filter = local;
@@ -89,34 +89,34 @@ internal sealed class ToolsWindow : GlassWindow
         new List<ToolCard>
         {
             new(
-                "Écran",
+                Strings.Screen,
                 "\uE722",
                 "Capturer et annoter",
-                "Encadre une zone, dessine dessus, copie ou épingle",
+                Strings.FrameAnAreaDrawOnIt,
                 "",
                 () => owner.OpenCapture()
             ),
             new(
-                "Écran",
+                Strings.Screen,
                 "\uE8A5",
                 "Texte d’une image",
-                "Encadre un texte, il est copié automatiquement",
+                Strings.FrameATextItIsCopied2,
                 "",
                 () => owner.OpenCapture(textOnly: true)
             ),
             new(
-                "Écran",
+                Strings.Screen,
                 "\uE790",
                 "Pipette de couleur",
-                "Agrandit sous le curseur et copie le code hexadécimal",
+                Strings.MagnifiesUnderTheCursorAndCopies,
                 "",
                 () => owner.OpenColorPicker()
             ),
             new(
-                "Écran",
+                Strings.Screen,
                 "\uE7A3",
-                "Règle pixel",
-                "Mesure une distance à l’écran, en pixels et en centimètres",
+                Strings.PixelRuler,
+                Strings.MeasuresADistanceOnScreenIn,
                 "",
                 () => owner.OpenRuler()
             ),
@@ -124,7 +124,7 @@ internal sealed class ToolsWindow : GlassWindow
                 "Système",
                 "\uE840",
                 "Toujours au premier plan",
-                "Une fenêtre reste devant toutes les autres",
+                Strings.AWindowStaysInFrontOf,
                 owner.PinShortcutLabel,
                 () => owner.ToggleAlwaysOnTop()
             ),
@@ -140,15 +140,15 @@ internal sealed class ToolsWindow : GlassWindow
                 "Système",
                 "\uE7ED",
                 "Notifications",
-                "Coupe ou rétablit les notifications Windows",
-                SystemTools.NotificationsOn ? "Activées" : "Coupées",
+                Strings.MutesOrRestoresWindowsNotifications,
+                SystemTools.NotificationsOn ? Strings.On2 : Strings.Muted,
                 () => owner.ToggleNotifications()
             ),
             new(
                 "Système",
                 "\uE72C",
-                "Redémarrer l’Explorateur",
-                "Quand la barre des tâches ou le Bureau se bloquent",
+                Strings.RestartExplorer,
+                Strings.WhenTheTaskbarOrTheDesktop,
                 "",
                 () => owner.RestartExplorer()
             ),
@@ -168,19 +168,12 @@ internal sealed class ToolsWindow : GlassWindow
                 "",
                 () => owner.OpenWorkspaces()
             ),
-            new(
-                "Confort",
-                "\uE70B",
-                "Papier pense-bête",
-                "Une feuille collée à l’écran : écris, place, garde",
-                "",
-                () => owner.OpenMemo()
-            ),
+            new("Confort", "\uE70B", Strings.StickyNote, Strings.ASheetStuckToTheScreen, "", () => owner.OpenMemo()),
             new(
                 "Confort",
                 "\uE8C8",
                 "Presse-papiers",
-                "Tout ce que tu as copié, prêt à revenir",
+                Strings.EverythingYouCopiedReadyToCome2,
                 "",
                 () => owner.OpenClipboard()
             ),
@@ -266,7 +259,7 @@ internal sealed class ToolsWindow : GlassWindow
         }
         if (cards.Count == 0)
         {
-            var empty = UI.Text("Rien dans cette catégorie.", 12, UI.Dim);
+            var empty = UI.Text(Strings.NothingInThisCategory, 12, UI.Dim);
             empty.Margin = new Thickness(6, 20, 0, 0);
             grid.Children.Add(empty);
         }
@@ -291,12 +284,12 @@ internal sealed class HelpWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", "Fermer l’aide", Close);
+        var close = UI.IconButton("\uE711", Strings.CloseTheHelp, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("Trois gestes, et tout est là.", 26, null, true));
-        var sub = UI.Text("Panneaux reste discret : une poignée à droite, deux raccourcis, un atelier", 12, UI.Dim);
+        titles.Children.Add(UI.Text(Strings.ThreeGesturesAndEverythingIsThere, 26, null, true));
+        var sub = UI.Text(Strings.PanneauxStaysDiscreetAHandleOn, 12, UI.Dim);
         sub.TextWrapping = TextWrapping.Wrap;
         sub.Margin = new Thickness(0, 7, 0, 0);
         titles.Children.Add(sub);
@@ -339,29 +332,23 @@ internal sealed class HelpWindow : GlassWindow
             grid.Children.Add(text);
             body.Children.Add(grid);
         }
-        Section(
-            "OUVRIR",
-            "Approche le pointeur du bord droit de l’écran, ou utilise le raccourci global. Un deuxième appui replie tout, avec les fenêtres ouvertes depuis l’espace."
-        );
+        Section("OUVRIR", Strings.MoveThePointerToTheRight);
         Row(
             GlobalShortcut.Label(Store.State.Shortcut.Modifiers, Store.State.Shortcut.Key),
             "Ouvre ou replie ton espace"
         );
         Row(owner.PaletteLabel, "Commande rapide : applications, sites, calculs, minuteur, actions");
-        Row(owner.PinShortcutLabel, "Toujours au premier plan : épingle la fenêtre active");
+        Row(owner.PinShortcutLabel, Strings.AlwaysOnTopPinTheActive);
         Row("Ctrl 1 … Ctrl 4", "Applications, Jeux, Projets, Documents");
         Row("Ctrl F", "Place le curseur dans la recherche");
-        Row("Ctrl H", "Revient à l’accueil");
-        Row("Échap", "Replie l’espace et ferme ce qui est ouvert avec lui");
-        Row("Ctrl Alt Retour arrière", "Retrouve le Bureau organisé, même si l’interface ne répond plus");
+        Row("Ctrl H", Strings.ReturnsToHome);
+        Row(Strings.Esc, "Replie l’espace et ferme ce qui est ouvert avec lui");
+        Row(Strings.CtrlAltBackspace, Strings.RestoresTheOrganizedDesktopEvenIf);
         Section(
             "L’ATELIER",
             "Treize outils, tous dans la même fenêtre : capture annotée, papier pense-bête, texte d’une image, pipette, règle, presse-papiers, son, profils d’espace, gros fichiers. Un papier garde son texte, sa taille, sa place et sa transparence d’une session à l’autre. Raccourci dans la palette : tape « atelier »."
         );
-        Section(
-            "TES RÉGLAGES",
-            "Dans Personnaliser : thème, mouvement Calme/Standard/Expressif, raccourcis, préservation du presse-papiers. Rien n’est imposé, tout se règle."
-        );
+        Section(Strings.YOURSETTINGS, Strings.InPersonalizeThemeCalmStandardExpressive);
         var footer = new DockPanel();
         var done = UI.Button("C’est parti", Close);
         done.MinWidth = 120;

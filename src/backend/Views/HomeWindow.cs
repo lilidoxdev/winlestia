@@ -45,7 +45,7 @@ internal sealed partial class HomeWindow : GlassWindow
         palette.Margin = new Thickness(0, 0, 6, 0);
         palette.VerticalAlignment = VerticalAlignment.Center;
         palette.ToolTip = "Commande rapide · " + owner.PaletteLabel;
-        System.Windows.Automation.AutomationProperties.SetName(palette, "Ouvrir la commande rapide");
+        System.Windows.Automation.AutomationProperties.SetName(palette, Strings.OpenTheQuickCommand);
         actions.Children.Add(palette);
         var atelier = UI.Button("Atelier", () => owner.OpenTools());
         atelier.Padding = new Thickness(11, 7, 11, 7);
@@ -53,7 +53,7 @@ internal sealed partial class HomeWindow : GlassWindow
         atelier.Margin = new Thickness(0, 0, 6, 0);
         atelier.VerticalAlignment = VerticalAlignment.Center;
         atelier.ToolTip = "Capture, pipette, presse-papiers, son, espaces de travail";
-        System.Windows.Automation.AutomationProperties.SetName(atelier, "Ouvrir l’atelier");
+        System.Windows.Automation.AutomationProperties.SetName(atelier, Strings.OpenTheWorkshop);
         actions.Children.Add(atelier);
         actions.Children.Add(UI.IconButton("\uE713", "Personnaliser l’espace", () => owner.Settings()));
         actions.Children.Add(UI.IconButton("\uE711", "Replier l’accueil", owner.Collapse));
@@ -84,7 +84,7 @@ internal sealed partial class HomeWindow : GlassWindow
         var all = UI.Button("Tout mon espace   ›", () => owner.ShowWorkspace());
         all.Padding = new Thickness(22, 13, 22, 13);
         all.Background = UI.Alpha(UI.Accent.Color, 46);
-        System.Windows.Automation.AutomationProperties.SetName(all, "Ouvrir les quatre panneaux");
+        System.Windows.Automation.AutomationProperties.SetName(all, Strings.OpenTheFourPanels);
         DockPanel.SetDock(all, Dock.Right);
         footer.Children.Add(all);
         footer.Children.Add(sites);
@@ -148,7 +148,7 @@ internal sealed partial class HomeWindow : GlassWindow
             Store.State.Favorites.Count
             + " favoris · "
             + Store.Entries.Count
-            + " accès · "
+            + Strings.Shortcuts
             + Store.State.Websites.Count
             + " sites";
         string signature =
@@ -251,12 +251,12 @@ internal sealed partial class HomeWindow : GlassWindow
                 HorizontalAlignment = HorizontalAlignment.Center,
             };
             empty.Children.Add(UI.Text("Tes favoris commencent ici", 16, null, true));
-            var explain = UI.Text("Dans les panneaux, clic droit sur un accès → Ajouter aux favoris.", 13, UI.Dim);
+            var explain = UI.Text(Strings.InThePanelsRightClickA, 13, UI.Dim);
             explain.Margin = new Thickness(0, 9, 0, 13);
             empty.Children.Add(explain);
             empty.Children.Add(
                 UI.Button(
-                    "Explorer mes accès   ›",
+                    Strings.ExploreMyShortcuts,
                     () => owner.ShowWorkspace(Store.State.HomeScope == "Tous" ? null : Store.State.HomeScope)
                 )
             );
@@ -273,7 +273,7 @@ internal sealed partial class HomeWindow : GlassWindow
             };
             var prev = UI.IconButton(
                 "\uE76B",
-                "Favoris précédents",
+                Strings.PreviousFavorites,
                 () =>
                 {
                     page--;
@@ -307,11 +307,11 @@ internal sealed partial class HomeWindow : GlassWindow
         recentHead.Children.Add(recentCount);
         recentHead.Children.Add(UI.Text("Reprendre", 19, null, true));
         recent.Children.Add(recentHead);
-        var sub = UI.Text("Tes dernières ouvertures depuis Panneaux, la plus récente en premier", 12, UI.Dim);
+        var sub = UI.Text(Strings.YourLatestOpeningsFromPanneauxMost, 12, UI.Dim);
         sub.Margin = new Thickness(0, 5, 0, 14);
         recent.Children.Add(sub);
         var history = Store.RecentEntries(Store.State.HomeScope).Take(10).ToList();
-        recentCount.Text = history.Count == 0 ? "" : history.Count + " récent" + (history.Count == 1 ? "" : "s");
+        recentCount.Text = history.Count == 0 ? "" : history.Count + Strings.Recent + (history.Count == 1 ? "" : "s");
         if (history.Count > 0)
         {
             var grid = new UniformGrid { Columns = 2 };
@@ -321,7 +321,7 @@ internal sealed partial class HomeWindow : GlassWindow
         }
         else
         {
-            var empty = UI.Text("Tes prochains accès ouverts apparaîtront ici.", 13, UI.Dim);
+            var empty = UI.Text(Strings.YourNextOpenedShortcutsWillAppear, 13, UI.Dim);
             empty.TextWrapping = TextWrapping.Wrap;
             empty.Margin = new Thickness(0, 10, 0, 0);
             recent.Children.Add(empty);
@@ -636,7 +636,7 @@ internal sealed partial class HomeWindow : GlassWindow
             entry.Name,
             new[]
             {
-                new MenuAction("Ouvrir", "\uE8A7", () => owner.Launch(entry)),
+                new MenuAction(Strings.Open, "\uE8A7", () => owner.Launch(entry)),
                 new MenuAction(
                     Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris" : "Ajouter aux favoris",
                     "\uE734",
@@ -649,11 +649,11 @@ internal sealed partial class HomeWindow : GlassWindow
                     }
                 ),
                 new MenuAction(
-                    Store.State.TaskbarPins.Contains(entry.Id) ? "Détacher de la barre" : "Épingler à la barre",
+                    Store.State.TaskbarPins.Contains(entry.Id) ? Strings.UnpinFromTheTaskbar : Strings.PinToTheTaskbar,
                     "\uE718",
                     () => owner.ToggleTaskbarPin(entry)
                 ),
-                new MenuAction("Personnaliser cet accès…", "\uE70F", () => owner.Edit(entry), Separator: true),
+                new MenuAction(Strings.CustomizeThisShortcut, "\uE70F", () => owner.Edit(entry), Separator: true),
                 new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)),
             },
             true

@@ -62,19 +62,19 @@ internal static class ShellLiveCheck
                 await Task.Delay(500);
             Check(
                 owner.ShellSampling.Running && owner.ShellSampling.Samples > 0,
-                "Mesures matérielles réelles publiées : " + owner.ShellSampling
+                "Real hardware measurements published: " + owner.ShellSampling
             );
             await Task.Delay(1600);
             Capture(owner.Anchor, "shell-performance-native.png");
             owner.SetTheme("shell-dark");
             await Task.Delay(500);
-            Check(Theme.Current.Id == "shell-dark", "Changement de thème après création des graphiques");
+            Check(Theme.Current.Id == "shell-dark", "Theme change after charts are created");
             Capture(owner.Anchor, "shell-performance-dark-native.png");
             owner.SetTheme("shell");
             owner.ShowShellPage("spaces");
             await Task.Delay(1500);
-            Check(!owner.ShellSampling.Running, "Collecteur arrêté en quittant Performances");
-            Check(owner.ShellPage == "spaces", "Navigation espaces et accès existants");
+            Check(!owner.ShellSampling.Running, "Collector stopped when leaving Performance");
+            Check(owner.ShellPage == "spaces", "Space navigation and existing shortcuts");
             for (int i = 0; i < 12; i++)
             {
                 owner.ShowShellPage(i % 2 == 0 ? "dashboard" : "music");
@@ -82,7 +82,7 @@ internal static class ShellLiveCheck
             }
             owner.ShowShellPage("dashboard");
             await Task.Delay(500);
-            Check(owner.ShellPage == "dashboard", "Transitions rapides interrompues : état final cohérent");
+            Check(owner.ShellPage == "dashboard", "Rapid transitions interrupted: consistent final state");
             Capture(owner.Anchor, "shell-home-native.png");
             owner.ShowWorkspace();
             await Task.Delay(600);
@@ -91,9 +91,9 @@ internal static class ShellLiveCheck
             await Task.Delay(1300);
             Check(
                 !owner.ShellSampling.Running && !owner.UiActivity.open,
-                "Collecte suspendue après fermeture : " + owner.ShellSampling + " / ouvert=" + owner.UiActivity.open
+                "Collection suspended after close: " + owner.ShellSampling + " / ouvert=" + owner.UiActivity.open
             );
-            Check(favorites.SequenceEqual(Store.State.Favorites), "Favoris conservés pendant toute la navigation");
+            Check(favorites.SequenceEqual(Store.State.Favorites), "Favorites kept throughout navigation");
         }
         catch (Exception ex)
         {

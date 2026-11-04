@@ -232,7 +232,7 @@ internal sealed class BookmarksService : IDisposable
                     + (
                         loaded.Length == 0
                             ? "aucun navigateur"
-                            : loaded + " " + result.Urls + " favoris, " + result.IconsCreated + " icônes créées"
+                            : loaded + " " + result.Urls + " favoris, " + result.IconsCreated + " icons created"
                     )
             );
         }
@@ -350,7 +350,7 @@ internal sealed class BookmarksService : IDisposable
         catch (Exception ex)
         {
             error = "Ouverture impossible";
-            Store.Log("Favoris ouverture : " + ex.GetType().Name);
+            Store.Log("Bookmarks open: " + ex.GetType().Name);
             Changed();
         }
     }

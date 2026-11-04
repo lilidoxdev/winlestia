@@ -42,7 +42,7 @@ internal sealed class ScreenFrameReservations : IDisposable
             var data = TaskbarNative.Data(source.Handle);
             data.Callback = message;
             if (TaskbarNative.SHAppBarMessage(0, ref data) == UIntPtr.Zero)
-                throw new InvalidOperationException("Réservation du cadre refusée.");
+                throw new InvalidOperationException("Frame reservation refused.");
             Place();
         }
 

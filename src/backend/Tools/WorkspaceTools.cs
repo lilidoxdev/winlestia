@@ -107,7 +107,7 @@ internal sealed class PromptWindow : GlassWindow
         string text = field.Text.Trim();
         if (text.Length == 0)
         {
-            error.Text = "Un nom est nécessaire.";
+            error.Text = Strings.ANameIsRequired;
             return;
         }
         answer = text;
@@ -228,7 +228,7 @@ internal sealed class WorkspaceWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", "Fermer", Close);
+        var close = UI.IconButton("\uE711", Strings.Close, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
@@ -331,7 +331,7 @@ internal sealed class WorkspaceWindow : GlassWindow
             VerticalAlignment = VerticalAlignment.Center,
         };
         var open = UI.Button(
-            "Ouvrir",
+            Strings.Open,
             () =>
             {
                 WorkspaceService.Open(owner, profile);
@@ -364,11 +364,7 @@ internal sealed class WorkspaceWindow : GlassWindow
             "Supprimer cet espace",
             () =>
             {
-                if (
-                    !owner.Confirm(
-                        "Supprimer l’espace « " + profile.Name + " » ?\n\nLes applications ne sont pas fermées."
-                    )
-                )
+                if (!owner.Confirm("Supprimer l’espace « " + profile.Name + Strings.ApplicationsAreNotClosed))
                     return;
                 Store.State.Workspaces.Remove(profile);
                 Store.Save();
@@ -401,18 +397,18 @@ internal sealed class WorkspaceWindow : GlassWindow
             return;
         if (Store.State.Workspaces.Any(w => string.Equals(w.Name, name, StringComparison.CurrentCultureIgnoreCase)))
         {
-            status.Text = "Un espace porte déjà ce nom.";
+            status.Text = Strings.ASpaceAlreadyHasThisName;
             return;
         }
         var profile = WorkspaceService.Capture(owner, name.Trim());
         if (profile.Targets.Count == 0)
         {
-            status.Text = "Aucune application visible à enregistrer.";
+            status.Text = Strings.NoVisibleApplicationToSave;
             return;
         }
         Store.State.Workspaces.Insert(0, profile);
         Store.Save();
         Refresh();
-        status.Text = profile.Targets.Count + " applications enregistrées";
+        status.Text = profile.Targets.Count + Strings.ApplicationsSaved;
     }
 }

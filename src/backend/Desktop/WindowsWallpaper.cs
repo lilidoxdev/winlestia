@@ -64,7 +64,7 @@ internal sealed class WindowsWallpaper : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Fond d’écran registre: " + ex.Message);
+            Store.Log("Wallpaper registry: " + ex.Message);
         }
         try
         {
@@ -72,7 +72,7 @@ internal sealed class WindowsWallpaper : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Fond d’écran fichiers: " + ex.Message);
+            Store.Log("Wallpaper files: " + ex.Message);
         }
         try
         {
@@ -80,7 +80,7 @@ internal sealed class WindowsWallpaper : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Fond d’écran hôte: " + ex.Message);
+            Store.Log("Wallpaper host: " + ex.Message);
         }
         Microsoft.Win32.SystemEvents.UserPreferenceChanged += Preference;
         Microsoft.Win32.SystemEvents.DisplaySettingsChanged += Display;
@@ -463,7 +463,7 @@ internal sealed class WindowsWallpaper : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Fond d’écran: " + ex.Message);
+                Store.Log("Wallpaper: " + ex.Message);
             }
             finally
             {

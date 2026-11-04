@@ -239,7 +239,7 @@ internal static class WebIcons
                 .Frames.Where(x => x.PixelWidth <= 2048 && x.PixelHeight <= 2048)
                 .OrderByDescending(x => x.PixelWidth)
                 .FirstOrDefault()
-            ?? throw new InvalidDataException("Icône invalide.");
+            ?? throw new InvalidDataException(Strings.InvalidIcon);
         BitmapSource source = frame;
         if (frame.PixelWidth > 256 || frame.PixelHeight > 256)
             source = new TransformedBitmap(
@@ -315,7 +315,7 @@ internal static class WebIcons
             count++;
         }
         if (count == 0)
-            throw new InvalidDataException("Le logo est entièrement transparent.");
+            throw new InvalidDataException(Strings.LogoFullyTransparent);
         // Preserve the exact alpha silhouette, using the light logo variant on dark glass.
         if (monochrome && count > 0 && luminance / count < 110)
             for (int i = 0; i < pixels.Length; i += 4)

@@ -114,7 +114,7 @@ internal static class Theme
         {
             Id = "shell",
             Name = "Atelier clair",
-            Description = "Crème, argile et cartes douces. Le nouveau bureau Panneaux.",
+            Description = Strings.CreamClayAndSoftCardsThe,
             Surface = C(252, 248, 243),
             HaloA = C(236, 220, 211),
             HaloB = C(233, 222, 214),
@@ -176,7 +176,7 @@ internal static class Theme
         {
             Id = "amethyste",
             Name = "Améthyste",
-            Description = "Prune et violet, une bande de lumière en travers du verre.",
+            Description = Strings.PlumAndVioletABandOf,
             Surface = C(27, 16, 48),
             HaloA = C(150, 100, 255),
             HaloB = C(220, 120, 255),
@@ -194,7 +194,7 @@ internal static class Theme
         {
             Id = "emeraude",
             Name = "Émeraude",
-            Description = "Vert profond, brume turquoise et pétales de verre.",
+            Description = Strings.DeepGreenTurquoiseMistAndGlass,
             Surface = C(7, 28, 25),
             HaloA = C(60, 200, 160),
             HaloB = C(70, 190, 220),
@@ -210,7 +210,7 @@ internal static class Theme
         {
             Id = "cuivre",
             Name = "Cuivre",
-            Description = "Ambre chaud, reflets de fin de journée.",
+            Description = Strings.WarmAmberEndOfDayReflections,
             Surface = C(36, 18, 9),
             HaloA = C(235, 140, 70),
             HaloB = C(240, 190, 110),
@@ -247,7 +247,7 @@ internal static class Theme
         {
             Id = "sakura",
             Name = "Sakura",
-            Description = "Prune rosé, halos fleur de cerisier.",
+            Description = Strings.RosyPlumCherryBlossomHalos,
             Surface = C(33, 16, 26),
             HaloA = C(245, 130, 175),
             HaloB = C(210, 120, 220),
@@ -266,7 +266,7 @@ internal static class Theme
         {
             Id = "calque",
             Name = "Papier calque",
-            Description = "Papier crème, encre brune et titres en serif. Les accès deviennent des fiches.",
+            Description = Strings.CreamPaperBrownInkAndSerif,
             Surface = C(233, 226, 211),
             HaloA = C(201, 162, 39),
             HaloB = C(127, 169, 184),
@@ -291,7 +291,7 @@ internal static class Theme
         {
             Id = "encre",
             Name = "Encre",
-            Description = "Noir de terminal, phosphore vert, typographie à chasse fixe. Tout est en listes.",
+            Description = Strings.TerminalBlackPhosphorGreenMonospacedTypography,
             Surface = C(7, 10, 8),
             HaloA = C(34, 197, 94),
             HaloB = C(14, 165, 160),
@@ -315,7 +315,7 @@ internal static class Theme
         {
             Id = "affiche",
             Name = "Affiche",
-            Description = "Bleu nuit, corail et moutarde. Blocs imprimés, bords francs, grandes fiches.",
+            Description = Strings.NavyCoralAndMustardPrintedBlocks,
             Surface = C(21, 26, 46),
             HaloA = C(255, 90, 60),
             HaloB = C(255, 200, 87),
@@ -339,7 +339,7 @@ internal static class Theme
         {
             Id = "brume",
             Name = "Brume",
-            Description = "Pierre claire, ombres douces, courbes généreuses. Une matière mate, lumineuse.",
+            Description = Strings.LightStoneSoftShadowsGenerousCurves,
             Surface = C(223, 229, 236),
             HaloA = C(255, 255, 255),
             HaloB = C(169, 184, 201),
@@ -365,7 +365,7 @@ internal static class Theme
         {
             Id = "bento",
             Name = "Bento",
-            Description = "Plateau crème et cases pleines, couleurs franches. Chaque accès est une petite boîte.",
+            Description = Strings.CreamTrayAndSolidCellsBold,
             Surface = C(242, 237, 228),
             HaloA = C(226, 86, 47),
             HaloB = C(76, 143, 109),
@@ -391,7 +391,7 @@ internal static class Theme
         {
             Id = "neon",
             Name = "Néon",
-            Description = "Noir de nuit, traits lumineux magenta et cyan. Les cadres brillent au lieu de refléter.",
+            Description = Strings.NightBlackGlowingMagentaAndCyan,
             Surface = C(7, 7, 12),
             HaloA = C(255, 47, 185),
             HaloB = C(57, 230, 255),
@@ -416,7 +416,7 @@ internal static class Theme
         {
             Id = "retro",
             Name = "Rétro 95",
-            Description = "Gris de bureau, bords biseautés, coins carrés et listes à l’ancienne. Un hommage assumé.",
+            Description = Strings.DesktopGrayBeveledEdgesSquareCorners,
             Surface = C(192, 192, 192),
             HaloA = C(0, 0, 128),
             HaloB = C(0, 128, 128),
@@ -442,7 +442,7 @@ internal static class Theme
         {
             Id = "suisse",
             Name = "Suisse",
-            Description = "Feuille blanche, filets fins, rouge signal et lignes numérotées. Rien de décoratif.",
+            Description = Strings.WhiteSheetThinRulesSignalRed,
             Surface = C(250, 250, 247),
             HaloA = C(225, 37, 27),
             HaloB = C(14, 14, 14),
@@ -468,7 +468,7 @@ internal static class Theme
         {
             Id = "zen",
             Name = "Zen",
-            Description = "Sable clair, encre verte et courbes amples. Des rangées larges, beaucoup d’air.",
+            Description = Strings.LightSandGreenInkAndWide,
             Surface = C(233, 226, 212),
             HaloA = C(143, 160, 122),
             HaloB = C(216, 201, 168),

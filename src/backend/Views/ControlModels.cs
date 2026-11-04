@@ -71,7 +71,7 @@ public sealed class ControlPreferences
             new()
             {
                 Id = "settings",
-                Name = "Réglages",
+                Name = Strings.Settings,
                 Target = "ms-settings:",
                 Glyph = "\uE713",
             },
@@ -90,7 +90,7 @@ public sealed class ControlPreferences
                     },
                     new WindowsShortcut
                     {
-                        Name = "Écran",
+                        Name = Strings.Screen,
                         Target = "ms-settings:display",
                         Glyph = "\uE7F4",
                     },
@@ -108,7 +108,7 @@ public sealed class ControlPreferences
                     },
                     new WindowsShortcut
                     {
-                        Name = "Réseau",
+                        Name = Strings.Network,
                         Target = "ms-settings:network-status",
                         Glyph = "\uE839",
                     },
@@ -144,7 +144,7 @@ public sealed class ControlPreferences
                     },
                     new WindowsShortcut
                     {
-                        Name = "Gestionnaire des tâches",
+                        Name = Strings.TaskManager,
                         Target = "taskmgr.exe",
                         Glyph = "\uE9D9",
                     },

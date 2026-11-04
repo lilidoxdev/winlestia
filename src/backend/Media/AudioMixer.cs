@@ -125,7 +125,7 @@ internal sealed class AudioMixer : IDisposable
                         if (control.State == AudioSessionState.AudioSessionStateExpired)
                             continue;
                         int pid = (int)control.GetProcessID;
-                        string name = "Sons système",
+                        string name = Strings.SystemSounds,
                             path = "";
                         if (pid != 0)
                         {
@@ -255,7 +255,7 @@ internal sealed class AudioMixer : IDisposable
         Refresh();
         var ids = sessions.Where(MatchesMedia).Select(s => s.Id).Distinct().ToArray();
         if (ids.Length == 0)
-            throw new InvalidOperationException("Aucune session audio pour ce lecteur.");
+            throw new InvalidOperationException(Strings.NoAudioSessionForPlayer);
         foreach (var id in ids)
             SetApplication(id, value, null);
     }
@@ -275,14 +275,14 @@ internal sealed class AudioMixer : IDisposable
             }
             catch (System.Runtime.InteropServices.COMException) { }
         if (updated == 0)
-            throw new InvalidOperationException("Cette application n’a plus de session audio. Relance sa lecture.");
+            throw new InvalidOperationException(Strings.AppNoLongerHasAudioSession);
         Refresh();
     }
 
     internal void SetDevice(string id, double? level, bool? muted, bool select)
     {
         if (!Devices.Any(d => d.id == id))
-            throw new InvalidOperationException("Ce périphérique n’est plus connecté.");
+            throw new InvalidOperationException(Strings.DeviceNoLongerConnected);
         if (select)
             AudioSwitch.SetDefault(id);
         else

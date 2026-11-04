@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using PanneauxGlass;
+using PanneauxGlass.Explorer;
+using PanneauxGlass.Storage;
 using D = System.Drawing;
 
 static class Program

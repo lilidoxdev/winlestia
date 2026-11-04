@@ -93,7 +93,7 @@ internal sealed class PcTelemetry : IDisposable
                 catch (OperationCanceledException) { }
                 catch (Exception ex)
                 {
-                    Store.Log("État PC: " + ex);
+                    Store.Log("PC status: " + ex);
                     if (!token.IsCancellationRequested)
                         error?.Invoke(ex.Message);
                 }
@@ -272,7 +272,7 @@ internal sealed class PcTelemetrySource : IDisposable
         string note =
             cpuTemperature.HasValue ? sensorNote
             : LibreHardwareMonitor.PawnIo.PawnIo.IsInstalled ? "Sonde CPU inaccessible avec les droits actuels"
-            : "Température CPU : pilote de capteurs requis";
+            : Strings.CPUTemperatureSensorDriverRequired;
         watch.Stop();
         return new(
             DateTimeOffset.Now,

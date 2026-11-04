@@ -18,18 +18,18 @@ internal sealed class PcStatusWindow : GlassWindow
     readonly Coordinator owner;
     readonly PcTelemetry telemetry = new();
     readonly SemaphoreSlim lifecycle = new(1, 1);
-    readonly TextBlock live = UI.Text("Préparation des capteurs…", 11, UI.Dim),
+    readonly TextBlock live = UI.Text(Strings.PreparingSensors, 11, UI.Dim),
         foot = UI.Text("Collecte suspendue hors de ce panneau", 10, UI.Dim);
     readonly Meter cpu = new("Processeur", "\uE950", "#96E6F5"),
         gpu = new("Carte graphique", "\uE7F4", "#BBAAFF");
     readonly TextBlock ramValue = UI.Text("—", 25, null, true),
-        ramDetail = UI.Text("Mémoire disponible", 10, UI.Dim),
+        ramDetail = UI.Text(Strings.AvailableMemory, 10, UI.Dim),
         ramHeat = UI.Text("Lecture des barrettes…", 10, UI.Dim);
     readonly TextBlock diskValue = UI.Text("—", 13, null, true),
-        diskRates = UI.Text("Lecture et écriture", 10, UI.Dim),
+        diskRates = UI.Text(Strings.ReadingAndWriting, 10, UI.Dim),
         networkValue = UI.Text("—", 21, null, true),
         networkUp = UI.Text("—", 13, UI.Brush("#D0BCFF")),
-        networkName = UI.Text("Connexion réseau", 10, UI.Dim);
+        networkName = UI.Text(Strings.NetworkConnection, 10, UI.Dim);
     readonly TelemetryGraph ramGraph = new("#8CE4C3"),
         diskGraph = new("#F3CF91"),
         networkGraph = new("#96E6F5", false);
@@ -43,7 +43,7 @@ internal sealed class PcStatusWindow : GlassWindow
     internal bool Sampling => telemetry.Running;
 
     internal PcStatusWindow(Coordinator coordinator)
-        : base("Panneaux Glass — état du PC")
+        : base(Strings.PanneauxGlassPCStatus)
     {
         owner = coordinator;
         Radius = 38;
@@ -53,11 +53,11 @@ internal sealed class PcStatusWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel { Margin = new Thickness(0, 0, 0, 18) };
-        var close = UI.IconButton("\uE76C", "Replier l’état du PC", owner.TogglePc);
+        var close = UI.IconButton("\uE76C", Strings.CollapsePCStatus, owner.TogglePc);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("État du PC", 23, null, true));
+        titles.Children.Add(UI.Text(Strings.PCStatus, 23, null, true));
         live.Margin = new Thickness(0, 6, 0, 0);
         titles.Children.Add(live);
         header.Children.Add(titles);
@@ -80,7 +80,7 @@ internal sealed class PcStatusWindow : GlassWindow
         pair.Children.Add(gpu.Root);
         content.Children.Add(pair);
         var memory = new StackPanel();
-        memory.Children.Add(Heading("\uE964", "Mémoire vive", "#8CE4C3"));
+        memory.Children.Add(Heading("\uE964", Strings.LiveMemory, "#8CE4C3"));
         var ramRow = new Grid { Margin = new Thickness(0, 5, 0, 2) };
         ramRow.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         ramRow.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
@@ -128,7 +128,7 @@ internal sealed class PcStatusWindow : GlassWindow
         networkGraph.Height = 35;
         networkGraph.Margin = new Thickness(0, 5, 0, 2);
         network.Children.Add(networkGraph);
-        network.Children.Add(UI.Text("↓ Réception     ↑ Envoi · débit réel, pas un test Internet", 9, UI.Dim));
+        network.Children.Add(UI.Text(Strings.ReceiveSendRealThroughputNotAn, 9, UI.Dim));
         content.Children.Add(Card(network));
         var footer = new DockPanel { Margin = new Thickness(0, 8, 0, 0) };
         var info = UI.IconButton("\uE946", "Comprendre les mesures", Explain);
@@ -170,7 +170,7 @@ internal sealed class PcStatusWindow : GlassWindow
             if (version != revision || !IsVisible || closed)
                 return;
             latest = null;
-            live.Text = "Préparation des capteurs…";
+            live.Text = Strings.PreparingSensors;
             live.Foreground = UI.Dim;
             storageKey = "";
             foreach (var graph in new[] { cpu.Graph, gpu.Graph, ramGraph, diskGraph, networkGraph })
@@ -194,7 +194,7 @@ internal sealed class PcStatusWindow : GlassWindow
                             {
                                 if (version == revision && IsVisible)
                                 {
-                                    live.Text = "Collecte indisponible · réouvre le panneau";
+                                    live.Text = Strings.CollectionUnavailableReopenThePanel;
                                     live.Foreground = UI.Brush("#F3CF91");
                                     live.ToolTip = message;
                                 }
@@ -205,7 +205,7 @@ internal sealed class PcStatusWindow : GlassWindow
         }
         catch (Exception ex)
         {
-            Store.Log("Cycle état PC: " + ex);
+            Store.Log("PC status cycle: " + ex);
         }
         finally
         {
@@ -223,9 +223,9 @@ internal sealed class PcStatusWindow : GlassWindow
         gpu.Update(
             device?.Load,
             device?.Temperature,
-            device?.Name ?? "Aucune carte détectée",
+            device?.Name ?? Strings.NoCardDetected,
             device?.MemoryUsedMb is double used && device.MemoryTotalMb is double total
-                ? "Vidéo : " + (used / 1024).ToString("0.0") + " / " + (total / 1024).ToString("0") + " Go"
+                ? Strings.Video + (used / 1024).ToString("0.0") + " / " + (total / 1024).ToString("0") + " Go"
                 : "Sonde selon le pilote"
         );
         gpu.Root.ToolTip = string.Join(
@@ -237,7 +237,7 @@ internal sealed class PcStatusWindow : GlassWindow
         ramValue.Text = Pct(memoryPercent);
         ramDetail.Text =
             value.MemoryTotal > 0
-                ? Bytes(value.MemoryTotal - value.MemoryAvailable) + " / " + Bytes(value.MemoryTotal) + " utilisés"
+                ? Bytes(value.MemoryTotal - value.MemoryAvailable) + " / " + Bytes(value.MemoryTotal) + Strings.Used
                 : "Mesure indisponible";
         ramGraph.Push(memoryPercent);
         ramHeat.Text =
@@ -246,20 +246,20 @@ internal sealed class PcStatusWindow : GlassWindow
                     "     ",
                     value.MemoryHeat.Select((h, i) => "Barrette " + (i + 1) + " · " + Temp(h.Temperature))
                 )
-                : "Température : aucune sonde de barrette accessible";
+                : Strings.TemperatureNoMemoryModuleSensorAccessible;
         ramHeat.ToolTip = string.Join("\n", value.MemoryHeat.Select(h => h.Name + " · " + Temp(h.Temperature)));
         diskValue.Text = Pct(value.DiskBusy) + " actifs";
-        diskRates.Text = "Lecture " + Rate(value.DiskRead) + "     Écriture " + Rate(value.DiskWrite);
+        diskRates.Text = "Lecture " + Rate(value.DiskRead) + Strings.Write + Rate(value.DiskWrite);
         diskGraph.Push(value.DiskBusy);
         UpdateStorage(value);
         networkValue.Text = "↓ " + Rate(value.Download);
         networkUp.Text = "↑ " + Rate(value.Upload);
         networkName.Text = value.Network;
         networkGraph.Push(value.Download, value.Upload);
-        networkGraph.ToolTip = "Cyan : réception · violet : envoi";
-        foot.Text = "1 relevé/s · sondes 3 s · disques 30 s";
+        networkGraph.ToolTip = Strings.CyanReceivePurpleSend;
+        foot.Text = Strings.N1ReadingSSensors3S;
         cpu.Heat.ToolTip = string.IsNullOrWhiteSpace(value.SensorNote)
-            ? "Température réelle du processeur · relevée toutes les 3 secondes"
+            ? Strings.RealProcessorTemperatureReadEvery3
             : value.SensorNote;
     }
 
@@ -303,7 +303,7 @@ internal sealed class PcStatusWindow : GlassWindow
             free.TextAlignment = TextAlignment.Right;
             Grid.SetColumn(free, 2);
             row.Children.Add(free);
-            row.ToolTip = drive.Name + " · " + Bytes(drive.Total - drive.Free) + " utilisés sur " + Bytes(drive.Total);
+            row.ToolTip = drive.Name + " · " + Bytes(drive.Total - drive.Free) + Strings.UsedOf + Bytes(drive.Total);
             driveRows.Children.Add(row);
         }
         storageHeat.Children.Clear();
@@ -327,16 +327,15 @@ internal sealed class PcStatusWindow : GlassWindow
             "Comprendre ton PC",
             new[]
             {
-                new MenuAction("Charge : part du matériel occupée", "\uE9D9", () => { }),
-                new MenuAction("Températures : capteurs physiques", "\uE7F4", () => { }),
-                new MenuAction("Graphiques : 60 derniers relevés", "\uE9D2", () => { }),
-                new MenuAction("Stockage : activité moyenne des disques", "\uEDA2", () => { }),
+                new MenuAction(Strings.LoadShareOfHardwareInUse, "\uE9D9", () => { }),
+                new MenuAction(Strings.TemperaturesPhysicalSensors, "\uE7F4", () => { }),
+                new MenuAction(Strings.ChartsLast60Readings, "\uE9D2", () => { }),
+                new MenuAction(Strings.StorageAverageDiskActivity, "\uEDA2", () => { }),
                 new MenuAction("Aucune collecte lorsque tu le replies", "\uE769", () => { }),
                 new MenuAction(
-                    "Ouvrir le Gestionnaire des tâches",
+                    Strings.OpenTaskManager,
                     "\uE950",
-                    () =>
-                        owner.LaunchWindowsShortcut(new() { Name = "Gestionnaire des tâches", Target = "taskmgr.exe" }),
+                    () => owner.LaunchWindowsShortcut(new() { Name = Strings.TaskManager, Target = "taskmgr.exe" }),
                     Separator: true
                 ),
             }
@@ -385,9 +384,9 @@ internal sealed class PcStatusWindow : GlassWindow
 
     static string LoadHint(double? load) =>
         !load.HasValue ? "Mesure indisponible"
-        : load < 35 ? "Peu sollicité"
-        : load < 75 ? "En activité"
-        : "Très sollicité";
+        : load < 35 ? Strings.LightlyLoaded
+        : load < 75 ? Strings.Active
+        : Strings.HeavilyLoaded;
 
     sealed class Meter
     {
@@ -404,7 +403,7 @@ internal sealed class PcStatusWindow : GlassWindow
             Heat = UI.Text("Lecture de la sonde…", 11, UI.Brush(color));
             var stack = new StackPanel();
             stack.Children.Add(Heading(glyph, title, color));
-            model = UI.Text("Détection du matériel…", 9, UI.Dim);
+            model = UI.Text(Strings.DetectingHardware, 9, UI.Dim);
             model.TextTrimming = TextTrimming.CharacterEllipsis;
             model.Margin = new Thickness(0, 6, 0, 2);
             stack.Children.Add(model);

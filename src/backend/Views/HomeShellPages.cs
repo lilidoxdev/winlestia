@@ -143,7 +143,7 @@ internal sealed partial class HomeWindow
             item.button.Background = Brushes.Transparent;
             System.Windows.Automation.AutomationProperties.SetHelpText(
                 item.button,
-                item.id == id ? "Page active" : "Ouvrir la page"
+                item.id == id ? "Page active" : Strings.OpenThePage
             );
         }
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, (Action)(() => UpdateTabMarker(true)));
@@ -372,7 +372,7 @@ internal sealed partial class HomeWindow
         songArtist = Detail("Ouvre Spotify ou un autre lecteur pour retrouver ta musique ici.");
         details.Children.Add(songArtist);
         var transport = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 24, 0, 15) };
-        previousButton = UI.IconButton("\uE892", "Titre précédent", () => _ = MediaCommand("previous"));
+        previousButton = UI.IconButton("\uE892", Strings.PreviousTitle, () => _ = MediaCommand("previous"));
         playButton = UI.IconButton("\uE768", "Lecture ou pause", () => _ = MediaCommand("toggle"));
         playButton.Width = playButton.Height = 58;
         playButton.Margin = new Thickness(14, 0, 14, 0);
@@ -419,7 +419,7 @@ internal sealed partial class HomeWindow
     void BuildSpaces()
     {
         var content = new StackPanel();
-        var intro = Detail("Tes profils d’applications et les quatre panneaux, retrouvés d’un geste.");
+        var intro = Detail(Strings.YourApplicationProfilesAndTheFour);
         intro.Margin = new Thickness(4, 0, 0, 20);
         content.Children.Add(intro);
         var profiles = new WrapPanel();
@@ -439,7 +439,7 @@ internal sealed partial class HomeWindow
             profiles.Children.Add(button);
         }
         content.Children.Add(profiles);
-        var manage = UI.Button("Créer ou modifier mes espaces…", owner.OpenWorkspaces);
+        var manage = UI.Button(Strings.CreateOrEditMySpaces, owner.OpenWorkspaces);
         manage.HorizontalAlignment = HorizontalAlignment.Left;
         manage.Margin = new Thickness(0, 0, 0, 22);
         content.Children.Add(manage);

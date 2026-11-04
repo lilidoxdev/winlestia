@@ -58,7 +58,7 @@ internal static class FilesPreload
             return;
         child = p;
         Store.Log(
-            "Files préchargé · t+"
+            "Files preloaded · t+"
                 + (int)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds
                 + " ms"
         );

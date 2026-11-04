@@ -16,7 +16,7 @@ internal static class CornerProof
         var canvas = new Canvas();
         var background = new Window
         {
-            Title = "Panneaux Glass — contrôle des coins",
+            Title = "Panneaux Glass — corner check",
             Width = 1000,
             Height = 370,
             WindowStyle = WindowStyle.None,
@@ -39,7 +39,7 @@ internal static class CornerProof
             Canvas.SetTop(cell, y);
             canvas.Children.Add(cell);
         }
-        var title = UI.Text("Ancien fond à gauche · masque alpha à droite", 22, Brushes.White, true);
+        var title = UI.Text("Old background on the left · alpha mask on the right", 22, Brushes.White, true);
         Canvas.SetLeft(title, 35);
         Canvas.SetTop(title, 25);
         canvas.Children.Add(title);
@@ -48,7 +48,7 @@ internal static class CornerProof
             double x = background.Left,
                 y = background.Top;
             Native.Layered = false;
-            var old = new GlassWindow("Panneaux Glass — ancien découpage")
+            var old = new GlassWindow("Panneaux Glass — old clipping")
             {
                 Owner = background,
                 ShowInTaskbar = true,

@@ -33,16 +33,12 @@ internal sealed class FocusSetupWindow : GlassWindow
         var root = new StackPanel();
         ContentHost.Children.Add(root);
         var header = new DockPanel { Margin = new Thickness(0, 0, 0, 6) };
-        var close = UI.IconButton("\uE711", "Fermer le minuteur", Close);
+        var close = UI.IconButton("\uE711", Strings.CloseTheTimer, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("Un focus, à ta façon.", 26, null, true));
-        var sub = UI.Text(
-            "Choisis une durée en minutes, heures ou secondes. Le compte à rebours reste au-dessus de tes fenêtres.",
-            12,
-            UI.Dim
-        );
+        titles.Children.Add(UI.Text(Strings.AFocusYourWay, 26, null, true));
+        var sub = UI.Text(Strings.ChooseADurationInMinutesHours, 12, UI.Dim);
         sub.Margin = new Thickness(0, 7, 0, 0);
         sub.TextWrapping = TextWrapping.Wrap;
         titles.Children.Add(sub);
@@ -55,7 +51,7 @@ internal sealed class FocusSetupWindow : GlassWindow
             Padding = new Thickness(11, 8, 11, 8),
             TextAlignment = TextAlignment.Center,
         };
-        System.Windows.Automation.AutomationProperties.SetName(field, "Durée du focus");
+        System.Windows.Automation.AutomationProperties.SetName(field, Strings.FocusDuration);
         var body = new StackPanel { Margin = new Thickness(0, 18, 0, 0) };
         root.Children.Add(body);
         var chips = new WrapPanel();
@@ -84,7 +80,7 @@ internal sealed class FocusSetupWindow : GlassWindow
         custom.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         custom.ColumnDefinitions.Add(new() { Width = new GridLength(96) });
         custom.ColumnDefinitions.Add(new() { Width = new GridLength(150) });
-        var label = UI.Text("Durée libre", 13);
+        var label = UI.Text(Strings.CustomDuration, 13);
         label.VerticalAlignment = VerticalAlignment.Center;
         label.Margin = new Thickness(0, 0, 14, 0);
         custom.Children.Add(label);
@@ -97,7 +93,7 @@ internal sealed class FocusSetupWindow : GlassWindow
         unit.MinWidth = 142;
         unit.Margin = new Thickness(10, 0, 0, 0);
         unit.VerticalAlignment = VerticalAlignment.Center;
-        System.Windows.Automation.AutomationProperties.SetName(unit, "Unité de la durée du focus");
+        System.Windows.Automation.AutomationProperties.SetName(unit, Strings.FocusDurationUnit);
         Grid.SetColumn(unit, 2);
         custom.Children.Add(unit);
         body.Children.Add(custom);
@@ -116,11 +112,11 @@ internal sealed class FocusSetupWindow : GlassWindow
         };
         var cancel = UI.Button("Annuler", Close);
         actions.Children.Add(cancel);
-        var start = UI.Button("Démarrer", Begin);
+        var start = UI.Button(Strings.Start2, Begin);
         start.MinWidth = 118;
         start.Margin = new Thickness(10, 0, 0, 0);
         start.Background = UI.Brush("#33BFE9F7");
-        System.Windows.Automation.AutomationProperties.SetName(start, "Démarrer le focus");
+        System.Windows.Automation.AutomationProperties.SetName(start, Strings.StartTheFocus);
         actions.Children.Add(start);
         body.Children.Add(actions);
         field.TextChanged += (_, _) =>
@@ -171,7 +167,7 @@ internal sealed class FocusSetupWindow : GlassWindow
         int seconds = Seconds();
         var end = DateTime.Now.AddSeconds(seconds);
         preview.Text =
-            "Se termine à "
+            Strings.EndsAt
             + end.ToString("HH:mm:ss", CultureInfo.InvariantCulture)
             + " · "
             + FocusTimer.DurationText(seconds);

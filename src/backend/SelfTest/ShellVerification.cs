@@ -38,28 +38,25 @@ internal static class ShellVerification
         ShellSettings.Migrate(false);
         Check(
             state.ShellRevision == 1 && state.Theme == "shell" && state.PreviousTheme == old,
-            "Migration vers le thème natif avec ancien thème conservé"
+            "Migration to the native theme with old theme kept"
         );
         Check(
             favorites.SequenceEqual(state.Favorites)
                 && recent.SequenceEqual(state.Recent)
                 && websites.SequenceEqual(state.Websites.Select(s => s.Id)),
-            "Migration : favoris, récents et sites conservés"
+            "Migration: favorites, recents and sites kept"
         );
         state.ReplaceTaskbar = false;
         state.Theme = "shell-dark";
         ShellSettings.Migrate(false);
-        Check(
-            !state.ReplaceTaskbar && state.Theme == "shell-dark",
-            "Migration idempotente : choix ultérieurs conservés"
-        );
+        Check(!state.ReplaceTaskbar && state.Theme == "shell-dark", "Idempotent migration: later choices kept");
         Check(
             Theme.Find("shell")!.Light && Theme.Find("shell")!.Opaque && !Theme.Find("shell-dark")!.Light,
-            "Thèmes natifs clair/sombre sans composition de verre invisible"
+            "Native light/dark themes without invisible glass composition"
         );
-        Check(Marshal.SizeOf<TaskbarNative.BarData>() == 48, "Structure AppBar x64 conforme à l’ABI Windows");
+        Check(Marshal.SizeOf<TaskbarNative.BarData>() == 48, "AppBar x64 structure conforms to the Windows ABI");
         var lease = TaskbarNative.Snapshot();
-        Check(lease.State is >= 0 and <= 3, "Lecture réelle, sans mutation, de l’état de la barre Windows");
+        Check(lease.State is >= 0 and <= 3, "Real, non-mutating read of the Windows taskbar state");
         foreach (MotionKind kind in Enum.GetValues<MotionKind>())
         {
             var curve = Motion.Curve(kind);
@@ -71,7 +68,7 @@ internal static class ShellVerification
                 valid &= double.IsFinite(sample) && sample >= previous - .00001;
                 previous = sample;
             }
-            Check(valid, "Courbe continue et sans retour arrière : " + kind);
+            Check(valid, "Continuous curve without backtracking: " + kind);
         }
         var graph = new TelemetryGraph("#A77967");
         graph.Measure(new Size(300, 80));
@@ -79,18 +76,15 @@ internal static class ShellVerification
         graph.Push(30);
         graph.Push(45);
         Theme.Use("shell-dark");
-        Check(
-            !UI.Brush("#A77967").IsFrozen,
-            "Les graphiques ne figent pas les pinceaux partagés pendant un changement de thème"
-        );
+        Check(!UI.Brush("#A77967").IsFrozen, "Charts do not freeze shared brushes during a theme change");
         var bounds = new Rect(0, 0, 1920, 1080);
         var layout = ControlPairLayout.Calculate(bounds, false, false, false);
         Check(
             layout.Home.Top >= 0 && layout.Home.Bottom <= bounds.Bottom && layout.Home.Width <= bounds.Width,
-            "Disposition native sans bande d’horloge supplémentaire"
+            "Native layout without an extra clock strip"
         );
         state.MotionLevel = 0;
-        Check(!Motion.On, "Mouvements réduits : animations désactivées");
+        Check(!Motion.On, "Reduced motion: animations disabled");
         Store.State = original;
         File.WriteAllText(
             Path.Combine(Store.Root, "verification-shell.json"),

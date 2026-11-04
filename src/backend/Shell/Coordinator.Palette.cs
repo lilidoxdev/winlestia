@@ -329,7 +329,7 @@ internal sealed partial class Coordinator
         }
         catch (Exception ex)
         {
-            Message("L’accès « " + entry.Name + " » n’a pas pu s’ouvrir.\n" + ex.Message);
+            Message(Strings.TheShortcut + entry.Name + " » n’a pas pu s’ouvrir.\n" + ex.Message);
         }
     }
 
@@ -342,7 +342,7 @@ internal sealed partial class Coordinator
             else if (File.Exists(e.Target))
                 Process.Start("explorer.exe", "/select,\"" + e.Target + "\"");
             else
-                Message("Cet accès utilise un protocole de lancement Windows.");
+                Message(Strings.ThisShortcutUsesAWindowsLaunch);
         }
         catch (Exception ex)
         {
@@ -427,7 +427,7 @@ internal sealed partial class Coordinator
         {
             using var picker = new Forms.FolderBrowserDialog
             {
-                Description = "Ajouter un dossier à ton espace",
+                Description = Strings.AddAFolderToYourSpace,
                 UseDescriptionForTitle = true,
                 ShowNewFolderButton = false,
             };
@@ -467,7 +467,7 @@ internal sealed partial class Coordinator
                     "projects" => "Projets",
                     _ => "Dossiers",
                 },
-                Category = "Mes accès",
+                Category = Strings.MyShortcuts,
             };
             Store.State.Custom.Add(entry);
             Store.State.BoardOverrides[entry.Id] = board;

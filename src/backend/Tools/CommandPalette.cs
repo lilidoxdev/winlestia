@@ -67,7 +67,7 @@ internal sealed class CommandPalette : GlassWindow
         hint.VerticalAlignment = VerticalAlignment.Center;
         hint.IsHitTestVisible = false;
         field.Children.Add(hint);
-        var close = UI.IconButton("\uE711", "Fermer la commande rapide", Close);
+        var close = UI.IconButton("\uE711", Strings.CloseTheQuickCommand, Close);
         close.Width = 32;
         close.Height = 32;
         close.Margin = new Thickness(8, 0, 4, 0);
@@ -98,7 +98,7 @@ internal sealed class CommandPalette : GlassWindow
         var footerRow = new Grid { Margin = new Thickness(13, 0, 4, 0) };
         footerRow.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         footerRow.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        footer = UI.Text("↑ ↓ naviguer     ↵ ouvrir     Échap fermer", 11, UI.Dim);
+        footer = UI.Text(Strings.NavigateOpenEscClose, 11, UI.Dim);
         footerRow.Children.Add(footer);
         var shortcuts = UI.Text("Onglets rapides · Modifier", 11, UI.Dim);
         Grid.SetColumn(shortcuts, 1);
@@ -379,9 +379,9 @@ internal sealed class CommandPalette : GlassWindow
             Add(
                 new PaletteResult(
                     "= " + Calculator.Format(value),
-                    "Entrée copie le résultat",
+                    Strings.EnterCopiesTheResult,
                     "\uE8EF",
-                    () => SystemActions.Copy(owner, value.ToString(CultureInfo.InvariantCulture), "Résultat")
+                    () => SystemActions.Copy(owner, value.ToString(CultureInfo.InvariantCulture), Strings.Result)
                 )
             );
         if (!empty)
@@ -389,7 +389,7 @@ internal sealed class CommandPalette : GlassWindow
             var entries = Match(text, 10);
             if (entries.Count > 0)
             {
-                Header("Accès");
+                Header(Strings.Shortcut);
                 foreach (var entry in entries)
                     AddEntry(entry);
             }
@@ -429,11 +429,7 @@ internal sealed class CommandPalette : GlassWindow
             }
             if (recent.Count == 0 && Store.State.Websites.Count == 0)
             {
-                var note = UI.Text(
-                    "Tes onglets rapides sont au-dessus, tes derniers accès apparaîtront ici.",
-                    12,
-                    UI.Dim
-                );
+                var note = UI.Text(Strings.YourQuickTabsAreAboveYour, 12, UI.Dim);
                 note.Margin = new Thickness(14, 8, 14, 16);
                 note.TextWrapping = TextWrapping.Wrap;
                 list.Children.Add(note);
@@ -446,7 +442,7 @@ internal sealed class CommandPalette : GlassWindow
 
     void AddEntry(Entry entry)
     {
-        string board = Store.State.Boards.FirstOrDefault(b => b.Id == Store.BoardFor(entry))?.Title ?? "Accès";
+        string board = Store.State.Boards.FirstOrDefault(b => b.Id == Store.BoardFor(entry))?.Title ?? Strings.Shortcut;
         Add(
             new PaletteResult(
                 entry.Name,
@@ -481,25 +477,15 @@ internal sealed class CommandPalette : GlassWindow
     List<PaletteResult> Commands(string text) =>
         new List<PaletteResult>
         {
-            new("Accueil", "Retour à l’espace du jour", "\uE8A9", () => owner.ShowHome()),
-            new("Atelier", "Tous les outils du quotidien, au même endroit", "\uE74C", () => owner.OpenTools()),
+            new("Accueil", Strings.BackToTodaySSpace, "\uE8A9", () => owner.ShowHome()),
+            new("Atelier", Strings.AllEverydayToolsInOnePlace, "\uE74C", () => owner.OpenTools()),
             new("Tout mon espace", "Les quatre panneaux", "\uE7C3", () => owner.ShowWorkspace()),
-            new("Capture annotée", "Encadrer, dessiner, copier ou épingler", "\uE722", () => owner.OpenCapture()),
-            new(
-                "Texte d’une image",
-                "Encadrer un texte, il est copié",
-                "\uE8A5",
-                () => owner.OpenCapture(textOnly: true)
-            ),
-            new(
-                "Papier pense-bête",
-                "Une feuille à coller sur l’écran, gardée au redémarrage",
-                "\uE70B",
-                () => owner.OpenMemo()
-            ),
-            new("Pipette de couleur", "Code hexadécimal sous le curseur", "\uE790", () => owner.OpenColorPicker()),
-            new("Règle pixel", "Mesurer une distance à l’écran", "\uE7A3", () => owner.OpenRuler()),
-            new("Presse-papiers", "Tout ce qui a été copié, prêt à revenir", "\uE8C8", () => owner.OpenClipboard()),
+            new(Strings.AnnotatedCapture, Strings.FrameDrawCopyOrPin, "\uE722", () => owner.OpenCapture()),
+            new("Texte d’une image", Strings.FrameATextItIsCopied, "\uE8A5", () => owner.OpenCapture(textOnly: true)),
+            new(Strings.StickyNote, Strings.ASheetToStickOnThe, "\uE70B", () => owner.OpenMemo()),
+            new("Pipette de couleur", Strings.HexadecimalCodeUnderTheCursor, "\uE790", () => owner.OpenColorPicker()),
+            new(Strings.PixelRuler, Strings.MeasureADistanceOnScreen, "\uE7A3", () => owner.OpenRuler()),
+            new("Presse-papiers", Strings.EverythingYouCopiedReadyToCome, "\uE8C8", () => owner.OpenClipboard()),
             new("Son et micro", "Changer de casque ou couper le micro", "\uE7F5", () => owner.OpenAudio()),
             new(
                 "Profils d’espace",
@@ -509,38 +495,33 @@ internal sealed class CommandPalette : GlassWindow
             ),
             new("Gros fichiers", "Ce qui remplit le disque", "\uE8B7", () => owner.OpenLargeFiles()),
             new(
-                "Épingler au premier plan",
-                "La fenêtre active reste devant · " + owner.PinShortcutLabel,
+                Strings.PinToTheForeground,
+                Strings.TheActiveWindowStaysInFront + owner.PinShortcutLabel,
                 "\uE840",
                 () => owner.ToggleAlwaysOnTop()
             ),
             new(
                 "Notifications",
-                SystemTools.NotificationsOn ? "Couper les notifications Windows" : "Rétablir les notifications",
+                SystemTools.NotificationsOn ? "Couper les notifications Windows" : Strings.RestoreNotifications,
                 "\uE7ED",
                 () => owner.ToggleNotifications()
             ),
-            new(
-                "Redémarrer l’Explorateur",
-                "Quand la barre des tâches se bloque",
-                "\uE72C",
-                () => owner.RestartExplorer()
-            ),
+            new(Strings.RestartExplorer, Strings.WhenTheTaskbarFreezes, "\uE72C", () => owner.RestartExplorer()),
             new("Note rapide", "Bloc-notes persistant", "\uE70B", () => owner.OpenNotes()),
-            new("Minuteur", "Régler une durée de focus", "\uE917", () => owner.OpenFocus()),
+            new("Minuteur", Strings.SetAFocusDuration, "\uE917", () => owner.OpenFocus()),
             new("Aide et raccourcis", "Les gestes de Panneaux, en une page", "\uE897", () => owner.OpenHelp()),
             new("Onglets rapides", "Modifier cette commande rapide", "\uE70F", () => owner.EditQuickTabs()),
-            new("Personnaliser", "Thèmes, verre, raccourcis, quotidien", "\uE713", () => owner.Settings()),
-            new("Commandes Windows", "Connexions, son, luminosité", "\uE7F4", () => owner.ToggleControls()),
-            new("État du PC", "Processeur, mémoire, disques", "\uE950", () => owner.TogglePc()),
+            new("Personnaliser", Strings.ThemesGlassShortcutsEveryday, "\uE713", () => owner.Settings()),
+            new("Commandes Windows", Strings.ConnectionsSoundBrightness, "\uE7F4", () => owner.ToggleControls()),
+            new(Strings.PCStatus, Strings.ProcessorMemoryDisks, "\uE950", () => owner.TogglePc()),
             new(
                 "Calculatrice",
-                "Ouvrir la calculatrice de Windows",
+                Strings.OpenTheWindowsCalculator,
                 "\uE8EF",
                 () => owner.LaunchWindowsShortcut(new WindowsShortcut { Name = "Calculatrice", Target = "calc.exe" })
             ),
             new("Verrouiller le PC", "Verrouille la session", "\uE72E", () => SystemActions.Lock(owner)),
-            new("Gestionnaire des tâches", "Processus et démarrage", "\uE7C4", () => SystemActions.TaskManager(owner)),
+            new(Strings.TaskManager, Strings.ProcessesAndStartup, "\uE7C4", () => SystemActions.TaskManager(owner)),
         }
             .Where(item => string.IsNullOrWhiteSpace(text) || Matches(item.Title + " " + item.Detail, text))
             .Take(6)

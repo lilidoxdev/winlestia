@@ -42,7 +42,7 @@ internal static class ControlVerification
                         && work.Contains(p.Controls)
                         && p.Controls.Left > p.Home.Right
                         && Math.Abs((p.Home.Left + p.Controls.Right) / 2 - (work.Left + work.Width / 2)) < .01,
-                    "Paire centrée sans chevauchement : " + size
+                    "Centered pair without overlap: " + size
                 );
             }
             var defaults = new ControlPreferences();
@@ -63,7 +63,7 @@ internal static class ControlVerification
             preferences.Controls.Shortcuts.Add(
                 new()
                 {
-                    Name = "Écran personnalisé",
+                    Name = "Custom screen",
                     Target = "ms-settings:display",
                     Arguments = "",
                     Glyph = "\uE7F4",
@@ -77,8 +77,8 @@ internal static class ControlVerification
                 copy.Controls.Modules.SequenceEqual(preferences.Controls.Modules)
                     && copy.Controls.HiddenModules.Contains("connections")
                     && !copy.Controls.ShowBrightness
-                    && copy.Controls.Shortcuts.Last().Name == "Écran personnalisé",
-                "Persistance des modules, ordre, icônes et raccourcis"
+                    && copy.Controls.Shortcuts.Last().Name == "Custom screen",
+                "Persistence of modules, order, icons and shortcuts"
             );
             var invalid = new ControlPreferences
             {
@@ -90,26 +90,26 @@ internal static class ControlVerification
                 invalid.Modules.Count == 5
                     && invalid.Modules.Distinct().Count() == 5
                     && invalid.HiddenModules.SequenceEqual(new[] { "levels" }),
-                "Configuration de modules invalide récupérée"
+                "Invalid module configuration recovered"
             );
             Check(
                 WindowsShortcutEditor.ValidTarget("ms-settings:display")
                     && WindowsShortcutEditor.ValidTarget(@"C:\Program Files\Application\app.exe")
                     && !WindowsShortcutEditor.ValidTarget("javascript:alert(1)")
                     && !WindowsShortcutEditor.ValidTarget("x\ncalc.exe"),
-                "Adresses Windows et chemins avec espaces acceptés, cibles invalides refusées"
+                "Windows addresses and paths with spaces accepted, invalid targets refused"
             );
             Check(
                 ControlCenterWindow.Time(125) == "2:05"
                     && ControlCenterWindow.Time(3601) == "1:00:01"
                     && ControlCenterWindow.Time(double.NaN) == "0:00",
-                "Durées de musique et absence de durée"
+                "Music durations and missing duration"
             );
             using var audio = new SystemAudio();
             var initial = audio.Read();
             Check(
                 initial.Available && initial.Volume is >= 0 and <= 100 && !string.IsNullOrWhiteSpace(initial.Device),
-                "Lecture du volume et du périphérique Windows"
+                "Reading Windows volume and device"
             );
             if (writeTest && initial.Available)
             {
@@ -120,7 +120,7 @@ internal static class ControlVerification
                     var readback = audio.Read();
                     Check(
                         readback.Available && Math.Abs(readback.Volume - test) < .1,
-                        "Réglage réel du volume et relecture"
+                        "Real volume change and read-back"
                     );
                 }
                 finally
@@ -131,7 +131,7 @@ internal static class ControlVerification
                 var restored = audio.Read();
                 Check(
                     Math.Abs(restored.Volume - initial.Volume) < .1 && restored.Muted == initial.Muted,
-                    "Volume et mode muet restaurés après l’essai"
+                    "Volume and mute restored after the test"
                 );
             }
             var network = await new WindowsConnections().ReadAsync();
@@ -140,7 +140,7 @@ internal static class ControlVerification
             var bright = await MonitorBrightness.ReadAsync(point);
             Check(
                 !bright.Available || bright.Value is >= 0 and <= 100,
-                "Luminosité lue ou indisponibilité signalée explicitement"
+                "Brightness read or unavailability explicitly reported"
             );
             if (writeTest && bright.Available)
             {
@@ -151,7 +151,7 @@ internal static class ControlVerification
                     var readback = await MonitorBrightness.ReadAsync(point);
                     Check(
                         readback.Available && Math.Abs(readback.Value - test) < 1.1,
-                        "Réglage réel de la luminosité et relecture"
+                        "Real brightness change and read-back"
                     );
                 }
                 finally
@@ -161,21 +161,21 @@ internal static class ControlVerification
                 var restored = await MonitorBrightness.ReadAsync(point);
                 Check(
                     restored.Available && Math.Abs(restored.Value - bright.Value) < 1.1,
-                    "Luminosité restaurée après l’essai"
+                    "Brightness restored after the test"
                 );
             }
             Store.State = new Preferences();
             using var media = new MediaController();
             await media.StartAsync();
             var song = await media.ReadAsync();
-            Check(song != null, "Accès aux sessions musicales Windows");
+            Check(song != null, "Access to Windows music sessions");
             if (song?.Available == true)
                 Check(
                     !string.IsNullOrWhiteSpace(song.Title) && song.Position >= 0 && song.Position <= song.Duration,
-                    "Titre réel et progression musicale bornée"
+                    "Real title and bounded music progress"
                 );
             media.Stop();
-            Check(await media.ReadAsync() == null, "Lecture musicale suspendue quand le panneau est masqué");
+            Check(await media.ReadAsync() == null, "Music playback suspended when the panel is hidden");
             live = new
             {
                 Audio = new

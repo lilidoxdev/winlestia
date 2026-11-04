@@ -71,8 +71,8 @@ internal static partial class MonitorBrightness
                     return new BrightnessSnapshot(
                         false,
                         0,
-                        "Luminosité de l’écran",
-                        "Cet écran ne fournit pas de réglage DDC/CI à Windows."
+                        Strings.DisplayBrightness,
+                        Strings.ThisDisplayDoesNotExposeA
                     );
                 }
                 finally
@@ -104,11 +104,11 @@ internal static partial class MonitorBrightness
                         {
                             uint value = min + (uint)Math.Round(Math.Clamp(percent, 0, 100) * (max - min) / 100d);
                             if (!SetMonitorBrightness(monitor.Handle, value))
-                                throw new InvalidOperationException("L’écran a refusé le réglage de luminosité.");
+                                throw new InvalidOperationException(Strings.DisplayRefusedBrightness);
                             changed = true;
                         }
                     if (!changed)
-                        throw new InvalidOperationException("Luminosité non réglable sur cet écran.");
+                        throw new InvalidOperationException(Strings.BrightnessNotAdjustable);
                 }
                 finally
                 {

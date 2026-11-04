@@ -143,7 +143,7 @@ internal sealed partial class QtShellBridge
                         RecycleActions.ClipboardFiles(
                             clipPaths.EnumerateArray().Select(p => p.GetString() ?? "").ToArray()
                         );
-                        notice = "Fichiers copiés dans le presse-papiers.";
+                        notice = Strings.FilesCopiedToTheClipboard;
                     }
                     break;
                 case "zipFiles":
@@ -154,7 +154,7 @@ internal sealed partial class QtShellBridge
                         if (destination != null)
                         {
                             await Task.Run(() => RecycleActions.Zip(files, destination));
-                            notice = "Archive ZIP créée.";
+                            notice = Strings.ZIPArchiveCreated;
                         }
                     }
                     break;
@@ -168,7 +168,7 @@ internal sealed partial class QtShellBridge
                     using (
                         var dialog = new System.Windows.Forms.FolderBrowserDialog
                         {
-                            Description = "Choisir le dossier à personnaliser",
+                            Description = Strings.ChooseTheFolderToCustomize,
                             UseDescriptionForTitle = true,
                         }
                     )
@@ -395,7 +395,7 @@ internal sealed partial class QtShellBridge
                                 }
                                 catch (Exception ex)
                                 {
-                                    Store.Log("Réglages connexion: " + ex.Message);
+                                    Store.Log("Connection settings: " + ex.Message);
                                 }
                             }
                             throw;
@@ -586,7 +586,7 @@ internal sealed partial class QtShellBridge
                         }
                         catch
                         {
-                            notice = "Impossible d’ouvrir ce fichier.";
+                            notice = Strings.CouldNotOpenThisFile;
                         }
                     }
                     break;
@@ -827,7 +827,7 @@ internal sealed partial class QtShellBridge
                             "wallpaper" => owner.SetWallpaperShortcut(modifiers, key, out error),
                             _ => owner.SetShortcut(modifiers, key, "home", out error),
                         };
-                        notice = success ? "Raccourci enregistré" : error;
+                        notice = success ? Strings.ShortcutSaved : error;
                         if (success)
                             Send("shortcut-saved:" + Text(args, "kind"));
                     }

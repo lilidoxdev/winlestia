@@ -206,7 +206,7 @@ internal static class DesktopRecents
                 }
                 catch (Exception ex)
                 {
-                    Store.Log("Récents bureau écriture: " + ex.Message);
+                    Store.Log("Desktop recents write: " + ex.Message);
                 }
             }
             wake.WaitOne(2000);

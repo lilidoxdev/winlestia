@@ -335,7 +335,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
                 }
                 catch (Exception ex)
                 {
-                    Store.Log("Icône dossier ignorée: " + folder + ": " + ex.Message);
+                    Store.Log("Folder icon ignored: " + folder + ": " + ex.Message);
                     return true;
                 }
             }
@@ -355,7 +355,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
                     }
                     catch (Exception ex)
                     {
-                        Store.Log("Icône dossier ignorée: " + item.folder + ": " + ex.Message);
+                        Store.Log("Folder icon ignored: " + item.folder + ": " + ex.Message);
                     }
                 }
                 pending.Clear();
@@ -397,7 +397,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
             if (flushed)
                 Save(data);
             if (flushed)
-                Status = data.Count + " dossier(s) assorti(s), y compris les dossiers affichés.";
+                Status = data.Count + Strings.MatchingFolderSIncludingShownFolders;
         }
     }
 
@@ -612,7 +612,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
                 report.Count(p => p.StartsWith("OK "))
                 + " dossier(s) assorti(s) · "
                 + report.Count(p => p.StartsWith("SKIPPED "))
-                + " ignoré(s).";
+                + Strings.Ignored;
             return string.Join(Environment.NewLine, report);
         }
     }
@@ -640,20 +640,20 @@ internal sealed partial class ExplorerAppearance : IDisposable
         if ((File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0)
             folder =
                 new DirectoryInfo(folder).ResolveLinkTarget(true)?.FullName
-                ?? throw new IOException("Cible du dossier introuvable.");
+                ?? throw new IOException("Folder target not found.");
         if (
             folder.StartsWith(@"\\")
             || folder.Length > 240
             || (File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0
         )
-            throw new IOException("Dossier distant, redirigé ou chemin non pris en charge.");
+            throw new IOException("Remote or redirected folder, or unsupported path.");
         if (Protected(folder))
-            throw new IOException("Emplacement système exclu.");
+            throw new IOException("System location excluded.");
         if (
             File.Exists(Path.Combine(folder, "desktop.ini"))
             && (File.GetAttributes(Path.Combine(folder, "desktop.ini")) & FileAttributes.ReparsePoint) != 0
         )
-            throw new IOException("desktop.ini redirigé : conservé.");
+            throw new IOException("desktop.ini redirected: kept.");
         var saved = data.FirstOrDefault(p => p.Folder.Equals(folder, StringComparison.OrdinalIgnoreCase));
         string ini = Path.Combine(folder, "desktop.ini");
         if (saved == null)
@@ -669,7 +669,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
             data.Add(saved);
         }
         else if (saved.AppliedHash != null && (!File.Exists(ini) || Hash(ini) != saved.AppliedHash))
-            throw new IOException("desktop.ini modifié ailleurs : conservé.");
+            throw new IOException("desktop.ini modified elsewhere: kept.");
         return (folder, saved);
     }
 
@@ -753,7 +753,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Réparation des dates: " + ex.Message);
+                Store.Log("Date repair: " + ex.Message);
             }
         }
     }
@@ -804,7 +804,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
                     DateTime? stamp = Stamp(saved);
                     string ini = Path.Combine(saved.Folder, "desktop.ini");
                     if (saved.AppliedHash != null && (!File.Exists(ini) || Hash(ini) != saved.AppliedHash))
-                        throw new IOException("desktop.ini modifié ailleurs : restauration manuelle requise.");
+                        throw new IOException("desktop.ini modified elsewhere: manual restore required.");
                     if (File.Exists(ini))
                         File.SetAttributes(ini, FileAttributes.Normal);
                     if (saved.Ini == null)
@@ -832,14 +832,13 @@ internal sealed partial class ExplorerAppearance : IDisposable
             signature = "";
             if (navigationConflicts > 0)
             {
-                Status = navigationConflicts + " réglage(s) de navigation modifié(s) ailleurs, conservé(s).";
+                Status = navigationConflicts + Strings.NavigationSettingSModifiedElsewhereKept;
                 return Status;
             }
-            Status =
-                remaining.Count == 0 ? "Icônes d’origine restaurées." : remaining.Count + " conflit(s) conservé(s).";
+            Status = remaining.Count == 0 ? Strings.OriginalIconsRestored : remaining.Count + Strings.ConflictSKept;
             return remaining.Count == 0
-                ? "Icônes d’origine restaurées."
-                : remaining.Count + " dossier(s) conservé(s), consulter le journal.";
+                ? Strings.OriginalIconsRestored
+                : remaining.Count + Strings.FolderSKeptCheckTheLog;
         }
     }
 

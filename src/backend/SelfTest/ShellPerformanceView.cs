@@ -18,15 +18,15 @@ internal sealed class ShellPerformanceView : Border, IDisposable
     bool active,
         closed;
     int version;
-    readonly TextBlock stamp = UI.Text("Préparation des mesures…", 12, UI.Dim),
+    readonly TextBlock stamp = UI.Text(Strings.PreparingMeasurements, 12, UI.Dim),
         cpu = UI.Text("—", 35, null, true),
         cpuDetail = UI.Text("Processeur", 12, UI.Dim),
         gpu = UI.Text("—", 35, null, true),
         gpuDetail = UI.Text("Carte graphique", 12, UI.Dim),
         ram = UI.Text("—", 35, null, true),
-        ramDetail = UI.Text("Mémoire", 12, UI.Dim),
+        ramDetail = UI.Text(Strings.Memory, 12, UI.Dim),
         network = UI.Text("—", 24, null, true),
-        networkDetail = UI.Text("Connexion réseau", 12, UI.Dim),
+        networkDetail = UI.Text(Strings.NetworkConnection, 12, UI.Dim),
         storage = UI.Text("—", 15, null, true);
     readonly TelemetryGraph cpuGraph = new("#A77967"),
         gpuGraph = new("#8E819D"),
@@ -54,10 +54,10 @@ internal sealed class ShellPerformanceView : Border, IDisposable
         var grid = new UniformGrid { Columns = 3 };
         grid.Children.Add(Card("PROCESSEUR", cpu, cpuDetail, cpuGraph));
         grid.Children.Add(Card("CARTE GRAPHIQUE", gpu, gpuDetail, gpuGraph));
-        grid.Children.Add(Card("MÉMOIRE VIVE", ram, ramDetail, ramGraph));
+        grid.Children.Add(Card(Strings.LIVEMEMORY, ram, ramDetail, ramGraph));
         root.Children.Add(grid);
         var bottom = new UniformGrid { Columns = 2 };
-        bottom.Children.Add(Card("RÉSEAU · DÉBIT EN DIRECT", network, networkDetail, netGraph));
+        bottom.Children.Add(Card(Strings.NETWORKLIVETHROUGHPUT, network, networkDetail, netGraph));
         var disks = new StackPanel();
         disks.Children.Add(UI.Text("STOCKAGE", 11, UI.Dim, true));
         storage.Margin = new Thickness(0, 20, 0, 0);
@@ -65,11 +65,7 @@ internal sealed class ShellPerformanceView : Border, IDisposable
         disks.Children.Add(storage);
         bottom.Children.Add(Plate(disks));
         root.Children.Add(bottom);
-        var note = UI.Text(
-            "Les mesures s’arrêtent en quittant cette page. Une température absente est indiquée par —.",
-            11,
-            UI.Dim
-        );
+        var note = UI.Text(Strings.MeasurementsStopWhenYouLeaveThis, 11, UI.Dim);
         note.Margin = new Thickness(4, 12, 4, 0);
         note.TextWrapping = TextWrapping.Wrap;
         root.Children.Add(note);
@@ -129,7 +125,7 @@ internal sealed class ShellPerformanceView : Border, IDisposable
                     graph.Stop();
                 return;
             }
-            stamp.Text = "Préparation des capteurs…";
+            stamp.Text = Strings.PreparingSensors;
             telemetry.Start(
                 reading =>
                     Dispatcher.BeginInvoke(
@@ -170,7 +166,7 @@ internal sealed class ShellPerformanceView : Border, IDisposable
 
     static string Percent(double? value) => value.HasValue ? Math.Round(value.Value) + " %" : "—";
 
-    static string Heat(double? value) => value.HasValue ? Math.Round(value.Value) + " °C" : "Température —";
+    static string Heat(double? value) => value.HasValue ? Math.Round(value.Value) + " °C" : Strings.Temperature;
 
     static string Rate(double? value) =>
         value.HasValue
@@ -198,7 +194,7 @@ internal sealed class ShellPerformanceView : Border, IDisposable
             ((value.MemoryTotal - value.MemoryAvailable) / 1073741824d).ToString("0.0")
             + " / "
             + (value.MemoryTotal / 1073741824d).ToString("0.0")
-            + " Go utilisés";
+            + Strings.GBUsed;
         ramGraph.Push(value.MemoryTotal > 0 ? used : null);
         network.Text = "↓ " + Rate(value.Download);
         networkDetail.Text = "↑ " + Rate(value.Upload) + " · " + value.Network;

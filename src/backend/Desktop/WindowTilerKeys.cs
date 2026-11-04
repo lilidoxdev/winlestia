@@ -43,9 +43,9 @@ internal sealed partial class WindowTiler
         (48, 7, 0x28, "Ctrl + Alt + Maj + ↓"),
         (49, 7, 0x46, "Ctrl + Alt + Maj + F"),
         (50, 7, 0xBB, "Ctrl + Alt + Maj + +"),
-        (51, 7, 0x6B, "Ctrl + Alt + Maj + pavé +"),
+        (51, 7, 0x6B, Strings.CtrlAltShiftNumpad),
         (52, 7, 0xBD, "Ctrl + Alt + Maj + -"),
-        (53, 7, 0x6D, "Ctrl + Alt + Maj + pavé -"),
+        (53, 7, 0x6D, Strings.CtrlAltShiftNumpad2),
         (54, 7, 0x36, "Ctrl + Alt + Maj + 6"),
         (55, 7, 0x58, "Ctrl + Alt + Maj + X"),
     };
@@ -92,11 +92,7 @@ internal sealed partial class WindowTiler
                     keyIds.Add(b.id);
                 else
                     Store.Log(
-                        "Tuilage · "
-                            + b.label
-                            + " refusé (erreur "
-                            + Marshal.GetLastWin32Error()
-                            + "), raccourci ignoré"
+                        "Tuilage · " + b.label + " refused (error" + Marshal.GetLastWin32Error() + "), shortcut ignored"
                     );
             }
         }
@@ -173,7 +169,7 @@ internal sealed partial class WindowTiler
         if (n < 0)
             return;
         if (!SetForegroundWindow(list[n].Key))
-            Store.Log("Tuilage · focus refusé par Windows");
+            Store.Log("Tiling · focus refused by Windows");
     }
 
     void SwapDir(TileDir dir)
@@ -349,7 +345,7 @@ internal sealed partial class WindowTiler
         }
         catch (Exception ex)
         {
-            Store.Log("Tuilage · exclusions non enregistrées : " + ex.Message);
+            Store.Log("Tiling · exclusions not saved: " + ex.Message);
         }
     }
 
@@ -406,7 +402,7 @@ internal sealed partial class WindowTiler
             return;
         LoadExclusions();
         if (excluded!.Remove(name))
-            Store.Log("Tuilage · " + name + " réintégrée");
+            Store.Log("Tuilage · " + name + " reinstated");
         else
         {
             excluded.Add(name);

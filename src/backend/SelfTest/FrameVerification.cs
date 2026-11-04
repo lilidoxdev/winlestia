@@ -75,7 +75,7 @@ internal static class FrameVerification
                 double scale = TaskbarNative.Scale(screens[0]);
                 probe = new Window
                 {
-                    Title = "Vérification du cadre Panneaux",
+                    Title = "Panneaux frame check",
                     Width = 500,
                     Height = 280,
                     Left = (screens[0].Bounds.Left + 100) / scale,

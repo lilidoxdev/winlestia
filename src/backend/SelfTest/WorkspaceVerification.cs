@@ -39,17 +39,17 @@ internal static class WorkspaceVerification
                     && minimum.Height == 310
                     && minimum.Right == panel.Right
                     && minimum.Bottom == panel.Bottom,
-                "Taille minimale et bord opposé conservé"
+                "Minimum size and opposite edge kept"
             );
             var moved = PanelLayout.Drag(panel, bounds, 5000, -5000, "move");
             Check(
                 moved.Right == bounds.Right && moved.Top == bounds.Top && moved.Size == panel.Size,
-                "Déplacement borné à l’écran"
+                "Move bounded to the screen"
             );
             var placement = PanelPlacement.Capture(panel, bounds);
-            Check(placement.Resolve(bounds) == panel, "Disposition restaurée à l’identique");
+            Check(placement.Resolve(bounds) == panel, "Layout restored identically");
             var small = new Rect(0, 100, 900, 600);
-            Check(small.Contains(placement.Resolve(small)), "Disposition adaptée à une autre résolution");
+            Check(small.Contains(placement.Resolve(small)), "Layout adapted to another resolution");
             var preferences = JsonSerializer.Deserialize<Preferences>(
                 "{\"Favorites\":[\"a\"],\"Boards\":null}",
                 Store.Json
@@ -69,7 +69,7 @@ internal static class WorkspaceVerification
             )!;
             Check(
                 saved.Boards[1].FavoritesOnly && saved.Boards[1].Placement!.Resolve(bounds) == panel,
-                "Persistance de la taille, position et étoile locale"
+                "Persistence of size, position and local star"
             );
             Store.State = new Preferences
             {
@@ -100,15 +100,15 @@ internal static class WorkspaceVerification
                 new()
                 {
                     Id = "d",
-                    Name = "Masqué",
+                    Name = "Hidden",
                     Section = "Applications",
                 },
             };
             Check(
                 Store.HomeFavorites().Select(e => e.Id).SequenceEqual(new[] { "b", "c", "a" }),
-                "Favoris triés par dernière ouverture, accès masqués exclus"
+                "Favorites sorted by last opening, hidden entries excluded"
             );
-            Check(Store.HomeFavorites("games").Single().Id == "b", "Favoris limités à la catégorie Jeux");
+            Check(Store.HomeFavorites("games").Single().Id == "b", "Favorites limited to the Games category");
             Check(Store.Visible("Tous", "cánad").Single().Id == "c", "Recherche sans accents");
             Store.RecordLaunch("a");
             Store.RecordLaunch("a");
@@ -116,9 +116,9 @@ internal static class WorkspaceVerification
                 Store.State.Recent[0] == "a"
                     && Store.State.Recent.Count(id => id == "a") == 1
                     && Store.State.LaunchCounts["a"] == 2,
-                "Ouvertures : récence sans doublon et compteur"
+                "Openings: recency without duplicates and counter"
             );
-            Check(Store.HomeFavorites().First().Id == "a", "Favori ouvert replacé en tête");
+            Check(Store.HomeFavorites().First().Id == "a", "Opened favorite moved to the top");
         }
         catch (Exception ex)
         {

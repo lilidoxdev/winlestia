@@ -298,7 +298,7 @@ internal sealed partial class WindowTiler : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Tuilage · dépôt : " + ex.Message);
+                Store.Log("Tiling · drop: " + ex.Message);
             }
             return;
         }

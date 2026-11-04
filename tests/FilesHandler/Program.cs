@@ -88,9 +88,9 @@ class Test
                 r["noPrior_command"] =
                     Def(o, @"Directory\shell\winlestia\command") == Cmd(exe)
                     && Def(o, @"Drive\shell\winlestia\command") == Cmd(exe);
-                r["noPrior_label"] = Def(o, @"Directory\shell\winlestia") == "Ouvrir avec Winlestia Fichiers";
+                r["noPrior_label"] = Def(o, @"Directory\shell\winlestia") == FilesHandler.Label;
                 using (var k = Open(o, @"Directory\shell\winlestia"))
-                    r["noPrior_muiverb"] = (k?.GetValue("MUIVerb") as string) == "Ouvrir avec Winlestia Fichiers";
+                    r["noPrior_muiverb"] = (k?.GetValue("MUIVerb") as string) == FilesHandler.Label;
                 r["noPrior_folderUntouched"] = !Exists(o, @"Folder");
                 r["noPrior_isRegistered"] = FilesHandler.IsRegistered(o, exe) && !FilesHandler.IsRegistered(o, exe2);
                 r["noPrior_backupWritten"] = File.Exists(o.BackupPath) && !File.Exists(o.BackupPath + ".tmp");

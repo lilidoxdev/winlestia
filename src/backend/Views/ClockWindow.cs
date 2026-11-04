@@ -46,7 +46,7 @@ internal sealed class ClockWindow : GlassWindow
         };
         time.Children.Add(hour);
         time.Children.Add(seconds);
-        time.ToolTip = "Ouvrir la commande rapide · " + owner.PaletteLabel;
+        time.ToolTip = Strings.OpenTheQuickCommand2 + owner.PaletteLabel;
         System.Windows.Automation.AutomationProperties.SetName(time, "Heure · ouvrir la commande rapide");
         time.MouseLeftButtonUp += (_, _) => owner.TogglePalette();
         var texts = new StackPanel
@@ -88,7 +88,7 @@ internal sealed class ClockWindow : GlassWindow
         );
         chips.Children.Add(shortcutChip);
         chips.Children.Add(Chip("Note", "Note rapide", "\uE70B", () => owner.OpenNotes()));
-        chips.Children.Add(Chip("Minuteur", "Régler un minuteur", "\uE917", () => owner.OpenFocus()));
+        chips.Children.Add(Chip("Minuteur", Strings.SetATimer, "\uE917", () => owner.OpenFocus()));
         var layout = new Grid();
         layout.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         layout.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
@@ -181,7 +181,7 @@ internal sealed class ClockWindow : GlassWindow
         {
             < 6 => "Bonne nuit, dj",
             < 12 => "Bonjour, dj",
-            < 18 => "Bel après-midi, dj",
+            < 18 => Strings.NiceAfternoonDj,
             _ => "Bonsoir, dj",
         };
 }

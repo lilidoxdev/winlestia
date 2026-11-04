@@ -61,7 +61,7 @@ internal sealed class FocusTimer : GlassWindow
         Radius = 28;
         ContentHost.Margin = new Thickness(22, 20, 22, 20);
         label = UI.Text("FOCUS · " + DurationText(seconds).ToUpperInvariant(), 10, UI.Label, true);
-        alarm = UI.Text("Sonnerie à la fin", 9, UI.Dim);
+        alarm = UI.Text(Strings.ChimeAtTheEnd, 9, UI.Dim);
         alarm.HorizontalAlignment = HorizontalAlignment.Right;
         alarm.VerticalAlignment = VerticalAlignment.Center;
         remaining = UI.Text("", 34, null, true);
@@ -97,11 +97,11 @@ internal sealed class FocusTimer : GlassWindow
         test.Height = 34;
         test.Padding = new Thickness(0);
         test.Margin = new Thickness(8, 0, 0, 0);
-        test.ToolTip = "Écouter la sonnerie";
-        System.Windows.Automation.AutomationProperties.SetName(test, "Écouter la sonnerie de fin");
+        test.ToolTip = Strings.ListenToTheChime;
+        System.Windows.Automation.AutomationProperties.SetName(test, Strings.ListenToTheEndChime);
         buttons.Children.Add(test);
         var stop = UI.Button(
-            "Arrêter",
+            Strings.Stop,
             () =>
             {
                 timer.Stop();
@@ -160,8 +160,8 @@ internal sealed class FocusTimer : GlassWindow
     {
         timer.Stop();
         FocusAlarm.Play();
-        owner.ShowToast("Focus terminé · " + DurationText(total));
-        owner.Notify("Focus terminé", "Tes " + DurationText(total) + " sont écoulées.");
+        owner.ShowToast(Strings.FocusFinished + DurationText(total));
+        owner.Notify(Strings.FocusFinished2, "Tes " + DurationText(total) + Strings.HaveElapsed);
         Close();
     }
 }

@@ -15,6 +15,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using Microsoft.Win32;
+using PanneauxGlass.Views;
 
 namespace Winlestia.Shared;
 
@@ -64,8 +65,8 @@ internal sealed record HandlerResult(bool Ok, string Message);
 
 internal static class FilesHandler
 {
-    internal const string Verb = "winlestia",
-        Label = "Ouvrir avec Winlestia Fichiers";
+    internal const string Verb = "winlestia";
+    internal static string Label => Strings.OpenWithWinlestiaFiles;
     static readonly string[] Targets = { "Directory", "Drive" };
 
     internal static string DataDir =>

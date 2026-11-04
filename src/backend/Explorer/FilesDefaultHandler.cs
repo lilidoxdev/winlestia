@@ -26,16 +26,16 @@ internal static class FilesDefaultHandler
             if (on)
             {
                 if (!File.Exists(ExePath))
-                    return (false, "Winlestia Fichiers est introuvable : option non activée.");
+                    return (false, Strings.WinlestiaFilesWasNotFoundOption);
                 var r = FilesHandler.Register(o, ExePath);
                 if (!r.Ok)
                     Store.Log("FilesDefaultHandler register: " + r.Message);
-                return r.Ok ? (true, null) : (false, "Activation impossible : " + r.Message);
+                return r.Ok ? (true, null) : (false, Strings.ActivationImpossible + r.Message);
             }
             var back = FilesHandler.Restore(o);
             if (!back.Ok)
                 Store.Log("FilesDefaultHandler restore: " + back.Message);
-            return back.Ok ? (false, null) : (true, "Restauration incomplète, réessaie : " + back.Message);
+            return back.Ok ? (false, null) : (true, Strings.RestoreIncompleteTryAgain + back.Message);
         }
     }
 
@@ -71,16 +71,10 @@ internal static class FilesDefaultHandler
                         FilesHandler.Register(o, ExePath); // idempotent; follows a moved install
                     break;
                 case HandlerStartup.RestoreAndDisable:
-                    Disable(
-                        FilesHandler.Restore(o),
-                        "Winlestia Fichiers est introuvable : Explorer rouvre à nouveau les dossiers."
-                    );
+                    Disable(FilesHandler.Restore(o), Strings.WinlestiaFilesWasNotFoundExplorer);
                     break;
                 case HandlerStartup.TrippedDisable:
-                    Disable(
-                        FilesHandler.Restore(o),
-                        "Winlestia Fichiers a planté trois fois : Explorer rouvre à nouveau les dossiers."
-                    );
+                    Disable(FilesHandler.Restore(o), Strings.WinlestiaFilesCrashedThreeTimesExplorer);
                     break;
             }
             return tripped;
@@ -204,7 +198,7 @@ internal static class FilesDefaultHandler
             else
             {
                 Store.Log("FilesDefaultHandler restore: " + restored.Message);
-                Toast.Show("Restauration des dossiers incomplète : " + restored.Message);
+                Toast.Show(Strings.FolderRestoreIncomplete + restored.Message);
             }
         });
     }

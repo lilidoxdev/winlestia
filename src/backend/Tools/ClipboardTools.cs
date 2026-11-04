@@ -293,12 +293,12 @@ internal sealed class ClipboardWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", "Fermer le presse-papiers", Close);
+        var close = UI.IconButton("\uE711", Strings.CloseTheClipboard, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
         titles.Children.Add(UI.Text("Ton presse-papiers.", 25, null, true));
-        var sub = UI.Text("Clique un élément pour le remettre dans le presse-papiers", 11, UI.Dim);
+        var sub = UI.Text(Strings.ClickAnItemToPutIt, 11, UI.Dim);
         sub.Margin = new Thickness(0, 6, 0, 0);
         titles.Children.Add(sub);
         header.Children.Add(titles);
@@ -308,7 +308,7 @@ internal sealed class ClipboardWindow : GlassWindow
         palette.Padding = new Thickness(10, 6, 10, 6);
         palette.Margin = new Thickness(0, 14, 0, 10);
         palette.HorizontalAlignment = HorizontalAlignment.Left;
-        palette.ToolTip = "Ouvrir la commande rapide";
+        palette.ToolTip = Strings.OpenTheQuickCommand;
         ContentHost.Children.Add(palette);
         var searchRow = new Grid { Margin = new Thickness(0, 0, 0, 12) };
         searchRow.ColumnDefinitions.Add(new() { Width = new GridLength(28) });
@@ -335,7 +335,7 @@ internal sealed class ClipboardWindow : GlassWindow
             "Vider",
             () =>
             {
-                if (owner.Confirm("Vider l’historique du presse-papiers ?\n\nLes éléments épinglés restent."))
+                if (owner.Confirm(Strings.ClearTheClipboardHistoryPinnedItems))
                 {
                     service.Clear();
                 }
@@ -351,11 +351,7 @@ internal sealed class ClipboardWindow : GlassWindow
         footer.Children.Add(count);
         Grid.SetRow(footer, 3);
         ContentHost.Children.Add(footer);
-        status = UI.Text(
-            "Windows garde ces éléments tant que Panneaux tourne. Rien n’est envoyé sur Internet.",
-            10,
-            UI.Dim
-        );
+        status = UI.Text(Strings.WindowsKeepsTheseItemsWhilePanneaux, 10, UI.Dim);
         status.Margin = new Thickness(0, 8, 0, 0);
         status.TextWrapping = TextWrapping.Wrap;
         ContentHost.Children.Add(status);
@@ -389,13 +385,11 @@ internal sealed class ClipboardWindow : GlassWindow
                 query.Length == 0 || Store.Fold(item.Kind == "image" ? "image capture" : item.Text).Contains(query)
             )
             .ToList();
-        count.Text = visible.Count + " élément" + (visible.Count == 1 ? "" : "s");
+        count.Text = visible.Count + Strings.Item + (visible.Count == 1 ? "" : "s");
         if (visible.Count == 0)
         {
             var empty = UI.Text(
-                query.Length == 0
-                    ? "Rien encore : copie du texte ou une image, elle apparaîtra ici."
-                    : "Aucun élément ne correspond.",
+                query.Length == 0 ? Strings.NothingYetCopySomeTextOr : Strings.NoItemMatches,
                 12,
                 UI.Dim
             );
@@ -478,14 +472,14 @@ internal sealed class ClipboardWindow : GlassWindow
         }
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 8, 0) };
         var preview = UI.Text(
-            item.Kind == "image" ? "Image copiée" : item.Text.Replace("\r", " ").Replace("\n", "  "),
+            item.Kind == "image" ? Strings.CopiedImage : item.Text.Replace("\r", " ").Replace("\n", "  "),
             12
         );
         preview.TextTrimming = TextTrimming.CharacterEllipsis;
         preview.MaxHeight = 34;
         preview.TextWrapping = TextWrapping.Wrap;
         text.Children.Add(preview);
-        var meta = UI.Text(item.At + (item.Pinned ? " · épinglé" : ""), 10, UI.Dim);
+        var meta = UI.Text(item.At + (item.Pinned ? Strings.Pinned : ""), 10, UI.Dim);
         meta.Margin = new Thickness(0, 4, 0, 0);
         text.Children.Add(meta);
         Grid.SetColumn(text, 1);
@@ -495,7 +489,7 @@ internal sealed class ClipboardWindow : GlassWindow
             Orientation = Orientation.Horizontal,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        var pin = UI.IconButton("\uE840", item.Pinned ? "Détacher" : "Épingler", () => service.TogglePin(item));
+        var pin = UI.IconButton("\uE840", item.Pinned ? Strings.Unpin : Strings.Pin, () => service.TogglePin(item));
         pin.Width = 28;
         pin.Height = 28;
         pin.Background = item.Pinned ? UI.Selected : Brushes.Transparent;
@@ -516,7 +510,7 @@ internal sealed class ClipboardWindow : GlassWindow
             if (e.OriginalSource is Button)
                 return;
             service.CopyBack(item);
-            owner.ShowToast("Élément copié");
+            owner.ShowToast(Strings.ItemCopied);
             Close();
         };
         Motion.Stagger(row, index);

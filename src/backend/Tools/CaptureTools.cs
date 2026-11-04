@@ -124,7 +124,7 @@ internal sealed class CaptureOverlay : Window
         catch (Exception ex)
         {
             current = null;
-            owner.Message("La capture n’a pas pu démarrer.\n" + ex.Message);
+            owner.Message(Strings.TheCaptureCouldNotStart + ex.Message);
         }
     }
 
@@ -163,7 +163,7 @@ internal sealed class CaptureOverlay : Window
         sizeLabel.Visibility = Visibility.Collapsed;
         root.Children.Add(sizeLabel);
         var hint = UI.Text(
-            textOnly ? "Encadre le texte à lire · Échap pour annuler" : "Glisse pour encadrer · Échap pour annuler",
+            textOnly ? Strings.FrameTheTextToReadEsc : Strings.DragToFrameEscToCancel,
             12,
             new SolidColorBrush(Color.FromArgb(210, 235, 245, 255))
         );
@@ -414,12 +414,12 @@ internal sealed class CaptureOverlay : Window
                 Margin = new Thickness(5, 6, 5, 6),
             }
         );
-        row.Children.Add(Tool("\uE840", "Épingler sur l’écran", Pin));
+        row.Children.Add(Tool("\uE840", Strings.PinOnScreen, Pin));
         row.Children.Add(Tool("\uE74E", "Enregistrer en PNG", Save));
         var copy = Tool("\uE8C8", "Copier", Copy);
         copy.Background = new SolidColorBrush(Color.FromArgb(70, 255, 255, 255));
         row.Children.Add(copy);
-        row.Children.Add(Tool("\uE711", "Fermer", Close));
+        row.Children.Add(Tool("\uE711", Strings.Close, Close));
         bar.Child = row;
         return bar;
     }
@@ -484,11 +484,11 @@ internal sealed class CaptureOverlay : Window
         try
         {
             System.Windows.Clipboard.SetImage(image);
-            owner.ShowToast("Capture copiée");
+            owner.ShowToast(Strings.CaptureCopied);
         }
         catch (Exception ex)
         {
-            owner.Message("La capture n’a pas pu être copiée.\n" + ex.Message);
+            owner.Message(Strings.TheCaptureCouldNotBeCopied + ex.Message);
         }
     }
 
@@ -504,7 +504,7 @@ internal sealed class CaptureOverlay : Window
         var image = Render();
         Close();
         ScreenShot.Save(image);
-        owner.ShowToast("Capture enregistrée");
+        owner.ShowToast(Strings.CaptureSaved);
     }
 
     void ExtractText()
@@ -556,11 +556,11 @@ internal sealed class PinWindow : Window
             }
             catch (Exception ex)
             {
-                Store.Log("Papier restauré: " + ex.Message);
+                Store.Log("Note restored: " + ex.Message);
             }
         }
         if (restored > 0)
-            Store.Log("Papiers restaurés · " + restored);
+            Store.Log("Notes restored · " + restored);
         Store.Save();
     }
 
@@ -592,7 +592,7 @@ internal sealed class PinWindow : Window
         }
         catch (Exception ex)
         {
-            coordinator.Message("Le papier n’a pas pu être épinglé.\n" + ex.Message);
+            coordinator.Message(Strings.TheNoteCouldNotBePinned + ex.Message);
         }
     }
 
@@ -646,7 +646,7 @@ internal sealed class PinWindow : Window
             }
             catch (Exception ex)
             {
-                Store.Log("Papier espace: " + ex.Message);
+                Store.Log("Space note: " + ex.Message);
             }
     }
 
@@ -817,7 +817,7 @@ internal sealed class PinWindow : Window
             Opacity = .95,
             Cursor = Cursors.SizeAll,
             RenderTransform = new RotateTransform(-3),
-            ToolTip = "Glisser par le ruban pour déplacer",
+            ToolTip = Strings.DragByTheRibbonToMove,
         };
         tape.MouseLeftButtonDown += (_, _) =>
         {
@@ -828,7 +828,7 @@ internal sealed class PinWindow : Window
             catch { }
         };
         root.Children.Add(tape);
-        var close = UI.IconButton("\uE711", "Détacher et supprimer ce papier", Detach);
+        var close = UI.IconButton("\uE711", Strings.UnpinAndDeleteThisNote, Detach);
         close.Width = 24;
         close.Height = 24;
         close.FontSize = 9;
@@ -958,7 +958,7 @@ internal sealed class PinWindow : Window
             }
             catch (Exception ex)
             {
-                Store.Log("Papier: " + ex.Message);
+                Store.Log("Note: " + ex.Message);
             }
         Store.Save();
         Close();
@@ -995,7 +995,7 @@ internal static class OcrService
         }
         catch (Exception ex)
         {
-            owner.Message("La lecture du texte a échoué.\n" + ex.Message);
+            owner.Message(Strings.ReadingTheTextFailed + ex.Message);
         }
     }
 
@@ -1014,7 +1014,7 @@ internal static class OcrService
         using var bitmap = await decoder.GetSoftwareBitmapAsync();
         var engine =
             OcrEngine.TryCreateFromUserProfileLanguages()
-            ?? throw new InvalidOperationException("Aucun moteur de reconnaissance n’est installé pour cette langue.");
+            ?? throw new InvalidOperationException(Strings.NoRecognitionEngine);
         var result = await engine.RecognizeAsync(bitmap);
         var lines = new List<string>();
         foreach (var line in result.Lines)
@@ -1038,12 +1038,12 @@ internal sealed class TextResultWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", "Fermer", Close);
+        var close = UI.IconButton("\uE711", Strings.Close, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
         titles.Children.Add(UI.Text(title, 23, null, true));
-        var sub = UI.Text("Copié dans le presse-papiers · modifie ou recopie si besoin", 11, UI.Dim);
+        var sub = UI.Text(Strings.CopiedToTheClipboardEditOr, 11, UI.Dim);
         sub.Margin = new Thickness(0, 6, 0, 0);
         titles.Children.Add(sub);
         header.Children.Add(titles);
@@ -1067,7 +1067,7 @@ internal sealed class TextResultWindow : GlassWindow
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
         };
-        var copy = UI.Button("Copier à nouveau", () => SystemActions.Copy(owner, editor.Text, "Texte"));
+        var copy = UI.Button(Strings.CopyAgain, () => SystemActions.Copy(owner, editor.Text, "Texte"));
         actions.Children.Add(copy);
         var done = UI.Button("Terminer", Close);
         done.Margin = new Thickness(10, 0, 0, 0);

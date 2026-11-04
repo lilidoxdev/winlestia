@@ -43,7 +43,7 @@ internal sealed partial class Coordinator
                 Native.Desktop(true);
                 desktopIconsManaged = true;
                 if (attempt == 0)
-                    Store.Log("Icônes du Bureau masquées.");
+                    Store.Log("Desktop icons hidden.");
             }
             catch (Exception ex)
             {
@@ -60,7 +60,7 @@ internal sealed partial class Coordinator
                     retry.Start();
                 }
                 else
-                    Store.Log("Masquage du Bureau impossible: " + ex.Message);
+                    Store.Log("Could not hide the Desktop: " + ex.Message);
             }
         }
         Apply();
@@ -110,7 +110,7 @@ internal sealed partial class Coordinator
     {
         if (preview || disposed)
             return;
-        Store.Log("Explorateur prêt (TaskbarCreated).");
+        Store.Log("Explorer ready (TaskbarCreated).");
         if (taskbarDeferred)
         {
             taskbarDeferred = false;
@@ -136,11 +136,11 @@ internal sealed partial class Coordinator
         {
             Native.Desktop(false);
             desktopIconsManaged = false;
-            Store.Log("Icônes du Bureau rétablies.");
+            Store.Log("Desktop icons restored.");
         }
         catch (Exception ex)
         {
-            Store.Log("Rétablissement du Bureau: " + ex.Message);
+            Store.Log("Desktop restore: " + ex.Message);
         }
     }
 
@@ -149,7 +149,7 @@ internal sealed partial class Coordinator
         string executable = Path.Combine(Store.Root, "SECOURS_BUREAU.exe");
         if (!File.Exists(executable))
         {
-            Message("Le secours indépendant est absent.\nDocuments\\SECOURS_BUREAU.exe peut également être utilisé.");
+            Message(Strings.TheIndependentRescueToolIsMissing);
             return;
         }
         Process.Start(new ProcessStartInfo(executable) { UseShellExecute = true });

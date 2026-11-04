@@ -44,7 +44,7 @@ internal sealed class WindowsConnections
         }
         bool internet = false,
             ethernet = false;
-        string network = "Non connecté";
+        string network = Strings.NotConnected;
         try
         {
             var profile = NetworkInformation.GetInternetConnectionProfile();
@@ -73,14 +73,12 @@ internal sealed class WindowsConnections
         if (access != RadioAccessStatus.Allowed)
             access = await Radio.RequestAccessAsync();
         if (access != RadioAccessStatus.Allowed)
-            throw new RadioAccessDeniedException(
-                "Windows n’autorise pas cette commande. Ouvre les réglages de connexion."
-            );
+            throw new RadioAccessDeniedException(Strings.WindowsDoesNotAllowThisCommand);
         var result = await radio.SetStateAsync(radio.State == RadioState.On ? RadioState.Off : RadioState.On);
         if (result != RadioAccessStatus.Allowed)
         {
             access = null;
-            throw new InvalidOperationException("Windows n’a pas appliqué ce changement de connexion.");
+            throw new InvalidOperationException(Strings.ConnectionChangeNotApplied);
         }
         return true;
     }

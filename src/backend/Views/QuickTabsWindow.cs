@@ -29,18 +29,18 @@ internal sealed class QuickTabsWindow : GlassWindow
         ("glass:focus", "Minuteur", "\uE917"),
         ("glass:settings", "Personnalisation", "\uE713"),
         ("glass:controls", "Commandes Windows", "\uE7F4"),
-        ("glass:pc", "État du PC", "\uE950"),
+        ("glass:pc", Strings.PCStatus, "\uE950"),
         ("glass:palette", "Commande rapide", "\uE721"),
         ("glass:tools", "Atelier", "\uE74C"),
-        ("glass:capture", "Capture annotée", "\uE722"),
+        ("glass:capture", Strings.AnnotatedCapture, "\uE722"),
         ("glass:text", "Texte d’une image", "\uE8A5"),
-        ("glass:memo", "Papier pense-bête", "\uE70B"),
+        ("glass:memo", Strings.StickyNote, "\uE70B"),
         ("glass:clipboard", "Presse-papiers", "\uE8C8"),
         ("glass:audio", "Son et micro", "\uE7F5"),
         ("glass:workspaces", "Profils d’espace", "\uE7C3"),
         ("glass:files", "Gros fichiers", "\uE8B7"),
         ("glass:help", "Aide", "\uE897"),
-        ("glass:pin", "Épingler au premier plan", "\uE840"),
+        ("glass:pin", Strings.PinToTheForeground, "\uE840"),
     };
     static readonly (string Glyph, string Name)[] Icons =
     {
@@ -49,7 +49,7 @@ internal sealed class QuickTabsWindow : GlassWindow
         ("\uE8B7", "Dossier"),
         ("\uE70B", "Note"),
         ("\uE917", "Minuteur"),
-        ("\uE713", "Réglages"),
+        ("\uE713", Strings.Settings),
         ("\uE721", "Recherche"),
         ("\uE950", "Moniteur"),
         ("\uE722", "Capture"),
@@ -57,7 +57,7 @@ internal sealed class QuickTabsWindow : GlassWindow
         ("\uE774", "Web"),
         ("\uE734", "Favori"),
         ("\uE756", "Terminal"),
-        ("\uE7F4", "Contrôles"),
+        ("\uE7F4", Strings.Controls),
         ("\uE8A9", "Espace"),
         ("\uE7C3", "Grille"),
     };
@@ -76,16 +76,12 @@ internal sealed class QuickTabsWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel { Margin = new Thickness(0, 0, 0, 6) };
-        var close = UI.IconButton("\uE711", "Fermer les onglets rapides", Close);
+        var close = UI.IconButton("\uE711", Strings.CloseTheQuickTabs, Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
         titles.Children.Add(UI.Text("Tes onglets rapides.", 26, null, true));
-        var sub = UI.Text(
-            "Ce que tu vois en haut de la commande rapide · renomme, change l’icône, réordonne",
-            12,
-            UI.Dim
-        );
+        var sub = UI.Text(Strings.WhatYouSeeAtTheTop, 12, UI.Dim);
         sub.Margin = new Thickness(0, 7, 0, 0);
         titles.Children.Add(sub);
         header.Children.Add(titles);
@@ -135,8 +131,8 @@ internal sealed class QuickTabsWindow : GlassWindow
             icon.Width = 38;
             icon.Height = 38;
             icon.Padding = new Thickness(0);
-            icon.ToolTip = "Changer l’icône";
-            System.Windows.Automation.AutomationProperties.SetName(icon, "Icône de " + tab.Name);
+            icon.ToolTip = Strings.ChangeTheIcon;
+            System.Windows.Automation.AutomationProperties.SetName(icon, Strings.IconOf + tab.Name);
             Button glyphTarget = icon;
             icon.Click += (_, _) => PickGlyph(glyphTarget, tab);
             row.Children.Add(icon);
@@ -205,11 +201,7 @@ internal sealed class QuickTabsWindow : GlassWindow
         add.Margin = new Thickness(0, 6, 0, 22);
         list.Children.Add(add);
         list.Children.Add(UI.Text("OUVRIR LA COMMANDE RAPIDE", 10, UI.Label, true));
-        var note = UI.Text(
-            "Un raccourci global, actif même launcher fermé, depuis n’importe quelle application. Ctrl F2 par défaut.",
-            12,
-            UI.Dim
-        );
+        var note = UI.Text(Strings.GlobalShortcutActiveEvenWithLauncherClosed, 12, UI.Dim);
         note.Margin = new Thickness(0, 8, 0, 12);
         note.TextWrapping = TextWrapping.Wrap;
         list.Children.Add(note);
@@ -218,8 +210,8 @@ internal sealed class QuickTabsWindow : GlassWindow
 
     static readonly (string Prefix, string Name)[] Protocols =
     {
-        ("ms-screenclip:", "Capture d’écran"),
-        ("ms-settings:", "Réglages Windows"),
+        ("ms-screenclip:", Strings.Screenshot),
+        ("ms-settings:", Strings.WindowsSettings),
         ("ms-windows-store:", "Microsoft Store"),
         ("ms-gamebar:", "Barre de jeu"),
         ("shell:", "Dossier Windows"),
@@ -252,7 +244,7 @@ internal sealed class QuickTabsWindow : GlassWindow
             owner,
             this,
             anchor,
-            "Choisir une icône",
+            Strings.ChooseAnIcon2,
             Icons
                 .Select(i => new MenuAction(
                     i.Name,
@@ -312,7 +304,7 @@ internal sealed class QuickTabsWindow : GlassWindow
     {
         if (Store.State.QuickTabs.Count >= 12)
         {
-            status.Text = "Douze onglets au maximum : au-delà, la palette devient un menu.";
+            status.Text = Strings.TwelveTabsAtMostBeyondThat;
             return;
         }
         Store.State.QuickTabs.Add(
@@ -407,7 +399,7 @@ internal sealed class QuickTabsWindow : GlassWindow
                     status.Foreground = UI.Brush("#F3CF91");
                     return;
                 }
-                status.Text = "Actif : " + owner.PaletteLabel + " ouvre la commande rapide, même launcher fermé.";
+                status.Text = "Actif : " + owner.PaletteLabel + Strings.OpensTheQuickCommandEvenWith;
                 status.Foreground = UI.Brush("#A0E7CF");
             }
         );

@@ -74,7 +74,7 @@ internal sealed class CpuTempChain : IDisposable
                     sources[p].RetryAt = now + 60000;
                     if (working == p)
                         working = -1;
-                    log("Température CPU " + sources[p].Name + ": sonde bloquée");
+                    log("CPU temperature " + sources[p].Name + ": probe blocked");
                 }
                 Volatile.Write(ref busy, 0);
             }
@@ -91,7 +91,7 @@ internal sealed class CpuTempChain : IDisposable
                     }
                     catch (Exception ex)
                     {
-                        log("Température CPU: " + ex.Message);
+                        log("CPU temperature: " + ex.Message);
                     }
                     finally
                     {
@@ -161,7 +161,7 @@ internal sealed class CpuTempChain : IDisposable
             if (!s.Logged)
             {
                 s.Logged = true;
-                log("Température CPU " + s.Name + ": " + ex.Message);
+                log("CPU temperature " + s.Name + ": " + ex.Message);
             }
             return null;
         }

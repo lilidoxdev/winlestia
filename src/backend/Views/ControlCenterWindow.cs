@@ -29,15 +29,15 @@ internal sealed class ControlCenterWindow : GlassWindow
     readonly Grid body = new();
     readonly TextBlock subtitle,
         note;
-    readonly GlassLevel volume = new("Volume système"),
-        brightness = new("Luminosité de l’écran") { Glyph = "\uE706" };
+    readonly GlassLevel volume = new(Strings.SystemVolume),
+        brightness = new(Strings.DisplayBrightness) { Glyph = "\uE706" };
     readonly TextBlock mediaTitle = UI.Text("Aucune lecture", 14, null, true),
         artist = UI.Text("Lance Spotify pour commencer", 11, UI.Dim),
         appName = UI.Text("MUSIQUE", 10, UI.Dim),
         elapsed = UI.Text("0:00", 10, UI.Dim),
         duration = UI.Text("0:00", 10, UI.Dim),
         device = UI.Text("Sortie Windows", 12),
-        muteLabel = UI.Text("Son activé", 12);
+        muteLabel = UI.Text(Strings.SoundOn, 12);
     readonly Image cover = new()
     {
         Width = 48,
@@ -73,7 +73,7 @@ internal sealed class ControlCenterWindow : GlassWindow
     string layoutKey = "";
 
     internal ControlCenterWindow(Coordinator coordinator)
-        : base("Panneaux Glass — centre de contrôle")
+        : base(Strings.PanneauxGlassControlCenter)
     {
         owner = coordinator;
         Radius = 38;
@@ -87,7 +87,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var title = new StackPanel();
-        title.Children.Add(UI.Text("Centre de contrôle", 23, null, true));
+        title.Children.Add(UI.Text(Strings.ControlCenter, 23, null, true));
         subtitle = UI.Text("Windows · Tes commandes essentielles", 11, UI.Dim);
         subtitle.Margin = new Thickness(0, 6, 0, 0);
         title.Children.Add(subtitle);
@@ -108,14 +108,14 @@ internal sealed class ControlCenterWindow : GlassWindow
         System.Windows.Automation.AutomationProperties.SetName(edit, "Personnaliser les commandes Windows");
         DockPanel.SetDock(edit, Dock.Right);
         footer.Children.Add(edit);
-        note = UI.Text("À ta façon", 11, UI.Dim);
+        note = UI.Text(Strings.YourWay, 11, UI.Dim);
         note.VerticalAlignment = VerticalAlignment.Center;
         note.TextTrimming = TextTrimming.CharacterEllipsis;
         note.Margin = new Thickness(2, 0, 10, 0);
         footer.Children.Add(note);
         Grid.SetRow(footer, 2);
         ContentHost.Children.Add(footer);
-        previous = MediaButton("\uE892", "Morceau précédent", () => _ = MediaCommand("previous"));
+        previous = MediaButton("\uE892", Strings.PreviousTrack, () => _ = MediaCommand("previous"));
         play = MediaButton("\uE768", "Lecture ou pause", () => _ = MediaCommand("toggle"));
         next = MediaButton("\uE893", "Morceau suivant", () => _ = MediaCommand("next"));
         play.Width = 42;
@@ -145,7 +145,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         );
         mute.HorizontalContentAlignment = HorizontalAlignment.Left;
         mute.Padding = new Thickness(13, 11, 13, 11);
-        mute.Content = IconLabel("\uE767", "Son activé", 12);
+        mute.Content = IconLabel("\uE767", Strings.SoundOn, 12);
         System.Windows.Automation.AutomationProperties.SetName(mute, "Activer ou couper le son");
         volume.ValueChanged += (_, _) =>
         {
@@ -248,7 +248,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         {
             "connections" => "Connexions",
             "media" => "Musique",
-            "levels" => "Volume et luminosité",
+            "levels" => Strings.VolumeAndBrightness,
             "actions" => "Actions rapides",
             _ => "Raccourcis Windows",
         };
@@ -421,8 +421,8 @@ internal sealed class ControlCenterWindow : GlassWindow
             {
                 ("wifi", "\uE701", "Wi-Fi"),
                 ("bluetooth", "\uE702", "Bluetooth"),
-                ("network", "\uE839", "Réseau"),
-                ("settings", "\uE713", "Réglages"),
+                ("network", "\uE839", Strings.Network),
+                ("settings", "\uE713", Strings.Settings),
             }
         )
         {
@@ -488,7 +488,7 @@ internal sealed class ControlCenterWindow : GlassWindow
             grid.Children.Add(stack);
         }
         Tile("\uE72E", "Verrouiller", "Session Windows", () => SystemActions.Lock(owner));
-        Tile("\uE722", "Capture", "Zone d’écran", () => SystemActions.Screenshot(owner));
+        Tile("\uE722", "Capture", Strings.ScreenArea, () => SystemActions.Screenshot(owner));
         Tile("\uE74D", "Corbeille", "Vider · confirmation", () => SystemActions.EmptyBin(owner));
         var power = new StackPanel
         {
@@ -508,8 +508,8 @@ internal sealed class ControlCenterWindow : GlassWindow
                         "Alimentation",
                         new[]
                         {
-                            new MenuAction("Redémarrer", "\uE72C", () => SystemActions.Power(owner, true)),
-                            new MenuAction("Éteindre", "\uE7E8", () => SystemActions.Power(owner, false)),
+                            new MenuAction(Strings.Restart, "\uE72C", () => SystemActions.Power(owner, true)),
+                            new MenuAction(Strings.ShutDown, "\uE7E8", () => SystemActions.Power(owner, false)),
                             new MenuAction("Mettre en veille", "\uE708", () => SystemActions.Sleep(owner)),
                         }
                     )
@@ -522,7 +522,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         var powerLabel = UI.Text("Alimentation", 11, null, true);
         powerLabel.HorizontalAlignment = HorizontalAlignment.Center;
         power.Children.Add(powerLabel);
-        var powerHint = UI.Text("Éteindre · veille", 9, UI.Dim);
+        var powerHint = UI.Text(Strings.ShutDownSleep, 9, UI.Dim);
         powerHint.HorizontalAlignment = HorizontalAlignment.Center;
         power.Children.Add(powerHint);
         grid.Children.Add(power);
@@ -610,19 +610,19 @@ internal sealed class ControlCenterWindow : GlassWindow
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(12) });
             var stack = new StackPanel();
             stack.Children.Add(level);
-            var caption = UI.Text(level == volume ? "Volume" : "Luminosité", 11, UI.Dim);
+            var caption = UI.Text(level == volume ? "Volume" : Strings.Brightness, 11, UI.Dim);
             caption.HorizontalAlignment = HorizontalAlignment.Center;
             caption.Margin = new Thickness(0, 8, 0, 0);
             if (level == brightness)
             {
-                var link = UI.Button("Luminosité  ›", () => OpenSetting("display"));
+                var link = UI.Button(Strings.Brightness2, () => OpenSetting("display"));
                 link.FontSize = 11;
                 link.Foreground = UI.Dim;
                 link.Background = Brushes.Transparent;
                 link.BorderBrush = Brushes.Transparent;
                 link.Padding = new Thickness(0);
                 link.Margin = new Thickness(0, 8, 0, 0);
-                link.ToolTip = "Réglages écran · ouvre les options Windows";
+                link.ToolTip = Strings.DisplaySettingsOpensTheWindowsOptions;
                 stack.Children.Add(link);
             }
             else
@@ -651,7 +651,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         options.Children.Add(mute);
         var screen = UI.Button("", () => OpenSetting("quiethours"));
         screen.Content = IconLabel("\uE708", "Concentration", 12);
-        screen.ToolTip = "Ouvrir les paramètres de concentration Windows";
+        screen.ToolTip = Strings.OpenTheWindowsFocusSettings;
         screen.HorizontalContentAlignment = HorizontalAlignment.Left;
         screen.Padding = new Thickness(13, 11, 13, 11);
         options.Children.Add(screen);
@@ -733,11 +733,11 @@ internal sealed class ControlCenterWindow : GlassWindow
         if (activeSince != 0)
         {
             Store.Log(
-                "Activité commandes · ms="
+                "Controls activity · ms="
                     + (Environment.TickCount64 - activeSince)
                     + " · audio="
                     + audioReads
-                    + " · médias="
+                    + " · media="
                     + mediaReads
                     + " · notifications="
                     + mediaEvents
@@ -773,7 +773,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         catch (Exception ex)
         {
             mediaTitle.Text = "Lecture indisponible";
-            artist.Text = "Ouvrir les commandes audio Windows";
+            artist.Text = Strings.OpenTheWindowsAudioControls;
             Store.Log("SMTC: " + ex.Message);
         }
     }
@@ -795,15 +795,13 @@ internal sealed class ControlCenterWindow : GlassWindow
                 volume.Value = audioState.Volume;
             volume.Glyph = audioState.Muted || audioState.Volume < 1 ? "\uE74F" : "\uE767";
             volume.InvalidateVisual();
-            volume.ToolTip = audioState.Available
-                ? "Volume système · glisser ou utiliser la molette"
-                : "Aucune sortie audio disponible";
+            volume.ToolTip = audioState.Available ? Strings.SystemVolumeDragOrUseThe : "Aucune sortie audio disponible";
             device.Text = audioState.Device;
             device.ToolTip = audioState.Device;
             mute.IsEnabled = audioState.Available;
             mute.Content = IconLabel(
                 audioState.Muted ? "\uE74F" : "\uE767",
-                audioState.Muted ? "Son coupé" : "Son activé",
+                audioState.Muted ? Strings.SoundMuted : Strings.SoundOn,
                 12
             );
         }
@@ -905,7 +903,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         var actions = new List<MenuAction>
         {
             new(
-                "Automatique · priorité à Spotify",
+                Strings.AutomaticSpotifyFirst,
                 "\uE8D6",
                 () =>
                 {
@@ -963,7 +961,7 @@ internal sealed class ControlCenterWindow : GlassWindow
     {
         if (connectionState is not { } s)
             return;
-        subtitle.Text = s.Internet ? s.Network + " · Connecté à Internet" : "Windows · Hors connexion";
+        subtitle.Text = s.Internet ? s.Network + Strings.ConnectedToTheInternet : "Windows · Hors connexion";
         foreach (string id in new[] { "wifi", "bluetooth", "network" })
             if (radios.TryGetValue(id, out var tile))
             {
@@ -986,20 +984,20 @@ internal sealed class ControlCenterWindow : GlassWindow
                     !present ? "Absent"
                     : id == "network"
                         ? s.Ethernet ? "Ethernet"
-                            : s.Internet ? "Connecté"
+                            : s.Internet ? Strings.Connected
                             : "Hors ligne"
-                    : on ? "Activé"
-                    : "Désactivé";
+                    : on ? Strings.On
+                    : Strings.Off;
                 tile.button.ToolTip =
                     id == "wifi"
                         ? s.Wifi.Present
-                            ? "Activer/désactiver le Wi-Fi · clic droit pour les réseaux"
-                            : "Wi-Fi absent · ouvrir les réglages"
+                            ? Strings.ToggleWiFiRightClickFor
+                            : Strings.WiFiMissingOpenSettings
                         : id == "bluetooth"
                             ? s.Bluetooth.Present
-                                ? "Activer/désactiver Bluetooth · clic droit pour les appareils"
-                                : "Bluetooth absent · ouvrir les réglages"
-                            : "Ouvrir les connexions Windows";
+                                ? Strings.ToggleBluetoothRightClickForDevices
+                                : Strings.BluetoothMissingOpenSettings
+                            : Strings.OpenTheWindowsConnections;
             }
     }
 
@@ -1055,7 +1053,7 @@ internal sealed class ControlCenterWindow : GlassWindow
     {
         int expected = revision;
         brightness.IsEnabled = false;
-        brightness.ToolTip = "Lecture du réglage de l’écran…";
+        brightness.ToolTip = Strings.ReadingTheDisplaySetting;
         try
         {
             var state = await MonitorBrightness.ReadAsync(ScreenPoint());
@@ -1067,8 +1065,8 @@ internal sealed class ControlCenterWindow : GlassWindow
                 brightness.IsEnabled = state.Available;
                 brightness.Value = state.Value;
                 brightness.ToolTip = state.Available
-                    ? state.Device + " · glisser pour régler"
-                    : state.Error + " Clique sur Luminosité pour ouvrir les réglages écran.";
+                    ? state.Device + Strings.DragToAdjust
+                    : state.Error + Strings.ClickBrightnessToOpenTheDisplay;
             }
             finally
             {
@@ -1077,8 +1075,8 @@ internal sealed class ControlCenterWindow : GlassWindow
         }
         catch (Exception ex)
         {
-            brightness.ToolTip = "Réglage non disponible · clique sur Luminosité pour les réglages écran";
-            Store.Log("Luminosité: " + ex.Message);
+            brightness.ToolTip = Strings.SettingUnavailableClickBrightnessForThe;
+            Store.Log("Brightness: " + ex.Message);
         }
     }
 
@@ -1113,5 +1111,5 @@ internal sealed class ControlCenterWindow : GlassWindow
     }
 
     void OpenSetting(string page) =>
-        owner.LaunchWindowsShortcut(new() { Name = "Réglages Windows", Target = "ms-settings:" + page });
+        owner.LaunchWindowsShortcut(new() { Name = Strings.WindowsSettings, Target = "ms-settings:" + page });
 }

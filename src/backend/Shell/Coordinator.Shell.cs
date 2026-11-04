@@ -53,7 +53,7 @@ internal sealed partial class Coordinator
         Store.State.ReplaceTaskbar = enabled && applied;
         Store.Save();
         if (!applied)
-            Message("Le secours de la barre n’a pas démarré. La barre Windows reste disponible.");
+            Message(Strings.TheTaskbarRescueDidNotStart);
     }
 
     // Engine shutdown restores the Windows bar without rewriting the user's preference:
@@ -108,13 +108,13 @@ internal sealed partial class Coordinator
             this,
             parent,
             anchor,
-            "Ta barre des tâches",
+            Strings.YourTaskbar,
             new[]
             {
                 new MenuAction("Tableau de bord", "\uE8A9", () => ShowShellPage("dashboard")),
                 new MenuAction("Applications et fichiers", "\uE8B7", () => ShowWorkspace()),
                 new MenuAction("Personnaliser…", "\uE713", () => Settings(), Separator: true),
-                new MenuAction("Rétablir la barre Windows", "\uE777", () => SetTaskbar(false)),
+                new MenuAction(Strings.RestoreTheWindowsTaskbar, "\uE777", () => SetTaskbar(false)),
                 new MenuAction("Quitter Panneaux", "\uE711", () => System.Windows.Application.Current.Shutdown()),
             },
             true
@@ -129,9 +129,9 @@ internal sealed partial class Coordinator
             entry.Name,
             new[]
             {
-                new MenuAction("Ouvrir une nouvelle fenêtre", "\uE8A7", () => Launch(entry)),
+                new MenuAction(Strings.OpenNewWindow, "\uE8A7", () => Launch(entry)),
                 new MenuAction(
-                    pinned ? "Détacher de la barre" : "Épingler à la barre",
+                    pinned ? Strings.UnpinFromTheTaskbar : Strings.PinToTheTaskbar,
                     "\uE718",
                     () =>
                     {
@@ -193,19 +193,19 @@ internal sealed partial class Coordinator
             target = lastForeign;
         if (target == IntPtr.Zero || !Native.IsWindow(target))
         {
-            ShowToast("Aucune fenêtre à épingler");
+            ShowToast(Strings.NoWindowToPin);
             return;
         }
         bool applied = Native.ToggleTopmost(target, out bool topmost);
         if (!applied)
         {
-            ShowToast("Windows a refusé ce changement");
+            ShowToast(Strings.WindowsRefusedThisChange);
             return;
         }
         string title = Native.Title(target);
         if (title.Length > 38)
             title = title[..37] + "…";
-        ShowToast((topmost ? "Au premier plan · " : "Rangée normalement · ") + title);
+        ShowToast((topmost ? "Au premier plan · " : Strings.TidiedNormally) + title);
     }
 
     internal void ApplyClipboardSettings() => clipboard.ApplySettings();
@@ -214,20 +214,16 @@ internal sealed partial class Coordinator
     {
         bool next = !SystemTools.NotificationsOn;
         SystemTools.SetNotifications(next);
-        ShowToast(next ? "Notifications rétablies" : "Notifications coupées");
+        ShowToast(next ? Strings.NotificationsRestored : Strings.NotificationsMuted);
     }
 
     internal void RestartExplorer()
     {
-        if (
-            !Confirm(
-                "Redémarrer l’Explorateur Windows ?\n\nLa barre des tâches et le Bureau vont clignoter, tes fenêtres restent ouvertes."
-            )
-        )
+        if (!Confirm(Strings.RestartWindowsExplorerTheTaskbarAnd))
             return;
         CloseDialogs();
         SystemTools.RestartExplorer();
-        ShowToast("Explorateur redémarré");
+        ShowToast(Strings.ExplorerRestarted);
     }
 
     internal async void OpenCapture(bool textOnly = false)

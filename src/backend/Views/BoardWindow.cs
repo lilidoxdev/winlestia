@@ -88,7 +88,7 @@ internal sealed class BoardWindow : GlassWindow
         };
         star = UI.IconButton(
             "\uE734",
-            "Favoris · " + model.Title,
+            Strings.FavouritesPrefix + model.Title,
             () =>
             {
                 Model.FavoritesOnly = !Model.FavoritesOnly;
@@ -99,7 +99,7 @@ internal sealed class BoardWindow : GlassWindow
         );
         star.Margin = new Thickness(0, 0, 7, 0);
         actions.Children.Add(star);
-        var add = UI.IconButton("\uE710", "Ajouter un accès à " + model.Title, () => owner.AddAccess(model.Id));
+        var add = UI.IconButton("\uE710", Strings.AddAShortcutTo + model.Title, () => owner.AddAccess(model.Id));
         add.Margin = new Thickness(0, 0, 7, 0);
         actions.Children.Add(add);
         actions.Children.Add(UI.IconButton("\uE713", "Personnaliser " + model.Title, () => owner.Settings(model.Id)));
@@ -109,7 +109,7 @@ internal sealed class BoardWindow : GlassWindow
         var filterRow = new DockPanel { LastChildFill = false, Margin = new Thickness(0, 23, 0, 17) };
         Grid.SetRow(filterRow, 1);
         ContentHost.Children.Add(filterRow);
-        selector = UI.Button("Toutes les catégories  ⌄", OpenCategories);
+        selector = UI.Button(Strings.CategoryLabel("Tous") + "  ⌄", OpenCategories);
         selector.Padding = new Thickness(12, 7, 12, 7);
         selector.FontSize = 12;
         selector.Margin = new Thickness(0, 0, 9, 0);
@@ -123,13 +123,13 @@ internal sealed class BoardWindow : GlassWindow
         footer.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         Grid.SetRow(footer, 3);
         ContentHost.Children.Add(footer);
-        var note = UI.Text("Glisser le titre · Étirer les bords", 11, UI.Label);
+        var note = UI.Text(Strings.DragTheTitleStretchTheEdges, 11, UI.Label);
         note.VerticalAlignment = VerticalAlignment.Center;
         footer.Children.Add(note);
         var pages = new StackPanel { Orientation = Orientation.Horizontal };
         Grid.SetColumn(pages, 1);
         footer.Children.Add(pages);
-        previous = UI.IconButton("\uE76B", "Page précédente", () => Turn(-1));
+        previous = UI.IconButton("\uE76B", Strings.PreviousPage, () => Turn(-1));
         previous.Width = 30;
         previous.Height = 28;
         pages.Children.Add(previous);
@@ -263,14 +263,14 @@ internal sealed class BoardWindow : GlassWindow
             filtered = Store.Sorted(selection).ToList();
             caption.Text = Model.Id switch
             {
-                "apps" => all.Count + " logiciels · tes outils au même endroit",
-                "games" => all.Count + " accès · trouve ton prochain jeu",
-                "projects" => all.Count + " espaces · reprends là où tu en étais",
-                _ => all.Count + " dossiers · le quotidien à portée de main",
+                "apps" => all.Count + Strings.ProgramsYourToolsInOnePlace,
+                "games" => all.Count + Strings.ShortcutsFindYourNextGame,
+                "projects" => all.Count + Strings.SpacesPickUpWhereYouLeft,
+                _ => all.Count + Strings.FoldersEverydayLifeWithinReach,
             };
             selector.Content = Model.FavoritesOnly
-                ? "Favoris · " + Model.Title + "  ⌄"
-                : (filter == "Tous" ? "Toutes les catégories" : filter) + "  ⌄";
+                ? Strings.FavouritesPrefix + Model.Title + "  ⌄"
+                : Strings.CategoryLabel(filter) + "  ⌄";
             BuildQuick();
             RenderItems(animate, direction);
         }
@@ -296,7 +296,7 @@ internal sealed class BoardWindow : GlassWindow
         foreach (string text in options)
         {
             var b = UI.Button(
-                text,
+                Strings.CategoryLabel(text),
                 () =>
                 {
                     Model.FavoritesOnly = false;
@@ -317,11 +317,11 @@ internal sealed class BoardWindow : GlassWindow
     {
         var actions = new List<MenuAction>
         {
-            new("Toutes les catégories", "\uE8A9", () => SetFilter("Tous"), Model.Filter == "Tous"),
+            new(Strings.CategoryLabel("Tous"), "\uE8A9", () => SetFilter("Tous"), Model.Filter == "Tous"),
         };
         if (Model.Id == "apps")
             actions.Add(
-                new("Sélection du quotidien", "\uE734", () => SetFilter("Sélection"), Model.Filter == "Sélection")
+                new(Strings.EverydaySelection, "\uE734", () => SetFilter("Sélection"), Model.Filter == "Sélection")
             );
         foreach (
             var cat in Store
@@ -333,10 +333,16 @@ internal sealed class BoardWindow : GlassWindow
         {
             string local = cat;
             actions.Add(
-                new(cat, GlassMenu.CategoryGlyph(cat), () => SetFilter(local), Model.Filter == cat, actions.Count == 1)
+                new(
+                    Strings.CategoryLabel(cat),
+                    GlassMenu.CategoryGlyph(cat),
+                    () => SetFilter(local),
+                    Model.Filter == cat,
+                    actions.Count == 1
+                )
             );
         }
-        GlassMenu.Open(owner, this, selector, "Catégories · " + Model.Title, actions);
+        GlassMenu.Open(owner, this, selector, Strings.Categories + Model.Title, actions);
     }
 
     void SetFilter(string filter)
@@ -443,7 +449,7 @@ internal sealed class BoardWindow : GlassWindow
             var g = UI.Glyph("\uE721", 29);
             g.Opacity = .6;
             empty.Children.Add(g);
-            var label = UI.Text("Aucun accès dans cette vue", 15, UI.Dim);
+            var label = UI.Text(Strings.NoShortcutInThisView, 15, UI.Dim);
             label.Margin = new Thickness(0, 16, 0, 0);
             empty.Children.Add(label);
             itemsHost.Children.Add(empty);
@@ -733,7 +739,7 @@ internal sealed class BoardWindow : GlassWindow
             entry.Name,
             new[]
             {
-                new MenuAction("Ouvrir", "\uE8A7", () => owner.Launch(entry)),
+                new MenuAction(Strings.Open, "\uE8A7", () => owner.Launch(entry)),
                 new MenuAction(
                     Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris" : "Ajouter aux favoris",
                     "\uE734",
@@ -746,15 +752,15 @@ internal sealed class BoardWindow : GlassWindow
                     }
                 ),
                 new MenuAction(
-                    Store.State.TaskbarPins.Contains(entry.Id) ? "Détacher de la barre" : "Épingler à la barre",
+                    Store.State.TaskbarPins.Contains(entry.Id) ? Strings.UnpinFromTheTaskbar : Strings.PinToTheTaskbar,
                     "\uE718",
                     () => owner.ToggleTaskbarPin(entry)
                 ),
-                new MenuAction("Personnaliser cet accès…", "\uE70F", () => owner.Edit(entry), Separator: true),
+                new MenuAction(Strings.CustomizeThisShortcut, "\uE70F", () => owner.Edit(entry), Separator: true),
                 new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)),
                 new MenuAction("Copier le chemin", "\uE8C8", () => System.Windows.Clipboard.SetText(entry.Target)),
                 new MenuAction(
-                    "Masquer cet accès",
+                    Strings.HideThisShortcut,
                     "\uE890",
                     () =>
                     {

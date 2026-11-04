@@ -110,7 +110,7 @@ public static class Store
             }
             catch (Exception ex2) when (ex2 is IOException || ex2 is UnauthorizedAccessException)
             {
-                Log(Path.GetFileName(path) + ": lecture impossible: " + ex2.Message);
+                Log(Path.GetFileName(path) + ": read failed: " + ex2.Message);
                 return new T();
             }
         }
@@ -141,7 +141,7 @@ public static class Store
                 var recovered = JsonSerializer.Deserialize<T>(File.ReadAllText(bak, Encoding.UTF8), Json);
                 if (recovered != null)
                 {
-                    Log(Path.GetFileName(path) + ": restauré depuis .bak");
+                    Log(Path.GetFileName(path) + ": restored from .bak");
                     // Put the good copy back as main: the next Save would otherwise roll the corrupt main over the good .bak.
                     try
                     {
@@ -149,7 +149,7 @@ public static class Store
                     }
                     catch (Exception ex2)
                     {
-                        Log(Path.GetFileName(path) + ": restauration du principal impossible: " + ex2.Message);
+                        Log(Path.GetFileName(path) + ": could not restore the main file: " + ex2.Message);
                     }
                     return recovered;
                 }
@@ -159,7 +159,7 @@ public static class Store
                 Log(Path.GetFileName(path) + ".bak: " + ex2.Message);
             }
         }
-        Log(Path.GetFileName(path) + ": valeurs par défaut utilisées");
+        Log(Path.GetFileName(path) + ": default values used");
         return new T();
     }
 
@@ -171,11 +171,11 @@ public static class Store
             if (!InDataDir(path))
                 return;
             File.Copy(path, path + ".corrupt.bak", true);
-            Log(Path.GetFileName(path) + ": copie du fichier illisible conservée (.corrupt.bak)");
+            Log(Path.GetFileName(path) + ": unreadable file copy kept (.corrupt.bak)");
         }
         catch (Exception ex)
         {
-            Log(Path.GetFileName(path) + ": copie .corrupt.bak impossible: " + ex.Message);
+            Log(Path.GetFileName(path) + ": could not copy .corrupt.bak: " + ex.Message);
         }
     }
 
@@ -248,7 +248,7 @@ public static class Store
                 }
                 catch (Exception ex)
                 {
-                    Log("Migration " + folder + " (déplacement): " + ex.Message);
+                    Log("Migration " + folder + " (move): " + ex.Message);
                     try
                     {
                         if (Directory.Exists(tmp))

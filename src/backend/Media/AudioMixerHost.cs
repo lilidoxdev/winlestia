@@ -91,7 +91,7 @@ internal sealed class AudioMixerHost : IDisposable
                     try
                     {
                         if (!enabled)
-                            throw new InvalidOperationException("Ouvre le mixeur pour régler une application.");
+                            throw new InvalidOperationException(Strings.OpenMixerToAdjustApp);
                         if (!mixer.Running)
                             mixer.Refresh();
                         command.action(mixer);

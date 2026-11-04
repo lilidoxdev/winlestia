@@ -77,14 +77,14 @@ internal sealed class GlobalShortcut : IDisposable
         if (wallpaper != null && !TrySetWallpaper(wallpaper.Modifiers, wallpaper.Key, out var failure))
         {
             Store.Log(
-                "Sélecteur de fonds d’écran · "
+                "Wallpaper picker · "
                     + Label(wallpaper.Modifiers, wallpaper.Key)
-                    + " refusé : "
+                    + " refused: "
                     + failure
                     + " · repli sur Ctrl + Alt + W"
             );
             if (!TrySetWallpaper(3, 0x57, out failure))
-                Store.Log("Sélecteur de fonds d’écran · repli refusé : " + failure);
+                Store.Log("Wallpaper picker · fallback refused: " + failure);
         }
     }
 
@@ -107,7 +107,7 @@ internal sealed class GlobalShortcut : IDisposable
         error = "";
         if (!ValidWallpaper(nextModifiers, nextKey))
         {
-            error = "Choisis Ctrl, Alt ou Windows et une touche. Ctrl + Alt + Retour arrière est réservé au secours.";
+            error = Strings.ChooseCtrlAltOrWindowsAnd;
             return false;
         }
         if (
@@ -117,7 +117,7 @@ internal sealed class GlobalShortcut : IDisposable
             || (nextModifiers == captureModifiers && nextKey == captureKey && captureId != 0)
         )
         {
-            error = "Cette combinaison est déjà utilisée par Panneaux.";
+            error = Strings.ThisCombinationIsAlreadyUsedBy;
             return false;
         }
         if (wallpaperId != 0 && nextModifiers == wallpaperModifiers && nextKey == wallpaperKey)
@@ -131,7 +131,7 @@ internal sealed class GlobalShortcut : IDisposable
             int code = Marshal.GetLastWin32Error();
             error =
                 code == 1409
-                    ? "Cette combinaison est déjà utilisée par une autre application."
+                    ? Strings.ThisCombinationIsAlreadyUsedBy2
                     : "Windows refuse cette combinaison (" + code + ").";
             WallpaperError = error;
             return false;
@@ -159,7 +159,7 @@ internal sealed class GlobalShortcut : IDisposable
             || (nextModifiers == pinModifiers && nextKey == pinKey && pinId != 0)
         )
         {
-            error = "Cette combinaison est déjà utilisée par Panneaux.";
+            error = Strings.ThisCombinationIsAlreadyUsedBy;
             return false;
         }
         if (captureId != 0 && nextModifiers == captureModifiers && nextKey == captureKey)
@@ -173,7 +173,7 @@ internal sealed class GlobalShortcut : IDisposable
             int code = Marshal.GetLastWin32Error();
             error =
                 code == 1409
-                    ? "Cette combinaison est déjà utilisée par une autre application."
+                    ? Strings.ThisCombinationIsAlreadyUsedBy2
                     : "Windows refuse cette combinaison (" + code + ").";
             CaptureError = error;
             return false;
@@ -200,12 +200,12 @@ internal sealed class GlobalShortcut : IDisposable
             || (nextModifiers == paletteModifiers && nextKey == paletteKey && paletteId != 0)
         )
         {
-            error = "Cette combinaison est déjà utilisée par Panneaux.";
+            error = Strings.ThisCombinationIsAlreadyUsedBy;
             return false;
         }
         if ((nextModifiers == captureModifiers && nextKey == captureKey && captureId != 0))
         {
-            error = "Cette combinaison lance déjà la capture.";
+            error = Strings.ThisCombinationAlreadyStartsTheCapture;
             return false;
         }
         if (pinId != 0 && nextModifiers == pinModifiers && nextKey == pinKey)
@@ -219,7 +219,7 @@ internal sealed class GlobalShortcut : IDisposable
             int code = Marshal.GetLastWin32Error();
             error =
                 code == 1409
-                    ? "Cette combinaison est déjà utilisée par une autre application."
+                    ? Strings.ThisCombinationIsAlreadyUsedBy2
                     : "Windows refuse cette combinaison (" + code + ").";
             PinError = error;
             return false;
@@ -238,12 +238,12 @@ internal sealed class GlobalShortcut : IDisposable
         error = "";
         if (!Valid(nextModifiers, nextKey))
         {
-            error = "Choisis Ctrl ou Alt et une touche. Ctrl + Alt + Retour arrière est réservé au secours.";
+            error = Strings.ChooseCtrlOrAltAndA;
             return false;
         }
         if (nextModifiers == paletteModifiers && nextKey == paletteKey && paletteId != 0)
         {
-            error = "Ce raccourci ouvre déjà la commande rapide. Choisis une autre combinaison.";
+            error = Strings.ThisShortcutAlreadyOpensTheQuick;
             return false;
         }
         if (
@@ -271,8 +271,8 @@ internal sealed class GlobalShortcut : IDisposable
             int code = Marshal.GetLastWin32Error();
             error =
                 code == 1409
-                    ? "Ce raccourci est déjà utilisé. Choisis une autre combinaison ; le précédent reste actif."
-                    : "Windows refuse ce raccourci (" + code + "). Le précédent reste actif.";
+                    ? Strings.ThisShortcutIsAlreadyInUse
+                    : "Windows refuse ce raccourci (" + code + Strings.ThePreviousOneStaysActive;
             Error = error;
             return false;
         }
@@ -290,12 +290,12 @@ internal sealed class GlobalShortcut : IDisposable
         error = "";
         if (!Valid(nextModifiers, nextKey))
         {
-            error = "Choisis Ctrl ou Alt et une touche. Ctrl + Alt + Retour arrière est réservé au secours.";
+            error = Strings.ChooseCtrlOrAltAndA;
             return false;
         }
         if (nextModifiers == modifiers && nextKey == key && customId != 0)
         {
-            error = "Cette combinaison ouvre déjà ton espace. Choisis une autre touche.";
+            error = Strings.ThisCombinationAlreadyOpensYourSpace;
             return false;
         }
         if (paletteId != 0 && nextModifiers == paletteModifiers && nextKey == paletteKey)
@@ -309,8 +309,8 @@ internal sealed class GlobalShortcut : IDisposable
             int code = Marshal.GetLastWin32Error();
             error =
                 code == 1409
-                    ? "Ce raccourci est déjà utilisé. Choisis une autre combinaison ; le précédent reste actif."
-                    : "Windows refuse ce raccourci (" + code + "). Le précédent reste actif.";
+                    ? Strings.ThisShortcutIsAlreadyInUse
+                    : "Windows refuse ce raccourci (" + code + Strings.ThePreviousOneStaysActive;
             PaletteError = error;
             return false;
         }

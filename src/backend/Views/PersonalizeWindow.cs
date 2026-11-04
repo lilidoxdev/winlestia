@@ -34,10 +34,10 @@ internal sealed class PersonalizeWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var titleRow = new DockPanel();
-        var done = UI.IconButton("\uE711", "Fermer la personnalisation", Close);
+        var done = UI.IconButton("\uE711", Strings.CloseCustomization, Close);
         DockPanel.SetDock(done, Dock.Right);
         titleRow.Children.Add(done);
-        titleRow.Children.Add(UI.Text("À ta façon.", 29, null, true));
+        titleRow.Children.Add(UI.Text(Strings.YourWay2, 29, null, true));
         ContentHost.Children.Add(titleRow);
         var scroll = new ScrollViewer
         {
@@ -52,7 +52,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         DailySection();
         ShortcutSection();
         Section("LE VERRE");
-        Description("La matière, les reflets et la densité de ton espace.");
+        Description(Strings.TheMaterialReflectionsAndDensityOf);
         AddSlider(
             "Teinte du verre",
             .05,
@@ -62,7 +62,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             v => Math.Round(v * 100) + " %"
         );
         AddSlider(
-            "Intensité des reflets",
+            Strings.ReflectionIntensity,
             0,
             1,
             Store.State.Reflections,
@@ -70,7 +70,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             v => Math.Round(v * 100) + " %"
         );
         AddSlider(
-            "Taille des icônes",
+            Strings.IconSize,
             40,
             80,
             Store.State.IconSize,
@@ -79,9 +79,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         );
         Check("Verre clair", Store.State.LightGlass, value => Store.State.LightGlass = value);
         Section("LES QUATRE PANNEAUX");
-        Description(
-            "Renomme, colore et réordonne les surfaces. Glisse les accès d’un panneau à l’autre pour les ranger."
-        );
+        Description(Strings.RenameColorAndReorderTheSurfaces);
         foreach (var model in Store.State.Boards.ToArray())
             BoardRow(model, model.Id == boardId);
         AddSlider(
@@ -93,7 +91,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             v => Math.Round(v * 100) + " %"
         );
         AddSlider(
-            "Hauteur de la première rangée",
+            Strings.FirstRowHeight,
             .3,
             .7,
             Store.State.TopRatio,
@@ -117,18 +115,14 @@ internal sealed class PersonalizeWindow : GlassWindow
             v => Math.Round(v) + " px"
         );
         Section("LA BARRE DES TÂCHES ET LE BORD");
+        Check(Strings.UseThePanneauxBarInsteadOf, coordinator.TaskbarEnabled, coordinator.SetTaskbar);
         Check(
-            "Utiliser la barre Panneaux à la place de la barre Windows",
-            coordinator.TaskbarEnabled,
-            coordinator.SetTaskbar
-        );
-        Check(
-            "Afficher la poignée sur le bord gauche",
+            Strings.ShowTheHandleOnTheLeft,
             Store.State.RailSide != "right",
             value => Store.State.RailSide = value ? "left" : "right"
         );
         AddSlider(
-            "Largeur de la poignée",
+            Strings.HandleWidth,
             40,
             90,
             Store.State.RailWidth,
@@ -136,32 +130,28 @@ internal sealed class PersonalizeWindow : GlassWindow
             v => Math.Round(v) + " px"
         );
         AddSlider(
-            "Hauteur de la poignée",
+            Strings.HandleHeight,
             .45,
             .94,
             Store.State.RailHeight,
             v => Store.State.RailHeight = v,
-            v => Math.Round(v * 100) + " % de l’écran"
+            v => Math.Round(v * 100) + Strings.OfTheScreen
         );
         AddSlider(
-            "Durée des animations",
+            Strings.AnimationDuration,
             0,
             1.5,
             Store.State.Motion,
             v => Store.State.Motion = v,
             v => v < .02 ? "Sans animation" : Math.Round(v * 160) + " ms"
         );
+        Check(Strings.CollapseAfter18SecondsOutside, Store.State.AutoHide, value => Store.State.AutoHide = value);
         Check(
-            "Replier après 1,8 seconde hors des panneaux",
-            Store.State.AutoHide,
-            value => Store.State.AutoHide = value
-        );
-        Check(
-            "Mettre le bord en pause pendant le plein écran",
+            Strings.PauseTheEdgeDuringFullScreen,
             Store.State.PauseFullscreen,
             value => Store.State.PauseFullscreen = value
         );
-        Check("Lancer Panneaux à l’ouverture de session", Native.Autostart, value => Native.SetAutostart(value));
+        Check(Strings.LaunchPanneauxAtSignIn, Native.Autostart, value => Native.SetAutostart(value));
         Section("TES ACCÈS");
         var choices = new WrapPanel();
         foreach (var board in Store.State.Boards)
@@ -179,7 +169,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         if (Store.State.Hidden.Count > 0)
         {
             var unhide = UI.Button(
-                "Réafficher les " + Store.State.Hidden.Count + " accès masqués",
+                Strings.ShowThe + Store.State.Hidden.Count + Strings.HiddenShortcutsAgain,
                 () =>
                 {
                     Store.State.Hidden.Clear();
@@ -197,14 +187,12 @@ internal sealed class PersonalizeWindow : GlassWindow
         transfers.Children.Add(import);
         body.Children.Add(transfers);
         Section("LE BUREAU, TOUJOURS ACCESSIBLE");
-        Description(
-            "Le secours natif réaffiche et organise tes icônes, arrête Panneaux et désactive son démarrage automatique. Il fonctionne même lorsque l’interface ne répond plus."
-        );
-        var rescue = UI.Button("Retrouver le Bureau organisé", coordinator.Rescue);
+        Description(Strings.TheNativeRescueToolShowsAnd);
+        var rescue = UI.Button(Strings.RestoreTheOrganizedDesktop, coordinator.Rescue);
         rescue.HorizontalAlignment = HorizontalAlignment.Left;
         body.Children.Add(rescue);
         var show = UI.Button(
-            "Afficher seulement les icônes du Bureau",
+            Strings.ShowOnlyTheDesktopIcons,
             () =>
             {
                 Native.Desktop(false);
@@ -214,7 +202,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         show.Margin = new Thickness(0, 10, 0, 0);
         body.Children.Add(show);
         var hide = UI.Button(
-            "Masquer les icônes du Bureau",
+            Strings.HideTheDesktopIcons,
             () =>
             {
                 Native.Desktop(true);
@@ -224,11 +212,11 @@ internal sealed class PersonalizeWindow : GlassWindow
         hide.Margin = new Thickness(0, 10, 0, 0);
         body.Children.Add(hide);
         var footer = new DockPanel();
-        var close = UI.Button("Terminé", Close);
+        var close = UI.Button(Strings.Done, Close);
         close.MinWidth = 120;
         DockPanel.SetDock(close, Dock.Right);
         footer.Children.Add(close);
-        var auto = UI.Text("Enregistré automatiquement · Les fichiers restent à leur place.", 12, UI.Dim);
+        var auto = UI.Text(Strings.SavedAutomaticallyFilesStayWhereThey, 12, UI.Dim);
         auto.VerticalAlignment = VerticalAlignment.Center;
         footer.Children.Add(auto);
         Grid.SetRow(footer, 2);
@@ -267,9 +255,7 @@ internal sealed class PersonalizeWindow : GlassWindow
     void ThemeSection()
     {
         Section("THÈMES");
-        Description(
-            "Chaque thème change la matière, la typographie, la forme des cartes et la disposition de l’accueil. Toutes les fonctions restent identiques."
-        );
+        Description(Strings.EachThemeChangesTheMaterialThe);
         body.Children.Add(themeGrid);
         ThemeCards();
     }
@@ -313,7 +299,7 @@ internal sealed class PersonalizeWindow : GlassWindow
                         )
                     ),
             };
-            System.Windows.Automation.AutomationProperties.SetName(card, "Thème " + theme.Name);
+            System.Windows.Automation.AutomationProperties.SetName(card, Strings.Theme + theme.Name);
             var text = new SolidColorBrush(theme.Text);
             var dim = new SolidColorBrush(theme.Dim);
             var stack = new StackPanel();
@@ -473,9 +459,7 @@ internal sealed class PersonalizeWindow : GlassWindow
     void DailySection()
     {
         Section("LE QUOTIDIEN");
-        Description(
-            "Ce qui sert tous les jours : un presse-papiers qui se souvient, une capture qui reste à l’écran, une fenêtre épinglée au premier plan. Chaque geste se coupe ici s’il ne te sert pas."
-        );
+        Description(Strings.WhatYouUseEveryDayA);
         var motion = new WrapPanel { Margin = new Thickness(0, 0, 0, 12) };
         foreach (var (level, name) in new[] { (0, "Calme"), (1, "Standard"), (2, "Expressif") })
         {
@@ -492,7 +476,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             chip.Padding = new Thickness(14, 7, 14, 7);
             chip.Margin = new Thickness(0, 0, 8, 0);
             chip.Tag = name;
-            System.Windows.Automation.AutomationProperties.SetName(chip, "Intensité du mouvement : " + name);
+            System.Windows.Automation.AutomationProperties.SetName(chip, Strings.MotionIntensity + name);
             motion.Children.Add(chip);
         }
         RefreshMotion(motion);
@@ -507,20 +491,20 @@ internal sealed class PersonalizeWindow : GlassWindow
             }
         );
         Check(
-            "Mémoriser aussi les images copiées",
+            Strings.AlsoRememberCopiedImages,
             Store.State.ClipboardImages,
             value => Store.State.ClipboardImages = value
         );
         AddSlider(
-            "Éléments conservés",
+            Strings.ItemsKept,
             8,
             80,
             Store.State.ClipboardLimit,
             v => Store.State.ClipboardLimit = (int)Math.Round(v),
-            v => Math.Round(v) + " éléments"
+            v => Math.Round(v) + Strings.Items
         );
         ShortcutEditor(
-            "ÉPINGLER AU PREMIER PLAN",
+            Strings.PINTOTHEFOREGROUND,
             Store.State.PinShortcut,
             (modifiers, key) =>
             {
@@ -532,7 +516,7 @@ internal sealed class PersonalizeWindow : GlassWindow
                 : coordinator.PinStatus
         );
         ShortcutEditor(
-            "CAPTURER L’ÉCRAN",
+            Strings.CAPTURETHESCREEN,
             Store.State.CaptureShortcut,
             (modifiers, key) =>
             {
@@ -544,7 +528,7 @@ internal sealed class PersonalizeWindow : GlassWindow
                 : coordinator.CaptureStatus
         );
         var tools = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 20, 0, 0) };
-        var open = UI.Button("Ouvrir l’atelier", () => coordinator.OpenTools());
+        var open = UI.Button(Strings.OpenTheWorkshop, () => coordinator.OpenTools());
         tools.Children.Add(open);
         var help = UI.Button("Aide et raccourcis", () => coordinator.OpenHelp());
         help.Margin = new Thickness(10, 0, 0, 0);
@@ -730,9 +714,7 @@ internal sealed class PersonalizeWindow : GlassWindow
     void ShortcutSection()
     {
         Section("OUVRIR DEPUIS N’IMPORTE QUELLE APPLICATION");
-        Description(
-            "Un appui ouvre ton espace au premier plan. Un second le replie. Choisis aussi la vue à retrouver pour accéder au son et à ta musique immédiatement."
-        );
+        Description(Strings.OnePressOpensYourSpaceIn);
         var current = Store.State.Shortcut;
         uint key = current.Key;
         string view = current.View;
@@ -790,7 +772,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             (ctrl.IsChecked == true ? 2u : 0) | (alt.IsChecked == true ? 1u : 0) | (shift.IsChecked == true ? 4u : 0);
         void Preview()
         {
-            status.Text = "À appliquer : " + GlobalShortcut.Label(Modifiers(), key);
+            status.Text = Strings.ToApply + GlobalShortcut.Label(Modifiers(), key);
             status.Foreground = UI.Dim;
         }
         foreach (var check in new[] { ctrl, alt, shift })
@@ -802,9 +784,9 @@ internal sealed class PersonalizeWindow : GlassWindow
         {
             ("controls", "Accueil + commandes Windows"),
             ("home", "Accueil seul"),
-            ("pc", "Accueil + état du PC"),
+            ("pc", Strings.HomePCStatus),
             ("workspace", "Les quatre panneaux"),
-            ("last", "Dernière vue utilisée"),
+            ("last", Strings.LastUsedView),
         };
         Button? viewButton = null;
         string ViewName() => views.First(v => v.Item1 == view).Item2;
@@ -815,7 +797,7 @@ internal sealed class PersonalizeWindow : GlassWindow
                     coordinator,
                     this,
                     viewButton!,
-                    "Vue à ouvrir",
+                    Strings.ViewToOpen,
                     views.Select(v => new MenuAction(
                         v.Item2,
                         "\uE8A9",
@@ -851,9 +833,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         status.Text = string.IsNullOrEmpty(coordinator.ShortcutStatus)
             ? "Actif : " + GlobalShortcut.Label(current.Modifiers, current.Key)
             : coordinator.ShortcutStatus;
-        Description(
-            "Ctrl + Alt + Espace reste disponible. Le raccourci fonctionne même si la poignée est masquée en plein écran."
-        );
+        Description(Strings.CtrlAltSpaceRemainsAvailableThe);
     }
 
     void BoardRow(BoardState model, bool selected)
@@ -883,7 +863,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         row.Children.Add(name);
         var up = UI.IconButton(
             "\uE74A",
-            "Déplacer ce panneau avant le précédent",
+            Strings.MoveThisPanelBeforeThePrevious,
             () =>
             {
                 int index = Store.State.Boards.IndexOf(model);
@@ -1015,7 +995,7 @@ internal sealed class PersonalizeWindow : GlassWindow
 internal sealed class EditWindow : GlassWindow
 {
     internal EditWindow(Coordinator coordinator, Entry entry, bool custom)
-        : base("Panneaux Glass — modifier un accès")
+        : base(Strings.PanneauxGlassEditAShortcut)
     {
         Width = 620;
         Height = 590;
@@ -1024,17 +1004,17 @@ internal sealed class EditWindow : GlassWindow
         ContentHost.Margin = new Thickness(30, 25, 30, 25);
         var form = new StackPanel();
         ContentHost.Children.Add(form);
-        form.Children.Add(UI.Text("Cet accès, à ta façon.", 25, null, true));
+        form.Children.Add(UI.Text(Strings.ThisShortcutYourWay, 25, null, true));
         void Label(string text)
         {
             var label = UI.Text(text, 12, UI.Dim);
             label.Margin = new Thickness(0, 21, 0, 8);
             form.Children.Add(label);
         }
-        Label("NOM AFFICHÉ");
+        Label(Strings.DISPLAYEDNAME);
         var name = new TextBox { Text = entry.Name };
         form.Children.Add(name);
-        Label("CATÉGORIE");
+        Label(Strings.CATEGORY);
         var category = new TextBox { Text = entry.Category };
         form.Children.Add(category);
         Label("PANNEAU");
@@ -1066,20 +1046,20 @@ internal sealed class EditWindow : GlassWindow
         string selectedIcon = entry.IconPath;
         var iconRow = new DockPanel();
         var choose = UI.Button(
-            "Choisir une icône…",
+            Strings.ChooseAnIcon,
             () =>
             {
                 var picker = new OpenFileDialog
                 {
-                    Title = "Choisir une icône",
-                    Filter = "Icône ou application|*.png;*.ico;*.exe;*.lnk|Tous les fichiers|*.*",
+                    Title = Strings.ChooseAnIcon2,
+                    Filter = Strings.IconOrApplicationPngIcoExe,
                 };
                 if (picker.ShowDialog(this) == true)
                     selectedIcon = picker.FileName;
             }
         );
         iconRow.Children.Add(choose);
-        var native = UI.Button("Icône d’origine", () => selectedIcon = entry.Target);
+        var native = UI.Button(Strings.OriginalIcon, () => selectedIcon = entry.Target);
         native.Margin = new Thickness(10, 0, 0, 0);
         iconRow.Children.Add(native);
         form.Children.Add(iconRow);

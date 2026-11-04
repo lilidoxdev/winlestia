@@ -26,13 +26,13 @@ internal static class VerificationTools
             byte[] png = ScreenShot.Png(shot);
             Check(
                 shot.PixelWidth == 64 && png.Length > 200 && png[0] == 0x89 && png[1] == 0x50,
-                "Capture d’écran : pixels saisis et PNG valide"
+                "Screen capture: pixels grabbed and valid PNG"
             );
         }
         catch (Exception ex)
         {
-            Store.Log("Vérification capture: " + ex);
-            Check(false, "Capture d’écran : pixels saisis et PNG valide");
+            Store.Log("Capture check: " + ex);
+            Check(false, "Screen capture: pixels grabbed and valid PNG");
         }
         try
         {
@@ -43,18 +43,18 @@ internal static class VerificationTools
         }
         catch (Exception ex)
         {
-            Store.Log("Vérification OCR: " + ex);
+            Store.Log("OCR check: " + ex);
             Check(false, "Moteur de lecture de texte disponible");
         }
         try
         {
             var outputs = AudioSwitch.Devices(0);
-            Check(outputs.Count > 0 && outputs.All(device => device.Id.Length > 0), "Sorties audio énumérées");
+            Check(outputs.Count > 0 && outputs.All(device => device.Id.Length > 0), "Audio outputs enumerated");
         }
         catch (Exception ex)
         {
-            Store.Log("Vérification audio: " + ex);
-            Check(false, "Sorties audio énumérées");
+            Store.Log("Audio check: " + ex);
+            Check(false, "Audio outputs enumerated");
         }
         Check(
             SystemTools.Size(1536) == "2 Ko" && SystemTools.Size(5L * 1024 * 1024) == "5 Mo",
@@ -64,13 +64,13 @@ internal static class VerificationTools
             GlobalShortcut.Valid(2, 0x72)
                 && GlobalShortcut.Label(2, 0x72) == "Ctrl + F3"
                 && !GlobalShortcut.Valid(0, 0x72),
-            "Raccourcis F valides et libellés"
+            "Valid F shortcuts and labels"
         );
         var sample = Store.Entries.FirstOrDefault(e => e.Name == "Google Chrome") ?? Store.Entries.FirstOrDefault();
         var logo = sample == null ? null : IconLoader.Sample(sample);
         Check(
             logo is System.Windows.Media.Imaging.BitmapSource bitmap && bitmap.PixelWidth >= 16,
-            "Logo réel d’une application disponible pour la commande rapide"
+            "Real logo of an application available for the quick command"
         );
         var orphan = new Entry
         {
@@ -81,17 +81,17 @@ internal static class VerificationTools
         var plate = IconLoader.InitialPlate(orphan);
         Check(
             plate is System.Windows.Media.ImageSource && plate is System.Windows.Media.DrawingImage,
-            "Un accès sans logo reçoit une vignette de secours, jamais un blanc"
+            "An entry without a logo gets a fallback thumbnail, never a blank"
         );
         var shellEntry = Store.Entries.FirstOrDefault(e =>
             e.Target.StartsWith("shell:", StringComparison.OrdinalIgnoreCase)
         );
-        Check(shellEntry != null, "Un accès Microsoft Store est présent dans le catalogue");
+        Check(shellEntry != null, "A Microsoft Store entry is present in the catalogue");
         var state = new Preferences();
         state.Normalize();
         Check(
             state.ClipboardHistory && state.PinShortcut.Key == 0x77 && state.CaptureShortcut.Key == 0x72,
-            "Préférences du quotidien par défaut"
+            "Default everyday preferences"
         );
         Check(Motion.LevelName is "Calme" or "Standard" or "Expressif", "Niveau de mouvement lisible");
         var profile = new WorkspaceProfile
@@ -108,7 +108,7 @@ internal static class VerificationTools
             JsonSerializer.Serialize(new ClipboardItem { Kind = "text", Text = "bonjour" }, Store.Json),
             Store.Json
         )!;
-        Check(clip.Text == "bonjour" && clip.Id.Length > 0, "Éléments du presse-papiers persistants");
+        Check(clip.Text == "bonjour" && clip.Id.Length > 0, "Persistent clipboard items");
         var pinned = new Preferences
         {
             Pins = new()
@@ -139,7 +139,7 @@ internal static class VerificationTools
                 && pinned.Pins[0].Width >= 160
                 && pinned.Pins[0].Opacity >= .35
                 && Math.Abs(pinned.Pins[0].Angle) <= 12,
-            "Papier pense-bête : texte, taille, transparence et angle bornés"
+            "Sticky note: text, size, transparency and angle bounded"
         );
         var stored = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(pinned, Store.Json), Store.Json)!;
         Check(
@@ -147,7 +147,7 @@ internal static class VerificationTools
                 && stored.Pins[0].Left == 120
                 && stored.Pins[0].Top == 240
                 && stored.Pins[1].ImagePath == "pins/exemple.png",
-            "Papier pense-bête : position et image conservées au redémarrage"
+            "Sticky note: position and image kept across restart"
         );
         try
         {
@@ -158,12 +158,12 @@ internal static class VerificationTools
             Native.ClickThrough(handle, false);
             bool restored = (Native.ExtendedStyle(handle) & 0x20) == 0;
             probe.Close();
-            Check(through && restored, "Papier au-dessus de l’espace : clics traversants puis rendus");
+            Check(through && restored, "Note above the space: click-through then rendered");
         }
         catch (Exception ex)
         {
-            Store.Log("Vérification clics traversants: " + ex);
-            Check(false, "Papier au-dessus de l’espace : clics traversants puis rendus");
+            Store.Log("Click-through check: " + ex);
+            Check(false, "Note above the space: click-through then rendered");
         }
         var report = new
         {

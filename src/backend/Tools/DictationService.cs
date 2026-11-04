@@ -169,7 +169,7 @@ internal sealed class DictationService : IDisposable
         {
             hook = SetWindowsHookExW(13, callback, Native.GetModuleHandleW(null), 0);
             if (hook == IntPtr.Zero)
-                Store.Log("Dictée: hook clavier indisponible.");
+                Store.Log("Dictation: keyboard hook unavailable.");
         }
         else if (!enabled && hook != IntPtr.Zero && !capturing)
         {
@@ -200,7 +200,7 @@ internal sealed class DictationService : IDisposable
             hook = SetWindowsHookExW(13, callback, Native.GetModuleHandleW(null), 0);
             if (hook == IntPtr.Zero)
             {
-                Store.Log("Dictée: hook clavier indisponible (capture).");
+                Store.Log("Dictation: keyboard hook unavailable (capture).");
                 send("dictation:keycancel");
                 return;
             }
@@ -244,7 +244,7 @@ internal sealed class DictationService : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Dictée: enregistrement de la touche: " + ex.Message);
+                Store.Log("Dictation: key recording: " + ex.Message);
             }
             send("dictation:key:" + vk);
         }
@@ -398,7 +398,7 @@ internal sealed class DictationService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Dictée: arrêt du micro: " + ex.Message);
+            Store.Log("Dictation: microphone stop: " + ex.Message);
         }
         lock (gate)
         {
@@ -637,7 +637,7 @@ internal sealed class DictationService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Dictée: " + ex);
+            Store.Log("Dictation: " + ex);
             Fail(ex.Message);
         }
         finally
@@ -657,7 +657,7 @@ internal sealed class DictationService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Dictée: détection de langue: " + ex.Message);
+            Store.Log("Dictation: language detection: " + ex.Message);
             return null;
         }
     }
@@ -777,7 +777,7 @@ internal sealed class DictationService : IDisposable
                     }
                     catch { }
                     throw new InvalidOperationException(
-                        "Modèle de dictée illisible, il sera retéléchargé au prochain essai (" + ex.Message + ")."
+                        "Unreadable dictation model, it will be downloaded again on the next try (" + ex.Message + ")."
                     );
                 }
                 // Préchauffage (compilation des shaders Vulkan à froid, ~20 s) sur ~1 s de silence, pendant que l'utilisateur parle.
@@ -788,7 +788,7 @@ internal sealed class DictationService : IDisposable
                 }
                 catch (Exception ex)
                 {
-                    Store.Log("Dictée: préchauffage: " + ex.Message);
+                    Store.Log("Dictation: warm-up: " + ex.Message);
                 }
                 return factory;
             });
@@ -820,9 +820,7 @@ internal sealed class DictationService : IDisposable
             long received = new FileInfo(part).Length;
             long? expected = response.Content.Headers.ContentLength;
             if (received <= 400_000_000L || (expected.HasValue && received != expected.Value))
-                throw new IOException(
-                    "Téléchargement du modèle incomplet (" + received / 1048576 + " Mo reçus). Réessaie."
-                );
+                throw new IOException(Strings.ModelDownloadIncompleteMessage(received / 1048576));
             File.Move(part, path, true);
         }
         catch
@@ -1073,7 +1071,7 @@ internal static class TextInjector
             }
             catch (Exception ex)
             {
-                Store.Log("Dictée: presse-papiers: " + ex.Message);
+                Store.Log("Dictation: clipboard: " + ex.Message);
             }
         });
         thread.SetApartmentState(ApartmentState.STA);

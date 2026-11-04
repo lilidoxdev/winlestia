@@ -303,12 +303,8 @@ internal static class Program
             }
             catch (Exception ex)
             {
-                Store.Log("Démarrage: " + ex);
-                System.Windows.MessageBox.Show(
-                    "Panneaux Glass n’a pas démarré. Le secours reste disponible dans Documents\\SECOURS_BUREAU.exe.\n\n"
-                        + ex.Message,
-                    "Panneaux Glass"
-                );
+                Store.Log("Startup: " + ex);
+                System.Windows.MessageBox.Show(Strings.PanneauxGlassDidNotStartThe + ex.Message, "Panneaux Glass");
                 app.Shutdown(1);
             }
         };

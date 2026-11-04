@@ -210,7 +210,7 @@ internal sealed partial class QtShellBridge
         }
         catch (Exception ex)
         {
-            Store.Log("Luminosité Qt: " + ex.Message);
+            Store.Log("Qt brightness: " + ex.Message);
         }
         finally
         {

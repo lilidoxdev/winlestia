@@ -685,7 +685,7 @@ internal static class BookmarksCore
             }
             catch (Exception ex)
             {
-                Log("Favoris icônes : " + ex.GetType().Name);
+                Log("Favorites icons: " + ex.GetType().Name);
             }
             finally
             {

@@ -99,7 +99,7 @@ internal sealed class WindowsDockKey : IDisposable
         callback = Handle;
         hook = SetWindowsHookExW(13, callback, Native.GetModuleHandleW(null), 0);
         if (hook == IntPtr.Zero)
-            throw new InvalidOperationException("La touche Windows ne peut pas être reliée au dock.");
+            throw new InvalidOperationException("The Windows key cannot be bound to the dock.");
     }
 
     IntPtr Handle(int code, IntPtr message, IntPtr data)

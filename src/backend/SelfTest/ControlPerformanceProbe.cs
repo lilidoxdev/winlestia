@@ -90,7 +90,7 @@ internal static class ControlPerformanceProbe
                         FrameP95Ms = Percentile(.95),
                         FrameP99Ms = Percentile(.99),
                         Over25Ms = frames.Count(f => f > 25),
-                        Note = "Intervalles WPF pendant les 360 ms suivant chaque transition ; ne mesure pas les présentations DWM ni les FPS d’un jeu.",
+                        Note = "WPF intervals during the 360 ms after each transition; does not measure DWM presentations or game FPS.",
                     },
                     Store.Json
                 )

@@ -95,11 +95,11 @@ internal sealed class WebStrip : IDisposable
                     site.Name,
                     new[]
                     {
-                        new MenuAction("Ouvrir dans le navigateur", "\uE774", () => Launch(site)),
+                        new MenuAction(Strings.OpenInBrowser, "\uE774", () => Launch(site)),
                         new MenuAction("Modifier ce site…", "\uE70F", () => coordinator.AddWebsite(site)),
                         new MenuAction("Image et recadrage…", "\uE7A8", () => coordinator.AddWebsite(site, true)),
-                        new MenuAction("Déplacer vers la gauche", "\uE72B", () => Move(site, 1), Separator: true),
-                        new MenuAction("Déplacer vers la droite", "\uE72A", () => Move(site, -1)),
+                        new MenuAction(Strings.MoveLeft, "\uE72B", () => Move(site, 1), Separator: true),
+                        new MenuAction(Strings.MoveRight, "\uE72A", () => Move(site, -1)),
                         new MenuAction(
                             "Retirer ce raccourci",
                             "\uE738",

@@ -427,11 +427,9 @@ public sealed partial class MainWindow
             permanent
             && !ConfirmDialog.Ask(
                 this,
-                "Supprimer définitivement ?",
-                items.Count == 1
-                    ? $"« {items[0].Name} » sera supprimé définitivement, sans passer par la Corbeille."
-                    : $"{items.Count} éléments seront supprimés définitivement, sans passer par la Corbeille.",
-                "Supprimer définitivement"
+                Strings.PermanentlyDelete,
+                Strings.DeletePermanentlyConfirm(items.Count, items.Count > 0 ? items[0].Name : ""),
+                Strings.PermanentlyDelete2
             )
         )
             return null;
@@ -546,7 +544,7 @@ public sealed partial class MainWindow
     string? RenameProblem(string name)
     {
         if (name.Length == 0)
-            return "Le nom ne peut pas être vide.";
+            return Strings.TheNameCannotBeEmpty;
         if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
             return "Un nom ne peut pas contenir : \\ / : * ? \" < > |";
         if (name.EndsWith('.'))
@@ -556,7 +554,7 @@ public sealed partial class MainWindow
             && !string.Equals(name, renaming.Name, StringComparison.OrdinalIgnoreCase)
             && Active.Find(Path.Combine(Active.Location, name)) != null
         )
-            return "Ce nom existe déjà dans ce dossier.";
+            return Strings.ThisNameAlreadyExistsInThis;
         return null;
     }
 
