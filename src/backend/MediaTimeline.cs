@@ -23,7 +23,8 @@ internal static class MediaTimeline
         DateTimeOffset now,
         double rate,
         bool playing,
-        double duration)
+        double duration
+    )
     {
         double position = reportedPosition;
         if (playing && lastUpdated != default)

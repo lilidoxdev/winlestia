@@ -1,5 +1,5 @@
 # Python 3.12 / emoji_data.py / Compact bundled emoji table: one emoji per line, "emoji|mots-clés français|english keywords". Written by hand, no download.
-EMOJI_TABLE='''
+EMOJI_TABLE = """
 😀|sourire content visage|grin smile happy face
 😃|sourire joie grand|smile happy open mouth
 😄|rire joyeux yeux|laugh happy smiling eyes
@@ -849,5 +849,5 @@ EMOJI_TABLE='''
 🇨🇳|chine drapeau chinois|china flag chinese
 🇧🇷|brésil drapeau brésilien|brazil flag brazilian
 🇪🇺|europe union européenne drapeau|european union flag europe
-'''
-EMOJI_ROWS=[tuple(line.split('|',2)) for line in EMOJI_TABLE.strip().splitlines() if line.count('|')==2]
+"""
+EMOJI_ROWS = [tuple(line.split("|", 2)) for line in EMOJI_TABLE.strip().splitlines() if line.count("|") == 2]

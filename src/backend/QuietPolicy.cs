@@ -3,9 +3,15 @@ using System;
 
 namespace PanneauxGlass;
 
-internal enum QuietForce { Auto, On, Off }
+internal enum QuietForce
+{
+    Auto,
+    On,
+    Off,
+}
 
-internal static class QuietPolicy {
+internal static class QuietPolicy
+{
     // Chromium fullscreen leaves the bottom row free (3440x1439 on a 3440x1440 monitor): tolerate a few px.
     internal const int Slack = 2;
 
@@ -17,16 +23,37 @@ internal static class QuietPolicy {
     internal static bool Detected(bool enabled, int fullscreenMonitors) => enabled && fullscreenMonitors > 0;
 
     // A forced state wins over detection; auto follows detection.
-    internal static bool Effective(QuietForce forced, bool detected) => forced switch { QuietForce.On => true, QuietForce.Off => false, _ => detected };
+    internal static bool Effective(QuietForce forced, bool detected) =>
+        forced switch
+        {
+            QuietForce.On => true,
+            QuietForce.Off => false,
+            _ => detected,
+        };
 
-    internal static string Label(QuietForce forced) => forced switch { QuietForce.On => "on", QuietForce.Off => "off", _ => "auto" };
+    internal static string Label(QuietForce forced) =>
+        forced switch
+        {
+            QuietForce.On => "on",
+            QuietForce.Off => "off",
+            _ => "auto",
+        };
 
-    internal static bool TryParse(string? text, out QuietForce forced) {
-        switch ((text ?? "").ToLowerInvariant()) {
-            case "on": forced = QuietForce.On; return true;
-            case "off": forced = QuietForce.Off; return true;
-            case "auto": forced = QuietForce.Auto; return true;
+    internal static bool TryParse(string? text, out QuietForce forced)
+    {
+        switch ((text ?? "").ToLowerInvariant())
+        {
+            case "on":
+                forced = QuietForce.On;
+                return true;
+            case "off":
+                forced = QuietForce.Off;
+                return true;
+            case "auto":
+                forced = QuietForce.Auto;
+                return true;
         }
-        forced = QuietForce.Auto; return false;
+        forced = QuietForce.Auto;
+        return false;
     }
 }

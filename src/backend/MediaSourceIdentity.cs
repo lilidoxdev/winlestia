@@ -53,7 +53,8 @@ internal sealed class MediaSourceIdentity
     internal MediaSourceIdentity(
         Func<string, string?> registryDisplayName,
         Func<string, bool> isProcessRunning,
-        Func<string, string?> packagedDisplayName)
+        Func<string, string?> packagedDisplayName
+    )
     {
         this.registryDisplayName = registryDisplayName;
         this.isProcessRunning = isProcessRunning;

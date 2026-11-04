@@ -13,15 +13,14 @@ class Test
         Results[name] = condition;
     }
 
-    static MediaSourceIdentity Identity(
-        Dictionary<string, string>? registry = null,
-        params string[] running)
+    static MediaSourceIdentity Identity(Dictionary<string, string>? registry = null, params string[] running)
     {
         var names = registry ?? new Dictionary<string, string>();
         return new MediaSourceIdentity(
             aumid => names.TryGetValue(aumid, out var name) ? name : null,
             stem => running.Contains(stem, StringComparer.OrdinalIgnoreCase),
-            aumid => null);
+            aumid => null
+        );
     }
 
     static AudioSessionInfo Session(int pid, string stem, string[]? ancestors = null, string identifier = "")
@@ -42,7 +41,10 @@ class Test
         var viaLibreWolf = Identity(null, "librewolf").Resolve(FirefoxHash);
         Check("hashLibreWolf", viaLibreWolf.ExeStem == "librewolf");
         var unknownHash = Identity().Resolve(FirefoxHash);
-        Check("unknownHashNotShown", unknownHash.DisplayName == "Navigateur" && !unknownHash.DisplayName.Contains("308046"));
+        Check(
+            "unknownHashNotShown",
+            unknownHash.DisplayName == "Navigateur" && !unknownHash.DisplayName.Contains("308046")
+        );
         Check("unknownHashNoStem", unknownHash.ExeStem == "");
         var registryOther = Identity(new() { [FirefoxHash] = "Mon lecteur" }).Resolve(FirefoxHash);
         Check("hashRegistryOtherName", registryOther.DisplayName == "Mon lecteur");
@@ -66,7 +68,10 @@ class Test
         Check("packagedShellName", shell.DisplayName == "Groove Perso");
         Check("emptyAumid", Identity().Resolve("").DisplayName == "Lecteur Windows");
         Check("nullAumid", Identity().Resolve(null).DisplayName == "Lecteur Windows");
-        Check("hexStyleDetection", MediaSourceIdentity.IsHashStyle(FirefoxHash) && !MediaSourceIdentity.IsHashStyle("Spotify.exe"));
+        Check(
+            "hexStyleDetection",
+            MediaSourceIdentity.IsHashStyle(FirefoxHash) && !MediaSourceIdentity.IsHashStyle("Spotify.exe")
+        );
 
         // Session matching.
         var firefox = new MediaTarget("firefox", FirefoxHash);
@@ -93,18 +98,27 @@ class Test
         var packagedSession = Session(30, "", null, "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify|x");
         Check("matchPackageFamilyInIdentifier", MediaSessionMatch.Matches(packagedSession, packagedTarget));
         var hashOnly = new MediaTarget("", FirefoxHash);
-        Check("hashAumidNotUsedAsIdentifier", !MediaSessionMatch.Matches(Session(31, "x", null, FirefoxHash), hashOnly));
+        Check(
+            "hashAumidNotUsedAsIdentifier",
+            !MediaSessionMatch.Matches(Session(31, "x", null, FirefoxHash), hashOnly)
+        );
 
         // Generic ancestors never match, direct exe still does.
         var explorerTarget = new MediaTarget("explorer", "Microsoft.Windows.Explorer");
-        Check("genericAncestorNoMatch", !MediaSessionMatch.Matches(Session(40, "x", new[] { "explorer" }), explorerTarget));
+        Check(
+            "genericAncestorNoMatch",
+            !MediaSessionMatch.Matches(Session(40, "x", new[] { "explorer" }), explorerTarget)
+        );
         Check("genericDirectExeMatches", MediaSessionMatch.Matches(Session(41, "explorer"), explorerTarget));
         var discordViaShell = Session(42, "Discord", new[] { "Discord", "explorer", "cmd" });
         Check("discordNotFirefoxViaGenericAncestors", !MediaSessionMatch.Matches(discordViaShell, firefox));
 
         // Ambiguous browsers: no wrong guess, short TTL only.
         var ambiguous = Identity(null, "firefox", "zen").Resolve(FirefoxHash, out bool ambiguousStable);
-        Check("ambiguousBrowsersGenericName", ambiguous.DisplayName == "Navigateur" && ambiguous.ExeStem == "" && !ambiguousStable);
+        Check(
+            "ambiguousBrowsersGenericName",
+            ambiguous.DisplayName == "Navigateur" && ambiguous.ExeStem == "" && !ambiguousStable
+        );
         Identity(null, "zen").Resolve(FirefoxHash, out bool singleStable);
         Check("singleBrowserStable", singleStable);
         Identity().Resolve(FirefoxHash, out bool noneStable);
@@ -113,8 +127,21 @@ class Test
         Check("registryNameStable", registryStable);
 
         // Process tree helpers.
-        var parents = new Dictionary<int, int> { [11] = 10, [10] = 5, [5] = 1, [20] = 5 };
-        var stems = new Dictionary<int, string> { [11] = "firefox", [10] = "firefox", [5] = "explorer", [1] = "System", [20] = "Discord" };
+        var parents = new Dictionary<int, int>
+        {
+            [11] = 10,
+            [10] = 5,
+            [5] = 1,
+            [20] = 5,
+        };
+        var stems = new Dictionary<int, string>
+        {
+            [11] = "firefox",
+            [10] = "firefox",
+            [5] = "explorer",
+            [1] = "System",
+            [20] = "Discord",
+        };
         Func<int, int> parentOf = pid => parents.TryGetValue(pid, out var p) ? p : 0;
         Func<int, string> stemOf = pid => stems.TryGetValue(pid, out var s) ? s : "";
         var chain = MediaSessionMatch.AncestorStems(11, parentOf, stemOf);
@@ -133,15 +160,27 @@ class Test
         Check("playingAdvances", Math.Abs(MediaTimeline.ExtrapolatePosition(10, t0, t5, 1, true, 200) - 15) < 1e-9);
         Check("pausedFrozen", MediaTimeline.ExtrapolatePosition(10, t0, t5, 1, false, 200) == 10);
         Check("rateApplied", Math.Abs(MediaTimeline.ExtrapolatePosition(10, t0, t5, 2, true, 200) - 20) < 1e-9);
-        Check("zeroRateTreatedAsOne", Math.Abs(MediaTimeline.ExtrapolatePosition(10, t0, t5, 0, true, 200) - 15) < 1e-9);
+        Check(
+            "zeroRateTreatedAsOne",
+            Math.Abs(MediaTimeline.ExtrapolatePosition(10, t0, t5, 0, true, 200) - 15) < 1e-9
+        );
         Check("clampsToDuration", MediaTimeline.ExtrapolatePosition(198, t0, t5, 1, true, 200) == 200);
-        Check("unknownDurationNoClamp", Math.Abs(MediaTimeline.ExtrapolatePosition(198, t0, t5, 1, true, 0) - 203) < 1e-9);
+        Check(
+            "unknownDurationNoClamp",
+            Math.Abs(MediaTimeline.ExtrapolatePosition(198, t0, t5, 1, true, 0) - 203) < 1e-9
+        );
         Check("negativeFloorsAtZero", MediaTimeline.ExtrapolatePosition(-3, t0, t0, 1, false, 200) == 0);
         Check("noTimestampNoAdvance", MediaTimeline.ExtrapolatePosition(10, default, t5, 1, true, 200) == 10);
         Check("futureTimestampNoRewind", MediaTimeline.ExtrapolatePosition(10, t5, t0, 1, true, 200) == 10);
-        Check("durationKnownWhenEndAfterStart", MediaTimeline.IsDurationKnown(TimeSpan.Zero, TimeSpan.FromSeconds(200)));
+        Check(
+            "durationKnownWhenEndAfterStart",
+            MediaTimeline.IsDurationKnown(TimeSpan.Zero, TimeSpan.FromSeconds(200))
+        );
         Check("durationUnknownWhenEndZero", !MediaTimeline.IsDurationKnown(TimeSpan.Zero, TimeSpan.Zero));
-        Check("durationUnknownWhenEndBeforeStart", !MediaTimeline.IsDurationKnown(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1)));
+        Check(
+            "durationUnknownWhenEndBeforeStart",
+            !MediaTimeline.IsDurationKnown(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1))
+        );
 
         // Resubscription: same AUMID with a new object must resubscribe; the same object must not.
         var firstSession = new object();

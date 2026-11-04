@@ -13,7 +13,8 @@ internal sealed record AudioSessionInfo(
     int Pid,
     string ExeStem,
     IReadOnlyList<string> AncestorExeStems,
-    string SessionIdentifier);
+    string SessionIdentifier
+);
 
 /// <summary>The resolved media source: executable stem (may be empty) and the raw AUMID.</summary>
 internal sealed record MediaTarget(string ExeStem, string Aumid);
@@ -25,8 +26,23 @@ internal static class MediaSessionMatch
     // Generic shell/host processes parent many unrelated apps: they never identify a media source via ancestors.
     static readonly HashSet<string> GenericAncestorStems = new(StringComparer.OrdinalIgnoreCase)
     {
-        "explorer", "cmd", "powershell", "pwsh", "conhost", "svchost", "services", "wininit", "winlogon", "sihost",
-        "runtimebroker", "dllhost", "applicationframehost", "windowsterminal", "wt", "taskhostw", "userinit",
+        "explorer",
+        "cmd",
+        "powershell",
+        "pwsh",
+        "conhost",
+        "svchost",
+        "services",
+        "wininit",
+        "winlogon",
+        "sihost",
+        "runtimebroker",
+        "dllhost",
+        "applicationframehost",
+        "windowsterminal",
+        "wt",
+        "taskhostw",
+        "userinit",
     };
 
     internal static bool Matches(AudioSessionInfo session, MediaTarget target)
@@ -39,8 +55,11 @@ internal static class MediaSessionMatch
             }
 
             // Firefox and Chromium play audio from a child process: walk the parent chain.
-            bool ancestorMatches = !GenericAncestorStems.Contains(target.ExeStem) && session.AncestorExeStems.Any(
-                ancestor => ancestor.Equals(target.ExeStem, StringComparison.OrdinalIgnoreCase));
+            bool ancestorMatches =
+                !GenericAncestorStems.Contains(target.ExeStem)
+                && session.AncestorExeStems.Any(ancestor =>
+                    ancestor.Equals(target.ExeStem, StringComparison.OrdinalIgnoreCase)
+                );
             if (ancestorMatches)
             {
                 return true;
@@ -59,7 +78,8 @@ internal static class MediaSessionMatch
     // Hash-style AUMIDs never appear in session identifiers: only package families are useful here.
     static string PackageFamily(string aumid)
     {
-        bool unusable = aumid.Length == 0
+        bool unusable =
+            aumid.Length == 0
             || MediaSourceIdentity.IsHashStyle(aumid)
             || aumid.EndsWith(".exe", StringComparison.OrdinalIgnoreCase);
         return unusable ? "" : aumid.Split('!')[0];

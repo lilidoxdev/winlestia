@@ -25,7 +25,9 @@ internal sealed class ProcessSnapshot
         public uint ParentProcessId;
         public int PriorityClassBase;
         public uint Flags;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string ExeFile;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+        public string ExeFile;
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]
@@ -107,7 +109,8 @@ internal sealed class ProcessSnapshot
                     return name;
                 }
             }
-            catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
+            catch (Exception ex)
+                when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
             {
                 // An unreadable key is the same as a missing one.
             }
