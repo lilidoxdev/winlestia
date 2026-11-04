@@ -11,7 +11,7 @@ Winlestia is a Windows 11 desktop shell (dock, dashboard, glass panels) and a Wi
 flowchart LR
     Setup["installer/Winlestia.iss<br/>(Inno Setup, built by installer/build.ps1)"] -->|installs| Backend
     subgraph Install["%LOCALAPPDATA%\Programs\Winlestia"]
-      Backend["Glass-v5\Panneaux.Glass.exe<br/>(.NET 8, WPF + WinForms)"]
+      Backend["Glass-v5\Panneaux.Glass.exe<br/>(.NET 10, WPF + WinForms)"]
       Front["Caelestia-Windows\.venv\Scripts\pythonw.exe<br/>frontend.py (PySide6 + QML)"]
       Guard["Glass-v5\RETABLIR_BARRE_WINDOWS.exe<br/>--watch-parent (taskbar watchdog)"]
       Files["Glass-v5\Winlestia.Files.exe"]
@@ -33,7 +33,7 @@ A second launch signals the first instance through the `Local\PanneauxGlassV5` m
 
 | Path | Responsibility |
 |---|---|
-| `src/backend` | `Panneaux.Glass.csproj` (net8.0-windows10.0.19041.0, WPF + WinForms). Windows integrations (taskbar hide/restore, audio, media, bookmarks, file search, hotkeys, autostart), the IPC servers, and the legacy "Glass" WPF shell (kept for compatibility, no new features). Native helpers `*.cpp` are built by `build-*.cmd` into `native/` (binaries are git-ignored). |
+| `src/backend` | `Panneaux.Glass.csproj` (net10.0-windows10.0.19041.0, WPF + WinForms). Windows integrations (taskbar hide/restore, audio, media, bookmarks, file search, hotkeys, autostart), the IPC servers, and the legacy "Glass" WPF shell (kept for compatibility, no new features). Native helpers `*.cpp` are built by `build-*.cmd` into `native/` (binaries are git-ignored). |
 | `src/backend/Inventory.ps1`, `Install.ps1` | App inventory (writes `catalog.json`) and installation helper. |
 | `src/frontend` | Qt Quick shell: `frontend.py` (Bridge, IPC client), `localization.py`, `interaction.py`, `search.py`, palette modules (`wallpaper_theme.py`, `chromatic_palette.py`, `custom_palette.py`), `qml/` (`qml/qs/config/Appearance.qml`, `qml/qs/services/Colours.qml`, panes, dock). Upstream tracking: `UPSTREAM.json`, `PORT_PATCHES.json`, `PORTAGE.md`. |
 | `src/files` | Winlestia Files file manager (WPF, `Winlestia.Files.csproj`). |

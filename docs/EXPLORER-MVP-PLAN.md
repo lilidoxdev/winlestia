@@ -10,7 +10,7 @@ Statut : plan, rien d'implémenté. Local uniquement, pas de push ni de release.
 - **Identité unifiée.** Il reprend `Tokens.cs` et `UiTokens.cs` (palette M3, rayons 12/17/25, Rubik, Material Symbols, Effets allégés).
 
 ## Architecture
-- **Exécutable séparé** : `src/files/Winlestia.Files.csproj` (WPF, net8.0-windows10.0.19041.0), publié à côté de `Panneaux.Glass.exe`. Un plantage n'emporte donc ni le dock ni le backend.
+- **Exécutable séparé** : `src/files/Winlestia.Files.csproj` (WPF, net10.0-windows10.0.19041.0), publié à côté de `Panneaux.Glass.exe`. Un plantage n'emporte donc ni le dock ni le backend.
 - **Partage des jetons** : les fichiers `Tokens.cs`, `UiTokens.cs` et `Visuals.cs` sont liés (`<Compile Include="..\backend\…" Link=…>`), sans copie.
 - **Choix de WPF plutôt que QML** : `IContextMenu3` et `IDropTarget` ont besoin d'un HWND et de COM dans le même processus. QML ne garantit pas la virtualisation des vues.
 - **Instance unique** : une deuxième ouverture envoie le chemin par pipe nommé et ouvre un nouvel onglet.

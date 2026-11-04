@@ -17,7 +17,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-if (-not $Exe) { $Exe = Join-Path $here '..\..\src\files\bin\Debug\net8.0-windows10.0.19041.0\win-x64\Winlestia.Files.exe' }
+if (-not $Exe) { $Exe = Join-Path $here '..\..\src\files\bin\Debug\net10.0-windows10.0.19041.0\win-x64\Winlestia.Files.exe' }
 if ($Seconds -gt 120) { $Seconds = 120 }
 $free = (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB
 if ($free -lt 4) { Write-Output ("SKIP: free RAM {0:F1} GB < 4 GB" -f $free); return }

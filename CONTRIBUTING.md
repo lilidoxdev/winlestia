@@ -6,17 +6,17 @@ Thanks for your interest. Winlestia is a GPL-3.0 project; contributions are acce
 
 | Path | Content |
 |---|---|
-| `src/backend` | .NET 8 backend (`Panneaux.Glass.csproj`, C#), native helpers (`*.cpp`) and their `build-*.cmd` |
+| `src/backend` | .NET 10 backend (`Panneaux.Glass.csproj`, C#), native helpers (`*.cpp`) and their `build-*.cmd` |
 | `src/frontend` | Qt Quick interface (QML) and Python 3.12 / PySide6 host (`frontend.py`) |
-| `src/cli` | The `winlestia` command (.NET 8) |
-| `src/files` | Winlestia Files (.NET 8) |
+| `src/cli` | The `winlestia` command (.NET 10) |
+| `src/files` | Winlestia Files (.NET 10) |
 | `src/terminal` | Terminal integration (Clink theme scripts) |
 | `installer` | Inno Setup script and `build.ps1` |
 | `tests` | Small console test projects, one per area (`tests/WifiPolicy`, `tests/CliCommands`, ...), plus Python scripts |
 
 ## Building from source
 
-Requirements: Windows 11 x64, .NET 8 SDK, Python 3.12 (for the Qt frontend and for `pip`), PowerShell 7, Inno Setup 6 (to build the installer), and MSVC only if you rebuild the native helpers.
+Requirements: Windows 11 x64, .NET 10 SDK, Python 3.12 (for the Qt frontend and for `pip`), PowerShell 7, Inno Setup 6 (to build the installer), and MSVC only if you rebuild the native helpers.
 
 **Backend**
 

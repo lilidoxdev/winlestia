@@ -5,7 +5,7 @@ to rebuild the native helpers. Commands below come from `installer/build.ps1` an
 
 ## Backend
 
-`src/backend/Panneaux.Glass.csproj`: `net8.0-windows10.0.19041.0`, WPF + WinForms, `win-x64`, version in `<Version>`.
+`src/backend/Panneaux.Glass.csproj`: `net10.0-windows10.0.19041.0`, WPF + WinForms, `win-x64`, version in `<Version>`.
 
 ```powershell
 dotnet build src\backend\Panneaux.Glass.csproj -c Release

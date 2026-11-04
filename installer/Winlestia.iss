@@ -167,7 +167,7 @@ Source: "..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\src\backend\LICENSE-CAELESTIA.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\src\backend\CAELESTIA-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 
-; Backend C# auto-suffisant (.NET 8 embarque)
+; Backend C# auto-suffisant (.NET 10 embarque)
 Source: "..\build\payload\Glass-v5\*"; DestDir: "{app}\Glass-v5"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Frontend Qt Quick + Python 3.12 embarque + Qt 6.10
 Source: "..\build\payload\Caelestia-Windows\*"; DestDir: "{app}\Caelestia-Windows"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "__pycache__,*.pyc,validation-*,tests"

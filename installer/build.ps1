@@ -23,19 +23,19 @@ Write-Host '→ Nettoyage' -ForegroundColor Cyan
 Remove-Item -Recurse -Force $payload -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $payload | Out-Null
 
-Write-Host '→ Backend .NET 8 (auto-suffisant)' -ForegroundColor Cyan
+Write-Host '→ Backend .NET 10 (auto-suffisant)' -ForegroundColor Cyan
 dotnet publish (Join-Path $root 'src\backend\Panneaux.Glass.csproj') `
     -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:DebugType=none -p:DebugSymbols=false `
     -o (Join-Path $payload 'Glass-v5') --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation du backend échouée.' }
 
-Write-Host '→ Winlestia Fichiers (.NET 8, auto-suffisant)' -ForegroundColor Cyan
+Write-Host '→ Winlestia Fichiers (.NET 10, auto-suffisant)' -ForegroundColor Cyan
 dotnet publish (Join-Path $root 'src\files\Winlestia.Files.csproj') `
     -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:DebugType=none -p:DebugSymbols=false `
     -o (Join-Path $payload 'Glass-v5') --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation de Winlestia Fichiers échouée.' }
 
-Write-Host '→ Commande winlestia.exe (.NET 8, auto-suffisant)' -ForegroundColor Cyan
+Write-Host '→ Commande winlestia.exe (.NET 10, auto-suffisant)' -ForegroundColor Cyan
 dotnet publish (Join-Path $root 'src\cli\winlestia.csproj') `
     -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true `
     -p:EnableCompressionInSingleFile=true -p:DebugType=none `
