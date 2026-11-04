@@ -146,7 +146,7 @@ internal sealed class BookmarksService:IDisposable {
     internal void Open(string id){
         var b=Loaded;var node=FindNode(tree,id);
         if(b==null||node==null||node.Folder||b.Exe.Length==0)return;
-        if(!Uri.TryCreate(node.Url,UriKind.Absolute,out var uri)||(uri.Scheme!=Uri.UriSchemeHttp&&uri.Scheme!=Uri.UriSchemeHttps&&uri.Scheme!=Uri.UriSchemeFile))return;
+        if(!BookmarkUri.IsOpenable(node.Url,out var uri))return;
         try{
             var start=new ProcessStartInfo(b.Exe){UseShellExecute=false};
             start.ArgumentList.Add(uri.AbsoluteUri);

@@ -59,7 +59,7 @@ def stop_previous_sync(command):
  paths=re.findall(r'"([^"\n]+)"',command or '')
  script=next((p for p in paths if Path(p).name.lower()=='sync_theme.py'),None)
  if not script:return
- literal=script.replace("'","''")
+ literal=re.sub("(['\u2018\u2019\u201a\u201b])",lambda m:m.group(0)*2,script)  # PowerShell also treats typographic single quotes as delimiters
  code="$target='"+literal+"'; Get-CimInstance Win32_Process | Where-Object { $_.Name -in @('python.exe','pythonw.exe') -and $_.CommandLine -and $_.CommandLine.Contains($target) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; Wait-Process -Id $_.ProcessId -Timeout 10 -ErrorAction SilentlyContinue }"
  powershell=Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe'
  subprocess.run([str(powershell),'-NoLogo','-NoProfile','-EncodedCommand',base64.b64encode(code.encode('utf-16le')).decode()],capture_output=True,creationflags=0x08000000,timeout=15)

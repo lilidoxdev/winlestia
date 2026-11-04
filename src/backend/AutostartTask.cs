@@ -26,15 +26,19 @@ internal static class AutostartTask {
     internal static void Refresh(){Volatile.Write(ref state,Run("/query /tn "+AutostartPolicy.TaskName,out _)==0?1:0);resolved.Set();}
 
     internal static bool Create(){
-        string xml=Path.Combine(Path.GetTempPath(),"winlestia-task-"+Guid.NewGuid().ToString("N")+".xml");
+        string xml="";
         try{
+            string local=Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if(string.IsNullOrEmpty(local)){Store.Log("Tâche de démarrage: dossier LocalApplicationData introuvable.");return false;}
+            xml=AutostartPolicy.PrivateTaskFile(local);
+            Directory.CreateDirectory(Path.GetDirectoryName(xml)!);
             string exe=Environment.ProcessPath!;
             File.WriteAllText(xml,AutostartPolicy.TaskXml(WindowsIdentity.GetCurrent().Name,exe,Path.GetDirectoryName(exe)??""),Encoding.Unicode);
             int code=Run("/create /tn "+AutostartPolicy.TaskName+" /xml \""+xml+"\" /f",out var text);
             if(code!=0){Store.Log("Tâche de démarrage non créée (code "+code+"): "+text);return false;}
             Volatile.Write(ref state,1);Store.Log("Tâche de démarrage WinlestiaShell créée.");return true;
         }catch(Exception ex){Store.Log("Tâche de démarrage: "+ex.Message);return false;}
-        finally{try{File.Delete(xml);}catch{}}
+        finally{try{if(xml.Length>0)File.Delete(xml);}catch{}}
     }
 
     internal static bool Delete(){

@@ -9,6 +9,9 @@ static class AutostartPolicy {
 
     internal enum Step { None, CreateTaskThenDropRun }
 
+    // Temporary task XML lives in the per-user folder (LOCALAPPDATA, Panneaux, tmp), never in the shared TEMP; unique name per call.
+    internal static string PrivateTaskFile(string localAppData)=>System.IO.Path.Combine(localAppData,"Panneaux","tmp","winlestia-task-"+Guid.NewGuid().ToString("N")+".xml");
+
     // Migration au lancement : une valeur Run présente (ancienne version ou case de l'installeur) devient une tâche.
     // Le chemin doit être celui d'une installation (Glass-v5), pas d'un dossier de développement.
     internal static Step Plan(bool runPresent,string processPath)=>
