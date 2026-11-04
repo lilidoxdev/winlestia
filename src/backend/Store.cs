@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using Winlestia.Shared;
 
 namespace PanneauxGlass;
 
@@ -19,8 +20,7 @@ public static class Store {
         get{
             string? env=Environment.GetEnvironmentVariable("WINLESTIA_DATA_DIR");
             if(dirInit&&dirEnv==env&&dirCached!=null)return dirCached;
-            string d=env is{Length:>0}
-            o?o:Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Panneaux");
+            string d=!string.IsNullOrEmpty(env)?env:Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Panneaux");
             try{Directory.CreateDirectory(d);}catch{}
             dirEnv=env;
             dirCached=d;
@@ -49,19 +49,54 @@ public static class Store {
             }
         }catch{}
     }
+    static bool InDataDir(string path){
+        string root=Path.GetFullPath(DataDir).TrimEnd(Path.DirectorySeparatorChar,Path.AltDirectorySeparatorChar)+Path.DirectorySeparatorChar;
+        return Path.GetFullPath(path).StartsWith(root,StringComparison.OrdinalIgnoreCase);
+    }
     public static T Read<T>(string path) where T:new(){
         if(!File.Exists(path))return new T();
-        try{return JsonSerializer.Deserialize<T>(File.ReadAllText(path,Encoding.UTF8),Json)??new T();}catch(
-            Exception ex
-        ){Log(Path.GetFileName(path)+": "+ex.Message);return new T();}
+        string text;
+        try{text=File.ReadAllText(path,Encoding.UTF8);}catch(Exception ex)when(ex is IOException||ex is UnauthorizedAccessException){
+            // Transient (locked, AV scan...): the file is not known to be corrupt, so never touch disk here.
+            System.Threading.Thread.Sleep(50);
+            try{text=File.ReadAllText(path,Encoding.UTF8);}catch(Exception ex2)when(ex2 is IOException||ex2 is UnauthorizedAccessException){
+                Log(Path.GetFileName(path)+": lecture impossible: "+ex2.Message);
+                return new T();
+            }
+        }catch(DecoderFallbackException ex){return Recover<T>(path,ex);}
+        try{return JsonSerializer.Deserialize<T>(text,Json)??new T();}catch(JsonException ex){return Recover<T>(path,ex);}
+    }
+    static T Recover<T>(string path,Exception ex) where T:new(){
+        Log(Path.GetFileName(path)+": "+ex.Message);
+        KeepCorrupt(path);
+        string bak=path+".bak";
+        if(InDataDir(path)&&File.Exists(bak)){
+            try{
+                var recovered=JsonSerializer.Deserialize<T>(File.ReadAllText(bak,Encoding.UTF8),Json);
+                if(recovered!=null){
+                    Log(Path.GetFileName(path)+": restauré depuis .bak");
+                    // Put the good copy back as main: the next Save would otherwise roll the corrupt main over the good .bak.
+                    try{File.Copy(bak,path,true);}catch(Exception ex2){Log(Path.GetFileName(path)+": restauration du principal impossible: "+ex2.Message);}
+                    return recovered;
+                }
+            }catch(Exception ex2){Log(Path.GetFileName(path)+".bak: "+ex2.Message);}
+        }
+        Log(Path.GetFileName(path)+": valeurs par défaut utilisées");
+        return new T();
+    }
+    // A corrupt user file is about to be replaced by defaults on the next Save: keep the bytes (one copy, kept apart from the rolling .bak).
+    static void KeepCorrupt(string path){
+        try{
+            if(!InDataDir(path))return;
+            File.Copy(path,path+".corrupt.bak",true);
+            Log(Path.GetFileName(path)+": copie du fichier illisible conservée (.corrupt.bak)");
+        }catch(Exception ex){Log(Path.GetFileName(path)+": copie .corrupt.bak impossible: "+ex.Message);}
     }
     public static void Save(){
         try{
             Directory.CreateDirectory(DataDir);
-            string path=Path.Combine(DataDir,"preferences-glass.json"),temp=path+".tmp";
-            File.WriteAllText(temp,JsonSerializer.Serialize(State,Json),Encoding.UTF8);
-            if(File.Exists(path))File.Replace(temp,path,path+".bak");
-            else File.Move(temp,path);
+            string path=Path.Combine(DataDir,"preferences-glass.json");
+            AtomicFile.WriteAllText(path,JsonSerializer.Serialize(State,Json),Encoding.UTF8,path+".bak");
         }catch(Exception ex){Log("Enregistrement: "+ex.Message);}
     }
     // One-shot migration from the install folder (legacy location). Copy prefs (old binaries keep working), move big
