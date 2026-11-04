@@ -52,3 +52,7 @@ ancestor (`27e07f6`) and is not used. Nothing is pushed.
 - 2026-11-04: 8857ab3 Coordinator/Models/Visuals split (token equivalence, Preferences JSON order kept)
 - 2026-11-04: 17cbda7 installer ships Caelestia licence and notices
 - 2026-11-04: build + 27 test projects pass; installer Winlestia-Setup-0.9.0.exe built; see MATRIX.md (.NET 10 not done)
+- 2026-11-04: fe48ea8 .NET 10 migration (31 csproj, Sqlite 10.0.14, Native95 baseline-aware, self-contained publish verified)
+- 2026-11-04: 44d3449 hygiene (duplicate item, CS9191, analyzers as suggestions, local CI)
+- 2026-11-04: 125dd1c atomic writes for durable state (AtomicFile 13/13)
+- 2026-11-04: 89f76b2 preferences recovery from .bak (StoreRecovery 10/10); 30 test projects pass; installer to be rebuilt
