@@ -50,7 +50,7 @@ internal sealed partial class Coordinator
                 attempt++;
                 if (attempt < 4)
                 {
-                    Store.Log("Masquage du Bureau, nouvel essai: " + ex.Message);
+                    Store.Log("Desktop hiding, retrying: " + ex.Message);
                     var retry = new DispatcherTimer { Interval = TimeSpan.FromSeconds(attempt == 1 ? 1 : 2) };
                     retry.Tick += (_, _) =>
                     {
@@ -117,7 +117,7 @@ internal sealed partial class Coordinator
             if (Store.State.ReplaceTaskbar && taskbar != null && !taskbar.Enable())
             {
                 Store.State.ReplaceTaskbar = false;
-                Store.Log("La barre Windows reste active : secours indisponible.");
+                Store.Log("The Windows taskbar stays active: rescue unavailable.");
             }
         }
         if (desktopSuspended)

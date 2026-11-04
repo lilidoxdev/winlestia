@@ -169,7 +169,7 @@ internal sealed partial class Coordinator
                     TogglePalette();
                     break;
                 default:
-                    Message("Cet onglet rapide pointe vers une vue inconnue.\n" + target);
+                    Message(Strings.ThisQuickTabPointsToAn + target);
                     break;
             }
             return;
@@ -280,7 +280,7 @@ internal sealed partial class Coordinator
         }
         catch (Exception ex)
         {
-            Message("La recherche n’a pas pu s’ouvrir.\n" + ex.Message);
+            Message(Strings.TheSearchCouldNotBeOpened + ex.Message);
         }
     }
 
@@ -329,7 +329,7 @@ internal sealed partial class Coordinator
         }
         catch (Exception ex)
         {
-            Message(Strings.TheShortcut + entry.Name + " » n’a pas pu s’ouvrir.\n" + ex.Message);
+            Message(Strings.TheShortcut + entry.Name + Strings.CouldNotBeOpened + ex.Message);
         }
     }
 
@@ -402,8 +402,8 @@ internal sealed partial class Coordinator
         {
             using var picker = new Forms.OpenFileDialog
             {
-                Title = "Choisir un fichier, une application ou un raccourci",
-                Filter = "Tous les fichiers|*.*",
+                Title = Strings.ChooseAFileAnAppOr,
+                Filter = Strings.AllFiles,
                 Multiselect = true,
             };
             if (picker.ShowDialog(new DialogOwner(DialogParent)) == Forms.DialogResult.OK)

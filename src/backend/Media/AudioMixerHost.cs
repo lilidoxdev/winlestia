@@ -120,7 +120,7 @@ internal sealed class AudioMixerHost : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Mixeur audio: " + ex.Message);
+                Store.Log("Audio mixer: " + ex.Message);
                 mixer.Stop();
             }
             wake.WaitOne(enabled ? 250 : Timeout.Infinite);

@@ -21,7 +21,7 @@ internal sealed class FocusSetupWindow : GlassWindow
     int amount = 25;
 
     internal FocusSetupWindow(Coordinator coordinator)
-        : base("Panneaux Glass — minuteur")
+        : base(Strings.PanneauxGlassTimer)
     {
         owner = coordinator;
         Width = 560;
@@ -87,8 +87,8 @@ internal sealed class FocusSetupWindow : GlassWindow
         Grid.SetColumn(field, 1);
         custom.Children.Add(field);
         unit.Items.Add("minutes");
-        unit.Items.Add("heures");
-        unit.Items.Add("secondes");
+        unit.Items.Add(Strings.Hours);
+        unit.Items.Add(Strings.Seconds);
         unit.SelectedIndex = 0;
         unit.MinWidth = 142;
         unit.Margin = new Thickness(10, 0, 0, 0);
@@ -110,7 +110,7 @@ internal sealed class FocusSetupWindow : GlassWindow
             HorizontalAlignment = HorizontalAlignment.Right,
             Margin = new Thickness(0, 18, 0, 0),
         };
-        var cancel = UI.Button("Annuler", Close);
+        var cancel = UI.Button(Strings.Cancel, Close);
         actions.Children.Add(cancel);
         var start = UI.Button(Strings.Start2, Begin);
         start.MinWidth = 118;
@@ -173,8 +173,8 @@ internal sealed class FocusSetupWindow : GlassWindow
             + FocusTimer.DurationText(seconds);
         preview.Foreground = UI.Dim;
         status.Text =
-            unit.SelectedIndex == 1 && amount > 24 ? "Vingt-quatre heures au maximum."
-            : unit.SelectedIndex == 0 && amount > 1440 ? "Vingt-quatre heures au maximum."
+            unit.SelectedIndex == 1 && amount > 24 ? Strings.TwentyFourHoursAtMost
+            : unit.SelectedIndex == 0 && amount > 1440 ? Strings.TwentyFourHoursAtMost
             : "";
     }
 

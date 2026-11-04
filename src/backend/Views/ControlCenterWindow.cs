@@ -31,12 +31,12 @@ internal sealed class ControlCenterWindow : GlassWindow
         note;
     readonly GlassLevel volume = new(Strings.SystemVolume),
         brightness = new(Strings.DisplayBrightness) { Glyph = "\uE706" };
-    readonly TextBlock mediaTitle = UI.Text("Aucune lecture", 14, null, true),
-        artist = UI.Text("Lance Spotify pour commencer", 11, UI.Dim),
-        appName = UI.Text("MUSIQUE", 10, UI.Dim),
+    readonly TextBlock mediaTitle = UI.Text(Strings.NothingPlaying, 14, null, true),
+        artist = UI.Text(Strings.StartSpotifyToBegin, 11, UI.Dim),
+        appName = UI.Text(Strings.MUSIC, 10, UI.Dim),
         elapsed = UI.Text("0:00", 10, UI.Dim),
         duration = UI.Text("0:00", 10, UI.Dim),
-        device = UI.Text("Sortie Windows", 12),
+        device = UI.Text(Strings.WindowsOutput, 12),
         muteLabel = UI.Text(Strings.SoundOn, 12);
     readonly Image cover = new()
     {
@@ -59,7 +59,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         LargeChange = 15,
     };
     readonly Dictionary<string, (Button button, TextBlock status)> radios = new();
-    AudioSnapshot audioState = new(false, 0, false, "Sortie Windows");
+    AudioSnapshot audioState = new(false, 0, false, Strings.WindowsOutput);
     ConnectionSnapshot? connectionState;
     MediaSnapshot? mediaState;
     bool syncing,
@@ -83,12 +83,12 @@ internal sealed class ControlCenterWindow : GlassWindow
         ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new DockPanel { Margin = new Thickness(1, 0, 1, 20) };
-        var close = UI.IconButton("\uE76B", "Replier les commandes Windows", owner.ToggleControls);
+        var close = UI.IconButton("\uE76B", Strings.CollapseWindowsControls, owner.ToggleControls);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var title = new StackPanel();
         title.Children.Add(UI.Text(Strings.ControlCenter, 23, null, true));
-        subtitle = UI.Text("Windows · Tes commandes essentielles", 11, UI.Dim);
+        subtitle = UI.Text(Strings.WindowsYourEssentialControls, 11, UI.Dim);
         subtitle.Margin = new Thickness(0, 6, 0, 0);
         title.Children.Add(subtitle);
         header.Children.Add(title);
@@ -102,10 +102,10 @@ internal sealed class ControlCenterWindow : GlassWindow
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var footer = new DockPanel { Margin = new Thickness(0, 15, 0, 0) };
-        var edit = UI.Button("\uE70F  Modifier", () => owner.EditControls(this));
-        edit.Content = IconLabel("\uE70F", "Modifier", 12);
+        var edit = UI.Button(Strings.Edit2, () => owner.EditControls(this));
+        edit.Content = IconLabel("\uE70F", Strings.Edit, 12);
         edit.Padding = new Thickness(12, 8, 12, 8);
-        System.Windows.Automation.AutomationProperties.SetName(edit, "Personnaliser les commandes Windows");
+        System.Windows.Automation.AutomationProperties.SetName(edit, Strings.CustomizeWindowsControls);
         DockPanel.SetDock(edit, Dock.Right);
         footer.Children.Add(edit);
         note = UI.Text(Strings.YourWay, 11, UI.Dim);
@@ -116,14 +116,14 @@ internal sealed class ControlCenterWindow : GlassWindow
         Grid.SetRow(footer, 2);
         ContentHost.Children.Add(footer);
         previous = MediaButton("\uE892", Strings.PreviousTrack, () => _ = MediaCommand("previous"));
-        play = MediaButton("\uE768", "Lecture ou pause", () => _ = MediaCommand("toggle"));
-        next = MediaButton("\uE893", "Morceau suivant", () => _ = MediaCommand("next"));
+        play = MediaButton("\uE768", Strings.PlayOrPause, () => _ = MediaCommand("toggle"));
+        next = MediaButton("\uE893", Strings.NextTrack, () => _ = MediaCommand("next"));
         play.Width = 42;
         play.Height = 42;
         play.Background = UI.Brush("#EAEEF8FF");
         if (play.Content is TextBlock pg)
             pg.Foreground = UI.Brush("#254D74");
-        sessionPicker = UI.IconButton("\uE712", "Choisir l’application musicale", OpenSessions);
+        sessionPicker = UI.IconButton("\uE712", Strings.ChooseTheMusicApp, OpenSessions);
         sessionPicker.Width = 25;
         sessionPicker.Height = 25;
         sessionPicker.Background = Brushes.Transparent;
@@ -146,7 +146,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         mute.HorizontalContentAlignment = HorizontalAlignment.Left;
         mute.Padding = new Thickness(13, 11, 13, 11);
         mute.Content = IconLabel("\uE767", Strings.SoundOn, 12);
-        System.Windows.Automation.AutomationProperties.SetName(mute, "Activer ou couper le son");
+        System.Windows.Automation.AutomationProperties.SetName(mute, Strings.TurnSoundOnOrOff);
         volume.ValueChanged += (_, _) =>
         {
             if (syncing)
@@ -246,11 +246,11 @@ internal sealed class ControlCenterWindow : GlassWindow
     internal static string ModuleName(string id) =>
         id switch
         {
-            "connections" => "Connexions",
-            "media" => "Musique",
+            "connections" => Strings.Connections,
+            "media" => Strings.KnownFolder("Music"),
             "levels" => Strings.VolumeAndBrightness,
-            "actions" => "Actions rapides",
-            _ => "Raccourcis Windows",
+            "actions" => Strings.QuickActions,
+            _ => Strings.WindowsShortcuts,
         };
 
     internal static StackPanel IconLabel(string glyph, string label, int size = 14)
@@ -392,7 +392,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         }
         if (body.Children.Count == 0)
         {
-            var empty = UI.Text("Ajoute des commandes avec Modifier.", 14, UI.Dim);
+            var empty = UI.Text(Strings.AddControlsWithEdit, 14, UI.Dim);
             empty.Margin = new Thickness(5, 25, 5, 25);
             body.Children.Add(empty);
         }
@@ -489,7 +489,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         }
         Tile("\uE72E", "Verrouiller", "Session Windows", () => SystemActions.Lock(owner));
         Tile("\uE722", "Capture", Strings.ScreenArea, () => SystemActions.Screenshot(owner));
-        Tile("\uE74D", "Corbeille", "Vider · confirmation", () => SystemActions.EmptyBin(owner));
+        Tile("\uE74D", Strings.RecycleBin, Strings.EmptyConfirmation, () => SystemActions.EmptyBin(owner));
         var power = new StackPanel
         {
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -510,7 +510,7 @@ internal sealed class ControlCenterWindow : GlassWindow
                         {
                             new MenuAction(Strings.Restart, "\uE72C", () => SystemActions.Power(owner, true)),
                             new MenuAction(Strings.ShutDown, "\uE7E8", () => SystemActions.Power(owner, false)),
-                            new MenuAction("Mettre en veille", "\uE708", () => SystemActions.Sleep(owner)),
+                            new MenuAction(Strings.Sleep, "\uE708", () => SystemActions.Sleep(owner)),
                         }
                     )
             )
@@ -633,24 +633,24 @@ internal sealed class ControlCenterWindow : GlassWindow
         }
         var options = new StackPanel();
         var output = new StackPanel();
-        var outputTitle = IconLabel("\uE7F5", "Sortie audio", 12);
+        var outputTitle = IconLabel("\uE7F5", Strings.AudioOutput, 12);
         output.Children.Add(outputTitle);
         device.TextTrimming = TextTrimming.CharacterEllipsis;
         device.Margin = new Thickness(0, 9, 0, 0);
         output.Children.Add(device);
-        var change = UI.Text("Choisir la sortie   ›", 10, UI.Dim);
+        var change = UI.Text(Strings.ChooseTheOutput, 10, UI.Dim);
         change.Margin = new Thickness(0, 5, 0, 0);
         output.Children.Add(change);
         var outputButton = UI.Button("", () => OpenSetting("sound"));
         outputButton.Content = output;
         outputButton.HorizontalContentAlignment = HorizontalAlignment.Stretch;
         outputButton.Padding = new Thickness(13, 13, 13, 13);
-        System.Windows.Automation.AutomationProperties.SetName(outputButton, "Choisir la sortie audio dans Windows");
+        System.Windows.Automation.AutomationProperties.SetName(outputButton, Strings.ChooseTheAudioOutputInWindows);
         options.Children.Add(outputButton);
         mute.Margin = new Thickness(0, 10, 0, 10);
         options.Children.Add(mute);
         var screen = UI.Button("", () => OpenSetting("quiethours"));
-        screen.Content = IconLabel("\uE708", "Concentration", 12);
+        screen.Content = IconLabel("\uE708", Strings.Focus, 12);
         screen.ToolTip = Strings.OpenTheWindowsFocusSettings;
         screen.HorizontalContentAlignment = HorizontalAlignment.Left;
         screen.Padding = new Thickness(13, 11, 13, 11);
@@ -662,7 +662,7 @@ internal sealed class ControlCenterWindow : GlassWindow
     FrameworkElement Shortcuts()
     {
         var stack = new StackPanel();
-        var title = UI.Text("Raccourcis Windows", 13, null, true);
+        var title = UI.Text(Strings.WindowsShortcuts, 13, null, true);
         title.Margin = new Thickness(2, 0, 0, 12);
         stack.Children.Add(title);
         var grid = new UniformGrid { Columns = 4 };
@@ -685,13 +685,11 @@ internal sealed class ControlCenterWindow : GlassWindow
             grid.Children.Add(tile);
         }
         var add = new StackPanel { Margin = new Thickness(0, 0, 0, 11) };
-        var plus = Circle(
-            UI.IconButton("\uE710", "Ajouter un raccourci Windows", () => owner.EditControls(this, true))
-        );
+        var plus = Circle(UI.IconButton("\uE710", Strings.AddAWindowsShortcut, () => owner.EditControls(this, true)));
         plus.Width = 48;
         plus.Height = 48;
         add.Children.Add(plus);
-        var text = UI.Text("Ajouter", 10, UI.Dim);
+        var text = UI.Text(Strings.Add, 10, UI.Dim);
         text.TextAlignment = TextAlignment.Center;
         text.Margin = new Thickness(0, 6, 0, 0);
         add.Children.Add(text);
@@ -772,7 +770,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         }
         catch (Exception ex)
         {
-            mediaTitle.Text = "Lecture indisponible";
+            mediaTitle.Text = Strings.PlaybackUnavailable;
             artist.Text = Strings.OpenTheWindowsAudioControls;
             Store.Log("SMTC: " + ex.Message);
         }
@@ -795,7 +793,7 @@ internal sealed class ControlCenterWindow : GlassWindow
                 volume.Value = audioState.Volume;
             volume.Glyph = audioState.Muted || audioState.Volume < 1 ? "\uE74F" : "\uE767";
             volume.InvalidateVisual();
-            volume.ToolTip = audioState.Available ? Strings.SystemVolumeDragOrUseThe : "Aucune sortie audio disponible";
+            volume.ToolTip = audioState.Available ? Strings.SystemVolumeDragOrUseThe : Strings.NoAudioOutputAvailable;
             device.Text = audioState.Device;
             device.ToolTip = audioState.Device;
             mute.IsEnabled = audioState.Available;
@@ -830,8 +828,8 @@ internal sealed class ControlCenterWindow : GlassWindow
         }
         catch (Exception ex)
         {
-            Feedback("Lecture indisponible");
-            Store.Log("SMTC lecture: " + ex.Message);
+            Feedback(Strings.PlaybackUnavailable);
+            Store.Log("SMTC playback: " + ex.Message);
         }
         finally
         {
@@ -848,7 +846,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         mediaTitle.ToolTip = s.Title;
         artist.Text = s.Artist;
         artist.ToolTip = s.Artist;
-        appName.Text = s.Available ? s.App.ToUpperInvariant() : "MUSIQUE";
+        appName.Text = s.Available ? s.App.ToUpperInvariant() : Strings.MUSIC;
         cover.Source = s.Artwork;
         cover.Visibility = s.Artwork == null ? Visibility.Hidden : Visibility.Visible;
         play.IsEnabled = s.Available && s.CanToggle;
@@ -888,7 +886,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         try
         {
             if (!await media.CommandAsync(action, position))
-                Feedback("Cette commande n’est pas disponible pour cette lecture.");
+                Feedback(Strings.ThisCommandIsNotAvailableFor);
             await RefreshMedia();
         }
         catch (Exception ex)
@@ -948,7 +946,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         }
         catch (Exception ex)
         {
-            Feedback("Connexions indisponibles");
+            Feedback(Strings.ConnectionsUnavailable);
             Store.Log("Radios: " + ex.Message);
         }
         finally
@@ -961,7 +959,7 @@ internal sealed class ControlCenterWindow : GlassWindow
     {
         if (connectionState is not { } s)
             return;
-        subtitle.Text = s.Internet ? s.Network + Strings.ConnectedToTheInternet : "Windows · Hors connexion";
+        subtitle.Text = s.Internet ? s.Network + Strings.ConnectedToTheInternet : Strings.WindowsOffline;
         foreach (string id in new[] { "wifi", "bluetooth", "network" })
             if (radios.TryGetValue(id, out var tile))
             {
@@ -981,11 +979,11 @@ internal sealed class ControlCenterWindow : GlassWindow
                         : "#20FFFFFF"
                 );
                 tile.status.Text =
-                    !present ? "Absent"
+                    !present ? Strings.Absent
                     : id == "network"
                         ? s.Ethernet ? "Ethernet"
                             : s.Internet ? Strings.Connected
-                            : "Hors ligne"
+                            : Strings.Offline
                     : on ? Strings.On
                     : Strings.Off;
                 tile.button.ToolTip =

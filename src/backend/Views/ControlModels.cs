@@ -36,7 +36,7 @@ public sealed class ControlPreferences
             new()
             {
                 Id = "calculator",
-                Name = "Calculatrice",
+                Name = Strings.Calculator,
                 Target = "calc.exe",
                 Glyph = "\uE8EF",
             },
@@ -57,7 +57,7 @@ public sealed class ControlPreferences
             new()
             {
                 Id = "explorer",
-                Name = "Fichiers",
+                Name = Strings.CategoryLabel("Fichiers"),
                 Target = "explorer.exe",
                 Glyph = "\uE8B7",
             },
@@ -84,7 +84,7 @@ public sealed class ControlPreferences
                 {
                     new WindowsShortcut
                     {
-                        Name = "Concentration",
+                        Name = Strings.Focus,
                         Target = "ms-settings:quiethours",
                         Glyph = "\uE708",
                     },
@@ -120,7 +120,7 @@ public sealed class ControlPreferences
                     },
                     new WindowsShortcut
                     {
-                        Name = "Stockage",
+                        Name = Strings.Storage,
                         Target = "ms-settings:storagesense",
                         Glyph = "\uEDA2",
                     },
@@ -132,7 +132,7 @@ public sealed class ControlPreferences
                     },
                     new WindowsShortcut
                     {
-                        Name = "Personnalisation",
+                        Name = Strings.Customization,
                         Target = "ms-settings:personalization",
                         Glyph = "\uE790",
                     },

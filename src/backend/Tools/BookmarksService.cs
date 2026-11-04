@@ -192,8 +192,8 @@ internal sealed class BookmarksService : IDisposable
         }
         catch (Exception ex)
         {
-            result.Error = "Lecture impossible (" + ex.GetType().Name + ")";
-            Store.Log("Favoris lecture : " + ex.GetType().Name);
+            result.Error = "Read failed (" + ex.GetType().Name + ")";
+            Store.Log("Favorites read: " + ex.GetType().Name);
         }
         return result;
     }
@@ -222,24 +222,24 @@ internal sealed class BookmarksService : IDisposable
             tree = result.Tree;
             if (result.Error.Length > 0)
                 error = result.Error;
-            else if (error.StartsWith("Lecture"))
+            else if (error.StartsWith("Read"))
                 error = "";
             lastScan = DateTime.UtcNow;
             version++;
             Watch();
             Store.Log(
-                "Favoris : "
+                "Favorites: "
                     + (
                         loaded.Length == 0
-                            ? "aucun navigateur"
-                            : loaded + " " + result.Urls + " favoris, " + result.IconsCreated + " icons created"
+                            ? "no browser"
+                            : loaded + " " + result.Urls + " favorites, " + result.IconsCreated + " icons created"
                     )
             );
         }
         catch (Exception ex)
         {
-            error = "Lecture impossible";
-            Store.Log("Favoris : " + ex.GetType().Name);
+            error = "Read failed";
+            Store.Log("Favorites: " + ex.GetType().Name);
         }
         finally
         {
@@ -278,7 +278,7 @@ internal sealed class BookmarksService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Favoris surveillance : " + ex.GetType().Name);
+            Store.Log("Favorites watch: " + ex.GetType().Name);
         }
     }
 
@@ -349,7 +349,7 @@ internal sealed class BookmarksService : IDisposable
         }
         catch (Exception ex)
         {
-            error = "Ouverture impossible";
+            error = "Open failed";
             Store.Log("Bookmarks open: " + ex.GetType().Name);
             Changed();
         }
@@ -402,7 +402,7 @@ internal sealed class BookmarksService : IDisposable
             null => "",
             _ => code,
         };
-        Store.Log("Favoris suppression dans le navigateur : " + (code ?? "ok"));
+        Store.Log("Favorites deletion in the browser: " + (code ?? "ok"));
         Changed();
         if (code == null)
             _ = Rescan();

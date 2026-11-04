@@ -111,9 +111,9 @@ internal sealed partial class Coordinator
             Strings.YourTaskbar,
             new[]
             {
-                new MenuAction("Tableau de bord", "\uE8A9", () => ShowShellPage("dashboard")),
-                new MenuAction("Applications et fichiers", "\uE8B7", () => ShowWorkspace()),
-                new MenuAction("Personnaliser…", "\uE713", () => Settings(), Separator: true),
+                new MenuAction(Strings.Dashboard, "\uE8A9", () => ShowShellPage("dashboard")),
+                new MenuAction(Strings.AppsAndFiles, "\uE8B7", () => ShowWorkspace()),
+                new MenuAction(Strings.Customize2, "\uE713", () => Settings(), Separator: true),
                 new MenuAction(Strings.RestoreTheWindowsTaskbar, "\uE777", () => SetTaskbar(false)),
                 new MenuAction("Quitter Panneaux", "\uE711", () => System.Windows.Application.Current.Shutdown()),
             },
@@ -144,7 +144,7 @@ internal sealed partial class Coordinator
                         taskbar?.Refresh();
                     }
                 ),
-                new MenuAction("Tout mon espace", "\uE8B7", () => ShowWorkspace(), Separator: true),
+                new MenuAction(Strings.MyWholeSpace, "\uE8B7", () => ShowWorkspace(), Separator: true),
             },
             true
         );
@@ -205,7 +205,7 @@ internal sealed partial class Coordinator
         string title = Native.Title(target);
         if (title.Length > 38)
             title = title[..37] + "…";
-        ShowToast((topmost ? "Au premier plan · " : Strings.TidiedNormally) + title);
+        ShowToast((topmost ? Strings.InFront : Strings.TidiedNormally) + title);
     }
 
     internal void ApplyClipboardSettings() => clipboard.ApplySettings();
@@ -364,7 +364,7 @@ internal sealed partial class Coordinator
         if (paletteChip != null)
         {
             paletteChip.Content = PaletteLabel;
-            paletteChip.ToolTip = "Commande rapide · " + PaletteLabel;
+            paletteChip.ToolTip = Strings.QuickCommand2 + PaletteLabel;
         }
         clock.RefreshLabels();
         palette?.ReloadTabs();

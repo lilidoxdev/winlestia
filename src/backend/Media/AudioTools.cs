@@ -145,7 +145,7 @@ internal sealed class AudioWindow : GlassWindow
     readonly TextBlock status;
 
     internal AudioWindow(Coordinator coordinator)
-        : base("Panneaux Glass — son et micro")
+        : base(Strings.PanneauxGlassSoundAndMicrophone)
     {
         owner = coordinator;
         Width = 560;
@@ -162,7 +162,7 @@ internal sealed class AudioWindow : GlassWindow
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("Le bon son, tout de suite.", 25, null, true));
+        titles.Children.Add(UI.Text(Strings.TheRightSoundRightAway, 25, null, true));
         var sub = UI.Text(Strings.SwitchHeadsetMicrophoneOrMuteThe, 11, UI.Dim);
         sub.TextWrapping = TextWrapping.Wrap;
         sub.Margin = new Thickness(0, 6, 0, 0);
@@ -201,12 +201,12 @@ internal sealed class AudioWindow : GlassWindow
         {
             var outputs = AudioSwitch.Devices(0);
             var inputs = AudioSwitch.Devices(1);
-            body.Children.Add(UI.Text("SORTIE", 10, UI.Brush("#ABD2E4F1"), true));
+            body.Children.Add(UI.Text(Strings.OUTPUT, 10, UI.Brush("#ABD2E4F1"), true));
             if (outputs.Count == 0)
                 body.Children.Add(Note(Strings.NoActiveOutputDetected));
             foreach (var device in outputs)
                 body.Children.Add(Row(device, "\uE7F5", () => Apply(device, false)));
-            body.Children.Add(UI.Text("MICRO", 10, UI.Brush("#ABD2E4F1"), true));
+            body.Children.Add(UI.Text(Strings.MICROPHONE, 10, UI.Brush("#ABD2E4F1"), true));
             if (inputs.Count == 0)
                 body.Children.Add(Note(Strings.NoActiveMicrophoneDetected));
             foreach (var device in inputs)
@@ -215,7 +215,7 @@ internal sealed class AudioWindow : GlassWindow
             {
                 var muted = inputs.FirstOrDefault(d => d.Default)?.Muted == true;
                 var toggle = UI.Button(
-                    muted ? Strings.UnmuteMicrophone : "Couper le micro",
+                    muted ? Strings.UnmuteMicrophone : Strings.MuteTheMicrophone,
                     () =>
                     {
                         try
@@ -281,10 +281,10 @@ internal sealed class AudioWindow : GlassWindow
             grid.Children.Add(muted);
         }
         button.Content = grid;
-        button.ToolTip = device.Default ? "Sortie actuelle" : "Choisir cette sortie";
+        button.ToolTip = device.Default ? Strings.CurrentOutput : Strings.UseThisOutput;
         System.Windows.Automation.AutomationProperties.SetName(
             button,
-            (device.Default ? "Actuel : " : "Choisir ") + device.Name
+            (device.Default ? "Actuel : " : Strings.Use) + device.Name
         );
         return button;
     }
@@ -303,7 +303,7 @@ internal sealed class AudioWindow : GlassWindow
         {
             AudioSwitch.SetDefault(device.Id);
             Rebuild();
-            owner.ShowToast((input ? "Micro : " : "Sortie : ") + device.Name);
+            owner.ShowToast((input ? Strings.Microphone : Strings.Output) + device.Name);
         }
         catch (Exception ex)
         {

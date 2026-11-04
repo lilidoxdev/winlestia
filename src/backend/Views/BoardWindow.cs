@@ -88,7 +88,7 @@ internal sealed class BoardWindow : GlassWindow
         };
         star = UI.IconButton(
             "\uE734",
-            Strings.FavouritesPrefix + model.Title,
+            Strings.FavoritesPrefix + model.Title,
             () =>
             {
                 Model.FavoritesOnly = !Model.FavoritesOnly;
@@ -102,7 +102,7 @@ internal sealed class BoardWindow : GlassWindow
         var add = UI.IconButton("\uE710", Strings.AddAShortcutTo + model.Title, () => owner.AddAccess(model.Id));
         add.Margin = new Thickness(0, 0, 7, 0);
         actions.Children.Add(add);
-        actions.Children.Add(UI.IconButton("\uE713", "Personnaliser " + model.Title, () => owner.Settings(model.Id)));
+        actions.Children.Add(UI.IconButton("\uE713", Strings.Customize3 + model.Title, () => owner.Settings(model.Id)));
         Grid.SetColumn(actions, 2);
         header.Children.Add(actions);
         ContentHost.Children.Add(header);
@@ -269,7 +269,7 @@ internal sealed class BoardWindow : GlassWindow
                 _ => all.Count + Strings.FoldersEverydayLifeWithinReach,
             };
             selector.Content = Model.FavoritesOnly
-                ? Strings.FavouritesPrefix + Model.Title + "  ⌄"
+                ? Strings.FavoritesPrefix + Model.Title + "  ⌄"
                 : Strings.CategoryLabel(filter) + "  ⌄";
             BuildQuick();
             RenderItems(animate, direction);
@@ -741,7 +741,7 @@ internal sealed class BoardWindow : GlassWindow
             {
                 new MenuAction(Strings.Open, "\uE8A7", () => owner.Launch(entry)),
                 new MenuAction(
-                    Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris" : "Ajouter aux favoris",
+                    Store.State.Favorites.Contains(entry.Id) ? Strings.RemoveFromFavorites : Strings.AddToFavorites,
                     "\uE734",
                     () =>
                     {
@@ -757,8 +757,8 @@ internal sealed class BoardWindow : GlassWindow
                     () => owner.ToggleTaskbarPin(entry)
                 ),
                 new MenuAction(Strings.CustomizeThisShortcut, "\uE70F", () => owner.Edit(entry), Separator: true),
-                new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)),
-                new MenuAction("Copier le chemin", "\uE8C8", () => System.Windows.Clipboard.SetText(entry.Target)),
+                new MenuAction(Strings.ShowLocation, "\uE8B7", () => owner.Reveal(entry)),
+                new MenuAction(Strings.CopyPath, "\uE8C8", () => System.Windows.Clipboard.SetText(entry.Target)),
                 new MenuAction(
                     Strings.HideThisShortcut,
                     "\uE890",

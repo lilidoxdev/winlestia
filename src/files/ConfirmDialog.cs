@@ -28,7 +28,7 @@ internal static class ConfirmDialog
         var body = UI.Text(message, M3.FontSmall, UI.Label);
         body.TextWrapping = TextWrapping.Wrap;
         body.Margin = new Thickness(0, M3.Sp2, 0, M3.Sp4);
-        var cancel = UI.Flat("Annuler", 36, new CornerRadius(M3.Small));
+        var cancel = UI.Flat(Strings.Cancel, 36, new CornerRadius(M3.Small));
         cancel.Padding = new Thickness(M3.Sp4, 0, M3.Sp4, 0);
         cancel.Click += (_, _) => win.Close();
         var confirm = UI.Flat(confirmLabel, 36, new CornerRadius(M3.Small), UI.T(M3Role.Error));

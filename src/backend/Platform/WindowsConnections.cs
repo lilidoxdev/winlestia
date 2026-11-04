@@ -40,7 +40,7 @@ internal sealed class WindowsConnections
         RadioSnapshot Read(RadioKind kind)
         {
             var r = radios.FirstOrDefault(r => r.Kind == kind);
-            return new(r != null, r?.State == RadioState.On, r?.Name ?? "Non disponible");
+            return new(r != null, r?.State == RadioState.On, r?.Name ?? Strings.NotAvailable);
         }
         bool internet = false,
             ethernet = false;

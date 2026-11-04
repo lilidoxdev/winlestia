@@ -121,7 +121,7 @@ internal sealed class ShellTaskbar : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Barre Windows: " + ex);
+            Store.Log("Windows taskbar: " + ex);
             Disable();
             return false;
         }
@@ -314,7 +314,7 @@ internal sealed class ShellDockWindow : Window
         owner = coordinator;
         manager = taskbar;
         screen = target;
-        Title = Strings.PanneauxTaskbar;
+        Title = "Panneaux — barre des tâches"; // matched verbatim by TaskbarRescue.cpp; never localise
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
         ResizeMode = ResizeMode.NoResize;
@@ -400,7 +400,7 @@ internal sealed class ShellDockWindow : Window
         };
         Grid.SetColumn(right, 2);
         row.Children.Add(right);
-        right.Children.Add(Icon("volume", "Son et commandes rapides", owner.ToggleControls));
+        right.Children.Add(Icon("volume", Strings.SoundAndQuickControls, owner.ToggleControls));
         right.Children.Add(Icon("wifi", Strings.Network, () => owner.LaunchTarget("ms-settings:network-status")));
         right.Children.Add(
             Icon(
@@ -413,7 +413,7 @@ internal sealed class ShellDockWindow : Window
                 }
             )
         );
-        right.Children.Add(Icon("settings", "Personnaliser", () => owner.Settings()));
+        right.Children.Add(Icon("settings", Strings.Customize, () => owner.Settings()));
         var when = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         time.TextAlignment = date.TextAlignment = TextAlignment.Center;
         when.Children.Add(time);

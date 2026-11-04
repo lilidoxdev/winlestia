@@ -94,7 +94,7 @@ internal sealed partial class QtShellBridge
         }
         catch (Exception ex)
         {
-            Store.Log("Musique Qt: " + ex.Message);
+            Store.Log("Qt music: " + ex.Message);
         }
     }
 

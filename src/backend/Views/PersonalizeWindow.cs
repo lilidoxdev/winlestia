@@ -22,7 +22,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
 
     internal PersonalizeWindow(Coordinator owner, string? boardId)
-        : base("Panneaux Glass — personnalisation")
+        : base(Strings.PanneauxGlassCustomization)
     {
         coordinator = owner;
         Width = 800;
@@ -51,10 +51,10 @@ internal sealed class PersonalizeWindow : GlassWindow
         ThemeSection();
         DailySection();
         ShortcutSection();
-        Section("LE VERRE");
+        Section(Strings.THEGLASS);
         Description(Strings.TheMaterialReflectionsAndDensityOf);
         AddSlider(
-            "Teinte du verre",
+            Strings.GlassTint,
             .05,
             .75,
             Store.State.Tint,
@@ -77,13 +77,13 @@ internal sealed class PersonalizeWindow : GlassWindow
             v => Store.State.IconSize = v,
             v => Math.Round(v) + " px"
         );
-        Check("Verre clair", Store.State.LightGlass, value => Store.State.LightGlass = value);
-        Section("LES QUATRE PANNEAUX");
+        Check(Strings.ClearGlass, Store.State.LightGlass, value => Store.State.LightGlass = value);
+        Section(Strings.THEFOURPANELS);
         Description(Strings.RenameColorAndReorderTheSurfaces);
         foreach (var model in Store.State.Boards.ToArray())
             BoardRow(model, model.Id == boardId);
         AddSlider(
-            "Largeur de la colonne gauche",
+            Strings.LeftColumnWidth,
             .3,
             .7,
             Store.State.LeftRatio,
@@ -98,23 +98,16 @@ internal sealed class PersonalizeWindow : GlassWindow
             v => Store.State.TopRatio = v,
             v => Math.Round(v * 100) + " %"
         );
+        AddSlider(Strings.PanelSpacing, 12, 48, Store.State.Gap, v => Store.State.Gap = v, v => Math.Round(v) + " px");
         AddSlider(
-            "Espacement des panneaux",
-            12,
-            48,
-            Store.State.Gap,
-            v => Store.State.Gap = v,
-            v => Math.Round(v) + " px"
-        );
-        AddSlider(
-            "Marge du Bureau",
+            Strings.DesktopMargin,
             20,
             100,
             Store.State.Margin,
             v => Store.State.Margin = v,
             v => Math.Round(v) + " px"
         );
-        Section("LA BARRE DES TÂCHES ET LE BORD");
+        Section(Strings.THETASKBARANDTHEEDGE);
         Check(Strings.UseThePanneauxBarInsteadOf, coordinator.TaskbarEnabled, coordinator.SetTaskbar);
         Check(
             Strings.ShowTheHandleOnTheLeft,
@@ -143,7 +136,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             1.5,
             Store.State.Motion,
             v => Store.State.Motion = v,
-            v => v < .02 ? "Sans animation" : Math.Round(v * 160) + " ms"
+            v => v < .02 ? Strings.NoAnimation : Math.Round(v * 160) + " ms"
         );
         Check(Strings.CollapseAfter18SecondsOutside, Store.State.AutoHide, value => Store.State.AutoHide = value);
         Check(
@@ -152,7 +145,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             value => Store.State.PauseFullscreen = value
         );
         Check(Strings.LaunchPanneauxAtSignIn, Native.Autostart, value => Native.SetAutostart(value));
-        Section("TES ACCÈS");
+        Section(Strings.YOURSHORTCUTS);
         var choices = new WrapPanel();
         foreach (var board in Store.State.Boards)
         {
@@ -162,7 +155,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             choices.Children.Add(add);
         }
         body.Children.Add(choices);
-        var folder = UI.Button("Ajouter un dossier…", () => coordinator.AddFolder(boardId ?? "documents"));
+        var folder = UI.Button(Strings.AddAFolder, () => coordinator.AddFolder(boardId ?? "documents"));
         folder.HorizontalAlignment = HorizontalAlignment.Left;
         folder.Margin = new Thickness(0, 3, 0, 12);
         body.Children.Add(folder);
@@ -180,13 +173,13 @@ internal sealed class PersonalizeWindow : GlassWindow
             body.Children.Add(unhide);
         }
         var transfers = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
-        var export = UI.Button("Exporter ma personnalisation", Export);
+        var export = UI.Button(Strings.ExportMyCustomization, Export);
         export.Margin = new Thickness(0, 0, 8, 8);
         transfers.Children.Add(export);
         var import = UI.Button("Importer…", Import);
         transfers.Children.Add(import);
         body.Children.Add(transfers);
-        Section("LE BUREAU, TOUJOURS ACCESSIBLE");
+        Section(Strings.THEDESKTOPALWAYSREACHABLE);
         Description(Strings.TheNativeRescueToolShowsAnd);
         var rescue = UI.Button(Strings.RestoreTheOrganizedDesktop, coordinator.Rescue);
         rescue.HorizontalAlignment = HorizontalAlignment.Left;
@@ -254,7 +247,7 @@ internal sealed class PersonalizeWindow : GlassWindow
 
     void ThemeSection()
     {
-        Section("THÈMES");
+        Section(Strings.THEMES);
         Description(Strings.EachThemeChangesTheMaterialThe);
         body.Children.Add(themeGrid);
         ThemeCards();
@@ -458,10 +451,10 @@ internal sealed class PersonalizeWindow : GlassWindow
     // The everyday layer: how lively the motion is, what the clipboard remembers, and how a window is pinned.
     void DailySection()
     {
-        Section("LE QUOTIDIEN");
+        Section(Strings.EVERYDAY);
         Description(Strings.WhatYouUseEveryDayA);
         var motion = new WrapPanel { Margin = new Thickness(0, 0, 0, 12) };
-        foreach (var (level, name) in new[] { (0, "Calme"), (1, "Standard"), (2, "Expressif") })
+        foreach (var (level, name) in new[] { (0, Strings.Calm), (1, "Standard"), (2, Strings.Expressive) })
         {
             int local = level;
             var chip = UI.Button(
@@ -482,7 +475,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         RefreshMotion(motion);
         body.Children.Add(motion);
         Check(
-            "Garder l’historique du presse-papiers",
+            Strings.KeepTheClipboardHistory,
             Store.State.ClipboardHistory,
             value =>
             {
@@ -512,7 +505,7 @@ internal sealed class PersonalizeWindow : GlassWindow
                 return (ok, error);
             },
             string.IsNullOrEmpty(coordinator.PinStatus)
-                ? "Actif : " + coordinator.PinShortcutLabel
+                ? Strings.Active2 + coordinator.PinShortcutLabel
                 : coordinator.PinStatus
         );
         ShortcutEditor(
@@ -524,13 +517,13 @@ internal sealed class PersonalizeWindow : GlassWindow
                 return (ok, error);
             },
             string.IsNullOrEmpty(coordinator.CaptureStatus)
-                ? "Actif : " + coordinator.CaptureShortcutLabel
+                ? Strings.Active2 + coordinator.CaptureShortcutLabel
                 : coordinator.CaptureStatus
         );
         var tools = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 20, 0, 0) };
         var open = UI.Button(Strings.OpenTheWorkshop, () => coordinator.OpenTools());
         tools.Children.Add(open);
-        var help = UI.Button("Aide et raccourcis", () => coordinator.OpenHelp());
+        var help = UI.Button(Strings.HelpAndShortcuts, () => coordinator.OpenHelp());
         help.Margin = new Thickness(10, 0, 0, 0);
         tools.Children.Add(help);
         body.Children.Add(tools);
@@ -566,7 +559,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             },
             shift = new CheckBox
             {
-                Content = "Maj",
+                Content = Strings.Shift2,
                 IsChecked = (current.Modifiers & 4) != 0,
                 Margin = new Thickness(0, 0, 18, 0),
             };
@@ -580,7 +573,7 @@ internal sealed class PersonalizeWindow : GlassWindow
                     coordinator,
                     this,
                     keyButton!,
-                    "Touche du raccourci",
+                    Strings.ShortcutKey,
                     GlobalShortcut.Keys.Select(k => new MenuAction(
                         GlobalShortcut.KeyName(k),
                         "\uE765",
@@ -593,17 +586,17 @@ internal sealed class PersonalizeWindow : GlassWindow
                 )
         );
         keyButton.MinWidth = 84;
-        System.Windows.Automation.AutomationProperties.SetName(keyButton, "Choisir la touche : " + label);
+        System.Windows.Automation.AutomationProperties.SetName(keyButton, Strings.ChooseTheKey + label);
         row.Children.Add(keyButton);
         body.Children.Add(row);
         uint Modifiers() =>
             (ctrl.IsChecked == true ? 2u : 0) | (alt.IsChecked == true ? 1u : 0) | (shift.IsChecked == true ? 4u : 0);
         var applyButton = UI.Button(
-            "Appliquer",
+            Strings.Apply,
             () =>
             {
                 var (ok, error) = apply(Modifiers(), key);
-                status.Text = ok ? "Actif : " + GlobalShortcut.Label(Modifiers(), key) : error;
+                status.Text = ok ? Strings.Active2 + GlobalShortcut.Label(Modifiers(), key) : error;
                 status.Foreground = UI.Brush(ok ? "#A0E7CF" : "#F3CF91");
             }
         );
@@ -623,8 +616,8 @@ internal sealed class PersonalizeWindow : GlassWindow
                 == (
                     Store.State.MotionLevel switch
                     {
-                        0 => "Calme",
-                        2 => "Expressif",
+                        0 => Strings.Calm,
+                        2 => Strings.Expressive,
                         _ => "Standard",
                     }
                 );
@@ -713,7 +706,7 @@ internal sealed class PersonalizeWindow : GlassWindow
 
     void ShortcutSection()
     {
-        Section("OUVRIR DEPUIS N’IMPORTE QUELLE APPLICATION");
+        Section(Strings.OPENFROMANYAPPLICATION);
         Description(Strings.OnePressOpensYourSpaceIn);
         var current = Store.State.Shortcut;
         uint key = current.Key;
@@ -736,7 +729,7 @@ internal sealed class PersonalizeWindow : GlassWindow
             },
             shift = new CheckBox
             {
-                Content = "Maj",
+                Content = Strings.Shift2,
                 IsChecked = (current.Modifiers & 4) != 0,
                 Margin = new Thickness(0, 0, 20, 0),
             };
@@ -750,7 +743,7 @@ internal sealed class PersonalizeWindow : GlassWindow
                     coordinator,
                     this,
                     keyButton!,
-                    "Touche du raccourci",
+                    Strings.ShortcutKey,
                     GlobalShortcut.Keys.Select(k => new MenuAction(
                         GlobalShortcut.KeyName(k),
                         "\uE765",
@@ -765,7 +758,7 @@ internal sealed class PersonalizeWindow : GlassWindow
                 )
         );
         keyButton.MinWidth = 94;
-        System.Windows.Automation.AutomationProperties.SetName(keyButton, "Choisir la touche du raccourci global");
+        System.Windows.Automation.AutomationProperties.SetName(keyButton, Strings.ChooseTheGlobalShortcutKey);
         modifiers.Children.Add(keyButton);
         body.Children.Add(modifiers);
         uint Modifiers() =>
@@ -782,10 +775,10 @@ internal sealed class PersonalizeWindow : GlassWindow
         }
         var views = new[]
         {
-            ("controls", "Accueil + commandes Windows"),
-            ("home", "Accueil seul"),
+            ("controls", Strings.HomeWindowsControls),
+            ("home", Strings.HomeOnly),
             ("pc", Strings.HomePCStatus),
-            ("workspace", "Les quatre panneaux"),
+            ("workspace", Strings.TheFourPanels),
             ("last", Strings.LastUsedView),
         };
         Button? viewButton = null;
@@ -813,15 +806,15 @@ internal sealed class PersonalizeWindow : GlassWindow
         );
         viewButton.HorizontalContentAlignment = HorizontalAlignment.Left;
         viewButton.Margin = new Thickness(0, 12, 0, 0);
-        System.Windows.Automation.AutomationProperties.SetName(viewButton, "Choisir la vue ouverte par le raccourci");
+        System.Windows.Automation.AutomationProperties.SetName(viewButton, Strings.ChooseTheViewTheShortcutOpens);
         body.Children.Add(viewButton);
         var apply = UI.Button(
-            "Appliquer le raccourci",
+            Strings.ApplyTheShortcut,
             () =>
             {
                 bool applied = coordinator.SetShortcut(Modifiers(), key, view, out var error);
                 status.Text = applied
-                    ? "Actif : " + GlobalShortcut.Label(Modifiers(), key) + " · " + ViewName()
+                    ? Strings.Active2 + GlobalShortcut.Label(Modifiers(), key) + " · " + ViewName()
                     : error;
                 status.Foreground = UI.Brush(applied ? "#A0E7CF" : "#F3CF91");
             }
@@ -831,7 +824,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         body.Children.Add(apply);
         body.Children.Add(status);
         status.Text = string.IsNullOrEmpty(coordinator.ShortcutStatus)
-            ? "Actif : " + GlobalShortcut.Label(current.Modifiers, current.Key)
+            ? Strings.Active2 + GlobalShortcut.Label(current.Modifiers, current.Key)
             : coordinator.ShortcutStatus;
         Description(Strings.CtrlAltSpaceRemainsAvailableThe);
     }
@@ -933,8 +926,8 @@ internal sealed class PersonalizeWindow : GlassWindow
     {
         var dialog = new SaveFileDialog
         {
-            Title = "Exporter la personnalisation",
-            Filter = "Personnalisation Panneaux|*.json",
+            Title = Strings.ExportTheCustomization,
+            Filter = Strings.PanneauxCustomizationJson,
             FileName = "Panneaux-dj.json",
         };
         if (dialog.ShowDialog(this) == true)
@@ -945,8 +938,8 @@ internal sealed class PersonalizeWindow : GlassWindow
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Importer une personnalisation Panneaux",
-            Filter = "Personnalisation Panneaux|*.json",
+            Title = Strings.ImportAPanneauxCustomization,
+            Filter = Strings.PanneauxCustomizationJson,
         };
         if (dialog.ShowDialog(this) != true)
             return;
@@ -954,7 +947,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         {
             var state = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(dialog.FileName), Store.Json);
             if (state == null)
-                throw new InvalidDataException("Le fichier ne contient pas de personnalisation.");
+                throw new InvalidDataException("The file does not contain a customization.");
             state.Normalize();
             File.Copy(
                 Path.Combine(Store.Root, "preferences-glass.json"),
@@ -987,7 +980,7 @@ internal sealed class PersonalizeWindow : GlassWindow
         }
         catch (Exception ex)
         {
-            coordinator.Message("Import impossible : " + ex.Message);
+            coordinator.Message(Strings.ImportFailed + ex.Message);
         }
     }
 }
@@ -1017,7 +1010,7 @@ internal sealed class EditWindow : GlassWindow
         Label(Strings.CATEGORY);
         var category = new TextBox { Text = entry.Category };
         form.Children.Add(category);
-        Label("PANNEAU");
+        Label(Strings.PANEL);
         BoardState destination = Store.State.Boards.First(b => b.Id == Store.BoardFor(entry));
         Button? destinationButton = null;
         destinationButton = UI.Button(
@@ -1027,7 +1020,7 @@ internal sealed class EditWindow : GlassWindow
                     coordinator,
                     this,
                     destinationButton!,
-                    "Choisir un panneau",
+                    Strings.ChooseAPanel,
                     Store.State.Boards.Select(b => new MenuAction(
                         b.Title,
                         GlassMenu.CategoryGlyph(b.Title),
@@ -1042,7 +1035,7 @@ internal sealed class EditWindow : GlassWindow
         );
         destinationButton.HorizontalContentAlignment = HorizontalAlignment.Left;
         form.Children.Add(destinationButton);
-        Label("ICÔNE");
+        Label(Strings.ICON);
         string selectedIcon = entry.IconPath;
         var iconRow = new DockPanel();
         var choose = UI.Button(
@@ -1073,9 +1066,9 @@ internal sealed class EditWindow : GlassWindow
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
         };
-        actions.Children.Add(UI.Button("Annuler", Close));
+        actions.Children.Add(UI.Button(Strings.Cancel, Close));
         var save = UI.Button(
-            "Enregistrer",
+            Strings.Save,
             () =>
             {
                 if (string.IsNullOrWhiteSpace(name.Text) || string.IsNullOrWhiteSpace(category.Text))

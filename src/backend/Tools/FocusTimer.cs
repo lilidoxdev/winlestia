@@ -161,7 +161,7 @@ internal sealed class FocusTimer : GlassWindow
         timer.Stop();
         FocusAlarm.Play();
         owner.ShowToast(Strings.FocusFinished + DurationText(total));
-        owner.Notify(Strings.FocusFinished2, "Tes " + DurationText(total) + Strings.HaveElapsed);
+        owner.Notify(Strings.FocusFinished2, Strings.Your + DurationText(total) + Strings.HaveElapsed);
         Close();
     }
 }

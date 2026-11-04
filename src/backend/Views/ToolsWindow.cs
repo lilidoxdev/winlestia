@@ -19,7 +19,7 @@ internal sealed class ToolsWindow : GlassWindow
     string filter = "Tout";
 
     internal ToolsWindow(Coordinator coordinator)
-        : base("Panneaux Glass — atelier")
+        : base(Strings.PanneauxGlassWorkshop)
     {
         owner = coordinator;
         Width = 720;
@@ -36,7 +36,7 @@ internal sealed class ToolsWindow : GlassWindow
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("L’atelier.", 27, null, true));
+        titles.Children.Add(UI.Text(Strings.TheWorkshop, 27, null, true));
         var sub = UI.Text(Strings.TheUsefulEverydayGesturesGatheredIn, 12, UI.Dim);
         sub.Margin = new Thickness(0, 7, 0, 0);
         titles.Children.Add(sub);
@@ -91,7 +91,7 @@ internal sealed class ToolsWindow : GlassWindow
             new(
                 Strings.Screen,
                 "\uE722",
-                "Capturer et annoter",
+                Strings.CaptureAndAnnotate,
                 Strings.FrameAnAreaDrawOnIt,
                 "",
                 () => owner.OpenCapture()
@@ -99,7 +99,7 @@ internal sealed class ToolsWindow : GlassWindow
             new(
                 Strings.Screen,
                 "\uE8A5",
-                "Texte d’une image",
+                Strings.TextFromAnImage,
                 Strings.FrameATextItIsCopied2,
                 "",
                 () => owner.OpenCapture(textOnly: true)
@@ -107,7 +107,7 @@ internal sealed class ToolsWindow : GlassWindow
             new(
                 Strings.Screen,
                 "\uE790",
-                "Pipette de couleur",
+                Strings.ColorPicker,
                 Strings.MagnifiesUnderTheCursorAndCopies,
                 "",
                 () => owner.OpenColorPicker()
@@ -123,7 +123,7 @@ internal sealed class ToolsWindow : GlassWindow
             new(
                 "Système",
                 "\uE840",
-                "Toujours au premier plan",
+                Strings.AlwaysOnTop,
                 Strings.AWindowStaysInFrontOf,
                 owner.PinShortcutLabel,
                 () => owner.ToggleAlwaysOnTop()
@@ -131,8 +131,8 @@ internal sealed class ToolsWindow : GlassWindow
             new(
                 "Système",
                 "\uE7F5",
-                "Son et micro",
-                "Change de casque ou coupe le micro en un clic",
+                Strings.SoundAndMicrophone,
+                Strings.SwitchHeadsetOrMuteTheMicrophone2,
                 "",
                 () => owner.OpenAudio()
             ),
@@ -155,16 +155,16 @@ internal sealed class ToolsWindow : GlassWindow
             new(
                 "Fichiers",
                 "\uE8B7",
-                "Gros fichiers",
-                "Trouve ce qui remplit le disque, sans rien supprimer",
+                Strings.LargeFiles,
+                Strings.FindWhatFillsTheDiskWithout,
                 "",
                 () => owner.OpenLargeFiles()
             ),
             new(
                 "Fichiers",
                 "\uE7C3",
-                "Profils d’espace",
-                "Rouvre tes applications et la disposition d’un moment",
+                Strings.SpaceProfiles,
+                Strings.ReopenYourAppsAndTheLayout,
                 "",
                 () => owner.OpenWorkspaces()
             ),
@@ -172,7 +172,7 @@ internal sealed class ToolsWindow : GlassWindow
             new(
                 "Confort",
                 "\uE8C8",
-                "Presse-papiers",
+                Strings.Clipboard,
                 Strings.EverythingYouCopiedReadyToCome2,
                 "",
                 () => owner.OpenClipboard()
@@ -180,8 +180,8 @@ internal sealed class ToolsWindow : GlassWindow
             new(
                 "Confort",
                 "\uE897",
-                "Aide et raccourcis",
-                "Les gestes de Panneaux, en une page",
+                Strings.HelpAndShortcuts,
+                Strings.PanneauxGesturesOnOnePage,
                 "F1",
                 () => owner.OpenHelp()
             ),
@@ -271,7 +271,7 @@ internal sealed class HelpWindow : GlassWindow
     readonly Coordinator owner;
 
     internal HelpWindow(Coordinator coordinator)
-        : base("Panneaux Glass — aide")
+        : base(Strings.PanneauxGlassHelp)
     {
         owner = coordinator;
         Width = 660;
@@ -332,29 +332,26 @@ internal sealed class HelpWindow : GlassWindow
             grid.Children.Add(text);
             body.Children.Add(grid);
         }
-        Section("OUVRIR", Strings.MoveThePointerToTheRight);
+        Section(Strings.OPEN, Strings.MoveThePointerToTheRight);
         Row(
             GlobalShortcut.Label(Store.State.Shortcut.Modifiers, Store.State.Shortcut.Key),
-            "Ouvre ou replie ton espace"
+            Strings.OpenOrCollapseYourSpace
         );
-        Row(owner.PaletteLabel, "Commande rapide : applications, sites, calculs, minuteur, actions");
+        Row(owner.PaletteLabel, Strings.QuickCommandAppsSitesCalculationsTimer);
         Row(owner.PinShortcutLabel, Strings.AlwaysOnTopPinTheActive);
         Row("Ctrl 1 … Ctrl 4", "Applications, Jeux, Projets, Documents");
-        Row("Ctrl F", "Place le curseur dans la recherche");
+        Row("Ctrl F", Strings.PlaceTheCursorInTheSearch);
         Row("Ctrl H", Strings.ReturnsToHome);
-        Row(Strings.Esc, "Replie l’espace et ferme ce qui est ouvert avec lui");
+        Row(Strings.Esc, Strings.CollapseTheSpaceAndCloseWhat);
         Row(Strings.CtrlAltBackspace, Strings.RestoresTheOrganizedDesktopEvenIf);
-        Section(
-            "L’ATELIER",
-            "Treize outils, tous dans la même fenêtre : capture annotée, papier pense-bête, texte d’une image, pipette, règle, presse-papiers, son, profils d’espace, gros fichiers. Un papier garde son texte, sa taille, sa place et sa transparence d’une session à l’autre. Raccourci dans la palette : tape « atelier »."
-        );
+        Section(Strings.THEWORKSHOP, Strings.ThirteenToolsAllInTheSame);
         Section(Strings.YOURSETTINGS, Strings.InPersonalizeThemeCalmStandardExpressive);
         var footer = new DockPanel();
-        var done = UI.Button("C’est parti", Close);
+        var done = UI.Button(Strings.LetSGo, Close);
         done.MinWidth = 120;
         DockPanel.SetDock(done, Dock.Right);
         footer.Children.Add(done);
-        var tip = UI.Text("Cette page reste accessible depuis l’atelier.", 10, UI.Dim);
+        var tip = UI.Text(Strings.ThisPageStaysReachableFromThe, 10, UI.Dim);
         tip.VerticalAlignment = VerticalAlignment.Center;
         footer.Children.Add(tip);
         Grid.SetRow(footer, 2);

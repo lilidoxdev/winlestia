@@ -17,7 +17,7 @@ internal sealed class NotesWindow : GlassWindow
     readonly DispatcherTimer save = new() { Interval = TimeSpan.FromMilliseconds(500) };
 
     internal NotesWindow(Coordinator coordinator)
-        : base("Panneaux Glass — note rapide")
+        : base(Strings.PanneauxGlassQuickNote)
     {
         owner = coordinator;
         Width = 660;
@@ -33,7 +33,7 @@ internal sealed class NotesWindow : GlassWindow
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("Ta note rapide.", 26, null, true));
+        titles.Children.Add(UI.Text(Strings.YourQuickNote, 26, null, true));
         var sub = UI.Text(Strings.EverythingThatDoesNotDeserveA, 12, UI.Dim);
         sub.Margin = new Thickness(0, 7, 0, 0);
         titles.Children.Add(sub);
@@ -48,15 +48,15 @@ internal sealed class NotesWindow : GlassWindow
         editor.VerticalContentAlignment = VerticalAlignment.Top;
         editor.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
         editor.Margin = new Thickness(0, 0, 0, 16);
-        System.Windows.Automation.AutomationProperties.SetName(editor, "Contenu de la note rapide");
+        System.Windows.Automation.AutomationProperties.SetName(editor, Strings.QuickNoteContent);
         Grid.SetRow(editor, 1);
         ContentHost.Children.Add(editor);
         var footer = new DockPanel();
         var actions = new StackPanel { Orientation = Orientation.Horizontal };
-        var clear = UI.Button("Effacer", Erase);
+        var clear = UI.Button(Strings.Clear2, Erase);
         clear.Margin = new Thickness(0, 0, 8, 0);
         actions.Children.Add(clear);
-        var copy = UI.Button("Copier", () => SystemActions.Copy(owner, editor.Text, "Note"));
+        var copy = UI.Button(Strings.Copy, () => SystemActions.Copy(owner, editor.Text, "Note"));
         copy.Margin = new Thickness(0, 0, 8, 0);
         actions.Children.Add(copy);
         var done = UI.Button("Terminer", Close);
@@ -125,7 +125,7 @@ internal sealed class NotesWindow : GlassWindow
     {
         if (editor.Text.Length == 0)
             return;
-        if (!owner.Confirm("Effacer le contenu de la note ?\n\nElle sera vide au prochain enregistrement."))
+        if (!owner.Confirm(Strings.ClearTheNoteContentItWill))
             return;
         editor.Text = "";
         Persist();

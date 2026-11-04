@@ -162,7 +162,7 @@ internal sealed class PcTelemetrySource : IDisposable
         computer.IsMemoryEnabled = !quick;
         computer.IsStorageEnabled = !quick;
         using (var key = Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0"))
-            cpuName = (key?.GetValue("ProcessorNameString") as string ?? "Processeur").Trim();
+            cpuName = (key?.GetValue("ProcessorNameString") as string ?? Strings.Processor).Trim();
         try
         {
             computer.IsGpuEnabled = !nvidia.Available;
@@ -178,8 +178,8 @@ internal sealed class PcTelemetrySource : IDisposable
         }
         catch (Exception ex)
         {
-            sensorNote = "Certaines sondes sont inaccessibles";
-            Store.Log("Sondes PC: " + ex.Message);
+            sensorNote = Strings.SomeSensorsAreUnreachable;
+            Store.Log("PC sensors: " + ex.Message);
         }
         ReadCpu();
         ReadNetwork(Environment.TickCount64);
@@ -271,7 +271,7 @@ internal sealed class PcTelemetrySource : IDisposable
         var network = ReadNetwork(now);
         string note =
             cpuTemperature.HasValue ? sensorNote
-            : LibreHardwareMonitor.PawnIo.PawnIo.IsInstalled ? "Sonde CPU inaccessible avec les droits actuels"
+            : LibreHardwareMonitor.PawnIo.PawnIo.IsInstalled ? Strings.CPUSensorUnreachableWithTheCurrent
             : Strings.CPUTemperatureSensorDriverRequired;
         watch.Stop();
         return new(
@@ -315,7 +315,7 @@ internal sealed class PcTelemetrySource : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Sonde " + h.Name + ": " + ex.Message);
+            Store.Log("Sensor " + h.Name + ": " + ex.Message);
         }
     }
 
@@ -393,9 +393,9 @@ internal sealed class PcTelemetrySource : IDisposable
         }
         lastNetwork = now;
         string name =
-            adapters.Length == 0 ? "Aucune interface active"
+            adapters.Length == 0 ? Strings.NoActiveInterface
             : adapters.Length == 1 ? adapters[0].Name
-            : adapters.Length + " interfaces physiques";
+            : adapters.Length + Strings.PhysicalInterfaces;
         return valid > 0 ? (down, up, name) : ((double?)null, null, name);
     }
 

@@ -40,7 +40,7 @@ internal sealed class PromptWindow : GlassWindow
         var header = new DockPanel();
         var close = UI.IconButton(
             "\uE711",
-            "Annuler",
+            Strings.Cancel,
             () =>
             {
                 DialogResult = false;
@@ -71,7 +71,7 @@ internal sealed class PromptWindow : GlassWindow
             HorizontalAlignment = HorizontalAlignment.Right,
             Margin = new Thickness(0, 18, 0, 0),
         };
-        actions.Children.Add(UI.Button("Annuler", () => DialogResult = false));
+        actions.Children.Add(UI.Button(Strings.Cancel, () => DialogResult = false));
         var ok = UI.Button("Valider", Accept);
         ok.MinWidth = 110;
         ok.Margin = new Thickness(10, 0, 0, 0);
@@ -201,9 +201,8 @@ internal static class WorkspaceService
             profile.Name
                 + " · "
                 + launched
-                + " application"
-                + (launched == 1 ? "" : "s")
-                + (failed > 0 ? " · " + failed + " introuvable" + (failed == 1 ? "" : "s") : "")
+                + (launched == 1 ? Strings.AppOne : Strings.AppMany)
+                + (failed > 0 ? " · " + failed + (failed == 1 ? Strings.NotFoundOne : Strings.NotFoundMany) : "")
         );
     }
 }
@@ -215,7 +214,7 @@ internal sealed class WorkspaceWindow : GlassWindow
     readonly TextBlock status;
 
     internal WorkspaceWindow(Coordinator coordinator)
-        : base("Panneaux Glass — profils d’espace")
+        : base(Strings.PanneauxGlassSpaceProfiles)
     {
         owner = coordinator;
         Width = 600;
@@ -232,8 +231,8 @@ internal sealed class WorkspaceWindow : GlassWindow
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("Tes espaces de travail.", 25, null, true));
-        var sub = UI.Text("Ouvre d’un clic les applications d’un moment et la disposition qui va avec", 11, UI.Dim);
+        titles.Children.Add(UI.Text(Strings.YourWorkspaces, 25, null, true));
+        var sub = UI.Text(Strings.OpenTheAppsOfAMoment, 11, UI.Dim);
         sub.TextWrapping = TextWrapping.Wrap;
         sub.Margin = new Thickness(0, 6, 0, 0);
         titles.Children.Add(sub);
@@ -249,7 +248,7 @@ internal sealed class WorkspaceWindow : GlassWindow
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var footer = new DockPanel();
-        var create = UI.Button("+  Enregistrer l’espace actuel", Create);
+        var create = UI.Button(Strings.SaveTheCurrentSpace, Create);
         create.Padding = new Thickness(15, 9, 15, 9);
         DockPanel.SetDock(create, Dock.Right);
         footer.Children.Add(create);
@@ -277,11 +276,7 @@ internal sealed class WorkspaceWindow : GlassWindow
         var profiles = Store.State.Workspaces;
         if (profiles.Count == 0)
         {
-            var empty = UI.Text(
-                "Aucun espace pour l’instant. Ouvre tes applications, range tes panneaux, puis enregistre l’espace actuel.",
-                12,
-                UI.Dim
-            );
+            var empty = UI.Text(Strings.NoSpaceYetOpenYourApps, 12, UI.Dim);
             empty.TextWrapping = TextWrapping.Wrap;
             empty.Margin = new Thickness(4, 20, 4, 10);
             list.Children.Add(empty);
@@ -343,7 +338,7 @@ internal sealed class WorkspaceWindow : GlassWindow
         tools.Children.Add(open);
         var update = UI.IconButton(
             "\uE72C",
-            "Remplacer par l’espace actuel",
+            Strings.ReplaceWithTheCurrentSpace,
             () =>
             {
                 var captured = WorkspaceService.Capture(owner, profile.Name);
@@ -361,10 +356,10 @@ internal sealed class WorkspaceWindow : GlassWindow
         tools.Children.Add(update);
         var remove = UI.IconButton(
             "\uE74D",
-            "Supprimer cet espace",
+            Strings.DeleteThisSpace,
             () =>
             {
-                if (!owner.Confirm("Supprimer l’espace « " + profile.Name + Strings.ApplicationsAreNotClosed))
+                if (!owner.Confirm(Strings.DeleteTheSpace + profile.Name + Strings.ApplicationsAreNotClosed))
                     return;
                 Store.State.Workspaces.Remove(profile);
                 Store.Save();
@@ -388,9 +383,9 @@ internal sealed class WorkspaceWindow : GlassWindow
     {
         string? name = PromptWindow.Ask(
             owner,
-            "Nommer cet espace",
-            "Un nom court, comme « Dev », « Musique » ou « Matin ».",
-            "Mon espace",
+            Strings.NameThisSpace,
+            Strings.AShortNameLikeDevMusic,
+            Strings.MySpace,
             this
         );
         if (string.IsNullOrWhiteSpace(name))

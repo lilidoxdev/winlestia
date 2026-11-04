@@ -24,7 +24,7 @@ internal static class WallpaperMedia
         }
         catch (Exception ex)
         {
-            Store.Log("Images du fond: " + ex.Message);
+            Store.Log("Background images: " + ex.Message);
             return 2;
         }
     }

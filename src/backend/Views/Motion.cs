@@ -85,8 +85,8 @@ internal static class Motion
     internal static string LevelName =>
         Level switch
         {
-            0 => "Calme",
-            2 => "Expressif",
+            0 => Strings.Calm,
+            2 => Strings.Expressive,
             _ => "Standard",
         };
     internal static double Factor =>

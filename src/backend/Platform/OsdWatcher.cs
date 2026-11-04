@@ -58,7 +58,7 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
         catch (Exception ex)
         {
             Detach();
-            Store.Log("OSD: sortie audio indisponible: " + ex.Message);
+            Store.Log("OSD: audio output unavailable: " + ex.Message);
         }
     }
 
@@ -95,7 +95,7 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
         catch (Exception ex)
         {
             DetachMic();
-            Store.Log("OSD: micro indisponible: " + ex.Message);
+            Store.Log("OSD: microphone unavailable: " + ex.Message);
         }
     }
 

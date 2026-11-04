@@ -37,7 +37,7 @@ internal static class WebIcons
             || string.IsNullOrWhiteSpace(uri.Host)
             || !string.IsNullOrEmpty(uri.UserInfo)
         )
-            throw new FormatException("Entre une adresse de site, par exemple gmail.com ou https://github.com.");
+            throw new FormatException("Enter a site address, for example gmail.com or https://github.com.");
         return uri;
     }
 

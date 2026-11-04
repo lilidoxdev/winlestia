@@ -85,7 +85,7 @@ internal sealed partial class QtShellBridge
             || !File.Exists(path)
             || new FileInfo(path).Length > 100_000_000
         )
-            throw new InvalidOperationException("Capture invalide.");
+            throw new InvalidOperationException("Invalid capture.");
         BitmapImage image = new();
         image.BeginInit();
         image.CacheOption = BitmapCacheOption.OnLoad;
@@ -107,7 +107,7 @@ internal sealed partial class QtShellBridge
                 return Strings.TextCopiedToTheClipboard;
             }
             Send("capture");
-            return "Aucun texte lisible dans cette zone";
+            return Strings.NoReadableTextInThisArea;
         }
         finally
         {

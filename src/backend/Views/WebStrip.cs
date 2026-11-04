@@ -96,12 +96,12 @@ internal sealed class WebStrip : IDisposable
                     new[]
                     {
                         new MenuAction(Strings.OpenInBrowser, "\uE774", () => Launch(site)),
-                        new MenuAction("Modifier ce site…", "\uE70F", () => coordinator.AddWebsite(site)),
-                        new MenuAction("Image et recadrage…", "\uE7A8", () => coordinator.AddWebsite(site, true)),
+                        new MenuAction(Strings.EditThisSite, "\uE70F", () => coordinator.AddWebsite(site)),
+                        new MenuAction(Strings.ImageAndCropping, "\uE7A8", () => coordinator.AddWebsite(site, true)),
                         new MenuAction(Strings.MoveLeft, "\uE72B", () => Move(site, 1), Separator: true),
                         new MenuAction(Strings.MoveRight, "\uE72A", () => Move(site, -1)),
                         new MenuAction(
-                            "Retirer ce raccourci",
+                            Strings.RemoveThisShortcut,
                             "\uE738",
                             () =>
                             {
@@ -119,22 +119,22 @@ internal sealed class WebStrip : IDisposable
         }
         if (overflow)
         {
-            var window = MakeWindow("autres sites", true);
-            var button = UI.IconButton("\uE712", "Autres sites", () => { });
+            var window = MakeWindow(Strings.OtherSites, true);
+            var button = UI.IconButton("\uE712", Strings.OtherSites2, () => { });
             PrepareButton(window, button);
             button.Click += (_, _) =>
                 GlassMenu.Open(
                     coordinator,
                     window,
                     button,
-                    "Autres sites",
+                    Strings.OtherSites2,
                     Store
                         .State.Websites.Skip(capacity)
                         .Select(site => new MenuAction(site.Name, "\uE774", () => Launch(site)))
                 );
         }
-        var plusWindow = MakeWindow("ajouter un site", true);
-        PrepareButton(plusWindow, UI.IconButton("\uE710", "Ajouter un site web", () => coordinator.AddWebsite()));
+        var plusWindow = MakeWindow(Strings.AddASite, true);
+        PrepareButton(plusWindow, UI.IconButton("\uE710", Strings.AddAWebsite2, () => coordinator.AddWebsite()));
         if (placed && visible)
             Place(false);
     }
@@ -209,7 +209,7 @@ internal sealed class WebStrip : IDisposable
         }
         catch (Exception ex)
         {
-            coordinator.Message("Ce site n’a pas pu s’ouvrir.\n" + ex.Message);
+            coordinator.Message(Strings.ThisSiteCouldNotBeOpened + ex.Message);
         }
     }
 

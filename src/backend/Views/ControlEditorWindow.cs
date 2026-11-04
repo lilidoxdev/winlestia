@@ -15,7 +15,7 @@ internal sealed class ControlEditorWindow : GlassWindow
     readonly StackPanel list = new();
 
     internal ControlEditorWindow(Coordinator coordinator, bool addImmediately)
-        : base("Panneaux Glass — personnaliser les commandes")
+        : base(Strings.PanneauxGlassCustomizeTheControls)
     {
         owner = coordinator;
         Width = 680;
@@ -32,7 +32,7 @@ internal sealed class ControlEditorWindow : GlassWindow
         header.Children.Add(close);
         var title = new StackPanel();
         title.Children.Add(UI.Text(Strings.TheControlsYourWay, 24, null, true));
-        var sub = UI.Text("Afficher, ranger et ajouter · enregistrement automatique", 12, UI.Dim);
+        var sub = UI.Text(Strings.ShowArrangeAndAddSavedAutomatically, 12, UI.Dim);
         sub.Margin = new Thickness(0, 7, 0, 0);
         title.Children.Add(sub);
         header.Children.Add(title);
@@ -46,8 +46,8 @@ internal sealed class ControlEditorWindow : GlassWindow
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var footer = new DockPanel { Margin = new Thickness(0, 20, 0, 0) };
-        var add = UI.Button("Ajouter un raccourci", () => Edit(null));
-        add.Content = ControlCenterWindow.IconLabel("\uE710", "Ajouter un raccourci", 13);
+        var add = UI.Button(Strings.AddAShortcut, () => Edit(null));
+        add.Content = ControlCenterWindow.IconLabel("\uE710", Strings.AddAShortcut, 13);
         add.Padding = new Thickness(17, 12, 17, 12);
         footer.Children.Add(add);
         var done = UI.Button("Terminer", Close);
@@ -141,7 +141,7 @@ internal sealed class ControlEditorWindow : GlassWindow
         {
             var check = new CheckBox
             {
-                Content = isVolume ? "Curseur volume" : Strings.BrightnessSlider,
+                Content = isVolume ? Strings.VolumeSlider : Strings.BrightnessSlider,
                 IsChecked = isVolume ? prefs.ShowVolume : prefs.ShowBrightness,
                 Margin = new Thickness(0, 0, 20, 0),
             };
@@ -156,7 +156,7 @@ internal sealed class ControlEditorWindow : GlassWindow
             sliders.Children.Add(check);
         }
         list.Children.Add(sliders);
-        list.Children.Add(UI.Text("RACCOURCIS WINDOWS", 11, UI.Dim, true));
+        list.Children.Add(UI.Text(Strings.WINDOWSSHORTCUTS, 11, UI.Dim, true));
         foreach (var shortcut in prefs.Shortcuts.ToArray())
         {
             var row = new DockPanel { Margin = new Thickness(0, 10, 0, 0) };
@@ -167,11 +167,11 @@ internal sealed class ControlEditorWindow : GlassWindow
             down.IsEnabled = prefs.Shortcuts.IndexOf(shortcut) < prefs.Shortcuts.Count - 1;
             actions.Children.Add(up);
             actions.Children.Add(down);
-            actions.Children.Add(UI.IconButton("\uE70F", "Modifier " + shortcut.Name, () => Edit(shortcut)));
+            actions.Children.Add(UI.IconButton("\uE70F", Strings.Edit3 + shortcut.Name, () => Edit(shortcut)));
             actions.Children.Add(
                 UI.IconButton(
                     "\uE711",
-                    "Retirer le raccourci " + shortcut.Name,
+                    Strings.RemoveTheShortcut + shortcut.Name,
                     () =>
                     {
                         prefs.Shortcuts.Remove(shortcut);
@@ -233,7 +233,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
     string glyph;
 
     internal WindowsShortcutEditor(Coordinator coordinator, WindowsShortcut? shortcut)
-        : base("Panneaux Glass — raccourci Windows")
+        : base(Strings.PanneauxGlassWindowsShortcut)
     {
         owner = coordinator;
         original = shortcut;
@@ -250,22 +250,22 @@ internal sealed class WindowsShortcutEditor : GlassWindow
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         header.Children.Add(
-            UI.Text(shortcut == null ? "Un raccourci de plus" : "Ton raccourci Windows", 24, null, true)
+            UI.Text(shortcut == null ? Strings.OneMoreShortcut : Strings.YourWindowsShortcut, 24, null, true)
         );
         stack.Children.Add(header);
-        var presets = UI.Button("Choisir une commande Windows   ⌄", () => OpenPresets());
+        var presets = UI.Button(Strings.ChooseAWindowsCommand, () => OpenPresets());
         presets.HorizontalAlignment = HorizontalAlignment.Left;
         presets.Margin = new Thickness(0, 22, 0, 20);
         presets.Padding = new Thickness(16, 10, 16, 10);
         presetAnchor = presets;
         stack.Children.Add(presets);
-        Label(stack, "NOM");
+        Label(stack, Strings.NAME);
         name.Text = shortcut?.Name ?? "";
         stack.Children.Add(name);
-        System.Windows.Automation.AutomationProperties.SetName(name, "Nom du raccourci Windows");
-        Label(stack, "PARAMÈTRE WINDOWS OU APPLICATION");
+        System.Windows.Automation.AutomationProperties.SetName(name, Strings.WindowsShortcutName);
+        Label(stack, Strings.WINDOWSSETTINGORAPP);
         target.Text = shortcut?.Target ?? "";
-        System.Windows.Automation.AutomationProperties.SetName(target, "Cible du raccourci Windows");
+        System.Windows.Automation.AutomationProperties.SetName(target, Strings.WindowsShortcutTarget);
         var choose = UI.Button("Parcourir…", ChooseFile);
         choose.Margin = new Thickness(10, 0, 0, 0);
         choose.Padding = new Thickness(13, 9, 13, 9);
@@ -274,12 +274,12 @@ internal sealed class WindowsShortcutEditor : GlassWindow
         row.Children.Add(choose);
         row.Children.Add(target);
         stack.Children.Add(row);
-        var hint = UI.Text("Exemple : ms-settings:display ou le chemin d’une application", 11, UI.Dim);
+        var hint = UI.Text(Strings.ExampleMsSettingsDisplayOrThe, 11, UI.Dim);
         hint.Margin = new Thickness(0, 7, 0, 0);
         stack.Children.Add(hint);
         Label(stack, "ARGUMENTS — FACULTATIF");
         arguments.Text = shortcut?.Arguments ?? "";
-        System.Windows.Automation.AutomationProperties.SetName(arguments, "Arguments de l’application");
+        System.Windows.Automation.AutomationProperties.SetName(arguments, Strings.AppArguments);
         stack.Children.Add(arguments);
         iconButton = UI.Button("", OpenIcons);
         iconButton.Content = ControlCenterWindow.IconLabel(glyph, Strings.ChooseTheIcon, 13);
@@ -296,10 +296,10 @@ internal sealed class WindowsShortcutEditor : GlassWindow
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
         };
-        var cancel = UI.Button("Annuler", Close);
+        var cancel = UI.Button(Strings.Cancel, Close);
         cancel.Padding = new Thickness(19, 12, 19, 12);
         buttons.Children.Add(cancel);
-        var save = UI.Button(shortcut == null ? "Ajouter" : "Enregistrer", Save);
+        var save = UI.Button(shortcut == null ? Strings.Add : Strings.Save, Save);
         save.Margin = new Thickness(12, 0, 0, 0);
         save.Padding = new Thickness(19, 12, 19, 12);
         buttons.Children.Add(save);
@@ -325,7 +325,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
             owner,
             this,
             presetAnchor,
-            "Commandes Windows",
+            Strings.WindowsControls,
             ControlPreferences
                 .Library()
                 .Select(s => new MenuAction(
@@ -353,14 +353,14 @@ internal sealed class WindowsShortcutEditor : GlassWindow
             ("Bluetooth", "\uE702"),
             (Strings.Screen, "\uE7F4"),
             ("Capture", "\uE722"),
-            ("Musique", "\uE8D6"),
-            ("Dossier", "\uE8B7"),
-            ("Calculatrice", "\uE8EF"),
+            (Strings.KnownFolder("Music"), "\uE8D6"),
+            (Strings.Folder, "\uE8B7"),
+            (Strings.Calculator, "\uE8EF"),
             ("Horloge", "\uE917"),
             ("Applications", "\uE71D"),
             (Strings.Network, "\uE839"),
             ("Alimentation", "\uE7E8"),
-            ("Personnalisation", "\uE790"),
+            (Strings.Customization, "\uE790"),
         };
         GlassMenu.Open(
             owner,
@@ -386,8 +386,8 @@ internal sealed class WindowsShortcutEditor : GlassWindow
     {
         var picker = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "Choisir une application ou un raccourci",
-            Filter = "Applications et raccourcis|*.exe;*.lnk|Tous les fichiers|*.*",
+            Title = Strings.ChooseAnAppOrAShortcut,
+            Filter = Strings.AppsAndShortcutsExeLnkAll,
         };
         if (picker.ShowDialog(this) == true)
         {
@@ -414,7 +414,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
             destination = target.Text.Trim();
         if (string.IsNullOrWhiteSpace(label))
         {
-            status.Text = "Ajoute un nom pour ce raccourci.";
+            status.Text = Strings.AddANameForThisShortcut;
             return;
         }
         if (!ValidTarget(destination))

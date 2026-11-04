@@ -158,7 +158,7 @@ internal static class Program
         ShowSignal = new(false, EventResetMode.AutoReset, @"Local\PanneauxGlassV5Show");
         QuitSignal = new(false, EventResetMode.AutoReset, @"Local\PanneauxGlassV5Quit");
         TaskbarRestoreSignal = new(false, EventResetMode.AutoReset, @"Local\PanneauxGlassTaskbarRestore");
-        Store.Log("Args " + Environment.CommandLine + " · pid=" + Environment.ProcessId + " · premier=" + first);
+        Store.Log("Args " + Environment.CommandLine + " · pid=" + Environment.ProcessId + " · first=" + first);
         if (!first)
         {
             if (args.Contains("--quit"))

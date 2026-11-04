@@ -119,7 +119,7 @@ internal sealed partial class Coordinator
         var active = full ? (Window?)Boards.FirstOrDefault(b => b.Model.Id == board) ?? toolbar : home;
         active.Activate();
         dismissal.SetActive(true);
-        Store.Log(full ? "Full view" : "Vue accueil");
+        Store.Log(full ? "Full view" : "Home view");
     }
 
     internal void ToggleControls()
@@ -250,7 +250,7 @@ internal sealed partial class Coordinator
         catch (Exception ex)
         {
             Open();
-            Message("Le raccourci « " + shortcut.Name + " » n’a pas pu s’ouvrir.\n" + ex.Message);
+            Message(Strings.TheShortcut2 + shortcut.Name + Strings.CouldNotBeOpened + ex.Message);
         }
     }
 
@@ -328,7 +328,7 @@ internal sealed partial class Coordinator
             if (rightArrow.ContentHost.Children[0] is Button arrow)
             {
                 arrow.Content = UI.Glyph(controlsExpanded ? "\uE76B" : "\uE76C");
-                arrow.ToolTip = controlsExpanded ? "Replier les commandes Windows" : "Afficher les commandes Windows";
+                arrow.ToolTip = controlsExpanded ? Strings.CollapseWindowsControls : Strings.ShowWindowsControls;
                 System.Windows.Automation.AutomationProperties.SetName(arrow, arrow.ToolTip.ToString());
             }
             return;
@@ -375,7 +375,7 @@ internal sealed partial class Coordinator
             }
             catch (Exception ex)
             {
-                Store.Log("Fermeture dialogue: " + ex.Message);
+                Store.Log("Dialog close: " + ex.Message);
             }
         }
     }

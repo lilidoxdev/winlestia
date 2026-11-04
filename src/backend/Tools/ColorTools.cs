@@ -59,7 +59,7 @@ internal sealed class ColorPickerWindow : Window
     };
     readonly TextBlock hex = UI.Text("", 20, null, true),
         rgb = UI.Text("", 11, UI.Dim),
-        hint = UI.Text("Clic : copier · clic droit : fermer", 10, UI.Dim);
+        hint = UI.Text(Strings.ClickCopyRightClickClose, 10, UI.Dim);
     readonly StackPanel swatches = new() { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 10, 0, 0) };
     readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(90) };
     readonly Coordinator owner;
@@ -97,7 +97,7 @@ internal sealed class ColorPickerWindow : Window
         var stack = new StackPanel();
         // An always-visible way out, on top of the global click that already picks the colour.
         var head = new DockPanel { Margin = new Thickness(2, 0, 2, 9) };
-        var heading = UI.Text("Pipette", 12, UI.White, true);
+        var heading = UI.Text(Strings.Eyedropper, 12, UI.White, true);
         heading.VerticalAlignment = VerticalAlignment.Center;
         head.Children.Add(heading);
         var shut = UI.IconButton("\uE711", Strings.CloseTheEyedropper, Close);
@@ -289,7 +289,7 @@ internal sealed class ColorPickerWindow : Window
         }
         catch (Exception ex)
         {
-            Store.Log("Pipette: " + ex.Message);
+            Store.Log("Eyedropper: " + ex.Message);
         }
     }
 
@@ -300,7 +300,7 @@ internal sealed class ColorPickerWindow : Window
         procedure = OnMouse;
         hook = Native.SetWindowsHookExW(14, procedure, Native.GetModuleHandleW(null), 0);
         if (hook == IntPtr.Zero)
-            Store.Log("Pipette: crochet souris indisponible");
+            Store.Log("Eyedropper: mouse hook unavailable");
     }
 
     void Remove()
@@ -431,7 +431,7 @@ internal sealed class RulerOverlay : Window
                 started = true;
                 finished = false;
                 origin = corner = point;
-                hint.Text = "Clique le second point · clic droit pour recommencer";
+                hint.Text = Strings.ClickTheSecondPointRightClick;
             }
             else
             {

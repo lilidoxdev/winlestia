@@ -65,6 +65,17 @@ public static class Strings
             : t.En;
     }
 
+    // French value of a text shown in the current language (palette search keeps matching French words).
+    public static string InFrench(string shown)
+    {
+        if (Language == "fr")
+            return shown;
+        foreach (var t in Table.Values)
+            if ((Language == "es" && !string.IsNullOrEmpty(t.Es) ? t.Es : t.En) == shown)
+                return t.Fr;
+        return shown;
+    }
+
     static string Get(string key) => Get(key, Language);
 
     public static IReadOnlyDictionary<string, (string Fr, string En, string? Es)> All => Table;
@@ -1196,7 +1207,7 @@ public static class Strings
         ["Category.Médias"] = ("Médias", "Media", null),
         ["Category.IA"] = ("IA", "AI", null),
         ["EverydaySelection"] = ("Sélection du quotidien", "Everyday selection", null),
-        ["FavouritesPrefix"] = ("Favoris · ", "Favourites · ", null),
+        ["FavoritesPrefix"] = ("Favoris · ", "Favorites · ", null),
         ["QuickAccess"] = ("Accès rapide", "Quick access", null),
         ["Drives"] = ("Lecteurs", "Drives", null),
         ["LocalDisk"] = ("Disque local", "Local disk", null),
@@ -1207,6 +1218,592 @@ public static class Strings
         ["Folder.Pictures"] = ("Images", "Pictures", null),
         ["Folder.Music"] = ("Musique", "Music", null),
         ["Folder.Videos"] = ("Vidéos", "Videos", null),
+        ["CtrlAltShift"] = ("Ctrl + Alt + Maj + ←", "Ctrl + Alt + Shift + ←", null),
+        ["CtrlAltShift2"] = ("Ctrl + Alt + Maj + →", "Ctrl + Alt + Shift + →", null),
+        ["CtrlAltShift3"] = ("Ctrl + Alt + Maj + ↑", "Ctrl + Alt + Shift + ↑", null),
+        ["CtrlAltShift4"] = ("Ctrl + Alt + Maj + ↓", "Ctrl + Alt + Shift + ↓", null),
+        ["CtrlAltShiftF"] = ("Ctrl + Alt + Maj + F", "Ctrl + Alt + Shift + F", null),
+        ["CtrlAltShift5"] = ("Ctrl + Alt + Maj + +", "Ctrl + Alt + Shift + +", null),
+        ["CtrlAltShift6"] = ("Ctrl + Alt + Maj + -", "Ctrl + Alt + Shift + -", null),
+        ["CtrlAltShift62"] = ("Ctrl + Alt + Maj + 6", "Ctrl + Alt + Shift + 6", null),
+        ["CtrlAltShiftX"] = ("Ctrl + Alt + Maj + X", "Ctrl + Alt + Shift + X", null),
+        ["CustomizationInactive"] = ("Personnalisation inactive.", "Customization inactive.", null),
+        ["MatchingFolderS"] = (" dossier(s) assorti(s) · ", " matching folder(s) · ", null),
+        ["PanneauxGlassLargeFiles"] = ("Panneaux Glass — gros fichiers", "Panneaux Glass — large files", null),
+        ["WhatFillsTheDisk"] = ("Ce qui remplit le disque.", "What fills the disk.", null),
+        ["ChooseAFolder"] = ("Choisir un dossier…", "Choose a folder…", null),
+        ["NoFolderChosen"] = ("Aucun dossier choisi", "No folder chosen", null),
+        ["Scanning"] = ("Analyse de ", "Scanning ", null),
+        ["NoLargeFiles"] = ("Aucun gros fichier", "No large files", null),
+        ["NoFileOver200MBIn"] = (
+            "Aucun fichier de plus de 200 Mo dans ce dossier.",
+            "No file over 200 MB in this folder.",
+            null
+        ),
+        ["ChooseAnotherFolder"] = ("Choisir un autre dossier…", "Choose another folder…", null),
+        ["ScanFailed"] = ("Analyse impossible : ", "Scan failed: ", null),
+        ["ShowInExplorer"] = ("Afficher dans l’Explorateur", "Show in Explorer", null),
+        ["PanneauxGlassSoundAndMicrophone"] = (
+            "Panneaux Glass — son et micro",
+            "Panneaux Glass — sound and microphone",
+            null
+        ),
+        ["TheRightSoundRightAway"] = ("Le bon son, tout de suite.", "The right sound, right away.", null),
+        ["OUTPUT"] = ("SORTIE", "OUTPUT", null),
+        ["MICROPHONE"] = ("MICRO", "MICROPHONE", null),
+        ["MuteTheMicrophone"] = ("Couper le micro", "Mute the microphone", null),
+        ["CurrentOutput"] = ("Sortie actuelle", "Current output", null),
+        ["UseThisOutput"] = ("Choisir cette sortie", "Use this output", null),
+        ["Use"] = ("Choisir ", "Use ", null),
+        ["Microphone"] = ("Micro : ", "Microphone: ", null),
+        ["Output"] = ("Sortie : ", "Output: ", null),
+        ["NothingPlaying"] = ("Aucune lecture", "Nothing playing", null),
+        ["StartSpotifyOrAnotherAudioApp"] = (
+            "Lance Spotify ou une autre application audio",
+            "Start Spotify or another audio app",
+            null
+        ),
+        ["NowPlaying"] = ("Lecture en cours", "Now playing", null),
+        ["NoAudioOutput"] = ("Aucune sortie audio", "No audio output", null),
+        ["Processor"] = ("Processeur", "Processor", null),
+        ["SomeSensorsAreUnreachable"] = ("Certaines sondes sont inaccessibles", "Some sensors are unreachable", null),
+        ["CPUSensorUnreachableWithTheCurrent"] = (
+            "Sonde CPU inaccessible avec les droits actuels",
+            "CPU sensor unreachable with the current rights",
+            null
+        ),
+        ["NoActiveInterface"] = ("Aucune interface active", "No active interface", null),
+        ["PhysicalInterfaces"] = (" interfaces physiques", " physical interfaces", null),
+        ["ThePCNowSaveYourWork"] = (
+            " le PC maintenant ?\n\nEnregistre ton travail avant de continuer.",
+            " the PC now?\n\nSave your work before continuing.",
+            null
+        ),
+        ["CopyFailed"] = ("Copie impossible : ", "Copy failed: ", null),
+        ["TheCommand"] = ("La commande « ", "The command « ", null),
+        ["NotAvailable"] = ("Non disponible", "Not available", null),
+        ["PanneauxGlassControls"] = ("Panneaux Glass — commandes", "Panneaux Glass — controls", null),
+        ["ShowWindowsControls"] = ("Afficher les commandes Windows", "Show Windows controls", null),
+        ["Customize"] = ("Personnaliser", "Customize", null),
+        ["QuickCommand"] = ("Commande rapide  ·  ", "Quick command  ·  ", null),
+        ["QuickNote"] = ("Note rapide", "Quick note", null),
+        ["Timer"] = ("Minuteur…", "Timer…", null),
+        ["CtrlF2YourWholeSpaceOn"] = (
+            "Ctrl F2 · tout ton espace en une ligne",
+            "Ctrl F2 · your whole space on one line",
+            null
+        ),
+        ["ShowFavoritesOnly"] = ("Afficher uniquement les favoris", "Show favorites only", null),
+        ["QuickCommand2"] = ("Commande rapide · ", "Quick command · ", null),
+        ["KeepTheSpaceOpen"] = ("Garder l’espace ouvert", "Keep the space open", null),
+        ["CustomizeTheSpace"] = ("Personnaliser l’espace", "Customize the space", null),
+        ["CollapseTheSpace"] = ("Replier l’espace", "Collapse the space", null),
+        ["ThisQuickTabPointsToAn"] = (
+            "Cet onglet rapide pointe vers une vue inconnue.\n",
+            "This quick tab points to an unknown view.\n",
+            null
+        ),
+        ["TheSearchCouldNotBeOpened"] = (
+            "La recherche n’a pas pu s’ouvrir.\n",
+            "The search could not be opened.\n",
+            null
+        ),
+        ["CouldNotBeOpened"] = (" » n’a pas pu s’ouvrir.\n", " » could not be opened.\n", null),
+        ["ChooseAFileAnAppOr"] = (
+            "Choisir un fichier, une application ou un raccourci",
+            "Choose a file, an app or a shortcut",
+            null
+        ),
+        ["AllFiles"] = ("Tous les fichiers|*.*", "All files|*.*", null),
+        ["Dashboard"] = ("Tableau de bord", "Dashboard", null),
+        ["AppsAndFiles"] = ("Applications et fichiers", "Apps and files", null),
+        ["Customize2"] = ("Personnaliser…", "Customize…", null),
+        ["MyWholeSpace"] = ("Tout mon espace", "My whole space", null),
+        ["InFront"] = ("Au premier plan · ", "In front · ", null),
+        ["TheShortcut2"] = ("Le raccourci « ", "The shortcut « ", null),
+        ["CollapseWindowsControls"] = ("Replier les commandes Windows", "Collapse Windows controls", null),
+        ["ThisAppIsNoLongerAvailable"] = (
+            "Cette application n’est plus disponible.",
+            "This app is no longer available.",
+            null
+        ),
+        ["ChooseCtrlAltOrWindowsWith"] = (
+            "Choisis Ctrl, Alt ou Windows avec une autre touche.",
+            "Choose Ctrl, Alt or Windows with another key.",
+            null
+        ),
+        ["NoReadableTextInThisArea"] = ("Aucun texte lisible dans cette zone", "No readable text in this area", null),
+        ["SoundAndQuickControls"] = ("Son et commandes rapides", "Sound and quick controls", null),
+        ["SaveTheCapture"] = ("Enregistrer la capture", "Save the capture", null),
+        ["Cancel"] = ("Annuler", "Cancel", null),
+        ["CopyTheTextOfTheArea"] = ("Copier le texte de la zone", "Copy the text of the area", null),
+        ["SaveAsPNG"] = ("Enregistrer en PNG", "Save as PNG", null),
+        ["Copy"] = ("Copier", "Copy", null),
+        ["StickyText"] = ("Texte du papier", "Sticky text", null),
+        ["Text"] = ("Texte", "Text", null),
+        ["TextReadByWindows"] = ("Texte lu par Windows", "Text read by Windows", null),
+        ["RecognizedText"] = ("Texte reconnu", "Recognized text", null),
+        ["PanneauxGlassClipboard"] = ("Panneaux Glass — presse-papiers", "Panneaux Glass — clipboard", null),
+        ["YourClipboard"] = ("Ton presse-papiers.", "Your clipboard.", null),
+        ["SearchTheClipboard"] = ("Rechercher dans le presse-papiers", "Search the clipboard", null),
+        ["Clear"] = ("Vider", "Clear", null),
+        ["Delete"] = ("Supprimer", "Delete", null),
+        ["ClickCopyRightClickClose"] = (
+            "Clic : copier · clic droit : fermer",
+            "Click: copy · right-click: close",
+            null
+        ),
+        ["Eyedropper"] = ("Pipette", "Eyedropper", null),
+        ["ClickTheSecondPointRightClick"] = (
+            "Clique le second point · clic droit pour recommencer",
+            "Click the second point · right-click to start over",
+            null
+        ),
+        ["PanneauxGlassQuickCommand"] = ("Panneaux Glass — commande rapide", "Panneaux Glass — quick command", null),
+        ["QuickCommand3"] = ("Commande rapide", "Quick command", null),
+        ["TypeAnAppACalculationAn"] = (
+            "Tape une application, un calcul, une action…",
+            "Type an app, a calculation, an action…",
+            null
+        ),
+        ["QuickTabsEdit"] = ("Onglets rapides · Modifier", "Quick tabs · Edit", null),
+        ["ChooseTheQuickTabs"] = ("Choisir les onglets rapides", "Choose the quick tabs", null),
+        ["Edit"] = ("Modifier", "Edit", null),
+        ["Search"] = ("Rechercher « ", "Search « ", null),
+        ["OnTheWeb"] = (" » sur le web", " » on the web", null),
+        ["DuckDuckGoNewTab"] = ("DuckDuckGo · nouvel onglet", "DuckDuckGo · new tab", null),
+        ["Home"] = ("Accueil", "Home", null),
+        ["TheFourPanels"] = ("Les quatre panneaux", "The four panels", null),
+        ["TextFromAnImage"] = ("Texte d’une image", "Text from an image", null),
+        ["ColorPicker"] = ("Pipette de couleur", "Color picker", null),
+        ["Clipboard"] = ("Presse-papiers", "Clipboard", null),
+        ["SoundAndMicrophone"] = ("Son et micro", "Sound and microphone", null),
+        ["SwitchHeadsetOrMuteTheMicrophone"] = (
+            "Changer de casque ou couper le micro",
+            "Switch headset or mute the microphone",
+            null
+        ),
+        ["SpaceProfiles"] = ("Profils d’espace", "Space profiles", null),
+        ["ReopenAppsAndALayout"] = ("Rouvrir des applications et une disposition", "Reopen apps and a layout", null),
+        ["LargeFiles"] = ("Gros fichiers", "Large files", null),
+        ["WhatFillsTheDisk2"] = ("Ce qui remplit le disque", "What fills the disk", null),
+        ["MuteWindowsNotifications"] = ("Couper les notifications Windows", "Mute Windows notifications", null),
+        ["HelpAndShortcuts"] = ("Aide et raccourcis", "Help and shortcuts", null),
+        ["PanneauxGesturesOnOnePage"] = ("Les gestes de Panneaux, en une page", "Panneaux gestures, on one page", null),
+        ["QuickTabs"] = ("Onglets rapides", "Quick tabs", null),
+        ["EditThisQuickCommand"] = ("Modifier cette commande rapide", "Edit this quick command", null),
+        ["WindowsControls"] = ("Commandes Windows", "Windows controls", null),
+        ["Calculator"] = ("Calculatrice", "Calculator", null),
+        ["LockThePC"] = ("Verrouiller le PC", "Lock the PC", null),
+        ["LocksTheSession"] = ("Verrouille la session", "Locks the session", null),
+        ["Your"] = ("Tes ", "Your ", null),
+        ["FallingBackToCtrlAltW"] = (" · repli sur Ctrl + Alt + W", " · falling back to Ctrl + Alt + W", null),
+        ["WindowsRefusesThisCombination"] = (
+            "Windows refuse cette combinaison (",
+            "Windows refuses this combination (",
+            null
+        ),
+        ["ChooseCtrlOrAltAndA2"] = (
+            "Choisis Ctrl ou Alt et une touche de fonction.",
+            "Choose Ctrl or Alt and a function key.",
+            null
+        ),
+        ["WindowsRefusesThisShortcut"] = ("Windows refuse ce raccourci (", "Windows refuses this shortcut (", null),
+        ["Space"] = ("Espace", "Space", null),
+        ["Shift"] = ("Maj + ", "Shift + ", null),
+        ["PanneauxGlassSpaceProfiles"] = ("Panneaux Glass — profils d’espace", "Panneaux Glass — space profiles", null),
+        ["YourWorkspaces"] = ("Tes espaces de travail.", "Your workspaces.", null),
+        ["OpenTheAppsOfAMoment"] = (
+            "Ouvre d’un clic les applications d’un moment et la disposition qui va avec",
+            "Open the apps of a moment and their layout in one click",
+            null
+        ),
+        ["SaveTheCurrentSpace"] = ("+  Enregistrer l’espace actuel", "+  Save the current space", null),
+        ["NoSpaceYetOpenYourApps"] = (
+            "Aucun espace pour l’instant. Ouvre tes applications, range tes panneaux, puis enregistre l’espace actuel.",
+            "No space yet. Open your apps, arrange your panels, then save the current space.",
+            null
+        ),
+        ["ReplaceWithTheCurrentSpace"] = ("Remplacer par l’espace actuel", "Replace with the current space", null),
+        ["DeleteThisSpace"] = ("Supprimer cet espace", "Delete this space", null),
+        ["DeleteTheSpace"] = ("Supprimer l’espace « ", "Delete the space « ", null),
+        ["NameThisSpace"] = ("Nommer cet espace", "Name this space", null),
+        ["AShortNameLikeDevMusic"] = (
+            "Un nom court, comme « Dev », « Musique » ou « Matin ».",
+            "A short name, like « Dev », « Music » or « Morning ».",
+            null
+        ),
+        ["MySpace"] = ("Mon espace", "My space", null),
+        ["Customize3"] = ("Personnaliser ", "Customize ", null),
+        ["Favorites"] = ("Favoris", "Favorites", null),
+        ["RemoveFromFavorites"] = ("Retirer des favoris", "Remove from favorites", null),
+        ["AddToFavorites"] = ("Ajouter aux favoris", "Add to favorites", null),
+        ["ShowLocation"] = ("Afficher l’emplacement", "Show location", null),
+        ["CopyPath"] = ("Copier le chemin", "Copy path", null),
+        ["TimeOpenTheQuickCommand"] = ("Heure · ouvrir la commande rapide", "Time · open the quick command", null),
+        ["GoodNightDj"] = ("Bonne nuit, dj", "Good night, dj", null),
+        ["StartSpotifyToBegin"] = ("Lance Spotify pour commencer", "Start Spotify to begin", null),
+        ["MUSIC"] = ("MUSIQUE", "MUSIC", null),
+        ["WindowsOutput"] = ("Sortie Windows", "Windows output", null),
+        ["WindowsYourEssentialControls"] = (
+            "Windows · Tes commandes essentielles",
+            "Windows · Your essential controls",
+            null
+        ),
+        ["Edit2"] = ("\uE70F  Modifier", "\uE70F  Edit", null),
+        ["CustomizeWindowsControls"] = ("Personnaliser les commandes Windows", "Customize Windows controls", null),
+        ["PlayOrPause"] = ("Lecture ou pause", "Play or pause", null),
+        ["NextTrack"] = ("Morceau suivant", "Next track", null),
+        ["ChooseTheMusicApp"] = ("Choisir l’application musicale", "Choose the music app", null),
+        ["TurnSoundOnOrOff"] = ("Activer ou couper le son", "Turn sound on or off", null),
+        ["Connections"] = ("Connexions", "Connections", null),
+        ["QuickActions"] = ("Actions rapides", "Quick actions", null),
+        ["WindowsShortcuts"] = ("Raccourcis Windows", "Windows shortcuts", null),
+        ["AddControlsWithEdit"] = ("Ajoute des commandes avec Modifier.", "Add controls with Edit.", null),
+        ["RecycleBin"] = ("Corbeille", "Recycle Bin", null),
+        ["EmptyConfirmation"] = ("Vider · confirmation", "Empty · confirmation", null),
+        ["Sleep"] = ("Mettre en veille", "Sleep", null),
+        ["AudioOutput"] = ("Sortie audio", "Audio output", null),
+        ["ChooseTheOutput"] = ("Choisir la sortie   ›", "Choose the output   ›", null),
+        ["ChooseTheAudioOutputInWindows"] = (
+            "Choisir la sortie audio dans Windows",
+            "Choose the audio output in Windows",
+            null
+        ),
+        ["Focus"] = ("Concentration", "Focus", null),
+        ["AddAWindowsShortcut"] = ("Ajouter un raccourci Windows", "Add a Windows shortcut", null),
+        ["Add"] = ("Ajouter", "Add", null),
+        ["PlaybackUnavailable"] = ("Lecture indisponible", "Playback unavailable", null),
+        ["NoAudioOutputAvailable"] = ("Aucune sortie audio disponible", "No audio output available", null),
+        ["ThisCommandIsNotAvailableFor"] = (
+            "Cette commande n’est pas disponible pour cette lecture.",
+            "This command is not available for this playback.",
+            null
+        ),
+        ["ConnectionsUnavailable"] = ("Connexions indisponibles", "Connections unavailable", null),
+        ["WindowsOffline"] = ("Windows · Hors connexion", "Windows · Offline", null),
+        ["Absent"] = ("Absent", "Absent", null),
+        ["Offline"] = ("Hors ligne", "Offline", null),
+        ["PanneauxGlassCustomizeTheControls"] = (
+            "Panneaux Glass — personnaliser les commandes",
+            "Panneaux Glass — customize the controls",
+            null
+        ),
+        ["ShowArrangeAndAddSavedAutomatically"] = (
+            "Afficher, ranger et ajouter · enregistrement automatique",
+            "Show, arrange and add · saved automatically",
+            null
+        ),
+        ["AddAShortcut"] = ("Ajouter un raccourci", "Add a shortcut", null),
+        ["VolumeSlider"] = ("Curseur volume", "Volume slider", null),
+        ["WINDOWSSHORTCUTS"] = ("RACCOURCIS WINDOWS", "WINDOWS SHORTCUTS", null),
+        ["Edit3"] = ("Modifier ", "Edit ", null),
+        ["RemoveTheShortcut"] = ("Retirer le raccourci ", "Remove the shortcut ", null),
+        ["PanneauxGlassWindowsShortcut"] = (
+            "Panneaux Glass — raccourci Windows",
+            "Panneaux Glass — Windows shortcut",
+            null
+        ),
+        ["OneMoreShortcut"] = ("Un raccourci de plus", "One more shortcut", null),
+        ["YourWindowsShortcut"] = ("Ton raccourci Windows", "Your Windows shortcut", null),
+        ["ChooseAWindowsCommand"] = ("Choisir une commande Windows   ⌄", "Choose a Windows command   ⌄", null),
+        ["NAME"] = ("NOM", "NAME", null),
+        ["WindowsShortcutName"] = ("Nom du raccourci Windows", "Windows shortcut name", null),
+        ["WINDOWSSETTINGORAPP"] = ("PARAMÈTRE WINDOWS OU APPLICATION", "WINDOWS SETTING OR APP", null),
+        ["WindowsShortcutTarget"] = ("Cible du raccourci Windows", "Windows shortcut target", null),
+        ["ExampleMsSettingsDisplayOrThe"] = (
+            "Exemple : ms-settings:display ou le chemin d’une application",
+            "Example: ms-settings:display or the path of an app",
+            null
+        ),
+        ["AppArguments"] = ("Arguments de l’application", "App arguments", null),
+        ["Save"] = ("Enregistrer", "Save", null),
+        ["Folder"] = ("Dossier", "Folder", null),
+        ["Customization"] = ("Personnalisation", "Customization", null),
+        ["ChooseAnAppOrAShortcut"] = ("Choisir une application ou un raccourci", "Choose an app or a shortcut", null),
+        ["AppsAndShortcutsExeLnkAll"] = (
+            "Applications et raccourcis|*.exe;*.lnk|Tous les fichiers|*.*",
+            "Apps and shortcuts|*.exe;*.lnk|All files|*.*",
+            null
+        ),
+        ["AddANameForThisShortcut"] = ("Ajoute un nom pour ce raccourci.", "Add a name for this shortcut.", null),
+        ["Storage"] = ("Stockage", "Storage", null),
+        ["PanneauxGlassTimer"] = ("Panneaux Glass — minuteur", "Panneaux Glass — timer", null),
+        ["Hours"] = ("heures", "hours", null),
+        ["Seconds"] = ("secondes", "seconds", null),
+        ["TwentyFourHoursAtMost"] = ("Vingt-quatre heures au maximum.", "Twenty-four hours at most.", null),
+        ["Spaces"] = ("Espaces", "Spaces", null),
+        ["Tab"] = ("Onglet ", "Tab ", null),
+        ["SwitchToLightOrDark"] = ("Passer en clair ou en sombre", "Switch to light or dark", null),
+        ["YourPersonalSpace"] = ("Ton espace personnel", "Your personal space", null),
+        ["SpotifyAndYourWindowsPlayers"] = (
+            "Spotify et tes lecteurs Windows",
+            "Spotify and your Windows players",
+            null
+        ),
+        ["SeeTheMusic"] = ("Voir la musique  ›", "See the music  ›", null),
+        ["YOURWINDOWSPLAYER"] = ("TON LECTEUR WINDOWS", "YOUR WINDOWS PLAYER", null),
+        ["NothingIsPlaying"] = ("Aucune lecture en cours", "Nothing is playing", null),
+        ["OpenSpotifyOrAnotherPlayerTo"] = (
+            "Ouvre Spotify ou un autre lecteur pour retrouver ta musique ici.",
+            "Open Spotify or another player to find your music here.",
+            null
+        ),
+        ["NextTitle"] = ("Titre suivant", "Next title", null),
+        ["MusicProgress"] = ("Progression de la musique", "Music progress", null),
+        ["ThePlayerDoesNotOfferThis"] = (
+            "Le lecteur ne propose pas cette commande",
+            "The player does not offer this command",
+            null
+        ),
+        ["PanneauxGlassHome"] = ("Panneaux Glass — accueil", "Panneaux Glass — home", null),
+        ["PanneauxGlassHome2"] = ("Panneaux Glass, accueil", "Panneaux Glass, home", null),
+        ["CaptureEyedropperClipboardSoundWorkspaces"] = (
+            "Capture, pipette, presse-papiers, son, espaces de travail",
+            "Capture, eyedropper, clipboard, sound, workspaces",
+            null
+        ),
+        ["CollapseHome"] = ("Replier l’accueil", "Collapse home", null),
+        ["YourSpaceDj"] = ("Ton espace, dj", "Your space, dj", null),
+        ["MyWholeSpace2"] = ("Tout mon espace   ›", "My whole space   ›", null),
+        ["Favorites2"] = (" favoris · ", " favorites · ", null),
+        ["YourFavorites"] = ("Tes favoris", "Your favorites", null),
+        ["YourFavoritesStartHere"] = ("Tes favoris commencent ici", "Your favorites start here", null),
+        ["NextFavorites"] = ("Favoris suivants", "Next favorites", null),
+        ["YourSites"] = ("Tes sites", "Your sites", null),
+        ["AddAWebsite"] = ("Ajouter un site internet", "Add a website", null),
+        ["PanneauxGlassCropTheImage"] = ("Panneaux Glass — recadrer l’image", "Panneaux Glass — crop the image", null),
+        ["CancelCropping"] = ("Annuler le recadrage", "Cancel cropping", null),
+        ["YourLogoYourFraming"] = ("Ton logo, ton cadrage.", "Your logo, your framing.", null),
+        ["ImageZoom"] = ("Zoom de l’image", "Image zoom", null),
+        ["UseThisCrop"] = ("Utiliser ce cadrage", "Use this crop", null),
+        ["Calm"] = ("Calme", "Calm", null),
+        ["Expressive"] = ("Expressif", "Expressive", null),
+        ["PanneauxGlassQuickNote"] = ("Panneaux Glass — note rapide", "Panneaux Glass — quick note", null),
+        ["YourQuickNote"] = ("Ta note rapide.", "Your quick note.", null),
+        ["QuickNoteContent"] = ("Contenu de la note rapide", "Quick note content", null),
+        ["Clear2"] = ("Effacer", "Clear", null),
+        ["ClearTheNoteContentItWill"] = (
+            "Effacer le contenu de la note ?\n\nElle sera vide au prochain enregistrement.",
+            "Clear the note content?\n\nIt will be empty at the next save.",
+            null
+        ),
+        ["CollectionPausedOutsideThisPanel"] = (
+            "Collecte suspendue hors de ce panneau",
+            "Collection paused outside this panel",
+            null
+        ),
+        ["GraphicsCard"] = ("Carte graphique", "Graphics card", null),
+        ["ReadingTheMemoryModules"] = ("Lecture des barrettes…", "Reading the memory modules…", null),
+        ["Connection"] = ("Connexion", "Connection", null),
+        ["UnderstandTheMeasurements"] = ("Comprendre les mesures", "Understand the measurements", null),
+        ["Live"] = ("●  En direct · ", "●  Live · ", null),
+        ["SensorDependsOnTheDriver"] = ("Sonde selon le pilote", "Sensor depends on the driver", null),
+        ["MeasurementUnavailable"] = ("Mesure indisponible", "Measurement unavailable", null),
+        ["Module"] = ("Barrette ", "Module ", null),
+        ["Reading"] = ("Lecture ", "Reading ", null),
+        ["Free"] = (" libres", " free", null),
+        ["NoAccessibleFixedVolume"] = ("Aucun volume fixe accessible", "No accessible fixed volume", null),
+        ["UnderstandYourPC"] = ("Comprendre ton PC", "Understand your PC", null),
+        ["NoCollectionWhenYouCollapseIt"] = (
+            "Aucune collecte lorsque tu le replies",
+            "No collection when you collapse it",
+            null
+        ),
+        ["Unavailable"] = ("Indisponible", "Unavailable", null),
+        ["ReadingTheSensor"] = ("Lecture de la sonde…", "Reading the sensor…", null),
+        ["PanneauxGlassCustomization"] = ("Panneaux Glass — personnalisation", "Panneaux Glass — customization", null),
+        ["THEGLASS"] = ("LE VERRE", "THE GLASS", null),
+        ["GlassTint"] = ("Teinte du verre", "Glass tint", null),
+        ["ClearGlass"] = ("Verre clair", "Clear glass", null),
+        ["THEFOURPANELS"] = ("LES QUATRE PANNEAUX", "THE FOUR PANELS", null),
+        ["LeftColumnWidth"] = ("Largeur de la colonne gauche", "Left column width", null),
+        ["PanelSpacing"] = ("Espacement des panneaux", "Panel spacing", null),
+        ["DesktopMargin"] = ("Marge du Bureau", "Desktop margin", null),
+        ["THETASKBARANDTHEEDGE"] = ("LA BARRE DES TÂCHES ET LE BORD", "THE TASKBAR AND THE EDGE", null),
+        ["NoAnimation"] = ("Sans animation", "No animation", null),
+        ["YOURSHORTCUTS"] = ("TES ACCÈS", "YOUR SHORTCUTS", null),
+        ["AddAFolder"] = ("Ajouter un dossier…", "Add a folder…", null),
+        ["ExportMyCustomization"] = ("Exporter ma personnalisation", "Export my customization", null),
+        ["THEDESKTOPALWAYSREACHABLE"] = ("LE BUREAU, TOUJOURS ACCESSIBLE", "THE DESKTOP, ALWAYS REACHABLE", null),
+        ["THEMES"] = ("THÈMES", "THEMES", null),
+        ["EVERYDAY"] = ("LE QUOTIDIEN", "EVERYDAY", null),
+        ["KeepTheClipboardHistory"] = ("Garder l’historique du presse-papiers", "Keep the clipboard history", null),
+        ["Active2"] = ("Actif : ", "Active: ", null),
+        ["Shift2"] = ("Maj", "Shift", null),
+        ["ShortcutKey"] = ("Touche du raccourci", "Shortcut key", null),
+        ["ChooseTheKey"] = ("Choisir la touche : ", "Choose the key: ", null),
+        ["Apply"] = ("Appliquer", "Apply", null),
+        ["OPENFROMANYAPPLICATION"] = ("OUVRIR DEPUIS N’IMPORTE QUELLE APPLICATION", "OPEN FROM ANY APPLICATION", null),
+        ["ChooseTheGlobalShortcutKey"] = (
+            "Choisir la touche du raccourci global",
+            "Choose the global shortcut key",
+            null
+        ),
+        ["HomeWindowsControls"] = ("Accueil + commandes Windows", "Home + Windows controls", null),
+        ["HomeOnly"] = ("Accueil seul", "Home only", null),
+        ["ChooseTheViewTheShortcutOpens"] = (
+            "Choisir la vue ouverte par le raccourci",
+            "Choose the view the shortcut opens",
+            null
+        ),
+        ["ApplyTheShortcut"] = ("Appliquer le raccourci", "Apply the shortcut", null),
+        ["ExportTheCustomization"] = ("Exporter la personnalisation", "Export the customization", null),
+        ["PanneauxCustomizationJson"] = ("Personnalisation Panneaux|*.json", "Panneaux customization|*.json", null),
+        ["ImportAPanneauxCustomization"] = (
+            "Importer une personnalisation Panneaux",
+            "Import a Panneaux customization",
+            null
+        ),
+        ["ImportFailed"] = ("Import impossible : ", "Import failed: ", null),
+        ["PANEL"] = ("PANNEAU", "PANEL", null),
+        ["ChooseAPanel"] = ("Choisir un panneau", "Choose a panel", null),
+        ["ICON"] = ("ICÔNE", "ICON", null),
+        ["Help"] = ("Aide", "Help", null),
+        ["PanneauxGlassQuickTabs"] = ("Panneaux Glass — onglets rapides", "Panneaux Glass — quick tabs", null),
+        ["YourQuickTabs"] = ("Tes onglets rapides.", "Your quick tabs.", null),
+        ["TabName"] = ("Nom de l’onglet ", "Tab name ", null),
+        ["Remove"] = ("Retirer ", "Remove ", null),
+        ["AddATab"] = ("+  Ajouter un onglet", "+  Add a tab", null),
+        ["OPENTHEQUICKCOMMAND"] = ("OUVRIR LA COMMANDE RAPIDE", "OPEN THE QUICK COMMAND", null),
+        ["GameBar"] = ("Barre de jeu", "Game bar", null),
+        ["WindowsFolder"] = ("Dossier Windows", "Windows folder", null),
+        ["Explorer"] = ("Explorateur", "Explorer", null),
+        ["WindowsCommand"] = ("Commande Windows", "Windows command", null),
+        ["ChooseAnApp"] = ("Choisir une application…", "Choose an app…", null),
+        ["TabTarget"] = ("Cible de l’onglet", "Tab target", null),
+        ["ChooseThisTabSApp"] = ("Choisir l’application de cet onglet", "Choose this tab’s app", null),
+        ["AppsAndShortcutsExeLnkBat"] = (
+            "Applications et raccourcis|*.exe;*.lnk;*.bat;*.cmd;*.url|Tous les fichiers|*.*",
+            "Apps and shortcuts|*.exe;*.lnk;*.bat;*.cmd;*.url|All files|*.*",
+            null
+        ),
+        ["NewTab"] = ("Nouvel onglet", "New tab", null),
+        ["QuickCommandKey"] = ("Touche de la commande rapide", "Quick command key", null),
+        ["ChooseTheQuickCommandKey"] = (
+            "Choisir la touche de la commande rapide",
+            "Choose the quick command key",
+            null
+        ),
+        ["ApplyTheQuickCommandShortcut"] = (
+            "Appliquer le raccourci de la commande rapide",
+            "Apply the quick command shortcut",
+            null
+        ),
+        ["Active3"] = (" · actif : ", " · active: ", null),
+        ["PanneauxGlassWorkshop"] = ("Panneaux Glass — atelier", "Panneaux Glass — workshop", null),
+        ["TheWorkshop"] = ("L’atelier.", "The workshop.", null),
+        ["CaptureAndAnnotate"] = ("Capturer et annoter", "Capture and annotate", null),
+        ["AlwaysOnTop"] = ("Toujours au premier plan", "Always on top", null),
+        ["SwitchHeadsetOrMuteTheMicrophone2"] = (
+            "Change de casque ou coupe le micro en un clic",
+            "Switch headset or mute the microphone in one click",
+            null
+        ),
+        ["FindWhatFillsTheDiskWithout"] = (
+            "Trouve ce qui remplit le disque, sans rien supprimer",
+            "Find what fills the disk, without deleting anything",
+            null
+        ),
+        ["ReopenYourAppsAndTheLayout"] = (
+            "Rouvre tes applications et la disposition d’un moment",
+            "Reopen your apps and the layout of a moment",
+            null
+        ),
+        ["PanneauxGlassHelp"] = ("Panneaux Glass — aide", "Panneaux Glass — help", null),
+        ["OPEN"] = ("OUVRIR", "OPEN", null),
+        ["OpenOrCollapseYourSpace"] = ("Ouvre ou replie ton espace", "Open or collapse your space", null),
+        ["QuickCommandAppsSitesCalculationsTimer"] = (
+            "Commande rapide : applications, sites, calculs, minuteur, actions",
+            "Quick command: apps, sites, calculations, timer, actions",
+            null
+        ),
+        ["PlaceTheCursorInTheSearch"] = ("Place le curseur dans la recherche", "Place the cursor in the search", null),
+        ["CollapseTheSpaceAndCloseWhat"] = (
+            "Replie l’espace et ferme ce qui est ouvert avec lui",
+            "Collapse the space and close what opened with it",
+            null
+        ),
+        ["THEWORKSHOP"] = ("L’ATELIER", "THE WORKSHOP", null),
+        ["ThirteenToolsAllInTheSame"] = (
+            "Treize outils, tous dans la même fenêtre : capture annotée, papier pense-bête, texte d’une image, pipette, règle, presse-papiers, son, profils d’espace, gros fichiers. Un papier garde son texte, sa taille, sa place et sa transparence d’une session à l’autre. Raccourci dans la palette : tape « atelier ».",
+            "Thirteen tools, all in the same window: annotated capture, sticky note, text from an image, eyedropper, ruler, clipboard, sound, space profiles, large files. A note keeps its text, size, position and transparency from one session to the next. Shortcut in the palette: type “workshop”.",
+            null
+        ),
+        ["LetSGo"] = ("C’est parti", "Let’s go", null),
+        ["ThisPageStaysReachableFromThe"] = (
+            "Cette page reste accessible depuis l’atelier.",
+            "This page stays reachable from the workshop.",
+            null
+        ),
+        ["ChooseYourImageOrKeepThe"] = (
+            "Choisis ton image ou conserve le logo actuel.",
+            "Choose your image or keep the current logo.",
+            null
+        ),
+        ["AddASite"] = ("ajouter un site", "add a site", null),
+        ["EditASite"] = ("modifier un site", "edit a site", null),
+        ["SITEADDRESS"] = ("ADRESSE DU SITE", "SITE ADDRESS", null),
+        ["WebsiteAddress"] = ("Adresse du site web", "Website address", null),
+        ["HOVERNAME"] = ("NOM AU SURVOL", "HOVER NAME", null),
+        ["SiteHoverName"] = ("Nom au survol du site", "Site hover name", null),
+        ["ChooseMyImage"] = ("Choisir mon image…", "Choose my image…", null),
+        ["CropTheImage"] = ("Recadrer l’image…", "Crop the image…", null),
+        ["AddTheSite"] = ("Ajouter le site", "Add the site", null),
+        ["ChooseTheSiteLogo"] = ("Choisir le logo du site", "Choose the site logo", null),
+        ["ImagesPngJpgJpegIcoBmp"] = (
+            "Images|*.png;*.jpg;*.jpeg;*.ico;*.bmp;*.gif;*.tif;*.tiff|Tous les fichiers|*.*",
+            "Images|*.png;*.jpg;*.jpeg;*.ico;*.bmp;*.gif;*.tif;*.tiff|All files|*.*",
+            null
+        ),
+        ["EditThisSite"] = ("Modifier ce site…", "Edit this site…", null),
+        ["ImageAndCropping"] = ("Image et recadrage…", "Image and cropping…", null),
+        ["RemoveThisShortcut"] = ("Retirer ce raccourci", "Remove this shortcut", null),
+        ["OtherSites"] = ("autres sites", "other sites", null),
+        ["OtherSites2"] = ("Autres sites", "Other sites", null),
+        ["AddAWebsite2"] = ("Ajouter un site web", "Add a website", null),
+        ["ThisSiteCouldNotBeOpened"] = ("Ce site n’a pas pu s’ouvrir.\n", "This site could not be opened.\n", null),
+        ["NewTabCtrlT"] = ("Nouvel onglet (Ctrl+T)", "New tab (Ctrl+T)", null),
+        ["ForwardAltRight"] = ("Suivant (Alt+Droite)", "Forward (Alt+Right)", null),
+        ["ParentFolderAltUp"] = ("Dossier parent (Alt+Haut)", "Parent folder (Alt+Up)", null),
+        ["Name"] = ("Nom", "Name", null),
+        ["Size"] = ("Taille", "Size", null),
+        ["TooManyTabsOpen"] = ("Trop d'onglets ouverts", "Too many tabs open", null),
+        ["YouDoNotHavePermissionTo"] = (
+            "Vous n'avez pas l'autorisation d'ouvrir ce dossier.",
+            "You do not have permission to open this folder.",
+            null
+        ),
+        ["FolderNotFound"] = ("Dossier introuvable", "Folder not found", null),
+        ["ThisFolderDoesNotExistOr"] = (
+            "Ce dossier n'existe pas ou n'est plus disponible.",
+            "This folder does not exist or is no longer available.",
+            null
+        ),
+        ["ThisFolderIsEmpty"] = ("Ce dossier est vide", "This folder is empty", null),
+        ["NewFolderCtrlShiftN"] = ("Nouveau dossier (Ctrl+Maj+N)", "New folder (Ctrl+Shift+N)", null),
+        ["CopyCtrlC"] = ("Copier (Ctrl+C)", "Copy (Ctrl+C)", null),
+        ["PasteCtrlV"] = ("Coller (Ctrl+V)", "Paste (Ctrl+V)", null),
+        ["DeleteDel"] = ("Supprimer (Suppr)", "Delete (Del)", null),
+        ["NewFolder"] = ("Nouveau dossier", "New folder", null),
+        ["ANameCannotContain"] = (
+            "Un nom ne peut pas contenir : \\ / : * ? \" < > |",
+            "A name cannot contain: \\ / : * ? \" < > |",
+            null
+        ),
+        ["ANameCannotEndWithA"] = (
+            "Un nom ne peut pas se terminer par un point.",
+            "A name cannot end with a period.",
+            null
+        ),
+        ["FileOne"] = (" fichier", " file", null),
+        ["FileMany"] = (" fichiers", " files", null),
+        ["AppOne"] = (" application", " app", null),
+        ["AppMany"] = (" applications", " apps", null),
+        ["NotFoundOne"] = (" introuvable", " not found", null),
+        ["NotFoundMany"] = (" introuvables", " not found", null),
+        ["TabOne"] = (" onglet", " tab", null),
+        ["TabMany"] = (" onglets", " tabs", null),
     };
 
     public static string PreparingMeasurements => Get("PreparingMeasurements");
@@ -1653,6 +2250,378 @@ public static class Strings
     public static string ModelDownloadIncompleteMessage(long megabytes) =>
         string.Format(Get("ModelDownloadIncomplete"), megabytes);
 
+    public static string CtrlAltShift => Get("CtrlAltShift");
+    public static string CtrlAltShift2 => Get("CtrlAltShift2");
+    public static string CtrlAltShift3 => Get("CtrlAltShift3");
+    public static string CtrlAltShift4 => Get("CtrlAltShift4");
+    public static string CtrlAltShiftF => Get("CtrlAltShiftF");
+    public static string CtrlAltShift5 => Get("CtrlAltShift5");
+    public static string CtrlAltShift6 => Get("CtrlAltShift6");
+    public static string CtrlAltShift62 => Get("CtrlAltShift62");
+    public static string CtrlAltShiftX => Get("CtrlAltShiftX");
+    public static string CustomizationInactive => Get("CustomizationInactive");
+    public static string MatchingFolderS => Get("MatchingFolderS");
+    public static string PanneauxGlassLargeFiles => Get("PanneauxGlassLargeFiles");
+    public static string WhatFillsTheDisk => Get("WhatFillsTheDisk");
+    public static string ChooseAFolder => Get("ChooseAFolder");
+    public static string NoFolderChosen => Get("NoFolderChosen");
+    public static string Scanning => Get("Scanning");
+    public static string NoLargeFiles => Get("NoLargeFiles");
+    public static string NoFileOver200MBIn => Get("NoFileOver200MBIn");
+    public static string ChooseAnotherFolder => Get("ChooseAnotherFolder");
+    public static string ScanFailed => Get("ScanFailed");
+    public static string ShowInExplorer => Get("ShowInExplorer");
+    public static string PanneauxGlassSoundAndMicrophone => Get("PanneauxGlassSoundAndMicrophone");
+    public static string TheRightSoundRightAway => Get("TheRightSoundRightAway");
+    public static string OUTPUT => Get("OUTPUT");
+    public static string MICROPHONE => Get("MICROPHONE");
+    public static string MuteTheMicrophone => Get("MuteTheMicrophone");
+    public static string CurrentOutput => Get("CurrentOutput");
+    public static string UseThisOutput => Get("UseThisOutput");
+    public static string Use => Get("Use");
+    public static string Microphone => Get("Microphone");
+    public static string Output => Get("Output");
+    public static string NothingPlaying => Get("NothingPlaying");
+    public static string StartSpotifyOrAnotherAudioApp => Get("StartSpotifyOrAnotherAudioApp");
+    public static string NowPlaying => Get("NowPlaying");
+    public static string NoAudioOutput => Get("NoAudioOutput");
+    public static string Processor => Get("Processor");
+    public static string SomeSensorsAreUnreachable => Get("SomeSensorsAreUnreachable");
+    public static string CPUSensorUnreachableWithTheCurrent => Get("CPUSensorUnreachableWithTheCurrent");
+    public static string NoActiveInterface => Get("NoActiveInterface");
+    public static string PhysicalInterfaces => Get("PhysicalInterfaces");
+    public static string ThePCNowSaveYourWork => Get("ThePCNowSaveYourWork");
+    public static string CopyFailed => Get("CopyFailed");
+    public static string TheCommand => Get("TheCommand");
+    public static string NotAvailable => Get("NotAvailable");
+    public static string PanneauxGlassControls => Get("PanneauxGlassControls");
+    public static string ShowWindowsControls => Get("ShowWindowsControls");
+    public static string Customize => Get("Customize");
+    public static string QuickCommand => Get("QuickCommand");
+    public static string QuickNote => Get("QuickNote");
+    public static string Timer => Get("Timer");
+    public static string CtrlF2YourWholeSpaceOn => Get("CtrlF2YourWholeSpaceOn");
+    public static string ShowFavoritesOnly => Get("ShowFavoritesOnly");
+    public static string QuickCommand2 => Get("QuickCommand2");
+    public static string KeepTheSpaceOpen => Get("KeepTheSpaceOpen");
+    public static string CustomizeTheSpace => Get("CustomizeTheSpace");
+    public static string CollapseTheSpace => Get("CollapseTheSpace");
+    public static string ThisQuickTabPointsToAn => Get("ThisQuickTabPointsToAn");
+    public static string TheSearchCouldNotBeOpened => Get("TheSearchCouldNotBeOpened");
+    public static string CouldNotBeOpened => Get("CouldNotBeOpened");
+    public static string ChooseAFileAnAppOr => Get("ChooseAFileAnAppOr");
+    public static string AllFiles => Get("AllFiles");
+    public static string Dashboard => Get("Dashboard");
+    public static string AppsAndFiles => Get("AppsAndFiles");
+    public static string Customize2 => Get("Customize2");
+    public static string MyWholeSpace => Get("MyWholeSpace");
+    public static string InFront => Get("InFront");
+    public static string TheShortcut2 => Get("TheShortcut2");
+    public static string CollapseWindowsControls => Get("CollapseWindowsControls");
+    public static string ThisAppIsNoLongerAvailable => Get("ThisAppIsNoLongerAvailable");
+    public static string ChooseCtrlAltOrWindowsWith => Get("ChooseCtrlAltOrWindowsWith");
+    public static string NoReadableTextInThisArea => Get("NoReadableTextInThisArea");
+    public static string SoundAndQuickControls => Get("SoundAndQuickControls");
+    public static string SaveTheCapture => Get("SaveTheCapture");
+    public static string Cancel => Get("Cancel");
+    public static string CopyTheTextOfTheArea => Get("CopyTheTextOfTheArea");
+    public static string SaveAsPNG => Get("SaveAsPNG");
+    public static string Copy => Get("Copy");
+    public static string StickyText => Get("StickyText");
+    public static string Text => Get("Text");
+    public static string TextReadByWindows => Get("TextReadByWindows");
+    public static string RecognizedText => Get("RecognizedText");
+    public static string PanneauxGlassClipboard => Get("PanneauxGlassClipboard");
+    public static string YourClipboard => Get("YourClipboard");
+    public static string SearchTheClipboard => Get("SearchTheClipboard");
+    public static string Clear => Get("Clear");
+    public static string Delete => Get("Delete");
+    public static string ClickCopyRightClickClose => Get("ClickCopyRightClickClose");
+    public static string Eyedropper => Get("Eyedropper");
+    public static string ClickTheSecondPointRightClick => Get("ClickTheSecondPointRightClick");
+    public static string PanneauxGlassQuickCommand => Get("PanneauxGlassQuickCommand");
+    public static string QuickCommand3 => Get("QuickCommand3");
+    public static string TypeAnAppACalculationAn => Get("TypeAnAppACalculationAn");
+    public static string QuickTabsEdit => Get("QuickTabsEdit");
+    public static string ChooseTheQuickTabs => Get("ChooseTheQuickTabs");
+    public static string Edit => Get("Edit");
+    public static string Search => Get("Search");
+    public static string OnTheWeb => Get("OnTheWeb");
+    public static string DuckDuckGoNewTab => Get("DuckDuckGoNewTab");
+    public static string Home => Get("Home");
+    public static string TheFourPanels => Get("TheFourPanels");
+    public static string TextFromAnImage => Get("TextFromAnImage");
+    public static string ColorPicker => Get("ColorPicker");
+    public static string Clipboard => Get("Clipboard");
+    public static string SoundAndMicrophone => Get("SoundAndMicrophone");
+    public static string SwitchHeadsetOrMuteTheMicrophone => Get("SwitchHeadsetOrMuteTheMicrophone");
+    public static string SpaceProfiles => Get("SpaceProfiles");
+    public static string ReopenAppsAndALayout => Get("ReopenAppsAndALayout");
+    public static string LargeFiles => Get("LargeFiles");
+    public static string WhatFillsTheDisk2 => Get("WhatFillsTheDisk2");
+    public static string MuteWindowsNotifications => Get("MuteWindowsNotifications");
+    public static string HelpAndShortcuts => Get("HelpAndShortcuts");
+    public static string PanneauxGesturesOnOnePage => Get("PanneauxGesturesOnOnePage");
+    public static string QuickTabs => Get("QuickTabs");
+    public static string EditThisQuickCommand => Get("EditThisQuickCommand");
+    public static string WindowsControls => Get("WindowsControls");
+    public static string Calculator => Get("Calculator");
+    public static string LockThePC => Get("LockThePC");
+    public static string LocksTheSession => Get("LocksTheSession");
+    public static string Your => Get("Your");
+    public static string FallingBackToCtrlAltW => Get("FallingBackToCtrlAltW");
+    public static string WindowsRefusesThisCombination => Get("WindowsRefusesThisCombination");
+    public static string ChooseCtrlOrAltAndA2 => Get("ChooseCtrlOrAltAndA2");
+    public static string WindowsRefusesThisShortcut => Get("WindowsRefusesThisShortcut");
+    public static string Space => Get("Space");
+    public static string Shift => Get("Shift");
+    public static string PanneauxGlassSpaceProfiles => Get("PanneauxGlassSpaceProfiles");
+    public static string YourWorkspaces => Get("YourWorkspaces");
+    public static string OpenTheAppsOfAMoment => Get("OpenTheAppsOfAMoment");
+    public static string SaveTheCurrentSpace => Get("SaveTheCurrentSpace");
+    public static string NoSpaceYetOpenYourApps => Get("NoSpaceYetOpenYourApps");
+    public static string ReplaceWithTheCurrentSpace => Get("ReplaceWithTheCurrentSpace");
+    public static string DeleteThisSpace => Get("DeleteThisSpace");
+    public static string DeleteTheSpace => Get("DeleteTheSpace");
+    public static string NameThisSpace => Get("NameThisSpace");
+    public static string AShortNameLikeDevMusic => Get("AShortNameLikeDevMusic");
+    public static string MySpace => Get("MySpace");
+    public static string Customize3 => Get("Customize3");
+    public static string Favorites => Get("Favorites");
+    public static string RemoveFromFavorites => Get("RemoveFromFavorites");
+    public static string AddToFavorites => Get("AddToFavorites");
+    public static string ShowLocation => Get("ShowLocation");
+    public static string CopyPath => Get("CopyPath");
+    public static string TimeOpenTheQuickCommand => Get("TimeOpenTheQuickCommand");
+    public static string GoodNightDj => Get("GoodNightDj");
+    public static string StartSpotifyToBegin => Get("StartSpotifyToBegin");
+    public static string MUSIC => Get("MUSIC");
+    public static string WindowsOutput => Get("WindowsOutput");
+    public static string WindowsYourEssentialControls => Get("WindowsYourEssentialControls");
+    public static string Edit2 => Get("Edit2");
+    public static string CustomizeWindowsControls => Get("CustomizeWindowsControls");
+    public static string PlayOrPause => Get("PlayOrPause");
+    public static string NextTrack => Get("NextTrack");
+    public static string ChooseTheMusicApp => Get("ChooseTheMusicApp");
+    public static string TurnSoundOnOrOff => Get("TurnSoundOnOrOff");
+    public static string Connections => Get("Connections");
+    public static string QuickActions => Get("QuickActions");
+    public static string WindowsShortcuts => Get("WindowsShortcuts");
+    public static string AddControlsWithEdit => Get("AddControlsWithEdit");
+    public static string RecycleBin => Get("RecycleBin");
+    public static string EmptyConfirmation => Get("EmptyConfirmation");
+    public static string Sleep => Get("Sleep");
+    public static string AudioOutput => Get("AudioOutput");
+    public static string ChooseTheOutput => Get("ChooseTheOutput");
+    public static string ChooseTheAudioOutputInWindows => Get("ChooseTheAudioOutputInWindows");
+    public static string Focus => Get("Focus");
+    public static string AddAWindowsShortcut => Get("AddAWindowsShortcut");
+    public static string Add => Get("Add");
+    public static string PlaybackUnavailable => Get("PlaybackUnavailable");
+    public static string NoAudioOutputAvailable => Get("NoAudioOutputAvailable");
+    public static string ThisCommandIsNotAvailableFor => Get("ThisCommandIsNotAvailableFor");
+    public static string ConnectionsUnavailable => Get("ConnectionsUnavailable");
+    public static string WindowsOffline => Get("WindowsOffline");
+    public static string Absent => Get("Absent");
+    public static string Offline => Get("Offline");
+    public static string PanneauxGlassCustomizeTheControls => Get("PanneauxGlassCustomizeTheControls");
+    public static string ShowArrangeAndAddSavedAutomatically => Get("ShowArrangeAndAddSavedAutomatically");
+    public static string AddAShortcut => Get("AddAShortcut");
+    public static string VolumeSlider => Get("VolumeSlider");
+    public static string WINDOWSSHORTCUTS => Get("WINDOWSSHORTCUTS");
+    public static string Edit3 => Get("Edit3");
+    public static string RemoveTheShortcut => Get("RemoveTheShortcut");
+    public static string PanneauxGlassWindowsShortcut => Get("PanneauxGlassWindowsShortcut");
+    public static string OneMoreShortcut => Get("OneMoreShortcut");
+    public static string YourWindowsShortcut => Get("YourWindowsShortcut");
+    public static string ChooseAWindowsCommand => Get("ChooseAWindowsCommand");
+    public static string NAME => Get("NAME");
+    public static string WindowsShortcutName => Get("WindowsShortcutName");
+    public static string WINDOWSSETTINGORAPP => Get("WINDOWSSETTINGORAPP");
+    public static string WindowsShortcutTarget => Get("WindowsShortcutTarget");
+    public static string ExampleMsSettingsDisplayOrThe => Get("ExampleMsSettingsDisplayOrThe");
+    public static string AppArguments => Get("AppArguments");
+    public static string Save => Get("Save");
+    public static string Folder => Get("Folder");
+    public static string Customization => Get("Customization");
+    public static string ChooseAnAppOrAShortcut => Get("ChooseAnAppOrAShortcut");
+    public static string AppsAndShortcutsExeLnkAll => Get("AppsAndShortcutsExeLnkAll");
+    public static string AddANameForThisShortcut => Get("AddANameForThisShortcut");
+    public static string Storage => Get("Storage");
+    public static string PanneauxGlassTimer => Get("PanneauxGlassTimer");
+    public static string Hours => Get("Hours");
+    public static string Seconds => Get("Seconds");
+    public static string TwentyFourHoursAtMost => Get("TwentyFourHoursAtMost");
+    public static string Spaces => Get("Spaces");
+    public static string Tab => Get("Tab");
+    public static string SwitchToLightOrDark => Get("SwitchToLightOrDark");
+    public static string YourPersonalSpace => Get("YourPersonalSpace");
+    public static string SpotifyAndYourWindowsPlayers => Get("SpotifyAndYourWindowsPlayers");
+    public static string SeeTheMusic => Get("SeeTheMusic");
+    public static string YOURWINDOWSPLAYER => Get("YOURWINDOWSPLAYER");
+    public static string NothingIsPlaying => Get("NothingIsPlaying");
+    public static string OpenSpotifyOrAnotherPlayerTo => Get("OpenSpotifyOrAnotherPlayerTo");
+    public static string NextTitle => Get("NextTitle");
+    public static string MusicProgress => Get("MusicProgress");
+    public static string ThePlayerDoesNotOfferThis => Get("ThePlayerDoesNotOfferThis");
+    public static string PanneauxGlassHome => Get("PanneauxGlassHome");
+    public static string PanneauxGlassHome2 => Get("PanneauxGlassHome2");
+    public static string CaptureEyedropperClipboardSoundWorkspaces => Get("CaptureEyedropperClipboardSoundWorkspaces");
+    public static string CollapseHome => Get("CollapseHome");
+    public static string YourSpaceDj => Get("YourSpaceDj");
+    public static string MyWholeSpace2 => Get("MyWholeSpace2");
+    public static string Favorites2 => Get("Favorites2");
+    public static string YourFavorites => Get("YourFavorites");
+    public static string YourFavoritesStartHere => Get("YourFavoritesStartHere");
+    public static string NextFavorites => Get("NextFavorites");
+    public static string YourSites => Get("YourSites");
+    public static string AddAWebsite => Get("AddAWebsite");
+    public static string PanneauxGlassCropTheImage => Get("PanneauxGlassCropTheImage");
+    public static string CancelCropping => Get("CancelCropping");
+    public static string YourLogoYourFraming => Get("YourLogoYourFraming");
+    public static string ImageZoom => Get("ImageZoom");
+    public static string UseThisCrop => Get("UseThisCrop");
+    public static string Calm => Get("Calm");
+    public static string Expressive => Get("Expressive");
+    public static string PanneauxGlassQuickNote => Get("PanneauxGlassQuickNote");
+    public static string YourQuickNote => Get("YourQuickNote");
+    public static string QuickNoteContent => Get("QuickNoteContent");
+    public static string Clear2 => Get("Clear2");
+    public static string ClearTheNoteContentItWill => Get("ClearTheNoteContentItWill");
+    public static string CollectionPausedOutsideThisPanel => Get("CollectionPausedOutsideThisPanel");
+    public static string GraphicsCard => Get("GraphicsCard");
+    public static string ReadingTheMemoryModules => Get("ReadingTheMemoryModules");
+    public static string Connection => Get("Connection");
+    public static string UnderstandTheMeasurements => Get("UnderstandTheMeasurements");
+    public static string Live => Get("Live");
+    public static string SensorDependsOnTheDriver => Get("SensorDependsOnTheDriver");
+    public static string MeasurementUnavailable => Get("MeasurementUnavailable");
+    public static string Module => Get("Module");
+    public static string Reading => Get("Reading");
+    public static string Free => Get("Free");
+    public static string NoAccessibleFixedVolume => Get("NoAccessibleFixedVolume");
+    public static string UnderstandYourPC => Get("UnderstandYourPC");
+    public static string NoCollectionWhenYouCollapseIt => Get("NoCollectionWhenYouCollapseIt");
+    public static string Unavailable => Get("Unavailable");
+    public static string ReadingTheSensor => Get("ReadingTheSensor");
+    public static string PanneauxGlassCustomization => Get("PanneauxGlassCustomization");
+    public static string THEGLASS => Get("THEGLASS");
+    public static string GlassTint => Get("GlassTint");
+    public static string ClearGlass => Get("ClearGlass");
+    public static string THEFOURPANELS => Get("THEFOURPANELS");
+    public static string LeftColumnWidth => Get("LeftColumnWidth");
+    public static string PanelSpacing => Get("PanelSpacing");
+    public static string DesktopMargin => Get("DesktopMargin");
+    public static string THETASKBARANDTHEEDGE => Get("THETASKBARANDTHEEDGE");
+    public static string NoAnimation => Get("NoAnimation");
+    public static string YOURSHORTCUTS => Get("YOURSHORTCUTS");
+    public static string AddAFolder => Get("AddAFolder");
+    public static string ExportMyCustomization => Get("ExportMyCustomization");
+    public static string THEDESKTOPALWAYSREACHABLE => Get("THEDESKTOPALWAYSREACHABLE");
+    public static string THEMES => Get("THEMES");
+    public static string EVERYDAY => Get("EVERYDAY");
+    public static string KeepTheClipboardHistory => Get("KeepTheClipboardHistory");
+    public static string Active2 => Get("Active2");
+    public static string Shift2 => Get("Shift2");
+    public static string ShortcutKey => Get("ShortcutKey");
+    public static string ChooseTheKey => Get("ChooseTheKey");
+    public static string Apply => Get("Apply");
+    public static string OPENFROMANYAPPLICATION => Get("OPENFROMANYAPPLICATION");
+    public static string ChooseTheGlobalShortcutKey => Get("ChooseTheGlobalShortcutKey");
+    public static string HomeWindowsControls => Get("HomeWindowsControls");
+    public static string HomeOnly => Get("HomeOnly");
+    public static string ChooseTheViewTheShortcutOpens => Get("ChooseTheViewTheShortcutOpens");
+    public static string ApplyTheShortcut => Get("ApplyTheShortcut");
+    public static string ExportTheCustomization => Get("ExportTheCustomization");
+    public static string PanneauxCustomizationJson => Get("PanneauxCustomizationJson");
+    public static string ImportAPanneauxCustomization => Get("ImportAPanneauxCustomization");
+    public static string ImportFailed => Get("ImportFailed");
+    public static string PANEL => Get("PANEL");
+    public static string ChooseAPanel => Get("ChooseAPanel");
+    public static string ICON => Get("ICON");
+    public static string Help => Get("Help");
+    public static string PanneauxGlassQuickTabs => Get("PanneauxGlassQuickTabs");
+    public static string YourQuickTabs => Get("YourQuickTabs");
+    public static string TabName => Get("TabName");
+    public static string Remove => Get("Remove");
+    public static string AddATab => Get("AddATab");
+    public static string OPENTHEQUICKCOMMAND => Get("OPENTHEQUICKCOMMAND");
+    public static string GameBar => Get("GameBar");
+    public static string WindowsFolder => Get("WindowsFolder");
+    public static string Explorer => Get("Explorer");
+    public static string WindowsCommand => Get("WindowsCommand");
+    public static string ChooseAnApp => Get("ChooseAnApp");
+    public static string TabTarget => Get("TabTarget");
+    public static string ChooseThisTabSApp => Get("ChooseThisTabSApp");
+    public static string AppsAndShortcutsExeLnkBat => Get("AppsAndShortcutsExeLnkBat");
+    public static string NewTab => Get("NewTab");
+    public static string QuickCommandKey => Get("QuickCommandKey");
+    public static string ChooseTheQuickCommandKey => Get("ChooseTheQuickCommandKey");
+    public static string ApplyTheQuickCommandShortcut => Get("ApplyTheQuickCommandShortcut");
+    public static string Active3 => Get("Active3");
+    public static string PanneauxGlassWorkshop => Get("PanneauxGlassWorkshop");
+    public static string TheWorkshop => Get("TheWorkshop");
+    public static string CaptureAndAnnotate => Get("CaptureAndAnnotate");
+    public static string AlwaysOnTop => Get("AlwaysOnTop");
+    public static string SwitchHeadsetOrMuteTheMicrophone2 => Get("SwitchHeadsetOrMuteTheMicrophone2");
+    public static string FindWhatFillsTheDiskWithout => Get("FindWhatFillsTheDiskWithout");
+    public static string ReopenYourAppsAndTheLayout => Get("ReopenYourAppsAndTheLayout");
+    public static string PanneauxGlassHelp => Get("PanneauxGlassHelp");
+    public static string OPEN => Get("OPEN");
+    public static string OpenOrCollapseYourSpace => Get("OpenOrCollapseYourSpace");
+    public static string QuickCommandAppsSitesCalculationsTimer => Get("QuickCommandAppsSitesCalculationsTimer");
+    public static string PlaceTheCursorInTheSearch => Get("PlaceTheCursorInTheSearch");
+    public static string CollapseTheSpaceAndCloseWhat => Get("CollapseTheSpaceAndCloseWhat");
+    public static string THEWORKSHOP => Get("THEWORKSHOP");
+    public static string ThirteenToolsAllInTheSame => Get("ThirteenToolsAllInTheSame");
+    public static string LetSGo => Get("LetSGo");
+    public static string ThisPageStaysReachableFromThe => Get("ThisPageStaysReachableFromThe");
+    public static string ChooseYourImageOrKeepThe => Get("ChooseYourImageOrKeepThe");
+    public static string AddASite => Get("AddASite");
+    public static string EditASite => Get("EditASite");
+    public static string SITEADDRESS => Get("SITEADDRESS");
+    public static string WebsiteAddress => Get("WebsiteAddress");
+    public static string HOVERNAME => Get("HOVERNAME");
+    public static string SiteHoverName => Get("SiteHoverName");
+    public static string ChooseMyImage => Get("ChooseMyImage");
+    public static string CropTheImage => Get("CropTheImage");
+    public static string AddTheSite => Get("AddTheSite");
+    public static string ChooseTheSiteLogo => Get("ChooseTheSiteLogo");
+    public static string ImagesPngJpgJpegIcoBmp => Get("ImagesPngJpgJpegIcoBmp");
+    public static string EditThisSite => Get("EditThisSite");
+    public static string ImageAndCropping => Get("ImageAndCropping");
+    public static string RemoveThisShortcut => Get("RemoveThisShortcut");
+    public static string OtherSites => Get("OtherSites");
+    public static string OtherSites2 => Get("OtherSites2");
+    public static string AddAWebsite2 => Get("AddAWebsite2");
+    public static string ThisSiteCouldNotBeOpened => Get("ThisSiteCouldNotBeOpened");
+    public static string NewTabCtrlT => Get("NewTabCtrlT");
+    public static string ForwardAltRight => Get("ForwardAltRight");
+    public static string ParentFolderAltUp => Get("ParentFolderAltUp");
+    public static string Name => Get("Name");
+    public static string Size => Get("Size");
+    public static string TooManyTabsOpen => Get("TooManyTabsOpen");
+    public static string YouDoNotHavePermissionTo => Get("YouDoNotHavePermissionTo");
+    public static string FolderNotFound => Get("FolderNotFound");
+    public static string ThisFolderDoesNotExistOr => Get("ThisFolderDoesNotExistOr");
+    public static string ThisFolderIsEmpty => Get("ThisFolderIsEmpty");
+    public static string NewFolderCtrlShiftN => Get("NewFolderCtrlShiftN");
+    public static string CopyCtrlC => Get("CopyCtrlC");
+    public static string PasteCtrlV => Get("PasteCtrlV");
+    public static string DeleteDel => Get("DeleteDel");
+    public static string NewFolder => Get("NewFolder");
+    public static string ANameCannotContain => Get("ANameCannotContain");
+    public static string ANameCannotEndWithA => Get("ANameCannotEndWithA");
+
+    public static string FileOne => Get("FileOne");
+    public static string FileMany => Get("FileMany");
+    public static string AppOne => Get("AppOne");
+    public static string AppMany => Get("AppMany");
+    public static string NotFoundOne => Get("NotFoundOne");
+    public static string NotFoundMany => Get("NotFoundMany");
+    public static string TabOne => Get("TabOne");
+    public static string TabMany => Get("TabMany");
+
     // Category / folder names double as data keys in the board, tools and sidebar code (filters, card
     // categories, saved state). Only the displayed text goes through here; unknown keys (catalogue categories)
     // are shown as they are.
@@ -1660,7 +2629,7 @@ public static class Strings
         Table.ContainsKey("Category." + key) ? Get("Category." + key) : key;
 
     public static string EverydaySelection => Get("EverydaySelection");
-    public static string FavouritesPrefix => Get("FavouritesPrefix");
+    public static string FavoritesPrefix => Get("FavoritesPrefix");
     public static string QuickAccess => Get("QuickAccess");
     public static string Drives => Get("Drives");
     public static string LocalDisk => Get("LocalDisk");

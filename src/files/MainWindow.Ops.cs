@@ -204,12 +204,12 @@ public sealed partial class MainWindow
             b.Click += (_, _) => action();
             bar.Children.Add(b);
         }
-        Add("", "Nouveau dossier (Ctrl+Maj+N)", () => Fire(NewFolderAsync));
+        Add("", Strings.NewFolderCtrlShiftN, () => Fire(NewFolderAsync));
         Add("", "Couper (Ctrl+X)", () => CopySelected(true));
-        Add("", "Copier (Ctrl+C)", () => CopySelected(false));
-        Add("", "Coller (Ctrl+V)", () => Fire(() => PasteAsync()));
+        Add("", Strings.CopyCtrlC, () => CopySelected(false));
+        Add("", Strings.PasteCtrlV, () => Fire(() => PasteAsync()));
         Add("", "Renommer (F2)", RenameSelected);
-        Add("", "Supprimer (Suppr)", () => Fire(() => DeleteSelectedAsync(false)));
+        Add("", Strings.DeleteDel, () => Fire(() => DeleteSelectedAsync(false)));
         return bar;
     }
 
@@ -447,7 +447,7 @@ public sealed partial class MainWindow
         if (tab.Location.Length == 0 || tab.State is LoadState.Denied or LoadState.NotFound or LoadState.Failed)
             return null;
         var watch = WatchSet();
-        var result = await FileOps.NewFolder(Hwnd, tab.Location, "Nouveau dossier", watch);
+        var result = await FileOps.NewFolder(Hwnd, tab.Location, Strings.NewFolder, watch);
         ApplyResult(result, true);
         var made = result.Added.FirstOrDefault(i =>
             string.Equals(ParentOf(i.FullPath), Norm(tab.Location), StringComparison.OrdinalIgnoreCase)
@@ -546,9 +546,9 @@ public sealed partial class MainWindow
         if (name.Length == 0)
             return Strings.TheNameCannotBeEmpty;
         if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-            return "Un nom ne peut pas contenir : \\ / : * ? \" < > |";
+            return Strings.ANameCannotContain;
         if (name.EndsWith('.'))
-            return "Un nom ne peut pas se terminer par un point.";
+            return Strings.ANameCannotEndWithA;
         if (
             renaming != null
             && !string.Equals(name, renaming.Name, StringComparison.OrdinalIgnoreCase)

@@ -37,17 +37,17 @@ internal sealed partial class WindowTiler
         (42, 3, 0x27, "Ctrl + Alt + →"),
         (43, 3, 0x26, "Ctrl + Alt + ↑"),
         (44, 3, 0x28, "Ctrl + Alt + ↓"),
-        (45, 7, 0x25, "Ctrl + Alt + Maj + ←"),
-        (46, 7, 0x27, "Ctrl + Alt + Maj + →"),
-        (47, 7, 0x26, "Ctrl + Alt + Maj + ↑"),
-        (48, 7, 0x28, "Ctrl + Alt + Maj + ↓"),
-        (49, 7, 0x46, "Ctrl + Alt + Maj + F"),
-        (50, 7, 0xBB, "Ctrl + Alt + Maj + +"),
+        (45, 7, 0x25, Strings.CtrlAltShift),
+        (46, 7, 0x27, Strings.CtrlAltShift2),
+        (47, 7, 0x26, Strings.CtrlAltShift3),
+        (48, 7, 0x28, Strings.CtrlAltShift4),
+        (49, 7, 0x46, Strings.CtrlAltShiftF),
+        (50, 7, 0xBB, Strings.CtrlAltShift5),
         (51, 7, 0x6B, Strings.CtrlAltShiftNumpad),
-        (52, 7, 0xBD, "Ctrl + Alt + Maj + -"),
+        (52, 7, 0xBD, Strings.CtrlAltShift6),
         (53, 7, 0x6D, Strings.CtrlAltShiftNumpad2),
-        (54, 7, 0x36, "Ctrl + Alt + Maj + 6"),
-        (55, 7, 0x58, "Ctrl + Alt + Maj + X"),
+        (54, 7, 0x36, Strings.CtrlAltShift62),
+        (55, 7, 0x58, Strings.CtrlAltShiftX),
     };
 
     double Ratio(string screen, string path) =>
@@ -98,7 +98,7 @@ internal sealed partial class WindowTiler
         }
         catch (Exception ex)
         {
-            Store.Log("Tuilage · raccourcis indisponibles : " + ex.Message);
+            Store.Log("Tiling · shortcuts unavailable: " + ex.Message);
         }
     }
 
@@ -113,7 +113,7 @@ internal sealed partial class WindowTiler
             }
             catch (Exception ex)
             {
-                Store.Log("Tuilage · raccourci : " + ex.Message);
+                Store.Log("Tiling · shortcut: " + ex.Message);
             }
         }
         return IntPtr.Zero;

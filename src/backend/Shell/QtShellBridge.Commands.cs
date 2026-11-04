@@ -61,7 +61,7 @@ internal sealed partial class QtShellBridge
                 }
                 if (Interlocked.Exchange(ref firstReply, 1) == 0)
                     Store.Log(
-                        "Premier affichage Qt · t+"
+                        "First Qt display · t+"
                             + (int)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds
                             + " ms"
                     );
@@ -247,7 +247,7 @@ internal sealed partial class QtShellBridge
                                 }
                                 catch (Exception ex)
                                 {
-                                    Store.Log("Capture du fond: " + ex.Message);
+                                    Store.Log("Background capture: " + ex.Message);
                                     return null;
                                 }
                             })
@@ -255,7 +255,7 @@ internal sealed partial class QtShellBridge
                     }
                     catch (TimeoutException)
                     {
-                        Store.Log("Capture du fond: delai depasse.");
+                        Store.Log("Background capture: timed out.");
                     }
                     wallpaperCapture = new
                     {
@@ -406,13 +406,13 @@ internal sealed partial class QtShellBridge
 
                 case "customTheme":
                     if (!args.TryGetProperty("colors", out var colors) || colors.ValueKind != JsonValueKind.Object)
-                        throw new InvalidOperationException("Palette invalide.");
+                        throw new InvalidOperationException("Invalid palette.");
                     var custom = new Dictionary<string, string>();
                     foreach (string role in new[] { "background", "text", "primary", "secondary", "tertiary" })
                     {
                         string color = Text(colors, role);
                         if (!System.Text.RegularExpressions.Regex.IsMatch(color, "^#[0-9a-fA-F]{6}$"))
-                            throw new InvalidOperationException("Couleur invalide : " + role);
+                            throw new InvalidOperationException("Invalid color: " + role);
                         custom[role] = color.ToLowerInvariant();
                     }
                     Store.State.CustomPalette = custom;
@@ -832,7 +832,7 @@ internal sealed partial class QtShellBridge
                             Send("shortcut-saved:" + Text(args, "kind"));
                     }
                     else
-                        notice = "Choisis Ctrl, Alt ou Windows avec une autre touche.";
+                        notice = Strings.ChooseCtrlAltOrWindowsWith;
                     break;
 
                 case "tools":
@@ -937,7 +937,7 @@ internal sealed partial class QtShellBridge
         catch (Exception ex)
         {
             notice = ex.Message;
-            Store.Log("Commande Qt: " + ex.Message);
+            Store.Log("Qt command: " + ex.Message);
         }
         notice ??= lateNotice;
         lateNotice = null;

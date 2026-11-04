@@ -75,10 +75,10 @@ internal sealed partial class HomeWindow
         foreach (
             var item in new[]
             {
-                ("dashboard", "Tableau de bord", "\uE8A9"),
-                ("music", "Musique", "\uE8D6"),
+                ("dashboard", Strings.Dashboard, "\uE8A9"),
+                ("music", Strings.KnownFolder("Music"), "\uE8D6"),
                 ("performance", "Performances", "\uE9D9"),
-                ("spaces", "Espaces", "\uE8F1"),
+                ("spaces", Strings.Spaces, "\uE8F1"),
             }
         )
         {
@@ -93,13 +93,13 @@ internal sealed partial class HomeWindow
             row.Children.Add(UI.Text(item.Item2, 13));
             button.Content = row;
             button.ToolTip = item.Item2;
-            System.Windows.Automation.AutomationProperties.SetName(button, "Onglet " + item.Item2);
+            System.Windows.Automation.AutomationProperties.SetName(button, Strings.Tab + item.Item2);
             tabs.Children.Add(button);
             tabButtons.Add((button, id));
         }
         var theme = UI.IconButton(
             "\uE708",
-            "Passer en clair ou en sombre",
+            Strings.SwitchToLightOrDark,
             () => owner.SetTheme(Theme.Current.Id == "shell-dark" ? "shell" : "shell-dark")
         );
         tabs.Children.Add(theme);
@@ -217,13 +217,13 @@ internal sealed partial class HomeWindow
         dashboardTime = UI.Text(DateTime.Now.ToString("HH:mm"), 42, null, false);
         dashboardTime.Margin = new Thickness(0, 8, 0, 8);
         today.Children.Add(dashboardTime);
-        today.Children.Add(Detail("Ton espace personnel"));
+        today.Children.Add(Detail(Strings.YourPersonalSpace));
         var gestures = new WrapPanel { Margin = new Thickness(0, 17, 0, 0) };
         foreach (
             var item in new[]
             {
                 ("\uE722", "Capture", (Action)(() => owner.OpenCapture())),
-                ("\uE77F", "Presse-papiers", owner.OpenClipboard),
+                ("\uE77F", Strings.Clipboard, owner.OpenClipboard),
                 ("\uE917", "Minuteur", owner.OpenFocus),
             }
         )
@@ -291,19 +291,19 @@ internal sealed partial class HomeWindow
                 Child = miniCover,
             }
         );
-        miniTitle = UI.Text("Aucune lecture", 15, null, true);
+        miniTitle = UI.Text(Strings.NothingPlaying, 15, null, true);
         miniTitle.TextTrimming = TextTrimming.CharacterEllipsis;
         miniTitle.TextAlignment = TextAlignment.Center;
         miniTitle.Margin = new Thickness(0, 12, 0, 5);
         music.Children.Add(miniTitle);
-        miniArtist = Detail("Spotify et tes lecteurs Windows");
+        miniArtist = Detail(Strings.SpotifyAndYourWindowsPlayers);
         miniArtist.TextAlignment = TextAlignment.Center;
         music.Children.Add(miniArtist);
-        miniPlay = UI.IconButton("\uE768", "Lecture ou pause", () => _ = MediaCommand("toggle"));
+        miniPlay = UI.IconButton("\uE768", Strings.PlayOrPause, () => _ = MediaCommand("toggle"));
         miniPlay.HorizontalAlignment = HorizontalAlignment.Center;
         miniPlay.Margin = new Thickness(0, 13, 0, 8);
         music.Children.Add(miniPlay);
-        var more = UI.Button("Voir la musique  ›", () => SelectPage("music"));
+        var more = UI.Button(Strings.SeeTheMusic, () => SelectPage("music"));
         more.HorizontalAlignment = HorizontalAlignment.Center;
         more.FontSize = 11;
         music.Children.Add(more);
@@ -363,20 +363,20 @@ internal sealed partial class HomeWindow
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(26, 0, 12, 0),
         };
-        songApp = Detail("TON LECTEUR WINDOWS");
+        songApp = Detail(Strings.YOURWINDOWSPLAYER);
         details.Children.Add(songApp);
-        songTitle = UI.Text("Aucune lecture en cours", 29, null, true);
+        songTitle = UI.Text(Strings.NothingIsPlaying, 29, null, true);
         songTitle.TextWrapping = TextWrapping.Wrap;
         songTitle.Margin = new Thickness(0, 15, 0, 10);
         details.Children.Add(songTitle);
-        songArtist = Detail("Ouvre Spotify ou un autre lecteur pour retrouver ta musique ici.");
+        songArtist = Detail(Strings.OpenSpotifyOrAnotherPlayerTo);
         details.Children.Add(songArtist);
         var transport = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 24, 0, 15) };
         previousButton = UI.IconButton("\uE892", Strings.PreviousTitle, () => _ = MediaCommand("previous"));
-        playButton = UI.IconButton("\uE768", "Lecture ou pause", () => _ = MediaCommand("toggle"));
+        playButton = UI.IconButton("\uE768", Strings.PlayOrPause, () => _ = MediaCommand("toggle"));
         playButton.Width = playButton.Height = 58;
         playButton.Margin = new Thickness(14, 0, 14, 0);
-        nextButton = UI.IconButton("\uE893", "Titre suivant", () => _ = MediaCommand("next"));
+        nextButton = UI.IconButton("\uE893", Strings.NextTitle, () => _ = MediaCommand("next"));
         transport.Children.Add(previousButton);
         transport.Children.Add(playButton);
         transport.Children.Add(nextButton);
@@ -388,7 +388,7 @@ internal sealed partial class HomeWindow
             IsEnabled = false,
             IsMoveToPointEnabled = true,
         };
-        System.Windows.Automation.AutomationProperties.SetName(timeline, "Progression de la musique");
+        System.Windows.Automation.AutomationProperties.SetName(timeline, Strings.MusicProgress);
         timeline.PreviewMouseLeftButtonDown += (_, _) => seeking = true;
         timeline.AddHandler(
             UIElement.PreviewMouseLeftButtonUpEvent,
@@ -480,7 +480,7 @@ internal sealed partial class HomeWindow
         }
         catch (Exception ex)
         {
-            Store.Log("Musique accueil: " + ex.Message);
+            Store.Log("Home music: " + ex.Message);
         }
     }
 
@@ -498,7 +498,7 @@ internal sealed partial class HomeWindow
         }
         catch (Exception ex)
         {
-            Store.Log("Lecture accueil: " + ex.Message);
+            Store.Log("Home playback: " + ex.Message);
         }
         finally
         {
@@ -523,7 +523,7 @@ internal sealed partial class HomeWindow
             return;
         songTitle.Text = media.Title;
         songArtist!.Text = media.Artist;
-        songApp!.Text = media.Available ? media.App.ToUpperInvariant() : "TON LECTEUR WINDOWS";
+        songApp!.Text = media.Available ? media.App.ToUpperInvariant() : Strings.YOURWINDOWSPLAYER;
         songCover!.Source = media.Artwork;
         playButton!.Content = UI.Glyph(media.Playing ? "\uE769" : "\uE768", 24);
         playButton.IsEnabled = media.CanToggle;
@@ -575,7 +575,7 @@ internal sealed partial class HomeWindow
         try
         {
             if (!await shellMedia.CommandAsync(action, value))
-                owner.ShowToast("Le lecteur ne propose pas cette commande");
+                owner.ShowToast(Strings.ThePlayerDoesNotOfferThis);
             await ReadMedia();
         }
         catch (Exception ex)

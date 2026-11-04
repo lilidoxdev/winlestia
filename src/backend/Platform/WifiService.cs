@@ -266,7 +266,7 @@ internal sealed class WifiHost : IDisposable
         catch (Exception ex)
         {
             key = "failed";
-            Store.Log("Wi-Fi: connexion interrompue (" + ex.GetType().Name + ")");
+            Store.Log("Wi-Fi: connection interrupted (" + ex.GetType().Name + ")");
         }
         finally
         {
@@ -338,7 +338,7 @@ internal sealed class WifiHost : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Wi-Fi: page de connexion: " + ex.GetType().Name);
+            Store.Log("Wi-Fi: sign-in page: " + ex.GetType().Name);
         }
     }
 

@@ -528,7 +528,7 @@ internal sealed class SocialService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Social vue " + n.Id + ": " + ex.Message);
+            Store.Log("Social view " + n.Id + ": " + ex.Message);
         }
         finally
         {
@@ -754,7 +754,7 @@ internal sealed class SocialService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Social lien externe: " + ex.Message);
+            Store.Log("Social external link: " + ex.Message);
         }
     }
 
@@ -972,7 +972,7 @@ internal sealed class SocialService : IDisposable
     void OnProcessFailed(object? sender, CoreWebView2ProcessFailedEventArgs e)
     {
         var n = Owner(sender);
-        Store.Log("Social processus " + (n?.Id ?? "?") + ": " + e.ProcessFailedKind);
+        Store.Log("Social process " + (n?.Id ?? "?") + ": " + e.ProcessFailedKind);
     }
 
     static string Clip(string? text, int max)
@@ -1225,7 +1225,7 @@ internal sealed class SocialService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Social veille " + n.Id + ": " + ex.Message);
+            Store.Log("Social sleep " + n.Id + ": " + ex.Message);
         }
     }
 
@@ -1312,7 +1312,7 @@ internal sealed class SocialService : IDisposable
                     + history.Count
                     + " entry(ies), next seq "
                     + nextSeq
-                    + (data.History == null ? " (fichier sans historique)" : "")
+                    + (data.History == null ? " (file without history)" : "")
             );
         }
         catch (Exception ex)

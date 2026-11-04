@@ -195,7 +195,7 @@ internal sealed class ImageCropWindow : GlassWindow
     readonly CropViewport viewport;
 
     internal ImageCropWindow(string path, LogoCrop? original)
-        : base("Panneaux Glass — recadrer l’image")
+        : base(Strings.PanneauxGlassCropTheImage)
     {
         Width = 650;
         Height = 750;
@@ -205,10 +205,10 @@ internal sealed class ImageCropWindow : GlassWindow
         var form = new StackPanel();
         ContentHost.Children.Add(form);
         var title = new DockPanel();
-        var close = UI.IconButton("\uE711", "Annuler le recadrage", Close);
+        var close = UI.IconButton("\uE711", Strings.CancelCropping, Close);
         DockPanel.SetDock(close, Dock.Right);
         title.Children.Add(close);
-        title.Children.Add(UI.Text("Ton logo, ton cadrage.", 25, null, true));
+        title.Children.Add(UI.Text(Strings.YourLogoYourFraming, 25, null, true));
         form.Children.Add(title);
         var hint = UI.Text(Strings.DragTheImageToMoveIt, 13, UI.Dim);
         hint.Margin = new Thickness(0, 10, 0, 19);
@@ -234,7 +234,7 @@ internal sealed class ImageCropWindow : GlassWindow
             SmallChange = .05,
             Margin = new Thickness(8, 0, 12, 0),
         };
-        System.Windows.Automation.AutomationProperties.SetName(slider, "Zoom de l’image");
+        System.Windows.Automation.AutomationProperties.SetName(slider, Strings.ImageZoom);
         Grid.SetColumn(slider, 1);
         zoomRow.Children.Add(slider);
         var value = UI.Text("", 12, UI.Dim);
@@ -272,9 +272,9 @@ internal sealed class ImageCropWindow : GlassWindow
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
         };
-        actions.Children.Add(UI.Button("Annuler", Close));
+        actions.Children.Add(UI.Button(Strings.Cancel, Close));
         var save = UI.Button(
-            "Utiliser ce cadrage",
+            Strings.UseThisCrop,
             () =>
             {
                 Output = viewport.Export();

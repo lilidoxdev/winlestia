@@ -267,8 +267,8 @@ internal sealed class MediaController : IDisposable
                 return new(
                     false,
                     "",
-                    "Aucune lecture",
-                    "Lance Spotify ou une autre application audio",
+                    Strings.NothingPlaying,
+                    Strings.StartSpotifyOrAnotherAudioApp,
                     false,
                     0,
                     0,
@@ -343,7 +343,7 @@ internal sealed class MediaController : IDisposable
             return new(
                 true,
                 source.DisplayName,
-                string.IsNullOrWhiteSpace(title) ? "Lecture en cours" : title,
+                string.IsNullOrWhiteSpace(title) ? Strings.NowPlaying : title,
                 artist,
                 playing,
                 position,

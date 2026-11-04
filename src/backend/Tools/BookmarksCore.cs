@@ -922,7 +922,7 @@ internal static class BookmarksCore
         }
         catch (Exception ex)
         {
-            Log("Favoris suppression : " + ex.GetType().Name);
+            Log("Favorites deletion: " + ex.GetType().Name);
             return "error";
         }
     }

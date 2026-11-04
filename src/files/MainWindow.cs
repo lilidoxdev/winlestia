@@ -399,7 +399,7 @@ public sealed partial class MainWindow : Window
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         plus = UI.Flat(UI.Glyph("", 14), 32, new CornerRadius(16));
         plus.Width = 32;
-        plus.ToolTip = "Nouvel onglet (Ctrl+T)";
+        plus.ToolTip = Strings.NewTabCtrlT;
         plus.Click += (_, _) => AddTab(Active.Location);
         tabStrip.Children.Add(plus);
         var scroll = new ScrollViewer
@@ -444,8 +444,8 @@ public sealed partial class MainWindow : Window
         Grid.SetColumn(right, 2);
         var nav = new StackPanel { Orientation = Orientation.Horizontal };
         back = NavButton("", Strings.BackAltLeft, () => Active.Back());
-        forward = NavButton("", "Suivant (Alt+Droite)", () => Active.Forward());
-        up = NavButton("", "Dossier parent (Alt+Haut)", () => Active.Up());
+        forward = NavButton("", Strings.ForwardAltRight, () => Active.Forward());
+        up = NavButton("", Strings.ParentFolderAltUp, () => Active.Up());
         nav.Children.Add(back);
         nav.Children.Add(forward);
         nav.Children.Add(up);
@@ -671,10 +671,10 @@ public sealed partial class MainWindow : Window
             Grid.SetColumnSpan(cell, span);
             grid.Children.Add(cell);
         }
-        Cell(SortColumn.Name, "Nom", 0, 2, false, new Thickness(M3.Sp2 + 4, 0, 0, 0));
+        Cell(SortColumn.Name, Strings.Name, 0, 2, false, new Thickness(M3.Sp2 + 4, 0, 0, 0));
         Cell(SortColumn.Modified, Strings.Modified2, 2, 1, false, new Thickness(8, 0, 0, 0));
         Cell(SortColumn.Type, "Type", 3, 1, false, new Thickness(8, 0, 0, 0));
-        Cell(SortColumn.Size, "Taille", 4, 1, true, new Thickness(0, 0, 12, 0));
+        Cell(SortColumn.Size, Strings.Size, 4, 1, true, new Thickness(0, 0, 12, 0));
         return grid;
     }
 
@@ -749,7 +749,7 @@ public sealed partial class MainWindow : Window
     {
         if (tabs.Count >= MaxTabs && activeView != null)
         {
-            Toast("Trop d'onglets ouverts");
+            Toast(Strings.TooManyTabsOpen);
             return activeView;
         }
         var view = new TabView();
@@ -938,15 +938,15 @@ public sealed partial class MainWindow : Window
                 "",
                 "",
                 Strings.AccessDenied,
-                "Vous n'avez pas l'autorisation d'ouvrir ce dossier.",
+                Strings.YouDoNotHavePermissionTo,
                 Strings.OpenInExplorer,
                 explorer
             ),
             LoadState.NotFound => UI.EmptyState(
                 "",
                 "",
-                "Dossier introuvable",
-                "Ce dossier n'existe pas ou n'est plus disponible.",
+                Strings.FolderNotFound,
+                Strings.ThisFolderDoesNotExistOr,
                 "Remonter",
                 () => Active.Up()
             ),
@@ -958,7 +958,7 @@ public sealed partial class MainWindow : Window
                 Strings.OpenInExplorer,
                 explorer
             ),
-            _ => UI.EmptyState("", "", "Ce dossier est vide", Strings.ThisFolderContainsNoItems),
+            _ => UI.EmptyState("", "", Strings.ThisFolderIsEmpty, Strings.ThisFolderContainsNoItems),
         };
     }
 

@@ -74,7 +74,7 @@ internal static class ScreenShot
     {
         var dialog = new SaveFileDialog
         {
-            Title = "Enregistrer la capture",
+            Title = Strings.SaveTheCapture,
             Filter = "Image PNG|*.png",
             FileName = "capture-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".png",
         };
@@ -403,8 +403,8 @@ internal sealed class CaptureOverlay : Window
                 Margin = new Thickness(5, 6, 5, 6),
             }
         );
-        row.Children.Add(Tool("\uE7A7", "Annuler", Undo));
-        row.Children.Add(Tool("\uE8A5", "Copier le texte de la zone", ExtractText));
+        row.Children.Add(Tool("\uE7A7", Strings.Cancel, Undo));
+        row.Children.Add(Tool("\uE8A5", Strings.CopyTheTextOfTheArea, ExtractText));
         row.Children.Add(
             new Border
             {
@@ -415,8 +415,8 @@ internal sealed class CaptureOverlay : Window
             }
         );
         row.Children.Add(Tool("\uE840", Strings.PinOnScreen, Pin));
-        row.Children.Add(Tool("\uE74E", "Enregistrer en PNG", Save));
-        var copy = Tool("\uE8C8", "Copier", Copy);
+        row.Children.Add(Tool("\uE74E", Strings.SaveAsPNG, Save));
+        var copy = Tool("\uE8C8", Strings.Copy, Copy);
         copy.Background = new SolidColorBrush(Color.FromArgb(70, 255, 255, 255));
         row.Children.Add(copy);
         row.Children.Add(Tool("\uE711", Strings.Close, Close));
@@ -786,7 +786,7 @@ internal sealed class PinWindow : Window
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 VerticalContentAlignment = VerticalAlignment.Top,
             };
-            System.Windows.Automation.AutomationProperties.SetName(editor, "Texte du papier");
+            System.Windows.Automation.AutomationProperties.SetName(editor, Strings.StickyText);
             editor.TextChanged += (_, _) =>
             {
                 note.Text = editor.Text;
@@ -982,11 +982,11 @@ internal static class OcrService
             string text = await RecognizeAsync(image);
             if (string.IsNullOrWhiteSpace(text))
             {
-                owner.ShowToast("Aucun texte lisible dans cette zone");
+                owner.ShowToast(Strings.NoReadableTextInThisArea);
                 return;
             }
-            SystemActions.Copy(owner, text, "Texte");
-            var window = new TextResultWindow(owner, "Texte lu par Windows", text)
+            SystemActions.Copy(owner, text, Strings.Text);
+            var window = new TextResultWindow(owner, Strings.TextReadByWindows, text)
             {
                 Owner = owner.Anchor,
                 ShowInTaskbar = owner.PreviewMode,
@@ -1059,7 +1059,7 @@ internal sealed class TextResultWindow : GlassWindow
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Margin = new Thickness(0, 16, 0, 14),
         };
-        System.Windows.Automation.AutomationProperties.SetName(editor, "Texte reconnu");
+        System.Windows.Automation.AutomationProperties.SetName(editor, Strings.RecognizedText);
         Grid.SetRow(editor, 1);
         ContentHost.Children.Add(editor);
         var actions = new StackPanel
@@ -1067,7 +1067,7 @@ internal sealed class TextResultWindow : GlassWindow
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
         };
-        var copy = UI.Button(Strings.CopyAgain, () => SystemActions.Copy(owner, editor.Text, "Texte"));
+        var copy = UI.Button(Strings.CopyAgain, () => SystemActions.Copy(owner, editor.Text, Strings.Text));
         actions.Children.Add(copy);
         var done = UI.Button("Terminer", Close);
         done.Margin = new Thickness(10, 0, 0, 0);

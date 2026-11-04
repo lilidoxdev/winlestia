@@ -47,7 +47,7 @@ internal sealed class ClockWindow : GlassWindow
         time.Children.Add(hour);
         time.Children.Add(seconds);
         time.ToolTip = Strings.OpenTheQuickCommand2 + owner.PaletteLabel;
-        System.Windows.Automation.AutomationProperties.SetName(time, "Heure · ouvrir la commande rapide");
+        System.Windows.Automation.AutomationProperties.SetName(time, Strings.TimeOpenTheQuickCommand);
         time.MouseLeftButtonUp += (_, _) => owner.TogglePalette();
         var texts = new StackPanel
         {
@@ -82,12 +82,12 @@ internal sealed class ClockWindow : GlassWindow
         };
         shortcutChip = Chip(
             owner.PaletteLabel,
-            "Commande rapide · " + owner.PaletteLabel,
+            Strings.QuickCommand2 + owner.PaletteLabel,
             "\uE721",
             () => owner.TogglePalette()
         );
         chips.Children.Add(shortcutChip);
-        chips.Children.Add(Chip("Note", "Note rapide", "\uE70B", () => owner.OpenNotes()));
+        chips.Children.Add(Chip("Note", Strings.QuickNote, "\uE70B", () => owner.OpenNotes()));
         chips.Children.Add(Chip("Minuteur", Strings.SetATimer, "\uE917", () => owner.OpenFocus()));
         var layout = new Grid();
         layout.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
@@ -149,7 +149,7 @@ internal sealed class ClockWindow : GlassWindow
     internal void RefreshLabels()
     {
         shortcutChip.Content = owner.PaletteLabel;
-        shortcutChip.ToolTip = "Commande rapide · " + owner.PaletteLabel;
+        shortcutChip.ToolTip = Strings.QuickCommand2 + owner.PaletteLabel;
         System.Windows.Automation.AutomationProperties.SetName(shortcutChip, shortcutChip.ToolTip.ToString());
     }
 
@@ -179,7 +179,7 @@ internal sealed class ClockWindow : GlassWindow
     internal static string Greeting(DateTime at) =>
         at.Hour switch
         {
-            < 6 => "Bonne nuit, dj",
+            < 6 => Strings.GoodNightDj,
             < 12 => "Bonjour, dj",
             < 18 => Strings.NiceAfternoonDj,
             _ => "Bonsoir, dj",

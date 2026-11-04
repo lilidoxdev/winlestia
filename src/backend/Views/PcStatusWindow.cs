@@ -19,12 +19,12 @@ internal sealed class PcStatusWindow : GlassWindow
     readonly PcTelemetry telemetry = new();
     readonly SemaphoreSlim lifecycle = new(1, 1);
     readonly TextBlock live = UI.Text(Strings.PreparingSensors, 11, UI.Dim),
-        foot = UI.Text("Collecte suspendue hors de ce panneau", 10, UI.Dim);
-    readonly Meter cpu = new("Processeur", "\uE950", "#96E6F5"),
-        gpu = new("Carte graphique", "\uE7F4", "#BBAAFF");
+        foot = UI.Text(Strings.CollectionPausedOutsideThisPanel, 10, UI.Dim);
+    readonly Meter cpu = new(Strings.Processor, "\uE950", "#96E6F5"),
+        gpu = new(Strings.GraphicsCard, "\uE7F4", "#BBAAFF");
     readonly TextBlock ramValue = UI.Text("—", 25, null, true),
         ramDetail = UI.Text(Strings.AvailableMemory, 10, UI.Dim),
-        ramHeat = UI.Text("Lecture des barrettes…", 10, UI.Dim);
+        ramHeat = UI.Text(Strings.ReadingTheMemoryModules, 10, UI.Dim);
     readonly TextBlock diskValue = UI.Text("—", 13, null, true),
         diskRates = UI.Text(Strings.ReadingAndWriting, 10, UI.Dim),
         networkValue = UI.Text("—", 21, null, true),
@@ -100,7 +100,7 @@ internal sealed class PcStatusWindow : GlassWindow
         var diskHeader = new DockPanel();
         DockPanel.SetDock(diskValue, Dock.Right);
         diskHeader.Children.Add(diskValue);
-        diskHeader.Children.Add(Heading("\uEDA2", "Stockage", "#F3CF91"));
+        diskHeader.Children.Add(Heading("\uEDA2", Strings.Storage, "#F3CF91"));
         disks.Children.Add(diskHeader);
         diskRates.Margin = new Thickness(0, 5, 0, 0);
         disks.Children.Add(diskRates);
@@ -113,7 +113,7 @@ internal sealed class PcStatusWindow : GlassWindow
         content.Children.Add(Card(disks));
         var network = new StackPanel();
         var netHeader = new DockPanel();
-        netHeader.Children.Add(Heading("\uE839", "Connexion", "#96E6F5"));
+        netHeader.Children.Add(Heading("\uE839", Strings.Connection, "#96E6F5"));
         networkName.TextTrimming = TextTrimming.CharacterEllipsis;
         networkName.HorizontalAlignment = HorizontalAlignment.Right;
         networkName.VerticalAlignment = VerticalAlignment.Center;
@@ -131,7 +131,7 @@ internal sealed class PcStatusWindow : GlassWindow
         network.Children.Add(UI.Text(Strings.ReceiveSendRealThroughputNotAn, 9, UI.Dim));
         content.Children.Add(Card(network));
         var footer = new DockPanel { Margin = new Thickness(0, 8, 0, 0) };
-        var info = UI.IconButton("\uE946", "Comprendre les mesures", Explain);
+        var info = UI.IconButton("\uE946", Strings.UnderstandTheMeasurements, Explain);
         info.Width = 28;
         info.Height = 28;
         DockPanel.SetDock(info, Dock.Right);
@@ -216,7 +216,7 @@ internal sealed class PcStatusWindow : GlassWindow
     void Update(PcReading value)
     {
         latest = value;
-        live.Text = "●  En direct · " + value.At.ToString("HH:mm:ss");
+        live.Text = Strings.Live + value.At.ToString("HH:mm:ss");
         live.Foreground = UI.Brush("#A0E7CF");
         cpu.Update(value.Cpu, value.CpuTemperature, value.CpuName, LoadHint(value.Cpu));
         var device = value.Gpus.OrderByDescending(g => g.Load ?? -1).FirstOrDefault();
@@ -226,7 +226,7 @@ internal sealed class PcStatusWindow : GlassWindow
             device?.Name ?? Strings.NoCardDetected,
             device?.MemoryUsedMb is double used && device.MemoryTotalMb is double total
                 ? Strings.Video + (used / 1024).ToString("0.0") + " / " + (total / 1024).ToString("0") + " Go"
-                : "Sonde selon le pilote"
+                : Strings.SensorDependsOnTheDriver
         );
         gpu.Root.ToolTip = string.Join(
             "\n",
@@ -238,18 +238,18 @@ internal sealed class PcStatusWindow : GlassWindow
         ramDetail.Text =
             value.MemoryTotal > 0
                 ? Bytes(value.MemoryTotal - value.MemoryAvailable) + " / " + Bytes(value.MemoryTotal) + Strings.Used
-                : "Mesure indisponible";
+                : Strings.MeasurementUnavailable;
         ramGraph.Push(memoryPercent);
         ramHeat.Text =
             value.MemoryHeat.Length > 0
                 ? string.Join(
                     "     ",
-                    value.MemoryHeat.Select((h, i) => "Barrette " + (i + 1) + " · " + Temp(h.Temperature))
+                    value.MemoryHeat.Select((h, i) => Strings.Module + (i + 1) + " · " + Temp(h.Temperature))
                 )
                 : Strings.TemperatureNoMemoryModuleSensorAccessible;
         ramHeat.ToolTip = string.Join("\n", value.MemoryHeat.Select(h => h.Name + " · " + Temp(h.Temperature)));
         diskValue.Text = Pct(value.DiskBusy) + " actifs";
-        diskRates.Text = "Lecture " + Rate(value.DiskRead) + Strings.Write + Rate(value.DiskWrite);
+        diskRates.Text = Strings.Reading + Rate(value.DiskRead) + Strings.Write + Rate(value.DiskWrite);
         diskGraph.Push(value.DiskBusy);
         UpdateStorage(value);
         networkValue.Text = "↓ " + Rate(value.Download);
@@ -299,7 +299,7 @@ internal sealed class PcStatusWindow : GlassWindow
             track.SizeChanged += (_, _) => fill.Width = track.ActualWidth * used;
             Grid.SetColumn(track, 1);
             row.Children.Add(track);
-            var free = UI.Text(Bytes(drive.Free) + " libres", 10, UI.Dim);
+            var free = UI.Text(Bytes(drive.Free) + Strings.Free, 10, UI.Dim);
             free.TextAlignment = TextAlignment.Right;
             Grid.SetColumn(free, 2);
             row.Children.Add(free);
@@ -314,7 +314,7 @@ internal sealed class PcStatusWindow : GlassWindow
             storageHeat.Children.Add(text);
         }
         if (value.Drives.Length == 0)
-            driveRows.Children.Add(UI.Text("Aucun volume fixe accessible", 11, UI.Dim));
+            driveRows.Children.Add(UI.Text(Strings.NoAccessibleFixedVolume, 11, UI.Dim));
     }
 
     void Explain()
@@ -324,14 +324,14 @@ internal sealed class PcStatusWindow : GlassWindow
             owner,
             this,
             anchor,
-            "Comprendre ton PC",
+            Strings.UnderstandYourPC,
             new[]
             {
                 new MenuAction(Strings.LoadShareOfHardwareInUse, "\uE9D9", () => { }),
                 new MenuAction(Strings.TemperaturesPhysicalSensors, "\uE7F4", () => { }),
                 new MenuAction(Strings.ChartsLast60Readings, "\uE9D2", () => { }),
                 new MenuAction(Strings.StorageAverageDiskActivity, "\uEDA2", () => { }),
-                new MenuAction("Aucune collecte lorsque tu le replies", "\uE769", () => { }),
+                new MenuAction(Strings.NoCollectionWhenYouCollapseIt, "\uE769", () => { }),
                 new MenuAction(
                     Strings.OpenTaskManager,
                     "\uE950",
@@ -369,7 +369,7 @@ internal sealed class PcStatusWindow : GlassWindow
         value.HasValue ? Math.Round(value.Value).ToString("0", CultureInfo.CurrentCulture) + " %" : "—";
 
     internal static string Temp(double? value) =>
-        value.HasValue ? value.Value.ToString("0", CultureInfo.CurrentCulture) + " °C" : "Indisponible";
+        value.HasValue ? value.Value.ToString("0", CultureInfo.CurrentCulture) + " °C" : Strings.Unavailable;
 
     internal static string Bytes(double value) =>
         value >= 1099511627776
@@ -383,7 +383,7 @@ internal sealed class PcStatusWindow : GlassWindow
         : Math.Round(value.Value).ToString("0") + " o/s";
 
     static string LoadHint(double? load) =>
-        !load.HasValue ? "Mesure indisponible"
+        !load.HasValue ? Strings.MeasurementUnavailable
         : load < 35 ? Strings.LightlyLoaded
         : load < 75 ? Strings.Active
         : Strings.HeavilyLoaded;
@@ -400,7 +400,7 @@ internal sealed class PcStatusWindow : GlassWindow
         internal Meter(string title, string glyph, string color)
         {
             Graph = new(color) { Height = 37, Margin = new Thickness(0, 4, 0, 7) };
-            Heat = UI.Text("Lecture de la sonde…", 11, UI.Brush(color));
+            Heat = UI.Text(Strings.ReadingTheSensor, 11, UI.Brush(color));
             var stack = new StackPanel();
             stack.Children.Add(Heading(glyph, title, color));
             model = UI.Text(Strings.DetectingHardware, 9, UI.Dim);

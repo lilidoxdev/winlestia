@@ -21,7 +21,7 @@ internal sealed class WebShortcutWindow : GlassWindow
         Height = 84,
         Stretch = Stretch.Uniform,
     };
-    readonly TextBlock status = UI.Text("Choisis ton image ou conserve le logo actuel.", 12, UI.Dim);
+    readonly TextBlock status = UI.Text(Strings.ChooseYourImageOrKeepThe, 12, UI.Dim);
     readonly CheckBox glass = new() { Content = Strings.ShowAGlassSquareBehindThe };
     readonly Button recrop;
     string sourcePath = "";
@@ -30,7 +30,7 @@ internal sealed class WebShortcutWindow : GlassWindow
     bool manualName;
 
     internal WebShortcutWindow(Coordinator coordinator, WebShortcut? original, bool chooseImage = false)
-        : base("Panneaux Glass — " + (original == null ? "ajouter un site" : "modifier un site"))
+        : base("Panneaux Glass — " + (original == null ? Strings.AddASite : Strings.EditASite))
     {
         Width = 650;
         Height = 640;
@@ -60,14 +60,14 @@ internal sealed class WebShortcutWindow : GlassWindow
             label.Margin = new Thickness(0, 0, 0, 8);
             form.Children.Add(label);
         }
-        Label("ADRESSE DU SITE");
+        Label(Strings.SITEADDRESS);
         url.Text = original?.Url ?? "";
-        System.Windows.Automation.AutomationProperties.SetName(url, "Adresse du site web");
+        System.Windows.Automation.AutomationProperties.SetName(url, Strings.WebsiteAddress);
         url.Margin = new Thickness(0, 0, 0, 16);
         form.Children.Add(url);
-        Label("NOM AU SURVOL");
+        Label(Strings.HOVERNAME);
         name.Text = original?.Name ?? "";
-        System.Windows.Automation.AutomationProperties.SetName(name, "Nom au survol du site");
+        System.Windows.Automation.AutomationProperties.SetName(name, Strings.SiteHoverName);
         name.Margin = new Thickness(0, 0, 0, 20);
         form.Children.Add(name);
         var imageRow = new Grid();
@@ -87,11 +87,11 @@ internal sealed class WebShortcutWindow : GlassWindow
         };
         imageRow.Children.Add(previewFrame);
         var imageTools = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        var choose = UI.Button("Choisir mon image…", () => ChooseImage());
+        var choose = UI.Button(Strings.ChooseMyImage, () => ChooseImage());
         choose.HorizontalAlignment = HorizontalAlignment.Left;
         choose.Margin = new Thickness(0, 0, 0, 9);
         imageTools.Children.Add(choose);
-        recrop = UI.Button("Recadrer l’image…", () => CropImage());
+        recrop = UI.Button(Strings.CropTheImage, () => CropImage());
         recrop.HorizontalAlignment = HorizontalAlignment.Left;
         imageTools.Children.Add(recrop);
         Grid.SetColumn(imageTools, 1);
@@ -139,8 +139,8 @@ internal sealed class WebShortcutWindow : GlassWindow
             HorizontalAlignment = HorizontalAlignment.Right,
             Margin = new Thickness(0, 12, 0, 0),
         };
-        actions.Children.Add(UI.Button("Annuler", Close));
-        var save = UI.Button(original == null ? "Ajouter le site" : "Enregistrer", () => Save(coordinator, original));
+        actions.Children.Add(UI.Button(Strings.Cancel, Close));
+        var save = UI.Button(original == null ? Strings.AddTheSite : Strings.Save, () => Save(coordinator, original));
         save.IsDefault = true;
         save.MinWidth = 150;
         save.Margin = new Thickness(12, 0, 0, 0);
@@ -179,8 +179,8 @@ internal sealed class WebShortcutWindow : GlassWindow
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Choisir le logo du site",
-            Filter = "Images|*.png;*.jpg;*.jpeg;*.ico;*.bmp;*.gif;*.tif;*.tiff|Tous les fichiers|*.*",
+            Title = Strings.ChooseTheSiteLogo,
+            Filter = Strings.ImagesPngJpgJpegIcoBmp,
             CheckFileExists = true,
         };
         if (dialog.ShowDialog(this) == true)

@@ -153,7 +153,7 @@ internal sealed class CpuTempChain : IDisposable
                 s.EverWorked = true;
                 return v;
             }
-            throw new InvalidOperationException("aucune valeur plausible");
+            throw new InvalidOperationException("no plausible value");
         }
         catch (Exception ex)
         {

@@ -146,7 +146,7 @@ internal sealed class DesktopIconsGuard : IDisposable
         worker.Start();
         if (!ready.Wait(2000) || !installed)
         {
-            Store.Log("Surveillance du Bureau: hook indisponible.");
+            Store.Log("Desktop watch: hook unavailable.");
             return false;
         }
         lock (gate)

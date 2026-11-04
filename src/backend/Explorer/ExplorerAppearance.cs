@@ -69,7 +69,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
     readonly string root;
     readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(1) };
     internal uint ExcludedProcess;
-    internal string Status { get; private set; } = "Personnalisation inactive.";
+    internal string Status { get; private set; } = Strings.CustomizationInactive;
     readonly Dictionary<IntPtr, uint[]> frames = new();
     readonly Dictionary<IntPtr, uint> frameOwners = new();
     readonly HashSet<IntPtr> captionFrames = new();
@@ -227,7 +227,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
                     }
                     catch (Exception ex)
                     {
-                        Store.Log("Dossiers visibles: " + ex.Message);
+                        Store.Log("Folders visible: " + ex.Message);
                     }
                     finally
                     {
@@ -240,7 +240,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
             }
             catch (Exception ex)
             {
-                Store.Log("Explorateur visible: " + ex.Message);
+                Store.Log("Explorer visible: " + ex.Message);
             }
             finally
             {
@@ -568,7 +568,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
                 return "";
             foreach (string value in new[] { a, bg, fg })
                 if (!System.Text.RegularExpressions.Regex.IsMatch(value, "^#[0-9a-fA-F]{6}$"))
-                    throw new ArgumentException("Palette invalide");
+                    throw new ArgumentException("Invalid palette");
             accent = a;
             background = bg;
             text = fg;
@@ -610,7 +610,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
             signature = key;
             Status =
                 report.Count(p => p.StartsWith("OK "))
-                + " dossier(s) assorti(s) · "
+                + Strings.MatchingFolderS
                 + report.Count(p => p.StartsWith("SKIPPED "))
                 + Strings.Ignored;
             return string.Join(Environment.NewLine, report);
@@ -775,7 +775,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
     {
         string ini = Path.Combine(folder, "desktop.ini");
         if (!PathMakeSystemFolderW(folder))
-            throw new IOException("Windows refuse la personnalisation.");
+            throw new IOException("Windows refuses the customization.");
         var settings = new Settings
         {
             Size = (uint)Marshal.SizeOf<Settings>(),
@@ -824,7 +824,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
                 catch (Exception ex)
                 {
                     remaining.Add(saved);
-                    Store.Log("Explorateur restauration: " + ex.Message);
+                    Store.Log("Explorer restore: " + ex.Message);
                 }
             }
             Save(remaining);

@@ -81,7 +81,7 @@ internal sealed class GlobalShortcut : IDisposable
                     + Label(wallpaper.Modifiers, wallpaper.Key)
                     + " refused: "
                     + failure
-                    + " · repli sur Ctrl + Alt + W"
+                    + Strings.FallingBackToCtrlAltW
             );
             if (!TrySetWallpaper(3, 0x57, out failure))
                 Store.Log("Wallpaper picker · fallback refused: " + failure);
@@ -132,7 +132,7 @@ internal sealed class GlobalShortcut : IDisposable
             error =
                 code == 1409
                     ? Strings.ThisCombinationIsAlreadyUsedBy2
-                    : "Windows refuse cette combinaison (" + code + ").";
+                    : Strings.WindowsRefusesThisCombination + code + ").";
             WallpaperError = error;
             return false;
         }
@@ -150,7 +150,7 @@ internal sealed class GlobalShortcut : IDisposable
         error = "";
         if (!Valid(nextModifiers, nextKey))
         {
-            error = "Choisis Ctrl ou Alt et une touche de fonction.";
+            error = Strings.ChooseCtrlOrAltAndA2;
             return false;
         }
         if (
@@ -174,7 +174,7 @@ internal sealed class GlobalShortcut : IDisposable
             error =
                 code == 1409
                     ? Strings.ThisCombinationIsAlreadyUsedBy2
-                    : "Windows refuse cette combinaison (" + code + ").";
+                    : Strings.WindowsRefusesThisCombination + code + ").";
             CaptureError = error;
             return false;
         }
@@ -192,7 +192,7 @@ internal sealed class GlobalShortcut : IDisposable
         error = "";
         if (!Valid(nextModifiers, nextKey))
         {
-            error = "Choisis Ctrl ou Alt et une touche de fonction.";
+            error = Strings.ChooseCtrlOrAltAndA2;
             return false;
         }
         if (
@@ -220,7 +220,7 @@ internal sealed class GlobalShortcut : IDisposable
             error =
                 code == 1409
                     ? Strings.ThisCombinationIsAlreadyUsedBy2
-                    : "Windows refuse cette combinaison (" + code + ").";
+                    : Strings.WindowsRefusesThisCombination + code + ").";
             PinError = error;
             return false;
         }
@@ -272,7 +272,7 @@ internal sealed class GlobalShortcut : IDisposable
             error =
                 code == 1409
                     ? Strings.ThisShortcutIsAlreadyInUse
-                    : "Windows refuse ce raccourci (" + code + Strings.ThePreviousOneStaysActive;
+                    : Strings.WindowsRefusesThisShortcut + code + Strings.ThePreviousOneStaysActive;
             Error = error;
             return false;
         }
@@ -310,7 +310,7 @@ internal sealed class GlobalShortcut : IDisposable
             error =
                 code == 1409
                     ? Strings.ThisShortcutIsAlreadyInUse
-                    : "Windows refuse ce raccourci (" + code + Strings.ThePreviousOneStaysActive;
+                    : Strings.WindowsRefusesThisShortcut + code + Strings.ThePreviousOneStaysActive;
             PaletteError = error;
             return false;
         }
@@ -356,13 +356,13 @@ internal sealed class GlobalShortcut : IDisposable
 
     internal static string KeyName(uint key) =>
         key is >= 0x70 and <= 0x87 ? "F" + (key - 0x6F)
-        : key == 0x20 ? "Espace"
+        : key == 0x20 ? Strings.Space
         : ((char)key).ToString();
 
     internal static string Label(uint modifiers, uint key) =>
         ((modifiers & 2) != 0 ? "Ctrl + " : "")
         + ((modifiers & 1) != 0 ? "Alt + " : "")
-        + ((modifiers & 4) != 0 ? "Maj + " : "")
+        + ((modifiers & 4) != 0 ? Strings.Shift : "")
         + ((modifiers & 8) != 0 ? "Win + " : "")
         + KeyName(key);
 

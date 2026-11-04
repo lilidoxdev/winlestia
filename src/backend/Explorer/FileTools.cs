@@ -78,7 +78,7 @@ internal sealed class LargeFilesWindow : GlassWindow
     CancellationTokenSource? cancel;
 
     internal LargeFilesWindow(Coordinator coordinator)
-        : base("Panneaux Glass — gros fichiers")
+        : base(Strings.PanneauxGlassLargeFiles)
     {
         Width = 680;
         Height = Math.Min(700, SystemParameters.WorkArea.Height - 80);
@@ -95,18 +95,18 @@ internal sealed class LargeFilesWindow : GlassWindow
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("Ce qui remplit le disque.", 25, null, true));
+        titles.Children.Add(UI.Text(Strings.WhatFillsTheDisk, 25, null, true));
         var sub = UI.Text(Strings.FilesOver200MBFromLargest, 11, UI.Dim);
         sub.Margin = new Thickness(0, 6, 0, 0);
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
         var actions = new DockPanel { Margin = new Thickness(0, 14, 0, 12) };
-        scan = UI.Button("Choisir un dossier…", Choose);
+        scan = UI.Button(Strings.ChooseAFolder, Choose);
         scan.Padding = new Thickness(14, 8, 14, 8);
         DockPanel.SetDock(scan, Dock.Right);
         actions.Children.Add(scan);
-        status = UI.Text("Aucun dossier choisi", 11, UI.Dim);
+        status = UI.Text(Strings.NoFolderChosen, 11, UI.Dim);
         status.VerticalAlignment = VerticalAlignment.Center;
         status.TextTrimming = TextTrimming.CharacterEllipsis;
         actions.Children.Add(status);
@@ -115,9 +115,9 @@ internal sealed class LargeFilesWindow : GlassWindow
         var first = UI.EmptyState(
             "",
             "",
-            "Aucun dossier choisi",
+            Strings.NoFolderChosen,
             Strings.ChooseAFolderToSeeIts,
-            "Choisir un dossier…",
+            Strings.ChooseAFolder,
             Choose
         );
         list.Children.Add(first);
@@ -163,7 +163,7 @@ internal sealed class LargeFilesWindow : GlassWindow
         var token = cancel.Token;
         list.Children.Clear();
         scan.IsEnabled = false;
-        status.Text = "Analyse de " + folder + "…";
+        status.Text = Strings.Scanning + folder + "…";
         var watch = Stopwatch.StartNew();
         try
         {
@@ -173,8 +173,7 @@ internal sealed class LargeFilesWindow : GlassWindow
             long total = found.Sum(file => file.Size);
             status.Text =
                 found.Count
-                + " fichier"
-                + (found.Count == 1 ? "" : "s")
+                + (found.Count == 1 ? Strings.FileOne : Strings.FileMany)
                 + " · "
                 + SystemTools.Size(total)
                 + " · "
@@ -186,9 +185,9 @@ internal sealed class LargeFilesWindow : GlassWindow
                     UI.EmptyState(
                         "",
                         "",
-                        "Aucun gros fichier",
-                        "Aucun fichier de plus de 200 Mo dans ce dossier.",
-                        "Choisir un autre dossier…",
+                        Strings.NoLargeFiles,
+                        Strings.NoFileOver200MBIn,
+                        Strings.ChooseAnotherFolder,
                         Choose
                     )
                 );
@@ -204,7 +203,7 @@ internal sealed class LargeFilesWindow : GlassWindow
         }
         catch (Exception ex)
         {
-            status.Text = "Analyse impossible : " + ex.Message;
+            status.Text = Strings.ScanFailed + ex.Message;
         }
         finally
         {
@@ -267,7 +266,7 @@ internal sealed class LargeFilesWindow : GlassWindow
         grid.Children.Add(size);
         var reveal = UI.IconButton(
             "\uE8B7",
-            "Afficher dans l’Explorateur",
+            Strings.ShowInExplorer,
             () =>
             {
                 try

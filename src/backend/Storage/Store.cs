@@ -258,7 +258,7 @@ public static class Store
                     }
                     catch (Exception ex2)
                     {
-                        Log("Migration " + folder + " (copie): " + ex2.Message);
+                        Log("Migration " + folder + " (copy): " + ex2.Message);
                     }
                 }
             }

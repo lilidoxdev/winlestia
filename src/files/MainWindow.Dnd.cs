@@ -643,7 +643,7 @@ public sealed partial class MainWindow
         var own = new List<(uint, string)>();
         if (!background && sel.All(i => i.IsDir))
             own.Add((OwnTab, Strings.OpenInANewTab));
-        own.Add((OwnPath, "Copier le chemin"));
+        own.Add((OwnPath, Strings.CopyPath));
         own.Add((OwnExplorer, Strings.OpenInExplorer));
         menu.Prepend(own);
         return new MenuSession

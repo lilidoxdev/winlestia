@@ -53,7 +53,7 @@ internal static class SystemActions
     internal static void Power(Coordinator owner, bool restart)
     {
         string verb = restart ? Strings.Restart : Strings.ShutDown;
-        if (!owner.Confirm(verb + " le PC maintenant ?\n\nEnregistre ton travail avant de continuer."))
+        if (!owner.Confirm(verb + Strings.ThePCNowSaveYourWork))
             return;
         owner.CollapseImmediately();
         TryStart(restart ? "shutdown.exe /r /t 0" : "shutdown.exe /s /t 0", owner);
@@ -70,7 +70,7 @@ internal static class SystemActions
         }
         catch (Exception ex)
         {
-            owner.ShowToast("Copie impossible : " + ex.Message);
+            owner.ShowToast(Strings.CopyFailed + ex.Message);
         }
     }
 
@@ -89,7 +89,7 @@ internal static class SystemActions
         }
         catch (Exception ex)
         {
-            owner.Message("La commande « " + command + Strings.CouldNotBeLaunched + ex.Message);
+            owner.Message(Strings.TheCommand + command + Strings.CouldNotBeLaunched + ex.Message);
         }
     }
 }

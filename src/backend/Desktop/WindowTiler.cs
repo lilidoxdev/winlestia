@@ -560,7 +560,7 @@ internal sealed partial class WindowTiler : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("MosaÃ¯que: " + ex.Message);
+            Store.Log("Tiling: " + ex.Message);
         }
     }
 

@@ -45,7 +45,7 @@ internal sealed class ClipboardService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Presse-papiers: " + ex.Message);
+            Store.Log("Clipboard: " + ex.Message);
         }
         Load();
         timer.Tick += (_, _) => _ = PollAsync();
@@ -114,7 +114,7 @@ internal sealed class ClipboardService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Presse-papiers copie: " + ex.Message);
+            Store.Log("Clipboard copy: " + ex.Message);
         }
     }
 
@@ -170,7 +170,7 @@ internal sealed class ClipboardService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Presse-papiers lecture: " + ex.Message);
+            Store.Log("Clipboard read: " + ex.Message);
         }
         finally
         {
@@ -241,7 +241,7 @@ internal sealed class ClipboardService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Presse-papiers chargement: " + ex.Message);
+            Store.Log("Clipboard load: " + ex.Message);
         }
     }
 
@@ -256,7 +256,7 @@ internal sealed class ClipboardService : IDisposable
         }
         catch (Exception ex)
         {
-            Store.Log("Presse-papiers sauvegarde: " + ex.Message);
+            Store.Log("Clipboard save: " + ex.Message);
         }
     }
 
@@ -278,7 +278,7 @@ internal sealed class ClipboardWindow : GlassWindow
         status;
 
     internal ClipboardWindow(Coordinator coordinator, ClipboardService clipboard)
-        : base("Panneaux Glass — presse-papiers")
+        : base(Strings.PanneauxGlassClipboard)
     {
         owner = coordinator;
         service = clipboard;
@@ -297,7 +297,7 @@ internal sealed class ClipboardWindow : GlassWindow
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("Ton presse-papiers.", 25, null, true));
+        titles.Children.Add(UI.Text(Strings.YourClipboard, 25, null, true));
         var sub = UI.Text(Strings.ClickAnItemToPutIt, 11, UI.Dim);
         sub.Margin = new Thickness(0, 6, 0, 0);
         titles.Children.Add(sub);
@@ -315,7 +315,7 @@ internal sealed class ClipboardWindow : GlassWindow
         searchRow.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         searchRow.Children.Add(UI.Glyph("\uE721", 15));
         search = new TextBox { FontSize = 13, Padding = new Thickness(10, 8, 10, 8) };
-        System.Windows.Automation.AutomationProperties.SetName(search, "Rechercher dans le presse-papiers");
+        System.Windows.Automation.AutomationProperties.SetName(search, Strings.SearchTheClipboard);
         Grid.SetColumn(search, 1);
         searchRow.Children.Add(search);
         Grid.SetRow(searchRow, 1);
@@ -332,7 +332,7 @@ internal sealed class ClipboardWindow : GlassWindow
         var footer = new DockPanel();
         var actions = new StackPanel { Orientation = Orientation.Horizontal };
         var clear = UI.Button(
-            "Vider",
+            Strings.Clear,
             () =>
             {
                 if (owner.Confirm(Strings.ClearTheClipboardHistoryPinnedItems))
@@ -496,7 +496,7 @@ internal sealed class ClipboardWindow : GlassWindow
         pin.BorderBrush = Brushes.Transparent;
         pin.Margin = new Thickness(0, 0, 2, 0);
         tools.Children.Add(pin);
-        var remove = UI.IconButton("\uE74D", "Supprimer", () => service.Remove(item));
+        var remove = UI.IconButton("\uE74D", Strings.Delete, () => service.Remove(item));
         remove.Width = 28;
         remove.Height = 28;
         remove.Background = Brushes.Transparent;

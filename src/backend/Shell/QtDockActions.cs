@@ -430,7 +430,7 @@ internal sealed partial class QtShellBridge
         {
             entry = Store.Entries.FirstOrDefault(e => e.Id == id);
             if (entry == null)
-                return "Cette application n’est plus disponible.";
+                return Strings.ThisAppIsNoLongerAvailable;
         }
         string path = TaskbarNative.LaunchPath(entry.Target);
         var matches = TaskbarNative.Applications().Where(w => SamePath(w.Path, path)).ToArray();

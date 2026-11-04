@@ -31,7 +31,7 @@ internal sealed partial class Coordinator : IDisposable
         WindowStyle = WindowStyle.None,
     };
     readonly GlassWindow rail = new(Strings.PanneauxSideHandle),
-        toolbar = new("Panneaux Glass — commandes");
+        toolbar = new(Strings.PanneauxGlassControls);
     internal QtShellBridge? QtShell;
     readonly ShellTaskbar? taskbar;
     readonly WebStrip websites;
@@ -145,7 +145,7 @@ internal sealed partial class Coordinator : IDisposable
         pc = new PcStatusWindow(this);
         leftArrow.Radius = rightArrow.Radius = 25;
         leftArrow.ContentHost.Children.Add(UI.IconButton("\uE76B", Strings.ShowPCStatus, TogglePc));
-        rightArrow.ContentHost.Children.Add(UI.IconButton("\uE76C", "Afficher les commandes Windows", ToggleControls));
+        rightArrow.ContentHost.Children.Add(UI.IconButton("\uE76C", Strings.ShowWindowsControls, ToggleControls));
         hwnd = new WindowInteropHelper(controller).EnsureHandle();
         source = HwndSource.FromHwnd(hwnd);
         source.AddHook(Hook);
@@ -158,7 +158,7 @@ internal sealed partial class Coordinator : IDisposable
             Store.State.WallpaperShortcut
         );
         Store.Log(
-            "Raccourcis · palette="
+            "Shortcuts · palette="
                 + PaletteLabel
                 + " · capture="
                 + CaptureShortcutLabel
@@ -191,7 +191,7 @@ internal sealed partial class Coordinator : IDisposable
         tray.Visible = true;
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add(Strings.OpenTheSpace, null, (_, _) => Open());
-        menu.Items.Add("Personnaliser", null, (_, _) => Settings());
+        menu.Items.Add(Strings.Customize, null, (_, _) => Settings());
         menu.Items.Add(Strings.RefreshShortcuts, null, (_, _) => RefreshCatalogue());
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(Strings.RestoreTheOrganizedDesktop, null, (_, _) => Rescue());
@@ -216,10 +216,10 @@ internal sealed partial class Coordinator : IDisposable
                     new[]
                     {
                         new MenuAction(Strings.OpenTheSpace, "\uE8A9", Open),
-                        new MenuAction("Commande rapide  ·  " + PaletteLabel, "\uE721", TogglePalette),
-                        new MenuAction("Note rapide", "\uE70B", OpenNotes),
-                        new MenuAction("Minuteur…", "\uE917", OpenFocus),
-                        new MenuAction("Personnaliser", "\uE713", () => Settings(), Separator: true),
+                        new MenuAction(Strings.QuickCommand + PaletteLabel, "\uE721", TogglePalette),
+                        new MenuAction(Strings.QuickNote, "\uE70B", OpenNotes),
+                        new MenuAction(Strings.Timer, "\uE917", OpenFocus),
+                        new MenuAction(Strings.Customize, "\uE713", () => Settings(), Separator: true),
                         new MenuAction(Strings.RefreshShortcuts, "\uE72C", RefreshCatalogue),
                         new MenuAction(Strings.RestoreTheOrganizedDesktop, "\uE777", Rescue, Separator: true),
                         new MenuAction(
@@ -246,7 +246,7 @@ internal sealed partial class Coordinator : IDisposable
             else if (!taskbar.Enable())
             {
                 Store.State.ReplaceTaskbar = false;
-                Store.Log("La barre Windows reste active : secours indisponible.");
+                Store.Log("The Windows taskbar stays active: rescue unavailable.");
             }
         }
         else if (preview && Program.DockPreview)
@@ -420,7 +420,7 @@ internal sealed partial class Coordinator : IDisposable
         brand.Children.Add(dj);
         row.Children.Add(brand);
         // The field lives in the quick command (Ctrl F2) now: the bar keeps only the space and its shortcuts.
-        var hint = UI.Text("Ctrl F2 · tout ton espace en une ligne", 12, UI.Dim);
+        var hint = UI.Text(Strings.CtrlF2YourWholeSpaceOn, 12, UI.Dim);
         hint.VerticalAlignment = VerticalAlignment.Center;
         hint.HorizontalAlignment = HorizontalAlignment.Center;
         hint.Opacity = .75;
@@ -429,7 +429,7 @@ internal sealed partial class Coordinator : IDisposable
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         var favorite = UI.IconButton(
             "\uE734",
-            "Afficher uniquement les favoris",
+            Strings.ShowFavoritesOnly,
             () =>
             {
                 FavoritesOnly = !FavoritesOnly;
@@ -440,7 +440,7 @@ internal sealed partial class Coordinator : IDisposable
         paletteChip = UI.Button(PaletteLabel, TogglePalette);
         paletteChip.Padding = new Thickness(11, 7, 11, 7);
         paletteChip.FontSize = 12;
-        paletteChip.ToolTip = "Commande rapide · " + PaletteLabel;
+        paletteChip.ToolTip = Strings.QuickCommand2 + PaletteLabel;
         System.Windows.Automation.AutomationProperties.SetName(paletteChip, Strings.OpenTheQuickCommand);
         actions.Children.Add(paletteChip);
         actions.Children.Add(UI.IconButton("\uE80F", Strings.BackToHome, ShowHome));
@@ -448,7 +448,7 @@ internal sealed partial class Coordinator : IDisposable
         actions.Children.Add(favorite);
         var pin = UI.IconButton(
             "\uE718",
-            "Garder l’espace ouvert",
+            Strings.KeepTheSpaceOpen,
             () =>
             {
                 Pinned = !Pinned;
@@ -457,9 +457,9 @@ internal sealed partial class Coordinator : IDisposable
         pin.Background = Pinned ? UI.Brush("#45C5E8FF") : UI.Brush("#0FFFFFFF");
         pin.Click += (_, _) => pin.Background = Pinned ? UI.Brush("#45C5E8FF") : UI.Brush("#0FFFFFFF");
         actions.Children.Add(pin);
-        actions.Children.Add(UI.IconButton("\uE713", "Personnaliser l’espace", () => Settings()));
+        actions.Children.Add(UI.IconButton("\uE713", Strings.CustomizeTheSpace, () => Settings()));
         actions.Children.Add(UI.IconButton("\uE777", Strings.RestoreTheOrganizedDesktop, Rescue));
-        actions.Children.Add(UI.IconButton("\uE711", "Replier l’espace", Collapse));
+        actions.Children.Add(UI.IconButton("\uE711", Strings.CollapseTheSpace, Collapse));
         foreach (Button button in actions.Children)
             button.Margin = new Thickness(3, 0, 0, 0);
         Grid.SetColumn(actions, 2);

@@ -380,7 +380,7 @@ internal sealed class DictationService : IDisposable
         {
             recording = false;
             DisposeCapture();
-            Fail("Micro indisponible : " + ex.Message);
+            Fail("Microphone unavailable: " + ex.Message);
             send("dictation:start");
             send("dictation:stop");
             ArmUnload();
@@ -528,7 +528,7 @@ internal sealed class DictationService : IDisposable
         }
         if (failure != null)
         {
-            Fail("Micro : " + failure.Message);
+            Fail(Strings.Microphone + failure.Message);
             ArmUnload();
             return;
         }
@@ -626,9 +626,9 @@ internal sealed class DictationService : IDisposable
             for (int i = 0; i < 500 && held; i++)
                 await Task.Delay(20).ConfigureAwait(false);
             if (held)
-                throw new InvalidOperationException("Touche maintenue");
+                throw new InvalidOperationException("Key held");
             if (!TextInjector.Type(clean))
-                throw new InvalidOperationException("Saisie impossible dans cette application.");
+                throw new InvalidOperationException("Typing is not possible in this application.");
             lock (gate)
             {
                 state = "done";

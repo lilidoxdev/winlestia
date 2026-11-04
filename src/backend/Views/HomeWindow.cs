@@ -27,10 +27,10 @@ internal sealed partial class HomeWindow : GlassWindow
         lastY = -1;
 
     internal HomeWindow(Coordinator coordinator)
-        : base("Panneaux Glass — accueil")
+        : base(Strings.PanneauxGlassHome)
     {
         owner = coordinator;
-        System.Windows.Automation.AutomationProperties.SetName(this, "Panneaux Glass, accueil");
+        System.Windows.Automation.AutomationProperties.SetName(this, Strings.PanneauxGlassHome2);
         Radius = 38;
         ContentHost.Margin = new Thickness(34, 28, 34, 27);
         foreach (var height in new[] { GridLength.Auto, new GridLength(1, GridUnitType.Star), GridLength.Auto })
@@ -44,7 +44,7 @@ internal sealed partial class HomeWindow : GlassWindow
         palette.FontSize = 12;
         palette.Margin = new Thickness(0, 0, 6, 0);
         palette.VerticalAlignment = VerticalAlignment.Center;
-        palette.ToolTip = "Commande rapide · " + owner.PaletteLabel;
+        palette.ToolTip = Strings.QuickCommand2 + owner.PaletteLabel;
         System.Windows.Automation.AutomationProperties.SetName(palette, Strings.OpenTheQuickCommand);
         actions.Children.Add(palette);
         var atelier = UI.Button("Atelier", () => owner.OpenTools());
@@ -52,18 +52,18 @@ internal sealed partial class HomeWindow : GlassWindow
         atelier.FontSize = 12;
         atelier.Margin = new Thickness(0, 0, 6, 0);
         atelier.VerticalAlignment = VerticalAlignment.Center;
-        atelier.ToolTip = "Capture, pipette, presse-papiers, son, espaces de travail";
+        atelier.ToolTip = Strings.CaptureEyedropperClipboardSoundWorkspaces;
         System.Windows.Automation.AutomationProperties.SetName(atelier, Strings.OpenTheWorkshop);
         actions.Children.Add(atelier);
-        actions.Children.Add(UI.IconButton("\uE713", "Personnaliser l’espace", () => owner.Settings()));
-        actions.Children.Add(UI.IconButton("\uE711", "Replier l’accueil", owner.Collapse));
+        actions.Children.Add(UI.IconButton("\uE713", Strings.CustomizeTheSpace, () => owner.Settings()));
+        actions.Children.Add(UI.IconButton("\uE711", Strings.CollapseHome, owner.Collapse));
         var brand = new StackPanel { Orientation = Orientation.Horizontal };
         var logo = UI.Glyph("\uE8A9", 28);
         logo.Foreground = UI.Accent;
         logo.Margin = new Thickness(0, 0, 16, 0);
         brand.Children.Add(logo);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("Ton espace, dj", 29, null, true));
+        titles.Children.Add(UI.Text(Strings.YourSpaceDj, 29, null, true));
         date = UI.Text("", 12, UI.Dim);
         date.Margin = new Thickness(0, 5, 0, 0);
         titles.Children.Add(date);
@@ -81,7 +81,7 @@ internal sealed partial class HomeWindow : GlassWindow
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var footer = new DockPanel { Margin = new Thickness(0, 23, 0, 0) };
-        var all = UI.Button("Tout mon espace   ›", () => owner.ShowWorkspace());
+        var all = UI.Button(Strings.MyWholeSpace2, () => owner.ShowWorkspace());
         all.Padding = new Thickness(22, 13, 22, 13);
         all.Background = UI.Alpha(UI.Accent.Color, 46);
         System.Windows.Automation.AutomationProperties.SetName(all, Strings.OpenTheFourPanels);
@@ -146,7 +146,7 @@ internal sealed partial class HomeWindow : GlassWindow
         string mode = Theme.Current.Tiles;
         date.Text =
             Store.State.Favorites.Count
-            + " favoris · "
+            + Strings.Favorites2
             + Store.Entries.Count
             + Strings.Shortcuts
             + Store.State.Websites.Count
@@ -191,7 +191,7 @@ internal sealed partial class HomeWindow : GlassWindow
         count.VerticalAlignment = VerticalAlignment.Center;
         DockPanel.SetDock(count, Dock.Right);
         titleRow.Children.Add(count);
-        titleRow.Children.Add(UI.Text("Tes favoris", 20, null, true));
+        titleRow.Children.Add(UI.Text(Strings.YourFavorites, 20, null, true));
         body.Children.Add(titleRow);
         var scopes = new WrapPanel { Margin = new Thickness(0, 15, 0, 14) };
         foreach (string id in new[] { "Tous", "apps", "games", "projects", "documents" })
@@ -250,7 +250,7 @@ internal sealed partial class HomeWindow : GlassWindow
                 Margin = new Thickness(20, 8, 20, 18),
                 HorizontalAlignment = HorizontalAlignment.Center,
             };
-            empty.Children.Add(UI.Text("Tes favoris commencent ici", 16, null, true));
+            empty.Children.Add(UI.Text(Strings.YourFavoritesStartHere, 16, null, true));
             var explain = UI.Text(Strings.InThePanelsRightClickA, 13, UI.Dim);
             explain.Margin = new Thickness(0, 9, 0, 13);
             empty.Children.Add(explain);
@@ -288,7 +288,7 @@ internal sealed partial class HomeWindow : GlassWindow
             navigation.Children.Add(number);
             var next = UI.IconButton(
                 "\uE76C",
-                "Favoris suivants",
+                Strings.NextFavorites,
                 () =>
                 {
                     page++;
@@ -327,7 +327,7 @@ internal sealed partial class HomeWindow : GlassWindow
             recent.Children.Add(empty);
         }
         body.Children.Add(recent);
-        var siteLabel = UI.Text("Tes sites", 12, UI.Dim);
+        var siteLabel = UI.Text(Strings.YourSites, 12, UI.Dim);
         siteLabel.VerticalAlignment = VerticalAlignment.Center;
         siteLabel.Margin = new Thickness(0, 0, 12, 0);
         sites.Children.Add(siteLabel);
@@ -382,7 +382,7 @@ internal sealed partial class HomeWindow : GlassWindow
             };
             sites.Children.Add(button);
         }
-        sites.Children.Add(UI.IconButton("\uE710", "Ajouter un site internet", () => owner.AddWebsite()));
+        sites.Children.Add(UI.IconButton("\uE710", Strings.AddAWebsite, () => owner.AddWebsite()));
     }
 
     internal static string BoardGlyph(string id) =>
@@ -638,7 +638,7 @@ internal sealed partial class HomeWindow : GlassWindow
             {
                 new MenuAction(Strings.Open, "\uE8A7", () => owner.Launch(entry)),
                 new MenuAction(
-                    Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris" : "Ajouter aux favoris",
+                    Store.State.Favorites.Contains(entry.Id) ? Strings.RemoveFromFavorites : Strings.AddToFavorites,
                     "\uE734",
                     () =>
                     {
@@ -654,7 +654,7 @@ internal sealed partial class HomeWindow : GlassWindow
                     () => owner.ToggleTaskbarPin(entry)
                 ),
                 new MenuAction(Strings.CustomizeThisShortcut, "\uE70F", () => owner.Edit(entry), Separator: true),
-                new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)),
+                new MenuAction(Strings.ShowLocation, "\uE8B7", () => owner.Reveal(entry)),
             },
             true
         );

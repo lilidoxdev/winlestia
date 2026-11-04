@@ -37,7 +37,7 @@ internal sealed class SystemAudio : IDisposable
         catch (Exception ex)
         {
             ReleaseEndpoint();
-            return new(false, 0, false, "Aucune sortie audio", ex.Message);
+            return new(false, 0, false, Strings.NoAudioOutput, ex.Message);
         }
     }
 
@@ -46,7 +46,7 @@ internal sealed class SystemAudio : IDisposable
         if (endpoint == null)
             Read();
         if (endpoint == null)
-            throw new InvalidOperationException("Aucune sortie audio disponible.");
+            throw new InvalidOperationException("No audio output available.");
         endpoint.AudioEndpointVolume.MasterVolumeLevelScalar = (float)Math.Clamp(percent / 100, 0, 1);
     }
 
@@ -55,7 +55,7 @@ internal sealed class SystemAudio : IDisposable
         if (endpoint == null)
             Read();
         if (endpoint == null)
-            throw new InvalidOperationException("Aucune sortie audio disponible.");
+            throw new InvalidOperationException("No audio output available.");
         endpoint.AudioEndpointVolume.Mute = value;
     }
 
