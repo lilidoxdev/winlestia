@@ -56,3 +56,9 @@ ancestor (`27e07f6`) and is not used. Nothing is pushed.
 - 2026-11-04: 44d3449 hygiene (duplicate item, CS9191, analyzers as suggestions, local CI)
 - 2026-11-04: 125dd1c atomic writes for durable state (AtomicFile 13/13)
 - 2026-11-04: 89f76b2 preferences recovery from .bak (StoreRecovery 10/10); 30 test projects pass; installer to be rebuilt
+- 2026-11-04: f8bc3e2 CSharpier (printWidth 120) and ruff; no line over 500 characters (was 207 over 500, 29 over 1000); one-line loops 246 to 54
+- 2026-11-04: 0a53929 backend split into 12 area namespaces (largest 20% of files, was 81%); AppNameNormalizer as ordered rule table plus KnownDisplayNames
+- 2026-11-04: 888c4c4, 29dd13a French literals out of code (about 535 lines to about 140 data keys and patterns); UI text in Views/Strings.cs (fr/en/es), English logs; StringsTable test in CI
+- 2026-11-04: SQL injection claim investigated: no exploitable injection (parameterised `$u`, EscapeLiteral in the Windows Search query); see SECURITY-AUDIT.md
+- 2026-11-04: live validation: 0.9.0 build installed on the maintainer's PC, UI tested OK. FullscreenWatcher test needs a real foreground desktop (environmental timeout in headless runs)
+- 2026-11-04: version bumped to 0.9.1; notes in docs/RELEASE-0.9.1.md

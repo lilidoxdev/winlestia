@@ -7,7 +7,7 @@
 ;   - déjà installé    → une page propose « Mettre à jour » ou « Désinstaller ».
 
 #define AppName        "Winlestia"
-#define AppVersion     "0.9.0"
+#define AppVersion     "0.9.1"
 #define AppPublisher   "dj"
 #define AppExe         "Panneaux.Glass.exe"
 #define AppId          "{{8E2B7C41-5F1A-4F7B-9C3D-6A2E0D5B7C18}"

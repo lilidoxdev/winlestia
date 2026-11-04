@@ -4,7 +4,7 @@
     <UseWPF>true</UseWPF><ImplicitUsings>disable</ImplicitUsings><Nullable>enable</Nullable>
     <AssemblyName>Winlestia.Files</AssemblyName><RootNamespace>WinlestiaFiles</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets\winlestia-files.ico</ApplicationIcon>
-    <Version>0.9.0</Version><Company>dj</Company><Product>Panneaux</Product>
+    <Version>0.9.1</Version><Company>dj</Company><Product>Panneaux</Product>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>false</SelfContained>
     <PublishReadyToRun>true</PublishReadyToRun><TieredPGO>false</TieredPGO>
     <StartupObject>WinlestiaFiles.Program</StartupObject>

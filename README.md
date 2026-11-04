@@ -8,11 +8,11 @@
 
 <a href="https://discord.gg/5jXv7NRj3Q"><img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join the Winlestia Discord server" height="40"></a>
 
-[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0)
+[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1)
 [![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
 
-[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
+[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
 
 <img src="docs/illustrations/desktop.webp" alt="Winlestia on a Windows 11 desktop" width="100%">
 
@@ -28,7 +28,7 @@ These visuals are motion-design illustrations made in HTML/CSS. They are not scr
 
 ## What is Winlestia
 
-Winlestia is a free, open-source desktop shell for Windows 11, bringing a Caelestia-inspired interface, dynamic themes, glass effects, a customizable dock and powerful desktop tools.
+Winlestia is a free, open-source desktop shell for Windows 11, bringing a Caelestia-inspired interface, dynamic themes, glass effects, a customizable dock and desktop tools.
 
 It replaces the surface of Windows, not the system. The taskbar is swapped for a dock, and a dashboard and glass panels sit on top of your normal desktop. Your files, windows and wallpaper stay where they are. The interface is a port of [Caelestia](https://github.com/caelestia-dots/shell) (Qt Quick), and a .NET 8 service handles the Windows side. Panel colours can be derived from your wallpaper (see [Wallpaper and dynamic theme](#wallpaper-and-dynamic-theme)).
 
@@ -59,7 +59,7 @@ Applications, Games, Projects and Documents boards, your favorites, recent short
 ### Media and quick controls
 <img src="docs/illustrations/media.webp" alt="Media panel" width="100%">
 
-Quick controls include a Wi-Fi network list, per-display brightness (DDC/CI, external displays too) and a "Reduced effects" switch. Audio and per-application mixer panels are included.
+Quick controls include a Wi-Fi network list, per-display brightness (DDC/CI, external displays too) and a "Reduced effects" switch. Audio and per-application mixer panels are included. The media panel shows a readable source name for browsers, updates the playback position, and the audio visualiser follows the playing browser.
 
 ### Performance
 <img src="docs/illustrations/performance.webp" alt="Performance panel" width="100%">
@@ -87,17 +87,17 @@ Opt-in at setup: Command Prompt through [Clink](https://github.com/chrisant996/c
 ### Panels
 <img src="docs/illustrations/panels.webp" alt="Winlestia panels" width="100%">
 
-Also: a Files explorer, messenger and bookmark side rails, an optional push-to-talk dictation (hold AltGr, off by default), and a `winlestia` command line to script the running shell.
+Also: a Files explorer, messenger and bookmark side rails (the dashboard moves aside so the social rail no longer covers its tabs; it reopens on the last tab used), the Glass shell UI in English, French and Spanish (language detected from Windows), an installer that detects the system language, an optional push-to-talk dictation (hold AltGr, off by default), and a `winlestia` command line to script the running shell.
 
 ## Install
 
 Requires **Windows 11 (64-bit)**. No administrator rights needed.
 
-1. Download [`Winlestia-Setup-0.9.0.exe`](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-Setup-0.9.0.exe) from the [release](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
-2. Check it: run `Get-FileHash .\Winlestia-Setup-0.9.0.exe -Algorithm SHA256` in PowerShell and compare the result with the SHA-256 printed in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
-3. Run it. The binaries are **not code-signed**, so SmartScreen will likely warn: choose **More info**, then **Run anyway**.
+1. Download [`Winlestia-Setup-0.9.1.exe`](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.1/Winlestia-Setup-0.9.1.exe) from the [release](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1).
+2. Check it: run `Get-FileHash .\Winlestia-Setup-0.9.1.exe -Algorithm SHA256` in PowerShell and compare the result with the SHA-256 printed in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1).
+3. Run it. The installer is not code-signed yet, so Windows may show a SmartScreen warning: choose **More info**, then **Run anyway**. Code signing is being looked into (SignPath Foundation offers free signing for open-source projects).
 
-After installing, move the pointer to the bottom edge of the screen to reveal the dock. The setup wizard is in French only. Full guide, options, updating and uninstalling: [docs/INSTALL.md](docs/INSTALL.md).
+After installing, move the pointer to the bottom edge of the screen to reveal the dock. The setup wizard is in English by default and uses French or Spanish when Windows is set to one of them. Full guide, options, updating and uninstalling: [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Usage
 
@@ -126,8 +126,7 @@ All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` c
 
 ## Known limitations
 
-- The installer wizard is in French only.
-- The shell panels are translated into English and Spanish; some rarer labels derived from the system may still appear in French. The language is chosen automatically from the Windows display language. To force it, set the `language` key (`auto`, `fr`, `en` or `es`) in `%LOCALAPPDATA%\Panneaux\Caelestia\language.json`. Fallback text is French.
+- The Glass UI is available in French, English and Spanish. The language comes from `Caelestia/language.json` (`auto`, `fr`, `en` or `es` under `%LOCALAPPDATA%\Panneaux\Caelestia\`), then the Windows UI language, then English. Spanish is partial: about 230 of 820 strings have a Spanish text, the others fall back to English.
 - Not tested on a clean machine or virtual machine, and not tested after a real reboot or sign-in (the start-up scheduled task was launched manually).
 - Binaries are unsigned, so SmartScreen may warn.
 - Windows 11 x64 only.
@@ -145,6 +144,8 @@ All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` c
 ## Roadmap
 
 **Shipped in 0.9.0:** Wi-Fi panel, per-display brightness, dashboard audio bars, fullscreen quiet mode, full-screen wallpaper switcher, richer command palette, settings search, tiling shortcuts, `winlestia` command line. See [CHANGELOG.md](CHANGELOG.md).
+
+**Shipped in 0.9.1:** media panel fixes, social rail spacing, English installer with language detection, safer writes of user data, .NET 10. See [docs/RELEASE-0.9.1.md](docs/RELEASE-0.9.1.md).
 
 **Ideas, not promises:** a notification centre, support for enterprise and hidden Wi-Fi networks, more testing on other display layouts, and a code-signed installer.
 

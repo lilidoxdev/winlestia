@@ -11,7 +11,7 @@ This guide is for people who just want Winlestia running, with no technical back
 
 ## 1. Download
 
-Go to the [Releases page](https://github.com/lilidoxdev/winlestia/releases/latest) and download `Winlestia-Setup-0.9.0.exe`, the installer. The SHA-256 used to verify it is in the [v0.9.0 release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
+Go to the [Releases page](https://github.com/lilidoxdev/winlestia/releases/latest) and download `Winlestia-Setup-0.9.1.exe`, the installer. The SHA-256 used to verify it is in the [v0.9.1 release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1).
 
 ## 2. Verify the download (recommended)
 
@@ -21,10 +21,10 @@ The installer is not code-signed (see the next section). A checksum lets you con
 2. Run, adjusting the folder if you did not save to Downloads:
 
    ```powershell
-   Get-FileHash "$env:USERPROFILE\Downloads\Winlestia-Setup-0.9.0.exe" -Algorithm SHA256
+   Get-FileHash "$env:USERPROFILE\Downloads\Winlestia-Setup-0.9.1.exe" -Algorithm SHA256
    ```
 
-3. Compare the `Hash` shown by PowerShell with the SHA-256 in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0). It must match exactly (letter case does not matter).
+3. Compare the `Hash` shown by PowerShell with the SHA-256 in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1). It must match exactly (letter case does not matter).
 
 If the values differ, do not run the file. Download it again, and open an issue if it still differs.
 
@@ -39,7 +39,7 @@ If the checksum matched and you want to continue:
 
 ## 4. Run the setup
 
-The setup wizard is in French only (no other language is offered). The steps are:
+The setup wizard is in English by default and picks French or Spanish when Windows uses one of them. The steps are:
 
 1. **Welcome** and licence (GPL-3.0).
 2. **Tasks** (checked on first install unless noted):
@@ -69,7 +69,7 @@ If something looks wrong, jump to [TROUBLESHOOTING.md](TROUBLESHOOTING.md). The 
 
 ## Updating from an older version
 
-Run the new `Winlestia-Setup-0.9.0.exe`. The setup detects the existing install and offers to update (or reinstall, or uninstall). It closes the running shell itself before replacing files, so you do not need to quit Winlestia first. Your settings in `%LOCALAPPDATA%\Panneaux` are kept. If terminal integration was already enabled, it stays checked.
+Run the new `Winlestia-Setup-0.9.1.exe`. The setup detects the existing install and offers to update (or reinstall, or uninstall). It closes the running shell itself before replacing files, so you do not need to quit Winlestia first. Your settings in `%LOCALAPPDATA%\Panneaux` are kept. If terminal integration was already enabled, it stays checked.
 
 ## Uninstalling
 

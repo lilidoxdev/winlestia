@@ -1,6 +1,6 @@
 # Verification matrix
 
-Branch `quality/community-fixes`, commits `6b1ba4a..17cbda7`. Date: 2026-11-04.
+Branch `quality/community-fixes`, commits `6b1ba4a..29dd13a`. Date: 2026-11-04.
 
 ## Request matrix
 
@@ -16,6 +16,37 @@ Branch `quality/community-fixes`, commits `6b1ba4a..17cbda7`. Date: 2026-11-04.
 | Hygiene | Not requested explicitly | Duplicate ProcessAudio.dll item removed, CS9191 fixed, analyzers enabled as suggestions (`Directory.Build.props`, `.editorconfig`), local CI workflow `.github/workflows/build.yml` (not pushed) | 44d3449 | Build | Backend warning WFO0003 (app.manifest high-DPI, ApplicationHighDpiMode) left on purpose: changing it may alter DPI behaviour |
 | Atomic writes | Robustness | `AtomicFile.cs` / `atomicfile.py` (unique tmp, flush, replace) on preferences, clipboard history, social counts, recents, taskbar lease, tiler exclusions, handler backup, Explorer appearance files; Python language.json, hidden wallpapers, weather city | 125dd1c | `tests/AtomicFile` 13/13 | No power-loss test |
 | Preferences recovery | Robustness | Corrupt JSON: keep `.corrupt.bak`, restore from `.bak`, defaults only if both fail. Transient IO errors retried once, never treated as corruption | 89f76b2 | `tests/StoreRecovery` 10/10 | None |
+
+## Readability metrics (base to now)
+
+| Metric | Base | Now |
+|---|---|---|
+| Lines over 1000 characters | 29 | 0 |
+| Lines over 500 characters | 207 | 0 |
+| One-line loops | 246 | 54 (collection initialisers) |
+| C# namespaces | one dominant namespace (81% of files) | 12 area namespaces (largest 20%) |
+| French literals in code | about 535 lines | data keys and patterns only (about 140 sites: category ids, regexes, preference ids; kept on purpose) |
+| App-name normaliser | chained `Regex.Replace` | ordered rule table plus a dictionary of known display names |
+
+UI text is in `Views/Strings.cs` (fr, en, es); log and exception messages are in English (commits 888c4c4, 29dd13a). The taskbar window title stays French because `TaskbarRescue.cpp` matches it verbatim.
+
+## Formatting and checks
+
+- CSharpier (printWidth 120) and ruff are enforced (`dotnet-tools.json`, `.csharpierrc.json`, `ruff.toml`); formatting commit f8bc3e2 changes no behaviour.
+- `.editorconfig` and analyzers are in place (analyzers as suggestions).
+- CI runs the `StringsTable` test.
+
+## Platform
+
+.NET 8 to .NET 10 (see the .NET 10 row above). Version 0.9.1.
+
+## SQL injection claim
+
+Investigated: no exploitable injection. `BookmarksCore.cs` passes values through the parameterised `$u`; the Windows Search query escapes literals with `EscapeLiteral`. Evidence in `SECURITY-AUDIT.md` (commit 966b58e).
+
+## Live validation (2026-11-04)
+
+The 0.9.0 build was installed on the maintainer's PC and the UI was tested by the user: OK. The `FullscreenWatcher` test needs a real foreground desktop; in headless runs it ends in an environmental timeout.
 
 ## Automated tests
 
@@ -33,7 +64,9 @@ JSON flags all true: Explorer077, Native95, Tiler075. Audio06: variation=True, s
 - Installer compiled: build 1 min 13 s with warm caches.
 - Payload inspected: self-contained runtime, embedded Python, restore tools present, no Unsplash key.
 
-Installer artefact: build/out/Winlestia-Setup-0.9.0.exe (rebuilt on .NET 10; 196,046,165 bytes, SHA256 64c53b17f2c49b08d96f7201b111caea6c7b58857b3c7d77bba516fa02ad4ce2)
+Installer artefact (0.9.0, historical): build/out/Winlestia-Setup-0.9.0.exe (rebuilt on .NET 10; 196,046,165 bytes, SHA256 64c53b17f2c49b08d96f7201b111caea6c7b58857b3c7d77bba516fa02ad4ce2)
+
+0.9.1 artefact: (filled in at publish)
 
 ## Not executed
 
@@ -47,8 +80,8 @@ Installer artefact: build/out/Winlestia-Setup-0.9.0.exe (rebuilt on .NET 10; 196
 
 - Payload contains the build user path in `.pyc` and numpy config. Build from a neutral path such as `C:\wl-build`, as recommended in the `build.ps1` header.
 - `build.ps1` fails if stderr is redirected inside PowerShell (a pip warning becomes fatal).
-- `build.ps1` hard-codes 0.9.0 in its final message.
-- `src/terminal/clink-profile` (3 files) is tracked since v0.7.6 and shipped by `build.ps1`. Owner decision pending.
+- `build.ps1` hard-coded the version in its final message (now 0.9.1, still hard-coded).
+- `src/terminal/clink-profile` (3 files) is tracked since v0.7.6 and shipped by `build.ps1`. Decided: keep tracked; contains no personal data, it is the shipped terminal theme.
 - Autostart task name is `WinlestiaShell`.
 - Swallowed errors left as findings: Store legacy Workspace-v4 migration `catch{}`, DataDir `CreateDirectory` `catch{}`, FilesHandler `LoadBackup` returns null, icon writes `catch{}`, SocialService `QueueSave` `catch{}`.
 - Timers: Coordinator.cs 120 ms timer runs for the process lifetime (cheap; follow-up). Frontend pointer timer 500 ms when idle.

@@ -2,6 +2,29 @@
 
 Earlier releases are described in `docs/RELEASE-*.md`. Release notes for each version are also published on the GitHub Releases page.
 
+## 0.9.1 - 2026-11-04
+
+Changes since 0.9.0.
+
+### Fixed
+
+- **Media panel and visualiser** (#1): readable browser names, track information re-read on change, playback position advances while the dashboard is visible, visualiser follows the playing browser and its child processes.
+- **Social rail** (#2): the dashboard moves aside by the width the rail covers and scales its panes. On a very small screen width the rail can still overlay it. The dashboard reopens on the last tab used (session only).
+- **User data** is written atomically; a corrupt preferences file is kept as `.corrupt.bak` and settings are restored from `.bak`.
+- Bookmarks only open `http` and `https` addresses.
+
+### Changed
+
+- All projects target .NET 10; the installer stays self-contained.
+- Interface text moved to `Views/Strings.cs` (French, English, Spanish; Spanish partial, English fallback). Language order: `Caelestia/language.json`, system culture, English.
+- Code quality: no line over 500 characters, backend split into 12 namespaces, formatters and analyzers added, generated artefacts untracked.
+
+### Installer
+
+- The setup wizard is in English by default and detects the Windows display language (French and Spanish kept).
+- The Caelestia licence and notices are installed with the application.
+- Still not code-signed; code signing is being looked into.
+
 ## 0.9.0 - 2026-10-31
 
 Changes since 0.8.0.
