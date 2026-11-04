@@ -1,6 +1,6 @@
 # Quality pass — progress log
 
-Branch `quality/community-fixes`, a separate worktree,
+Branch `quality/community-fixes`,
 based on `6b1ba4a` (= tag `v0.9.0` + README-only commits; no `src/` or `installer/` difference).
 The installed build reports `0.9.0+a41b13b` (tag `v0.9.0`). `winlestia-0.9.0-clean` is an older
 ancestor (`27e07f6`) and is not used. Nothing is pushed.
@@ -46,3 +46,9 @@ ancestor (`27e07f6`) and is not used. Nothing is pushed.
 - 2026-11-04: audits done (architecture, security, media, social rail/top bar, .NET/installer).
 - 2026-11-04: committed ef8a438 social rail + last tab, b27b22c installer EN/auto-detect, ebac43b media #1 (61 tests)
 - 2026-11-04: lot 4 security hardening (see SECURITY-AUDIT.md)
+- 2026-11-04: 5f2c24a shortcut-name normaliser (43 tests, PowerShell parity)
+- 2026-11-04: b7220cb docs, .editorconfig, 31 generated artefacts untracked
+- 2026-11-04: 659b862 QtShellBridge split into partial files (token equivalence)
+- 2026-11-04: 8857ab3 Coordinator/Models/Visuals split (token equivalence, Preferences JSON order kept)
+- 2026-11-04: 17cbda7 installer ships Caelestia licence and notices
+- 2026-11-04: build + 27 test projects pass; installer Winlestia-Setup-0.9.0.exe built; see MATRIX.md (.NET 10 not done)
