@@ -35,6 +35,13 @@ Item {
     // True while the drawer is moving (y/height changing); the layer exists only then, not during tab slides.
     property bool drawerMoving: false
 
+    // Width the host can give the drawer (0 = unconstrained); panes scale down to fit, see Content.
+    property real maxWidth: 0
+    // Narrowest drawer width the content can shrink to; the host uses it to decide when to stop shrinking.
+    readonly property real minWidth: content.item?.minWidth ?? 0
+    // Drawer width at scale 1, independent of maxWidth.
+    readonly property real naturalWidth: content.item?.naturalWidth ?? 0
+
     visible: height > 0
     implicitHeight: content.implicitHeight
     implicitWidth: content.implicitWidth
@@ -71,6 +78,7 @@ Item {
             visibilities: root.visibilities
             state: root.dashState
             facePicker: root.facePicker
+            availableWidth: root.maxWidth
         }
     }
 }

@@ -34,16 +34,28 @@ Window {
     property real extraHeight:extraOpen?extraBody.implicitHeight+36:0
     property real contentWidth:pageMode==="workspace"?Math.min(1220,Bridge.screenWidth-80):pageMode==="palette"?(palette.item&&palette.item.wide?Math.min(1320,Bridge.screenWidth-80):660):pageMode==="settings"?Math.min(900,Bridge.screenWidth-80):pageMode==="clipboard"?730:pageMode==="tools"?760:pageMode==="audio"||pageMode==="microphone"?650:pageMode==="mixer"?490:pageMode==="capture"?620:450+(pageMode==="controls"?mixerExtent+wifiExtent:0)
 
+    // Social rail reserve. The rail is its own window pinned to the right edge of this same screen (Bridge.screenX/Width).
+    // Only the real overlap between the centred dashboard and the rail is reserved: nothing moves or rescales while they do not
+    // touch; the panel then slides left (up to the screen margin) and only if that is not enough do the panes scale down
+    // (drawer.maxWidth, min scale in Content). On a very small logical width what still cannot fit overlays the dashboard.
+    readonly property bool railBound:pageMode==="dashboard"
+    readonly property real railLeft:Bridge.screenWidth-socialRail.reservedWidth
+    readonly property real dashboardOverlap:railBound?Math.max(0,(Bridge.screenWidth+panelWidth)/2-railLeft):0
+    readonly property real dashboardShift:Math.min(dashboardOverlap,Math.max(0,(Bridge.screenWidth-panelWidth)/2-8))
+    // The rail reveal animates the reserve: panelWidth must then follow the scaled content frame by frame.
+    readonly property bool railMoving:socialRail.reservedWidth>0&&socialRail.reveal<1
     property real panelWidth:Math.ceil((pageMode==="dashboard"?Math.max(600,drawer.implicitWidth||854):contentWidth)+40)
     property real panelHeight:Bridge.fileDragNearTop?0:Math.ceil(Math.max(1,pageMode==="dashboard"?(vis.dashboard?drawer.implicitHeight:peek?82:0):extraHeight))
-    width:Math.max(Math.min(1600,Bridge.screenWidth-16),Math.ceil(panelWidth))
+    // Window width stays stable (wide) unless the panel is shifted by the rail, then it hugs the panel so the shifted window stays on screen.
+    width:dashboardShift>0?Math.ceil(panelWidth)+16:Math.max(Math.min(1600,Bridge.screenWidth-16),Math.ceil(panelWidth))
     height:Math.max(Math.min(900,Bridge.screenHeight-Config.border.thickness),Math.ceil(panelHeight))
-    Behavior on panelWidth {enabled:!Appearance.reducedEffects;Anim{duration:Math.round(250*(Bridge.settings.motionScale??1));easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
+    Behavior on panelWidth {enabled:!Appearance.reducedEffects&&!window.railMoving;Anim{duration:Math.round(250*(Bridge.settings.motionScale??1));easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
     Behavior on panelHeight {enabled:!Appearance.reducedEffects;Anim{duration:Math.round(260*(Bridge.settings.motionScale??1));easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
     onPanelWidthChanged:Bridge.updateSurfaces()
     onPanelHeightChanged:Bridge.updateSurfaces()
     property int dashboardTab:drawer.dashState.currentTab
-    x:Bridge.screenX+(Bridge.screenWidth-width)/2
+    // Centred on the screen, shifted left by the real overlap with the social rail.
+    x:Bridge.screenX+(Bridge.screenWidth-width)/2-dashboardShift
     y:Bridge.screenY+Math.max(0,Config.border.thickness)
     visible:panelHeight>1&&!Bridge.screenFullscreen
     property int servicePage:pageMode==="dashboard"?drawer.dashState.currentTab:pageMode==="controls"?4:pageMode==="clipboard"?6:pageMode==="audio"||pageMode==="microphone"||pageMode==="mixer"?7:5
@@ -52,7 +64,12 @@ Window {
         if(mode==="close"){vis.dashboard=false;peek=false;extraOpen=false;mixerOpen=false;wifiOpen=false;subscribe();return}
         if(mode==="toggle"){if(visible&&pageMode==="dashboard"&&vis.dashboard){openMode("close");return}mode="dashboard"}
         if(mode==="dashboard"||mode==="media"||mode==="performance"||mode==="access"){
-            extraOpen=false;pageMode="dashboard";drawer.dashState.currentTab=mode==="media"?1:mode==="performance"?2:mode==="access"?3:0;vis.dashboard=true;peek=true
+            extraOpen=false;pageMode="dashboard"
+            // Explicit modes pick their tab; a plain dashboard/toggle open keeps the last tab used this session.
+            if(mode==="media")drawer.dashState.currentTab=1
+            else if(mode==="performance")drawer.dashState.currentTab=2
+            else if(mode==="access")drawer.dashState.currentTab=3
+            vis.dashboard=true;peek=true
         }else{
             mixerOpen=false;wifiOpen=false;vis.dashboard=false;peek=false;pageMode=mode.split(":")[0];extraOpen=true
             if(pageMode==="palette")Qt.callLater(()=>{if(palette.item)palette.item.reset()})
@@ -75,7 +92,7 @@ Window {
     PersistentProperties {id:vis;property bool dashboard:false;property bool launcher:false}
     Binding {target:Config.appearance.anim.durations;property:"scale";value:Bridge.settings.motionScale??1}
     // All backgrounds are drawn once by the shared screen surface.
-    Dashboard.Wrapper {id:drawer;y:Math.min(0,window.panelHeight-implicitHeight);anchors.horizontalCenter:parent.horizontalCenter;visibilities:vis;visible:window.pageMode==="dashboard"&&(vis.dashboard||(!window.peek&&window.panelHeight>1))}
+    Dashboard.Wrapper {id:drawer;maxWidth:window.railBound?Math.max(drawer.minWidth,railLeft-16-40):0;y:Math.min(0,window.panelHeight-implicitHeight);anchors.horizontalCenter:parent.horizontalCenter;visibilities:vis;visible:window.pageMode==="dashboard"&&(vis.dashboard||(!window.peek&&window.panelHeight>1))}
     Dashboard.Tabs {anchors.top:parent.top;anchors.topMargin:15;anchors.horizontalCenter:parent.horizontalCenter;width:window.panelWidth-70;nonAnimWidth:width;state:drawer.dashState;visible:window.pageMode==="dashboard"&&window.peek&&!vis.dashboard}
     Item {
         id:extraBody
@@ -145,6 +162,6 @@ Window {
     Connections{target:Bridge;function onShellEvent(event){if(event==="wallpaper-switcher")wallpaperSwitcher.active=!wallpaperSwitcher.active}}
     Loader{id:osdLoader;active:Bridge.settings.osd??true;sourceComponent:Osd{}}
     Dock {id:bottomDock;objectName:"bottomDock"}
-    SocialRail {}
+    SocialRail {id:socialRail}
     BookmarksRail {}
 }

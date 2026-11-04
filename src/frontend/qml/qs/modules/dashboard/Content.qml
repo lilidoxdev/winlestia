@@ -17,6 +17,26 @@ Item {
     readonly property real nonAnimWidth: view.implicitWidth + viewWrapper.anchors.margins * 2
     readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2
 
+    // Width the host can give the drawer (0 = unconstrained). Panes keep their natural layout and the
+    // whole view is scaled uniformly to fit, never below minScale (below that the host stops shrinking).
+    property real availableWidth: 0
+    readonly property real minScale: 0.7
+    // Scale basis follows paneMaxWidth through a short glide so a late-measured wider pane eases the scale
+    // instead of making it jump; rail-driven changes of availableWidth still apply immediately.
+    property real scaleBasis: paneMaxWidth
+    Behavior on scaleBasis {
+        enabled: !Appearance.reducedEffects
+        Anim {
+            duration: Appearance.anim.durations.small
+        }
+    }
+    readonly property real viewScale: availableWidth > 0
+        ? Math.max(minScale, Math.min(1, (availableWidth - viewWrapper.anchors.margins * 2) / scaleBasis))
+        : 1
+    readonly property real minWidth: paneMaxWidth * minScale + viewWrapper.anchors.margins * 2
+    // Unscaled drawer width (independent of the scale, so hosts can compute overlap without a binding loop).
+    readonly property real naturalWidth: paneMaxWidth + viewWrapper.anchors.margins * 2
+
     // Fixed drawer content size: max over panes, only ever grows (when a pane is first measured).
     property real paneMaxWidth: 966
     property real paneMaxHeight: 450
@@ -93,12 +113,16 @@ Item {
                 });
             }
 
-            anchors.fill: parent
+            // Laid out at the natural pane size, then scaled; implicit size is the scaled footprint.
+            width: root.paneMaxWidth
+            height: root.paneMaxHeight
+            scale: root.viewScale
+            transformOrigin: Item.TopLeft
 
             flickableDirection: Flickable.HorizontalFlick
 
-            implicitWidth: root.paneMaxWidth
-            implicitHeight: root.paneMaxHeight
+            implicitWidth: root.paneMaxWidth * root.viewScale
+            implicitHeight: root.paneMaxHeight * root.viewScale
 
             contentX: currentItem.cellX
             contentWidth: row.implicitWidth

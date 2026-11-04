@@ -28,6 +28,9 @@ Window {
     readonly property real baseHeight:Math.min(Math.ceil(contentHeight)+2*(fillet+Appearance.padding.large),Math.max(200,Bridge.screenHeight-80))
     readonly property real fullHeight:panelW>0?Math.max(baseHeight,Math.min(Bridge.screenHeight-160,520)):baseHeight
     readonly property real bumpWidth:railW+panelW*reveal
+    // Live width this rail claims from its screen edge: 0 while collapsed or hidden, rail + drawer + frame inset + gap once expanded.
+    // It follows `reveal`, so neighbours (the dashboard) glide out of the way with the rail instead of being overlaid.
+    readonly property real reservedWidth:reveal*(railW+panelW+inset+Appearance.padding.large)
     readonly property real bumpHeight:baseHeight+(fullHeight-baseHeight)*reveal
     property real offset:shown?0:railW
     // Bump width last sent to the native backdrop (-1 without native glass); content follows the narrower of the two so it never sticks out of either.
