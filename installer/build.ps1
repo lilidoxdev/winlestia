@@ -23,6 +23,11 @@ Write-Host '→ Nettoyage' -ForegroundColor Cyan
 Remove-Item -Recurse -Force $payload -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $payload | Out-Null
 
+# Composants natifs (ignorés par git) : compilés au besoin AVANT le publish, qui copie ProcessAudio.dll.
+$nativeDir = Join-Path $root 'src\backend\native'
+$missingNative = @('RETABLIR_BARRE_WINDOWS.exe','SECOURS_BUREAU.exe','GlassBackdrop.dll','ProcessAudio.dll') | Where-Object { -not (Test-Path (Join-Path $nativeDir $_)) }
+if ($missingNative) { & (Join-Path $root 'tools\build-native.ps1') }   # source unique, partagée avec la CI
+
 Write-Host '→ Backend .NET 10 (auto-suffisant)' -ForegroundColor Cyan
 dotnet publish (Join-Path $root 'src\backend\Panneaux.Glass.csproj') `
     -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:DebugType=none -p:DebugSymbols=false `
