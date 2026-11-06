@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=xfer : big copy (3000 small files + 300 MB file) with native progress window + UI responsiveness, locked file (move, recycle) with the native
 // error dialog dismissed through UI Automation, access-denied folder (navigation message + copy from it), cross-drive copy / move when a second fixed writable drive exists.
 // Needs WINLESTIA_FILES_DATA_DIR under %TEMP% and a fixture folder under %TEMP%\WinlestiaFilesOps (harness). Everything created is removed at the end (ACLs restored first).
@@ -34,11 +35,7 @@ public sealed partial class MainWindow
         p.StandardError.ReadToEnd();
         if (!p.WaitForExit(20000))
         {
-            try
-            {
-                p.Kill();
-            }
-            catch { }
+            Safe.Try(() => p.Kill());
             return -1;
         }
         return p.ExitCode;
@@ -119,7 +116,10 @@ public sealed partial class MainWindow
                             {
                                 seen.AddRange(Uia.Dump(w, 12).Skip(1).Select(x => "    " + x));
                             }
-                            catch { }
+                            catch (Exception)
+                            {
+                                // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+                            }
                         }
                     }
                     Task.Delay(200).Wait();
@@ -162,12 +162,12 @@ public sealed partial class MainWindow
             }
             Check("(a) 300 MB file intact (size, head, tail)", bigOk);
             Check("(a) list matches disk", DiskMatches());
-            try
+            Safe.Try(() =>
             {
                 Directory.Delete(srcA, true);
                 Directory.Delete(dstA, true);
-            }
-            catch { }
+            
+            });
 
             // ---- (b) locked file ----
             string B = Path.Combine(X, "lock"), dstB = Path.Combine(X, "lock-dst");
@@ -274,7 +274,10 @@ public sealed partial class MainWindow
             {
                 RunExe("icacls.exe", denyDir, "/remove:d", sid, "/T", "/C");
             }
-            catch { }
+            catch (Exception)
+            {
+                // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+            }
             Active.Go(F0);
             await WaitLoaded();
             try
@@ -295,3 +298,4 @@ public sealed partial class MainWindow
         Close();
     }
 }
+#endif

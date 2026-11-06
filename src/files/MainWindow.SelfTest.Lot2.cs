@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=lot2 : undo journal, shortcuts (HandleKey), properties / open with (model level), deep search, views, selection (keys + rectangle),
 // drives (device change), "Ce PC", context menu model, AUMID, crash.log. Needs WINLESTIA_FILES_DATA_DIR under %TEMP% and a fixture folder under %TEMP%\WinlestiaFilesOps.
 using System;
@@ -111,11 +112,7 @@ public sealed partial class MainWindow
         Check("(1) undo of the delete restores from the Recycle Bin", restored && File.ReadAllText(del) == "Z", back);
         if (restored)
         {
-            try
-            {
-                File.Delete(del);
-            }
-            catch { }
+            Safe.Try(() => File.Delete(del));
         }
 
         journal.RecordPermanentDelete();
@@ -134,11 +131,7 @@ public sealed partial class MainWindow
               r1);
         if (nf2 != null)
         {
-            try
-            {
-                Directory.Delete(nf2.FullPath, true);
-            }
-            catch { }
+            Safe.Try(() => Directory.Delete(nf2.FullPath, true));
         }
 
         await SetClipboardAsync(new[] { P("c.log") }, false);
@@ -148,11 +141,7 @@ public sealed partial class MainWindow
         File.SetLastWriteTimeUtc(copied, DateTime.UtcNow.AddHours(1));
         string r2 = await UndoAsync();
         Check("(1b) undo of a copy refuses when the copy was modified", File.Exists(copied) && r2.Contains("modifié"), r2);
-        try
-        {
-            File.Delete(copied);
-        }
-        catch { }
+        Safe.Try(() => File.Delete(copied));
 
         File.WriteAllText(P("m1.txt"), "M");
         await SetClipboardAsync(new[] { P("m1.txt") }, true);
@@ -163,12 +152,12 @@ public sealed partial class MainWindow
         Check("(1b) undo of a move refuses when the origin name is taken",
               File.Exists(Path.Combine(dest, "m1.txt")) && File.ReadAllText(P("m1.txt")) == "autre" && r3.Contains("existe déjà"),
               r3);
-        try
+        Safe.Try(() =>
         {
             File.Delete(P("m1.txt"));
             File.Delete(Path.Combine(dest, "m1.txt"));
-        }
-        catch { }
+        
+        });
 
         // ---- 2. properties / open with ----
         Active.Reload();
@@ -223,11 +212,7 @@ public sealed partial class MainWindow
         Active.SetDeepOption(false);
         Active.Go(F);
         await WaitLoaded();
-        try
-        {
-            Directory.Delete(@"\\?\" + Path.Combine(F, new string('l', 50)), true);
-        }
-        catch { }
+        Safe.Try(() => Directory.Delete(@"\\?\" + Path.Combine(F, new string('l', 50)), true));
 
         // ---- 4. views ----
         Press(Key.D2, ModifierKeys.Control | ModifierKeys.Shift);
@@ -336,11 +321,7 @@ public sealed partial class MainWindow
         Check("(6) drive removal updates the list",
               await WaitFor(() => sidebar.DrivesRebuilt > rebuilt && !sidebar.DriveView().Any(d => d.Path.StartsWith("Q:")), 4000));
         QuickAccess.Unpin(pinDir);
-        try
-        {
-            Directory.Delete(pinDir);
-        }
-        catch { }
+        Safe.Try(() => Directory.Delete(pinDir));
         fake.Insert(0, (@"Q:\", "Faux", 50L << 30, 100L << 30));
         Active.Go(ThisPc.Path);
         await WaitFor(() => thisPcWrap != null && ThisPcCards.Count > 0, 4000);
@@ -395,12 +376,9 @@ public sealed partial class MainWindow
 
         Active.Go(F0);
         await WaitLoaded();
-        try
-        {
-            Directory.Delete(F, true);
-        }
-        catch { }
+        Safe.Try(() => Directory.Delete(F, true));
         T($"DONE fails={testFails}");
         Close();
     }
 }
+#endif

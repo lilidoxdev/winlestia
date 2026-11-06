@@ -250,7 +250,10 @@ internal static class Theme
                 var color = (Color)ColorConverter.ConvertFromString(Store.State.CustomPalette.GetValueOrDefault("background", "#fff8f6"));
                 nativeId = color.R * .2126 + color.G * .7152 + color.B * .0722 < 128 ? "nuit" : "shell";
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Store.Log("Themes.Use : " + ex.GetType().Name + ": " + ex.Message);
+            }
         }
         var next = Find(nativeId) ?? Find("nuit")!;
         if (IsShellFamily(next.Id))

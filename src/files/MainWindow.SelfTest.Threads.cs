@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=ctxthreads : which phase of a shell context-menu build leaves OS threads behind, and who owns them (start address -> module+offset, thread description).
 // Variants a (SHBindToParent) b (+GetUIObjectOf) c (+QueryContextMenu) d (+populate submenus), each on the UI STA and on an MTA pool thread, same folder vs fresh folder. Fixture under %TEMP%\WinlestiaFilesOps only.
 // WINLESTIA_FILES_CYCLES (default 20), WINLESTIA_FILES_SETTLE (seconds per variant, default 8).
@@ -32,7 +33,10 @@ public sealed partial class MainWindow
             foreach (ProcessModule m in p.Modules)
                 mods.Add((m.BaseAddress.ToInt64(), m.BaseAddress.ToInt64() + m.ModuleMemorySize, m.ModuleName));
         }
-        catch { }
+        catch (Exception)
+        {
+            // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+        }
         foreach (ProcessThread t in p.Threads)
         {
             string s = "?";
@@ -59,7 +63,10 @@ public sealed partial class MainWindow
                     {
                         st = t.ThreadState + (t.ThreadState == System.Diagnostics.ThreadState.Wait ? "/" + t.WaitReason : "");
                     }
-                    catch { }
+                    catch (Exception)
+                    {
+                        // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+                    }
                     s = $"{where} desc='{d}' {st}";
                 }
                 finally { CloseHandle(h); }
@@ -162,3 +169,4 @@ public sealed partial class MainWindow
         Close();
     }
 }
+#endif

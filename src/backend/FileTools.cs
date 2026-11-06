@@ -40,14 +40,10 @@ internal static class SystemTools
     {
         foreach (var process in Process.GetProcessesByName("explorer"))
         {
-            try
-            {
-                process.Kill();
-            }
-            catch { }
+            Safe.Try(() => process.Kill());
         }
         var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(900) };
-        timer.Tick += (_, _) => { timer.Stop(); try { Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true }); } catch { } };
+        timer.Tick += (_, _) => { timer.Stop(); try { Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true }); } catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException) { Store.Log("FileTools.RestartExplorer : " + ex.GetType().Name + ": " + ex.Message); } };
         timer.Start();
     }
     internal static string Size(long bytes) => bytes >= 1L << 30 ? Math.Round(bytes / (double)(1L << 30), 1) + " Go" : bytes >= 1L << 20 ? Math.Round(bytes / (double)(1L << 20)) + " Mo" : Math.Round(bytes / 1024d) + " Ko";
@@ -164,7 +160,10 @@ internal sealed class LargeFilesWindow : GlassWindow
                 if (info.Length >= 200L * 1024 * 1024)
                     result.Add((path, info.Length));
             }
-            catch { }
+            catch (Exception)
+            {
+                // Fichier inaccessible : absent de la liste des gros fichiers.
+            }
         }
         return result.OrderByDescending(item => item.Item2).Take(200).ToList();
     }
@@ -198,7 +197,7 @@ internal sealed class LargeFilesWindow : GlassWindow
         size.VerticalAlignment = VerticalAlignment.Center;
         Grid.SetColumn(size, 1);
         grid.Children.Add(size);
-        var reveal = UI.IconButton("\uE8B7", "Afficher dans l’Explorateur", () => { try { Process.Start("explorer.exe", "/select,\"" + file.Path + "\""); } catch { } });
+        var reveal = UI.IconButton("\uE8B7", "Afficher dans l’Explorateur", () => { try { Process.Start("explorer.exe", "/select,\"" + file.Path + "\""); } catch (Exception err) when (err is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or InvalidOperationException) { Store.Log("FileTools.Row : " + err.GetType().Name + ": " + err.Message); } });
         reveal.Width = 28;
         reveal.Height = 28;
         reveal.Margin = new Thickness(8, 0, 0, 0);

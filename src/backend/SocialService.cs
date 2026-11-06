@@ -403,7 +403,10 @@ internal sealed class SocialService : IDisposable
             var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(n.Win);
             n.Ctl.Bounds = new System.Drawing.Rectangle(0, 0, Math.Max(1, (int)Math.Round(n.Win.ActualWidth * dpi.DpiScaleX)), Math.Max(1, (int)Math.Round(n.Win.ActualHeight * dpi.DpiScaleY)));
         }
-        catch { }
+        catch (Exception)
+        {
+            // Redimensionnement très fréquent : un contrôle en cours de fermeture est ignoré.
+        }
     }
 
     void ShowWindow(Net n)
@@ -422,7 +425,10 @@ internal sealed class SocialService : IDisposable
             {
                 n.Wv.Resume();
             }
-            catch { }
+            catch (Exception err)
+            {
+                Store.Log("SocialService.ShowWindow : " + err.GetType().Name + ": " + err.Message);
+            }
             n.Suspended = false;
         }
         n.Wv.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
@@ -439,7 +445,10 @@ internal sealed class SocialService : IDisposable
         {
             n.Ctl.MoveFocus(CoreWebView2MoveFocusReason.Programmatic);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Store.Log("SocialService.ShowWindow : " + ex.GetType().Name + ": " + ex.Message);
+        }
     }
 
     void HideWindow(Net n)
@@ -459,7 +468,10 @@ internal sealed class SocialService : IDisposable
                 n.Wv.IsMuted = true;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Store.Log("SocialService.HideWindow : " + ex.GetType().Name + ": " + ex.Message);
+        }
     }
 
     // Plus aucune vue et pas d'arrière-plan : lâche l'environnement pour que les processus msedgewebview2 se terminent ; GetEnvironment le recrée.
@@ -488,7 +500,7 @@ internal sealed class SocialService : IDisposable
         n.Armed = false;
         n.Arming = false;
         n.U.CancelZero();
-        try
+        Safe.Try(() =>
         {
             if (wv != null)
             {
@@ -501,21 +513,12 @@ internal sealed class SocialService : IDisposable
                 wv.NotificationReceived -= OnNotification;
                 wv.ProcessFailed -= OnProcessFailed;
             }
-        }
-        catch { }
-        try
-        {
-            ctl?.Close();
-        }
-        catch { }
+        });
+        Safe.Try(() => ctl?.Close());
         if (win != null)
         {
             n.ForceClose = true;
-            try
-            {
-                win.Close();
-            }
-            catch { }
+            Safe.Try(() => win.Close());
             n.ForceClose = false;
         }
         if (nets.All(x => x.Ctl == null))
@@ -933,7 +936,10 @@ internal sealed class SocialService : IDisposable
                         {
                             n.Wv.Resume();
                         }
-                        catch { }
+                        catch (Exception err)
+                        {
+                            Store.Log("SocialService.SlowTick : " + err.GetType().Name + ": " + err.Message);
+                        }
                         n.Suspended = false;
                     }
             }
@@ -1019,7 +1025,7 @@ internal sealed class SocialService : IDisposable
         if (saveQueued || disposed)
             return;
         saveQueued = true;
-        _ = Task.Run(async () => { try { await Task.Delay(2000); if (disposed) return; dispatcher.Invoke(() => saveQueued = false); WriteNow(); } catch { } });
+        _ = Task.Run(async () => { try { await Task.Delay(2000); if (disposed) return; dispatcher.Invoke(() => saveQueued = false); WriteNow(); } catch (Exception err) { Store.Log("SocialService.QueueSave : " + err.GetType().Name + ": " + err.Message); } });
     }
 
     void WriteNow()
@@ -1060,7 +1066,10 @@ internal sealed class SocialService : IDisposable
                 Directory.CreateDirectory(folder);
                 File.WriteAllText(CountsFile, JsonSerializer.Serialize(MakeFile()));
             }
-            catch { }
+            catch (Exception err) when (err is IOException or UnauthorizedAccessException or JsonException)
+            {
+                Store.Log("SocialService.Dispose : " + err.GetType().Name + ": " + err.Message);
+            }
         }
         environment = null;
     }

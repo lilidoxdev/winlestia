@@ -28,8 +28,14 @@ internal sealed class NvidiaTelemetry : IDisposable
                     devices.Add((handle, name.ToString()));
                 }
         }
-        catch (DllNotFoundException) { }
-        catch (EntryPointNotFoundException) { }
+        catch (DllNotFoundException)
+        {
+            // Pas de pilote NVIDIA : la télémétrie GPU est simplement absente.
+        }
+        catch (EntryPointNotFoundException)
+        {
+            // Pas de pilote NVIDIA : la télémétrie GPU est simplement absente.
+        }
     }
     internal GpuReading[] Read()
     {

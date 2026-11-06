@@ -21,18 +21,18 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
-      # Tests autonomes qui ne demandent ni bureau ni fenêtre (les autres : Audio06, Explorer077, FolderIcons,
-      # FullscreenWatcher, Native95, Tiler075, VirtualDesktops, VsCodeTheme restent locaux).
-      - name: Tests
+      # Tests xUnit (tests/Winlestia.Tests). La categorie Desktop (Audio, Explorateur, icones de dossiers, tiling,
+      # bureaux virtuels, interop native, plein ecran) touche au bureau : elle reste locale.
+      - name: Tests .NET
+        shell: pwsh
+        run: dotnet test tests/Winlestia.Tests -c Release --filter "Category!=Desktop"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Tests Python
         shell: pwsh
         run: |
-          $tests = 'AppCatalogueWatch','AudioBars','AutostartPolicy','BrightnessPolicy','CliCommands','DataDirMigration',
-                   'DesktopReassert','FileSearch','FilesHandler','FilesPinMigration','FilesPreloadPolicy','FilesRouter',
-                   'FramePolicy','NetworkKind','SettingsRefonte','SocialPolicy','StaleDockTarget','TileLogicTests','WifiPolicy'
-          $failed = @()
-          foreach ($t in $tests) {
-            Write-Host "=== $t"
-            dotnet run -c Release --project "tests/$t/$t.csproj"
-            if ($LASTEXITCODE -ne 0) { $failed += $t }
-          }
-          if ($failed) { throw "Tests en échec : $($failed -join ', ')" }
+          python -m pip install -r src/frontend/requirements.txt pytest
+          pytest -q

@@ -367,6 +367,7 @@ internal sealed class FolderTab
         }
         catch (OperationCanceledException)
         {
+            // Énumération annulée par la navigation : résultat partiel jeté.
         }
         catch (Exception ex) { Perf.Log("deep search: " + ex.Message); Post(token, () => DeepDone(new List<FileItem>())); }
     }
@@ -624,6 +625,7 @@ internal sealed class FolderTab
         }
         catch (OperationCanceledException)
         {
+            // Énumération annulée par la navigation : résultat partiel jeté.
         }
         catch (Exception ex)
         {

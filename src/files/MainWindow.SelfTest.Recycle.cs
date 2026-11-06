@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=recycle (resident --background instance, opened once through the pipe on a fixture under %TEMP%\WinlestiaFilesOps):
 // builds WINLESTIA_FILES_RECYCLE_BUILDS native menus (item + background), optionally (WINLESTIA_FILES_RECYCLE_OP=1) starts a copy of <fixture>\bigfile.bin
 // into <fixture>\dest, then hides the window like a user closing it. Marks go to selftest.log; the harness checks the exit code and the pipe.
@@ -36,3 +37,4 @@ public sealed partial class MainWindow
         Close();
     }
 }
+#endif

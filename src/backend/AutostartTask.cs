@@ -33,11 +33,7 @@ internal static class AutostartTask
             var error = process.StandardError.ReadToEndAsync();
             if (!process.WaitForExit(15000))
             {
-                try
-                {
-                    process.Kill();
-                }
-                catch { }
+                Safe.Try(() => process.Kill());
                 text = "délai dépassé";
                 return -1;
             }
@@ -71,7 +67,7 @@ internal static class AutostartTask
             return true;
         }
         catch (Exception ex) { Store.Log("Tâche de démarrage: " + ex.Message); return false; }
-        finally { try { File.Delete(xml); } catch { } }
+        finally { Safe.Try(() => File.Delete(xml)); }
     }
 
     internal static bool Delete()

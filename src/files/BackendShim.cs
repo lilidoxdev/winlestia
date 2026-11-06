@@ -83,7 +83,10 @@ internal static class Store
             if (File.Exists(path))
                 prefs = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(path), new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? prefs;
         }
-        catch { }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            WinlestiaFiles.App.LogLine("BackendShim.Load : " + ex.GetType().Name + ": " + ex.Message);
+        }
         return prefs;
     }
 }

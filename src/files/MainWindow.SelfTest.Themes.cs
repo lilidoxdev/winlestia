@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=themes : for every Winlestia theme (Porcelaine = "shell", Nuit = "nuit", Personnalise = "custom", Automatique = AutoTheme + palette-shell.json)
 // applies the palette through the real PaletteLoader.Refresh path, saves <theme>.png, and measures WCAG contrast of the role pairs the UI really uses.
 // Palette files are written under WINLESTIA_FILES_SHOTDIR\palettes (never the real profile). Then scale-100/125/150/200.png on the last theme.
@@ -164,3 +165,4 @@ public sealed partial class MainWindow
         T($"shot {path} ({pw}x{ph}, logical {w:F0}x{h:F0})");
     }
 }
+#endif

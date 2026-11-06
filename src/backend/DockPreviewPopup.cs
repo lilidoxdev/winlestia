@@ -30,7 +30,10 @@ internal static class DwmThumb
         {
             DwmSetWindowAttribute(window, 33, ref round, 4);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Store.Log("DockPreviewPopup.RoundCorners : " + ex.GetType().Name + ": " + ex.Message);
+        }
     }   // DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_ROUND
     internal static bool Register(IntPtr dest, IntPtr source, out IntPtr thumb, out Size size)
     {
@@ -59,17 +62,17 @@ internal static class DwmThumb
         {
             DwmUpdateThumbnailProperties(thumb, ref props);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Miniature DWM rafraîchie à chaque cycle : un échec transitoire est sans conséquence.
+        }
     }
     internal static void Unregister(ref IntPtr thumb)
     {
         if (thumb == IntPtr.Zero)
             return;
-        try
-        {
-            DwmUnregisterThumbnail(thumb);
-        }
-        catch { }
+        IntPtr handle = thumb;
+        Safe.Try(() => DwmUnregisterThumbnail(handle));
         thumb = IntPtr.Zero;
     }
 }
@@ -93,7 +96,10 @@ internal sealed class DockPreviewForm : Form
         {
             Store.Log("Aperçu du dock (" + where + "): " + ex.Message);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Le journal ne peut pas se journaliser lui-même.
+        }
     }
     readonly List<Tile> tiles = new(); readonly bool live; readonly int maxWidth; readonly Font font, small; int hover = -1; Rectangle overflowArea;
     internal int OverflowCount
@@ -222,7 +228,10 @@ internal sealed class DockPreviewForm : Form
                     Invalidate();
                 }));
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Store.Log("DockPreviewPopup.LoadIcon : " + ex.GetType().Name + ": " + ex.Message);
+            }
         });
     }
     // Diff by hwnd: tiles (and their DWM thumbnails) of surviving windows are kept, vanished ones are released.
@@ -365,7 +374,10 @@ internal sealed class DockPreviewForm : Form
         {
             pal = Theme.Current?.P;
         }
-        catch { }
+        catch (Exception)
+        {
+            // Palette indisponible : couleurs de repli.
+        }
         Color K(Func<M3Palette, System.Windows.Media.Color> pick, Color fallback) => pal == null ? fallback : C(pick(pal));
         var p = new
         {

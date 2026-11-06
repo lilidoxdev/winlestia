@@ -147,7 +147,10 @@ internal static class FileOps
                         if (File.Exists(t) || Directory.Exists(t))
                             existing.Add(t);
                     }
-                    catch { }
+                    catch (Exception)
+                    {
+                        // Chemin inaccessible : traité comme inexistant.
+                    }
                 }
             IFileOperation? op = null;
             Sink? sink = null;
@@ -172,27 +175,19 @@ internal static class FileOps
             }
             finally
             {
-                try
+                Safe.Try(() =>
                 {
                     if (advised)
                         op!.Unadvise(cookie);
-                }
-                catch { }
+
+                });
                 foreach (var o in held)
                 {
-                    try
-                    {
-                        Marshal.FinalReleaseComObject(o);
-                    }
-                    catch { }
+                    Safe.Try(() => Marshal.FinalReleaseComObject(o));
                 }
                 if (op != null)
                 {
-                    try
-                    {
-                        Marshal.FinalReleaseComObject(op);
-                    }
-                    catch { }
+                    Safe.Try(() => Marshal.FinalReleaseComObject(op));
                 }
             }
             // Outside the COM call: stat the new items (find data only) for the folders somebody is looking at.
@@ -223,7 +218,10 @@ internal static class FileOps
                 {
                     Idle?.Invoke();
                 }
-                catch { }
+                catch (Exception err)
+                {
+                    App.LogLine("FileOps.Run : " + err.GetType().Name + ": " + err.Message);
+                }
             }
         })
         {
@@ -260,7 +258,7 @@ internal static class FileOps
                 return s;
             }
             catch { return null; }
-            finally { try { Marshal.FinalReleaseComObject(item); } catch { } }
+            finally { Safe.Try(() => Marshal.FinalReleaseComObject(item)); }
         }
         // A positive HRESULT is not always a success: COPYENGINE_S_PENDING (0x27000B, observed after a cancelled "file in use" prompt: the item is untouched), S_USER_IGNORED (0x270005), S_ALREADY_DONE (0x27000A).
         // S_DONT_PROCESS_CHILDREN (0x270008, folders) and the other S_ codes are real successes.

@@ -75,7 +75,10 @@ internal sealed class M3Palette
                 if (colors.TryGetValue(key, out var v) && v.Length == 7 && v[0] == '#')
                     return H(v);
             }
-            catch { }
+            catch (Exception)
+            {
+                // Couleur invalide : on garde le repli.
+            }
             return H(fallback);
         }
         var bg = Get("background", "#fff8f6");
@@ -346,7 +349,10 @@ internal static class M3
                 if (File.Exists(Path.Combine(candidate, "Rubik.ttf")))
                     return Path.GetFullPath(candidate);
             }
-            catch { }
+            catch (Exception)
+            {
+                // Dossier de polices illisible : on essaie le suivant.
+            }
         }
         return null;
     }
@@ -367,7 +373,10 @@ internal static class M3
                 return new FontFamily(uri, "./#Rubik, " + fallback);
             }
         }
-        catch { }
+        catch (Exception)
+        {
+            // Polices système indisponibles : repli sur la police par défaut.
+        }
         return new FontFamily(fallback);
     }
     // Wallpaper-driven (auto) palette, rebuilt off the UI thread only when the picture changes.

@@ -35,6 +35,7 @@ def default_bases():
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Valve\Steam') as k:
             steam = winreg.QueryValueEx(k, 'SteamPath')[0]
     except Exception:
+        # Steam absent : pas de dossier de fonds Steam.
         pass
     return {
         'localappdata': os.environ.get('LOCALAPPDATA', ''),
@@ -211,6 +212,7 @@ def steam_libraries(bases):
         text = (Path(root) / 'steamapps' / 'libraryfolders.vdf').read_text(encoding='utf-8', errors='replace')
         libs += [m.replace('\\\\', '\\') for m in re.findall(r'"path"\s+"([^"]+)"', text)]
     except OSError:
+        # libraryfolders.vdf absent : seule la bibliothèque principale compte.
         pass
     seen = []
     [seen.append(l) for l in libs if l not in seen]
@@ -426,6 +428,7 @@ def spotlight_image(bases):
                 if os.path.isfile(p) and os.path.getsize(p) > 100_000:
                     candidates.append((os.path.getmtime(p), p))
             except OSError:
+                # Fichier disparu pendant le parcours : ignoré.
                 pass
     return max(candidates)[1] if candidates else ''
 
@@ -536,6 +539,7 @@ def prune_cache(root, limit=CACHE_LIMIT):
         for p in entries[: max(0, len(entries) - limit)]:
             shutil.rmtree(p, ignore_errors=True)
     except OSError:
+        # Nettoyage au mieux du cache : il sera refait au prochain passage.
         pass
 
 
@@ -587,6 +591,7 @@ def _extract_mpv(video, out_dir, deadline, mpv):
                 )
             )  # no window, below-normal priority
         except OSError:
+            # Lancement impossible : pas de miniature pour cette vidéo.
             pass
     for i, tmp, process in processes:
         try:
@@ -599,6 +604,7 @@ def _extract_mpv(video, out_dir, deadline, mpv):
             try:
                 os.replace(shots[0], out_dir / f'f{i}.jpg')
             except OSError:
+                # Image disparue entre la capture et le déplacement : ignorée.
                 pass
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -624,6 +630,7 @@ def extract_frames(video, out_dir, exe=None, timeout=EXTRACT_TIMEOUT, rect=None)
                 process.kill()
                 process.wait(2)
         except OSError:
+            # Processus déjà terminé ou inaccessible : rien à tuer.
             pass
     frames = sorted(str(p) for p in out_dir.glob('f*.jpg') if p.stat().st_size > 0)
     if len(frames) < 2 and exe and time.monotonic() < deadline - 1.5:
@@ -653,6 +660,7 @@ def extract_frames(video, out_dir, exe=None, timeout=EXTRACT_TIMEOUT, rect=None)
                 process.kill()
                 process.wait(2)
         except OSError:
+            # Processus déjà terminé ou inaccessible : rien à tuer.
             pass
         frames = sorted(str(p) for p in out_dir.glob('f*.jpg') if p.stat().st_size > 0)
     if len(frames) < 2 and time.monotonic() < deadline - 0.5:
@@ -682,6 +690,7 @@ def representative_images(source, bases=None, exe=None, timeout=EXTRACT_TIMEOUT)
                 try:
                     os.utime(folder, None)
                 except OSError:
+                    # Date du dossier facultative : le cache reste valide.
                     pass
                 prune_cache(root)
                 return frames

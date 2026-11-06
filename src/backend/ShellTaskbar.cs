@@ -185,11 +185,7 @@ internal sealed class ShellTaskbar : IDisposable
         bars.Clear();
         release?.Set();
         if (guard != null)
-            try
-            {
-                guard.WaitForExit(2200);
-            }
-            catch { }
+            Safe.Try(() => guard.WaitForExit(2200));
         TaskbarNative.Restore(lease);
         guard?.Dispose();
         guard = null;

@@ -61,14 +61,20 @@ internal static class DesktopRecents
             foreach (var item in JsonSerializer.Deserialize<Recent[]>(File.ReadAllText(file)) ?? Array.Empty<Recent>())
                 Put(item.Entry, item.At);
         }
-        catch { }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            Store.Log("DesktopRecents.Loop : " + ex.GetType().Name + ": " + ex.Message);
+        }
         object? shell = null;
         var shortcuts = new Dictionary<string, (DateTime time, string target)>();
         try
         {
             shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")!);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Store.Log("DesktopRecents.Loop : " + ex.GetType().Name + ": " + ex.Message);
+        }
         while (true)
         {
             bool changed = false;
@@ -87,7 +93,10 @@ internal static class DesktopRecents
                     }, item.at);
                     changed = true;
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // Processus fermé ou inaccessible : ignoré.
+                }
             if (DateTime.UtcNow >= nextScan)
             {
                 nextScan = DateTime.UtcNow.AddSeconds(15);
@@ -108,7 +117,10 @@ internal static class DesktopRecents
                                 target = ((dynamic)link).TargetPath;
                                 shortcuts[linkPath] = (at, target);
                             }
-                            catch { }
+                            catch (Exception)
+                            {
+                                // Raccourci illisible : ignoré.
+                            }
                             finally { if (link != null) Marshal.FinalReleaseComObject(link); }
                         }
                         if (!string.IsNullOrEmpty(target) && (File.Exists(target) || Directory.Exists(target)))
@@ -125,7 +137,10 @@ internal static class DesktopRecents
                     if (shortcuts.Count > 128)
                         shortcuts.Clear();
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // Raccourci récent illisible : ignoré.
+                }
             }
             if (changed)
             {
@@ -145,7 +160,10 @@ internal static class DesktopRecents
                     Directory.CreateDirectory(Path.GetDirectoryName(file)!);
                     File.WriteAllText(file, JsonSerializer.Serialize(ordered));
                 }
-                catch { }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+                {
+                    Store.Log("DesktopRecents.Loop : " + ex.GetType().Name + ": " + ex.Message);
+                }
             }
             wake.WaitOne(2000);
         }

@@ -96,11 +96,7 @@ public sealed partial class MainWindow
     {
         if (watchId != 0)
         {
-            try
-            {
-                SHChangeNotifyDeregister(watchId);
-            }
-            catch { }
+            Safe.Try(() => SHChangeNotifyDeregister(watchId));
             watchId = 0;
         }
         watchPath = "";

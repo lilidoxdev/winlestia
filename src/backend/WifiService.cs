@@ -91,7 +91,10 @@ internal sealed class WifiHost : IDisposable
         {
             Refresh(scan);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Rafraîchissement périodique : un échec est retenté au tick suivant, sans journal répété.
+        }
         lock (gate)
         {
             if (open && !disposed)
@@ -214,7 +217,7 @@ internal sealed class WifiHost : IDisposable
         lock (gate)
             stillOpen = open;
         if (stillOpen)
-            _ = Task.Run(() => { try { Refresh(false); } catch { } });
+            _ = Task.Run(() => { try { Refresh(false); } catch (Exception) { /* Rafraîchissement périodique : un échec est retenté au tick suivant, sans journal répété. */ } });
     }
 
     internal static void OpenPortal()
@@ -321,7 +324,10 @@ internal sealed class WifiHost : IDisposable
                     return true;
             }
         }
-        catch { }
+        catch (Exception ex) when (ex is System.Security.SecurityException or System.IO.IOException or UnauthorizedAccessException)
+        {
+            Store.Log("WifiService.LocationDenied : " + ex.GetType().Name + ": " + ex.Message);
+        }
         return false;
     }
 
@@ -493,7 +499,10 @@ internal sealed class WifiHost : IDisposable
                     uint why = payload == IntPtr.Zero ? 0u : (uint)Marshal.ReadInt32(payload, 560);
                     done.TrySetResult(notification == NotifyAttemptFail && why == 0 ? 0x10001u : why);
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // Callback natif : une exception ne doit jamais remonter vers Win32.
+                }
             };
             registered = WlanNative.WlanRegisterNotification(handle, SourceAcm, false, callback, IntPtr.Zero, IntPtr.Zero, out _) == 0;
             IntPtr name = Marshal.StringToHGlobalUni(profile);

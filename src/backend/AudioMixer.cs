@@ -54,7 +54,10 @@ internal sealed class AudioMixer : IDisposable
                     playing |= state == AudioSessionState.AudioSessionStateActive;
                     count++;
                 }
-                catch (System.Runtime.InteropServices.COMException) { }
+                catch (System.Runtime.InteropServices.COMException)
+                {
+                    // Session audio disparue pendant l'énumération : on passe à la suivante.
+                }
             var first = group.First();
             if (count > 0)
                 result.Add(new(first.Id, first.Name, first.Path, first.Pid, Math.Round(volume), muted, playing));
@@ -101,11 +104,17 @@ internal sealed class AudioMixer : IDisposable
                         sessions.Add(new(id, name, path, pid, control));
                         keep = true;
                     }
-                    catch (System.Runtime.InteropServices.COMException) { }
+                    catch (System.Runtime.InteropServices.COMException)
+                    {
+                        // Session audio disparue pendant l'énumération : on passe à la suivante.
+                    }
                     finally { if (!keep) control.Dispose(); }
                 }
             }
-            catch (System.Runtime.InteropServices.COMException) { }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                // Session audio disparue pendant l'énumération : on passe à la suivante.
+            }
         }
     }
     static MixerDevice[] ReadDevices()
@@ -120,7 +129,10 @@ internal sealed class AudioMixer : IDisposable
                 using var device = enumerator.GetDefaultAudioEndpoint((DataFlow)flow, Role.Multimedia);
                 current = device.ID;
             }
-            catch { }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                // Aucun périphérique par défaut (pas de sortie audio) : la valeur reste vide.
+            }
             foreach (var device in enumerator.EnumerateAudioEndPoints((DataFlow)flow, DeviceState.Active))
                 using (device)
                     try
@@ -128,7 +140,10 @@ internal sealed class AudioMixer : IDisposable
                         var gain = device.AudioEndpointVolume;
                         result.Add(new(device.ID, device.FriendlyName, current == device.ID, Math.Round(gain.MasterVolumeLevelScalar * 100), gain.Mute, flow));
                     }
-                    catch (System.Runtime.InteropServices.COMException) { }
+                    catch (System.Runtime.InteropServices.COMException)
+                    {
+                        // Périphérique retiré pendant l'énumération : ignoré.
+                    }
         }
         return result.OrderByDescending(d => d.selected).ThenBy(d => d.name).ToArray();
     }
@@ -155,7 +170,10 @@ internal sealed class AudioMixer : IDisposable
                     gain.Mute = muted.Value;
                 updated++;
             }
-            catch (System.Runtime.InteropServices.COMException) { }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                // Session fermée entre l'énumération et le réglage : rien à régler.
+            }
         if (updated == 0)
             throw new InvalidOperationException("Cette application n’a plus de session audio. Relance sa lecture.");
         Refresh();

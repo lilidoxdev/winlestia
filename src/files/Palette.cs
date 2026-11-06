@@ -77,7 +77,10 @@ internal static class PaletteLoader
                     if (p.TryGetProperty(key, out var v) && v.GetString() is { Length: 7 } s && s[0] == '#')
                         return (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(s);
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // Couleur absente ou invalide : repli sur le thème par défaut.
+                }
                 return fallback;
             }
             d.Surface = Get("m3surface", d.Surface);

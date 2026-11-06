@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=refresh : auto refresh + filter + selection/scroll on a fixture folder (first command-line argument, must live under %TEMP%\WinlestiaFilesOps).
 // WINLESTIA_FILES_SELFTEST=states  : empty / denied / filter screenshots (WINLESTIA_FILES_SHOTDIR). Results: PASS/FAIL lines in selftest.log. Fixture: any folder with >= 12 files.
 using System;
@@ -231,3 +232,4 @@ public sealed partial class MainWindow
         Close();
     }
 }
+#endif

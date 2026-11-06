@@ -254,12 +254,12 @@ internal sealed class AppCatalogueWatcher : IDisposable
         }
         foreach (var watcher in watchers)
         {
-            try
+            Safe.Try(() =>
             {
                 watcher.EnableRaisingEvents = false;
                 watcher.Dispose();
-            }
-            catch { }
+
+            });
         }
         watchers.Clear();
     }

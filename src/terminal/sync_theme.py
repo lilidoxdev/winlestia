@@ -100,6 +100,7 @@ def shell_palette():
         if data.get('mode') == 'auto' and data.get('palette', {}).get('m3primary'):
             return {'palette': data['palette']}
     except (OSError, ValueError):
+        # Préférences absentes ou invalides : on garde le thème par défaut.
         pass
     return None
 
@@ -192,6 +193,7 @@ def apply(values):
         try:
             update_terminal(settings_path, values)
         except (OSError, ValueError, KeyError, StopIteration):
+            # Profil Terminal illisible : on passe au suivant.
             continue
 
 

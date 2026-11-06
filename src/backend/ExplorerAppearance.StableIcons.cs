@@ -45,7 +45,10 @@ internal sealed partial class ExplorerAppearance
             {
                 iconState = File.Exists(StatePath) ? JsonSerializer.Deserialize<IconState>(File.ReadAllText(StatePath)) : null;
             }
-            catch { }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                Store.Log("ExplorerAppearance.StableIcons.LoadState : " + ex.GetType().Name + ": " + ex.Message);
+            }
             return iconState ??= new();
         }
     }
@@ -72,7 +75,7 @@ internal sealed partial class ExplorerAppearance
             else
                 File.Move(temp, path, true);
         }
-        finally { try { File.Delete(temp); } catch { } }
+        finally { Safe.Try(() => File.Delete(temp)); }
     }
     // Stable icon path for a kind; drawn on demand (current accent) if it does not exist yet.
     internal string EnsureIcon(string kind)
@@ -235,7 +238,10 @@ internal sealed partial class ExplorerAppearance
             {
                 SaveState();
             }
-            catch { }
+            catch (Exception err)
+            {
+                Store.Log("ExplorerAppearance.StableIcons.MigrateAsync : " + err.GetType().Name + ": " + err.Message);
+            }
         }
         return (migrated, edited, failed, removed);
     }
@@ -259,7 +265,10 @@ internal sealed partial class ExplorerAppearance
                     foreach (Match m in pattern.Matches(File.ReadAllText(ini)))
                         used.Add(Path.GetFileName(m.Value));
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // desktop.ini illisible : ce dossier est laissé tel quel.
+                }
             }
             var legacy = new Regex(@"^[0-9a-f]{6}-[a-z]+-v2\.ico$", RegexOptions.IgnoreCase);
             foreach (string file in Directory.EnumerateFiles(IconsDir, "*-v2.ico"))
@@ -272,7 +281,10 @@ internal sealed partial class ExplorerAppearance
                     File.Delete(file);
                     removed++;
                 }
-                catch { }
+                catch (Exception err) when (err is IOException or UnauthorizedAccessException)
+                {
+                    Store.Log("ExplorerAppearance.StableIcons.CleanupLegacyIcons : " + err.GetType().Name + ": " + err.Message);
+                }
             }
         }
         catch (Exception ex) { Store.Log("Nettoyage icônes: " + ex.Message); }
@@ -309,14 +321,14 @@ internal sealed partial class ExplorerAppearance
     }
     void DisposeIcons()
     {
-        try
+        Safe.Try(() =>
         {
             lock (iconGate)
             {
                 iconTimer?.Dispose();
                 iconTimer = null;
             }
-        }
-        catch { }
+
+        });
     }
 }

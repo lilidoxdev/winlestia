@@ -137,7 +137,10 @@ internal sealed class DictationService : IDisposable
         {
             suspendTimer.Change(TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
         }
-        catch (ObjectDisposedException) { }
+        catch (ObjectDisposedException)
+        {
+            // Minuterie déjà libérée : arrêt en cours.
+        }
     }
 
     internal void EndCapture()
@@ -146,7 +149,10 @@ internal sealed class DictationService : IDisposable
         {
             suspendTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         }
-        catch (ObjectDisposedException) { }
+        catch (ObjectDisposedException)
+        {
+            // Minuterie déjà libérée : arrêt en cours.
+        }
         capturing = false;
         if (!enabledPref && hook != IntPtr.Zero)
             Unhook();
@@ -404,7 +410,7 @@ internal sealed class DictationService : IDisposable
         if (ReferenceEquals(capture, device))
             capture = null;
         // Libération hors du thread de capture.
-        Task.Run(() => { try { device.Dispose(); } catch { } });
+        Task.Run(() => { Safe.Dispose(device); });
         if (data == null)
         {
             ArmUnload();
@@ -446,7 +452,10 @@ internal sealed class DictationService : IDisposable
         {
             unloadTimer.Change(TimeSpan.FromMinutes(10), Timeout.InfiniteTimeSpan);
         }
-        catch (ObjectDisposedException) { }
+        catch (ObjectDisposedException)
+        {
+            // Minuterie déjà libérée : arrêt en cours.
+        }
     }
 
     void DisposeCapture()
@@ -455,7 +464,7 @@ internal sealed class DictationService : IDisposable
         capture = null;
         samples = null;
         if (device != null)
-            Task.Run(() => { try { device.Dispose(); } catch { } });
+            Task.Run(() => { Safe.Dispose(device); });
     }
 
     // --- transcription (thread de fond) -----------------------------------------------------------
@@ -633,11 +642,7 @@ internal sealed class DictationService : IDisposable
                 catch (Exception ex)
                 {
                     // Fichier corrompu : on le supprime pour forcer un retéléchargement au prochain appui.
-                    try
-                    {
-                        File.Delete(path);
-                    }
-                    catch { }
+                    Safe.Try(() => File.Delete(path));
                     throw new InvalidOperationException("Modèle de dictée illisible, il sera retéléchargé au prochain essai (" + ex.Message + ").");
                 }
                 // Préchauffage (compilation des shaders Vulkan à froid, ~20 s) sur ~1 s de silence, pendant que l'utilisateur parle.
@@ -678,11 +683,7 @@ internal sealed class DictationService : IDisposable
         }
         catch
         {
-            try
-            {
-                File.Delete(part);
-            }
-            catch { }
+            Safe.Try(() => File.Delete(part));
             throw;
         }
         finally { downloading = false; }
@@ -699,11 +700,7 @@ internal sealed class DictationService : IDisposable
             factoryTask = null;
         }
         if (task is { IsCompletedSuccessfully: true })
-            try
-            {
-                task.Result.Dispose();
-            }
-            catch { }
+            Safe.Dispose(task.Result);
     }
 
     public void Dispose()
@@ -720,12 +717,12 @@ internal sealed class DictationService : IDisposable
         var device = capture;
         capture = null;
         if (device != null)
-            try
+            Safe.Try(() =>
             {
                 device.StopRecording();
                 device.Dispose();
-            }
-            catch { }
+
+            });
         unloadTimer.Dispose();
         idleTimer.Dispose();
         suspendTimer.Dispose();
@@ -736,11 +733,7 @@ internal sealed class DictationService : IDisposable
             factoryTask = null;
         }
         if (task is { IsCompletedSuccessfully: true })
-            try
-            {
-                task.Result.Dispose();
-            }
-            catch { }
+            Safe.Dispose(task.Result);
     }
 }
 
@@ -866,7 +859,10 @@ internal static class TextInjector
                     else
                         System.Windows.Forms.Clipboard.Clear();
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Store.Log("DictationService.Paste : " + ex.GetType().Name + ": " + ex.Message);
+                }
             }
             catch (Exception ex) { Store.Log("Dictée: presse-papiers: " + ex.Message); }
         });

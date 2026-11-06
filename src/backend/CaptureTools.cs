@@ -524,7 +524,10 @@ internal sealed class PinWindow : Window
             {
                 window.Topmost = !lower;
             }
-            catch { }
+            catch (Exception err)
+            {
+                Store.Log("CaptureTools.Lower : " + err.GetType().Name + ": " + err.Message);
+            }
     }
     // While the space is open the sheets float between the toolbar and the panels, dimmed and
     // transparent to input: still readable, but not one click of the interface is taken from you.
@@ -545,7 +548,10 @@ internal sealed class PinWindow : Window
             {
                 Native.KeepAbove(new WindowInteropHelper(window).Handle);
             }
-            catch { }
+            catch (Exception err)
+            {
+                Store.Log("CaptureTools.EnsureAbove : " + err.GetType().Name + ": " + err.Message);
+            }
     }
     void ApplySpace(bool open, IntPtr toolbar)
     {
@@ -677,7 +683,7 @@ internal sealed class PinWindow : Window
                 RenderTransform = new RotateTransform(-3),
                 ToolTip = "Glisser par le ruban pour déplacer"
             };
-        tape.MouseLeftButtonDown += (_, _) => { try { DragMove(); } catch { } };
+        tape.MouseLeftButtonDown += (_, _) => { try { DragMove(); } catch (InvalidOperationException) { /* DragMove lève si le bouton est déjà relâché : glissement sans objet. */ } };
         root.Children.Add(tape);
         var close = UI.IconButton("\uE711", "Détacher et supprimer ce papier", Detach);
         close.Width = 24;
@@ -709,7 +715,10 @@ internal sealed class PinWindow : Window
                 {
                     DragMove();
                 }
-                catch { }
+                catch (InvalidOperationException)
+                {
+                    // DragMove lève si le bouton est déjà relâché : glissement sans objet.
+                }
             };
         card.PreviewMouseWheel += (_, e) => Adjust(e);
         LocationChanged += (_, _) => { if (placed) Schedule(); };

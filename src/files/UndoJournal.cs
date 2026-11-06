@@ -216,7 +216,10 @@ internal sealed class UndoJournal
                             nm = (string)it.Name;
                             where = ((string)folder.GetDetailsOf(it, 1)).TrimEnd('\\');
                         }
-                        catch { }
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                        {
+                            App.LogLine("UndoJournal.RestoreAsync : " + ex.GetType().Name + ": " + ex.Message);
+                        }
                         // GetDetailsOf may prefix invisible direction marks
                         where = where.Trim('‎', '‏', '‪', '‬');
                         bool byBin = bin != null && string.Equals(p, bin, StringComparison.OrdinalIgnoreCase);
@@ -237,7 +240,10 @@ internal sealed class UndoJournal
                     {
                         found.InvokeVerb("undelete");
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        App.LogLine("UndoJournal.RestoreAsync : " + ex.GetType().Name + ": " + ex.Message);
+                    }
                     if (!WaitExists(orig))
                     {
                         try
@@ -252,7 +258,10 @@ internal sealed class UndoJournal
                                 }
                             }
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            App.LogLine("UndoJournal.RestoreAsync : " + ex.GetType().Name + ": " + ex.Message);
+                        }
                     }
                     if (WaitExists(orig))
                     {

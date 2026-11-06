@@ -442,7 +442,10 @@ internal sealed class IconLoader : IDisposable
                 if (at > stamp)
                     stamp = at;
             }
-            catch { }
+            catch (Exception)
+            {
+                // Entrée récente illisible : ignorée.
+            }
         }
         return stamp;
     }

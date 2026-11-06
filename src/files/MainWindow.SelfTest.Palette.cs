@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=palette : live palette update. Points Store.DataDir at <fixture>\prefs (never the real preferences), writes a light then a dark choice,
 // sends the "palette" message over this instance's own pipe (WINLESTIA_FILES_PIPE from the harness) and checks that a live token brush changed colour both ways.
 using System;
@@ -81,3 +82,4 @@ public sealed partial class MainWindow
         Close();
     }
 }
+#endif

@@ -218,7 +218,10 @@ internal sealed class ColorPickerWindow : Window
         {
             System.Windows.Clipboard.SetText(value);
         }
-        catch { }
+        catch (Exception err)
+        {
+            Store.Log("ColorTools.Copy : " + err.GetType().Name + ": " + err.Message);
+        }
         Store.State.ColorHistory.RemoveAll(c => string.Equals(c, value, StringComparison.OrdinalIgnoreCase));
         Store.State.ColorHistory.Insert(0, value);
         Store.State.ColorHistory = Store.State.ColorHistory.Take(24).ToList();

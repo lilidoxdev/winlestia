@@ -220,7 +220,10 @@ public sealed partial class MainWindow
                     {
                         Clipboard.SetText(drive);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        App.LogLine("MainWindow.Menu.RunContext : " + ex.GetType().Name + ": " + ex.Message);
+                    }
                 }
                 else
                     CopyPaths(background ? new List<FileItem>() : sel.ToList());

@@ -56,7 +56,10 @@ internal static partial class MonitorBrightness
         {
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, proc, IntPtr.Zero);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Store.Log("MonitorDisplays.Screens : " + ex.GetType().Name + ": " + ex.Message);
+        }
         GC.KeepAlive(proc);
         return found;
     }
@@ -85,7 +88,10 @@ internal static partial class MonitorBrightness
                     map[id] = name;
             }
         }
-        catch { }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+        {
+            Store.Log("MonitorDisplays.FriendlyNames : " + ex.GetType().Name + ": " + ex.Message);
+        }
         return map;
     }
     static PhysicalMonitor[] OpenHandle(IntPtr monitor)
@@ -190,7 +196,10 @@ internal static partial class MonitorBrightness
                 {
                     (ok, raw, min, max) = await Task.Run(() => TryRead(monitor));
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // DDC/CI absent ou moniteur occupé : pas de journal à chaque déplacement du curseur.
+                }
                 lock (sync)
                 {
                     var d = displays[id];
@@ -279,7 +288,10 @@ internal static partial class MonitorBrightness
                 }
                 finally { gate.Release(); }
             }
-            catch { }
+            catch (Exception)
+            {
+                // DDC/CI absent ou moniteur occupé : pas de journal à chaque déplacement du curseur.
+            }
             lock (sync)
             {
                 state.LastWrite = Environment.TickCount64;

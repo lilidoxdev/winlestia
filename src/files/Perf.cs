@@ -63,7 +63,10 @@ internal static class Perf
                     File.AppendAllText(file, text);
                 }
             }
-            catch { }
+            catch (Exception)
+            {
+                // Le journal ne peut pas se journaliser lui-même.
+            }
         });
     }
 }

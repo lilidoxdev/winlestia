@@ -232,7 +232,10 @@ internal sealed class ImageCropWindow : GlassWindow
             if (decoder.Frames[0].Metadata is BitmapMetadata metadata && metadata.GetQuery("/app1/ifd/{ushort=274}") is ushort rotation)
                 orientation = rotation;
         }
-        catch { }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Store.Log("ImageCropWindow.LoadImage : " + ex.GetType().Name + ": " + ex.Message);
+        }
         var image = new BitmapImage();
         image.BeginInit();
         image.CacheOption = BitmapCacheOption.OnLoad;

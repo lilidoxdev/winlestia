@@ -121,7 +121,7 @@ public sealed partial class MainWindow
     {
         SourceInitialized += (_, _) => RegisterDrop();
         ContentRendered += (_, _) => { if (!OwnsDropTarget()) RegisterDrop(); };       // WPF may have registered its own in between
-        Closed += (_, _) => { try { RevokeDragDrop(Hwnd); } catch { } };
+        Closed += (_, _) => { Safe.Try(() => RevokeDragDrop(Hwnd)); };
 
         list.PreviewMouseLeftButtonDown += (_, e) =>
         {
@@ -253,7 +253,10 @@ public sealed partial class MainWindow
         {
             dndHelper?.DragEnter(Hwnd, data, ref pt, allowed);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            App.LogLine("MainWindow.Dnd.DndEnter : " + ex.GetType().Name + ": " + ex.Message);
+        }
         return DndOver(key, pt, allowed, false);
     }
 
@@ -268,7 +271,10 @@ public sealed partial class MainWindow
             {
                 dndHelper?.DragOver(ref pt, effect);
             }
-            catch { }
+            catch (Exception)
+            {
+                // DragOver à chaque mouvement de souris : l'état est resynchronisé à l'appel suivant.
+            }
         }
         return effect;
     }
@@ -279,7 +285,10 @@ public sealed partial class MainWindow
         {
             dndHelper?.DragLeave();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            App.LogLine("MainWindow.Dnd.DndLeave : " + ex.GetType().Name + ": " + ex.Message);
+        }
         DndReset();
     }
 
@@ -293,7 +302,10 @@ public sealed partial class MainWindow
         {
             dndHelper?.Drop(data, ref pt, effect);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            App.LogLine("MainWindow.Dnd.DndDrop : " + ex.GetType().Name + ": " + ex.Message);
+        }
         DndReset();
         if (effect == 0 || spot == null)
             return 0;
@@ -307,11 +319,7 @@ public sealed partial class MainWindow
         SetHot(null);
         if (dndHelper != null)
         {
-            try
-            {
-                Marshal.FinalReleaseComObject(dndHelper);
-            }
-            catch { }
+            Safe.Try(() => Marshal.FinalReleaseComObject(dndHelper));
             dndHelper = null;
         }
         dndData = null;

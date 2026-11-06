@@ -410,7 +410,10 @@ internal static partial class UI
                 image.Effect = shadow;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Store.Log("Visuals.SetIcon : " + ex.GetType().Name + ": " + ex.Message);
+        }
     }
     internal static void Animate(UIElement element, int direction = 1)
     {

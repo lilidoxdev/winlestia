@@ -1915,7 +1915,10 @@ internal sealed class Coordinator : IDisposable
             {
                 process.PriorityClass = ProcessPriorityClass.BelowNormal;
             }
-            catch { }
+            catch (Exception err) when (err is System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                Store.Log("Coordinator.RefreshCatalogue : " + err.GetType().Name + ": " + err.Message);
+            }
             var output = process.StandardOutput.ReadToEndAsync();
             var error = process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
@@ -1995,7 +1998,10 @@ internal sealed class Coordinator : IDisposable
                     Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages");
                 count = key?.SubKeyCount ?? -1;
             }
-            catch { }
+            catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
+            {
+                Store.Log("Coordinator.CatalogueTick : " + ex.GetType().Name + ": " + ex.Message);
+            }
             System.Windows.Application.Current?.Dispatcher.BeginInvoke((Action)(() =>
             {
                 if (disposed)
@@ -2100,7 +2106,10 @@ internal static class Program
                 using var recovery = EventWaitHandle.OpenExisting(@"Local\PanneauxGlassTaskbarRestore");
                 recovery.Set();
             }
-            catch { }
+            catch (Exception)
+            {
+                // Pas d'événement de reprise ouvert : la barre des tâches n'est pas à réveiller.
+            }
             TaskbarNative.RestoreSaved();
             return 0;
         }

@@ -53,11 +53,11 @@ internal static class Toast
         window = null;
         if (toast == null)
             return;
-        try
+        Safe.Try(() =>
         {
             toast.HideImmediately();
             toast.Close();
-        }
-        catch { }
+
+        });
     }
 }

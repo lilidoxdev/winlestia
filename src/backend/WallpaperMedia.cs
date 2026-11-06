@@ -96,11 +96,7 @@ internal static class WallpaperMedia
             string folder = Path.Combine(Path.GetTempPath(), "Winlestia-wallpaper");
             Directory.CreateDirectory(folder);
             foreach (var old in Directory.GetFiles(folder, "cap-*.png").OrderByDescending(File.GetLastWriteTimeUtc).Skip(4))
-                try
-                {
-                    File.Delete(old);
-                }
-                catch { }
+                Safe.Try(() => File.Delete(old));
             string path = Path.Combine(folder, $"cap-{DateTime.UtcNow.Ticks}.png");
             small.Save(path, ImageFormat.Png);
             return path;

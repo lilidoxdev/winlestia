@@ -317,7 +317,10 @@ public sealed partial class MainWindow
             {
                 Clipboard.Clear();
             }
-            catch { }
+            catch (Exception err)
+            {
+                App.LogLine("MainWindow.Ops.PasteAsync : " + err.GetType().Name + ": " + err.Message);
+            }
             SetCut(new HashSet<string>(StringComparer.OrdinalIgnoreCase));
         }
         return result;

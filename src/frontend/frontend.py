@@ -208,6 +208,7 @@ class PipeClient(QThread):
             try:
                 self.handle.close()
             except OSError:
+                # Nettoyage au mieux : le handle peut être déjà fermé.
                 pass
 
 
@@ -425,6 +426,7 @@ class Bridge(QObject):
 
             self._publisher.submit(write)
         except Exception:
+            # Publication de palette facultative : la prochaine mise à jour la rejouera.
             pass
 
     def theme_inputs_changed(self):
@@ -550,6 +552,7 @@ class Bridge(QObject):
                     user32.GetWindowThreadProcessId(user32.WindowFromPoint(cursor), ctypes.byref(owner))
                     self._file_drag_foreign = owner.value != os.getpid()
             except Exception:
+                # Position du curseur illisible pendant un glisser : on garde l'état précédent.
                 pass
         active = (
             down
@@ -985,6 +988,7 @@ class Bridge(QObject):
             folder.mkdir(parents=True, exist_ok=True)
             os.startfile(str(folder))
         except OSError:
+            # Ouverture du dossier facultative : le bouton reste sans effet.
             pass
 
     @Slot(str, result=bool)
@@ -1097,6 +1101,7 @@ class Bridge(QObject):
                 try:
                     os.startfile(key)
                 except OSError:
+                    # Fichier introuvable ou sans application associée : rien à ouvrir.
                     pass
         elif kind == 'file':
             # The backend resolves the path from its own last result; only a generation and an index travel back (queued before the panel closes, which cancels the search).

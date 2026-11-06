@@ -429,7 +429,10 @@ public static class Store
             {
                 Directory.CreateDirectory(d);
             }
-            catch { }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Store.Log("Models.get : " + ex.GetType().Name + ": " + ex.Message);
+            }
             dirEnv = env;
             dirCached = d;
             dirInit = true;
@@ -466,7 +469,10 @@ public static class Store
                 }
             }
         }
-        catch { }
+        catch (Exception)
+        {
+            // Le journal ne peut pas se journaliser lui-même.
+        }
     }
     public static T Read<T>(string path) where T : new()
     {
@@ -549,7 +555,7 @@ public static class Store
                 }
             }
         }
-        catch (Exception ex) { try { Log("Migration: " + ex.Message); } catch { } }
+        catch (Exception ex) { try { Log("Migration: " + ex.Message); } catch (Exception) { /* Le journal ne peut pas se journaliser lui-même. */ } }
     }
     static void CopyTree(string from, string to)
     {
@@ -579,7 +585,10 @@ public static class Store
                     if (doc.RootElement.TryGetProperty("Favorites", out var f))
                         State.Favorites = f.Deserialize<List<string>>() ?? new();
                 }
-                catch { }
+                catch (Exception err) when (err is IOException or UnauthorizedAccessException or JsonException)
+                {
+                    Store.Log("Models.Load : " + err.GetType().Name + ": " + err.Message);
+                }
             }
         }
         State.Normalize();
@@ -694,7 +703,10 @@ public static class Store
             }
             return best == null ? null : Path.Combine(best, name);
         }
-        catch { }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Store.Log("Models.HealStaleExe : " + ex.GetType().Name + ": " + ex.Message);
+        }
         return null;
     }
     static void RepairMovedTarget(Entry entry)

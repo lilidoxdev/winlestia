@@ -91,7 +91,10 @@ internal static class NetworkKindWatcher
             {
                 Changed?.Invoke();
             }
-            catch { }
+            catch (Exception)
+            {
+                // Un abonné défaillant ne doit pas arrêter la veille réseau.
+            }
         }
     }
 
@@ -111,7 +114,10 @@ internal static class NetworkKindWatcher
             {
                 Changed?.Invoke();
             }
-            catch { }
+            catch (Exception)
+            {
+                // Un abonné défaillant ne doit pas arrêter la veille réseau.
+            }
         }
     }
 

@@ -9,12 +9,15 @@
     <PublishReadyToRun>true</PublishReadyToRun><TieredPGO>false</TieredPGO>
     <StartupObject>WinlestiaFiles.Program</StartupObject>
     <NoWarn>$(NoWarn);CS0649</NoWarn>
+    <!-- Auto-tests (MainWindow.SelfTest.*.cs) absents du binaire livré : dotnet build -p:SelfTest=true pour les inclure. -->
+    <DefineConstants Condition="'$(SelfTest)'=='true'">$(DefineConstants);WINLESTIA_SELFTEST</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="Assets\winlestia-files.ico" />
   </ItemGroup>
   <ItemGroup>
     <!-- Shared tokens, linked not copied. Theme/Store/UI/Motion are satisfied by BackendShim.cs (Visuals.cs and Themes.cs drag in GlassWindow, Native, Motion, Store...). -->
+    <Compile Include="..\backend\Safe.cs" Link="Shared\Safe.cs" />
     <Compile Include="..\backend\Tokens.cs" Link="Shared\Tokens.cs" />
     <Compile Include="..\backend\UiTokens.cs" Link="Shared\UiTokens.cs" />
     <Compile Include="..\backend\FilesPipe.cs" Link="Shared\FilesPipe.cs" />

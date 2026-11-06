@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=ops : scripted file operations on a fixture folder (first command-line argument, must live under %TEMP%\WinlestiaFilesOps).
 // Fixture layout expected: file001.txt..file060.txt, big\ (500 files), ext\ (x1.txt x2.txt m1.txt). Results: PASS/FAIL lines in %LOCALAPPDATA%\Winlestia\Files\selftest.log.
 using System;
@@ -343,3 +344,4 @@ public sealed partial class MainWindow
         Close();
     }
 }
+#endif

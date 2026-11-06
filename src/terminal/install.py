@@ -14,6 +14,7 @@ def registry(path, name, value=None, remove=False):
             try:
                 winreg.DeleteValue(key, name)
             except FileNotFoundError:
+                # Valeur Run déjà absente : rien à supprimer.
                 pass
         elif value is not None:
             winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
@@ -362,6 +363,7 @@ def note_written(package, **values):
         else:
             temporary.unlink(missing_ok=True)
     except (OSError, ValueError, KeyError, TypeError):
+        # Nettoyage au mieux : le fichier de réglages peut avoir disparu.
         pass
 
 
@@ -555,6 +557,7 @@ def restore():
     try:
         stop_previous_sync(registry(RUN, 'WinlestiaTerminalTheme') or run_command())
     except (OSError, subprocess.SubprocessError):
+        # Aucune synchro à arrêter ou arrêt déjà fait.
         pass
     restored = STATE / 'state.restored.json'
     os.replace(path, restored)
@@ -604,6 +607,7 @@ def restore():
     try:
         policy(restore=True)
     except (OSError, subprocess.CalledProcessError):
+        # Stratégie déjà levée ou inaccessible : restauration poursuivie.
         pass
 
 

@@ -44,16 +44,8 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
     {
         if (endpoint == null)
             return;
-        try
-        {
-            endpoint.AudioEndpointVolume.OnVolumeNotification -= OnVolume;
-        }
-        catch { }
-        try
-        {
-            endpoint.Dispose();
-        }
-        catch { }
+        Safe.Try(() => endpoint.AudioEndpointVolume.OnVolumeNotification -= OnVolume);
+        Safe.Dispose(endpoint);
         endpoint = null;
     }
     void AttachMic()
@@ -75,16 +67,8 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
     {
         if (mic == null)
             return;
-        try
-        {
-            mic.AudioEndpointVolume.OnVolumeNotification -= OnMic;
-        }
-        catch { }
-        try
-        {
-            mic.Dispose();
-        }
-        catch { }
+        Safe.Try(() => mic.AudioEndpointVolume.OnVolumeNotification -= OnMic);
+        Safe.Dispose(mic);
         mic = null;
     }
     void OnMic(AudioVolumeNotificationData data)
@@ -100,7 +84,7 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
         {
             var watcher = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM WmiMonitorBrightnessEvent"));
             watcher.Scope = new ManagementScope(@"root\wmi");
-            watcher.EventArrived += (_, e) => { try { int value = Math.Clamp(Convert.ToInt32(e.NewEvent["Brightness"]), 0, 100); _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || value == lastBrightness) return; lastBrightness = value; extra?.Invoke("osd:brightness:" + value); })); } catch { } };
+            watcher.EventArrived += (_, e) => { try { int value = Math.Clamp(Convert.ToInt32(e.NewEvent["Brightness"]), 0, 100); _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || value == lastBrightness) return; lastBrightness = value; extra?.Invoke("osd:brightness:" + value); })); } catch (Exception) { /* Événement WMI fréquent : une valeur illisible est ignorée. */ } };
             watcher.Start();
             brightnessWatcher = watcher;
         }
@@ -112,16 +96,8 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
         brightnessWatcher = null;
         if (watcher == null)
             return;
-        try
-        {
-            watcher.Stop();
-        }
-        catch { }
-        try
-        {
-            watcher.Dispose();
-        }
-        catch { }
+        Safe.Try(() => watcher.Stop());
+        Safe.Dispose(watcher);
     }
     void OnVolume(AudioVolumeNotificationData data)
     {
@@ -155,11 +131,7 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
         if (disposed)
             return;
         disposed = true;
-        try
-        {
-            devices?.UnregisterEndpointNotificationCallback(this);
-        }
-        catch { }
+        Safe.Try(() => devices?.UnregisterEndpointNotificationCallback(this));
         Detach();
         DetachMic();
         StopBrightness();

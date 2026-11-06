@@ -137,12 +137,13 @@ internal sealed class SingleInstance : IDisposable
             }
             catch (OperationCanceledException)
             {
+                // Client parti ou requête annulée : rien à reporter.
             }
             catch (System.Text.Json.JsonException)
             {        // garbage from a foreign client
             }
             catch (Exception ex) { App.CrashLog(ex); }
-            finally { try { slots.Release(); } catch (ObjectDisposedException) { } }
+            finally { try { slots.Release(); } catch (ObjectDisposedException) { /* Sémaphore déjà libéré à l'arrêt. */ } }
         }
     }
 
@@ -183,11 +184,11 @@ internal sealed class SingleInstance : IDisposable
 
     public void Dispose()
     {
-        try
+        Safe.Try(() =>
         {
             cts.Cancel();
             pending?.Dispose();
-        }
-        catch { }
+
+        });
     }
 }

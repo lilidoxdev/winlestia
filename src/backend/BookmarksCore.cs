@@ -58,7 +58,10 @@ internal static class BookmarksCore
                             return path;
                     }
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // Clé App Paths absente : ce navigateur n'est pas installé.
+                }
             }
         return "";
     }
@@ -90,7 +93,10 @@ internal static class BookmarksCore
                                     profile = last.GetString()!;
                             }
                         }
-                        catch { }
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+                        {
+                            Store.Log("BookmarksCore.Add : " + ex.GetType().Name + ": " + ex.Message);
+                        }
                         if (profile.IndexOfAny(new[] { '\\', '/' }) >= 0 || profile.Contains(".."))
                             profile = "Default";
                         b.ProfileDir = Path.Combine(userData, profile);
@@ -105,7 +111,10 @@ internal static class BookmarksCore
                     b.Installed = exe.Length > 0 && b.ProfileDir.Length > 0 && File.Exists(b.BookmarksFile);
                 }
             }
-            catch { }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                Store.Log("BookmarksCore.Add : " + ex.GetType().Name + ": " + ex.Message);
+            }
             list.Add(b);
         }
         Add("edge", "Microsoft Edge", First(FromAppPaths("msedge.exe"), Path.Combine(ProgramsX86, @"Microsoft\Edge\Application\msedge.exe"), Path.Combine(Programs, @"Microsoft\Edge\Application\msedge.exe")), true, Path.Combine(Local, @"Microsoft\Edge\User Data"), "msedge");
@@ -142,7 +151,10 @@ internal static class BookmarksCore
             if (prog.Contains("Opera", StringComparison.OrdinalIgnoreCase))
                 return "opera";
         }
-        catch { }
+        catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
+        {
+            Store.Log("BookmarksCore.DefaultBrowserId : " + ex.GetType().Name + ": " + ex.Message);
+        }
         return "";
     }
 
@@ -191,7 +203,10 @@ internal static class BookmarksCore
                         return dir;
                 }
         }
-        catch { }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Store.Log("BookmarksCore.FirefoxProfile : " + ex.GetType().Name + ": " + ex.Message);
+        }
         return "";
     }
 
@@ -395,11 +410,7 @@ internal static class BookmarksCore
         finally
         {
             SqliteConnection.ClearAllPools();
-            try
-            {
-                Directory.Delete(work, true);
-            }
-            catch { }
+            Safe.Try(() => Directory.Delete(work, true));
         }
     }
 
@@ -478,12 +489,15 @@ internal static class BookmarksCore
                             File.WriteAllBytes(Path.Combine(IconsDir, Hash(host) + ".png"), png);
                             created++;
                         }
-                        catch { }
+                        catch (Exception)
+                        {
+                            // Favicon illisible ou non enregistrable : icône de repli, sans journal par site.
+                        }
                     }
                 }
             }
             catch (Exception ex) { Log("Favoris icônes : " + ex.GetType().Name); }
-            finally { SqliteConnection.ClearAllPools(); try { Directory.Delete(work, true); } catch { } }
+            finally { SqliteConnection.ClearAllPools(); Safe.Try(() => Directory.Delete(work, true)); }
         }
         Assign(items);
         return created;
@@ -495,7 +509,10 @@ internal static class BookmarksCore
         {
             Store.Log(text);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Le journal ne peut pas se journaliser lui-même.
+        }
     }
 
     static byte[]? Query(SqliteConnection connection, bool chromium, string url, string host)
@@ -595,14 +612,13 @@ internal static class BookmarksCore
                 var old = new DirectoryInfo(backupsDir).GetFiles(b.Id + "-*.json").OrderByDescending(f => f.LastWriteTimeUtc).ThenByDescending(f => f.Name, StringComparer.Ordinal).Skip(20);
                 foreach (var f in old)
                 {
-                    try
-                    {
-                        f.Delete();
-                    }
-                    catch { }
+                    Safe.Try(() => f.Delete());
                 }
             }
-            catch { }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Store.Log("BookmarksCore.DeleteChromium : " + ex.GetType().Name + ": " + ex.Message);
+            }
             bool removed = false;
             bool Remove(JsonNode? folder)
             {
@@ -639,7 +655,7 @@ internal static class BookmarksCore
             {
                 File.Replace(temp, file, null);
             }
-            catch { try { File.Delete(temp); } catch { } throw; }
+            catch { Safe.Try(() => File.Delete(temp)); throw; }
             return null;
         }
         catch (Exception ex) { Log("Favoris suppression : " + ex.GetType().Name); return "error"; }

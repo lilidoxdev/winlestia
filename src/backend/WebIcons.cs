@@ -74,7 +74,10 @@ internal static class WebIcons
                 if (!fallback || File.GetLastWriteTimeUtc(path) > DateTime.UtcNow.AddHours(-1))
                     return new(name, path, fallback);
             }
-            catch { }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Store.Log("WebIcons.Resolve : " + ex.GetType().Name + ": " + ex.Message);
+            }
         }
         var candidates = new List<Uri>();
         if (known != null)
@@ -121,7 +124,10 @@ internal static class WebIcons
             }
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { throw; }
-        catch { }
+        catch (Exception)
+        {
+            // Page inaccessible ou illisible : on retombe sur /favicon.ico.
+        }
         candidates.Add(new Uri(uri.GetLeftPart(UriPartial.Authority) + "/favicon.ico"));
         foreach (var candidate in candidates.Distinct().Take(7))
         {
@@ -135,7 +141,10 @@ internal static class WebIcons
                 return new(name, path, false);
             }
             catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { throw; }
-            catch { }
+            catch (Exception)
+            {
+                // Candidat d'icône inutilisable : on essaie le suivant.
+            }
         }
         Default(path);
         File.WriteAllText(path + ".fallback", "Designed local fallback");

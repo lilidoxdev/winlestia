@@ -223,7 +223,10 @@ public partial class App : Application
         {
             Winlestia.Shared.FilesHandlerGuard.RecordStartupCrash(Winlestia.Shared.FilesHandler.DataDir, Winlestia.Shared.FilesHandlerGuard.NowMs());
         }
-        catch { }
+        catch (Exception err)
+        {
+            App.LogLine("App.RecordStartupCrash : " + err.GetType().Name + ": " + err.Message);
+        }
     }
 
     // First 15 s of the process, unhandled exception: count it (real crashes only) and hand the requested folder to explorer.exe before dying. Best effort.
@@ -239,16 +242,15 @@ public partial class App : Application
             if (RequestedArg.Length > 0)
                 PathRouter.LaunchExplorer(RequestedArg);
         }
-        catch { }
+        catch (Exception err)
+        {
+            App.LogLine("App.EarlyDeath : " + err.GetType().Name + ": " + err.Message);
+        }
     }
 
     internal void StopServer()
     {
-        try
-        {
-            server?.Dispose();
-        }
-        catch { }
+        Safe.Dispose(server);
         server = null;
     }
 
@@ -273,7 +275,10 @@ public partial class App : Application
                 File.WriteAllLines(file, lines);
             }
         }
-        catch { }
+        catch (Exception)
+        {
+            // Le journal ne peut pas se journaliser lui-même.
+        }
     }
 }
 
@@ -303,7 +308,10 @@ internal static class Program
         {
             SetCurrentProcessExplicitAppUserModelID(AppId);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Identité de barre des tâches facultative.
+        }
         // Command line only (installer, uninstaller, tests): no window, no pipe, no WPF. --register "<exe>" | --restore
         if (args.Length > 0 && (args[0].Equals("--register", StringComparison.OrdinalIgnoreCase) || args[0].Equals("--restore", StringComparison.OrdinalIgnoreCase)))
             return Winlestia.Shared.FilesHandler.RunCli(args);

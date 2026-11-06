@@ -96,12 +96,18 @@ internal static class WgcCapture
                 {
                     session.IsCursorCaptureEnabled = false;
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // Propriété absente selon la version de Windows : comportement par défaut.
+                }
                 try
                 {
                     typeof(GraphicsCaptureSession).GetProperty("IsBorderRequired")?.SetValue(session, false);
                 }
-                catch { }  // Windows 11 only, may need the borderless capability: failure just means the system border stays during the ~3 s grab
+                catch (Exception)
+                {
+                    // Propriété absente selon la version de Windows : comportement par défaut.
+                }  // Windows 11 only, may need the borderless capability: failure just means the system border stays during the ~3 s grab
                 session.StartCapture();
                 long lastSaved = -interval;
                 int tries = 0;

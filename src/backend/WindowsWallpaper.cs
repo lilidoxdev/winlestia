@@ -51,7 +51,10 @@ internal sealed class WindowsWallpaper : IDisposable
             {
                 debounce.Change(delay, Timeout.Infinite);
             }
-            catch (ObjectDisposedException) { }
+            catch (ObjectDisposedException)
+            {
+                // Minuterie déjà libérée : arrêt en cours.
+            }
     }
     // WM_SETTINGCHANGE / SPI_SETDESKWALLPAPER arrive through SystemEvents' hidden message window. Unlock, resume and display change are the only safety re-checks.
     void Preference(object? s, Microsoft.Win32.UserPreferenceChangedEventArgs e)
@@ -172,7 +175,10 @@ internal sealed class WindowsWallpaper : IDisposable
                 foreach (Match m in Regex.Matches(File.ReadAllText(vdf), "\"path\"\\s+\"([^\"]+)\""))
                     libs.Add(m.Groups[1].Value.Replace(@"\\", @"\"));
         }
-        catch { }
+        catch (Exception)
+        {
+            // Steam absent : pas de dossier de fonds Steam.
+        }
         return libs.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
@@ -303,7 +309,10 @@ internal sealed class WindowsWallpaper : IDisposable
                         if (File.Exists(path))
                             modified = File.GetLastWriteTimeUtc(path).Ticks;
                     }
-                    catch { }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    {
+                        Store.Log("WindowsWallpaper.Read : " + ex.GetType().Name + ": " + ex.Message);
+                    }
                     string name = System.Windows.Forms.Screen.AllScreens.FirstOrDefault(s => s.Bounds.Left == rect.Left && s.Bounds.Top == rect.Top)?.DeviceName ?? id;
                     result.Add(new(name, rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top, path ?? "", modified, background));
                 }

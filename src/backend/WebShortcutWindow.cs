@@ -108,7 +108,7 @@ internal sealed class WebShortcutWindow : GlassWindow
         actions.Children.Add(save);
         form.Children.Add(actions);
         name.TextChanged += (_, _) => { if (name.IsKeyboardFocusWithin) manualName = true; };
-        url.TextChanged += (_, _) => { if (manualName) return; try { var uri = WebIcons.Parse(url.Text); name.Text = uri.Host.StartsWith("www.") ? uri.Host[4..] : uri.Host; } catch { } };
+        url.TextChanged += (_, _) => { if (manualName) return; try { var uri = WebIcons.Parse(url.Text); name.Text = uri.Host.StartsWith("www.") ? uri.Host[4..] : uri.Host; } catch (Exception) { /* URL incomplète pendant la frappe : le nom reste inchangé. */ } };
         Loaded += (_, _) => { url.Focus(); if (chooseImage) Dispatcher.BeginInvoke((Action)ChooseImage); };
         KeyDown += (_, e) => { if (e.Key == Key.Escape) Close(); };
     }

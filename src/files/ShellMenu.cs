@@ -189,11 +189,7 @@ internal sealed class ShellItems : IDisposable
         disposed = true;
         if (folder != null)
         {
-            try
-            {
-                Marshal.FinalReleaseComObject(folder);
-            }
-            catch { }
+            Safe.Try(() => Marshal.FinalReleaseComObject(folder));
             folder = null;
         }
         foreach (var p in full)
@@ -399,7 +395,10 @@ internal sealed class ShellMenu : IDisposable
                             else
                                 c2?.HandleMenuMsg(WM_INITMENUPOPUP, info.hSubMenu, (IntPtr)(i & 0xFFFF));
                         }
-                        catch { }
+                        catch (Exception)
+                        {
+                            // Message relayé à l'extension shell : une extension défaillante ne doit pas casser le menu.
+                        }
                     }
                     all.Add((0, "", label, depth));
                     if (depth < 2)
@@ -426,11 +425,7 @@ internal sealed class ShellMenu : IDisposable
         c3 = null;
         if (com != null)
         {
-            try
-            {
-                Marshal.FinalReleaseComObject(com);
-            }
-            catch { }
+            Safe.Try(() => Marshal.FinalReleaseComObject(com));
             com = null;
         }
     }

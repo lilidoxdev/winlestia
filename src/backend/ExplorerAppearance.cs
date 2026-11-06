@@ -126,7 +126,10 @@ internal sealed partial class ExplorerAppearance : IDisposable
                     w.Renamed += (_, _) => RequestScan();
                     watchers[path] = w;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Store.Log("ExplorerAppearance.Watch : " + ex.GetType().Name + ": " + ex.Message);
+                }
             }
         }
     }
@@ -216,7 +219,10 @@ internal sealed partial class ExplorerAppearance : IDisposable
                 {
                     Watch(visible);
                 }
-                catch { }
+                catch (Exception err)
+                {
+                    Store.Log("ExplorerAppearance.ScanVisibleFolders : " + err.GetType().Name + ": " + err.Message);
+                }
                 scanning = false;
             }
         });
@@ -360,7 +366,10 @@ internal sealed partial class ExplorerAppearance : IDisposable
         {
             p = new DirectoryInfo(p).ResolveLinkTarget(true)?.FullName ?? p;
         }
-        catch { }
+        catch (Exception err) when (err is IOException or UnauthorizedAccessException)
+        {
+            Store.Log("ExplorerAppearance.Real : " + err.GetType().Name + ": " + err.Message);
+        }
         return p.TrimEnd(Path.DirectorySeparatorChar);
     }
     // Containment in one of the six personal folders (real paths); strict excludes the personal folder itself.
@@ -576,7 +585,10 @@ internal sealed partial class ExplorerAppearance : IDisposable
         {
             Directory.SetLastWriteTimeUtc(folder, when.Value);
         }
-        catch { }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Store.Log("ExplorerAppearance.SetStamp : " + ex.GetType().Name + ": " + ex.Message);
+        }
     }
     // Sets the folder mtime to the newest child (desktop.ini and our own icons excluded); unchanged when there is no such child.
     internal void RepairDatesFromChildren(string folder)
@@ -595,7 +607,10 @@ internal sealed partial class ExplorerAppearance : IDisposable
             }
             SetStamp(folder, newest);
         }
-        catch { }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Store.Log("ExplorerAppearance.RepairDatesFromChildren : " + ex.GetType().Name + ": " + ex.Message);
+        }
     }
     // One-shot (first Sync after startup): repairs themed folders that are never re-written (unchanged, not visited). Max 256 entries, one Save.
     bool repairPassDone;

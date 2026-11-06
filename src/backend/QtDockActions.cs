@@ -179,7 +179,10 @@ internal sealed partial class QtShellBridge
                             continue;
                         result.Add(known.FirstOrDefault(e => SamePath(e.Target, path)) ?? new Entry { Id = "background:" + path, Name = FileVersionInfo.GetVersionInfo(path).FileDescription ?? process.ProcessName, Target = path, IconPath = path });
                     }
-                    catch { }
+                    catch (Exception)
+                    {
+                        // Processus fermé ou inaccessible : ignoré.
+                    }
             dispatcher.BeginInvoke((Action)(() => { scanningBackground = false; if (!disposed) { backgroundEntries = result.ToArray(); nextTasks = DateTime.MinValue; } }));
         });
     }
@@ -196,11 +199,7 @@ internal sealed partial class QtShellBridge
             windowIconTries.Remove(id);
             requested.Remove(id);
             icons.Remove(id);
-            try
-            {
-                File.Delete(WindowIconFile(id));
-            }
-            catch { }
+            Safe.Try(() => File.Delete(WindowIconFile(id)));
         }
     }
     void LoadWindowIcon(Entry entry, IntPtr window)
@@ -231,7 +230,7 @@ internal sealed partial class QtShellBridge
                 bitmap.Freeze();
                 string file = WindowIconFile(entry.Id);
                 SaveImage(bitmap, file);
-                dispatcher.BeginInvoke((Action)(() => { if (disposed) return; if (windowIconTries.ContainsKey(entry.Id)) { icons[entry.Id] = file; iconRevision++; } else { try { File.Delete(file); } catch { } } }));
+                dispatcher.BeginInvoke((Action)(() => { if (disposed) return; if (windowIconTries.ContainsKey(entry.Id)) { icons[entry.Id] = file; iconRevision++; } else { Safe.Try(() => File.Delete(file)); } }));
             }
             catch { dispatcher.BeginInvoke((Action)(() => { if (tries < 3) requested.Remove(entry.Id); })); }
         });
@@ -343,12 +342,12 @@ internal sealed partial class QtShellBridge
                 foreach (var p in Process.GetProcesses())
                     using (p)
                     {
-                        try
+                        Safe.Try(() =>
                         {
                             if (p.Id != Environment.ProcessId && p.SessionId == session && SamePath(p.MainModule?.FileName ?? "", path))
                                 p.Kill();
-                        }
-                        catch { }
+
+                        });
                     }
                 backgroundEntries = backgroundEntries.Where(e => !SamePath(e.Target, path)).ToArray();
                 backgroundAt = DateTime.MinValue;

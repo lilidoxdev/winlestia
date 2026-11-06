@@ -101,7 +101,10 @@ internal static class FilesHandler
         {
             SHChangeNotify(0x08000000 /*SHCNE_ASSOCCHANGED*/, 0x0000 /*SHCNF_IDLIST*/ | 0x3000 /*SHCNF_FLUSHNOWAIT*/, IntPtr.Zero, IntPtr.Zero);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Notification shell facultative : l'association sera vue au prochain rafraîchissement.
+        }
     }
 
     static string P(HandlerOptions o, string rel) => o.ClassesPath + "\\" + rel;
@@ -165,7 +168,7 @@ internal static class FilesHandler
         {
             return body();
         }
-        finally { try { mutex.ReleaseMutex(); } catch { } }
+        finally { try { mutex.ReleaseMutex(); } catch (Exception) { /* Nettoyage au mieux : le mutex a pu être libéré ailleurs. */ } }
     }
 
     internal static HandlerResult Register(HandlerOptions o, string exe) => Locked(() => RegisterCore(o, exe));
@@ -311,7 +314,10 @@ internal static class FilesHandler
             if (File.Exists(o.BackupPath))
                 File.Delete(o.BackupPath);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Nettoyage au mieux : la sauvegarde a pu disparaître ou être verrouillée.
+        }
         if (changed && o.Notify)
             NotifyAssoc();
         return new(true, backup == null ? (changed ? "restored (no backup: our keys removed)" : "nothing to restore") : "restored");
@@ -382,6 +388,9 @@ internal static class FilesHandler
                 lines.RemoveRange(0, lines.Count - 100);
             File.WriteAllLines(file, lines);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Le journal ne peut pas se journaliser lui-même.
+        }
     }
 }

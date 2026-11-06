@@ -19,6 +19,13 @@ $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $Exe) { $Exe = Join-Path $here '..\..\src\files\bin\Debug\net8.0-windows10.0.19041.0\win-x64\Winlestia.Files.exe' }
 if ($Seconds -gt 120) { $Seconds = 120 }
+# Les auto-tests ne sont compilés qu'avec : dotnet build src/files/Winlestia.Files.csproj -p:SelfTest=true
+if ($Mode -notin 'handler', 'idle' -and (Test-Path $Exe)) {
+  $dll = Join-Path (Split-Path $Exe) 'Winlestia.Files.dll'
+  $needle = [Text.Encoding]::Unicode.GetBytes('WINLESTIA_FILES_SELFTEST')
+  $hay = [Text.Encoding]::GetEncoding(28591).GetString([IO.File]::ReadAllBytes($dll)); $pin = [Text.Encoding]::GetEncoding(28591).GetString($needle)
+  if (-not $hay.Contains($pin)) { Write-Output 'SKIP: binaire sans auto-tests, relancer le build avec -p:SelfTest=true'; return }
+}
 $free = (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB
 if ($free -lt 4) { Write-Output ("SKIP: free RAM {0:F1} GB < 4 GB" -f $free); return }
 

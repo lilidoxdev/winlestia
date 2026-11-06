@@ -50,7 +50,7 @@ internal sealed class BookmarksService : IDisposable
 
     internal void Start()
     {
-        _ = Task.Run(() => { try { Directory.Delete(Path.Combine(BookmarksCore.WorkRoot, "tmp"), true); } catch { } }).ContinueWith(t => dispatcher.BeginInvoke(() => { if (!disposed) _ = Rescan(); }));
+        _ = Task.Run(() => { Safe.Try(() => Directory.Delete(Path.Combine(BookmarksCore.WorkRoot, "tmp"), true)); }).ContinueWith(t => dispatcher.BeginInvoke(() => { if (!disposed) _ = Rescan(); }));
     }
 
     BrowserInfo? Loaded => browsers.FirstOrDefault(b => b.Id == loaded);
@@ -213,15 +213,15 @@ internal sealed class BookmarksService : IDisposable
         watcher = null;
         if (w == null)
             return;
-        try
+        Safe.Try(() =>
         {
             w.EnableRaisingEvents = false;
             w.Changed -= OnFile;
             w.Created -= OnFile;
             w.Renamed -= OnFile;
             w.Dispose();
-        }
-        catch { }
+
+        });
     }
 
     // Le watcher ne fait que lever un drapeau : aucun rescan tant que le panneau n'est pas affiché (bookmarksRefresh{ifDirty:true}).
@@ -331,10 +331,6 @@ internal sealed class BookmarksService : IDisposable
         disposed = true;
         notifyTimer.Stop();
         StopWatching();
-        try
-        {
-            Directory.Delete(Path.Combine(BookmarksCore.WorkRoot, "tmp"), true);
-        }
-        catch { }
+        Safe.Try(() => Directory.Delete(Path.Combine(BookmarksCore.WorkRoot, "tmp"), true));
     }
 }

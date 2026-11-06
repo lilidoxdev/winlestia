@@ -33,14 +33,14 @@ internal sealed partial class WindowTiler
         {
             if (keySink == null)
                 return;
-            try
+            Safe.Try(() =>
             {
                 foreach (var id in keyIds)
                     Native.UnregisterHotKey(keySink.Handle, id);
                 keySink.RemoveHook(KeyHook);
                 keySink.Dispose();
-            }
-            catch { }
+
+            });
             keyIds.Clear();
             keySink = null;
             return;
@@ -264,7 +264,10 @@ internal sealed partial class WindowTiler
             using var p = Process.GetProcessById((int)pid);
             name = TileLogic.Normalize(p.ProcessName);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Processus fermé ou inaccessible : ignoré.
+        }
         processNames[pid] = name;
         return name;
     }

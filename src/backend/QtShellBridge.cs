@@ -113,7 +113,10 @@ internal sealed partial class QtShellBridge : IDisposable
                     return s.Trim();
             }
         }
-        catch { }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            Store.Log("QtShellBridge.(initialiseur) : " + ex.GetType().Name + ": " + ex.Message);
+        }
         try
         {
             var name = new StringBuilder(256);
@@ -121,7 +124,10 @@ internal sealed partial class QtShellBridge : IDisposable
             if (GetUserNameEx(3, name, ref size) && name.Length > 0)
                 return name.ToString();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Store.Log("QtShellBridge.(initialiseur) : " + ex.GetType().Name + ": " + ex.Message);
+        }
         return Environment.UserName;
     });
 
@@ -221,14 +227,11 @@ internal sealed partial class QtShellBridge : IDisposable
         root = Program.QtRoot ?? Path.GetFullPath(Path.Combine(Store.Root, "..", "Caelestia-Windows"));
         cache = Path.Combine(Store.DataDir, "Caelestia");
         Directory.CreateDirectory(Path.Combine(cache, "icons"));
-        try
+        Safe.Try(() =>
         {
-            foreach (string stale in Directory.GetFiles(Path.Combine(cache, "icons"), "*.fb.png").Concat(Directory.GetFiles(
-                Path.Combine(cache, "icons"),
-                "win-*.png")))
+            foreach (string stale in Directory.GetFiles(Path.Combine(cache, "icons"), "*.fb.png").Concat(Directory.GetFiles(Path.Combine(cache, "icons"), "win-*.png")))
                 File.Delete(stale);
-        }
-        catch { }
+        });
 
         dismissal = new OutsideDismiss(() => Send("close"), () => active && !DialogOpen, h =>
         {
@@ -302,7 +305,7 @@ internal sealed partial class QtShellBridge : IDisposable
         _ = social.Start();
         bookmarks = new BookmarksService(dispatcher, () => Send("bookmarks"));
         bookmarks.Start();
-        networkChanged = () => { if (!disposed) { try { wake.Set(); } catch { } } };
+        networkChanged = () => { if (!disposed) { try { wake.Set(); } catch (ObjectDisposedException) { /* Signal déjà libéré à l'arrêt : plus personne à réveiller. */ } } };
         NetworkKindWatcher.Changed += networkChanged;
         NetworkKindWatcher.Start();
         VirtualDesktops.Changed += networkChanged;
@@ -1555,7 +1558,10 @@ internal sealed partial class QtShellBridge : IDisposable
         {
             wake.Set();
         }
-        catch { }
+        catch (ObjectDisposedException)
+        {
+            // Signal déjà libéré à l'arrêt : plus personne à réveiller.
+        }
         dispatcher.BeginInvoke((Action)(() => { if (!disposed) UpdateSampling(); }));
     }
     static bool LightRendering => Store.State.ReducedEffects ?? GC.GetGCMemoryInfo().TotalAvailableMemoryBytes <= 8L * 1024 * 1024 * 1024;
@@ -1808,11 +1814,7 @@ internal sealed partial class QtShellBridge : IDisposable
                             placeholderIcons.Remove(entry.Id);
                             if (previous.EndsWith(".fb.png", StringComparison.Ordinal))
                             {
-                                try
-                                {
-                                    File.Delete(previous);
-                                }
-                                catch { }
+                                Safe.Try(() => File.Delete(previous));
                             }
                         }
                     }));
@@ -2067,12 +2069,12 @@ internal sealed partial class QtShellBridge : IDisposable
         disposed = true;
         if (frontend is { HasExited: false })
         {
-            try
+            Safe.Try(() =>
             {
                 frontend.Kill();
                 frontend.WaitForExit(2000);
-            }
-            catch { }
+
+            });
         }
         timer.Stop();
         wifi.Dispose();

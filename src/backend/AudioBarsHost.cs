@@ -103,22 +103,10 @@ internal sealed class AudioBarsHost : IDisposable
             device = null;
             if (c != null)
             {
-                try
-                {
-                    c.StopRecording();
-                }
-                catch { }
-                try
-                {
-                    c.Dispose();
-                }
-                catch { }
+                Safe.Try(() => c.StopRecording());
+                Safe.Dispose(c);
             }
-            try
-            {
-                d?.Dispose();
-            }
-            catch { }
+            Safe.Dispose(d);
             if (c == null)
                 return;
             lock (ringGate)
@@ -173,12 +161,15 @@ internal sealed class AudioBarsHost : IDisposable
                         }
                         fresh.Set();
                     }
-                    catch { }
+                    catch (Exception)
+                    {
+                        // Callback audio à haute fréquence : une trame illisible est simplement sautée.
+                    }
                 };
                 c.StartRecording();
                 capture = c;
             }
-            catch (Exception ex) { capture = null; try { device?.Dispose(); } catch { } device = null; Store.Log("Audio bars: " + ex.Message); }
+            catch (Exception ex) { capture = null; Safe.Dispose(device); device = null; Store.Log("Audio bars: " + ex.Message); }
         }
 
         try
@@ -252,22 +243,14 @@ internal sealed class AudioBarsHost : IDisposable
         }
         finally
         {
-            try
-            {
-                Close();
-            }
-            catch { }
-            try
+            Safe.Try(() => Close());
+            Safe.Try(() =>
             {
                 if (notifier != null)
                     enumerator?.UnregisterEndpointNotificationCallback(notifier);
-            }
-            catch { }
-            try
-            {
-                enumerator?.Dispose();
-            }
-            catch { }
+
+            });
+            Safe.Dispose(enumerator);
             fresh.Dispose();
             changed.Dispose();
             self.Exited = true;
@@ -306,7 +289,10 @@ internal sealed class AudioBarsHost : IDisposable
                 {
                     changed.Set();
                 }
-                catch { }
+                catch (ObjectDisposedException)
+                {
+                    // Signal déjà libéré à l'arrêt : plus personne à réveiller.
+                }
             }
         }
         public void OnDeviceStateChanged(string deviceId, DeviceState newState)

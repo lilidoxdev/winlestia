@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=dnd : native context menu + drag & drop on a fixture folder (first command-line argument, must live under %TEMP%\WinlestiaFilesOps).
 // Fixture: file001.txt..file012.txt, ctxtest.txt, folders Cible, Autre, Third. WINLESTIA_FILES_SHOTDIR = where the two screenshots are written.
 // Only harmless verbs are invoked natively ("properties", whose window is closed again); delete is never sent to the Recycle Bin.
@@ -585,7 +586,10 @@ if ({(esc
         {
             await LastDrop;
         }
-        catch { }
+        catch (Exception)
+        {
+            // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+        }
         Check("real mouse drag of a 2-file multi-selection onto a folder row (SHDoDragDrop -> OLE -> our IDropTarget) moves both", names.All(n =>
             File.Exists(Path.Combine(P(folder), n)) && !File.Exists(P(n)))
             && names.All(n => Active.Find(P(n)) == null)
@@ -595,3 +599,4 @@ if ({(esc
                     Active.Find(P(n)) != null)}");
     }
 }
+#endif

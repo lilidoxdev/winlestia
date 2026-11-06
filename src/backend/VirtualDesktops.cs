@@ -62,7 +62,10 @@ internal static class VirtualDesktops
                 PostThreadMessageW(id, WM_QUIT, IntPtr.Zero, IntPtr.Zero);
             t.Join(2000);
         }
-        catch { }
+        catch (Exception)
+        {
+            // Arrêt au mieux : le fil a pu se terminer seul.
+        }
     }
 
     static string SessionRoot => Explorer + @"\SessionInfo\" + Process.GetCurrentProcess().SessionId;
@@ -114,7 +117,10 @@ internal static class VirtualDesktops
                 DispatchMessageW(ref m);
             }
         }
-        catch { }
+        catch (Exception)
+        {
+            // Fil de messages : l'arrêt est géré par le finally, rien d'autre à rapporter.
+        }
         finally
         {
             Disarm();
@@ -175,7 +181,10 @@ internal static class VirtualDesktops
         {
             Changed?.Invoke();
         }
-        catch { }
+        catch (Exception)
+        {
+            // Un abonné défaillant ne doit pas arrêter la veille des bureaux.
+        }
     }
 
     internal static Snapshot Read()
@@ -387,7 +396,10 @@ internal static class VirtualDesktops
             {
                 SendKey(vk, true);
             }
-            catch { }
+            catch (Exception)
+            {
+                // Relâchement de touche au mieux : la touche peut déjà être relâchée.
+            }
         }
     }
 

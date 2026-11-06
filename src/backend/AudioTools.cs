@@ -39,7 +39,10 @@ internal static class AudioSwitch
             using var device = devices.GetDefaultAudioEndpoint((NAudio.CoreAudioApi.DataFlow)flow, NAudio.CoreAudioApi.Role.Multimedia);
             current = device.ID;
         }
-        catch { }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            // Aucun périphérique par défaut (pas de sortie audio) : la valeur reste vide.
+        }
         foreach (var device in devices.EnumerateAudioEndPoints((NAudio.CoreAudioApi.DataFlow)flow, NAudio.CoreAudioApi.DeviceState.Active))
             using (device)
             {

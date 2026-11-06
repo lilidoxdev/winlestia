@@ -148,7 +148,10 @@ internal static class TaskbarNative
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Store.Log("TaskbarNative.LaunchPath : " + ex.GetType().Name + ": " + ex.Message);
+        }
         finally { if (link != null && Marshal.IsComObject(link)) Marshal.ReleaseComObject(link); if (shell != null && Marshal.IsComObject(shell)) Marshal.ReleaseComObject(shell); }
         linkTargets[path] = target;
         return target;
@@ -173,7 +176,10 @@ internal static class TaskbarNative
             if (GetDpiForMonitor(MonitorFromPoint(p, 2), 0, out var x, out _) == 0)
                 return x / 96d;
         }
-        catch { }
+        catch (Exception)
+        {
+            // Repli sur le DPI par défaut si le moniteur est introuvable.
+        }
         return 1;
     }
     internal static Lease Snapshot()
@@ -275,7 +281,10 @@ internal static class TaskbarNative
                 GetWindowThreadProcessId(h, out uint pid);
                 path = ProcessImagePath(pid);
             }
-            catch { }
+            catch (Exception)
+            {
+                // Processus fermé ou inaccessible : chemin d'image vide.
+            }
             if (NeedsPackageKey(path))
             {
                 string aumid = AppUserModelId(h);

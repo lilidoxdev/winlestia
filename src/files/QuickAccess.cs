@@ -112,7 +112,10 @@ internal static class QuickAccess
                 if (File.Exists(path))
                     return TargetKind.File;
             }
-            catch { }
+            catch (Exception)
+            {
+                // Chemin inaccessible : type de cible inconnu.
+            }
             return TargetKind.Missing;
         });
         var first = await Task.WhenAny(work, Task.Delay(timeoutMs));

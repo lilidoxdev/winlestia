@@ -52,6 +52,7 @@ def _pixels(paths, background):
                 original.thumbnail((96, 96))
                 chunks.append(np.asarray(original.convert('RGB'), dtype=np.uint8).reshape(-1, 3))
         except Exception:
+            # Image illisible : elle est simplement absente de la palette.
             continue
     if not chunks:
         value = background if isinstance(background, str) and len(background) == 7 else '#182025'

@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // Hidden measurement drivers, only reachable through WINLESTIA_FILES_SELFTEST (never set in normal use).
 //   tabs50 : 50 open/close cycles of a tab, 30 s settle, logs handles/threads/private bytes before and after.
 //   grid   : switches to the large-icons view, waits for the thumbnails, 5 end-to-end fast scroll passes, logs GDI/handles/threads/private/stall.
@@ -18,7 +19,7 @@ public sealed partial class MainWindow
         if (string.IsNullOrEmpty(file))
             return;
         var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
-        timer.Tick += (_, _) => { try { System.IO.File.WriteAllText(file, "tabs=" + tabs.Count + " visible=" + IsVisible); } catch { } };
+        timer.Tick += (_, _) => { try { System.IO.File.WriteAllText(file, "tabs=" + tabs.Count + " visible=" + IsVisible); } catch (Exception) { /* Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test. */ } };
         timer.Start();
     }
 
@@ -170,3 +171,4 @@ public sealed partial class MainWindow
         Perf.Log("selftest nav done");
     }
 }
+#endif

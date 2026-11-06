@@ -68,7 +68,10 @@ public sealed partial class MainWindow : Window
                                                                    System.Windows.Media.Imaging.BitmapCreateOptions.DelayCreation,
                                                                    System.Windows.Media.Imaging.BitmapCacheOption.OnDemand);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            App.LogLine("MainWindow.MainWindow : " + ex.GetType().Name + ": " + ex.Message);
+        }
         Background = UI.T(M3Role.Surface, reduced ? (byte)255 : (byte)0xEE);
         WindowChrome.SetWindowChrome(this,
                                      new WindowChrome
@@ -151,7 +154,9 @@ public sealed partial class MainWindow : Window
         InitWatch();
         if (App.Resident)
             FileOps.Idle += () => Dispatcher.BeginInvoke(TryRecycle);
+#if WINLESTIA_SELFTEST
         StartSelfTest();
+#endif
     }
 
     // Enumeration runs in parallel with the rest of the construction; rows queued within 60 ms are in the first layout pass.
@@ -246,7 +251,10 @@ public sealed partial class MainWindow : Window
                         System.Diagnostics.Process.Start(psi)?.Dispose();
                     }
                 }
-                catch { }
+                catch (Exception err) when (err is System.IO.IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or InvalidOperationException)
+                {
+                    App.LogLine("MainWindow.ShowAtCore : " + err.GetType().Name + ": " + err.Message);
+                }
                 return;
             }
             PaletteLoader.Start(Dispatcher, ApplyDwm);       // one-shot, off the UI thread: picks up a theme/wallpaper change made while hidden

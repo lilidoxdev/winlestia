@@ -50,22 +50,14 @@ internal sealed class ClipboardService : IDisposable
         items.Clear();
         Save();
         foreach (var file in Directory.EnumerateFiles(folder, "*.png").ToArray())
-            try
-            {
-                File.Delete(file);
-            }
-            catch { }
+            Safe.Try(() => File.Delete(file));
         Changed?.Invoke();
     }
     internal void Remove(ClipboardItem item)
     {
         items.Remove(item);
         if (!string.IsNullOrEmpty(item.ImagePath))
-            try
-            {
-                File.Delete(item.ImagePath);
-            }
-            catch { }
+            Safe.Try(() => File.Delete(item.ImagePath));
         Save();
         Changed?.Invoke();
     }
@@ -166,11 +158,7 @@ internal sealed class ClipboardService : IDisposable
                 break;
             items.Remove(victim);
             if (!string.IsNullOrEmpty(victim.ImagePath))
-                try
-                {
-                    File.Delete(victim.ImagePath);
-                }
-                catch { }
+                Safe.Try(() => File.Delete(victim.ImagePath));
         }
     }
     void Load()
@@ -346,7 +334,10 @@ internal sealed class ClipboardWindow : GlassWindow
                 source.Freeze();
                 image.Source = source;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Store.Log("ClipboardTools.Row : " + ex.GetType().Name + ": " + ex.Message);
+            }
             image.Clip = new RectangleGeometry(new Rect(0, 0, 42, 42), 9, 9);
             grid.Children.Add(new Border { Width = 42, Height = 42, CornerRadius = new CornerRadius(9), Background = UI.T(M3Role.OnSurface, 0x18), Child = image, VerticalAlignment = VerticalAlignment.Center });
         }

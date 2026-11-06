@@ -78,7 +78,10 @@ internal sealed class OutsideDismiss : IDisposable
                     openingForeground = IntPtr.Zero;
             }
         }
-        catch { }
+        catch (Exception)
+        {
+            // Crochet souris appelé à chaque message : ne jamais lever dans le hook.
+        }
         return CallNextHookEx(mouseHook, code, message, data);
     }
     void Queue(bool foreground)

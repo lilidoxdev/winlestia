@@ -142,6 +142,10 @@ All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` c
 - The optional terminal integration prints a welcome banner in French, with your session and computer names.
 - When you confirm a wallpaper in the switcher, the previous one can flash briefly before the new one appears.
 
+## Tests
+
+`dotnet test tests/Winlestia.Tests --filter "Category!=Desktop"` and `pytest -q`. Details in [docs/TESTS.md](docs/TESTS.md).
+
 ## Privacy and data
 
 - Weather: when no city is set, your approximate location is found from your IP address through wttr.in (which therefore sees your IP address); the forecast comes from Open-Meteo. Set a city to avoid the IP lookup. Temperature is in °C only.

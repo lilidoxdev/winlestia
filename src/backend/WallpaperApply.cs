@@ -78,11 +78,17 @@ internal static class WallpaperApply
                 {
                     names.Add(p.ProcessName);
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // Processus fermé ou inaccessible : ignoré.
+                }
                 finally { p.Dispose(); }
             }
         }
-        catch { }
+        catch (Exception)
+        {
+            // Processus fermé ou inaccessible : ignoré.
+        }
         return WallpaperLogic.Animated(names);
     }
 

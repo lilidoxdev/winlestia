@@ -30,7 +30,7 @@ internal sealed class PcTelemetry : IDisposable
         cancellation?.Dispose();
         cancellation = new();
         var token = cancellation.Token;
-        worker = Task.Run(async () => { try { using var source = new PcTelemetrySource(quick); while (!token.IsCancellationRequested) { long start = Environment.TickCount64; var reading = source.Read(); if (token.IsCancellationRequested) break; Interlocked.Increment(ref samples); publish(reading); await Task.Delay((int)Math.Max(1, Math.Max(1000, interval) - (Environment.TickCount64 - start)), token).ConfigureAwait(false); } } catch (OperationCanceledException) { } catch (Exception ex) { Store.Log("État PC: " + ex); if (!token.IsCancellationRequested) error?.Invoke(ex.Message); } }, token);
+        worker = Task.Run(async () => { try { using var source = new PcTelemetrySource(quick); while (!token.IsCancellationRequested) { long start = Environment.TickCount64; var reading = source.Read(); if (token.IsCancellationRequested) break; Interlocked.Increment(ref samples); publish(reading); await Task.Delay((int)Math.Max(1, Math.Max(1000, interval) - (Environment.TickCount64 - start)), token).ConfigureAwait(false); } } catch (OperationCanceledException) { /* Arrêt demandé : fin normale de la boucle. */ } catch (Exception ex) { Store.Log("État PC: " + ex); if (!token.IsCancellationRequested) error?.Invoke(ex.Message); } }, token);
     }
     internal async Task StopAsync()
     {
@@ -41,7 +41,10 @@ internal sealed class PcTelemetry : IDisposable
             if (pending != null)
                 await pending.ConfigureAwait(false);
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException)
+        {
+            // Arrêt demandé : fin normale de la boucle.
+        }
         finally { if (ReferenceEquals(worker, pending)) worker = null; }
     }
     public void Dispose()
@@ -183,7 +186,10 @@ internal sealed class PcTelemetrySource : IDisposable
                 }
                 previousNetwork[adapter.Id] = (data.BytesReceived, data.BytesSent);
             }
-            catch (NetworkInformationException) { }
+            catch (NetworkInformationException)
+            {
+                // Carte réseau disparue : ignorée pour ce relevé.
+            }
         }
         lastNetwork = now;
         string name = adapters.Length == 0 ? "Aucune interface active" : adapters.Length == 1 ? adapters[0].Name : adapters.Length + " interfaces physiques";

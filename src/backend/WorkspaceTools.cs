@@ -88,7 +88,10 @@ internal static class WorkspaceService
                 if (!targets.Any(existing => string.Equals(existing, path, StringComparison.OrdinalIgnoreCase)))
                     targets.Add(path);
             }
-            catch { }
+            catch (Exception)
+            {
+                // Processus fermé ou inaccessible : ignoré.
+            }
         }
         var profile = new WorkspaceProfile { Name = name, Targets = targets.Take(16).ToList() };
         foreach (var board in Store.State.Boards)

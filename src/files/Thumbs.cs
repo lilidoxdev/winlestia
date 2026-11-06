@@ -196,7 +196,10 @@ internal static class Thumbs
                 if (!r.Cancelled)
                     bmp = Load(r);
             }
-            catch { }
+            catch (Exception)
+            {
+                // Vignette illisible : l'icône générique reste affichée, sans journal par fichier.
+            }
             var req = r;
             var result = bmp;
             Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>

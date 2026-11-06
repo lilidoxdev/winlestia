@@ -68,7 +68,10 @@ internal static class FilesHandlerGuard
             {
                 File.Delete(file);
             }
-            catch { }
+            catch (Exception)
+            {
+                // Nettoyage au mieux : fichier déjà supprimé ou verrouillé.
+            }
             var o = options ?? HandlerOptions.FromEnvironment();
             if (!FilesHandler.IsActive(o))
                 return false;          // handler not enabled: nothing to undo, no flag, no misleading toast

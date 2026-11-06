@@ -41,7 +41,10 @@ internal static class FilesPreload
             if (child != null && !child.HasExited)
                 return;
         }
-        catch { }   // never two residents at once, whatever path got us here
+        catch (Exception err) when (err is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Store.Log("FilesPreload.Launch : " + err.GetType().Name + ": " + err.Message);
+        }   // never two residents at once, whatever path got us here
         string exe = Path.Combine(AppContext.BaseDirectory, "Winlestia.Files.exe");
         if (!File.Exists(exe))
             return;
@@ -56,11 +59,14 @@ internal static class FilesPreload
         {
             p.PriorityClass = ProcessPriorityClass.BelowNormal;
         }
-        catch { }
+        catch (Exception err) when (err is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Store.Log("FilesPreload.Launch : " + err.GetType().Name + ": " + err.Message);
+        }
         p.EnableRaisingEvents = true;
         p.Exited += (_, _) => OnExited(p);
         // BelowNormal only while it builds its hidden window; the resident then idles at Normal so a later open is not starved.
-        Task.Run(async () => { await Task.Delay(8000).ConfigureAwait(false); try { if (!p.HasExited) p.PriorityClass = ProcessPriorityClass.Normal; } catch { } });
+        Task.Run(async () => { await Task.Delay(8000).ConfigureAwait(false); try { if (!p.HasExited) p.PriorityClass = ProcessPriorityClass.Normal; } catch (InvalidOperationException) { /* Processus déjà terminé : plus de priorité à rétablir. */ } });
     }
 
     static void OnExited(Process p)
@@ -70,11 +76,14 @@ internal static class FilesPreload
         {
             code = p.ExitCode;
         }
-        catch { }
+        catch (Exception err) when (err is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Store.Log("FilesPreload.OnExited : " + err.GetType().Name + ": " + err.Message);
+        }
         switch (policy.OnExit(code, Environment.TickCount64, quitting, Store.State.FilesPreload))
         {
             case PreloadAction.Crash:
-                Task.Run(async () => { await Task.Delay(5000).ConfigureAwait(false); try { Launch(); } catch { } });
+                Task.Run(async () => { await Task.Delay(5000).ConfigureAwait(false); try { Launch(); } catch (Exception err) { Store.Log("FilesPreload.OnExited : " + err.GetType().Name + ": " + err.Message); } });
                 break;
             case PreloadAction.Recycle:
                 Store.Log("FilesPreload: resident recycled (exit 75), relaunch in " + DelayMs / 1000 + " s");
@@ -99,7 +108,7 @@ internal static class FilesPreload
         lock (policy)
         {
             paletteTimer?.Dispose();
-            paletteTimer = new Timer(_ => { try { FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "palette"), 150); } catch { } }, null, 600, Timeout.Infinite);
+            paletteTimer = new Timer(_ => { try { FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "palette"), 150); } catch (Exception err) { Store.Log("FilesPreload.NotifyPalette : " + err.GetType().Name + ": " + err.Message); } }, null, 600, Timeout.Infinite);
         }
     }
 
@@ -121,6 +130,9 @@ internal static class FilesPreload
             if (child != null)
                 FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "quit"), 150);
         }
-        catch { }
+        catch (Exception err)
+        {
+            Store.Log("FilesPreload.Quit : " + err.GetType().Name + ": " + err.Message);
+        }
     }
 }

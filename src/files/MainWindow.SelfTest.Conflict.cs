@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=conflict : copy onto an existing file through the REAL paste path (native IFileOperation UI, FileOps.Quiet off), the Windows
 // "Replace or Skip Files" dialog is driven with UI Automation from a thread-pool thread (Uia below, also used by the xfer test).
 // Needs WINLESTIA_FILES_DATA_DIR under %TEMP% and a fixture folder under %TEMP%\WinlestiaFilesOps (harness).
@@ -33,10 +34,16 @@ internal static class Uia
                     if (w.Current.NativeWindowHandle != mainHwnd)
                         list.Add(w);
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+                }
             }
         }
-        catch { }
+        catch (Exception)
+        {
+            // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+        }
         return list;
     }
 
@@ -82,7 +89,10 @@ internal static class Uia
                 lines.Add("  " + Describe(e));
             }
         }
-        catch { }
+        catch (Exception)
+        {
+            // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+        }
         return lines;
     }
 
@@ -108,7 +118,7 @@ internal static class Uia
             }
             if (e.TryGetCurrentPattern(InvokePattern.Pattern, out var ip) && ip is InvokePattern inv)
             {
-                Task.Run(() => { try { inv.Invoke(); } catch { } });
+                Task.Run(() => { try { inv.Invoke(); } catch (Exception) { /* Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test. */ } });
                 return true;
             }
             if (e.TryGetCurrentPattern(SelectionItemPattern.Pattern, out var sp2) && sp2 is SelectionItemPattern s2)
@@ -183,7 +193,10 @@ internal static class Uia
                                 if (bx.TryGetCurrentPattern(TogglePattern.Pattern, out var tq) && ((TogglePattern)tq).Current.ToggleState != ToggleState.On)
                                     Act(bx, true);
                             }
-                            catch { }
+                            catch (Exception)
+                            {
+                                // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+                            }
                         }
                         log.AddRange(boxes.Select(b => { try { return "    after: " + Describe(b) + " state=" + (b.TryGetCurrentPattern(TogglePattern.Pattern, out var tp) ? ((TogglePattern)tp).Current.ToggleState.ToString() : "?"); } catch { return "    after: ?"; } }));
                         if (n == 0)
@@ -236,7 +249,10 @@ internal static class Uia
                     {
                         PostMessage((IntPtr)w.Current.NativeWindowHandle, 0x10, IntPtr.Zero, IntPtr.Zero);
                     }
-                    catch { }
+                    catch (Exception)
+                    {
+                        // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
+                    }
                 }
                 break;
             }
@@ -366,13 +382,10 @@ public sealed partial class MainWindow
         {
             Active.Go(F0);
             await WaitLoaded();
-            try
-            {
-                Directory.Delete(F, true);
-            }
-            catch { }
+            Safe.Try(() => Directory.Delete(F, true));
         }
         T($"DONE fails={testFails}");
         Close();
     }
 }
+#endif

@@ -198,7 +198,7 @@ internal static class FilesSettings
                     data = merged;
                     baseline = Snapshot(merged);
                 }
-                finally { try { if (File.Exists(tmp)) File.Delete(tmp); } catch { } if (held) mutex.ReleaseMutex(); }
+                finally { Safe.Try(() => { if (File.Exists(tmp)) File.Delete(tmp); }); if (held) mutex.ReleaseMutex(); }
             }
         }
         catch (Exception ex) { Perf.Log("settings save: " + ex.Message); }

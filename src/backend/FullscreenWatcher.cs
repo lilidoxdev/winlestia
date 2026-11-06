@@ -223,7 +223,10 @@ internal static class FullscreenWatcher
             {
                 Changed?.Invoke();
             }
-            catch { }
+            catch (Exception)
+            {
+                // Un abonné défaillant ne doit pas arrêter la veille plein écran.
+            }
         }
     }
 
@@ -259,7 +262,10 @@ internal static class FullscreenWatcher
             {
                 Changed?.Invoke();
             }
-            catch { }
+            catch (Exception)
+            {
+                // Un abonné défaillant ne doit pas arrêter la veille plein écran.
+            }
         }
     }
 
@@ -272,7 +278,10 @@ internal static class FullscreenWatcher
         {
             ignored = IgnoredPids?.Invoke();
         }
-        catch { }
+        catch (Exception)
+        {
+            // Fournisseur de PID à ignorer défaillant : aucun PID ignoré à ce tour.
+        }
         var decided = new System.Collections.Generic.Dictionary<IntPtr, string?>();
         var fg = GetForegroundWindow();
         if (fg != IntPtr.Zero)

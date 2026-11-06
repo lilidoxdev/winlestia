@@ -182,6 +182,7 @@ def window_results(needle, windows, limit=5, language='fr'):
         try:
             hwnd = int(entry.get('hwnd', 0))
         except (AttributeError, TypeError, ValueError):
+            # Entrée de fenêtre malformée : ignorée.
             continue
         title = str(entry.get('title') or '')
         exe = str(entry.get('exe') or '')
@@ -437,6 +438,7 @@ def wallpaper_import(paths):
             shutil.copy2(source, target)
             added.append(str(target))
         except OSError:
+            # Copie impossible (fichier verrouillé ou disparu) : ignorée.
             pass
     return added
 
@@ -524,6 +526,7 @@ def wallpaper_scan(limit=200):
                             }
                         )
         except OSError:
+            # Dossier illisible : ignoré dans l'indexation.
             pass
 
     for folder, depth in wallpaper_dirs():

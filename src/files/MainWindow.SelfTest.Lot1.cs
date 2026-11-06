@@ -1,3 +1,4 @@
+#if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=lot1 : address bar (breadcrumb / edit mode), copy path, quick access (pin, order, label, broken targets, persistence), sort (default, folders first, persistence),
 // corrupt settings.json. Needs WINLESTIA_FILES_DATA_DIR = a fresh folder under %TEMP% (the harness sets it) and a fixture folder (first argument) under %TEMP%\WinlestiaFilesOps.
 // Results: PASS/FAIL lines in <data dir>\selftest.log.
@@ -397,3 +398,4 @@ public sealed partial class MainWindow
         return kind == TargetKind.Missing && ms < 4000;
     }
 }
+#endif
