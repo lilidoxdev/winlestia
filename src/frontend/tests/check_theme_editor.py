@@ -13,7 +13,7 @@ from PySide6.QtCore import QTimer, QUrl, qInstallMessageHandler
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
-import frontend
+import app_state
 from frontend import Bridge, ROOT
 from localization import Translator
 from custom_palette import make_palette
@@ -34,7 +34,7 @@ qInstallMessageHandler(
 )
 for font in (ROOT / 'assets/fonts').glob('*.ttf'):
     QFontDatabase.addApplicationFont(str(font))
-frontend.TRANSLATOR = Translator(tempfile.mkdtemp(prefix="wl-lang-"))
+app_state.TRANSLATOR = Translator(tempfile.mkdtemp(prefix="wl-lang-"))
 bridge = Bridge(SimpleNamespace(pipe='WinLestiaThemeEditorTest', backend_pid=0, preview=True))
 bridge.pointer.stop()
 bridge.city = ''

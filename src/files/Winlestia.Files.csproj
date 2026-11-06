@@ -17,11 +17,11 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Shared tokens, linked not copied. Theme/Store/UI/Motion are satisfied by BackendShim.cs (Visuals.cs and Themes.cs drag in GlassWindow, Native, Motion, Store...). -->
-    <Compile Include="..\backend\Safe.cs" Link="Shared\Safe.cs" />
-    <Compile Include="..\backend\Tokens.cs" Link="Shared\Tokens.cs" />
-    <Compile Include="..\backend\UiTokens.cs" Link="Shared\UiTokens.cs" />
-    <Compile Include="..\backend\FilesPipe.cs" Link="Shared\FilesPipe.cs" />
-    <Compile Include="..\backend\FilesHandler.cs" Link="Shared\FilesHandler.cs" />
-    <Compile Include="..\backend\FilesHandlerGuard.cs" Link="Shared\FilesHandlerGuard.cs" />
+    <Compile Include="../backend/Core/Safe.cs" Link="Shared\Safe.cs" />
+    <Compile Include="../backend/Theme/Tokens.cs" Link="Shared\Tokens.cs" />
+    <Compile Include="../backend/Theme/UiTokens.cs" Link="Shared\UiTokens.cs" />
+    <Compile Include="../backend/Files/FilesPipe.cs" Link="Shared\FilesPipe.cs" />
+    <Compile Include="../backend/Files/FilesHandler.cs" Link="Shared\FilesHandler.cs" />
+    <Compile Include="../backend/Files/FilesHandlerGuard.cs" Link="Shared\FilesHandlerGuard.cs" />
   </ItemGroup>
 </Project>

@@ -6,6 +6,13 @@ from PySide6.QtWidgets import QApplication
 from surface_geometry import path_commands
 
 
+def default_library():
+    """DLL installée à côté du frontend ; en dépôt (dev), repli sur <depot>/build/ où build-qt-glass.cmd la produit."""
+    local = Path(__file__).with_name('QtGlassBackdrop.dll')
+    built = Path(__file__).resolve().parents[2] / 'build' / 'QtGlassBackdrop.dll'
+    return local if local.exists() or not built.exists() else built
+
+
 class SurfaceCommand(ctypes.Structure):
     _fields_ = [('kind', ctypes.c_uint32), ('points', ctypes.c_float * 6)]
 
@@ -21,7 +28,7 @@ class NativeGlass(QObject):
         self.queued = False
         self.watched = set()
         try:
-            self.dll = ctypes.WinDLL(str(library or Path(__file__).with_name('QtGlassBackdrop.dll')))
+            self.dll = ctypes.WinDLL(str(library or default_library()))
             signatures = {
                 'BackdropAttach': [ctypes.c_void_p],
                 'BackdropUpdate': [ctypes.c_void_p, ctypes.c_double, ctypes.c_int, ctypes.c_int],

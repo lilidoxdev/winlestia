@@ -8,7 +8,7 @@
 # d'utilisateur, jamais depuis le dossier personnel :
 #   git clone --no-hardlinks <depot> C:\wl-build\src   (ou git worktree add --detach, au commit final)
 #   cmd /c src\backend\build-backdrop.cmd, build-process-audio.cmd, build-rescue.cmd, build-taskbar-rescue.cmd
-#   cmd /c src\frontend\build-qt-glass.cmd   (verre natif Qt : src\frontend\QtGlassBackdrop.dll, ignore par git)
+#   cmd /c src\native\qtglass\build-qt-glass.cmd   (verre natif Qt : build\QtGlassBackdrop.dll, ignore par git)
 #   $env:TEMP = $env:TMP = 'C:\wl-build\tmp'; $env:NUGET_PACKAGES = 'C:\wl-build\nuget'; $env:PIP_CACHE_DIR = 'C:\wl-build\pip'
 #   pwsh C:\wl-build\src\installer\build.ps1
 # Aucun .pdb ni lanceur pip n'est livre. Verifier ensuite que build\payload ne contient ni le nom
@@ -96,11 +96,16 @@ Get-ChildItem (Join-Path $payload 'Glass-v5') -Filter '*.log' -ErrorAction Silen
 
 Write-Host '→ Frontend QML' -ForegroundColor Cyan
 # Verre natif Qt (ignoré par git) : sans lui native_glass.py retombe sans flou natif. Copié avec le frontend.
-$qtGlass = Join-Path $root 'src\frontend\QtGlassBackdrop.dll'
-if (-not (Test-Path $qtGlass)) { throw "QtGlassBackdrop.dll manquant dans src\frontend. Compile-le avec : cmd /c src\frontend\build-qt-glass.cmd" }
+$qtGlass = Join-Path $root 'build\QtGlassBackdrop.dll'
+if (-not (Test-Path $qtGlass)) {
+    cmd /c (Join-Path $root 'src\native\qtglass\build-qt-glass.cmd')
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $qtGlass)) { throw "QtGlassBackdrop.dll manquant dans build : compilation (src\native\qtglass\build-qt-glass.cmd) echouee." }
+}
 $frontDest = Join-Path $payload 'Caelestia-Windows'
 robocopy (Join-Path $root 'src\frontend') $frontDest /E /NFL /NDL /NJH /NJS /NP `
     /XD '.venv' 'validation-*' 'checkpoint-*' '__pycache__' '/XF' '*.zip' '*.pyc' | Out-Null
+# La DLL est produite dans build\ : elle doit finir a cote des modules du frontend (native_glass.default_library).
+Copy-Item -LiteralPath $qtGlass -Destination $frontDest -Force
 
 Write-Host '→ Python embarqué' -ForegroundColor Cyan
 $pyDir = Join-Path $frontDest '.venv\Scripts'
@@ -157,6 +162,7 @@ Write-Host '→ Vérification du frontend dans le payload' -ForegroundColor Cyan
 $probe = Join-Path $frontDest '_probe.py'
 Set-Content -LiteralPath $probe -Encoding ASCII -Value @'
 import interaction, search, live_model, capture_native, wallpaper_theme, native_glass, surface_geometry
+import win_native, bridge_client, windows_player
 from PySide6.QtQuick import QQuickWindow
 print('frontend ok')
 '@

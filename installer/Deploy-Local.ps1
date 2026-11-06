@@ -85,10 +85,10 @@ Get-ChildItem $stage -File -Recurse | ForEach-Object {
 }
 
 Write-Host '-> Verre natif Qt' -ForegroundColor Cyan
-$qtGlass = Join-Path $root 'src\frontend\QtGlassBackdrop.dll'
+$qtGlass = Join-Path $root 'build\QtGlassBackdrop.dll'
 if (-not (Test-Path $qtGlass)) {
-    cmd /c (Join-Path $root 'src\frontend\build-qt-glass.cmd')
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $qtGlass)) { throw 'QtGlassBackdrop.dll manquant : compilation (src\frontend\build-qt-glass.cmd) echouee.' }
+    cmd /c (Join-Path $root 'src\native\qtglass\build-qt-glass.cmd')
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $qtGlass)) { throw 'QtGlassBackdrop.dll manquant : compilation (src\native\qtglass\build-qt-glass.cmd) echouee.' }
 }
 
 Write-Host '-> Copie frontend' -ForegroundColor Cyan
@@ -96,6 +96,8 @@ robocopy (Join-Path $root 'src\frontend') $front /E /NFL /NDL /NJH /NJS /NP `
     /XD '.venv' '__pycache__' 'tests' 'validation-*' 'checkpoint-*' /XF '*.zip' '*.pyc' | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy frontend: $LASTEXITCODE" }
 $global:LASTEXITCODE = 0
+# La DLL est produite dans build\ : elle doit finir a cote des modules du frontend.
+Copy-Item -LiteralPath $qtGlass -Destination $front -Force
 
 if (-not $NoStart) {
     Write-Host '-> Demarrage' -ForegroundColor Cyan

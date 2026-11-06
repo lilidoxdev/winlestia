@@ -40,7 +40,7 @@ public class SettingsMigrationAndShortcutsTests
     static string RepoRoot()
     {
         for (var d = new DirectoryInfo(AppContext.BaseDirectory); d != null; d = d.Parent)
-            if (File.Exists(Path.Combine(d.FullName, "src", "backend", "QtShellBridge.cs")))
+            if (File.Exists(Path.Combine(d.FullName, "src", "backend", "Bridge", "QtShellBridge.cs")))
                 return d.FullName;
         throw new DirectoryNotFoundException("racine du depot introuvable depuis " + AppContext.BaseDirectory);
     }
@@ -328,7 +328,7 @@ public class SettingsMigrationAndShortcutsTests
     {
         // Source layout is not part of the contract: compare with all whitespace removed.
         string src = System.Text.RegularExpressions.Regex.Replace(
-            File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "QtShellBridge.cs")),
+            File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Bridge", "QtShellBridge.cs")),
             @"\s+",
             "");
         Check(src.Contains("case\"dockVisible\":Store.State.DockVisible=Flag(args,\"enabled\");if(!Store.State.DockVisible&&owner.TaskbarEnabled)owner.SetTaskbar(false);"),

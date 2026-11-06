@@ -17,7 +17,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickItem
 from PySide6.QtTest import QTest
 from PySide6.QtCore import Qt
-import frontend
+import app_state
 from frontend import Bridge, ROOT
 from localization import Translator
 import faulthandler
@@ -38,7 +38,7 @@ qInstallMessageHandler(
 )
 for font in (ROOT / 'assets/fonts').glob('*.ttf'):
     QFontDatabase.addApplicationFont(str(font))
-frontend.TRANSLATOR = Translator(tempfile.mkdtemp(prefix="wl-lang-"))
+app_state.TRANSLATOR = Translator(tempfile.mkdtemp(prefix="wl-lang-"))
 # Mirrors ShortcutCatalog.cs (ShortcutManager.List) exactly: same ids, groups, labels, defaults, reasons.
 SHORTCUTS = [
     {
@@ -280,7 +280,7 @@ def find(root, name):
 
 def run():
     for lang in ('fr', 'en', 'es'):
-        frontend.TRANSLATOR.select(lang)
+        app_state.TRANSLATOR.select(lang)
         for w, h in ((1280, 800), (640, 720)):
             e = build(w, h)
             root = e.rootObjects()[0] if e.rootObjects() else None
@@ -295,7 +295,7 @@ def run():
                 root.setProperty('pageTo', -1)
                 root.setProperty('pageTo', page)
                 yield 350
-            app.installTranslator(frontend.TRANSLATOR)
+            app.installTranslator(app_state.TRANSLATOR)
             e.retranslate()
             root.setProperty('pageTo', -1)
             yield 300
@@ -365,7 +365,7 @@ def run():
                             (not shown) and r is not None and bool(r.property('hint')) and str(r.property('hint')) != ''
                         )
             root.close()
-            app.removeTranslator(frontend.TRANSLATOR)
+            app.removeTranslator(app_state.TRANSLATOR)
             e.deleteLater()
             yield 200
     checks['noQmlWarnings'] = not issues
