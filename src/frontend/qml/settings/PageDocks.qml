@@ -30,7 +30,10 @@ ColumnLayout {
 
                 objectName: "dockVisibleToggle"
                 value: Bridge.settings.dockVisible ?? true
-                onToggled: Bridge.action("preference", {key: "dockVisible", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "dockVisible",
+                    enabled: checked
+                })
             }
         }
 
@@ -43,7 +46,10 @@ ColumnLayout {
 
                 objectName: "bookmarksRailToggle"
                 value: Bridge.settings.bookmarksRailVisible ?? true
-                onToggled: Bridge.action("preference", {key: "bookmarksRailVisible", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "bookmarksRailVisible",
+                    enabled: checked
+                })
             }
         }
 
@@ -56,7 +62,10 @@ ColumnLayout {
 
                 objectName: "socialRailToggle"
                 value: Bridge.settings.socialRailVisible ?? true
-                onToggled: Bridge.action("preference", {key: "socialRailVisible", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "socialRailVisible",
+                    enabled: checked
+                })
             }
         }
     }
@@ -74,7 +83,10 @@ ColumnLayout {
 
                 objectName: "replaceTaskbarToggle"
                 value: Bridge.taskbarEnabled
-                onToggled: Bridge.action("preference", {key: "replaceTaskbar", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "replaceTaskbar",
+                    enabled: checked
+                })
             }
         }
 
@@ -85,7 +97,10 @@ ColumnLayout {
             stepSize: 2
             value: Bridge.settings.iconSize ?? 56
             valueText: Math.round(slider.value) + " px"
-            onMoved: v => Bridge.action("preference", {key: "iconSize", value: v})
+            onMoved: v => Bridge.action("preference", {
+                    key: "iconSize",
+                    value: v
+                })
         }
     }
 
@@ -102,7 +117,10 @@ ColumnLayout {
 
                 objectName: "autoTileToggle"
                 value: page.tiling
-                onToggled: Bridge.action("preference", {key: "autoTile", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "autoTile",
+                    enabled: checked
+                })
             }
         }
 
@@ -118,12 +136,30 @@ ColumnLayout {
 
                 Repeater {
                     model: [
-                        {keys: "Ctrl+Alt+←↑→↓", label: qsTr("Passer à la tuile voisine")},
-                        {keys: "Ctrl+Alt+Maj+←↑→↓", label: qsTr("Échanger avec la tuile voisine, y compris sur l’écran d’à côté")},
-                        {keys: "Ctrl+Alt+Maj+F", label: qsTr("Sortir la fenêtre du tuilage, ou l’y remettre")},
-                        {keys: "Ctrl+Alt+Maj++", label: qsTr("Agrandir ou réduire la tuile active (20 à 80 %)")},
-                        {keys: "Ctrl+Alt+Maj+X", label: qsTr("Exclure l’application de la fenêtre active, ou la réintégrer")},
-                        {keys: "", label: qsTr("Lâcher une fenêtre sur une autre tuile les échange")}
+                        {
+                            keys: "Ctrl+Alt+←↑→↓",
+                            label: qsTr("Passer à la tuile voisine")
+                        },
+                        {
+                            keys: "Ctrl+Alt+Maj+←↑→↓",
+                            label: qsTr("Échanger avec la tuile voisine, y compris sur l’écran d’à côté")
+                        },
+                        {
+                            keys: "Ctrl+Alt+Maj+F",
+                            label: qsTr("Sortir la fenêtre du tuilage, ou l’y remettre")
+                        },
+                        {
+                            keys: "Ctrl+Alt+Maj++",
+                            label: qsTr("Agrandir ou réduire la tuile active (20 à 80 %)")
+                        },
+                        {
+                            keys: "Ctrl+Alt+Maj+X",
+                            label: qsTr("Exclure l’application de la fenêtre active, ou la réintégrer")
+                        },
+                        {
+                            keys: "",
+                            label: qsTr("Lâcher une fenêtre sur une autre tuile les échange")
+                        }
                     ]
 
                     RowLayout {
@@ -181,7 +217,10 @@ ColumnLayout {
                         IconButton {
                             icon: "close"
                             type: IconButton.Text
-                            onClicked: Bridge.action("preference", {key: "tileExclusionRemove", value: modelData})
+                            onClicked: Bridge.action("preference", {
+                                key: "tileExclusionRemove",
+                                value: modelData
+                            })
                         }
                     }
                 }

@@ -20,7 +20,10 @@ ColumnLayout {
             base.push(clipLimit);
             base.sort((a, b) => a - b);
         }
-        return base.map(v => ({label: String(v), value: v}));
+        return base.map(v => ({
+                    label: String(v),
+                    value: v
+                }));
     }
 
     spacing: Appearance.spacing.larger
@@ -37,9 +40,14 @@ ColumnLayout {
             SettingsOptionList {
                 Layout.fillWidth: true
                 namePrefix: "bookmarksBrowser-"
-                model: page.browsers.map(b => ({label: b.name + (b.isDefault ? qsTr(" (navigateur par défaut)") : ""), value: b.id}))
+                model: page.browsers.map(b => ({
+                            label: b.name + (b.isDefault ? qsTr(" (navigateur par défaut)") : ""),
+                            value: b.id
+                        }))
                 current: Bridge.bookmarks.browser
-                onChosen: v => Bridge.action("bookmarksBrowser", {id: v})
+                onChosen: v => Bridge.action("bookmarksBrowser", {
+                        id: v
+                    })
             }
 
             StyledText {
@@ -79,7 +87,10 @@ ColumnLayout {
 
                 objectName: "socialBackgroundToggle"
                 value: Bridge.settings.socialBackground ?? false
-                onToggled: Bridge.action("preference", {key: "socialBackground", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "socialBackground",
+                    enabled: checked
+                })
             }
         }
 
@@ -140,34 +151,46 @@ ColumnLayout {
                             visible: net.enabledNet && !net.connected
                             text: qsTr("Se connecter")
                             type: TextButton.Tonal
-                            onClicked: Bridge.action("socialLogin", {id: net.modelData.id})
+                            onClicked: Bridge.action("socialLogin", {
+                                id: net.modelData.id
+                            })
                         }
 
                         TextButton {
                             visible: net.connected
                             text: qsTr("Ouvrir")
                             type: TextButton.Tonal
-                            onClicked: Bridge.action("socialOpen", {id: net.modelData.id})
+                            onClicked: Bridge.action("socialOpen", {
+                                id: net.modelData.id
+                            })
                         }
 
                         IconButton {
                             visible: net.enabledNet
                             icon: net.modelData.muted ? "notifications_off" : "notifications"
                             type: net.modelData.muted ? IconButton.Tonal : IconButton.Text
-                            onClicked: Bridge.action("socialMute", {id: net.modelData.id, muted: !(net.modelData.muted ?? false)})
+                            onClicked: Bridge.action("socialMute", {
+                                id: net.modelData.id,
+                                muted: !(net.modelData.muted ?? false)
+                            })
                         }
 
                         IconButton {
                             visible: net.connected
                             icon: "logout"
                             type: IconButton.Text
-                            onClicked: Bridge.action("socialLogout", {id: net.modelData.id})
+                            onClicked: Bridge.action("socialLogout", {
+                                id: net.modelData.id
+                            })
                         }
 
                         StyledSwitch {
                             objectName: "socialEnable-" + net.modelData.id
                             checked: net.enabledNet
-                            onToggled: Bridge.action("socialEnable", {id: net.modelData.id, enabled: checked})
+                            onToggled: Bridge.action("socialEnable", {
+                                id: net.modelData.id,
+                                enabled: checked
+                            })
                         }
                     }
                 }
@@ -188,7 +211,9 @@ ColumnLayout {
 
                 objectName: "socialGlobalMute"
                 value: Bridge.social.muted ?? false
-                onToggled: Bridge.action("socialGlobalMute", {muted: checked})
+                onToggled: Bridge.action("socialGlobalMute", {
+                    muted: checked
+                })
             }
         }
 
@@ -201,7 +226,9 @@ ColumnLayout {
 
                 objectName: "socialSound"
                 value: page.sound
-                onToggled: Bridge.action("socialSound", {enabled: checked})
+                onToggled: Bridge.action("socialSound", {
+                    enabled: checked
+                })
             }
         }
 
@@ -215,7 +242,9 @@ ColumnLayout {
             valueText: Math.round(slider.value) + " %"
             commitOnRelease: true
             slider.objectName: "socialVolume"
-            onMoved: v => Bridge.action("socialVolume", {value: Math.round(v)})
+            onMoved: v => Bridge.action("socialVolume", {
+                    value: Math.round(v)
+                })
 
             TextButton {
                 text: qsTr("Tester")
@@ -237,7 +266,10 @@ ColumnLayout {
                 id: history
 
                 value: Bridge.settings.clipboardHistory ?? false
-                onToggled: Bridge.action("preference", {key: "clipboardHistory", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "clipboardHistory",
+                    enabled: checked
+                })
             }
         }
 
@@ -251,7 +283,10 @@ ColumnLayout {
                 id: images
 
                 value: Bridge.settings.clipboardImages ?? true
-                onToggled: Bridge.action("preference", {key: "clipboardImages", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "clipboardImages",
+                    enabled: checked
+                })
             }
         }
 
@@ -264,7 +299,10 @@ ColumnLayout {
                 objectName: "clipboardLimit"
                 model: page.limitModel
                 current: page.clipLimit
-                onChosen: v => Bridge.action("preference", {key: "clipboardLimit", value: v})
+                onChosen: v => Bridge.action("preference", {
+                        key: "clipboardLimit",
+                        value: v
+                    })
             }
         }
     }

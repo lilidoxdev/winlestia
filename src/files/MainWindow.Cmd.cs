@@ -12,21 +12,39 @@ using PanneauxGlass;
 
 namespace WinlestiaFiles;
 
-public sealed partial class MainWindow {
+public sealed partial class MainWindow
+{
     [DllImport("user32.dll")] static extern bool IsClipboardFormatAvailable(uint format);
     const int WM_CLIPBOARDUPDATE_CMD = 0x031D;
 
     // One command: icon + optional label (+ chevron for menus). The Button is not focusable so the keyboard shortcuts keep working after a click.
-    sealed class Cmd {
+    sealed class Cmd
+    {
         internal readonly Button Button; internal readonly TextBlock Label; readonly TextBlock glyph; readonly Func<bool> enabled; readonly bool accent, small;
         internal bool Hot, Down;
-        internal Cmd(string glyphCode, string? text, string tip, bool chevron, bool small, bool accent, Action click, Func<bool> enabled) {
-            this.enabled = enabled; this.accent = accent; this.small = small;
-            glyph = UI.Glyph(glyphCode, small ? 14 : 16); glyph.Width = small ? 18 : 20;
-            Label = UI.Text(text ?? "", M3.FontSmall); Label.Margin = new Thickness(small ? 4 : 6, 0, 0, 0); Label.VerticalAlignment = VerticalAlignment.Center; Label.TextWrapping = TextWrapping.NoWrap;
-            if (text == null) Label.Visibility = Visibility.Collapsed;
-            var row = new StackPanel { Orientation = Orientation.Horizontal }; row.Children.Add(glyph); row.Children.Add(Label);
-            if (chevron) { var c = UI.Glyph("", 8); c.Margin = new Thickness(6, 0, 0, 0); c.Tag = "chevron"; row.Children.Add(c); }
+        internal Cmd(string glyphCode, string? text, string tip, bool chevron, bool small, bool accent, Action click, Func<bool> enabled)
+        {
+            this.enabled = enabled;
+            this.accent = accent;
+            this.small = small;
+            glyph = UI.Glyph(glyphCode, small ? 14 : 16);
+            glyph.Width = small ? 18 : 20;
+            Label = UI.Text(text ?? "", M3.FontSmall);
+            Label.Margin = new Thickness(small ? 4 : 6, 0, 0, 0);
+            Label.VerticalAlignment = VerticalAlignment.Center;
+            Label.TextWrapping = TextWrapping.NoWrap;
+            if (text == null)
+                Label.Visibility = Visibility.Collapsed;
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
+            row.Children.Add(glyph);
+            row.Children.Add(Label);
+            if (chevron)
+            {
+                var c = UI.Glyph("", 8);
+                c.Margin = new Thickness(6, 0, 0, 0);
+                c.Tag = "chevron";
+                row.Children.Add(c);
+            }
             var border = new FrameworkElementFactory(typeof(Border));
             border.SetValue(Border.CornerRadiusProperty, new CornerRadius(small ? 13 : 18));
             border.SetValue(Border.BackgroundProperty, new TemplateBindingExtension(Control.BackgroundProperty));
@@ -36,8 +54,21 @@ public sealed partial class MainWindow {
             presenter.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
             presenter.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
             border.AppendChild(presenter);
-            Button = new Button { Content = row, Height = small ? 26 : 36, MinWidth = small ? 26 : 36, Template = new ControlTemplate(typeof(Button)) { VisualTree = border }, Background = Brushes.Transparent,
-                Foreground = UI.White, FontFamily = M3.Body, FontSize = M3.FontSmall, Focusable = false, OverridesDefaultStyle = true, ToolTip = tip, SnapsToDevicePixels = true };
+            Button = new Button
+            {
+                Content = row,
+                Height = small ? 26 : 36,
+                MinWidth = small ? 26 : 36,
+                Template = new ControlTemplate(typeof(Button)) { VisualTree = border },
+                Background = Brushes.Transparent,
+                Foreground = UI.White,
+                FontFamily = M3.Body,
+                FontSize = M3.FontSmall,
+                Focusable = false,
+                OverridesDefaultStyle = true,
+                ToolTip = tip,
+                SnapsToDevicePixels = true
+            };
             ToolTipService.SetShowOnDisabled(Button, true);
             SetCompact(false);
             Button.MouseEnter += (_, _) => { Hot = true; Paint(); };
@@ -47,19 +78,29 @@ public sealed partial class MainWindow {
             Button.Click += (_, _) => click();
             Paint();
         }
-        internal void SetCompact(bool compact) {
+        internal void SetCompact(bool compact)
+        {
             bool hasText = Label.Text.Length > 0;
             Label.Visibility = hasText && !compact ? Visibility.Visible : Visibility.Collapsed;
             Button.Padding = hasText && !compact ? new Thickness(small ? 8 : 12, 0, small ? 10 : 12, 0) : new Thickness(0);
         }
-        internal void Refresh() { Button.IsEnabled = enabled(); Paint(); }
-        internal void Paint() {
+        internal void Refresh()
+        {
+            Button.IsEnabled = enabled();
+            Paint();
+        }
+        internal void Paint()
+        {
             bool on = Button.IsEnabled;
             Button.Background = !on ? Brushes.Transparent : Down ? UI.Pressed : Hot ? UI.Hover : Brushes.Transparent;
             Button.Cursor = on ? Cursors.Hand : Cursors.Arrow;
             Brush fg = on ? UI.White : UI.T(M3Role.Outline);
-            glyph.Foreground = on && accent ? UI.Accent : fg; Label.Foreground = fg;
-            if (Button.Content is StackPanel p) foreach (var c in p.Children) if (c is TextBlock { Tag: "chevron" } t) t.Foreground = on ? UI.Label : fg;
+            glyph.Foreground = on && accent ? UI.Accent : fg;
+            Label.Foreground = fg;
+            if (Button.Content is StackPanel p)
+                foreach (var c in p.Children)
+                    if (c is TextBlock { Tag: "chevron" } t)
+                        t.Foreground = on ? UI.Label : fg;
         }
     }
 
@@ -71,10 +112,15 @@ public sealed partial class MainWindow {
     bool RealFolder => activeView == null || !ThisPc.Is(Active.Location);
     int SelCount => list.SelectedItems.Count;
 
-    FrameworkElement CommandBar() {
+    FrameworkElement CommandBar()
+    {
         var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        Cmd Add(string g, string? text, string tip, Action a, Func<bool> en, bool chevron = false, bool accent = false) {
-            var c = new Cmd(g, text, tip, chevron, false, accent, a, en); cmds.Add(c); row.Children.Add(c.Button); return c;
+        Cmd Add(string g, string? text, string tip, Action a, Func<bool> en, bool chevron = false, bool accent = false)
+        {
+            var c = new Cmd(g, text, tip, chevron, false, accent, a, en);
+            cmds.Add(c);
+            row.Children.Add(c.Button);
+            return c;
         }
         void Sep() => row.Children.Add(new Border { Width = 1, Height = 20, Margin = new Thickness(M3.Pad2, 0, M3.Pad2, 0), Background = UI.Hairline, SnapsToDevicePixels = true });
         Add("", "Nouveau", "Nouveau dossier (Ctrl+Maj+N)", () => Fire(NewFolderAsync), () => RealFolder, false, true);
@@ -96,8 +142,10 @@ public sealed partial class MainWindow {
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         row.Margin = new Thickness(M3.Pad3, 0, 0, 0);
-        cmdUndo.Button.Margin = new Thickness(0, 0, M3.Pad3, 0); Grid.SetColumn(cmdUndo.Button, 1);
-        grid.Children.Add(row); grid.Children.Add(cmdUndo.Button);
+        cmdUndo.Button.Margin = new Thickness(0, 0, M3.Pad3, 0);
+        Grid.SetColumn(cmdUndo.Button, 1);
+        grid.Children.Add(row);
+        grid.Children.Add(cmdUndo.Button);
         grid.SizeChanged += (_, e) => { bool compact = e.NewSize.Width < 640; foreach (var c in cmds) c.SetCompact(compact); foreach (var c in quickCmds) c.SetCompact(e.NewSize.Width < 800); };
         journal.Changed += () => Dispatcher.BeginInvoke(UpdateCommands);
         Activated += (_, _) => UpdateCommands();
@@ -106,41 +154,60 @@ public sealed partial class MainWindow {
         return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 0, 0, 1), SnapsToDevicePixels = true };
     }
 
-    IntPtr CmdHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-        if (msg == WM_CLIPBOARDUPDATE_CMD) Dispatcher.BeginInvoke(UpdateCommands);
+    IntPtr CmdHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WM_CLIPBOARDUPDATE_CMD)
+            Dispatcher.BeginInvoke(UpdateCommands);
         return IntPtr.Zero;
     }
 
     readonly List<Cmd> quickCmds = new();
 
-    void UpdateCommands() {
-        if (closed || cmds.Count == 0) return;
-        foreach (var c in cmds) c.Refresh();
+    void UpdateCommands()
+    {
+        if (closed || cmds.Count == 0)
+            return;
+        foreach (var c in cmds)
+            c.Refresh();
         cmdUndo.Button.ToolTip = journal.NextUndo is { } u ? (u.Irreversible ? "Annuler (impossible : " + u.Why + ")" : "Annuler " + u.Label + " (Ctrl+Z)") : "Annuler (Ctrl+Z) : rien à annuler";
         cmdPaste.Button.ToolTip = cmdPaste.Button.IsEnabled ? "Coller (Ctrl+V)" : "Coller (Ctrl+V) : le presse-papiers ne contient aucun fichier";
     }
 
-    void ShowViewMenu() {
+    void ShowViewMenu()
+    {
         var id = NativeMenu.Show(Hwnd, new NativeMenu.Item?[] {
             new(1, "Liste", view == ViewMode.List), new(2, "Détails", view == ViewMode.Details),
             new(3, "Icônes moyennes", view == ViewMode.Medium), new(4, "Grandes icônes", view == ViewMode.Large) });
-        if (id is >= 1 and <= 4) SetView((ViewMode)(id - 1));
+        if (id is >= 1 and <= 4)
+            SetView((ViewMode)(id - 1));
     }
 
     // Status bar: counts on the left, quick actions for the current selection, the four view buttons on the right.
-    FrameworkElement StatusBar() {
+    FrameworkElement StatusBar()
+    {
         var grid = new Grid { Height = 34 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        status.Margin = new Thickness(M3.Sp3, 0, M3.Sp3, 0); status.VerticalAlignment = VerticalAlignment.Center; status.TextTrimming = TextTrimming.CharacterEllipsis;
+        status.Margin = new Thickness(M3.Sp3, 0, M3.Sp3, 0);
+        status.VerticalAlignment = VerticalAlignment.Center;
+        status.TextTrimming = TextTrimming.CharacterEllipsis;
         selActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
-        void Quick(string g, string text, string tip, Action a) { var c = new Cmd(g, text, tip, false, true, false, a, () => true); quickCmds.Add(c); selActions.Children.Add(c.Button); }
+        void Quick(string g, string text, string tip, Action a)
+        {
+            var c = new Cmd(g, text, tip, false, true, false, a, () => true);
+            quickCmds.Add(c);
+            selActions.Children.Add(c.Button);
+        }
         Quick("", "Ouvrir", "Ouvrir la sélection (Entrée)", () => OpenSelected(false));
         Quick("", "Copier le chemin", "Copier le chemin (Ctrl+Maj+C)", () => CopyPaths(Selection()));
         Quick("", "Supprimer", "Supprimer (Suppr)", () => Fire(() => DeleteSelectedAsync(false)));
-        var viewBar = ViewBar(); Grid.SetColumn(selActions, 1); Grid.SetColumn(viewBar, 2);
-        grid.Children.Add(status); grid.Children.Add(selActions); grid.Children.Add(viewBar);
+        var viewBar = ViewBar();
+        Grid.SetColumn(selActions, 1);
+        Grid.SetColumn(viewBar, 2);
+        grid.Children.Add(status);
+        grid.Children.Add(selActions);
+        grid.Children.Add(viewBar);
         return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 1, 0, 0), SnapsToDevicePixels = true };
     }
 
@@ -148,16 +215,27 @@ public sealed partial class MainWindow {
         : size < 1024L * 1024 * 1024 ? (size / 1048576.0).ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " Mo" : (size / 1073741824.0).ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " Go";
 
     // "N sélectionnés — taille totale" (files only: a folder size would need a recursive walk, which is never done here).
-    string SelectionSummary(int m) {
-        long total = 0; int dirs = 0;
-        foreach (FileItem item in list.SelectedItems) { if (item.IsDir) dirs++; else total += item.Size; }
-        if (dirs == m) return "";
+    string SelectionSummary(int m)
+    {
+        long total = 0;
+        int dirs = 0;
+        foreach (FileItem item in list.SelectedItems)
+        {
+            if (item.IsDir)
+                dirs++;
+            else
+                total += item.Size;
+        }
+        if (dirs == m)
+            return "";
         return " — " + FormatBytes(total) + (dirs > 0 ? " (hors dossiers)" : "");
     }
 
     // The search field names the folder it searches.
-    void UpdateSearchHint(string location) {
-        if (searchHint == null) return;
+    void UpdateSearchHint(string location)
+    {
+        if (searchHint == null)
+            return;
         string name = ThisPc.Is(location) ? ThisPc.Label : System.IO.Path.GetFileName(location.TrimEnd('\\', '/')) is { Length: > 0 } leaf ? leaf : location;
         searchHint.Text = "Rechercher dans " + name;
     }

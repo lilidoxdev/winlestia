@@ -7,11 +7,18 @@ using System.Windows.Media;
 
 namespace WinlestiaFiles;
 
-public sealed class TilePanel : VirtualizingPanel, IScrollInfo {
+public sealed class TilePanel : VirtualizingPanel, IScrollInfo
+{
     public static readonly DependencyProperty CellWProperty = DependencyProperty.Register(nameof(CellW), typeof(double), typeof(TilePanel), new FrameworkPropertyMetadata(132.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
     public static readonly DependencyProperty CellHProperty = DependencyProperty.Register(nameof(CellH), typeof(double), typeof(TilePanel), new FrameworkPropertyMetadata(156.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
-    public double CellW { get => (double)GetValue(CellWProperty); set => SetValue(CellWProperty, value); }
-    public double CellH { get => (double)GetValue(CellHProperty); set => SetValue(CellHProperty, value); }
+    public double CellW
+    {
+        get => (double)GetValue(CellWProperty); set => SetValue(CellWProperty, value);
+    }
+    public double CellH
+    {
+        get => (double)GetValue(CellHProperty); set => SetValue(CellHProperty, value);
+    }
     internal int Cols => cols;
     ScrollViewer? owner;
     Size extent, viewport;
@@ -20,18 +27,22 @@ public sealed class TilePanel : VirtualizingPanel, IScrollInfo {
 
     ItemsControl? Owner => ItemsControl.GetItemsOwner(this);
 
-    protected override Size MeasureOverride(Size available) {
+    protected override Size MeasureOverride(Size available)
+    {
         _ = InternalChildren;                                   // creates the generator
         double w = double.IsInfinity(available.Width) ? CellW : available.Width;
         double h = double.IsInfinity(available.Height) ? CellH * 4 : available.Height;
-        var owner = Owner; int n = owner?.Items.Count ?? 0;
+        var owner = Owner;
+        int n = owner?.Items.Count ?? 0;
         cols = Math.Max(1, (int)(w / CellW));
         var newExtent = new Size(w, Math.Ceiling(n / (double)cols) * CellH);
         var newViewport = new Size(w, h);
         bool changed = newExtent != extent || newViewport != viewport;
-        extent = newExtent; viewport = newViewport;
+        extent = newExtent;
+        viewport = newViewport;
         offsetY = Math.Clamp(offsetY, 0, Math.Max(0, extent.Height - viewport.Height));
-        if (changed) this.owner?.InvalidateScrollInfo();
+        if (changed)
+            this.owner?.InvalidateScrollInfo();
 
         int firstRow = (int)(offsetY / CellH), lastRow = (int)((offsetY + h - 0.5) / CellH);
         int first = Math.Min(firstRow * cols, n), last = Math.Min((lastRow + 1) * cols, n) - 1;
@@ -39,24 +50,37 @@ public sealed class TilePanel : VirtualizingPanel, IScrollInfo {
         return new Size(w, h);
     }
 
-    void Realize(int first, int last, ItemsControl? owner) {
+    void Realize(int first, int last, ItemsControl? owner)
+    {
         var gen = ItemContainerGenerator;
         bool recycle = gen is IRecyclingItemContainerGenerator && owner != null && GetVirtualizationMode(owner) == VirtualizationMode.Recycling;
-        for (int i = InternalChildren.Count - 1; i >= 0; i--) {
+        for (int i = InternalChildren.Count - 1; i >= 0; i--)
+        {
             var pos = new GeneratorPosition(i, 0);
             int index = gen.IndexFromGeneratorPosition(pos);
-            if (index >= first && index <= last) continue;
-            if (recycle) ((IRecyclingItemContainerGenerator)gen).Recycle(pos, 1); else gen.Remove(pos, 1);
+            if (index >= first && index <= last)
+                continue;
+            if (recycle)
+                ((IRecyclingItemContainerGenerator)gen).Recycle(pos, 1);
+            else
+                gen.Remove(pos, 1);
             RemoveInternalChildRange(i, 1);
         }
-        if (last < first) return;
+        if (last < first)
+            return;
         var start = gen.GeneratorPositionFromIndex(first);
         int child = start.Offset == 0 ? start.Index : start.Index + 1;
-        using (gen.StartAt(start, GeneratorDirection.Forward, true)) {
-            for (int index = first; index <= last; index++, child++) {
+        using (gen.StartAt(start, GeneratorDirection.Forward, true))
+        {
+            for (int index = first; index <= last; index++, child++)
+            {
                 var element = (UIElement)gen.GenerateNext(out bool isNew);
-                if (isNew) {
-                    if (child >= InternalChildren.Count) AddInternalChild(element); else InsertInternalChild(child, element);
+                if (isNew)
+                {
+                    if (child >= InternalChildren.Count)
+                        AddInternalChild(element);
+                    else
+                        InsertInternalChild(child, element);
                     gen.PrepareItemContainer(element);
                 }
                 element.Measure(new Size(CellW, CellH));
@@ -64,17 +88,21 @@ public sealed class TilePanel : VirtualizingPanel, IScrollInfo {
         }
     }
 
-    protected override Size ArrangeOverride(Size finalSize) {
+    protected override Size ArrangeOverride(Size finalSize)
+    {
         var gen = ItemContainerGenerator;
-        for (int i = 0; i < InternalChildren.Count; i++) {
+        for (int i = 0; i < InternalChildren.Count; i++)
+        {
             int index = gen.IndexFromGeneratorPosition(new GeneratorPosition(i, 0));
             InternalChildren[i].Arrange(new Rect((index % cols) * CellW, (index / cols) * CellH - offsetY, CellW, CellH));
         }
         return finalSize;
     }
 
-    protected override void OnItemsChanged(object sender, ItemsChangedEventArgs args) {
-        switch (args.Action) {
+    protected override void OnItemsChanged(object sender, ItemsChangedEventArgs args)
+    {
+        switch (args.Action)
+        {
             case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
             case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
             case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
@@ -84,48 +112,76 @@ public sealed class TilePanel : VirtualizingPanel, IScrollInfo {
         InvalidateMeasure();
     }
 
-    protected override void BringIndexIntoView(int index) {
+    protected override void BringIndexIntoView(int index)
+    {
         double top = index / cols * CellH, bottom = top + CellH;
-        if (top < offsetY) SetVerticalOffset(top);
-        else if (bottom > offsetY + viewport.Height) SetVerticalOffset(bottom - viewport.Height);
+        if (top < offsetY)
+            SetVerticalOffset(top);
+        else if (bottom > offsetY + viewport.Height)
+            SetVerticalOffset(bottom - viewport.Height);
     }
 
     // ---- IScrollInfo (vertical pixels only) --------------------------------------------------------------------
     public bool CanVerticallyScroll { get; set; } = true;
-    public bool CanHorizontallyScroll { get; set; }
+    public bool CanHorizontallyScroll
+    {
+        get; set;
+    }
     public double ExtentWidth => extent.Width;
     public double ExtentHeight => extent.Height;
     public double ViewportWidth => viewport.Width;
     public double ViewportHeight => viewport.Height;
     public double HorizontalOffset => 0;
     public double VerticalOffset => offsetY;
-    public ScrollViewer? ScrollOwner { get => owner; set => owner = value; }
+    public ScrollViewer? ScrollOwner
+    {
+        get => owner; set => owner = value;
+    }
 
-    public void SetVerticalOffset(double offset) {
+    public void SetVerticalOffset(double offset)
+    {
         offset = Math.Clamp(offset, 0, Math.Max(0, extent.Height - viewport.Height));
-        if (offset == offsetY) return;
+        if (offset == offsetY)
+            return;
         offsetY = offset;
         InvalidateMeasure();
         owner?.InvalidateScrollInfo();
     }
-    public void SetHorizontalOffset(double offset) { }
+    public void SetHorizontalOffset(double offset)
+    {
+    }
     public void LineUp() => SetVerticalOffset(offsetY - 48);
     public void LineDown() => SetVerticalOffset(offsetY + 48);
     public void PageUp() => SetVerticalOffset(offsetY - viewport.Height);
     public void PageDown() => SetVerticalOffset(offsetY + viewport.Height);
     public void MouseWheelUp() => SetVerticalOffset(offsetY - Math.Max(CellH * 0.75, 64));
     public void MouseWheelDown() => SetVerticalOffset(offsetY + Math.Max(CellH * 0.75, 64));
-    public void LineLeft() { }
-    public void LineRight() { }
-    public void PageLeft() { }
-    public void PageRight() { }
-    public void MouseWheelLeft() { }
-    public void MouseWheelRight() { }
+    public void LineLeft()
+    {
+    }
+    public void LineRight()
+    {
+    }
+    public void PageLeft()
+    {
+    }
+    public void PageRight()
+    {
+    }
+    public void MouseWheelLeft()
+    {
+    }
+    public void MouseWheelRight()
+    {
+    }
 
-    public Rect MakeVisible(Visual visual, Rect rectangle) {
-        if (visual is UIElement element) {
+    public Rect MakeVisible(Visual visual, Rect rectangle)
+    {
+        if (visual is UIElement element)
+        {
             int i = InternalChildren.IndexOf(element);
-            if (i >= 0) BringIndexIntoView(ItemContainerGenerator.IndexFromGeneratorPosition(new GeneratorPosition(i, 0)));
+            if (i >= 0)
+                BringIndexIntoView(ItemContainerGenerator.IndexFromGeneratorPosition(new GeneratorPosition(i, 0)));
         }
         return rectangle;
     }

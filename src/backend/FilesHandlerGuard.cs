@@ -8,9 +8,13 @@ using System.Linq;
 
 namespace Winlestia.Shared;
 
-internal enum HandlerStartup { Nothing, Ensure, RestoreAndDisable, TrippedDisable }
+internal enum HandlerStartup
+{
+    Nothing, Ensure, RestoreAndDisable, TrippedDisable
+}
 
-internal static class FilesHandlerGuard {
+internal static class FilesHandlerGuard
+{
     internal const int Limit = 3, WindowMs = 60000;
     internal const string StampsFile = "startup-crashes.txt", FlagFile = "handler-tripped.flag";
 
@@ -37,33 +41,56 @@ internal static class FilesHandlerGuard {
 
     internal static long NowMs() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-    static List<long> Read(string dir) {
-        try {
+    static List<long> Read(string dir)
+    {
+        try
+        {
             string f = Path.Combine(dir, StampsFile);
             return File.Exists(f) ? File.ReadAllLines(f).Select(l => long.TryParse(l.Trim(), out var v) ? v : -1).Where(v => v >= 0).ToList() : new List<long>();
-        } catch { return new List<long>(); }
+        }
+        catch { return new List<long>(); }
     }
 
     // Records one startup crash. Returns true when the limit is reached AND there was something to undo: the handler was then restored and the flag written.
-    internal static bool RecordStartupCrash(string dir, long nowMs, HandlerOptions? options = null) {
-        try {
+    internal static bool RecordStartupCrash(string dir, long nowMs, HandlerOptions? options = null)
+    {
+        try
+        {
             Directory.CreateDirectory(dir);
             var stamps = Prune(Read(dir).Append(nowMs), nowMs);
             string file = Path.Combine(dir, StampsFile);
-            if (!ShouldTrip(stamps, nowMs)) { File.WriteAllLines(file, stamps.Select(s => s.ToString())); return false; }
-            try { File.Delete(file); } catch { }
+            if (!ShouldTrip(stamps, nowMs))
+            {
+                File.WriteAllLines(file, stamps.Select(s => s.ToString()));
+                return false;
+            }
+            try
+            {
+                File.Delete(file);
+            }
+            catch { }
             var o = options ?? HandlerOptions.FromEnvironment();
-            if (!FilesHandler.IsActive(o)) return false;          // handler not enabled: nothing to undo, no flag, no misleading toast
+            if (!FilesHandler.IsActive(o))
+                return false;          // handler not enabled: nothing to undo, no flag, no misleading toast
             var r = FilesHandler.Restore(o);
             FilesHandler.Log("crash guard: 3 startup crashes in 60 s, restore " + (r.Ok ? "ok" : "FAILED: " + r.Message));
             File.WriteAllText(Path.Combine(dir, FlagFile), nowMs.ToString());
             return true;
-        } catch { return false; }
+        }
+        catch { return false; }
     }
 
     // True once if the flag exists (and removes it).
-    internal static bool ConsumeFlag(string dir) {
-        try { string f = Path.Combine(dir, FlagFile); if (!File.Exists(f)) return false; File.Delete(f); return true; }
+    internal static bool ConsumeFlag(string dir)
+    {
+        try
+        {
+            string f = Path.Combine(dir, FlagFile);
+            if (!File.Exists(f))
+                return false;
+            File.Delete(f);
+            return true;
+        }
         catch { return false; }
     }
 }

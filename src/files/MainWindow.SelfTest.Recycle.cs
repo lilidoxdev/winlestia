@@ -7,19 +7,27 @@ using System.Threading.Tasks;
 
 namespace WinlestiaFiles;
 
-public sealed partial class MainWindow {
-    async Task RecycleTest() {
+public sealed partial class MainWindow
+{
+    async Task RecycleTest()
+    {
         string F = Path.GetFullPath(Active.Location);
-        if (!F.StartsWith(Path.Combine(Path.GetTempPath(), "WinlestiaFilesOps"), StringComparison.OrdinalIgnoreCase)) { T("ABORT fixture outside %TEMP%/WinlestiaFilesOps: " + F); return; }
+        if (!F.StartsWith(Path.Combine(Path.GetTempPath(), "WinlestiaFilesOps"), StringComparison.OrdinalIgnoreCase))
+        {
+            T("ABORT fixture outside %TEMP%/WinlestiaFilesOps: " + F);
+            return;
+        }
         FileOps.Quiet = true;
         await WaitLoaded();
         int n = int.TryParse(Environment.GetEnvironmentVariable("WINLESTIA_FILES_RECYCLE_BUILDS"), out var b) ? b : 0;
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++)
+        {
             using var s = i % 2 == 0 ? ShellItems.OfFolder(F) : ShellItems.Of(new[] { Path.Combine(F, "bigfile.bin") });
             using var m = s == null ? null : ShellMenu.Create(Hwnd, s, false);
         }
         T($"RECYCLE builds={ShellMenu.Builds} threshold={App.RecycleMenus} pid={Environment.ProcessId}");
-        if (Environment.GetEnvironmentVariable("WINLESTIA_FILES_RECYCLE_OP") == "1") {
+        if (Environment.GetEnvironmentVariable("WINLESTIA_FILES_RECYCLE_OP") == "1")
+        {
             Directory.CreateDirectory(Path.Combine(F, "dest"));
             var op = FileOps.Copy(Hwnd, new[] { Path.Combine(F, "bigfile.bin") }, Path.Combine(F, "dest"), false, WatchSet());
             _ = op.ContinueWith(_ => T("RECYCLE opdone"));

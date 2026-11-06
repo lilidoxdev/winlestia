@@ -29,7 +29,12 @@ Flow {
         }
         return flat;
     }
-    readonly property var arrowIcons: ({"←": "arrow_back", "↑": "arrow_upward", "→": "arrow_forward", "↓": "arrow_downward"})
+    readonly property var arrowIcons: ({
+            "←": "arrow_back",
+            "↑": "arrow_upward",
+            "→": "arrow_forward",
+            "↓": "arrow_downward"
+        })
 
     spacing: 5
 

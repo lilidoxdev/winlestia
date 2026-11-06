@@ -230,7 +230,7 @@ Item {
                 anchors.bottom: label.top
 
                 text: tab.iconName
-                color: Bridge.themeMode==="auto" ? Qt.alpha(Colours.palette.m3primary,tab.current?1:.78) : tab.current ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                color: Bridge.themeMode === "auto" ? Qt.alpha(Colours.palette.m3primary, tab.current ? 1 : .78) : tab.current ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                 fill: tab.current ? 1 : 0
                 font.pointSize: Appearance.font.size.large
 

@@ -22,8 +22,35 @@ Window {
     x: Bridge.screenX + (Bridge.screenWidth - width) / 2
     y: Bridge.screenY + (Bridge.screenHeight - height) / 2
 
-    property var roles: [{key: "background", label: qsTr("Fond")}, {key: "text", label: qsTr("Texte")}, {key: "primary", label: qsTr("Principal")}, {key: "secondary", label: qsTr("Secondaire")}, {key: "tertiary", label: qsTr("Troisième accent")}]
-    property var draft: ({background: "#fff8f6", text: "#261916", primary: "#895143", secondary: "#775b52", tertiary: "#68613c"})
+    property var roles: [
+        {
+            key: "background",
+            label: qsTr("Fond")
+        },
+        {
+            key: "text",
+            label: qsTr("Texte")
+        },
+        {
+            key: "primary",
+            label: qsTr("Principal")
+        },
+        {
+            key: "secondary",
+            label: qsTr("Secondaire")
+        },
+        {
+            key: "tertiary",
+            label: qsTr("Troisième accent")
+        }
+    ]
+    property var draft: ({
+            background: "#fff8f6",
+            text: "#261916",
+            primary: "#895143",
+            secondary: "#775b52",
+            tertiary: "#68613c"
+        })
     property int selected: 0
     property real hue: 0
     property real saturation: 0
@@ -641,7 +668,11 @@ Window {
                     text: qsTr("Appliquer")
                     icon: "check"
                     onClicked: {
-                        Bridge.action("customTheme", {colors: studio.draft, glass: studio.glass, opacity: 1 - studio.transparency / 100});
+                        Bridge.action("customTheme", {
+                            colors: studio.draft,
+                            glass: studio.glass,
+                            opacity: 1 - studio.transparency / 100
+                        });
                         studio.finish();
                     }
                 }

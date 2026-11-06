@@ -27,7 +27,10 @@ ColumnLayout {
                 id: borders
 
                 value: page.borders
-                onToggled: Bridge.action("preference", {key: "accentBorders", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "accentBorders",
+                    enabled: checked
+                })
             }
         }
 
@@ -41,7 +44,10 @@ ColumnLayout {
                 id: activeOnly
 
                 value: Bridge.settings.activeBorderOnly ?? false
-                onToggled: Bridge.action("preference", {key: "activeBorderOnly", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "activeBorderOnly",
+                    enabled: checked
+                })
             }
         }
     }
@@ -58,7 +64,10 @@ ColumnLayout {
                 id: frame
 
                 value: Bridge.frameEnabled
-                onToggled: Bridge.action("preference", {key: "screenFrame", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "screenFrame",
+                    enabled: checked
+                })
             }
         }
 
@@ -71,7 +80,10 @@ ColumnLayout {
             value: Bridge.frameThickness
             valueText: Math.round(slider.value) + " px"
             slider.objectName: "frameThicknessSlider"
-            onMoved: v => Bridge.action("preference", {key: "frameThickness", value: v})
+            onMoved: v => Bridge.action("preference", {
+                    key: "frameThickness",
+                    value: v
+                })
         }
     }
 
@@ -88,7 +100,10 @@ ColumnLayout {
 
                 objectName: "desktopLogoToggle"
                 value: Bridge.settings.desktopLogo ?? false
-                onToggled: Bridge.action("preference", {key: "desktopLogo", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "desktopLogo",
+                    enabled: checked
+                })
             }
         }
 
@@ -101,7 +116,10 @@ ColumnLayout {
 
                 objectName: "desktopIndicatorToggle"
                 value: Bridge.settings.desktopIndicator ?? true
-                onToggled: Bridge.action("preference", {key: "desktopIndicator", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "desktopIndicator",
+                    enabled: checked
+                })
             }
         }
 
@@ -114,7 +132,10 @@ ColumnLayout {
 
                 objectName: "quietFullscreenToggle"
                 value: Bridge.settings.quietFullscreen ?? true
-                onToggled: Bridge.action("preference", {key: "quietFullscreen", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "quietFullscreen",
+                    enabled: checked
+                })
             }
         }
     }

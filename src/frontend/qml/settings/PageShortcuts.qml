@@ -14,10 +14,30 @@ ColumnLayout {
     readonly property var all: Bridge.settings.shortcuts ?? []
     // Panel-local keys are handled in QML, so the backend does not list them.
     readonly property var local: [
-        {id: "local-tabs", group: qsTr("Dans le panneau"), label: qsTr("Changer d’onglet"), combo: "Ctrl+1 … Ctrl+4"},
-        {id: "local-history", group: qsTr("Dans le panneau"), label: qsTr("Historique du presse-papiers"), combo: "Ctrl+H"},
-        {id: "local-search", group: qsTr("Dans le panneau"), label: qsTr("Rechercher"), combo: "Ctrl+F"},
-        {id: "local-close", group: qsTr("Dans le panneau"), label: qsTr("Fermer le panneau"), combo: "Échap"}
+        {
+            id: "local-tabs",
+            group: qsTr("Dans le panneau"),
+            label: qsTr("Changer d’onglet"),
+            combo: "Ctrl+1 … Ctrl+4"
+        },
+        {
+            id: "local-history",
+            group: qsTr("Dans le panneau"),
+            label: qsTr("Historique du presse-papiers"),
+            combo: "Ctrl+H"
+        },
+        {
+            id: "local-search",
+            group: qsTr("Dans le panneau"),
+            label: qsTr("Rechercher"),
+            combo: "Ctrl+F"
+        },
+        {
+            id: "local-close",
+            group: qsTr("Dans le panneau"),
+            label: qsTr("Fermer le panneau"),
+            combo: "Échap"
+        }
     ]
     readonly property var groups: {
         const names = [];
@@ -86,7 +106,9 @@ ColumnLayout {
                         objectName: "shortcutReset-" + sc.modelData.id
                         icon: "restart_alt"
                         type: IconButton.Text
-                        onClicked: Bridge.action("shortcut-reset", {id: sc.modelData.id})
+                        onClicked: Bridge.action("shortcut-reset", {
+                            id: sc.modelData.id
+                        })
                     }
 
                     TextButton {

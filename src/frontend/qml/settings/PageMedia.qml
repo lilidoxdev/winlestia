@@ -28,7 +28,10 @@ ColumnLayout {
 
                 objectName: "osdToggle"
                 value: Bridge.settings.osd ?? true
-                onToggled: Bridge.action("preference", {key: "osd", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "osd",
+                    enabled: checked
+                })
             }
         }
     }
@@ -46,7 +49,10 @@ ColumnLayout {
 
                 objectName: "dictationToggle"
                 value: Bridge.settings.dictationEnabled ?? false
-                onToggled: Bridge.action("preference", {key: "dictationEnabled", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "dictationEnabled",
+                    enabled: checked
+                })
             }
         }
 

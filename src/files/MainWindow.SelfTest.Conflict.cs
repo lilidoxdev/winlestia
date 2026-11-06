@@ -14,102 +14,230 @@ namespace WinlestiaFiles;
 // One scripted action on a native dialog: first element (by token priority, case-insensitive substring of its Name) found in any non-main window of this process.
 internal sealed record UiaStep(string Label, string[] Tokens, bool CheckAll = false, int WaitMs = 8000, bool Optional = false, bool Closes = false);     // Closes: the clicked element must disappear (retried, then a real mouse click, if the first Invoke was swallowed)
 
-internal static class Uia {
+internal static class Uia
+{
     [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr w, IntPtr l);
     [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] static extern void mouse_event(uint flags, int dx, int dy, uint data, UIntPtr extra);
 
-    internal static List<AutomationElement> Windows(int mainHwnd) {
+    internal static List<AutomationElement> Windows(int mainHwnd)
+    {
         var cond = new OrCondition(new PropertyCondition(AutomationElement.ProcessIdProperty, Environment.ProcessId), new PropertyCondition(AutomationElement.ClassNameProperty, "OperationStatusWindow"));
         var list = new List<AutomationElement>();
-        try { foreach (AutomationElement w in AutomationElement.RootElement.FindAll(TreeScope.Children, cond)) { try { if (w.Current.NativeWindowHandle != mainHwnd) list.Add(w); } catch { } } } catch { }
+        try
+        {
+            foreach (AutomationElement w in AutomationElement.RootElement.FindAll(TreeScope.Children, cond))
+            {
+                try
+                {
+                    if (w.Current.NativeWindowHandle != mainHwnd)
+                        list.Add(w);
+                }
+                catch { }
+            }
+        }
+        catch { }
         return list;
     }
 
-    static bool Gone(AutomationElement e, int ms) {
+    static bool Gone(AutomationElement e, int ms)
+    {
         long end = Environment.TickCount64 + ms;
-        while (Environment.TickCount64 < end) { try { _ = e.Current.Name; _ = e.Current.BoundingRectangle; } catch { return true; } Task.Delay(100).Wait(); }
-        try { _ = e.Current.Name; return false; } catch { return true; }
+        while (Environment.TickCount64 < end)
+        {
+            try
+            {
+                _ = e.Current.Name;
+                _ = e.Current.BoundingRectangle;
+            }
+            catch { return true; }
+            Task.Delay(100).Wait();
+        }
+        try
+        {
+            _ = e.Current.Name;
+            return false;
+        }
+        catch { return true; }
     }
 
-    internal static string Describe(AutomationElement e) {
-        try { return $"{e.Current.ControlType.ProgrammaticName.Replace("ControlType.", "")}|{e.Current.Name}|{e.Current.ClassName}|{e.Current.AutomationId}"; } catch { return "?"; }
+    internal static string Describe(AutomationElement e)
+    {
+        try
+        {
+            return $"{e.Current.ControlType.ProgrammaticName.Replace("ControlType.", "")}|{e.Current.Name}|{e.Current.ClassName}|{e.Current.AutomationId}";
+        }
+        catch { return "?"; }
     }
 
-    internal static List<string> Dump(AutomationElement window, int max = 70) {
+    internal static List<string> Dump(AutomationElement window, int max = 70)
+    {
         var lines = new List<string> { "WINDOW " + Describe(window) };
-        try { foreach (AutomationElement e in window.FindAll(TreeScope.Descendants, Condition.TrueCondition)) { if (lines.Count >= max) break; lines.Add("  " + Describe(e)); } } catch { }
+        try
+        {
+            foreach (AutomationElement e in window.FindAll(TreeScope.Descendants, Condition.TrueCondition))
+            {
+                if (lines.Count >= max)
+                    break;
+                lines.Add("  " + Describe(e));
+            }
+        }
+        catch { }
         return lines;
     }
 
-    static bool Act(AutomationElement e, bool check, bool mouse = false) {
-        try {
-            if (mouse) goto click;
-            if (check) {
-                if (e.TryGetCurrentPattern(TogglePattern.Pattern, out var tp) && tp is TogglePattern t) { if (t.Current.ToggleState != ToggleState.On) t.Toggle(); return true; }
-                if (e.TryGetCurrentPattern(SelectionItemPattern.Pattern, out var sp) && sp is SelectionItemPattern s) { s.Select(); return true; }
+    static bool Act(AutomationElement e, bool check, bool mouse = false)
+    {
+        try
+        {
+            if (mouse)
+                goto click;
+            if (check)
+            {
+                if (e.TryGetCurrentPattern(TogglePattern.Pattern, out var tp) && tp is TogglePattern t)
+                {
+                    if (t.Current.ToggleState != ToggleState.On)
+                        t.Toggle();
+                    return true;
+                }
+                if (e.TryGetCurrentPattern(SelectionItemPattern.Pattern, out var sp) && sp is SelectionItemPattern s)
+                {
+                    s.Select();
+                    return true;
+                }
             }
-            if (e.TryGetCurrentPattern(InvokePattern.Pattern, out var ip) && ip is InvokePattern inv) { Task.Run(() => { try { inv.Invoke(); } catch { } }); return true; }
-            if (e.TryGetCurrentPattern(SelectionItemPattern.Pattern, out var sp2) && sp2 is SelectionItemPattern s2) { s2.Select(); return true; }
-            if (e.TryGetCurrentPattern(TogglePattern.Pattern, out var tp2) && tp2 is TogglePattern t2) { t2.Toggle(); return true; }
-            click:
+            if (e.TryGetCurrentPattern(InvokePattern.Pattern, out var ip) && ip is InvokePattern inv)
+            {
+                Task.Run(() => { try { inv.Invoke(); } catch { } });
+                return true;
+            }
+            if (e.TryGetCurrentPattern(SelectionItemPattern.Pattern, out var sp2) && sp2 is SelectionItemPattern s2)
+            {
+                s2.Select();
+                return true;
+            }
+            if (e.TryGetCurrentPattern(TogglePattern.Pattern, out var tp2) && tp2 is TogglePattern t2)
+            {
+                t2.Toggle();
+                return true;
+            }
+        click:
             var r = e.Current.BoundingRectangle;
-            if (r.IsEmpty) return false;
+            if (r.IsEmpty)
+                return false;
             SetCursorPos((int)(r.X + r.Width / 2), (int)(r.Y + r.Height / 2));
-            mouse_event(2, 0, 0, 0, UIntPtr.Zero); mouse_event(4, 0, 0, 0, UIntPtr.Zero);
+            mouse_event(2, 0, 0, 0, UIntPtr.Zero);
+            mouse_event(4, 0, 0, 0, UIntPtr.Zero);
             return true;
-        } catch { return false; }
+        }
+        catch { return false; }
     }
 
     // Runs the steps in order. Returns one log line per step ("OK label -> element" / "MISS label"); on a miss the dialog tree is dumped and the dialogs are closed (WM_CLOSE).
-    internal static Task<List<string>> Run(int mainHwnd, params UiaStep[] steps) => Task.Run(() => {
+    internal static Task<List<string>> Run(int mainHwnd, params UiaStep[] steps) => Task.Run(() =>
+    {
         var log = new List<string>();
         AutomationElement? lastHit = null;
-        foreach (var step in steps) {
+        foreach (var step in steps)
+        {
             long stepStart = Environment.TickCount64;
-            long end = Environment.TickCount64 + step.WaitMs; bool done = false, dumped = false; int seen = 0;
-            while (!done && Environment.TickCount64 < end) {
+            long end = Environment.TickCount64 + step.WaitMs;
+            bool done = false, dumped = false;
+            int seen = 0;
+            while (!done && Environment.TickCount64 < end)
+            {
                 var wins = Windows(mainHwnd);
-                if (wins.Count > 0 && !dumped && ++seen == 3) { dumped = true; foreach (var w in wins) log.AddRange(Dump(w).Select(l => "    " + l)); }
-                foreach (var w in wins) {
+                if (wins.Count > 0 && !dumped && ++seen == 3)
+                {
+                    dumped = true;
+                    foreach (var w in wins)
+                        log.AddRange(Dump(w).Select(l => "    " + l));
+                }
+                foreach (var w in wins)
+                {
                     AutomationElement[] all;
-                    try { all = w.FindAll(TreeScope.Descendants, Condition.TrueCondition).Cast<AutomationElement>().ToArray(); } catch { continue; }
-                    if (step.CheckAll) {
+                    try
+                    {
+                        all = w.FindAll(TreeScope.Descendants, Condition.TrueCondition).Cast<AutomationElement>().ToArray();
+                    }
+                    catch { continue; }
+                    if (step.CheckAll)
+                    {
                         var boxes = all.Where(e => { try { return e.Current.ControlType == ControlType.CheckBox && e.Current.AutomationId != "eltSkipCheckbox" && !e.Current.AutomationId.Contains("Global"); } catch { return false; } }).ToList();
-                        if (boxes.Count < 2) {          // the per-file tiles are filled in a moment after the page opens; the two "global" boxes are the fallback
-                            if (Environment.TickCount64 - stepStart < 6000) continue;
+                        if (boxes.Count < 2)
+                        {          // the per-file tiles are filled in a moment after the page opens; the two "global" boxes are the fallback
+                            if (Environment.TickCount64 - stepStart < 6000)
+                                continue;
                             boxes = all.Where(e => { try { return e.Current.ControlType == ControlType.CheckBox && e.Current.AutomationId.Contains("Global"); } catch { return false; } }).ToList();
-                            if (boxes.Count == 0) continue;
+                            if (boxes.Count == 0)
+                                continue;
                         }
                         Task.Delay(700).Wait();     // the page must be fully drawn before toggling
                         log.AddRange(Dump(w).Select(l => "    " + l));
                         int n = boxes.Count(b => Act(b, true));
                         Task.Delay(500).Wait();
-                        foreach (var bx in boxes) { try { if (bx.TryGetCurrentPattern(TogglePattern.Pattern, out var tq) && ((TogglePattern)tq).Current.ToggleState != ToggleState.On) Act(bx, true); } catch { } }
+                        foreach (var bx in boxes)
+                        {
+                            try
+                            {
+                                if (bx.TryGetCurrentPattern(TogglePattern.Pattern, out var tq) && ((TogglePattern)tq).Current.ToggleState != ToggleState.On)
+                                    Act(bx, true);
+                            }
+                            catch { }
+                        }
                         log.AddRange(boxes.Select(b => { try { return "    after: " + Describe(b) + " state=" + (b.TryGetCurrentPattern(TogglePattern.Pattern, out var tp) ? ((TogglePattern)tp).Current.ToggleState.ToString() : "?"); } catch { return "    after: ?"; } }));
-                        if (n == 0) continue;
-                        log.Add($"OK {step.Label} -> {n} case(s) cochée(s)"); done = true; break;
+                        if (n == 0)
+                            continue;
+                        log.Add($"OK {step.Label} -> {n} case(s) cochée(s)");
+                        done = true;
+                        break;
                     }
-                    foreach (var token in step.Tokens) {
+                    foreach (var token in step.Tokens)
+                    {
                         var hit = all.FirstOrDefault(e => { try { return (token[0] == '=' ? string.Equals(e.Current.Name, token[1..], StringComparison.OrdinalIgnoreCase) : e.Current.Name.Contains(token, StringComparison.OrdinalIgnoreCase)) && e.Current.IsEnabled && !e.Current.IsOffscreen; } catch { return false; } });
-                        if (hit != null && Act(hit, false)) {
+                        if (hit != null && Act(hit, false))
+                        {
                             string how = "invoke";
-                            if (step.Closes) {
-                                for (int attempt = 0; attempt < 3 && !Gone(hit, 1500); attempt++) { how = attempt == 0 ? "invoke x2" : "mouse"; Act(hit, false, mouse: attempt > 0); }
-                                if (!Gone(hit, 1500)) how += " (element still there)";
+                            if (step.Closes)
+                            {
+                                for (int attempt = 0; attempt < 3 && !Gone(hit, 1500); attempt++)
+                                {
+                                    how = attempt == 0 ? "invoke x2" : "mouse";
+                                    Act(hit, false, mouse: attempt > 0);
+                                }
+                                if (!Gone(hit, 1500))
+                                    how += " (element still there)";
                             }
                             lastHit = hit;
-                            log.Add($"OK {step.Label} -> {Describe(hit)} [{how}]"); done = true; break;
+                            log.Add($"OK {step.Label} -> {Describe(hit)} [{how}]");
+                            done = true;
+                            break;
                         }
                     }
-                    if (done) break;
+                    if (done)
+                        break;
                 }
-                if (!done) Task.Delay(150).Wait();
+                if (!done)
+                    Task.Delay(150).Wait();
             }
-            if (!done) {
-                if (step.Optional) { log.Add($"SKIP {step.Label}"); continue; }
+            if (!done)
+            {
+                if (step.Optional)
+                {
+                    log.Add($"SKIP {step.Label}");
+                    continue;
+                }
                 log.Add($"MISS {step.Label}");
-                foreach (var w in Windows(mainHwnd)) { if (!dumped) log.AddRange(Dump(w).Select(l => "    " + l)); try { PostMessage((IntPtr)w.Current.NativeWindowHandle, 0x10, IntPtr.Zero, IntPtr.Zero); } catch { } }
+                foreach (var w in Windows(mainHwnd))
+                {
+                    if (!dumped)
+                        log.AddRange(Dump(w).Select(l => "    " + l));
+                    try
+                    {
+                        PostMessage((IntPtr)w.Current.NativeWindowHandle, 0x10, IntPtr.Zero, IntPtr.Zero);
+                    }
+                    catch { }
+                }
                 break;
             }
             Task.Delay(400).Wait();     // let the dialog switch page
@@ -118,41 +246,72 @@ internal static class Uia {
     });
 }
 
-public sealed partial class MainWindow {
+public sealed partial class MainWindow
+{
     int mainHwndCache;
     int MainHwnd => mainHwndCache != 0 ? mainHwndCache : (mainHwndCache = (int)Hwnd);   // read on the UI thread first (Hwnd needs it)
 
-    void LogUia(string what, List<string> log) { foreach (var l in log) T($"  uia[{what}] {l}"); }
+    void LogUia(string what, List<string> log)
+    {
+        foreach (var l in log)
+            T($"  uia[{what}] {l}");
+    }
 
-    async Task ConflictTest() {
+    async Task ConflictTest()
+    {
         string F0 = Fixture();
         string tmp = Path.GetFullPath(Path.GetTempPath());
-        if (!Path.GetFullPath(FilesSettings.Dir).StartsWith(tmp, StringComparison.OrdinalIgnoreCase) || Environment.GetEnvironmentVariable("WINLESTIA_FILES_DATA_DIR") is not { Length: > 0 }) {
-            T("ABORT data dir is not a %TEMP% folder"); Close(); return;
+        if (!Path.GetFullPath(FilesSettings.Dir).StartsWith(tmp, StringComparison.OrdinalIgnoreCase) || Environment.GetEnvironmentVariable("WINLESTIA_FILES_DATA_DIR") is not { Length: > 0 })
+        {
+            T("ABORT data dir is not a %TEMP% folder");
+            Close();
+            return;
         }
         T("START conflict fixture " + F0);
-        Activate(); FileOps.Quiet = false;
+        Activate();
+        FileOps.Quiet = false;
         await WaitLoaded();
-        string F = Path.Combine(F0, "CF"); string src = Path.Combine(F, "src"), dst = Path.Combine(F, "dst");
-        try {
-            Directory.CreateDirectory(src); Directory.CreateDirectory(dst);
-            string Read(string p) { try { return File.ReadAllText(p); } catch { return "<absent>"; } }
-            void Reset(int n) {
-                foreach (var d in new[] { src, dst }) foreach (var f in Directory.GetFiles(d)) File.Delete(f);
-                for (int i = 1; i <= n; i++) {
+        string F = Path.Combine(F0, "CF");
+        string src = Path.Combine(F, "src"), dst = Path.Combine(F, "dst");
+        try
+        {
+            Directory.CreateDirectory(src);
+            Directory.CreateDirectory(dst);
+            string Read(string p)
+            {
+                try
+                {
+                    return File.ReadAllText(p);
+                }
+                catch { return "<absent>"; }
+            }
+            void Reset(int n)
+            {
+                foreach (var d in new[] { src, dst })
+                    foreach (var f in Directory.GetFiles(d))
+                        File.Delete(f);
+                for (int i = 1; i <= n; i++)
+                {
                     string name = n == 1 ? "a.txt" : $"a{i}.txt";
-                    File.WriteAllText(Path.Combine(src, name), "NEW"); File.WriteAllText(Path.Combine(dst, name), "OLD");
+                    File.WriteAllText(Path.Combine(src, name), "NEW");
+                    File.WriteAllText(Path.Combine(dst, name), "OLD");
                 }
             }
-            async Task<(OpResult? r, List<string> log)> Paste(int n, params UiaStep[] steps) {
-                Active.Go(dst); await WaitLoaded();
+            async Task<(OpResult? r, List<string> log)> Paste(int n, params UiaStep[] steps)
+            {
+                Active.Go(dst);
+                await WaitLoaded();
                 var paths = Directory.GetFiles(src).OrderBy(p => p).ToList();
                 bool ok = await SetClipboardAsync(paths, false);
                 Check("clipboard set", ok);
                 var drv = Uia.Run(MainHwnd, steps);
                 var paste = PasteAsync(dst);
                 var both = Task.WhenAll(paste, drv);
-                if (await Task.WhenAny(both, Task.Delay(60000)) != both) { T("TIMEOUT paste"); return (null, new List<string> { "timeout" }); }
+                if (await Task.WhenAny(both, Task.Delay(60000)) != both)
+                {
+                    T("TIMEOUT paste");
+                    return (null, new List<string> { "timeout" });
+                }
                 var log = await drv;
                 await WaitLoaded();
                 return (await paste, log);
@@ -201,10 +360,17 @@ public sealed partial class MainWindow {
             T("  3-conflict result: " + string.Join(",", contents) + " | uia steps: " + string.Join(" ; ", l4.Where(x => !x.StartsWith("    ")).Select(x => x.Length > 90 ? x[..90] : x)));
             Check("(4) 3 conflicts: single choice applied to all three", contents.All(c => c == "NEW") && Directory.GetFiles(dst).Length == 3, string.Join(",", contents));
             Check("(4) 3 conflicts: journal not claiming undo", journal.NextUndo is not { Irreversible: false, Label: "Copier" or "Copier (3 éléments)" });
-        } catch (Exception ex) { Check("conflict test exception", false, ex.ToString()); }
-        finally {
-            Active.Go(F0); await WaitLoaded();
-            try { Directory.Delete(F, true); } catch { }
+        }
+        catch (Exception ex) { Check("conflict test exception", false, ex.ToString()); }
+        finally
+        {
+            Active.Go(F0);
+            await WaitLoaded();
+            try
+            {
+                Directory.Delete(F, true);
+            }
+            catch { }
         }
         T($"DONE fails={testFails}");
         Close();

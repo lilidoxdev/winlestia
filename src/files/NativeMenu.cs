@@ -5,7 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace WinlestiaFiles;
 
-internal static class NativeMenu {
+internal static class NativeMenu
+{
     // A null entry is a separator.
     internal sealed record Item(uint Id, string Text, bool Checked = false, bool Disabled = false, IReadOnlyList<Item?>? Sub = null);
 
@@ -17,24 +18,40 @@ internal static class NativeMenu {
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hwnd);
     [DllImport("user32.dll")] static extern bool GetCursorPos(out NPoint p);
 
-    static void Fill(IntPtr menu, IReadOnlyList<Item?> items) {
-        foreach (var item in items) {
-            if (item == null) { AppendMenuW(menu, MF_SEPARATOR, UIntPtr.Zero, null); continue; }
+    static void Fill(IntPtr menu, IReadOnlyList<Item?> items)
+    {
+        foreach (var item in items)
+        {
+            if (item == null)
+            {
+                AppendMenuW(menu, MF_SEPARATOR, UIntPtr.Zero, null);
+                continue;
+            }
             uint flags = (item.Checked ? MF_CHECKED : 0) | (item.Disabled ? MF_GRAYED | MF_DISABLED : 0);
-            if (item.Sub != null) { var sub = CreatePopupMenu(); Fill(sub, item.Sub); AppendMenuW(menu, flags | MF_POPUP, (UIntPtr)(ulong)sub.ToInt64(), item.Text); }
-            else AppendMenuW(menu, flags, (UIntPtr)item.Id, item.Text);
+            if (item.Sub != null)
+            {
+                var sub = CreatePopupMenu();
+                Fill(sub, item.Sub);
+                AppendMenuW(menu, flags | MF_POPUP, (UIntPtr)(ulong)sub.ToInt64(), item.Text);
+            }
+            else
+                AppendMenuW(menu, flags, (UIntPtr)item.Id, item.Text);
         }
     }
 
-    internal static uint Show(IntPtr hwnd, IReadOnlyList<Item?> items) {
+    internal static uint Show(IntPtr hwnd, IReadOnlyList<Item?> items)
+    {
         ShellMenu.InitMenuTheme(PanneauxGlass.Theme.Current.IsDark);
         var menu = CreatePopupMenu();
-        if (menu == IntPtr.Zero) return 0;
-        try {
+        if (menu == IntPtr.Zero)
+            return 0;
+        try
+        {
             Fill(menu, items);
             GetCursorPos(out var at);
             SetForegroundWindow(hwnd);
             return TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, at.X, at.Y, hwnd, IntPtr.Zero);
-        } finally { DestroyMenu(menu); }
+        }
+        finally { DestroyMenu(menu); }
     }
 }

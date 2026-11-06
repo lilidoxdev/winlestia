@@ -65,7 +65,7 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: root.padding
 
-            text:qsTr("search")
+            text: qsTr("search")
             color: Colours.palette.m3onSurfaceVariant
         }
 
@@ -84,11 +84,25 @@ Item {
 
             placeholderText: qsTr("Type \"%1\" for commands").arg(Config.launcher.actionPrefix)
 
-            onAccepted: {const currentItem=list.currentList?.currentItem;if(currentItem)Apps.launch(currentItem.modelData)}
+            onAccepted: {
+                const currentItem = list.currentList?.currentItem;
+                if (currentItem)
+                    Apps.launch(currentItem.modelData);
+            }
             Keys.onUpPressed: list.currentList?.decrementCurrentIndex()
             Keys.onDownPressed: list.currentList?.incrementCurrentIndex()
-            Keys.onLeftPressed: event => { if (list.showEmoji && list.currentList) list.currentList.moveCurrentIndexLeft(); else event.accepted = false }
-            Keys.onRightPressed: event => { if (list.showEmoji && list.currentList) list.currentList.moveCurrentIndexRight(); else event.accepted = false }
+            Keys.onLeftPressed: event => {
+                if (list.showEmoji && list.currentList)
+                    list.currentList.moveCurrentIndexLeft();
+                else
+                    event.accepted = false;
+            }
+            Keys.onRightPressed: event => {
+                if (list.showEmoji && list.currentList)
+                    list.currentList.moveCurrentIndexRight();
+                else
+                    event.accepted = false;
+            }
 
             Keys.onEscapePressed: root.visibilities.launcher = false
 
@@ -148,7 +162,7 @@ Item {
                 return 1;
             }
 
-            text:qsTr("close")
+            text: qsTr("close")
             color: Colours.palette.m3onSurfaceVariant
 
             MouseArea {

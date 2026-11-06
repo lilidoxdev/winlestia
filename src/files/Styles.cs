@@ -7,7 +7,8 @@ using PanneauxGlass;
 namespace WinlestiaFiles;
 
 // Plain CLR properties returning the shared live brushes (PanneauxGlass.UI.T): bound from XAML, never frozen.
-public sealed class LiveBrushes {
+public sealed class LiveBrushes
+{
     public static readonly LiveBrushes Instance = new();
     public Brush Hover => UI.Tint;
     public Brush Selected => UI.Selected;
@@ -20,7 +21,8 @@ public sealed class LiveBrushes {
     public Brush ThumbHot => UI.T(M3Role.OnSurface, 130);
 }
 
-internal static class Styles {
+internal static class Styles
+{
     internal const int IconWidth = 36, ModifiedWidth = 140, TypeWidth = 110, SizeWidth = 84, ScrollWidth = 10, RowHeight = 32;
 
     const string Xaml = """
@@ -179,7 +181,8 @@ internal static class Styles {
 </ResourceDictionary>
 """;
 
-    internal static ResourceDictionary Load() {
+    internal static ResourceDictionary Load()
+    {
         var context = new ParserContext();
         context.XmlnsDictionary.Add("", "http://schemas.microsoft.com/winfx/2006/xaml/presentation");
         context.XmlnsDictionary.Add("x", "http://schemas.microsoft.com/winfx/2006/xaml");

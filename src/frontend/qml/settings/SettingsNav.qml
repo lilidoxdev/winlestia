@@ -33,9 +33,24 @@ Item {
     function allEntries(): var {
         const out = SettingsIndex.entries.slice();
         for (const sc of (Bridge.settings.shortcuts ?? []))
-            out.push({id: "sc:" + sc.id, page: 3, section: qsTr(sc.group ?? ""), label: qsTr(sc.label ?? ""), desc: sc.combo ?? "", kw: "raccourci shortcut clavier keyboard touche " + (sc.id ?? "")});
+            out.push({
+                id: "sc:" + sc.id,
+                page: 3,
+                section: qsTr(sc.group ?? ""),
+                label: qsTr(sc.label ?? ""),
+                desc: sc.combo ?? "",
+                kw: "raccourci shortcut clavier keyboard touche " + (sc.id ?? "")
+            });
         for (const net of (Bridge.social.networks ?? []))
-            out.push({id: "net:" + net.id, page: 5, section: qsTr("Réseaux sociaux"), label: net.name ?? net.id, desc: "", kw: "reseau social network compte", anchor: "socialNetworks"});
+            out.push({
+                id: "net:" + net.id,
+                page: 5,
+                section: qsTr("Réseaux sociaux"),
+                label: net.name ?? net.id,
+                desc: "",
+                kw: "reseau social network compte",
+                anchor: "socialNetworks"
+            });
         return out;
     }
 
@@ -52,7 +67,10 @@ Item {
             const hay = head + " " + fold(e.desc) + " " + fold(e.section) + " " + fold(SettingsIndex.pages[e.page].title) + " " + fold(e.kw);
             if (!words.every(w => hay.includes(w)))
                 continue;
-            scored.push({entry: e, score: words.every(w => head.includes(w)) ? 0 : 1});
+            scored.push({
+                entry: e,
+                score: words.every(w => head.includes(w)) ? 0 : 1
+            });
         }
         scored.sort((a, b) => a.score - b.score);
         results = scored.map(s => s.entry);

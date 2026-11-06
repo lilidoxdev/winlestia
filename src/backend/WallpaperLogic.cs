@@ -5,7 +5,8 @@ using System.Linq;
 
 namespace PanneauxGlass;
 
-internal static class WallpaperLogic {
+internal static class WallpaperLogic
+{
     // Executable name (lower case, with .exe) -> product name. Process names only; no window or content is read. Add a line to cover another product.
     internal static readonly (string exe, string label)[] AnimatedHosts = {
         ("desktophut studio.exe", "DesktopHut"),
@@ -15,12 +16,17 @@ internal static class WallpaperLogic {
     };
 
     // Process names may come with or without ".exe" and in any case (Process.ProcessName has no extension).
-    internal static string[] Animated(IEnumerable<string?> processNames) {
+    internal static string[] Animated(IEnumerable<string?> processNames)
+    {
         var seen = new HashSet<string>(processNames.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => Normalize(n!)), StringComparer.Ordinal);
         return AnimatedHosts.Where(h => seen.Contains(h.exe)).Select(h => h.label).Distinct().ToArray();
     }
 
-    static string Normalize(string name) { name = name.Trim().ToLowerInvariant(); return name.EndsWith(".exe", StringComparison.Ordinal) ? name : name + ".exe"; }
+    static string Normalize(string name)
+    {
+        name = name.Trim().ToLowerInvariant();
+        return name.EndsWith(".exe", StringComparison.Ordinal) ? name : name + ".exe";
+    }
 
     // Neutral label for the CLI; the picker builds its own translated label from the same fields.
     internal static string DisplayName(int id, int width, int height, bool primary) => "Display " + id + " (" + width + "x" + height + ")" + (primary ? " primary" : "");

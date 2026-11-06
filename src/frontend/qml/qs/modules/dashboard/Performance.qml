@@ -11,7 +11,8 @@ RowLayout {
     readonly property int padding: Appearance.padding.large
 
     function displayTemp(temp: real): string {
-        if (!Number.isFinite(temp)) return "—";
+        if (!Number.isFinite(temp))
+            return "—";
         return `${Math.ceil(Config.services.useFahrenheit ? temp * 1.8 + 32 : temp)}°${Config.services.useFahrenheit ? "F" : "C"}`;
     }
 

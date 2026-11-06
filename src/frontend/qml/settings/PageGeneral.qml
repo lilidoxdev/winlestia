@@ -28,11 +28,31 @@ ColumnLayout {
                 Layout.fillWidth: true
                 namePrefix: "language-"
                 model: [
-                    {label: qsTr("Langue de Windows"), value: "auto", flag: "windows"},
-                    {label: "Français", value: "fr", flag: "fr"},
-                    {label: "English", value: "en", flag: "en"},
-                    {label: "Español", value: "es", flag: "es"}
-                ].map(o => ({label: o.label, value: o.value, flag: Bridge.localUrl(Bridge.assetRoot + "/flags/" + o.flag + ".svg")}))
+                    {
+                        label: qsTr("Langue de Windows"),
+                        value: "auto",
+                        flag: "windows"
+                    },
+                    {
+                        label: "Français",
+                        value: "fr",
+                        flag: "fr"
+                    },
+                    {
+                        label: "English",
+                        value: "en",
+                        flag: "en"
+                    },
+                    {
+                        label: "Español",
+                        value: "es",
+                        flag: "es"
+                    }
+                ].map(o => ({
+                            label: o.label,
+                            value: o.value,
+                            flag: Bridge.localUrl(Bridge.assetRoot + "/flags/" + o.flag + ".svg")
+                        }))
                 current: Bridge.languageMode
                 onChosen: v => Bridge.setLanguage(v)
             }
@@ -51,7 +71,10 @@ ColumnLayout {
                 id: autostart
 
                 value: Bridge.settings.autostart ?? false
-                onToggled: Bridge.action("preference", {key: "autostart", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "autostart",
+                    enabled: checked
+                })
             }
         }
     }

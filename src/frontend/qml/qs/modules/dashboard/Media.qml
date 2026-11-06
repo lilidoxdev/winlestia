@@ -50,7 +50,7 @@ Item {
     }
 
     Timer {
-        running: (Bridge.window?.visible??false) && Bridge.window.pageMode==="dashboard" && Bridge.window.dashboardTab===1 && (Players.active?.isPlaying ?? false)
+        running: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 1 && (Players.active?.isPlaying ?? false)
         interval: Config.dashboard.mediaUpdateInterval
         triggeredOnStart: true
         repeat: true
@@ -135,14 +135,20 @@ Item {
             anchors.centerIn: parent
 
             grade: 200
-            text:qsTr("art_track")
+            text: qsTr("art_track")
             color: Colours.palette.m3onSurfaceVariant
             font.pointSize: (parent.width * 0.4) || 1
         }
 
         Image {
             id: image
-            RotationAnimator on rotation {from:0;to:360;duration:16000;loops:Animation.Infinite;running:root.spinning&&!Appearance.reducedEffects}
+            RotationAnimator on rotation {
+                from: 0
+                to: 360
+                duration: 16000
+                loops: Animation.Infinite
+                running: root.spinning && !Appearance.reducedEffects
+            }
 
             anchors.fill: parent
 
@@ -323,9 +329,21 @@ Item {
             }
 
             StyledSlider {
-                id: mediaVolume;visible:false;from:0;to:100;implicitWidth:100;implicitHeight:28
-                onMoved:Bridge.action("mediaVolume",{value:value})
-                Binding{target:mediaVolume;property:"value";value:Players.active?.volume??70;when:!mediaVolume.pressed}
+                id: mediaVolume
+                visible: false
+                from: 0
+                to: 100
+                implicitWidth: 100
+                implicitHeight: 28
+                onMoved: Bridge.action("mediaVolume", {
+                    value: value
+                })
+                Binding {
+                    target: mediaVolume
+                    property: "value"
+                    value: Players.active?.volume ?? 70
+                    when: !mediaVolume.pressed
+                }
             }
 
             SplitButton {
@@ -389,7 +407,7 @@ Item {
             width: visualiser.width * 0.75
             height: visualiser.height * 0.75
 
-            playing: (Bridge.window?.visible??false) && Bridge.window.pageMode==="dashboard" && Bridge.window.dashboardTab===1 && (Players.active?.isPlaying ?? false)
+            playing: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 1 && (Players.active?.isPlaying ?? false)
             speed: Audio.beatTracker.bpm / 300
             source: Paths.absolutePath(Config.paths.mediaGif)
             asynchronous: true

@@ -56,7 +56,7 @@ Item {
         sourceComponent: ColumnLayout {
             MaterialIcon {
                 Layout.alignment: Qt.AlignHCenter
-                text:qsTr("scan_delete")
+                text: qsTr("scan_delete")
                 color: Colours.palette.m3outline
                 font.pointSize: Appearance.font.size.extraLarge * 2
                 font.weight: 500

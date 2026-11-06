@@ -1,8 +1,9 @@
 # Python 3.12 / localization.py / Qt application translations and Windows UI language detection.
-import ctypes,json
+import ctypes, json
 from pathlib import Path
 from PySide6.QtCore import QTranslator
-ROWS='''Paramètres|Settings|Ajustes
+
+ROWS = '''Paramètres|Settings|Ajustes
 Personnaliser|Customize|Personalizar
 Personnalisation|Customization|Personalización
 Apparence|Appearance|Apariencia
@@ -102,7 +103,9 @@ Today|Today|Hoy
 Weather|Weather|Tiempo
 Performance|Performance|Rendimiento
 Workspaces|Workspaces|Espacios de trabajo'''
-ROWS+="\n"+r"""Arrêter l’application|Stop application|Detener aplicación
+ROWS += (
+    "\n"
+    + r"""Arrêter l’application|Stop application|Detener aplicación
 Garder les messageries actives en arrière-plan (compteurs de messages, plus de mémoire)|Keep messaging apps active in the background (message counters, more memory)|Mantener las mensajerías activas en segundo plano (contadores de mensajes, más memoria)
 Arrêter l’application…|Stop application…|Detener aplicación…
 Barre des tâches Panneaux|Winlestia taskbar|Barra de tareas Winlestia
@@ -128,7 +131,10 @@ Ctrl + F3 · capture rapide d’une zone|Ctrl + F3 · quick region capture|Ctrl 
 ↑ ↓ naviguer · Entrée ouvrir · Échap fermer|↑ ↓ navigate · Enter open · Esc close|↑ ↓ navegar · Intro abrir · Esc cerrar
 > commandes · 24 × 7 calculer|> commands · 24 × 7 calculate|> comandos · 24 × 7 calcular
 Terminal Winlestia — administrateur|Winlestia Terminal — administrator|Terminal Winlestia — administrador"""
-ROWS+="\n"+r"""Temp. GPU|GPU temp|Temp. GPU
+)
+ROWS += (
+    "\n"
+    + r"""Temp. GPU|GPU temp|Temp. GPU
 Temp. CPU|CPU temp|Temp. CPU
 Utilisation|Usage|Uso
 Mémoire|Memory|Memoria
@@ -176,7 +182,10 @@ Coucher du soleil|Sunset|Atardecer
 Humidité|Humidity|Humedad
 Ressenti|Feels Like|Sensación térmica
 Vent|Wind|Viento"""
-ROWS+="\n"+r"""Nouvelle sélection|New selection|Nueva selección
+)
+ROWS += (
+    "\n"
+    + r"""Nouvelle sélection|New selection|Nueva selección
 Crayon|Pen|Lápiz
 Surligneur|Highlighter|Resaltador
 Changer de couleur|Change colour|Cambiar de color
@@ -208,7 +217,10 @@ Rechercher un réglage|Search settings|Buscar un ajuste
 Aucun réglage trouvé|No setting found|No se encontró ningún ajuste
 Essaie un autre mot|Try another word|Prueba con otra palabra
 Effets allégés|Reduced effects|Efectos reducidos"""
-ROWS+="\n"+r"""Le Wi-Fi est désactivé.|Wi-Fi is turned off.|El Wi-Fi está desactivado.
+)
+ROWS += (
+    "\n"
+    + r"""Le Wi-Fi est désactivé.|Wi-Fi is turned off.|El Wi-Fi está desactivado.
 Aucune carte Wi-Fi détectée sur cet ordinateur.|No Wi-Fi adapter found on this computer.|No se detectó ningún adaptador Wi-Fi en este equipo.
 Le service Wi-Fi de Windows est arrêté.|The Windows Wi-Fi service is stopped.|El servicio Wi-Fi de Windows está detenido.
 Windows demande l’autorisation de localisation pour afficher les réseaux Wi-Fi.|Windows needs location permission to show Wi-Fi networks.|Windows necesita permiso de ubicación para mostrar las redes Wi-Fi.
@@ -240,7 +252,10 @@ Connexion…|Connecting…|Conectando…
 Ouvrir dans Windows|Open in Windows|Abrir en Windows
 Oublier|Forget|Olvidar
 Se connecter|Connect|Conectar"""
-ROWS+="\n"+r"""Transparence|Transparency|Transparencia
+)
+ROWS += (
+    "\n"
+    + r"""Transparence|Transparency|Transparencia
 Active « Verre transparent » dans Modifier ma palette|Turn on “Transparent glass” in Edit my palette|Activa «Vidrio transparente» en Modificar mi paleta
 Réglable avec les thèmes Automatique et Personnalisé|Adjustable with the Automatic and Custom themes|Ajustable con los temas Automático y Personalizado
 Visibilité|Visibility|Visibilidad
@@ -350,27 +365,50 @@ Choisissez Ctrl, Alt ou Windows avec une touche (F1 à F24 sauf F12, lettre, chi
 Choisissez Ctrl ou Alt avec une touche (F1 à F24 sauf F12, lettre, chiffre ou Espace).|Choose Ctrl or Alt with a key (F1 to F24 except F12, a letter, a digit or Space).|Elige Ctrl o Alt con una tecla (F1 a F24 salvo F12, una letra, un dígito o Espacio).
 Déjà au réglage d’origine.|Already at the original setting.|Ya está en el ajuste original.
 Raccourci inchangé.|Shortcut unchanged.|Atajo sin cambios."""
+)
 
-TABLE={}
+TABLE = {}
 for row in ROWS.splitlines():
- fr,en,es=row.split('|');value={'fr':fr,'en':en,'es':es};TABLE[fr]=value;TABLE.setdefault(en,value)
+    fr, en, es = row.split('|')
+    value = {'fr': fr, 'en': en, 'es': es}
+    TABLE[fr] = value
+    TABLE.setdefault(en, value)
+
+
 def windows_language():
- try:
-  buffer=ctypes.create_unicode_buffer(85);ctypes.windll.kernel32.GetUserDefaultUILanguage.restype=ctypes.c_ushort
-  ident=ctypes.windll.kernel32.GetUserDefaultUILanguage();primary=ident&0x3ff
-  return {12:'fr',9:'en',10:'es'}.get(primary,'en')
- except Exception:return 'en'
+    try:
+        buffer = ctypes.create_unicode_buffer(85)
+        ctypes.windll.kernel32.GetUserDefaultUILanguage.restype = ctypes.c_ushort
+        ident = ctypes.windll.kernel32.GetUserDefaultUILanguage()
+        primary = ident & 0x3FF
+        return {12: 'fr', 9: 'en', 10: 'es'}.get(primary, 'en')
+    except Exception:
+        return 'en'
+
+
 class Translator(QTranslator):
- def __init__(self,config):
-  super().__init__();self.path=Path(config)/'language.json'
-  try:self.mode=json.loads(self.path.read_text(encoding='utf-8'))['language']
-  except (OSError,ValueError,KeyError):self.mode='auto'
- @property
- def language(self):return windows_language() if self.mode=='auto' else self.mode
- def isEmpty(self):return False
- def translate(self,context,source,disambiguation=None,n=-1):return TABLE.get(source,{}).get(self.language,source)
- def select(self,mode):
-  self.mode=mode if mode in ('auto','fr','en','es') else 'auto';self.path.write_text(json.dumps({'language':self.mode}),encoding='utf-8')
+    def __init__(self, config):
+        super().__init__()
+        self.path = Path(config) / 'language.json'
+        try:
+            self.mode = json.loads(self.path.read_text(encoding='utf-8'))['language']
+        except (OSError, ValueError, KeyError):
+            self.mode = 'auto'
+
+    @property
+    def language(self):
+        return windows_language() if self.mode == 'auto' else self.mode
+
+    def isEmpty(self):
+        return False
+
+    def translate(self, context, source, disambiguation=None, n=-1):
+        return TABLE.get(source, {}).get(self.language, source)
+
+    def select(self, mode):
+        self.mode = mode if mode in ('auto', 'fr', 'en', 'es') else 'auto'
+        self.path.write_text(json.dumps({'language': self.mode}), encoding='utf-8')
+
 
 for row in """Un espace qui te ressemble|A space of your own|Un espacio a tu medida
 Couleurs et transparence|Colours and transparency|Colores y transparencia
@@ -440,7 +478,8 @@ Les modifications non enregistrées seront perdues.|Unsaved changes will be lost
 Ta session sera verrouillée.|Your session will be locked.|Tu sesión se bloqueará.
 Ses commandes audio apparaîtront ici.|Its audio controls will appear here.|Sus controles de audio aparecerán aquí.
 %1 ?|%1?|¿%1?""".splitlines():
- fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}
+    fr, en, es = row.split('|')
+    TABLE[fr] = {'fr': fr, 'en': en, 'es': es}
 for row in """Bureau et dock|Desktop and dock|Escritorio y dock
 Explorateur et fichiers|Explorer and files|Explorador y archivos
 Au quotidien|Everyday|Día a día
@@ -609,7 +648,8 @@ Ajoute des favoris depuis le clic droit d’un accès|Add favorites from a short
 Ajouter|Add|Añadir
 Voir|View|Ver
 Tes derniers accès apparaîtront ici|Your latest shortcuts will appear here|Tus últimos accesos aparecerán aquí""".splitlines():
- fr,en,es=row.split('|');TABLE[fr]={'fr':fr,'en':en,'es':es}
+    fr, en, es = row.split('|')
+    TABLE[fr] = {'fr': fr, 'en': en, 'es': es}
 for row in """Choisis ton entrée et règle sa sensibilité|Pick your input and adjust its sensitivity|Elige tu entrada y ajusta su sensibilidad
 Choisis où écouter tes applications|Choose where to hear your applications|Elige dónde escuchar tus aplicaciones
 Périphérique par défaut|Default device|Dispositivo predeterminado
@@ -708,7 +748,8 @@ Icône de cet accès|Icon for this shortcut|Icono de este acceso
 Photo de profil|Profile picture|Foto de perfil
 Ville, pays|City, country|Ciudad, país
 Météo · Open-Meteo|Weather · Open-Meteo|Tiempo · Open-Meteo""".splitlines():
- fr,en,es=row.split('|');TABLE.setdefault(fr,{'fr':fr,'en':en,'es':es})
+    fr, en, es = row.split('|')
+    TABLE.setdefault(fr, {'fr': fr, 'en': en, 'es': es})
 for row in """Masquer le dock réaffiche la barre des tâches de Windows.|Hiding the dock shows the Windows taskbar again.|Ocultar el dock vuelve a mostrar la barra de tareas de Windows.
 Inactif : une autre application utilise cette combinaison.|Inactive: another application uses this combination.|Inactivo: otra aplicación usa esta combinación.
 Flèches|Arrows|Flechas
@@ -750,4 +791,5 @@ Raccourci de secours fixe : il ouvre toujours le tableau de bord, même si l’a
 Se règle dans Médias et audio › Dictée (touche maintenue).|Set in Media and audio › Dictation (held key).|Se ajusta en Medios y audio › Dictado (tecla mantenida).
 Réservé à la restauration du bureau : il doit fonctionner même si Winlestia ne répond plus.|Reserved for restoring the desktop: it must work even if Winlestia stops responding.|Reservado para restaurar el escritorio: debe funcionar aunque Winlestia no responda.
 Fixe pour l’instant ; actif uniquement quand la disposition automatique est activée.|Fixed for now; only active when automatic layout is on.|Fijo por ahora; solo activo cuando la disposición automática está activada.""".splitlines():
- fr,en,es=row.split('|');TABLE.setdefault(fr,{'fr':fr,'en':en,'es':es})
+    fr, en, es = row.split('|')
+    TABLE.setdefault(fr, {'fr': fr, 'en': en, 'es': es})

@@ -19,7 +19,8 @@ using PanneauxGlass;
 
 namespace WinlestiaFiles;
 
-public sealed partial class MainWindow {
+public sealed partial class MainWindow
+{
     [DllImport("user32.dll")] static extern bool AddClipboardFormatListener(IntPtr hwnd);
     [DllImport("user32.dll")] static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
     [DllImport("user32.dll")] static extern uint GetClipboardSequenceNumber();
@@ -28,7 +29,10 @@ public sealed partial class MainWindow {
     const int WM_CLIPBOARDUPDATE = 0x031D;
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    struct OpenAsInfo { public string File; public string? Class; public uint Flags; }
+    struct OpenAsInfo
+    {
+        public string File; public string? Class; public uint Flags;
+    }
 
     readonly TextBox renameBox = new();
     readonly TextBlock renameError = UI.Text("", M3.FontSmall, UI.T(M3Role.Error));
@@ -43,41 +47,83 @@ public sealed partial class MainWindow {
     static string Norm(string path) => path.TrimEnd('\\');
     static string? ParentOf(string path) => Path.GetDirectoryName(path) is { } p ? Norm(p) : null;
     HashSet<string> WatchSet() => new(tabs.Select(t => Norm(t.Tab.Location)), StringComparer.OrdinalIgnoreCase);
-    static async void Fire(Func<Task> work) { try { await work(); } catch (Exception ex) { App.CrashLog(ex); } }
+    static async void Fire(Func<Task> work)
+    {
+        try
+        {
+            await work();
+        }
+        catch (Exception ex) { App.CrashLog(ex); }
+    }
 
-    void WireOps() {
-        journal.Owner = () => Hwnd; journal.Watch = WatchSet;
+    void WireOps()
+    {
+        journal.Owner = () => Hwnd;
+        journal.Watch = WatchSet;
         renameBox.Template = RenameTemplate();
-        renameBox.Height = double.NaN; renameBox.MinHeight = 28; renameBox.FontSize = M3.FontSmall; renameBox.FontFamily = M3.Body; renameBox.Foreground = UI.White; renameBox.CaretBrush = UI.White;
-        renameBox.Padding = new Thickness(M3.Pad2, 2, M3.Pad2, 2); renameBox.VerticalContentAlignment = VerticalAlignment.Center;
-        renameBox.BorderThickness = new Thickness(2); renameBox.BorderBrush = UI.T(M3Role.Primary); renameBox.Background = UI.T(M3Role.SurfaceHigh);
+        renameBox.Height = double.NaN;
+        renameBox.MinHeight = 28;
+        renameBox.FontSize = M3.FontSmall;
+        renameBox.FontFamily = M3.Body;
+        renameBox.Foreground = UI.White;
+        renameBox.CaretBrush = UI.White;
+        renameBox.Padding = new Thickness(M3.Pad2, 2, M3.Pad2, 2);
+        renameBox.VerticalContentAlignment = VerticalAlignment.Center;
+        renameBox.BorderThickness = new Thickness(2);
+        renameBox.BorderBrush = UI.T(M3Role.Primary);
+        renameBox.Background = UI.T(M3Role.SurfaceHigh);
         renameBox.TextChanged += (_, _) => ValidateRename();
-        renameBox.KeyDown += (_, e) => {
-            if (e.Key == Key.Enter) { e.Handled = true; Fire(CommitRename); }
-            else if (e.Key == Key.Escape) { e.Handled = true; CancelRename(); }
+        renameBox.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                Fire(CommitRename);
+            }
+            else if (e.Key == Key.Escape)
+            {
+                e.Handled = true;
+                CancelRename();
+            }
         };
         renameBox.LostKeyboardFocus += (_, _) => { if (renaming != null) Fire(CommitRename); };
-        renameError.Margin = new Thickness(M3.Pad2, 2, 0, 0); renameError.Visibility = Visibility.Collapsed; renameError.TextWrapping = TextWrapping.Wrap;
-        renamePanel.Children.Add(renameBox); renamePanel.Children.Add(renameError);
-        Grid.SetRowSpan(renamePanel, 2); Panel.SetZIndex(renamePanel, 10);
+        renameError.Margin = new Thickness(M3.Pad2, 2, 0, 0);
+        renameError.Visibility = Visibility.Collapsed;
+        renameError.TextWrapping = TextWrapping.Wrap;
+        renamePanel.Children.Add(renameBox);
+        renamePanel.Children.Add(renameError);
+        Grid.SetRowSpan(renamePanel, 2);
+        Panel.SetZIndex(renamePanel, 10);
         listHost.Children.Add(renamePanel);
         list.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, e) => { if (renaming != null && e.VerticalChange != 0 && !PlaceRename(renaming)) CancelRename(); }));
 
-        list.PreviewMouseLeftButtonDown += (_, e) => {
-            clickArm++; pressed = null;
-            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem { DataContext: FileItem item }) return;
+        list.PreviewMouseLeftButtonDown += (_, e) =>
+        {
+            clickArm++;
+            pressed = null;
+            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem { DataContext: FileItem item })
+                return;
             if (e.ClickCount == 1 && Keyboard.Modifiers == ModifierKeys.None)
                 pressed = (item, list.SelectedItems.Count == 1 && ReferenceEquals(list.SelectedItem, item), e.OriginalSource is TextBlock t && t.Text == item.Name);
         };
-        list.PreviewMouseLeftButtonUp += (_, _) => {
-            if (pressed is not { alone: true, onName: true } p || list.SelectedItems.Count != 1 || !ReferenceEquals(list.SelectedItem, p.item)) return;
+        list.PreviewMouseLeftButtonUp += (_, _) =>
+        {
+            if (pressed is not { alone: true, onName: true } p || list.SelectedItems.Count != 1 || !ReferenceEquals(list.SelectedItem, p.item))
+                return;
             Fire(() => SlowClick(p.item));
         };
-        list.PreviewMouseDown += (_, e) => {
-            if (e.ChangedButton != MouseButton.Middle) return;
-            if (e.OriginalSource is DependencyObject src && ItemsControl.ContainerFromElement(list, src) is ListBoxItem { DataContext: FileItem { IsDir: true } dir }) { AddTab(dir.FullPath); e.Handled = true; }
+        list.PreviewMouseDown += (_, e) =>
+        {
+            if (e.ChangedButton != MouseButton.Middle)
+                return;
+            if (e.OriginalSource is DependencyObject src && ItemsControl.ContainerFromElement(list, src) is ListBoxItem { DataContext: FileItem { IsDir: true } dir })
+            {
+                AddTab(dir.FullPath);
+                e.Handled = true;
+            }
         };
-        SourceInitialized += (_, _) => {
+        SourceInitialized += (_, _) =>
+        {
             clipSource = HwndSource.FromHwnd(Hwnd);
             ShellMenu.InitMenuTheme(Theme.Current.IsDark);
             clipSource?.AddHook(ClipHook);
@@ -87,10 +133,15 @@ public sealed partial class MainWindow {
     }
 
     // The toolbar: no focus stealing, so the shortcuts keep working right after a click.
-    FrameworkElement OpsBar() {
+    FrameworkElement OpsBar()
+    {
         var bar = new StackPanel { Orientation = Orientation.Horizontal };
-        void Add(string glyph, string tip, Action action) {
-            var b = UI.Flat(UI.Glyph(glyph, 16), 36, new CornerRadius(18)); b.Width = 36; b.ToolTip = tip; b.Focusable = false;
+        void Add(string glyph, string tip, Action action)
+        {
+            var b = UI.Flat(UI.Glyph(glyph, 16), 36, new CornerRadius(18));
+            b.Width = 36;
+            b.ToolTip = tip;
+            b.Focusable = false;
             b.Click += (_, _) => action();
             bar.Children.Add(b);
         }
@@ -107,40 +158,73 @@ public sealed partial class MainWindow {
 
     // ---- open ------------------------------------------------------------------------------------------------
 
-    void Open(FileItem item, bool newTab = false) {
-        if (item.IsDir) { if (newTab) AddTab(item.FullPath); else Active.Go(item.FullPath); return; }
-        string path = item.FullPath; IntPtr owner = Hwnd;
+    void Open(FileItem item, bool newTab = false)
+    {
+        if (item.IsDir)
+        {
+            if (newTab)
+                AddTab(item.FullPath);
+            else
+                Active.Go(item.FullPath);
+            return;
+        }
+        string path = item.FullPath;
+        IntPtr owner = Hwnd;
         // Default verb on a short-lived STA thread (a slow handler never blocks the UI). No association: the Windows "Open with" dialog.
-        var thread = new Thread(() => {
-            try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true })?.Dispose(); }
-            catch (Win32Exception ex) when (ex.NativeErrorCode is 1155 or 31 or 1156) {
-                try { var info = new OpenAsInfo { File = path, Class = null, Flags = 0x1 | 0x4 }; SHOpenWithDialog(owner, ref info); } catch (Exception inner) { App.CrashLog(inner); }
-            } catch (Exception ex) { App.CrashLog(ex); }
-        }) { IsBackground = true };
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true })?.Dispose();
+            }
+            catch (Win32Exception ex) when (ex.NativeErrorCode is 1155 or 31 or 1156)
+            {
+                try
+                {
+                    var info = new OpenAsInfo { File = path, Class = null, Flags = 0x1 | 0x4 };
+                    SHOpenWithDialog(owner, ref info);
+                }
+                catch (Exception inner) { App.CrashLog(inner); }
+            }
+            catch (Exception ex) { App.CrashLog(ex); }
+        })
+        {
+            IsBackground = true
+        };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
     }
 
-    void OpenSelected(bool newTab) {
+    void OpenSelected(bool newTab)
+    {
         var sel = Selection();
-        if (sel.Count == 1) Open(sel[0], newTab);
-        else foreach (var item in sel) Open(item, item.IsDir);
+        if (sel.Count == 1)
+            Open(sel[0], newTab);
+        else
+            foreach (var item in sel)
+                Open(item, item.IsDir);
     }
 
     // ---- result patching -------------------------------------------------------------------------------------
 
     // Patches every tab that shows an affected folder, then selects the new items of the active one.
-    void ApplyResult(OpResult r, bool select) {
-        if (r.Error != null) Perf.Log("fileop: " + r.Error);
-        foreach (var view in tabs.ToList()) {
+    void ApplyResult(OpResult r, bool select)
+    {
+        if (r.Error != null)
+            Perf.Log("fileop: " + r.Error);
+        foreach (var view in tabs.ToList())
+        {
             string where = Norm(view.Tab.Location);
             var removed = r.Removed.Where(p => view.Tab.DeepActive || string.Equals(ParentOf(p), where, StringComparison.OrdinalIgnoreCase)).ToList();
             var added = r.Added.Where(i => string.Equals(ParentOf(i.FullPath), where, StringComparison.OrdinalIgnoreCase)).ToList();
-            if (removed.Count > 0 || added.Count > 0) view.Tab.ApplyChanges(removed, added);
+            if (removed.Count > 0 || added.Count > 0)
+                view.Tab.ApplyChanges(removed, added);
         }
-        if (!select) return;
+        if (!select)
+            return;
         var shown = r.Added.Select(i => Active.Find(i.FullPath)).Where(i => i != null).Cast<FileItem>().ToList();
-        if (shown.Count == 0) return;
+        if (shown.Count == 0)
+            return;
         list.Select(shown);
         list.ScrollIntoView(shown[0]);
     }
@@ -149,20 +233,29 @@ public sealed partial class MainWindow {
 
     void CopySelected(bool cut) => Fire(() => CopySelectedAsync(cut));
 
-    internal Task CopySelectedAsync(bool cut) {
+    internal Task CopySelectedAsync(bool cut)
+    {
         var sel = Selection();
-        if (sel.Count == 0 || renaming != null) return Task.CompletedTask;
+        if (sel.Count == 0 || renaming != null)
+            return Task.CompletedTask;
         return SetClipboardAsync(sel.Select(i => i.FullPath).ToList(), cut);
     }
 
     // WPF already retries OpenClipboard; if another process (clipboard history, a viewer) still holds it, retry here without blocking the UI.
-    internal async Task<bool> SetClipboardAsync(IReadOnlyList<string> paths, bool cut) {
-        var files = new StringCollection(); files.AddRange(paths.ToArray());
-        for (int attempt = 0; ; attempt++) {
+    internal async Task<bool> SetClipboardAsync(IReadOnlyList<string> paths, bool cut)
+    {
+        var files = new StringCollection();
+        files.AddRange(paths.ToArray());
+        for (int attempt = 0; ; attempt++)
+        {
             var data = new DataObject();
             data.SetFileDropList(files);
             data.SetData("Preferred DropEffect", new MemoryStream(BitConverter.GetBytes(cut ? 2 : 1)));
-            try { Clipboard.SetDataObject(data, true); break; }
+            try
+            {
+                Clipboard.SetDataObject(data, true);
+                break;
+            }
             catch (Exception ex) when (attempt < 4) { Perf.Log("clipboard set retry: " + ex.Message); await Task.Delay(100); }
             catch (Exception ex) { Perf.Log("clipboard set failed: " + ex.Message); return false; }
         }
@@ -171,37 +264,60 @@ public sealed partial class MainWindow {
         return true;
     }
 
-    void SetCut(HashSet<string> next) {
+    void SetCut(HashSet<string> next)
+    {
         var before = FileItem.CutPaths;
-        if (before.Count == 0 && next.Count == 0) return;
+        if (before.Count == 0 && next.Count == 0)
+            return;
         FileItem.CutPaths = next;
-        foreach (var view in tabs) view.Tab.RaiseCut(before, next);
+        foreach (var view in tabs)
+            view.Tab.RaiseCut(before, next);
     }
 
-    IntPtr ClipHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-        if (msg == WM_CLIPBOARDUPDATE && FileItem.CutPaths.Count > 0 && GetClipboardSequenceNumber() != cutSequence) SetCut(new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+    IntPtr ClipHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WM_CLIPBOARDUPDATE && FileItem.CutPaths.Count > 0 && GetClipboardSequenceNumber() != cutSequence)
+            SetCut(new HashSet<string>(StringComparer.OrdinalIgnoreCase));
         return IntPtr.Zero;
     }
 
     // Reads CF_HDROP and Preferred DropEffect (what Explorer writes) and runs Copy or Move into the current (or given) folder.
-    internal async Task<OpResult?> PasteAsync(string? destination = null) {
+    internal async Task<OpResult?> PasteAsync(string? destination = null)
+    {
         string dest = destination ?? Active.Location;
-        if (dest.Length == 0 || ThisPc.Is(dest) || renaming != null) return null;
-        string[] files; int effect = 1; uint sequence;
-        try {
+        if (dest.Length == 0 || ThisPc.Is(dest) || renaming != null)
+            return null;
+        string[] files;
+        int effect = 1;
+        uint sequence;
+        try
+        {
             var data = Clipboard.GetDataObject();
-            if (data == null || !data.GetDataPresent(DataFormats.FileDrop) || data.GetData(DataFormats.FileDrop) is not string[] drop || drop.Length == 0) return null;
+            if (data == null || !data.GetDataPresent(DataFormats.FileDrop) || data.GetData(DataFormats.FileDrop) is not string[] drop || drop.Length == 0)
+                return null;
             files = drop;
-            if (data.GetDataPresent("Preferred DropEffect") && data.GetData("Preferred DropEffect") is Stream s) { var b = new byte[4]; if (s.Read(b, 0, 4) == 4) effect = BitConverter.ToInt32(b, 0); }
+            if (data.GetDataPresent("Preferred DropEffect") && data.GetData("Preferred DropEffect") is Stream s)
+            {
+                var b = new byte[4];
+                if (s.Read(b, 0, 4) == 4)
+                    effect = BitConverter.ToInt32(b, 0);
+            }
             sequence = GetClipboardSequenceNumber();
-        } catch (Exception ex) { Perf.Log("clipboard read failed: " + ex.Message); return null; }
+        }
+        catch (Exception ex) { Perf.Log("clipboard read failed: " + ex.Message); return null; }
         bool move = (effect & 2) != 0;
-        var watch = WatchSet(); watch.Add(Norm(dest));
+        var watch = WatchSet();
+        watch.Add(Norm(dest));
         var result = await FileOps.Copy(Hwnd, files, dest, move, watch);
         journal.Record(result);
         ApplyResult(result, true);
-        if (move && !result.Aborted && result.Error == null && GetClipboardSequenceNumber() == sequence) {
-            try { Clipboard.Clear(); } catch { }
+        if (move && !result.Aborted && result.Error == null && GetClipboardSequenceNumber() == sequence)
+        {
+            try
+            {
+                Clipboard.Clear();
+            }
+            catch { }
             SetCut(new HashSet<string>(StringComparer.OrdinalIgnoreCase));
         }
         return result;
@@ -209,28 +325,40 @@ public sealed partial class MainWindow {
 
     // ---- delete / new folder ---------------------------------------------------------------------------------
 
-    internal async Task<OpResult?> DeleteAsync(IReadOnlyList<FileItem> items, bool permanent) {
-        if (items.Count == 0) return null;
+    internal async Task<OpResult?> DeleteAsync(IReadOnlyList<FileItem> items, bool permanent)
+    {
+        if (items.Count == 0)
+            return null;
         if (permanent && !ConfirmDialog.Ask(this, "Supprimer définitivement ?",
             items.Count == 1 ? $"« {items[0].Name} » sera supprimé définitivement, sans passer par la Corbeille."
-                             : $"{items.Count} éléments seront supprimés définitivement, sans passer par la Corbeille.", "Supprimer définitivement")) return null;
+                             : $"{items.Count} éléments seront supprimés définitivement, sans passer par la Corbeille.", "Supprimer définitivement"))
+            return null;
         var result = await FileOps.Delete(Hwnd, items.Select(i => i.FullPath).ToList(), permanent, WatchSet());
-        if (permanent) { if (result.Log.Count > 0) journal.RecordPermanentDelete(); } else journal.Record(result);
+        if (permanent)
+        {
+            if (result.Log.Count > 0)
+                journal.RecordPermanentDelete();
+        }
+        else
+            journal.Record(result);
         ApplyResult(result, false);
         return result;
     }
 
     Task<OpResult?> DeleteSelectedAsync(bool permanent) => renaming != null ? Task.FromResult<OpResult?>(null) : DeleteAsync(Selection(), permanent);
 
-    internal async Task<FileItem?> NewFolderAsync() {
+    internal async Task<FileItem?> NewFolderAsync()
+    {
         var tab = Active;
-        if (tab.Location.Length == 0 || ThisPc.Is(tab.Location) || tab.State is LoadState.Denied or LoadState.NotFound or LoadState.Failed) return null;
+        if (tab.Location.Length == 0 || ThisPc.Is(tab.Location) || tab.State is LoadState.Denied or LoadState.NotFound or LoadState.Failed)
+            return null;
         var watch = WatchSet();
         var result = await FileOps.NewFolder(Hwnd, tab.Location, "Nouveau dossier", watch);
         journal.Record(result);
         ApplyResult(result, true);
         var made = result.Added.FirstOrDefault(i => string.Equals(ParentOf(i.FullPath), Norm(tab.Location), StringComparison.OrdinalIgnoreCase));
-        if (made == null || tab != Active) return null;
+        if (made == null || tab != Active)
+            return null;
         await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
         BeginRename(made);
         return made;
@@ -238,80 +366,139 @@ public sealed partial class MainWindow {
 
     // ---- rename ----------------------------------------------------------------------------------------------
 
-    void RenameSelected() { if (list.SelectedItems.Count == 1 && list.SelectedItem is FileItem item) BeginRename(item); }
-
-    async Task SlowClick(FileItem item) {
-        int arm = ++clickArm;
-        await Task.Delay((int)GetDoubleClickTime() + 120);      // one-shot; any click / key / double-click bumps clickArm and cancels it
-        if (arm == clickArm && list.SelectedItems.Count == 1 && ReferenceEquals(list.SelectedItem, item)) BeginRename(item);
+    void RenameSelected()
+    {
+        if (list.SelectedItems.Count == 1 && list.SelectedItem is FileItem item)
+            BeginRename(item);
     }
 
-    static TextBlock? FindText(DependencyObject root, string text) {
-        for (int i = 0, n = VisualTreeHelper.GetChildrenCount(root); i < n; i++) {
+    async Task SlowClick(FileItem item)
+    {
+        int arm = ++clickArm;
+        await Task.Delay((int)GetDoubleClickTime() + 120);      // one-shot; any click / key / double-click bumps clickArm and cancels it
+        if (arm == clickArm && list.SelectedItems.Count == 1 && ReferenceEquals(list.SelectedItem, item))
+            BeginRename(item);
+    }
+
+    static TextBlock? FindText(DependencyObject root, string text)
+    {
+        for (int i = 0, n = VisualTreeHelper.GetChildrenCount(root); i < n; i++)
+        {
             var child = VisualTreeHelper.GetChild(root, i);
-            if (child is TextBlock t && t.Text == text) return t;
-            if (FindText(child, text) is { } found) return found;
+            if (child is TextBlock t && t.Text == text)
+                return t;
+            if (FindText(child, text) is { } found)
+                return found;
         }
         return null;
     }
 
     // Overlay positioned on the name label of the realized container (rows and tiles alike).
-    bool PlaceRename(FileItem item) {
-        if (list.ItemContainerGenerator.ContainerFromItem(item) is not ListBoxItem box || FindText(box, item.Name) is not { } label) return false;
+    bool PlaceRename(FileItem item)
+    {
+        if (list.ItemContainerGenerator.ContainerFromItem(item) is not ListBoxItem box || FindText(box, item.Name) is not { } label)
+            return false;
         var cell = box.TransformToAncestor(listHost).Transform(new Point(0, 0));
         var text = label.TransformToAncestor(listHost).Transform(new Point(0, 0));
-        if (view is ViewMode.Large or ViewMode.Medium) {
+        if (view is ViewMode.Large or ViewMode.Medium)
+        {
             renamePanel.Margin = new Thickness(cell.X + 4, text.Y - 6, 0, 0);
-            renameBox.Width = box.ActualWidth - 8; renameBox.TextWrapping = TextWrapping.Wrap; renameBox.TextAlignment = TextAlignment.Center; renameBox.MaxHeight = 84;
-        } else {
+            renameBox.Width = box.ActualWidth - 8;
+            renameBox.TextWrapping = TextWrapping.Wrap;
+            renameBox.TextAlignment = TextAlignment.Center;
+            renameBox.MaxHeight = 84;
+        }
+        else
+        {
             renamePanel.Margin = new Thickness(text.X - 8, cell.Y + 2, 0, 0);
-            renameBox.Width = Math.Max(label.ActualWidth + 8, 180); renameBox.TextWrapping = TextWrapping.NoWrap; renameBox.TextAlignment = TextAlignment.Left; renameBox.MaxHeight = 28;
+            renameBox.Width = Math.Max(label.ActualWidth + 8, 180);
+            renameBox.TextWrapping = TextWrapping.NoWrap;
+            renameBox.TextAlignment = TextAlignment.Left;
+            renameBox.MaxHeight = 28;
         }
         return true;
     }
 
-    internal void BeginRename(FileItem item) {
-        if (renaming != null) CancelRename();
+    internal void BeginRename(FileItem item)
+    {
+        if (renaming != null)
+            CancelRename();
         clickArm++;
-        list.ScrollIntoView(item); list.UpdateLayout();
-        if (!PlaceRename(item)) return;
+        list.ScrollIntoView(item);
+        list.UpdateLayout();
+        if (!PlaceRename(item))
+            return;
         renaming = item;
-        renameBox.Text = item.Name; renameError.Visibility = Visibility.Collapsed; renameBox.BorderBrush = UI.T(M3Role.Primary);
-        renamePanel.Visibility = Visibility.Visible; renamePanel.UpdateLayout();
-        renameBox.Focus(); Keyboard.Focus(renameBox);
+        renameBox.Text = item.Name;
+        renameError.Visibility = Visibility.Collapsed;
+        renameBox.BorderBrush = UI.T(M3Role.Primary);
+        renamePanel.Visibility = Visibility.Visible;
+        renamePanel.UpdateLayout();
+        renameBox.Focus();
+        Keyboard.Focus(renameBox);
         int dot = item.IsDir ? -1 : item.Name.LastIndexOf('.');
-        if (dot > 0) renameBox.Select(0, dot); else renameBox.SelectAll();
+        if (dot > 0)
+            renameBox.Select(0, dot);
+        else
+            renameBox.SelectAll();
     }
 
-    string? RenameProblem(string name) {
-        if (name.Length == 0) return "Le nom ne peut pas être vide.";
-        if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return "Un nom ne peut pas contenir : \\ / : * ? \" < > |";
-        if (name.EndsWith('.')) return "Un nom ne peut pas se terminer par un point.";
-        if (renaming != null && !string.Equals(name, renaming.Name, StringComparison.OrdinalIgnoreCase) && Active.Find(Path.Combine(Active.Location, name)) != null) return "Ce nom existe déjà dans ce dossier.";
+    string? RenameProblem(string name)
+    {
+        if (name.Length == 0)
+            return "Le nom ne peut pas être vide.";
+        if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            return "Un nom ne peut pas contenir : \\ / : * ? \" < > |";
+        if (name.EndsWith('.'))
+            return "Un nom ne peut pas se terminer par un point.";
+        if (renaming != null && !string.Equals(name, renaming.Name, StringComparison.OrdinalIgnoreCase) && Active.Find(Path.Combine(Active.Location, name)) != null)
+            return "Ce nom existe déjà dans ce dossier.";
         return null;
     }
 
-    bool ValidateRename() {
-        if (renaming == null) return true;
+    bool ValidateRename()
+    {
+        if (renaming == null)
+            return true;
         string? problem = RenameProblem(renameBox.Text.Trim());
-        renameError.Text = problem ?? ""; renameError.Visibility = problem == null ? Visibility.Collapsed : Visibility.Visible;
+        renameError.Text = problem ?? "";
+        renameError.Visibility = problem == null ? Visibility.Collapsed : Visibility.Visible;
         renameBox.BorderBrush = UI.T(problem == null ? M3Role.Primary : M3Role.Error);
         return problem == null;
     }
 
-    void EndRename() {
+    void EndRename()
+    {
         renaming = null;
         renamePanel.Visibility = Visibility.Collapsed;
-        if (renameBox.IsKeyboardFocusWithin) list.Focus();
+        if (renameBox.IsKeyboardFocusWithin)
+            list.Focus();
     }
 
-    void CancelRename() { if (renaming != null) EndRename(); }
+    void CancelRename()
+    {
+        if (renaming != null)
+            EndRename();
+    }
 
-    internal async Task CommitRename() {
-        var item = renaming; if (item == null) return;
+    internal async Task CommitRename()
+    {
+        var item = renaming;
+        if (item == null)
+            return;
         string name = renameBox.Text.Trim();
-        if (name == item.Name) { EndRename(); return; }
-        if (!ValidateRename()) { if (renameBox.IsKeyboardFocusWithin) return; EndRename(); return; }   // invalid + focus lost: drop the edit
+        if (name == item.Name)
+        {
+            EndRename();
+            return;
+        }
+        if (!ValidateRename())
+        {
+            if (renameBox.IsKeyboardFocusWithin)
+                return;
+            EndRename();
+            return;
+        }   // invalid + focus lost: drop the edit
         EndRename();
         var result = await FileOps.Rename(Hwnd, item.FullPath, name, WatchSet());
         journal.Record(result);
@@ -323,34 +510,48 @@ public sealed partial class MainWindow {
     internal readonly UndoJournal journal = new();
 
     // Returns the toast text (also shown). Permanent delete cannot be undone and says so.
-    internal async Task<string> UndoAsync() {
-        if (renaming != null) return "";
+    internal async Task<string> UndoAsync()
+    {
+        if (renaming != null)
+            return "";
         var ran = await journal.UndoAsync();
         return Report(ran, "Annulé", "Rien à annuler");
     }
 
-    internal async Task<string> RedoAsync() {
-        if (renaming != null) return "";
+    internal async Task<string> RedoAsync()
+    {
+        if (renaming != null)
+            return "";
         var ran = await journal.RedoAsync();
         return Report(ran, "Rétabli", "Rien à rétablir");
     }
 
-    string Report((UndoEntry Entry, OpResult? Result)? ran, string verb, string none) {
+    string Report((UndoEntry Entry, OpResult? Result)? ran, string verb, string none)
+    {
         string text;
-        if (ran == null) text = none;
-        else if (ran.Value.Entry.Irreversible) text = "Impossible d'annuler : " + ran.Value.Entry.Why;
-        else {
+        if (ran == null)
+            text = none;
+        else if (ran.Value.Entry.Irreversible)
+            text = "Impossible d'annuler : " + ran.Value.Entry.Why;
+        else
+        {
             var r = ran.Value.Result!;
             ApplyResult(r, true);
-            if (r.Error != null) { text = "Échec : " + r.Error; Active.Reload(); }
-            else text = verb + " : " + ran.Value.Entry.Label;
+            if (r.Error != null)
+            {
+                text = "Échec : " + r.Error;
+                Active.Reload();
+            }
+            else
+                text = verb + " : " + ran.Value.Entry.Label;
         }
         Toast(text);
         return text;
     }
 
     // Same chrome as the address pill but with the small radius and a primary (or error) focus border.
-    static ControlTemplate RenameTemplate() {
+    static ControlTemplate RenameTemplate()
+    {
         var border = new FrameworkElementFactory(typeof(Border));
         border.SetValue(Border.CornerRadiusProperty, new CornerRadius(M3.Small));
         border.SetValue(Border.BackgroundProperty, new TemplateBindingExtension(Control.BackgroundProperty));
@@ -364,10 +565,16 @@ public sealed partial class MainWindow {
     }
 
     // Hide / tab drop: nothing may stay armed.
-    void EndOpsState() { CancelRename(); clickArm++; SetCut(new HashSet<string>(StringComparer.OrdinalIgnoreCase)); }
+    void EndOpsState()
+    {
+        CancelRename();
+        clickArm++;
+        SetCut(new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+    }
 }
 
 // ListBox with a public one-shot multi-select (a single selection notification, not one per item).
-internal sealed class BulkListBox : ListBox {
+internal sealed class BulkListBox : ListBox
+{
     internal void Select(System.Collections.IEnumerable items) => SetSelectedItems(items);
 }

@@ -1,0 +1,31 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+[*.cs]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+csharp_new_line_between_query_expression_clauses = true
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = false
+csharp_space_around_binary_operators = before_and_after
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+
+[*.{py,pyi}]
+indent_size = 4
+
+[*.qml]
+indent_size = 4

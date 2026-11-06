@@ -93,14 +93,38 @@ Item {
         }
     }
 
-    Component { id: appearance; PageAppearance {} }
-    Component { id: iface; PageInterface {} }
-    Component { id: docks; PageDocks {} }
-    Component { id: shortcuts; PageShortcuts {} }
-    Component { id: media; PageMedia {} }
-    Component { id: apps; PageApps {} }
-    Component { id: files; PageFiles {} }
-    Component { id: general; PageGeneral {} }
+    Component {
+        id: appearance
+        PageAppearance {}
+    }
+    Component {
+        id: iface
+        PageInterface {}
+    }
+    Component {
+        id: docks
+        PageDocks {}
+    }
+    Component {
+        id: shortcuts
+        PageShortcuts {}
+    }
+    Component {
+        id: media
+        PageMedia {}
+    }
+    Component {
+        id: apps
+        PageApps {}
+    }
+    Component {
+        id: files
+        PageFiles {}
+    }
+    Component {
+        id: general
+        PageGeneral {}
+    }
 
     SequentialAnimation {
         id: swap

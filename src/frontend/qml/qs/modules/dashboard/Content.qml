@@ -145,7 +145,7 @@ Item {
                 id: row
 
                 Pane {
-                    paneIndex:0
+                    paneIndex: 0
                     sourceComponent: Dash {
                         visibilities: root.visibilities
                         state: root.state
@@ -154,19 +154,19 @@ Item {
                 }
 
                 Pane {
-                    paneIndex:1
+                    paneIndex: 1
                     sourceComponent: Media {
                         visibilities: root.visibilities
                     }
                 }
 
                 Pane {
-                    paneIndex:2
+                    paneIndex: 2
                     sourceComponent: Performance {}
                 }
 
                 Pane {
-                    paneIndex:3
+                    paneIndex: 3
                     sourceComponent: Workspaces {
                         tabActive: root.state.currentTab === 3
                     }
@@ -177,7 +177,8 @@ Item {
                 Anim {
                     id: slide
 
-                    onRunningChanged: if (!running) view.previousIndex = -1
+                    onRunningChanged: if (!running)
+                        view.previousIndex = -1
 
                     duration: Appearance.reducedEffects ? 0 : Appearance.anim.durations.normal
                 }
@@ -207,8 +208,10 @@ Item {
         // Start of the pane's cell (x includes the centering margin).
         readonly property real cellX: x - Layout.leftMargin
 
-        onCachedWidthChanged: if (cachedWidth > root.paneMaxWidth) root.paneMaxWidth = cachedWidth
-        onCachedHeightChanged: if (cachedHeight > root.paneMaxHeight) root.paneMaxHeight = cachedHeight
+        onCachedWidthChanged: if (cachedWidth > root.paneMaxWidth)
+            root.paneMaxWidth = cachedWidth
+        onCachedHeightChanged: if (cachedHeight > root.paneMaxHeight)
+            root.paneMaxHeight = cachedHeight
         asynchronous: paneIndex > 0
         active: false
 
@@ -219,7 +222,6 @@ Item {
             value: pane.shown
             when: pane.item !== null
         }
-
 
         Connections {
             target: pane.item
@@ -242,7 +244,9 @@ Item {
             if (status === Loader.Ready)
                 Qt.callLater(root.preloadStep);
         }
-        onCurrentChanged: if (current) active = true
-        Component.onCompleted: if (current) active = true
+        onCurrentChanged: if (current)
+            active = true
+        Component.onCompleted: if (current)
+            active = true
     }
 }

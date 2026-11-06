@@ -1,5 +1,6 @@
 """Genere src/files/Assets/winlestia-files.ico + apercu build/icon-preview/files-icon-preview.png.
 Dossier lavande Material 3, liseré indigo, etincelle (>=32 px). Chaque taille est dessinee nativement."""
+
 import io, struct
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
@@ -9,11 +10,11 @@ ICO = ROOT / "src" / "files" / "Assets" / "winlestia-files.ico"
 PREVIEW = ROOT / "build" / "icon-preview" / "files-icon-preview.png"
 SIZES = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]
 
-OUTLINE = (52, 42, 112, 255)     # indigo fonce
-BACK = (140, 124, 214, 255)      # violet moyen (panneau arriere)
+OUTLINE = (52, 42, 112, 255)  # indigo fonce
+BACK = (140, 124, 214, 255)  # violet moyen (panneau arriere)
 FRONT_TOP = (238, 232, 255, 255)
 FRONT_BOT = (203, 192, 250, 255)
-STAR = (92, 70, 190, 255)        # accent unique
+STAR = (92, 70, 190, 255)  # accent unique
 
 # x0, x1, tab_top, body_top, front_top, bottom, tab_w, radius, outline  (pixels, entiers)
 SMALL = {
@@ -38,6 +39,7 @@ def params(s):
 def star(d, cx, cy, r, col, pinch=0.22):
     pts = []
     import math
+
     for i in range(8):
         a = math.pi / 4 * i - math.pi / 2
         rr = r if i % 2 == 0 else r * pinch
@@ -123,11 +125,14 @@ def write_ico(images, path):
     blobs = []
     for im in images:
         if im.width >= 128:
-            buf = io.BytesIO(); im.save(buf, "PNG", optimize=True); blobs.append(buf.getvalue())
+            buf = io.BytesIO()
+            im.save(buf, "PNG", optimize=True)
+            blobs.append(buf.getvalue())
         else:
             blobs.append(bmp_entry(im))
     off = 6 + 16 * len(images)
-    out = struct.pack("<HHH", 0, 1, len(images)); data = b""
+    out = struct.pack("<HHH", 0, 1, len(images))
+    data = b""
     for im, bl in zip(images, blobs):
         n = im.width
         out += struct.pack("<BBBBHHII", n % 256, n % 256, 0, 0, 1, 32, len(bl), off + len(data))
@@ -147,14 +152,17 @@ def preview(images):
     out = Image.new("RGB", (W * 2 if False else W, 0 + (H1 + H2) * 2))
     y = 0
     for bg in ((243, 243, 243), (32, 32, 32)):
-        d = ImageDraw.Draw(out); d.rectangle([0, y, W, y + H1 + H2], fill=bg)
+        d = ImageDraw.Draw(out)
+        d.rectangle([0, y, W, y + H1 + H2], fill=bg)
         x = pad
         for im in images:
-            out.paste(im, (x, y + pad + (256 - im.width)), im); x += im.width + pad
+            out.paste(im, (x, y + pad + (256 - im.width)), im)
+            x += im.width + pad
         x = pad
         for im in zoom:
             z = im.resize((im.width * 4, im.width * 4), Image.NEAREST)
-            out.paste(z, (x, y + H1 + pad), z); x += z.width + pad
+            out.paste(z, (x, y + H1 + pad), z)
+            x += z.width + pad
         y += H1 + H2
     PREVIEW.parent.mkdir(parents=True, exist_ok=True)
     out.save(PREVIEW)

@@ -12,7 +12,11 @@ Item {
     implicitWidth: icon.implicitWidth + info.implicitWidth + info.anchors.leftMargin
 
     Component.onCompleted: Weather.reload()
-    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Bridge.chooseCity() }
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: Bridge.chooseCity()
+    }
 
     MaterialIcon {
         id: icon

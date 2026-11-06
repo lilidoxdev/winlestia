@@ -10,32 +10,70 @@ using System.Runtime.InteropServices;
 
 namespace WinlestiaFiles;
 
-internal enum SortColumn { Name, Modified, Type, Size }
+internal enum SortColumn
+{
+    Name, Modified, Type, Size
+}
 // FoldersFirst false = folders and files mixed, each by its own value. Default: modified date, newest first.
-internal sealed record SortSpec(SortColumn Column, bool Ascending, bool FoldersFirst = false) {
+internal sealed record SortSpec(SortColumn Column, bool Ascending, bool FoldersFirst = false)
+{
     internal static readonly SortSpec Default = new(SortColumn.Modified, false, false);
 }
 
-public sealed class FileItem : INotifyPropertyChanged {
+public sealed class FileItem : INotifyPropertyChanged
+{
     // Paths currently cut to the clipboard (UI thread only): read when a container binds, raised per item by RaiseCut().
     internal static HashSet<string> CutPaths = new(StringComparer.OrdinalIgnoreCase);
     public event PropertyChangedEventHandler? PropertyChanged;
     public double CutOpacity => CutPaths.Count > 0 && CutPaths.Contains(FullPath) ? 0.5 : 1.0;
     internal void RaiseCut() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CutOpacity)));
     // Drag-over highlight (a folder row / tile that would receive the drop).
-    public bool DropHot { get; private set; }
-    internal void SetDrop(bool on) { if (DropHot == on) return; DropHot = on; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DropHot))); }
+    public bool DropHot
+    {
+        get; private set;
+    }
+    internal void SetDrop(bool on)
+    {
+        if (DropHot == on)
+            return;
+        DropHot = on;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DropHot)));
+    }
     // Set once by the window: Material Symbols code points when the font ships, Segoe Fluent otherwise.
     internal static bool UseMaterial;
-    internal FileItem(string name, string fullPath, bool isDir, long size, DateTime modified, string type) {
-        Name = name; FullPath = fullPath; IsDir = isDir; Size = size; Modified = modified; TypeLabel = type;
+    internal FileItem(string name, string fullPath, bool isDir, long size, DateTime modified, string type)
+    {
+        Name = name;
+        FullPath = fullPath;
+        IsDir = isDir;
+        Size = size;
+        Modified = modified;
+        TypeLabel = type;
     }
-    public string Name { get; }
-    public string FullPath { get; }
-    public bool IsDir { get; }
-    public long Size { get; }
-    public DateTime Modified { get; }
-    public string TypeLabel { get; }
+    public string Name
+    {
+        get;
+    }
+    public string FullPath
+    {
+        get;
+    }
+    public bool IsDir
+    {
+        get;
+    }
+    public long Size
+    {
+        get;
+    }
+    public DateTime Modified
+    {
+        get;
+    }
+    public string TypeLabel
+    {
+        get;
+    }
     // Deep search only: folder of the hit relative to the searched folder ("" = the folder itself).
     public string Where { get; internal set; } = "";
     public string Icon => IsDir ? (UseMaterial ? "" : "") : (UseMaterial ? "" : "");
@@ -44,67 +82,93 @@ public sealed class FileItem : INotifyPropertyChanged {
         : Size < 1024L * 1024 * 1024 ? (Size / 1048576.0).ToString("0.#", CultureInfo.GetCultureInfo("fr-FR")) + " Mo" : (Size / 1073741824.0).ToString("0.##", CultureInfo.GetCultureInfo("fr-FR")) + " Go";
 
     // Stats one path (worker thread, one find-data read); null when it vanished.
-    internal static FileItem? Probe(string path, Dictionary<string, string> types) {
-        try {
+    internal static FileItem? Probe(string path, Dictionary<string, string> types)
+    {
+        try
+        {
             FileSystemInfo info = Directory.Exists(path) ? new DirectoryInfo(path) : new FileInfo(path);
             return info.Exists ? From(info, types) : null;
-        } catch { return null; }
+        }
+        catch { return null; }
     }
 
     // Called on the enumeration thread: FileSystemInfo from an enumeration already carries the find data (no extra I/O).
-    internal static FileItem From(ref System.IO.Enumeration.FileSystemEntry e, Dictionary<string, string> types) {
+    internal static FileItem From(ref System.IO.Enumeration.FileSystemEntry e, Dictionary<string, string> types)
+    {
         string name = e.FileName.ToString(), full = e.ToFullPath();
-        if (e.IsDirectory) return new FileItem(name, full, true, 0, e.LastWriteTimeUtc.LocalDateTime, "Dossier");
+        if (e.IsDirectory)
+            return new FileItem(name, full, true, 0, e.LastWriteTimeUtc.LocalDateTime, "Dossier");
         string ext = Path.GetExtension(name);
-        if (!types.TryGetValue(ext, out var type)) types[ext] = type = ext.Length > 1 ? "Fichier " + ext.Substring(1).ToUpperInvariant() : "Fichier";
+        if (!types.TryGetValue(ext, out var type))
+            types[ext] = type = ext.Length > 1 ? "Fichier " + ext.Substring(1).ToUpperInvariant() : "Fichier";
         return new FileItem(name, full, false, e.Length, e.LastWriteTimeUtc.LocalDateTime, type);
     }
 
-    internal static FileItem From(FileSystemInfo info, Dictionary<string, string> types) {
+    internal static FileItem From(FileSystemInfo info, Dictionary<string, string> types)
+    {
         bool dir = (info.Attributes & FileAttributes.Directory) != 0;
-        if (dir) return new FileItem(info.Name, info.FullName, true, 0, info.LastWriteTime, "Dossier");
+        if (dir)
+            return new FileItem(info.Name, info.FullName, true, 0, info.LastWriteTime, "Dossier");
         string ext = Path.GetExtension(info.Name);
-        if (!types.TryGetValue(ext, out var type)) types[ext] = type = ext.Length > 1 ? "Fichier " + ext.Substring(1).ToUpperInvariant() : "Fichier";
+        if (!types.TryGetValue(ext, out var type))
+            types[ext] = type = ext.Length > 1 ? "Fichier " + ext.Substring(1).ToUpperInvariant() : "Fichier";
         return new FileItem(info.Name, info.FullName, false, info is FileInfo f ? f.Length : 0, info.LastWriteTime, type);
     }
 }
 
 // Batch changes raise a single Reset (WPF's list collection view rejects multi-item Add notifications).
-internal sealed class RangeObservableCollection<T> : ObservableCollection<T> {
-    internal void AddRange(IEnumerable<T> items) { CheckReentrancy(); ((List<T>)Items).AddRange(items); Notify(); }
-    internal static int Resets;                          // diagnostics: how many whole-list rewrites happened (the refresh selftest asserts none for small changes)
-    internal void Reset(IEnumerable<T>? items) {
-        CheckReentrancy(); Resets++;
-        var list = (List<T>)Items;
-        list.Clear();
-        if (items != null) list.AddRange(items);
+internal sealed class RangeObservableCollection<T> : ObservableCollection<T>
+{
+    internal void AddRange(IEnumerable<T> items)
+    {
+        CheckReentrancy();
+        ((List<T>)Items).AddRange(items);
         Notify();
     }
-    void Notify() {
+    internal static int Resets;                          // diagnostics: how many whole-list rewrites happened (the refresh selftest asserts none for small changes)
+    internal void Reset(IEnumerable<T>? items)
+    {
+        CheckReentrancy();
+        Resets++;
+        var list = (List<T>)Items;
+        list.Clear();
+        if (items != null)
+            list.AddRange(items);
+        Notify();
+    }
+    void Notify()
+    {
         OnPropertyChanged(new PropertyChangedEventArgs("Count"));
         OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }
 }
 
-internal static class FileSort {
+internal static class FileSort
+{
     [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)] static extern int StrCmpLogicalW(string a, string b);
 
     // Natural name order as the tie-break; folders grouped first only when the spec asks for it.
-    internal static Comparison<FileItem> Comparer(SortSpec spec) {
+    internal static Comparison<FileItem> Comparer(SortSpec spec)
+    {
         int sign = spec.Ascending ? 1 : -1;
-        return (a, b) => {
-            if (spec.FoldersFirst && a.IsDir != b.IsDir) return a.IsDir ? -1 : 1;
-            int c = spec.Column switch {
+        return (a, b) =>
+        {
+            if (spec.FoldersFirst && a.IsDir != b.IsDir)
+                return a.IsDir ? -1 : 1;
+            int c = spec.Column switch
+            {
                 SortColumn.Modified => a.Modified.CompareTo(b.Modified),
                 SortColumn.Type => string.Compare(a.TypeLabel, b.TypeLabel, StringComparison.OrdinalIgnoreCase),
                 SortColumn.Size => a.Size.CompareTo(b.Size),
-                _ => StrCmpLogicalW(a.Name, b.Name) };
+                _ => StrCmpLogicalW(a.Name, b.Name)
+            };
             return c != 0 ? c * sign : StrCmpLogicalW(a.Name, b.Name);
         };
     }
 
-    internal static List<FileItem> Sorted(IEnumerable<FileItem> source, SortSpec spec) {
+    internal static List<FileItem> Sorted(IEnumerable<FileItem> source, SortSpec spec)
+    {
         var list = new List<FileItem>(source);
         list.Sort(Comparer(spec));
         return list;

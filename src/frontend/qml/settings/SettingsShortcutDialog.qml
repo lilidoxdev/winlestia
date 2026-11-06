@@ -222,7 +222,10 @@ Window {
                     dlg.draft = combo;
                     dlg.failed = false;
                     dlg.message = "";
-                    Bridge.action("shortcut", {id: dlg.shortcutId, combo: combo});
+                    Bridge.action("shortcut", {
+                        id: dlg.shortcutId,
+                        combo: combo
+                    });
                 }
                 Keys.onReleased: event => {
                     event.accepted = true;

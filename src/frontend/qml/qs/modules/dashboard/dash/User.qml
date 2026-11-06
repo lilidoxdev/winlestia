@@ -28,7 +28,7 @@ Row {
         MaterialIcon {
             anchors.centerIn: parent
 
-            text:qsTr("person")
+            text: qsTr("person")
             fill: 1
             grade: 200
             font.pointSize: Math.floor(info.implicitHeight / 2) || 1
@@ -84,7 +84,7 @@ Row {
                     anchors.centerIn: parent
                     anchors.horizontalCenterOffset: -font.pointSize * 0.02
 
-                    text:qsTr("frame_person")
+                    text: qsTr("frame_person")
                     color: Colours.palette.m3onPrimary
                     font.pointSize: Appearance.font.size.extraLarge
                 }

@@ -114,7 +114,7 @@ RowLayout {
             id: upIcon
 
             anchors.centerIn: parent
-            text:qsTr("keyboard_arrow_up")
+            text: qsTr("keyboard_arrow_up")
             color: Colours.palette.m3onPrimary
         }
     }
@@ -149,7 +149,7 @@ RowLayout {
             id: downIcon
 
             anchors.centerIn: parent
-            text:qsTr("keyboard_arrow_down")
+            text: qsTr("keyboard_arrow_down")
             color: Colours.palette.m3onPrimary
         }
     }

@@ -40,7 +40,7 @@ StyledRect {
                 id: upIcon
 
                 anchors.centerIn: parent
-                text:qsTr("drive_folder_upload")
+                text: qsTr("drive_folder_upload")
                 color: root.dialog.cwd.length === 1 ? Colours.palette.m3outline : Colours.palette.m3onSurface
                 grade: 200
             }
@@ -79,7 +79,7 @@ StyledRect {
                             active: folder.index > 0
                             asynchronous: true
                             sourceComponent: StyledText {
-                                text:qsTr("/")
+                                text: qsTr("/")
                                 color: Colours.palette.m3onSurfaceVariant
                                 font.bold: true
                             }
@@ -112,7 +112,7 @@ StyledRect {
                                 active: folder.index === 0 && folder.modelData === "Home"
                                 asynchronous: true
                                 sourceComponent: MaterialIcon {
-                                    text:qsTr("home")
+                                    text: qsTr("home")
                                     color: root.dialog.cwd.length === 1 ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
                                     fill: 1
                                 }

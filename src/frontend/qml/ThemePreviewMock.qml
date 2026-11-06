@@ -103,10 +103,22 @@ Item {
 
         Repeater {
             model: [
-                {icon: "dashboard", label: qsTr("Tableau de bord")},
-                {icon: "queue_music", label: qsTr("Média")},
-                {icon: "speed", label: qsTr("Performances")},
-                {icon: "workspaces", label: qsTr("Espaces de travail")}
+                {
+                    icon: "dashboard",
+                    label: qsTr("Tableau de bord")
+                },
+                {
+                    icon: "queue_music",
+                    label: qsTr("Média")
+                },
+                {
+                    icon: "speed",
+                    label: qsTr("Performances")
+                },
+                {
+                    icon: "workspaces",
+                    label: qsTr("Espaces de travail")
+                }
             ]
 
             Item {
@@ -244,9 +256,21 @@ Item {
 
             Repeater {
                 model: [
-                    {icon: "water_drop", tone: mock.p.m3tertiary, v: "48%"},
-                    {icon: "air", tone: mock.p.m3secondary, v: "12 km/h"},
-                    {icon: "device_thermostat", tone: mock.p.m3primary, v: "19°"}
+                    {
+                        icon: "water_drop",
+                        tone: mock.p.m3tertiary,
+                        v: "48%"
+                    },
+                    {
+                        icon: "air",
+                        tone: mock.p.m3secondary,
+                        v: "12 km/h"
+                    },
+                    {
+                        icon: "device_thermostat",
+                        tone: mock.p.m3primary,
+                        v: "19°"
+                    }
                 ]
 
                 Row {
@@ -327,10 +351,26 @@ Item {
 
             Repeater {
                 model: [
-                    {icon: "desktop_windows", text: "Windows 11", tone: mock.p.m3primary},
-                    {icon: "person", text: "lilid", tone: mock.p.m3primary},
-                    {icon: "memory", text: "Winlestia", tone: mock.p.m3secondary},
-                    {icon: "timer", text: qsTr("actif depuis 3 h"), tone: mock.p.m3tertiary}
+                    {
+                        icon: "desktop_windows",
+                        text: "Windows 11",
+                        tone: mock.p.m3primary
+                    },
+                    {
+                        icon: "person",
+                        text: "lilid",
+                        tone: mock.p.m3primary
+                    },
+                    {
+                        icon: "memory",
+                        text: "Winlestia",
+                        tone: mock.p.m3secondary
+                    },
+                    {
+                        icon: "timer",
+                        text: qsTr("actif depuis 3 h"),
+                        tone: mock.p.m3tertiary
+                    }
                 ]
 
                 Row {
@@ -527,9 +567,21 @@ Item {
 
             Repeater {
                 model: [
-                    {icon: "memory", tone: mock.p.m3primary, v: 0.62},
-                    {icon: "developer_board", tone: mock.p.m3secondary, v: 0.38},
-                    {icon: "hard_drive", tone: mock.p.m3tertiary, v: 0.8}
+                    {
+                        icon: "memory",
+                        tone: mock.p.m3primary,
+                        v: 0.62
+                    },
+                    {
+                        icon: "developer_board",
+                        tone: mock.p.m3secondary,
+                        v: 0.38
+                    },
+                    {
+                        icon: "hard_drive",
+                        tone: mock.p.m3tertiary,
+                        v: 0.8
+                    }
                 ]
 
                 Column {

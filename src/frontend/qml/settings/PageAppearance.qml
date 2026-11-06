@@ -37,10 +37,32 @@ ColumnLayout {
                     Repeater {
                         // Preview swatches keep fixed colours on purpose: Porcelaine and Nuit never follow the wallpaper.
                         model: [
-                            {mode: "light", dark: false, label: qsTr("Porcelaine"), bg: "#fff8f6", fg: "#895143"},
-                            {mode: "dark", dark: true, label: qsTr("Nuit"), bg: "#101518", fg: "#afd4f0"},
-                            {mode: "custom", label: qsTr("Personnalisé"), bg: Colours.surfaceBase, fg: Colours.palette.m3primary},
-                            {mode: "auto", label: qsTr("Automatique"), bg: Colours.palette.m3surfaceContainerHigh, fg: Colours.palette.m3primary}
+                            {
+                                mode: "light",
+                                dark: false,
+                                label: qsTr("Porcelaine"),
+                                bg: "#fff8f6",
+                                fg: "#895143"
+                            },
+                            {
+                                mode: "dark",
+                                dark: true,
+                                label: qsTr("Nuit"),
+                                bg: "#101518",
+                                fg: "#afd4f0"
+                            },
+                            {
+                                mode: "custom",
+                                label: qsTr("Personnalisé"),
+                                bg: Colours.surfaceBase,
+                                fg: Colours.palette.m3primary
+                            },
+                            {
+                                mode: "auto",
+                                label: qsTr("Automatique"),
+                                bg: Colours.palette.m3surfaceContainerHigh,
+                                fg: Colours.palette.m3primary
+                            }
                         ]
 
                         StyledRect {
@@ -63,7 +85,10 @@ ColumnLayout {
                             // Choosing "custom" only switches mode; the editor opens from the "Modifier ma palette" row below.
                             function choose(): void {
                                 const m = modelData.mode, dark = modelData.dark ?? false;
-                                Bridge.action("theme", {mode: m, dark: dark});
+                                Bridge.action("theme", {
+                                    mode: m,
+                                    dark: dark
+                                });
                             }
 
                             Keys.onPressed: event => {
@@ -212,7 +237,10 @@ ColumnLayout {
             hint: page.glassOk ? SettingsIndex.desc("transparency") : page.mode === "custom" ? qsTr("Active « Verre transparent » dans Modifier ma palette") : qsTr("Réglable avec les thèmes Automatique et Personnalisé")
             slider.objectName: "glassTransparency"
             // One slider for both themes: it writes whichever key the current theme reads.
-            onMoved: v => Bridge.action("preference", {key: page.mode === "custom" ? "customGlassOpacity" : "glassOpacity", value: 1 - v / 100})
+            onMoved: v => Bridge.action("preference", {
+                    key: page.mode === "custom" ? "customGlassOpacity" : "glassOpacity",
+                    value: 1 - v / 100
+                })
         }
     }
 
@@ -228,12 +256,24 @@ ColumnLayout {
                 Layout.fillWidth: true
                 namePrefix: "motion-"
                 model: [
-                    {label: qsTr("Sans"), value: 0},
-                    {label: qsTr("Rapides"), value: 0.5},
-                    {label: "Caelestia", value: 1}
+                    {
+                        label: qsTr("Sans"),
+                        value: 0
+                    },
+                    {
+                        label: qsTr("Rapides"),
+                        value: 0.5
+                    },
+                    {
+                        label: "Caelestia",
+                        value: 1
+                    }
                 ]
                 current: page.motion <= 0.01 ? 0 : page.motion <= 0.75 ? 0.5 : 1
-                onChosen: v => Bridge.action("preference", {key: "motion", value: v})
+                onChosen: v => Bridge.action("preference", {
+                        key: "motion",
+                        value: v
+                    })
             }
         }
 
@@ -245,7 +285,10 @@ ColumnLayout {
                 id: reduced
 
                 value: Bridge.reducedEffects
-                onToggled: Bridge.action("preference", {key: "reducedEffects", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "reducedEffects",
+                    enabled: checked
+                })
             }
         }
     }

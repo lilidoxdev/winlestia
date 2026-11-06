@@ -33,20 +33,71 @@ Item {
 
             startX: 0
             startY: 0
-            PathLine { x: root.width; y: 0 }
-            PathLine { x: root.width; y: root.height }
-            PathLine { x: 0; y: root.height }
-            PathLine { x: 0; y: 0 }
+            PathLine {
+                x: root.width
+                y: 0
+            }
+            PathLine {
+                x: root.width
+                y: root.height
+            }
+            PathLine {
+                x: 0
+                y: root.height
+            }
+            PathLine {
+                x: 0
+                y: 0
+            }
 
-            PathMove { x: root.innerLeft + root.rounding; y: root.innerTop }
-            PathLine { x: root.innerRight - root.rounding; y: root.innerTop }
-            PathArc { x: root.innerRight; y: root.innerTop + root.rounding; radiusX: root.rounding; radiusY: root.rounding; direction: PathArc.Clockwise }
-            PathLine { x: root.innerRight; y: root.innerBottom - root.rounding }
-            PathArc { x: root.innerRight - root.rounding; y: root.innerBottom; radiusX: root.rounding; radiusY: root.rounding; direction: PathArc.Clockwise }
-            PathLine { x: root.innerLeft + root.rounding; y: root.innerBottom }
-            PathArc { x: root.innerLeft; y: root.innerBottom - root.rounding; radiusX: root.rounding; radiusY: root.rounding; direction: PathArc.Clockwise }
-            PathLine { x: root.innerLeft; y: root.innerTop + root.rounding }
-            PathArc { x: root.innerLeft + root.rounding; y: root.innerTop; radiusX: root.rounding; radiusY: root.rounding; direction: PathArc.Clockwise }
+            PathMove {
+                x: root.innerLeft + root.rounding
+                y: root.innerTop
+            }
+            PathLine {
+                x: root.innerRight - root.rounding
+                y: root.innerTop
+            }
+            PathArc {
+                x: root.innerRight
+                y: root.innerTop + root.rounding
+                radiusX: root.rounding
+                radiusY: root.rounding
+                direction: PathArc.Clockwise
+            }
+            PathLine {
+                x: root.innerRight
+                y: root.innerBottom - root.rounding
+            }
+            PathArc {
+                x: root.innerRight - root.rounding
+                y: root.innerBottom
+                radiusX: root.rounding
+                radiusY: root.rounding
+                direction: PathArc.Clockwise
+            }
+            PathLine {
+                x: root.innerLeft + root.rounding
+                y: root.innerBottom
+            }
+            PathArc {
+                x: root.innerLeft
+                y: root.innerBottom - root.rounding
+                radiusX: root.rounding
+                radiusY: root.rounding
+                direction: PathArc.Clockwise
+            }
+            PathLine {
+                x: root.innerLeft
+                y: root.innerTop + root.rounding
+            }
+            PathArc {
+                x: root.innerLeft + root.rounding
+                y: root.innerTop
+                radiusX: root.rounding
+                radiusY: root.rounding
+                direction: PathArc.Clockwise
+            }
         }
     }
 }

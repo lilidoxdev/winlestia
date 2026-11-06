@@ -57,7 +57,10 @@ ColumnLayout {
 
                     objectName: "explorerThemeToggle"
                     value: Bridge.settings.explorerTheme ?? false
-                    onToggled: Bridge.action("preference", {key: "explorerTheme", enabled: checked})
+                    onToggled: Bridge.action("preference", {
+                        key: "explorerTheme",
+                        enabled: checked
+                    })
                 }
             }
         }
@@ -108,7 +111,10 @@ ColumnLayout {
 
                 objectName: "filesDefaultHandlerToggle"
                 value: Bridge.settings.filesDefaultHandler ?? false
-                onToggled: Bridge.action("preference", {key: "filesDefaultHandler", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "filesDefaultHandler",
+                    enabled: checked
+                })
             }
         }
 
@@ -121,7 +127,10 @@ ColumnLayout {
 
                 objectName: "filesPreloadToggle"
                 value: Bridge.settings.filesPreload ?? false
-                onToggled: Bridge.action("preference", {key: "filesPreload", enabled: checked})
+                onToggled: Bridge.action("preference", {
+                    key: "filesPreload",
+                    enabled: checked
+                })
             }
         }
     }
