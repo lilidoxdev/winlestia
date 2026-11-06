@@ -17,7 +17,9 @@ jobs:
         shell: pwsh
         run: |
           foreach ($p in 'src/backend/Panneaux.Glass.csproj', 'src/files/Winlestia.Files.csproj', 'src/cli/winlestia.csproj') {
-            dotnet build $p -c Release
+            dotnet restore $p --locked-mode
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            dotnet build $p -c Release --no-restore
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
@@ -25,7 +27,9 @@ jobs:
       # bureaux virtuels, interop native, plein ecran) touche au bureau : elle reste locale.
       - name: Tests .NET
         shell: pwsh
-        run: dotnet test tests/Winlestia.Tests -c Release --filter "Category!=Desktop"
+        run: |
+          dotnet restore tests/Winlestia.Tests --locked-mode
+          dotnet test tests/Winlestia.Tests -c Release --no-restore --filter "Category!=Desktop"
 
       - uses: actions/setup-python@v5
         with:

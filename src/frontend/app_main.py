@@ -20,7 +20,6 @@ def main():
     parser.add_argument('--backend-pid', type=int, default=0)
     parser.add_argument('--preview', action='store_true')
     parser.add_argument('--verify', action='store_true')
-    parser.add_argument('--verify-tools82', action='store_true')
     parser.add_argument('--page', type=int, default=0)
     parser.add_argument('--capture')
     parser.add_argument('--exit-after', type=int, default=0)
@@ -76,14 +75,6 @@ def main():
     bridge.changed.connect(bridge.apply_surface_visibility)
     bridge.apply_surface_visibility()
     bridge.glass = NativeGlass(bridge)
-    if os.environ.get('PANNEAUX_VERIFY_THICKNESS85') == '1':
-        from validation85 import run
-
-        run(bridge, root, app, QML_ISSUES, ROOT / 'validation-8.5')
-    if os.environ.get('PANNEAUX_VERIFY_MATERIAL84') == '1':
-        from validation84 import run
-
-        run(bridge, root, app, QML_ISSUES, ROOT / 'validation-8.4')
     if os.environ.get('PANNEAUX_PROOF91') == '1':
 
         def proof91():
@@ -131,10 +122,6 @@ def main():
         QTimer.singleShot(3500, capture)
     if args.exit_after:
         QTimer.singleShot(args.exit_after, app.quit)
-    if args.verify_tools82:
-        from validation82 import run
-
-        run(bridge, root, app, QML_ISSUES, ROOT / 'validation-8.3')
     if args.verify:
         report = {'started': time.time(), 'views': [], 'frames': []}
         proof = ROOT / 'validation-8.1'

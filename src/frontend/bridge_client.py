@@ -5,6 +5,10 @@ from PySide6.QtCore import Signal, QThread
 from win_native import kernel32
 
 
+# Version du protocole (docs/BRIDGE.md), annoncée dans args.protocol de chaque requête ; le serveur journalise une divergence.
+PROTOCOL_VERSION = 1
+
+
 class PipeClient(QThread):
     received = Signal(dict)
 
@@ -60,6 +64,7 @@ class PipeClient(QThread):
                                 **request['args'],
                                 'pid': os.getpid(),
                                 'epoch': self.subscription.get('epoch', 0),
+                                'protocol': PROTOCOL_VERSION,
                             },
                         }
                         payload = (json.dumps(request, ensure_ascii=False) + '\n').encode('utf-8')

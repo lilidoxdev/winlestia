@@ -173,6 +173,9 @@ internal sealed partial class QtShellBridge : IDisposable
     readonly string root, cache;
     Process? frontend;
     NamedPipeServerStream? pipe;
+    // Version du protocole JSON lignes (docs/BRIDGE.md). Le client l'annonce dans args.protocol de chaque requête ;
+    // une divergence est journalisée une fois par connexion, sans refuser la connexion.
+    internal const int ProtocolVersion = 1;
 
     OsdWatcher? osdWatcher;
     PcReading? reading;
@@ -332,6 +335,16 @@ internal sealed partial class QtShellBridge : IDisposable
         wake.Set();
     }
 
+    // Avertit si le client parle une autre version du protocole (ou n'en annonce aucune : client ancien).
+    static void CheckProtocol(JsonElement request)
+    {
+        int? announced = request.TryGetProperty("args", out var a) && a.ValueKind == JsonValueKind.Object
+            && a.TryGetProperty("protocol", out var p) && p.TryGetInt32(out int v) ? v : null;
+        if (announced != ProtocolVersion)
+            Store.Log("Qt IPC: version de protocole différente (client " + (announced?.ToString() ?? "non annoncée")
+                + ", serveur " + ProtocolVersion + ") : des commandes peuvent être ignorées.");
+    }
+
     async Task Serve()
     {
         while (!cancellation.IsCancellationRequested)
@@ -348,6 +361,7 @@ internal sealed partial class QtShellBridge : IDisposable
                 await server.WaitForConnectionAsync(cancellation.Token);
                 using var reader = new StreamReader(server, new UTF8Encoding(false), false, 65536, true);
                 using var writer = new StreamWriter(server, new UTF8Encoding(false), 65536, true) { AutoFlush = true };
+                bool versionChecked = false;
                 while (server.IsConnected && !cancellation.IsCancellationRequested)
                 {
                     string? line = await reader.ReadLineAsync(cancellation.Token);
@@ -355,6 +369,11 @@ internal sealed partial class QtShellBridge : IDisposable
                         break;
                     using var request = JsonDocument.Parse(line);
                     var element = request.RootElement.Clone();
+                    if (!versionChecked)
+                    {
+                        versionChecked = true;
+                        CheckProtocol(element);
+                    }
                     var operation = await dispatcher.InvokeAsync(() => Handle(element));
                     string reply = await operation;
                     await writer.WriteLineAsync(reply.AsMemory(), cancellation.Token);

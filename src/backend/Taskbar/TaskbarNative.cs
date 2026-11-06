@@ -228,7 +228,8 @@ internal static class TaskbarNative
     }
     internal static void RestoreSaved()
     {
-        Restore(ReadLease(LeasePath));
+        // Fichier de session absent ou illisible : même repli que RETABLIR_BARRE_WINDOWS.exe (toujours visible, 2 = ABS_ALWAYSONTOP).
+        Restore(ReadLease(LeasePath) ?? new Lease { State = 2 });
     }
     sealed class ProcessWait : WaitHandle
     {
