@@ -71,7 +71,6 @@ internal static class PaletteLoader {
         if (watcher != null) return;
         try {
             string file = ShellFile, dir = Path.GetDirectoryName(file)!;
-            try { Directory.CreateDirectory(dir); } catch { }
             if (!Directory.Exists(dir)) return;
             watcher = new FileSystemWatcher(dir, Path.GetFileName(file)) { NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime };
             FileSystemEventHandler h = (_, _) => { debounce?.Dispose(); debounce = new Timer(_ => Refresh(ui, applied), null, 400, Timeout.Infinite); };

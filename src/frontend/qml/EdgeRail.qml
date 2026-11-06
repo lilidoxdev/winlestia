@@ -47,6 +47,7 @@ Window {
     height:fullHeight
     x:isLeft?Bridge.screenX+inset:Bridge.screenX+Bridge.screenWidth-width-inset
     y:Bridge.screenY+(Bridge.screenHeight-height)/2
-    visible:(shown||offset<bumpWidth-1)&&!Bridge.screenFullscreen
+    property bool allowed:true
+    visible:allowed&&(shown||offset<bumpWidth-1)&&!Bridge.screenFullscreen
     Behavior on offset {Anim {duration:Appearance.anim.durations.expressiveFastSpatial;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
 }

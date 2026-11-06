@@ -1,6 +1,6 @@
 # Shortcuts and command line
 
-Everything below was checked against the source (`src/backend/GlobalShortcut.cs`, `src/backend/Models.cs`, `src/frontend/qml`, `src/backend/CliCommands.cs`). Global shortcuts can be reassigned in Settings; the values shown are the defaults. If another application already owns a combination, Windows refuses it and Winlestia reports the conflict.
+Everything below was checked against the source (`src/backend/GlobalShortcut.cs`, `src/backend/Models.cs`, `src/frontend/qml`, `src/backend/CliCommands.cs`). Global shortcuts can be reassigned in Settings, on the Keyboard shortcuts page (Modify, then press the new combination); Windows-reserved combinations and ones already used by another action are refused; the values shown are the defaults. If another application already owns a combination, Windows refuses it and Winlestia reports the conflict.
 
 ## Global shortcuts
 
@@ -8,29 +8,30 @@ Everything below was checked against the source (`src/backend/GlobalShortcut.cs`
 |---|---|---|
 | Ctrl+F1 | Toggle the dashboard (pressing again closes it) | Yes |
 | Ctrl+Alt+Space | Also opens the dashboard; always registered as a second way in | No |
+| Win+Alt+S | Open Settings | Yes |
 | Ctrl+F2 | Command palette | Yes |
 | Ctrl+F3 | Screen capture | Yes |
 | Ctrl+F8 | Keep the active window on top (pin) | Yes |
 | Win+Alt+W | Wallpaper switcher. If Windows refuses the combination, Ctrl+Alt+W is the fallback | Yes |
 | Ctrl+Alt+Backspace | Emergency rescue (see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)) | No, reserved |
-| Hold AltGr | Push-to-talk dictation. Off by default, enable it in Settings; the key can be changed | Yes |
+| Hold AltGr | Push-to-talk dictation. Off by default, enable it in Settings; the key is chosen in Settings, Media and audio, not on the Keyboard shortcuts page | Set elsewhere |
 
 ## The dock
 
 The Win key opens the normal Windows Start menu; it does not reveal the dock. The dock auto-hides: it slides away about 0.45 s after the pointer leaves it, and appears when the pointer reaches the bottom edge of the screen.
 
-Reassignable shortcuts must combine Ctrl and/or Alt (the wallpaper switcher also accepts Win) with a letter, digit, Space or a function key (F12 excluded).
+Reassignable shortcuts must combine Ctrl and/or Alt (the wallpaper switcher and Settings also accept Win) with a letter, digit, Space or a function key (F12 excluded).
 
 ## Automatic tiling
 
-Tiling is **off by default**. These keys are registered only while it is turned on (Settings, or the dock button).
+Tiling is **off by default**. These keys are registered only while it is turned on (Settings, or the dock button). They are fixed for now and listed, read-only, on the Keyboard shortcuts page.
 
 | Shortcut | Action |
 |---|---|
 | Ctrl+Alt+Arrows | Move to the neighbouring tile |
 | Ctrl+Alt+Shift+Arrows | Swap with the neighbouring tile, across displays too |
 | Ctrl+Alt+Shift+F | Take the window out of tiling, or put it back |
-| Ctrl+Alt+Shift++ / - | Grow or shrink the active tile (20 to 80 %) |
+| Ctrl+Alt+Shift++ / - | Grow or shrink the active tile (20 to 80 %); the numeric keypad + and - also work |
 | Ctrl+Alt+Shift+X | Exclude the active window's application, or include it again |
 
 Dropping a window onto another tile with the mouse swaps them. Switching virtual desktops uses the standard Windows Win+Ctrl+Arrows.

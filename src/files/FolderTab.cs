@@ -30,7 +30,7 @@ internal sealed class FolderTab {
     internal string Location { get; private set; } = "";
     internal LoadState State { get; private set; }
     internal string Error { get; private set; } = "";
-    internal SortSpec Sort { get; private set; } = new(SortColumn.Name, true);
+    internal SortSpec Sort { get; private set; } = FilesSettings.InitialSort();
     internal event Action<FolderTab>? Changed;
     // Raised around every in-place rewrite of the rows (begin = the kind, end = null) so the window can restore selection and scroll by path.
     internal event Action<FolderTab, Keep?>? Mutating;
@@ -42,15 +42,15 @@ internal sealed class FolderTab {
     internal void SyncIfStale() { if (!Stale) return; Stale = false; Sync(Array.Empty<string>(), true); }
     string filter = "";
     internal string Filter => filter;
-    internal bool FilterEmpty => filter.Length > 0 && items.Count == 0 && State is LoadState.Ready or LoadState.Empty;
+    internal bool FilterEmpty => filter.Length > 0 && items.Count == 0 && !Searching && State is LoadState.Ready or LoadState.Empty;
     // Set once the first rows (or the final result, or a failure) have been queued to the UI: lets the window apply them
     // before its very first layout pass instead of building the list empty and laying it out a second time.
     internal readonly ManualResetEventSlim FirstPosted = new(false);
 
     internal bool CanBack => index > 0;
     internal bool CanForward => index < history.Count - 1;
-    internal string? Parent => Location.Length == 0 ? null : Path.GetDirectoryName(Location);
-    internal string Title => Path.GetFileName(Location) is { Length: > 0 } leaf ? leaf : Location;
+    internal string? Parent => Location.Length == 0 || ThisPc.Is(Location) ? null : Path.GetDirectoryName(Location) ?? ThisPc.Path;
+    internal string Title => ThisPc.Is(Location) ? ThisPc.Label : Path.GetFileName(Location) is { Length: > 0 } leaf ? leaf : Location;
 
     internal void Go(string path) {
         if (disposed) return;
@@ -64,8 +64,10 @@ internal sealed class FolderTab {
     internal void Up() { if (Parent is { } parent) Go(parent); }
     internal void Reload() { if (!disposed && Location.Length > 0) Load(Location); }
 
-    internal void SetSort(SortColumn column) {
-        Sort = new SortSpec(column, Sort.Column == column ? !Sort.Ascending : true);
+    internal void SetSort(SortColumn column) => SetSort(Sort with { Column = column, Ascending = Sort.Column == column ? !Sort.Ascending : true });
+    internal void SetSort(SortSpec spec) {
+        if (Sort == spec) return;
+        Sort = spec;
         Changed?.Invoke(this);
         if (State == LoadState.Loading) return;               // Complete() applies the final sort once
         StartSort();
@@ -76,7 +78,7 @@ internal sealed class FolderTab {
         var source = all; var spec = Sort; int mine = ++sortGeneration; sorting = true;
         Task.Run(() => {
             var sorted = FileSort.Sorted(source, spec);
-            ui.InvokeAsync(() => { if (mine != sortGeneration || !ReferenceEquals(source, all) || disposed) return; sorting = false; all = sorted; Mutating?.Invoke(this, Keep.Offset); try { items.Reset(Visible()); } finally { Mutating?.Invoke(this, null); } Changed?.Invoke(this); }, DispatcherPriority.Background);
+            ui.InvokeAsync(() => { if (mine != sortGeneration || !ReferenceEquals(source, all) || disposed) return; sorting = false; all = sorted; if (deepMode) deep = FileSort.Sorted(deep, Sort); Mutating?.Invoke(this, Keep.Offset); try { items.Reset(Visible()); } finally { Mutating?.Invoke(this, null); } Changed?.Invoke(this); }, DispatcherPriority.Background);
         });
     }
 
@@ -88,6 +90,10 @@ internal sealed class FolderTab {
         bool touched = false, reset = false, mirror = filter.Length == 0;
         Mutating?.Invoke(this, Keep.Anchor);
         try {
+        if (deepMode && removed.Count > 0) {
+            var drop = new HashSet<string>(removed, StringComparer.OrdinalIgnoreCase);
+            if (deep.RemoveAll(i => drop.Contains(i.FullPath)) > 0) { touched = true; reset = true; }
+        }
         if (removed.Count > 0) {
             if (removed.Count > Bulk) {
                 var drop = new HashSet<string>(removed, StringComparer.OrdinalIgnoreCase);
@@ -138,14 +144,99 @@ internal sealed class FolderTab {
     static readonly System.Globalization.CompareInfo Compare = System.Globalization.CultureInfo.CurrentCulture.CompareInfo;
     const System.Globalization.CompareOptions Loose = System.Globalization.CompareOptions.IgnoreCase | System.Globalization.CompareOptions.IgnoreNonSpace | System.Globalization.CompareOptions.IgnoreWidth;
 
-    List<FileItem> Visible() => filter.Length == 0 ? all : all.FindAll(i => Compare.IndexOf(i.Name, filter, Loose) >= 0);
+    List<FileItem> Visible() => deepMode ? deep : filter.Length == 0 ? all : all.FindAll(i => Compare.IndexOf(i.Name, filter, Loose) >= 0);
 
     internal void SetFilter(string text) {
         text = text.Trim();
         if (disposed || text == filter || State is LoadState.Loading or LoadState.Denied or LoadState.NotFound or LoadState.Failed) return;
         filter = text;
+        RestartDeep();
         Mutating?.Invoke(this, Keep.Selection);
         try { items.Reset(Visible()); } finally { Mutating?.Invoke(this, null); }
+        Changed?.Invoke(this);
+    }
+
+    // ---- search in sub-folders (off the UI thread, cancellable, results posted in batches) ---------------------------
+
+    // The shallow list (`all`) is never touched by a deep search: clearing the filter or cancelling puts it back as it was.
+    List<FileItem> deep = new();
+    bool deepOption, deepMode;
+    CancellationTokenSource? deepCts;
+    internal bool DeepOption => deepOption;
+    internal bool DeepActive => deepMode;
+    internal bool Searching { get; private set; }
+    internal int DeepCount => deep.Count;
+
+    internal void SetDeepOption(bool on) {
+        if (deepOption == on || disposed) return;
+        deepOption = on;
+        if (filter.Length == 0) return;
+        RestartDeep();
+        Mutating?.Invoke(this, Keep.Selection);
+        try { items.Reset(Visible()); } finally { Mutating?.Invoke(this, null); }
+        Changed?.Invoke(this);
+    }
+
+    // Esc: stops the walk, keeps what was found so far.
+    internal bool CancelDeep() {
+        if (!Searching) return false;
+        deepCts?.Cancel(); Searching = false;
+        Changed?.Invoke(this);
+        return true;
+    }
+
+    void StopDeep() { deepCts?.Cancel(); deepCts?.Dispose(); deepCts = null; Searching = false; }
+
+    void RestartDeep() {
+        StopDeep();
+        deep = new List<FileItem>();
+        deepMode = deepOption && filter.Length > 0 && State is LoadState.Ready or LoadState.Empty && !ThisPc.Is(Location);
+        if (!deepMode) return;
+        var mine = deepCts = new CancellationTokenSource();
+        var token = mine.Token; string root = Location, text = filter; bool hidden = ShowHidden;
+        Searching = true;
+        Task.Run(() => DeepRun(token, root, text, hidden));
+    }
+
+    void DeepRun(CancellationToken token, string root, string text, bool hidden) {
+        try {
+            var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true, ReturnSpecialDirectories = false, AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System };
+            var types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var walk = new System.IO.Enumeration.FileSystemEnumerable<FileItem>(root, (ref System.IO.Enumeration.FileSystemEntry e) => {
+                string dir = e.Directory.ToString();
+                string rel = Path.GetRelativePath(root, dir); if (rel == ".") rel = "";
+                var item = FileItem.From(ref e, types); item.Where = rel; return item;
+            }, options) {
+                ShouldIncludePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => Compare.IndexOf(e.FileName.ToString(), text, Loose) >= 0,
+                ShouldRecursePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => e.IsDirectory && (e.Attributes & FileAttributes.ReparsePoint) == 0,
+            };
+            var pending = new List<FileItem>(); long last = System.Diagnostics.Stopwatch.GetTimestamp();
+            foreach (var item in walk) {
+                if (token.IsCancellationRequested) return;
+                pending.Add(item);
+                if (pending.Count >= 200 || Perf.Ms(last) >= 120) {
+                    var slice = pending; pending = new List<FileItem>(); last = System.Diagnostics.Stopwatch.GetTimestamp();
+                    Post(token, () => DeepBatch(slice));
+                }
+            }
+            var rest = pending;
+            Post(token, () => DeepDone(rest));
+        } catch (OperationCanceledException) {
+        } catch (Exception ex) { Perf.Log("deep search: " + ex.Message); Post(token, () => DeepDone(new List<FileItem>())); }
+    }
+
+    void DeepBatch(List<FileItem> slice) {
+        if (!deepMode) return;
+        deep.AddRange(slice); items.AddRange(slice);
+        Changed?.Invoke(this);
+    }
+
+    void DeepDone(List<FileItem> rest) {
+        if (!deepMode) return;
+        deep.AddRange(rest); Searching = false;
+        deep = FileSort.Sorted(deep, Sort);
+        Mutating?.Invoke(this, Keep.Selection);
+        try { items.Reset(deep); } finally { Mutating?.Invoke(this, null); }
         Changed?.Invoke(this);
     }
 
@@ -218,6 +309,7 @@ internal sealed class FolderTab {
     internal void RaiseCut(HashSet<string> before, HashSet<string> after) { foreach (var item in all) if (before.Contains(item.FullPath) || after.Contains(item.FullPath)) item.RaiseCut(); }
 
     void Load(string path) {
+        StopDeep(); deepMode = false; deep = new List<FileItem>();
         cts?.Cancel(); cts?.Dispose();
         var mine = cts = new CancellationTokenSource();
         Location = path; State = LoadState.Loading; Error = ""; filter = ""; dirty = false; syncPaths.Clear(); syncFull = false; Stale = false; firstLogged = false; sortGeneration++;
@@ -230,6 +322,7 @@ internal sealed class FolderTab {
         Changed?.Invoke(this);
         Perf.Mark("enumeration start");
         FirstPosted.Reset();
+        if (ThisPc.Is(path)) { State = LoadState.Ready; FirstPosted.Set(); Changed?.Invoke(this); return; }   // virtual page: drives are listed by the window
         Task.Run(() => Run(token, path, hidden, start));
     }
 
@@ -312,7 +405,7 @@ internal sealed class FolderTab {
     }
 
     internal void Dispose() {
-        disposed = true;
+        disposed = true; StopDeep();
         cts?.Cancel(); cts?.Dispose(); cts = null;
         items.Reset(null); all = new List<FileItem>(); Changed = null;
     }

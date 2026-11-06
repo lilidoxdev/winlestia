@@ -25,7 +25,6 @@ Tout afficher|Show all|Mostrar todo
 Tes favoris|Your favorites|Tus favoritos
 Récents|Recent|Recientes
 Reprendre ton espace|Resume your workspace|Retomar tu espacio
-Ajouter un site|Add website|Añadir sitio
 En cours|Running|En ejecución
 Arrière-plan|Background|Segundo plano
 Alimentation|Power|Energía
@@ -241,6 +240,117 @@ Connexion…|Connecting…|Conectando…
 Ouvrir dans Windows|Open in Windows|Abrir en Windows
 Oublier|Forget|Olvidar
 Se connecter|Connect|Conectar"""
+ROWS+="\n"+r"""Transparence|Transparency|Transparencia
+Active « Verre transparent » dans Modifier ma palette|Turn on “Transparent glass” in Edit my palette|Activa «Vidrio transparente» en Modificar mi paleta
+Réglable avec les thèmes Automatique et Personnalisé|Adjustable with the Automatic and Custom themes|Ajustable con los temas Automático y Personalizado
+Visibilité|Visibility|Visibilidad
+Disposition automatique|Automatic layout|Disposición automática
+Démarrage|Start-up|Inicio
+Services|Services|Servicios
+Restauration|Restoration|Restauración
+Rétablir|Restore|Restablecer
+À propos|About|Acerca de
+Contours|Borders|Contornos
+Ouverture du panneau|Opening the panel|Apertura del panel
+Affichage à l’écran|On-screen display|Pantalla
+Dans le panneau|In the panel|En el panel
+Changer d’onglet|Switch tab|Cambiar de pestaña
+Rechercher|Search|Buscar
+Fermer le panneau|Close the panel|Cerrar el panel
+Clique sur « Modifier », puis appuie sur la nouvelle combinaison. Un raccourci déjà pris est refusé avec une explication.|Click “Edit”, then press the new combination. A shortcut that is already taken is refused with an explanation.|Haz clic en «Modificar» y pulsa la nueva combinación. Un atajo ya ocupado se rechaza con una explicación.
+Actif seulement quand le panneau est ouvert.|Only active while the panel is open.|Solo activo cuando el panel está abierto.
+Thème, couleurs, transparence, animations|Theme, colours, transparency, animations|Tema, colores, transparencia, animaciones
+Interface|Interface|Interfaz
+Contours, cadre, logo, ouverture du panneau|Borders, frame, logo, panel opening|Contornos, marco, logo, apertura del panel
+Docks et panneaux|Docks and panels|Docks y paneles
+Visibilité, barre des tâches, disposition|Visibility, taskbar, layout|Visibilidad, barra de tareas, disposición
+Raccourcis clavier|Keyboard shortcuts|Atajos de teclado
+Ouvrir, modifier, éviter les conflits|Open, change, avoid conflicts|Abrir, cambiar, evitar conflictos
+Médias et audio|Media and audio|Multimedia y audio
+Indicateurs à l’écran, dictée vocale|On-screen indicators, voice dictation|Indicadores en pantalla, dictado por voz
+Applications, favoris et liens|Apps, bookmarks and links|Aplicaciones, favoritos y enlaces
+Favoris, réseaux sociaux, presse-papiers|Bookmarks, social networks, clipboard|Favoritos, redes sociales, portapapeles
+Fichiers et Windows|Files and Windows|Archivos y Windows
+Explorateur, gestionnaire de fichiers|Explorer, file manager|Explorador, gestor de archivos
+Général|General|General
+Langue, démarrage, restauration, à propos|Language, start-up, restoration, about|Idioma, inicio, restauración, acerca de
+Mode discret en plein écran|Quiet mode in fullscreen|Modo discreto a pantalla completa
+Masque l’OSD, le visualiseur et les animations quand une application est en plein écran.|Hides the OSD, the visualizer and animations when an application is fullscreen.|Oculta el OSD, el visualizador y las animaciones cuando una aplicación está a pantalla completa.
+Bande en haut de l’écran qui ouvre le panneau|Strip at the top of the screen that opens the panel|Franja en la parte superior de la pantalla que abre el panel
+Dock Winlestia|Winlestia dock|Dock de Winlestia
+Le dock avec les applications ouvertes, au bord bas de l’écran|The dock with open applications, at the bottom edge of the screen|El dock con las aplicaciones abiertas, en el borde inferior de la pantalla
+Panneau des favoris (bord gauche)|Bookmarks panel (left edge)|Panel de favoritos (borde izquierdo)
+Se déploie quand la souris touche le bord gauche de l’écran|Opens when the mouse touches the left edge of the screen|Se despliega cuando el ratón toca el borde izquierdo de la pantalla
+Panneau des réseaux sociaux (bord droit)|Social networks panel (right edge)|Panel de redes sociales (borde derecho)
+Se déploie quand la souris touche le bord droit de l’écran|Opens when the mouse touches the right edge of the screen|Se despliega cuando el ratón toca el borde derecho de la pantalla
+Masquer la barre des tâches de Windows|Hide the Windows taskbar|Ocultar la barra de tareas de Windows
+Elle se rétablit à tout moment depuis Général › Restauration.|You can bring it back at any time from General › Restoration.|Se restablece en cualquier momento desde General › Restauración.
+Taille des aperçus de bureaux|Desktop preview size|Tamaño de las vistas de escritorios
+Taille des icônes dans les vues de bureaux et d’applications|Icon size in the desktop and application views|Tamaño de los iconos en las vistas de escritorios y aplicaciones
+Navigateur des favoris|Bookmarks browser|Navegador de favoritos
+Le navigateur dont Winlestia lit les favoris|The browser whose bookmarks Winlestia reads|El navegador del que Winlestia lee los favoritos
+Réafficher les favoris retirés|Show removed bookmarks again|Volver a mostrar los favoritos quitados
+Garder les messageries actives en arrière-plan|Keep messengers active in the background|Mantener las mensajerías activas en segundo plano
+Compteurs de messages à jour, mais plus de mémoire utilisée.|Message counters stay up to date, but more memory is used.|Contadores de mensajes al día, pero se usa más memoria.
+Comptes des réseaux sociaux|Social network accounts|Cuentas de redes sociales
+Garder les images copiées|Keep copied images|Conservar las imágenes copiadas
+Ajoute aussi les captures et images à l’historique|Also adds screenshots and images to the history|También añade capturas e imágenes al historial
+Taille de l’historique|History size|Tamaño del historial
+Nombre maximal d’éléments conservés|Maximum number of items kept|Número máximo de elementos conservados
+Dossiers personnalisés|Custom folders|Carpetas personalizadas
+Ajouter un dossier, ouvrir l’Explorateur ou restaurer les icônes d’origine|Add a folder, open Explorer or restore the original icons|Añadir una carpeta, abrir el Explorador o restaurar los iconos originales
+Réaffiche la barre des tâches de Windows|Shows the Windows taskbar again|Vuelve a mostrar la barra de tareas de Windows
+À propos de Winlestia|About Winlestia|Acerca de Winlestia
+Version et dossier des données|Version and data folder|Versión y carpeta de datos
+Aucun|None|Ninguno
+Aller à « %1 »|Go to “%1”|Ir a «%1»
+Le raccourci est enregistré dès que la combinaison est valide.|The shortcut is saved as soon as the combination is valid.|El atajo se guarda en cuanto la combinación es válida.
+Shell|Shell|Shell
+Apparence|Appearance|Apariencia
+Outils|Tools|Herramientas
+Secours|Rescue|Rescate
+Ouvrir le tableau de bord|Open the dashboard|Abrir el panel
+Tableau de bord (secours)|Dashboard (fallback)|Panel (respaldo)
+Ouvrir les paramètres|Open settings|Abrir ajustes
+Changer de fond d’écran|Change wallpaper|Cambiar fondo de pantalla
+Capturer l’écran|Capture the screen|Capturar la pantalla
+Épingler au premier plan|Pin to the foreground|Fijar en primer plano
+Dictée (touche maintenue)|Dictation (held key)|Dictado (tecla mantenida)
+Restaurer le bureau|Restore the desktop|Restaurar el escritorio
+Passer le focus à la fenêtre voisine|Move focus to the neighbouring window|Pasar el foco a la ventana vecina
+Échanger avec la fenêtre voisine|Swap with the neighbouring window|Intercambiar con la ventana vecina
+Basculer la fenêtre en flottant|Toggle the window to floating|Cambiar la ventana a flotante
+Agrandir la zone de la fenêtre|Grow the window area|Ampliar el área de la ventana
+Réduire la zone de la fenêtre|Shrink the window area|Reducir el área de la ventana
+Exclure l’application de la disposition|Exclude the application from the layout|Excluir la aplicación de la disposición
+Couleurs|Colours|Colores
+Choisir : %1|Pick: %1|Elegir: %1
+Aperçu en direct|Live preview|Vista previa en directo
+Horizontal : teinte · Vertical : intensité|Horizontal: hue · Vertical: intensity|Horizontal: tono · Vertical: intensidad
+Clarté|Lightness|Claridad
+Du sombre au lumineux|From dark to bright|De oscuro a luminoso
+Verre|Glass|Vidrio
+Le fond laisse voir le bureau|The background shows the desktop through|El fondo deja ver el escritorio
+Transparence|Transparency|Transparencia
+Appliquer|Apply|Aplicar
+Ensoleillé|Sunny|Soleado
+actif depuis 3 h|up 3 h|activo desde hace 3 h
+Titre du morceau|Track title|Título de la pista
+Album|Album|Álbum
+Artiste|Artist|Artista
+Fixe pour l’instant ; actif uniquement quand la disposition automatique est activée.|Fixed for now; only active when automatic layout is turned on.|Fijo por ahora; solo activo cuando la disposición automática está activada.
+Raccourci de secours fixe : il ouvre toujours le tableau de bord, même si l’autre raccourci est réassigné.|Fixed fallback shortcut: it always opens the dashboard, even if the other shortcut is reassigned.|Atajo de respaldo fijo: siempre abre el panel, aunque se reasigne el otro atajo.
+Réservé à la restauration du bureau : il doit fonctionner même si Winlestia ne répond plus.|Reserved for restoring the desktop: it must work even if Winlestia stops responding.|Reservado para restaurar el escritorio: debe funcionar aunque Winlestia deje de responder.
+Se règle dans Médias et audio › Dictée (touche maintenue).|Set in Media and audio › Dictation (held key).|Se ajusta en Multimedia y audio › Dictado (tecla mantenida).
+Ce raccourci n’est pas modifiable.|This shortcut cannot be changed.|Este atajo no se puede cambiar.
+Combinaison réservée par Windows.|Combination reserved by Windows.|Combinación reservada por Windows.
+Une autre application utilise déjà cette combinaison.|Another application is already using this combination.|Otra aplicación ya usa esta combinación.
+Combinaison non reconnue. Maintenez un ou plusieurs modificateurs puis une touche.|Combination not recognised. Hold one or more modifiers, then a key.|Combinación no reconocida. Mantén uno o varios modificadores y luego una tecla.
+Choisissez Ctrl, Alt ou Windows avec une touche (F1 à F24 sauf F12, lettre, chiffre ou Espace).|Choose Ctrl, Alt or Windows with a key (F1 to F24 except F12, a letter, a digit or Space).|Elige Ctrl, Alt o Windows con una tecla (F1 a F24 salvo F12, una letra, un dígito o Espacio).
+Choisissez Ctrl ou Alt avec une touche (F1 à F24 sauf F12, lettre, chiffre ou Espace).|Choose Ctrl or Alt with a key (F1 to F24 except F12, a letter, a digit or Space).|Elige Ctrl o Alt con una tecla (F1 a F24 salvo F12, una letra, un dígito o Espacio).
+Déjà au réglage d’origine.|Already at the original setting.|Ya está en el ajuste original.
+Raccourci inchangé.|Shortcut unchanged.|Atajo sin cambios."""
+
 TABLE={}
 for row in ROWS.splitlines():
  fr,en,es=row.split('|');value={'fr':fr,'en':en,'es':es};TABLE[fr]=value;TABLE.setdefault(en,value)
@@ -598,4 +708,46 @@ Icône de cet accès|Icon for this shortcut|Icono de este acceso
 Photo de profil|Profile picture|Foto de perfil
 Ville, pays|City, country|Ciudad, país
 Météo · Open-Meteo|Weather · Open-Meteo|Tiempo · Open-Meteo""".splitlines():
+ fr,en,es=row.split('|');TABLE.setdefault(fr,{'fr':fr,'en':en,'es':es})
+for row in """Masquer le dock réaffiche la barre des tâches de Windows.|Hiding the dock shows the Windows taskbar again.|Ocultar el dock vuelve a mostrar la barra de tareas de Windows.
+Inactif : une autre application utilise cette combinaison.|Inactive: another application uses this combination.|Inactivo: otra aplicación usa esta combinación.
+Flèches|Arrows|Flechas
+Maj|Shift|Mayús
+Plus|Plus|Más
+Moins|Minus|Menos
+Impr. écran|Print Screen|Impr. pant.
+Échap|Esc|Esc
+Backspace|Backspace|Retroceso
+Alt gauche|Left Alt|Alt izquierda
+Ctrl gauche|Left Ctrl|Ctrl izquierda
+Ctrl droit|Right Ctrl|Ctrl derecha
+Maj gauche|Left Shift|Mayús izquierda
+Maj droit|Right Shift|Mayús derecha
+Win gauche|Left Win|Win izquierda
+Win droit|Right Win|Win derecha
+Verr. maj.|Caps Lock|Bloq Mayús
+Shell|Shell|Shell
+Apparence|Appearance|Apariencia
+Outils|Tools|Herramientas
+Secours|Rescue|Rescate
+Disposition automatique|Automatic layout|Disposición automática
+Ouvrir le tableau de bord|Open the dashboard|Abrir el panel
+Tableau de bord (secours)|Dashboard (backup)|Panel (respaldo)
+Ouvrir les paramètres|Open settings|Abrir los ajustes
+Commande rapide|Quick command|Comando rápido
+Changer de fond d’écran|Change wallpaper|Cambiar el fondo de pantalla
+Capturer l’écran|Capture the screen|Capturar la pantalla
+Épingler au premier plan|Pin to the foreground|Fijar en primer plano
+Dictée (touche maintenue)|Dictation (held key)|Dictado (tecla mantenida)
+Restaurer le bureau|Restore the desktop|Restaurar el escritorio
+Passer le focus à la fenêtre voisine|Move focus to the neighbouring window|Pasar el foco a la ventana vecina
+Échanger avec la fenêtre voisine|Swap with the neighbouring window|Intercambiar con la ventana vecina
+Basculer la fenêtre en flottant|Toggle the window to floating|Pasar la ventana a flotante
+Agrandir la zone de la fenêtre|Grow the window area|Ampliar la zona de la ventana
+Réduire la zone de la fenêtre|Shrink the window area|Reducir la zona de la ventana
+Exclure l’application de la disposition|Exclude the app from the layout|Excluir la aplicación de la disposición
+Raccourci de secours fixe : il ouvre toujours le tableau de bord, même si l’autre raccourci est réassigné.|Fixed backup shortcut: it always opens the dashboard, even if the other shortcut is reassigned.|Atajo de respaldo fijo: siempre abre el panel, aunque se reasigne el otro atajo.
+Se règle dans Médias et audio › Dictée (touche maintenue).|Set in Media and audio › Dictation (held key).|Se ajusta en Medios y audio › Dictado (tecla mantenida).
+Réservé à la restauration du bureau : il doit fonctionner même si Winlestia ne répond plus.|Reserved for restoring the desktop: it must work even if Winlestia stops responding.|Reservado para restaurar el escritorio: debe funcionar aunque Winlestia no responda.
+Fixe pour l’instant ; actif uniquement quand la disposition automatique est activée.|Fixed for now; only active when automatic layout is on.|Fijo por ahora; solo activo cuando la disposición automática está activada.""".splitlines():
  fr,en,es=row.split('|');TABLE.setdefault(fr,{'fr':fr,'en':en,'es':es})

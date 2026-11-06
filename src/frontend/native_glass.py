@@ -27,9 +27,10 @@ class NativeGlass(QObject):
         self.queued=False
         if self.stopped:return
         scene=self.bridge.surface_scene
-        if not scene or not self.dll:return
+        if not scene:return
         live=set();native_bump={3:-1,4:-1};busy=False
-        for window in QApplication.allWindows():
+        # Without the native DLL the backdrop part is skipped, but content windows must still be kept above the frame window below.
+        for window in (QApplication.allWindows() if self.dll else ()):
             if not window.title().startswith('Panneaux · Cadre '):continue
             handle=int(window.winId());live.add(handle)
             if handle not in self.watched:self.watched.add(handle);window.visibleChanged.connect(self.request_sync)

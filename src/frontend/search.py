@@ -173,7 +173,7 @@ def emoji_choices(query):
 WALL_EXT={'.jpg','.jpeg','.png','.bmp','.webp'}
 _walls=[];_walls_at=-100.0;_scanning=False;_rescan=False
 def user_wallpaper_dir():
-    return Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData'/'Local')))/'Panneaux'/'Wallpapers'
+    return Path(os.environ.get('WINLESTIA_DATA_DIR') or (Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData'/'Local')))/'Panneaux'))/'Wallpapers'
 def bundled_wallpaper_dir():
     # Installed: <app>\wallpapers next to <app>\Caelestia-Windows; from the sources: <repo>ssets\wallpapers. Read-only.
     here=Path(__file__).resolve().parent

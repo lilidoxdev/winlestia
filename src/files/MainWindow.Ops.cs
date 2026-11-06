@@ -46,6 +46,7 @@ public sealed partial class MainWindow {
     static async void Fire(Func<Task> work) { try { await work(); } catch (Exception ex) { App.CrashLog(ex); } }
 
     void WireOps() {
+        journal.Owner = () => Hwnd; journal.Watch = WatchSet;
         renameBox.Template = RenameTemplate();
         renameBox.Height = double.NaN; renameBox.MinHeight = 28; renameBox.FontSize = M3.FontSmall; renameBox.FontFamily = M3.Body; renameBox.Foreground = UI.White; renameBox.CaretBrush = UI.White;
         renameBox.Padding = new Thickness(M3.Pad2, 2, M3.Pad2, 2); renameBox.VerticalContentAlignment = VerticalAlignment.Center;
@@ -133,7 +134,7 @@ public sealed partial class MainWindow {
         if (r.Error != null) Perf.Log("fileop: " + r.Error);
         foreach (var view in tabs.ToList()) {
             string where = Norm(view.Tab.Location);
-            var removed = r.Removed.Where(p => string.Equals(ParentOf(p), where, StringComparison.OrdinalIgnoreCase)).ToList();
+            var removed = r.Removed.Where(p => view.Tab.DeepActive || string.Equals(ParentOf(p), where, StringComparison.OrdinalIgnoreCase)).ToList();
             var added = r.Added.Where(i => string.Equals(ParentOf(i.FullPath), where, StringComparison.OrdinalIgnoreCase)).ToList();
             if (removed.Count > 0 || added.Count > 0) view.Tab.ApplyChanges(removed, added);
         }
@@ -185,7 +186,7 @@ public sealed partial class MainWindow {
     // Reads CF_HDROP and Preferred DropEffect (what Explorer writes) and runs Copy or Move into the current (or given) folder.
     internal async Task<OpResult?> PasteAsync(string? destination = null) {
         string dest = destination ?? Active.Location;
-        if (dest.Length == 0 || renaming != null) return null;
+        if (dest.Length == 0 || ThisPc.Is(dest) || renaming != null) return null;
         string[] files; int effect = 1; uint sequence;
         try {
             var data = Clipboard.GetDataObject();
@@ -197,6 +198,7 @@ public sealed partial class MainWindow {
         bool move = (effect & 2) != 0;
         var watch = WatchSet(); watch.Add(Norm(dest));
         var result = await FileOps.Copy(Hwnd, files, dest, move, watch);
+        journal.Record(result);
         ApplyResult(result, true);
         if (move && !result.Aborted && result.Error == null && GetClipboardSequenceNumber() == sequence) {
             try { Clipboard.Clear(); } catch { }
@@ -213,6 +215,7 @@ public sealed partial class MainWindow {
             items.Count == 1 ? $"« {items[0].Name} » sera supprimé définitivement, sans passer par la Corbeille."
                              : $"{items.Count} éléments seront supprimés définitivement, sans passer par la Corbeille.", "Supprimer définitivement")) return null;
         var result = await FileOps.Delete(Hwnd, items.Select(i => i.FullPath).ToList(), permanent, WatchSet());
+        if (permanent) { if (result.Log.Count > 0) journal.RecordPermanentDelete(); } else journal.Record(result);
         ApplyResult(result, false);
         return result;
     }
@@ -221,9 +224,10 @@ public sealed partial class MainWindow {
 
     internal async Task<FileItem?> NewFolderAsync() {
         var tab = Active;
-        if (tab.Location.Length == 0 || tab.State is LoadState.Denied or LoadState.NotFound or LoadState.Failed) return null;
+        if (tab.Location.Length == 0 || ThisPc.Is(tab.Location) || tab.State is LoadState.Denied or LoadState.NotFound or LoadState.Failed) return null;
         var watch = WatchSet();
         var result = await FileOps.NewFolder(Hwnd, tab.Location, "Nouveau dossier", watch);
+        journal.Record(result);
         ApplyResult(result, true);
         var made = result.Added.FirstOrDefault(i => string.Equals(ParentOf(i.FullPath), Norm(tab.Location), StringComparison.OrdinalIgnoreCase));
         if (made == null || tab != Active) return null;
@@ -256,7 +260,7 @@ public sealed partial class MainWindow {
         if (list.ItemContainerGenerator.ContainerFromItem(item) is not ListBoxItem box || FindText(box, item.Name) is not { } label) return false;
         var cell = box.TransformToAncestor(listHost).Transform(new Point(0, 0));
         var text = label.TransformToAncestor(listHost).Transform(new Point(0, 0));
-        if (gridMode) {
+        if (view is ViewMode.Large or ViewMode.Medium) {
             renamePanel.Margin = new Thickness(cell.X + 4, text.Y - 6, 0, 0);
             renameBox.Width = box.ActualWidth - 8; renameBox.TextWrapping = TextWrapping.Wrap; renameBox.TextAlignment = TextAlignment.Center; renameBox.MaxHeight = 84;
         } else {
@@ -310,7 +314,39 @@ public sealed partial class MainWindow {
         if (!ValidateRename()) { if (renameBox.IsKeyboardFocusWithin) return; EndRename(); return; }   // invalid + focus lost: drop the edit
         EndRename();
         var result = await FileOps.Rename(Hwnd, item.FullPath, name, WatchSet());
+        journal.Record(result);
         ApplyResult(result, true);
+    }
+
+    // ---- undo / redo -----------------------------------------------------------------------------------------
+
+    internal readonly UndoJournal journal = new();
+
+    // Returns the toast text (also shown). Permanent delete cannot be undone and says so.
+    internal async Task<string> UndoAsync() {
+        if (renaming != null) return "";
+        var ran = await journal.UndoAsync();
+        return Report(ran, "Annulé", "Rien à annuler");
+    }
+
+    internal async Task<string> RedoAsync() {
+        if (renaming != null) return "";
+        var ran = await journal.RedoAsync();
+        return Report(ran, "Rétabli", "Rien à rétablir");
+    }
+
+    string Report((UndoEntry Entry, OpResult? Result)? ran, string verb, string none) {
+        string text;
+        if (ran == null) text = none;
+        else if (ran.Value.Entry.Irreversible) text = "Impossible d'annuler : " + ran.Value.Entry.Why;
+        else {
+            var r = ran.Value.Result!;
+            ApplyResult(r, true);
+            if (r.Error != null) { text = "Échec : " + r.Error; Active.Reload(); }
+            else text = verb + " : " + ran.Value.Entry.Label;
+        }
+        Toast(text);
+        return text;
     }
 
     // Same chrome as the address pill but with the small radius and a primary (or error) focus border.

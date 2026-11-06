@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        shell: pwsh
+        run: |
+          foreach ($p in 'src/backend/Panneaux.Glass.csproj', 'src/files/Winlestia.Files.csproj', 'src/cli/winlestia.csproj') {
+            dotnet build $p -c Release
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      # Tests autonomes qui ne demandent ni bureau ni fenêtre (les autres : Audio06, Explorer077, FolderIcons,
+      # FullscreenWatcher, Native95, Tiler075, VirtualDesktops, VsCodeTheme restent locaux).
+      - name: Tests
+        shell: pwsh
+        run: |
+          $tests = 'AppCatalogueWatch','AudioBars','AutostartPolicy','BrightnessPolicy','CliCommands','DataDirMigration',
+                   'DesktopReassert','FileSearch','FilesHandler','FilesPinMigration','FilesPreloadPolicy','FilesRouter',
+                   'FramePolicy','NetworkKind','SettingsRefonte','SocialPolicy','StaleDockTarget','TileLogicTests','WifiPolicy'
+          $failed = @()
+          foreach ($t in $tests) {
+            Write-Host "=== $t"
+            dotnet run -c Release --project "tests/$t/$t.csproj"
+            if ($LASTEXITCODE -ne 0) { $failed += $t }
+          }
+          if ($failed) { throw "Tests en échec : $($failed -join ', ')" }

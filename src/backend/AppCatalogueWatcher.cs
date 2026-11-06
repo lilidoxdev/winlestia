@@ -7,12 +7,14 @@ using System.Windows.Threading;
 namespace PanneauxGlass;
 // Two recursive FileSystemWatchers (user and common Start menu). The debounce timer only exists during a burst of events.
 internal sealed class AppCatalogueWatcher:IDisposable {
-    readonly Dispatcher dispatcher;readonly Func<List<Entry>,int> add;readonly Func<List<string>,int> remove;readonly Action refresh;readonly RefreshThrottle throttle=new();
+    readonly Dispatcher dispatcher;readonly Func<List<Entry>,int> add;readonly Func<List<string>,int> remove;readonly Action refresh;readonly Action? tick;System.Threading.Timer? poll;readonly RefreshThrottle throttle=new();
     readonly List<FileSystemWatcher> watchers=new();readonly object gate=new();readonly BurstDebounce burst=new();
     readonly Dictionary<string,int> paths=new(StringComparer.OrdinalIgnoreCase);
     System.Threading.Timer? timer,refreshTimer;bool disposed,wantRefresh;
-    internal AppCatalogueWatcher(Dispatcher dispatcher,Func<List<Entry>,int> add,Func<List<string>,int> remove,Action refresh){this.dispatcher=dispatcher;this.add=add;this.remove=remove;this.refresh=refresh;}
+    internal AppCatalogueWatcher(Dispatcher dispatcher,Func<List<Entry>,int> add,Func<List<string>,int> remove,Action refresh,Action? tick=null){this.dispatcher=dispatcher;this.add=add;this.remove=remove;this.refresh=refresh;this.tick=tick;}
     internal void Start(){
+        // Low-frequency check (packaged apps leave no Start menu event, vanished targets leave none either): one light pass per minute, nothing between.
+        if(tick!=null)poll=new System.Threading.Timer(_=>{if(!disposed)dispatcher.BeginInvoke((Action)(()=>{if(!disposed)tick();}));},null,TimeSpan.FromSeconds(20),TimeSpan.FromSeconds(60));
         foreach(var folder in new[]{Environment.SpecialFolder.StartMenu,Environment.SpecialFolder.CommonStartMenu}){
             try{
                 string root=Environment.GetFolderPath(folder);
@@ -76,7 +78,7 @@ internal sealed class AppCatalogueWatcher:IDisposable {
         if(need)RequestRefresh();
     }
     // At most one inventory per minute from the watcher; the last request is replayed by a one-shot timer that exists only while it waits.
-    void RequestRefresh(){
+    internal void RequestRefresh(){
         lock(gate){
             if(disposed)return;
             TimeSpan wait=throttle.Delay(DateTime.UtcNow);
@@ -112,7 +114,7 @@ internal sealed class AppCatalogueWatcher:IDisposable {
         finally{if(link!=null&&System.Runtime.InteropServices.Marshal.IsComObject(link))System.Runtime.InteropServices.Marshal.ReleaseComObject(link);if(shell!=null&&System.Runtime.InteropServices.Marshal.IsComObject(shell))System.Runtime.InteropServices.Marshal.ReleaseComObject(shell);}
     }
     public void Dispose(){
-        lock(gate){if(disposed)return;disposed=true;timer?.Dispose();timer=null;refreshTimer?.Dispose();refreshTimer=null;}
+        lock(gate){if(disposed)return;disposed=true;poll?.Dispose();poll=null;timer?.Dispose();timer=null;refreshTimer?.Dispose();refreshTimer=null;}
         foreach(var watcher in watchers){try{watcher.EnableRaisingEvents=false;watcher.Dispose();}catch{}}
         watchers.Clear();
     }

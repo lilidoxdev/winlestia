@@ -10,6 +10,7 @@ import qs.services
 EdgeRail {
     id:rail
     side:"right"
+    allowed:Bridge.settings.socialRailVisible??true
     title:"Panneaux · Réseaux sociaux"
     objectName:"socialRail"
     contentW:54

@@ -21,6 +21,22 @@ internal static class TaskbarNative {
     [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
     // PROCESS_QUERY_LIMITED_INFORMATION also opens most elevated processes, which Process.MainModule refuses.
     internal static string ProcessImagePath(uint pid){IntPtr process=OpenProcess(0x1000,false,pid);if(process==IntPtr.Zero)return "";try{var buffer=new StringBuilder(1024);uint size=(uint)buffer.Capacity;return QueryFullProcessImageName(process,0,buffer,ref size)?buffer.ToString(0,(int)size):"";}catch{return "";}finally{CloseHandle(process);}}
+    // Packaged (MSIX/UWP) windows: the AppUserModelID of the window gives the same "shell:AppsFolder\<id>" key as the launcher catalogue, whatever process hosts the window.
+    [StructLayout(LayoutKind.Sequential,Size=24)] struct PropVariant { public ushort Type,R1,R2,R3;public IntPtr A,B; }
+    [StructLayout(LayoutKind.Sequential)] struct PropKey { public Guid Format;public uint Id; }
+    [ComImport,Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"),InterfaceType(ComInterfaceType.InterfaceIsIUnknown)] interface IPropertyStore { [PreserveSig] int GetCount(out uint count);[PreserveSig] int GetAt(uint index,out PropKey key);[PreserveSig] int GetValue(ref PropKey key,out PropVariant value);[PreserveSig] int SetValue(ref PropKey key,ref PropVariant value);[PreserveSig] int Commit(); }
+    [DllImport("shell32.dll")] static extern int SHGetPropertyStoreForWindow(IntPtr window,ref Guid iid,[MarshalAs(UnmanagedType.Interface)] out IPropertyStore? store);
+    [DllImport("propsys.dll",CharSet=CharSet.Unicode)] static extern int PropVariantToStringAlloc(ref PropVariant value,out IntPtr text);
+    [DllImport("ole32.dll")] static extern int PropVariantClear(ref PropVariant value);
+    internal static string AppUserModelId(IntPtr window){
+        IPropertyStore? store=null;try{
+            Guid iid=typeof(IPropertyStore).GUID;if(SHGetPropertyStoreForWindow(window,ref iid,out store)!=0||store==null)return "";
+            var key=new PropKey{Format=new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"),Id=5};if(store.GetValue(ref key,out var value)!=0)return "";
+            try{if(value.Type!=31)return "";if(PropVariantToStringAlloc(ref value,out IntPtr text)!=0||text==IntPtr.Zero)return "";try{return Marshal.PtrToStringUni(text)??"";}finally{Marshal.FreeCoTaskMem(text);}}finally{PropVariantClear(ref value);}
+        }catch{return "";}finally{if(store!=null)Marshal.ReleaseComObject(store);}
+    }
+    // Packaged = AppsFolder id with a package family ("Name_hash!App"); plain desktop ids (a path or a bare name) keep the process path.
+    static bool NeedsPackageKey(string path)=>path.Length==0||path.EndsWith(@"\ApplicationFrameHost.exe",StringComparison.OrdinalIgnoreCase)||path.Contains(@"\WindowsApps\",StringComparison.OrdinalIgnoreCase);
     internal delegate bool EnumProc(IntPtr window,IntPtr data);
     internal delegate void WinEvent(IntPtr hook,uint kind,IntPtr window,int obj,int child,uint thread,uint time);
     [DllImport("shell32.dll")] internal static extern UIntPtr SHAppBarMessage(uint message,ref BarData data);
@@ -67,6 +83,8 @@ internal static class TaskbarNative {
         if(DwmGetWindowAttribute(h,14,out int cloaked,4)==0&&cloaked!=0)return true;
         string title=Native.Title(h);if(string.IsNullOrWhiteSpace(title))return true;
         string path="";try{GetWindowThreadProcessId(h,out uint pid);path=ProcessImagePath(pid);}catch{}
+        if(NeedsPackageKey(path)){string aumid=AppUserModelId(h);if(aumid.Contains('!'))path=@"shell:AppsFolder\"+aumid;}
+        if(path.EndsWith(@"\ApplicationFrameHost.exe",StringComparison.OrdinalIgnoreCase))path="";
         if(string.IsNullOrEmpty(path))path=CatalogueWatchRules.PseudoPath(h.ToInt64());
         result.Add(new(h,title,path));return true;
     },IntPtr.Zero);return result;}

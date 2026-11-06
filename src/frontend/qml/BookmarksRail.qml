@@ -11,6 +11,7 @@ import qs.services
 EdgeRail {
     id:rail
     side:"left"
+    allowed:Bridge.settings.bookmarksRailVisible??true
     title:"Panneaux · Favoris"
     objectName:"bookmarksRail"
     contentW:54

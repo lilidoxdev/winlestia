@@ -11,7 +11,10 @@ using System.Runtime.InteropServices;
 namespace WinlestiaFiles;
 
 internal enum SortColumn { Name, Modified, Type, Size }
-internal sealed record SortSpec(SortColumn Column, bool Ascending);
+// FoldersFirst false = folders and files mixed, each by its own value. Default: modified date, newest first.
+internal sealed record SortSpec(SortColumn Column, bool Ascending, bool FoldersFirst = false) {
+    internal static readonly SortSpec Default = new(SortColumn.Modified, false, false);
+}
 
 public sealed class FileItem : INotifyPropertyChanged {
     // Paths currently cut to the clipboard (UI thread only): read when a container binds, raised per item by RaiseCut().
@@ -33,10 +36,12 @@ public sealed class FileItem : INotifyPropertyChanged {
     public long Size { get; }
     public DateTime Modified { get; }
     public string TypeLabel { get; }
+    // Deep search only: folder of the hit relative to the searched folder ("" = the folder itself).
+    public string Where { get; internal set; } = "";
     public string Icon => IsDir ? (UseMaterial ? "" : "") : (UseMaterial ? "" : "");
     public string ModifiedText => Modified.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
     public string SizeText => IsDir ? "" : Size < 1024 ? Size + " o" : Size < 1024 * 1024 ? Math.Ceiling(Size / 1024.0) + " Ko"
-        : Size < 1024L * 1024 * 1024 ? (Size / 1048576.0).ToString("0.#", CultureInfo.InvariantCulture) + " Mo" : (Size / 1073741824.0).ToString("0.##", CultureInfo.InvariantCulture) + " Go";
+        : Size < 1024L * 1024 * 1024 ? (Size / 1048576.0).ToString("0.#", CultureInfo.GetCultureInfo("fr-FR")) + " Mo" : (Size / 1073741824.0).ToString("0.##", CultureInfo.GetCultureInfo("fr-FR")) + " Go";
 
     // Stats one path (worker thread, one find-data read); null when it vanished.
     internal static FileItem? Probe(string path, Dictionary<string, string> types) {
@@ -47,6 +52,14 @@ public sealed class FileItem : INotifyPropertyChanged {
     }
 
     // Called on the enumeration thread: FileSystemInfo from an enumeration already carries the find data (no extra I/O).
+    internal static FileItem From(ref System.IO.Enumeration.FileSystemEntry e, Dictionary<string, string> types) {
+        string name = e.FileName.ToString(), full = e.ToFullPath();
+        if (e.IsDirectory) return new FileItem(name, full, true, 0, e.LastWriteTimeUtc.LocalDateTime, "Dossier");
+        string ext = Path.GetExtension(name);
+        if (!types.TryGetValue(ext, out var type)) types[ext] = type = ext.Length > 1 ? "Fichier " + ext.Substring(1).ToUpperInvariant() : "Fichier";
+        return new FileItem(name, full, false, e.Length, e.LastWriteTimeUtc.LocalDateTime, type);
+    }
+
     internal static FileItem From(FileSystemInfo info, Dictionary<string, string> types) {
         bool dir = (info.Attributes & FileAttributes.Directory) != 0;
         if (dir) return new FileItem(info.Name, info.FullName, true, 0, info.LastWriteTime, "Dossier");
@@ -77,11 +90,11 @@ internal sealed class RangeObservableCollection<T> : ObservableCollection<T> {
 internal static class FileSort {
     [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)] static extern int StrCmpLogicalW(string a, string b);
 
-    // Folders first whatever the column and direction, natural name order as the tie-break (same as Explorer).
+    // Natural name order as the tie-break; folders grouped first only when the spec asks for it.
     internal static Comparison<FileItem> Comparer(SortSpec spec) {
         int sign = spec.Ascending ? 1 : -1;
         return (a, b) => {
-            if (a.IsDir != b.IsDir) return a.IsDir ? -1 : 1;
+            if (spec.FoldersFirst && a.IsDir != b.IsDir) return a.IsDir ? -1 : 1;
             int c = spec.Column switch {
                 SortColumn.Modified => a.Modified.CompareTo(b.Modified),
                 SortColumn.Type => string.Compare(a.TypeLabel, b.TypeLabel, StringComparison.OrdinalIgnoreCase),

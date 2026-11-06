@@ -618,7 +618,6 @@ Item {
                 spacing: Appearance.spacing.small
                 Pill { order: 9; icon: "content_paste"; text: qsTr("Presse-papiers"); onClicked: Bridge.navigate("clipboard") }
                 Pill { order: 10; icon: "search"; text: qsTr("Commande rapide"); onClicked: Bridge.navigate("palette") }
-                Pill { order: 11; icon: "add_link"; text: qsTr("Ajouter un site"); onClicked: Bridge.action("websites", {}) }
                 Item { Layout.fillWidth: true }
                 Pill { order: 12; icon: "tune"; text: qsTr("Personnaliser"); onClicked: Bridge.navigate("settings") }
             }

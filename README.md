@@ -77,7 +77,13 @@ Screen capture with annotation (**Ctrl+F3**), text recognition (OCR) on a captur
 ### Settings
 <img src="docs/illustrations/settings.webp" alt="Settings" width="100%">
 
-Six pages with a search field: appearance, desktop and dock, file explorer, daily use, messengers and bookmarks. Screen frame, accent border on windows, desktop logo, quiet mode (dock and OSD hidden during fullscreen), on-screen indicators for volume, brightness and microphone, and optional automatic tiling (off by default; Ctrl+Alt+arrows).
+Eight pages with a search field (a result opens its page and highlights the row): Appearance, Interface, Docks and panels, Keyboard shortcuts, Media and audio, Apps, bookmarks and links, Files and Windows, General.
+
+- **Docks and panels**: the dock, the bookmarks panel (left edge) and the social networks panel (right edge) can each be hidden. Hiding the dock while it replaces the Windows taskbar gives the Windows taskbar back, so there is always one bar.
+- **Keyboard shortcuts**: every global shortcut in one page, grouped. "Modifier" opens a capture dialog; a combination reserved by Windows or already used by another action is refused with the reason. Fixed shortcuts (backup dashboard shortcut, desktop rescue, tiling keys, dictation key) show why they cannot be changed here. A shortcut that another application already holds at start-up is flagged "Inactif".
+- **Opening Settings**: **Win+Alt+S** (reassignable), the tray icon menu ("Paramètres de Winlestia"), or `winlestia panel settings` from a terminal.
+
+Screen frame, accent border on windows, desktop logo, quiet mode (dock and OSD hidden during fullscreen), on-screen indicators for volume, brightness and microphone, and optional automatic tiling (off by default; Ctrl+Alt+arrows).
 
 ### Terminal
 <img src="docs/illustrations/terminal.webp" alt="Terminal with the Winlestia palette" width="100%">

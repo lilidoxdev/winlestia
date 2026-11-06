@@ -4,7 +4,7 @@ namespace PanneauxGlass;
 internal static class DesktopRecents{
  internal sealed record Recent(Entry Entry,DateTime At);
  internal static readonly Dictionary<string,Entry> Entries=new();static readonly Dictionary<string,Recent> history=new(StringComparer.OrdinalIgnoreCase);
- static readonly ConcurrentQueue<(uint pid,DateTime at)> queue=new();static readonly AutoResetEvent wake=new(false);static readonly string file=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Panneaux","recent-launches.json");
+ static readonly ConcurrentQueue<(uint pid,DateTime at)> queue=new();static readonly AutoResetEvent wake=new(false);static readonly string file=Path.Combine(Store.DataDir,"recent-launches.json");
  static readonly Thread worker;static uint lastPid;static object[] values=Array.Empty<object>();static DateTime nextScan;
  [DllImport("user32.dll")]static extern uint GetWindowThreadProcessId(IntPtr h,out uint pid);
  static DesktopRecents(){worker=new Thread(Loop){IsBackground=true,Name="Winlestia recent items"};worker.SetApartmentState(ApartmentState.STA);worker.Start();}

@@ -56,8 +56,8 @@ Window {
         }else{
             mixerOpen=false;wifiOpen=false;vis.dashboard=false;peek=false;pageMode=mode.split(":")[0];extraOpen=true
             if(pageMode==="palette")Qt.callLater(()=>{if(palette.item)palette.item.reset()})
-            if(pageMode==="settings"&&mode==="settings:social"){if(preferences.item)preferences.item.tab=4;else preferences.pendingTab=4}
-            if(pageMode==="settings"&&mode==="settings:bookmarks"){if(preferences.item)preferences.item.tab=5;else preferences.pendingTab=5}
+            if(pageMode==="settings"&&mode==="settings:social"){if(preferences.item)preferences.item.openSection("social");else preferences.pendingSection="social"}
+            if(pageMode==="settings"&&mode==="settings:bookmarks"){if(preferences.item)preferences.item.openSection("bookmarks");else preferences.pendingSection="bookmarks"}
         }
         subscribe();Bridge.activate()
     }
@@ -107,8 +107,8 @@ Window {
         PaneLoader{id:browser;want:window.pageMode==="workspace";asynchronous:true;sourceComponent:WorkspaceBrowser{}}
         PaneLoader{id:palette;want:window.pageMode==="palette";asynchronous:true;sourceComponent:PalettePane{}
             onLoaded:if(want)item.reset()}
-        PaneLoader{id:preferences;want:window.pageMode==="settings";property int pendingTab:-1;sourceComponent:ShellPreferences{}
-            onLoaded:if(pendingTab>=0){item.tab=pendingTab;pendingTab=-1}}
+        PaneLoader{id:preferences;want:window.pageMode==="settings";property string pendingSection:"";sourceComponent:ShellPreferences{}
+            onLoaded:if(pendingSection!==""){item.openSection(pendingSection);pendingSection=""}}
         PaneLoader{id:clipboard;want:window.pageMode==="clipboard";sourceComponent:ClipboardPane{}}
         ConfirmDialog {
             id:sessionDialog;cardWidth:340;destructive:true;property string choice:""

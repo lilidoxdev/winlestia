@@ -5,7 +5,7 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage,QImageReader
 THUMB_WIDTH=480
 def thumb_dir():
-    return Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData'/'Local')))/'Panneaux'/'Caelestia'/'thumbs'
+    return Path(os.environ.get('WINLESTIA_DATA_DIR') or (Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData'/'Local')))/'Panneaux'))/'Caelestia'/'thumbs'
 def thumb_for(path):
     # Returns the thumbnail file for `path` (path+mtime key), generating it if missing; '' on failure. Only the scaled size is ever decoded.
     try:

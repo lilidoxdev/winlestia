@@ -150,7 +150,7 @@ public partial class App : Application {
     static readonly object logGate = new();
     internal static void CrashLog(Exception ex) {
         try { lock (logGate) {
-            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia", "Files");
+            string dir = WinlestiaFiles.FilesSettings.Dir;
             Directory.CreateDirectory(dir);
             string file = Path.Combine(dir, "crash.log");
             var lines = File.Exists(file) ? File.ReadAllLines(file).ToList() : new System.Collections.Generic.List<string>();
@@ -168,8 +168,13 @@ public partial class App : Application {
 internal static class Program {
     static readonly long born = System.Diagnostics.Stopwatch.GetTimestamp();
     internal static TimeSpan Uptime => System.Diagnostics.Stopwatch.GetElapsedTime(born);
+    [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
+    [System.Runtime.InteropServices.DllImport("shell32.dll")] static extern int GetCurrentProcessExplicitAppUserModelID([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] out string appId);
+    internal const string AppId = "Winlestia.Files";
+    internal static string? CurrentAppId() { try { return GetCurrentProcessExplicitAppUserModelID(out var id) == 0 ? id : null; } catch { return null; } }
     [STAThread]
     public static int Main(string[] args) {
+        try { SetCurrentProcessExplicitAppUserModelID(AppId); } catch { }
         // Command line only (installer, uninstaller, tests): no window, no pipe, no WPF. --register "<exe>" | --restore
         if (args.Length > 0 && (args[0].Equals("--register", StringComparison.OrdinalIgnoreCase) || args[0].Equals("--restore", StringComparison.OrdinalIgnoreCase))) return Winlestia.Shared.FilesHandler.RunCli(args);
         App.RequestedArg = string.Join(" ", args.Where(a => !App.IsFlag(a)));

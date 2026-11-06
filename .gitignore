@@ -40,3 +40,5 @@ catalog-workspace*
 # Sorties de build de vérification
 buildverify-*/
 clink_errorlevel_*.txt
+.freebuff/
+buildverify-fullscreen/

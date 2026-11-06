@@ -106,14 +106,16 @@ if ($Mode -eq 'handler') {
   }
   return
 }
-$logDir = Join-Path $env:LOCALAPPDATA 'Winlestia\Files'
+$logDir = Join-Path $root ('data-' + (Split-Path $fx -Leaf))   # WINLESTIA_FILES_DATA_DIR: settings.json + logs of the test run never touch the real profile
+New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 $selfLog = Join-Path $logDir 'selftest.log'
-$before = if (Test-Path $selfLog) { @(Get-Content $selfLog).Count } else { 0 }
+$before = 0
 $tabLog = Join-Path $root ('tablog-' + (Split-Path $fx -Leaf) + '.txt')
 $pipe = 'harness' + (Get-Random -Maximum 99999)
 
 $psi = New-Object System.Diagnostics.ProcessStartInfo $Exe
 $psi.UseShellExecute = $false
+$psi.Environment['WINLESTIA_FILES_DATA_DIR'] = $logDir
 $psi.Environment['WINLESTIA_FILES_PIPE'] = $pipe
 $psi.Environment['WINLESTIA_FILES_OPS_NOBIN'] = '1'
 $psi.Environment['WINLESTIA_FILES_TABLOG'] = $tabLog
@@ -174,3 +176,4 @@ try {
 }
 "peak private {0:F0} MB, peak threads {1}, exit {2}, {3:F1}s" -f $peakMb, $peakThreads, $(if ($p.HasExited) { $p.ExitCode } else { 'killed' }), $sw.Elapsed.TotalSeconds
 if (Test-Path $selfLog) { Get-Content $selfLog | Select-Object -Skip $before }
+Remove-Item -LiteralPath $logDir -Recurse -Force -ErrorAction SilentlyContinue

@@ -34,8 +34,7 @@ public sealed partial class MainWindow : Window {
     readonly TextBlock[] chevrons = new TextBlock[4];
     Grid listHost = null!;
     FrameworkElement headerRow = null!;
-    Button viewToggle = null!;
-    bool gridMode;
+    Button sortButton = null!; Border addressPill = null!;
     Button back = null!, forward = null!, up = null!, plus = null!;
     StackPanel crumbs = null!; ScrollViewer crumbScroll = null!; TextBox addressBox = null!;
     Sidebar sidebar = null!;
@@ -50,6 +49,8 @@ public sealed partial class MainWindow : Window {
         Width = 1100; Height = 700; MinWidth = 760; MinHeight = 420;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         FontFamily = M3.Body;
+        UseLayoutRounding = true; SnapsToDevicePixels = true;     // crisp 1 px edges at 125 % / 150 %
+        try { Icon = System.Windows.Media.Imaging.BitmapFrame.Create(new Uri("pack://application:,,,/Assets/winlestia-files.ico"), System.Windows.Media.Imaging.BitmapCreateOptions.DelayCreation, System.Windows.Media.Imaging.BitmapCacheOption.OnDemand); } catch { }
         Background = UI.T(M3Role.Surface, reduced ? (byte)255 : (byte)0xEE);
         WindowChrome.SetWindowChrome(this, new WindowChrome { CaptionHeight = 48, ResizeBorderThickness = new Thickness(6), GlassFrameThickness = reduced ? new Thickness(0) : new Thickness(-1), CornerRadius = new CornerRadius(0), UseAeroCaptionButtons = false });
         SourceInitialized += (_, _) => { Thumbs.Dpi = VisualTreeHelper.GetDpi(this).DpiScaleX; Perf.Mark("SourceInitialized"); ApplyDwm(); Perf.Mark("dwm applied"); };
@@ -71,7 +72,9 @@ public sealed partial class MainWindow : Window {
         root.Children.Add(tabRow); root.Children.Add(navRow);
 
         Perf.Mark("tab+nav rows");
-        sidebar = new Sidebar(OpenFromSidebar);
+        sidebar = new Sidebar(OpenFromSidebar, OpenPinnedFile);
+        SourceInitialized += (_, _) => HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(DeviceHook);
+        Activated += (_, _) => sidebar.RecheckThrottled();
         Perf.Mark("sidebar");
         var body = new Grid { Margin = new Thickness(0, M3.Sp1, 0, 0) };
         body.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(220) });
@@ -97,6 +100,9 @@ public sealed partial class MainWindow : Window {
         PaletteLoader.Start(Dispatcher, ApplyDwm);
         WireOps();
         WireDnd();
+        WireRubber();
+        sidebar.DriveMenu = p => ShowContextMenu(null, p);
+        sidebar.DrivesChanged += () => { if (activeView?.Tab is { } t && ThisPc.Is(t.Location) && thisPcWrap != null) FillThisPc(); };
         InitWatch();
         if (App.Resident) FileOps.Idle += () => Dispatcher.BeginInvoke(TryRecycle);
         StartSelfTest();
@@ -262,10 +268,8 @@ public sealed partial class MainWindow : Window {
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        viewToggle = UI.Flat(UI.Glyph("", 16), 36, new CornerRadius(18)); viewToggle.Width = 36; viewToggle.Margin = new Thickness(M3.Sp2, 0, 0, 0);
-        viewToggle.ToolTip = "Grandes icônes (Ctrl+Maj+2)";
-        viewToggle.Click += (_, _) => SetView(!gridMode);
-        var right = new StackPanel { Orientation = Orientation.Horizontal }; right.Children.Add(BuildFilter()); right.Children.Add(OpsBar()); right.Children.Add(viewToggle);
+        sortButton = null!;                         // the sort command lives in the command bar (MainWindow.Cmd.cs)
+        var right = new StackPanel { Orientation = Orientation.Horizontal }; right.Children.Add(BuildFilter());
         Grid.SetColumn(right, 2);
         var nav = new StackPanel { Orientation = Orientation.Horizontal };
         back = NavButton("", "Précédent (Alt+Gauche)", () => Active.Back());
@@ -279,14 +283,16 @@ public sealed partial class MainWindow : Window {
         addressBox = new TextBox { Height = 36, VerticalContentAlignment = VerticalAlignment.Center, Padding = new Thickness(M3.Sp3, 0, M3.Sp3, 0), Background = Brushes.Transparent, Foreground = UI.White,
             BorderThickness = new Thickness(0), FontSize = M3.FontSmall, FontFamily = M3.Body, CaretBrush = UI.White, Visibility = Visibility.Collapsed, Template = AddressTemplate() };
         addressBox.LostKeyboardFocus += (_, _) => EndEdit();
+        addressBox.GotKeyboardFocus += (_, _) => addressPill.BorderBrush = UI.T(M3Role.Primary);
+        addressBox.LostKeyboardFocus += (_, _) => addressPill.BorderBrush = UI.Hairline;
         addressBox.KeyDown += (_, e) => {
-            if (e.Key == Key.Enter) { string text = addressBox.Text; EndEdit(); Submit(text); list.Focus(); e.Handled = true; }
+            if (e.Key == Key.Enter) { SubmitAddress(addressBox.Text); e.Handled = true; }
             else if (e.Key == Key.Escape) { EndEdit(); list.Focus(); e.Handled = true; }
         };
-        var pill = new Border { Height = 36, CornerRadius = new CornerRadius(18), Background = UI.Recess, Margin = new Thickness(M3.Sp2, 0, 0, 0), Cursor = Cursors.IBeam, ClipToBounds = true };
+        var pill = addressPill = new Border { Height = 36, CornerRadius = new CornerRadius(18), Background = UI.T(M3Role.SurfaceContainer), BorderBrush = UI.Hairline, BorderThickness = new Thickness(1), Margin = new Thickness(M3.Sp2, 0, M3.Sp2, 0), Cursor = Cursors.IBeam, ClipToBounds = true, SnapsToDevicePixels = true };
         var inner = new Grid(); inner.Children.Add(crumbScroll); inner.Children.Add(addressBox);
         pill.Child = inner;
-        pill.MouseLeftButtonDown += (_, e) => { BeginEdit(); e.Handled = true; };   // buttons mark their own clicks handled
+        pill.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2) { BeginEdit(); e.Handled = true; } };   // double click on the free area right of the segments (buttons mark their own clicks handled)
         Grid.SetColumn(pill, 1);
         grid.Children.Add(nav); grid.Children.Add(pill); grid.Children.Add(right);
         return grid;
@@ -327,44 +333,18 @@ public sealed partial class MainWindow : Window {
         listHost.Children.Add(header); listHost.Children.Add(list);
 
         var card = new Grid();
+        card.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         card.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        card.RowDefinitions.Add(new RowDefinition { Height = new GridLength(30) });
-        status.Margin = new Thickness(M3.Sp3, 0, M3.Sp3, 0); status.VerticalAlignment = VerticalAlignment.Center;
-        Grid.SetRow(status, 1);
-        card.Children.Add(content); card.Children.Add(status);
+        card.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var cmdBar = CommandBar(); var statusBar = StatusBar();
+        Grid.SetRow(content, 1); Grid.SetRow(statusBar, 2); 
+        card.Children.Add(cmdBar); card.Children.Add(content); card.Children.Add(statusBar);
+        SetView(ParseView(FilesSettings.InitialView()), false);
         toastText = UI.Text("", M3.FontSmall, UI.T(M3Role.OnSecondaryContainer));
         toast = new Border { Child = toastText, Background = UI.T(M3Role.SecondaryContainer), CornerRadius = new CornerRadius(16), Padding = new Thickness(M3.Sp3, 6, M3.Sp3, 6),
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, M3.Sp2), Visibility = Visibility.Collapsed, IsHitTestVisible = false };
-        card.Children.Add(toast);
+        Grid.SetRowSpan(toast, 3); card.Children.Add(toast);
         return new Border { Background = UI.Panel, CornerRadius = new CornerRadius(M3.Normal), Child = card, BorderBrush = UI.Hairline, BorderThickness = new Thickness(1), ClipToBounds = true };
-    }
-
-    FrameworkElement Header() {
-        var grid = new Grid { Margin = new Thickness(M3.Pad1, M3.Pad1, 0, 0) };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Styles.IconWidth) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Styles.ModifiedWidth) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Styles.TypeWidth) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Styles.SizeWidth) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Styles.ScrollWidth) });   // matches the always-visible scrollbar lane
-        void Cell(SortColumn column, string text, int col, int span, bool right, Thickness pad) {
-            var label = UI.Text(text, M3.FontSmall, UI.Label, true);
-            var chevron = UI.Glyph("", 10); chevron.Foreground = UI.Label; chevron.Margin = new Thickness(6, 0, 0, 0); chevron.Visibility = Visibility.Collapsed;
-            chevrons[(int)column] = chevron;
-            var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = right ? HorizontalAlignment.Right : HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center, Margin = pad };
-            row.Children.Add(label); row.Children.Add(chevron);
-            var cell = new Border { Child = row, Background = Brushes.Transparent, CornerRadius = new CornerRadius(8), Cursor = Cursors.Hand };
-            cell.MouseEnter += (_, _) => cell.Background = UI.Tint;
-            cell.MouseLeave += (_, _) => cell.Background = Brushes.Transparent;
-            cell.MouseLeftButtonUp += (_, _) => Active.SetSort(column);
-            Grid.SetColumn(cell, col); Grid.SetColumnSpan(cell, span);
-            grid.Children.Add(cell);
-        }
-        Cell(SortColumn.Name, "Nom", 0, 2, false, new Thickness(M3.Sp2 + 4, 0, 0, 0));
-        Cell(SortColumn.Modified, "Modifié", 2, 1, false, new Thickness(8, 0, 0, 0));
-        Cell(SortColumn.Type, "Type", 3, 1, false, new Thickness(8, 0, 0, 0));
-        Cell(SortColumn.Size, "Taille", 4, 1, true, new Thickness(0, 0, 12, 0));
-        return grid;
     }
 
     static ControlTemplate AddressTemplate() {
@@ -392,19 +372,6 @@ public sealed partial class MainWindow : Window {
         int dark = Theme.Current.IsDark ? 1 : 0; DwmSetWindowAttribute(hwnd, 20, ref dark, 4);
         int corner = 2; DwmSetWindowAttribute(hwnd, 33, ref corner, 4);
         int backdrop = reduced ? 1 : 2; DwmSetWindowAttribute(hwnd, 38, ref backdrop, 4);
-    }
-
-    // Details <-> large icons: same ItemsSource and selection, only panel, row template and container style change.
-    void SetView(bool grid) {
-        if (gridMode == grid) return;
-        gridMode = grid;
-        headerRow.Visibility = grid ? Visibility.Collapsed : Visibility.Visible;
-        listHost.RowDefinitions[0].Height = grid ? new GridLength(0) : new GridLength(34);
-        if (grid) list.ItemsPanel = (ItemsPanelTemplate)Resources["TilePanel"]; else list.ClearValue(ItemsControl.ItemsPanelProperty);
-        list.ItemTemplate = (DataTemplate)Resources[grid ? "TileTemplate" : "RowTemplate"];
-        list.ItemContainerStyle = (Style)Resources[grid ? "TileStyle" : "RowStyle"];
-        if (viewToggle.Content is TextBlock glyph) glyph.Text = grid ? "" : "";
-        viewToggle.ToolTip = grid ? "Détails (Ctrl+Maj+1)" : "Grandes icônes (Ctrl+Maj+2)";
     }
 
     protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
@@ -486,16 +453,17 @@ public sealed partial class MainWindow : Window {
         if (activeView.Title.Text != title) activeView.Title.Text = title;
         Title = "Winlestia Fichiers - " + tab.Location;
         SetEnabled(back, tab.CanBack); SetEnabled(forward, tab.CanForward); SetEnabled(up, tab.Parent != null);
-        if (crumbPath != tab.Location) { crumbPath = tab.Location; BuildCrumbs(tab.Location); sidebar.Highlight(tab.Location); }
+        if (crumbPath != tab.Location) { crumbPath = tab.Location; BuildCrumbs(tab.Location); UpdateSearchHint(tab.Location); sidebar.Highlight(tab.Location); }
         for (int i = 0; i < chevrons.Length; i++) {
             bool sorted = (int)tab.Sort.Column == i;
             chevrons[i].Visibility = sorted ? Visibility.Visible : Visibility.Collapsed;
             if (sorted) chevrons[i].Text = tab.Sort.Ascending ? "" : "";
         }
-        WatchFolder(tab.Location); SyncFilterUi(tab);
+        WatchFolder(tab.Location); SyncFilterUi(tab); SyncLocationColumn(tab);
         bool noResult = tab.FilterEmpty;
-        string key = noResult ? "nores|" + tab.Filter : tab.State is LoadState.Loading or LoadState.Ready ? "list" : tab.State + "|" + tab.Location;
-        if (key != shownKey) { shownKey = key; content.Child = noResult ? NoResult(tab) : tab.State is LoadState.Loading or LoadState.Ready ? listHost : EmptyFor(tab); }
+        bool pc = ThisPc.Is(tab.Location);
+        string key = pc ? "thispc" : noResult ? "nores|" + tab.Filter : tab.State is LoadState.Loading or LoadState.Ready ? "list" : tab.State + "|" + tab.Location;
+        if (key != shownKey) { shownKey = key; content.Child = pc ? ThisPcPageView() : noResult ? NoResult(tab) : tab.State is LoadState.Loading or LoadState.Ready ? listHost : EmptyFor(tab); }
         if (renaming != null && Active.Find(renaming.FullPath) == null) CancelRename();
         UpdateStatus();
     }
@@ -513,18 +481,22 @@ public sealed partial class MainWindow : Window {
     }
 
     void UpdateStatus() {
+        if (ThisPc.Is(Active.Location)) { status.Text = $"{ThisPcCards.Count} lecteur{(ThisPcCards.Count > 1 ? "s" : "")}"; UpdateCommands(); return; }
         int n = Active.Items.Count, m = list.SelectedItems.Count;
         string count = Active.Filter.Length > 0 ? $"{n} sur {Active.Total} élément{(Active.Total > 1 ? "s" : "")}" : $"{n} élément{(n > 1 ? "s" : "")}";
-        status.Text = $"{count} · {m} sélectionné{(m > 1 ? "s" : "")}";
+        status.Text = count + (m > 0 ? $" · {m} sélectionné{(m > 1 ? "s" : "")}{SelectionSummary(m)}" : "") + (Active.Searching ? " · Recherche en cours…" : "");
+        selActions.Visibility = m > 0 ? Visibility.Visible : Visibility.Collapsed;
+        UpdateCommands();
     }
 
     // ---- address ---------------------------------------------------------------------------------------------
 
     void BuildCrumbs(string path) {
         crumbs.Children.Clear();
+        if (ThisPc.Is(path)) { var pcb = UI.Flat(ThisPc.Label, 28, new CornerRadius(14)); pcb.Padding = new Thickness(M3.Pad3, 0, M3.Pad3, 0); pcb.Foreground = UI.Accent; crumbs.Children.Add(pcb); return; }
         string root = System.IO.Path.GetPathRoot(path) ?? "";
         var parts = new List<(string label, string target)>();
-        if (root.Length > 0) parts.Add((root.TrimEnd('\\'), root));
+        if (root.Length > 0) parts.Add((root.TrimEnd('\\'), root.EndsWith('\\') ? root : root + "\\"));
         string walk = root;
         foreach (var segment in path.Substring(Math.Min(root.Length, path.Length)).Split('\\', StringSplitOptions.RemoveEmptyEntries)) {
             walk = System.IO.Path.Combine(walk, segment);
@@ -543,7 +515,7 @@ public sealed partial class MainWindow : Window {
     void BeginEdit() {
         addressBox.Text = Active.Location;
         crumbScroll.Visibility = Visibility.Collapsed; addressBox.Visibility = Visibility.Visible;
-        addressBox.Focus(); addressBox.SelectAll();
+        addressBox.UpdateLayout(); addressBox.Focus(); addressBox.SelectAll();
     }
 
     void EndEdit() {
@@ -551,15 +523,79 @@ public sealed partial class MainWindow : Window {
         addressBox.Visibility = Visibility.Collapsed; crumbScroll.Visibility = Visibility.Visible;
     }
 
-    // Route() touches the disk (File.Exists / Directory.Exists): keep it off the UI thread.
-    async void Submit(string text) {
-        if (string.IsNullOrWhiteSpace(text)) return;
+    // Environment variables are expanded, the disk is probed off the UI thread. A path that does not exist leaves the box in edit mode with a clear message.
+    enum AddressKind { Folder, File, Shell, Invalid }
+
+    static (AddressKind Kind, string Value) ResolveAddress(string text) {
+        string value = Environment.ExpandEnvironmentVariables((text ?? "").Trim().Trim('"').Trim());
+        if (value.Length == 0) return (AddressKind.Invalid, "");
+        if (value.Equals(ThisPc.Label, StringComparison.OrdinalIgnoreCase) || value.Equals("This PC", StringComparison.OrdinalIgnoreCase) || ThisPc.Is(value)) return (AddressKind.Folder, ThisPc.Path);
+        if (value.StartsWith("shell:", StringComparison.OrdinalIgnoreCase) || value.StartsWith("::{", StringComparison.Ordinal)) return (AddressKind.Shell, value);
+        try {
+            if (value.Length == 2 && value[1] == ':' && char.IsAsciiLetter(value[0])) value += "\\";
+            string full = System.IO.Path.GetFullPath(value);
+            if (System.IO.Directory.Exists(full)) {
+                string root = System.IO.Path.GetPathRoot(full) ?? "";
+                if (full.Length > root.Length) full = full.TrimEnd('\\', '/');
+                return (AddressKind.Folder, full);
+            }
+            if (System.IO.File.Exists(full)) return (AddressKind.File, full);
+            return (AddressKind.Invalid, value);
+        } catch { return (AddressKind.Invalid, value); }
+    }
+
+    async void SubmitAddress(string text) {
+        if (string.IsNullOrWhiteSpace(text)) { EndEdit(); list.Focus(); return; }
         var tab = Active;
         try {
-            var route = await Task.Run(() => PathRouter.Route(text));
-            if (route.IsOwn) tab.Go(route.Value); else PathRouter.LaunchExplorer(route.Value);
+            var (kind, value) = await Task.Run(() => ResolveAddress(text));
+            if (kind == AddressKind.Invalid) { Toast("Chemin introuvable : " + value); addressBox.Focus(); return; }
+            EndEdit(); list.Focus();
+            if (kind == AddressKind.Folder) tab.Go(value);
+            else if (kind == AddressKind.File) Open(new FileItem(System.IO.Path.GetFileName(value), value, false, 0, DateTime.Now, ""));
+            else PathRouter.LaunchExplorer(value);
         } catch (Exception ex) { App.CrashLog(ex); }
     }
+
+    // Labels of the clickable segments, left to right (self-test).
+    internal List<string> CrumbLabels() => crumbs.Children.OfType<Button>().Select(b => b.Content as string ?? "").ToList();
+
+    // ---- sort ------------------------------------------------------------------------------------------------
+
+    // One sort for every tab, saved in settings.json.
+    internal void ApplySort(SortSpec spec) {
+        foreach (var view in tabs.ToList()) view.Tab.SetSort(spec);
+        FilesSettings.SaveSort(spec);
+    }
+
+    internal void ResetSort() {
+        foreach (var view in tabs.ToList()) view.Tab.SetSort(SortSpec.Default);
+        FilesSettings.ClearSort();
+    }
+
+    void ShowSortMenu() {
+        var s = Active.Sort;
+        var id = NativeMenu.Show(Hwnd, new NativeMenu.Item?[] {
+            new(1, "Nom", s.Column == SortColumn.Name), new(2, "Date de modification", s.Column == SortColumn.Modified), new(3, "Type", s.Column == SortColumn.Type), new(4, "Taille", s.Column == SortColumn.Size),
+            null, new(5, "Croissant", s.Ascending), new(6, "Décroissant", !s.Ascending),
+            null, new(7, "Dossiers en premier", s.FoldersFirst),
+            null, new(8, "Rétablir le tri par défaut") });
+        switch (id) {
+            case >= 1 and <= 4: ApplySort(s with { Column = (SortColumn)(id switch { 1 => SortColumn.Name, 2 => SortColumn.Modified, 3 => SortColumn.Type, _ => SortColumn.Size }) }); break;
+            case 5: ApplySort(s with { Ascending = true }); break;
+            case 6: ApplySort(s with { Ascending = false }); break;
+            case 7: ApplySort(s with { FoldersFirst = !s.FoldersFirst }); break;
+            case 8: ResetSort(); break;
+        }
+    }
+
+    // Drive arrival / removal: the pinned targets are checked again (no polling).
+    IntPtr DeviceHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
+        if (msg == 0x0219 && wParam.ToInt64() is 0x8000 or 0x8004 or 0x0007) sidebar.ScheduleRecheck();   // rebuilds the drive list and rechecks the pins; DBT_DEVICEARRIVAL, DBT_DEVICEREMOVECOMPLETE, DBT_DEVNODES_CHANGED
+        return IntPtr.Zero;
+    }
+
+    void OpenPinnedFile(string path) => Open(new FileItem(System.IO.Path.GetFileName(path), path, false, 0, DateTime.Now, ""));
 
     // ---- opening / input -------------------------------------------------------------------------------------
 
@@ -568,34 +604,60 @@ public sealed partial class MainWindow : Window {
     protected override void OnPreviewKeyDown(KeyEventArgs e) {
         base.OnPreviewKeyDown(e);
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
-        var mod = Keyboard.Modifiers;
+        if (HandleKey(key, Keyboard.Modifiers)) e.Handled = true;
+    }
+
+    // Every window shortcut (the self-test calls this with simulated keys).
+    internal bool HandleKey(Key key, ModifierKeys mod) {
         bool ctrl = (mod & ModifierKeys.Control) != 0, alt = (mod & ModifierKeys.Alt) != 0, shift = (mod & ModifierKeys.Shift) != 0;
-        bool editing = addressBox.IsKeyboardFocusWithin || renameBox.IsKeyboardFocusWithin;
+        bool editing = addressBox.IsKeyboardFocusWithin || renameBox.IsKeyboardFocusWithin || sidebar.Editing;
+        bool typing = editing || filterBox.IsKeyboardFocusWithin;
         clickArm++;
         if (alt && key == Key.Left) Active.Back();
         else if (alt && key == Key.Right) Active.Forward();
         else if (alt && key == Key.Up) Active.Up();
-        else if (key == Key.Back && mod == ModifierKeys.None && !editing) Active.Up();
-        else if ((ctrl && key == Key.L) || (!alt && key == Key.F4)) BeginEdit();
+        else if (alt && !ctrl && !shift && key == Key.Return && !editing) ShowProperties();
+        else if (key == Key.Back && mod == ModifierKeys.None && !typing) Active.Up();
+        else if ((ctrl && key == Key.L) || (!alt && key == Key.F4) || (alt && !ctrl && key == Key.D)) BeginEdit();
+        else if (!typing && ctrl && shift && !alt && key == Key.C) CopyPaths(Selection());
         else if (ctrl && key == Key.T) AddTab(Active.Location);
         else if (ctrl && key == Key.W) CloseTab(activeView);
         else if (ctrl && key == Key.Tab) Cycle(shift ? -1 : 1);
-        else if (ctrl && shift && key == Key.D1) SetView(false);
-        else if (ctrl && shift && key == Key.D2) SetView(true);
-        else if (!editing && ctrl && !shift && !alt && key == Key.C) CopySelected(false);
-        else if (!editing && ctrl && !shift && !alt && key == Key.X) CopySelected(true);
-        else if (!editing && ctrl && !shift && !alt && key == Key.V) Fire(() => PasteAsync());
-        else if (!editing && ctrl && !shift && !alt && key == Key.A) list.SelectAll();
-        else if (!editing && ctrl && shift && key == Key.N) Fire(NewFolderAsync);
+        else if (ctrl && shift && key == Key.D1) SetView(ViewMode.Details);
+        else if (ctrl && shift && key == Key.D2) SetView(ViewMode.Large);
+        else if (ctrl && shift && key == Key.D3) SetView(ViewMode.Medium);
+        else if (ctrl && shift && key == Key.D5) SetView(ViewMode.List);
+        else if (ctrl && shift && key == Key.D6) SetView(ViewMode.Details);
+        else if (!typing && ctrl && !shift && !alt && key == Key.Z) Fire(() => UndoAsync());
+        else if (!typing && ((ctrl && !shift && !alt && key == Key.Y) || (ctrl && shift && !alt && key == Key.Z))) Fire(() => RedoAsync());
+        else if (!typing && ctrl && !shift && !alt && key == Key.C) CopySelected(false);
+        else if (!typing && ctrl && !shift && !alt && key == Key.X) CopySelected(true);
+        else if (!typing && ctrl && !shift && !alt && key == Key.V) Fire(() => PasteAsync());
+        else if (!typing && ctrl && !shift && !alt && key == Key.A) list.SelectAll();
+        else if (!typing && ctrl && !shift && !alt && key == Key.Space) ToggleFocused();
+        else if (!typing && ctrl && shift && key == Key.N) Fire(NewFolderAsync);
         else if (!editing && !ctrl && !alt && key == Key.F2) RenameSelected();
-        else if (!editing && !ctrl && !alt && key == Key.Delete) Fire(() => DeleteSelectedAsync(shift));
-        else if (!editing && !ctrl && !alt && (key == Key.Apps || (shift && key == Key.F10))) Dispatcher.BeginInvoke(() => ShowShellMenu(true, null), System.Windows.Threading.DispatcherPriority.Input);
-        else if (ctrl && !shift && !alt && key == Key.F) ShowFilter(null);
-        else if (key == Key.Escape && !renameBox.IsKeyboardFocusWithin && !addressBox.IsKeyboardFocusWithin && Active.Filter.Length > 0) ClearFilter(true);
+        else if (!typing && !ctrl && !alt && key == Key.Delete) Fire(() => DeleteSelectedAsync(shift));
+        else if (!editing && !ctrl && !alt && shift && key == Key.F10) Dispatcher.BeginInvoke(() => ShowShellMenu(true, null), System.Windows.Threading.DispatcherPriority.Input);
+        else if (!typing && !ctrl && !alt && !shift && key == Key.Apps) Dispatcher.BeginInvoke(() => ShowContextMenu(null), System.Windows.Threading.DispatcherPriority.Input);
+        else if (!alt && ctrl && !shift && (key == Key.F || key == Key.E)) ShowFilter(null);
+        else if (key == Key.Escape && !renameBox.IsKeyboardFocusWithin && !addressBox.IsKeyboardFocusWithin && (Active.DeepActive || Active.Searching || Active.Filter.Length > 0 || list.SelectedItems.Count > 0)) {
+            if (Active.Searching || Active.DeepActive) { Active.CancelDeep(); if (Active.Filter.Length > 0) ClearFilter(true); UpdateStatus(); }
+            else if (Active.Filter.Length > 0) ClearFilter(true);
+            else list.UnselectAll();
+        }
         else if (key == Key.F5) Active.Reload();
         else if (ctrl && key == Key.H) { FolderTab.ShowHidden = !FolderTab.ShowHidden; Active.Reload(); }
-        else return;
-        e.Handled = true;
+        else return false;
+        return true;
+    }
+
+    // Ctrl+Space: toggles the item that has the keyboard focus (the last selected one if the focus is elsewhere), without touching the others.
+    internal void ToggleFocused() {
+        object? item = (Keyboard.FocusedElement as System.Windows.Controls.ListBoxItem)?.DataContext;
+        if (item == null || !list.Items.Contains(item)) item = list.SelectedItem ?? (list.Items.Count > 0 ? list.Items[0] : null);
+        if (item == null) return;
+        if (list.SelectedItems.Contains(item)) list.SelectedItems.Remove(item); else list.SelectedItems.Add(item);
     }
 
     protected override void OnPreviewMouseDown(MouseButtonEventArgs e) {

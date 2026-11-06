@@ -38,6 +38,11 @@ public sealed partial class MainWindow {
                 else if (mode == "states") await StatesShots();
                 else if (mode == "palette") await PaletteTest();
                 else if (mode == "themeshot") await ThemeShot();
+                else if (mode == "lot1") await Lot1Test();
+                else if (mode == "lot2") await Lot2Test();
+                else if (mode == "themes") await ThemesTest();
+                else if (mode == "conflict") await ConflictTest();
+                else if (mode == "xfer") await XferTest();
             } catch (Exception ex) { App.CrashLog(ex); }
         };
     }

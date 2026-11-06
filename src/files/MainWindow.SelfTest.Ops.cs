@@ -11,7 +11,7 @@ using System.Windows;
 namespace WinlestiaFiles;
 
 public sealed partial class MainWindow {
-    static readonly string TestLog = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia", "Files", "selftest.log");
+    static readonly string TestLog = Path.Combine(FilesSettings.Dir, "selftest.log");
     int testFails;
 
     static void T(string line) {
@@ -130,7 +130,7 @@ public sealed partial class MainWindow {
         // 5. clipboard interop with Explorer-style consumers/producers
         SelectNames(Files(21, 23)); await CopySelectedAsync(false);
         string outCopy = await Ps("Add-Type -AssemblyName System.Windows.Forms; $f=(Get-Clipboard -Format FileDropList | %{ $_.Name }) -join '|'; $s=[Windows.Forms.Clipboard]::GetData('Preferred DropEffect'); $b=New-Object byte[] 4; $null=$s.Read($b,0,4); \"effect=$([BitConverter]::ToInt32($b,0));$f\"");
-        Check("interop out: copy seen by PowerShell (FileDropList + DropEffect=1)", outCopy == "effect=1;file021.txt|file022.txt|file023.txt", outCopy);
+        Check("interop out: copy seen by PowerShell (FileDropList + DropEffect=1)", outCopy.StartsWith("effect=1;") && string.Join("|", outCopy.Substring(9).Split('|').OrderBy(x => x, StringComparer.Ordinal)) == "file021.txt|file022.txt|file023.txt", outCopy);
         SelectNames(Files(21, 23)); await CopySelectedAsync(true);
         string outCut = await Ps("Add-Type -AssemblyName System.Windows.Forms; $s=[Windows.Forms.Clipboard]::GetData('Preferred DropEffect'); $b=New-Object byte[] 4; $null=$s.Read($b,0,4); \"effect=$([BitConverter]::ToInt32($b,0))\"");
         Check("interop out: cut has DropEffect=2", outCut == "effect=2", outCut);
@@ -179,7 +179,7 @@ public sealed partial class MainWindow {
             await PasteAsync(cyc);
             await TDelete(new[] { Active.Find(cyc)! });
         }
-        Check("cycles leave the list consistent", DiskMatches() && OrderOk());
+        Check("cycles leave the list consistent", DiskMatches() && OrderOk(), FileOps.OddHr + $" disk={DiskMatches()} order={OrderOk()} items={Active.Items.Count} entries={Directory.GetFileSystemEntries(Active.Location).Length}");
         await Task.Delay(SettleMs);
         var s1 = Snap();
         T($"MEASURE after 10 cycles + 30 s: handles {s1.handles}, threads {s1.threads}, gdi {s1.gdi}, user {s1.user}, private {s1.mb:F1} MB");

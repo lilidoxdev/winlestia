@@ -112,6 +112,7 @@ class SurfaceScene(QObject):
                     path=QTransform().translate(mask_x,spec[1]-window.y()).map(rail_path(spec[2],spec[3],spec[4],side))
                     window.setMask(QRegion(path.toFillPolygon().toPolygon(),Qt.WindingFill));self.input_masks[handle]=mask_key
         for window,spec,builder,is_dock in ((bridge.top,top,panel_path,False),(bridge.dock,dock,dock_path,True)):
+            if window and not spec and is_dock:self.input_masks.pop(int(window.winId()),None)   # hidden dock: forget its mask, it is re-applied on the next show
             if window and spec:
                 offset=spec[1]-window.y() if is_dock else 0
                 mask_key=(window.width(),window.height(),round(spec[2]),round(spec[3]),spec[4],round(offset))

@@ -2,6 +2,24 @@
 
 Earlier releases are described in `docs/RELEASE-*.md`. Release notes for each version are also published on the GitHub Releases page.
 
+## Unreleased
+
+### Changed
+
+- **Settings reorganised** into eight pages (Appearance, Interface, Docks and panels, Keyboard shortcuts, Media and audio, Apps/bookmarks/links, Files and Windows, General), with the search field and a navigation column. Interface text is translated to English and Spanish.
+- **Keyboard shortcuts page** lists every global shortcut with its combination; configurable ones can be reassigned (Windows-reserved and conflicting combinations are refused with an explanation, a failed change is rolled back). Fixed ones show the reason.
+- **Win+Alt+S** opens Settings (reassignable). Other ways: tray menu, `winlestia panel settings`.
+- **Dock, bookmarks panel and social panel** can be hidden individually. Hiding the dock while it replaces the Windows taskbar restores the Windows taskbar.
+- Settings snapshot now includes the data folder and the version.
+- `WINLESTIA_DATA_DIR` is now also honoured by the frontend (language, weather, thumbnails, logs) and by the backend cache and recent launches.
+
+### Fixed
+
+- Arrow keys drawn as empty boxes in the tiling shortcut list.
+- A shortcut that failed to register at start-up was reported as "unchanged"; the registration is now retried and its real result shown.
+- A Settings shortcut equal to another configured combination is replaced at load by the first free one among Win+Alt+S, Ctrl+Alt+F10, Ctrl+Alt+F11.
+- Dock, bookmarks and social panels are no longer hidden before the first settings snapshot arrives.
+
 ## 0.9.0 - 2026-10-31
 
 Changes since 0.8.0.

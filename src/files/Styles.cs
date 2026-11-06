@@ -13,6 +13,8 @@ public sealed class LiveBrushes {
     public Brush Selected => UI.Selected;
     public Brush Accent => UI.T(M3Role.Primary);
     public Brush DropTarget => UI.T(M3Role.PrimaryContainer);
+    public Brush OnSelected => UI.T(M3Role.OnPrimaryContainer);
+    public Brush Ring => UI.T(M3Role.Primary);
     public Brush Label => UI.Label;
     public Brush Thumb => UI.T(M3Role.OnSurface, 70);
     public Brush ThumbHot => UI.T(M3Role.OnSurface, 130);
@@ -74,10 +76,11 @@ internal static class Styles {
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
-          <Border x:Name="Bd" CornerRadius="10" Background="Transparent"><ContentPresenter VerticalAlignment="Center"/></Border>
+          <Border x:Name="Bd" CornerRadius="10" Background="Transparent" BorderThickness="2" BorderBrush="Transparent" SnapsToDevicePixels="True"><ContentPresenter x:Name="Cp" VerticalAlignment="Center"/></Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="{Binding Hover, Source={x:Static local:LiveBrushes.Instance}}"/></Trigger>
-            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="{Binding Selected, Source={x:Static local:LiveBrushes.Instance}}"/></Trigger>
+            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="{Binding Selected, Source={x:Static local:LiveBrushes.Instance}}"/><Setter TargetName="Cp" Property="TextElement.Foreground" Value="{Binding OnSelected, Source={x:Static local:LiveBrushes.Instance}}"/></Trigger>
+            <Trigger Property="IsFocused" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="{Binding Ring, Source={x:Static local:LiveBrushes.Instance}}"/></Trigger>
             <DataTrigger Binding="{Binding DropHot}" Value="True"><Setter TargetName="Bd" Property="Background" Value="{Binding DropTarget, Source={x:Static local:LiveBrushes.Instance}}"/></DataTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -88,14 +91,20 @@ internal static class Styles {
   <DataTemplate x:Key="RowTemplate">
     <Grid Opacity="{Binding CutOpacity}">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="@ICON@"/><ColumnDefinition Width="*"/><ColumnDefinition Width="@MOD@"/><ColumnDefinition Width="@TYPE@"/><ColumnDefinition Width="@SIZE@"/>
+        <ColumnDefinition Width="@ICON@"/>
+        <ColumnDefinition Width="{Binding NameW, Source={x:Static local:ColumnLayout.Instance}}"/>
+        <ColumnDefinition Width="{Binding LocW, Source={x:Static local:ColumnLayout.Instance}}"/>
+        <ColumnDefinition Width="{Binding ModW, Source={x:Static local:ColumnLayout.Instance}}"/>
+        <ColumnDefinition Width="{Binding TypeW, Source={x:Static local:ColumnLayout.Instance}}"/>
+        <ColumnDefinition Width="{Binding SizeW, Source={x:Static local:ColumnLayout.Instance}}"/>
       </Grid.ColumnDefinitions>
       <TextBlock x:Name="Ic" Text="{Binding Icon, Mode=OneTime}" FontFamily="{DynamicResource IconFont}" FontSize="20" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <local:ShellImage Cell="22" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <TextBlock Grid.Column="1" Text="{Binding Name, Mode=OneTime}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="4,0,8,0"/>
-      <TextBlock Grid.Column="2" Text="{Binding ModifiedText, Mode=OneTime}" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" VerticalAlignment="Center" Margin="8,0,0,0"/>
-      <TextBlock Grid.Column="3" Text="{Binding TypeLabel, Mode=OneTime}" TextTrimming="CharacterEllipsis" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" VerticalAlignment="Center" Margin="8,0,4,0"/>
-      <TextBlock Grid.Column="4" Text="{Binding SizeText, Mode=OneTime}" TextAlignment="Right" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+      <TextBlock Grid.Column="2" Text="{Binding Where, Mode=OneTime}" TextTrimming="CharacterEllipsis" ClipToBounds="True" ToolTip="{Binding Where, Mode=OneTime}" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" VerticalAlignment="Center" Margin="8,0,4,0"/>
+      <TextBlock Grid.Column="3" Text="{Binding ModifiedText, Mode=OneTime}" TextTrimming="CharacterEllipsis" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+      <TextBlock Grid.Column="4" Text="{Binding TypeLabel, Mode=OneTime}" TextTrimming="CharacterEllipsis" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" VerticalAlignment="Center" Margin="8,0,4,0"/>
+      <TextBlock Grid.Column="5" Text="{Binding SizeText, Mode=OneTime}" TextAlignment="Right" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" VerticalAlignment="Center" Margin="0,0,12,0"/>
     </Grid>
     <DataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsDir, Mode=OneTime}" Value="True"><Setter TargetName="Ic" Property="Foreground" Value="{Binding Accent, Source={x:Static local:LiveBrushes.Instance}}"/></DataTrigger>
@@ -112,10 +121,11 @@ internal static class Styles {
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
-          <Border x:Name="Bd" CornerRadius="12" Background="Transparent"><ContentPresenter/></Border>
+          <Border x:Name="Bd" CornerRadius="12" Background="Transparent" BorderThickness="2" BorderBrush="Transparent" SnapsToDevicePixels="True"><ContentPresenter x:Name="Cp"/></Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="{Binding Hover, Source={x:Static local:LiveBrushes.Instance}}"/></Trigger>
-            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="{Binding Selected, Source={x:Static local:LiveBrushes.Instance}}"/></Trigger>
+            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="{Binding Selected, Source={x:Static local:LiveBrushes.Instance}}"/><Setter TargetName="Cp" Property="TextElement.Foreground" Value="{Binding OnSelected, Source={x:Static local:LiveBrushes.Instance}}"/></Trigger>
+            <Trigger Property="IsFocused" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="{Binding Ring, Source={x:Static local:LiveBrushes.Instance}}"/></Trigger>
             <DataTrigger Binding="{Binding DropHot}" Value="True"><Setter TargetName="Bd" Property="Background" Value="{Binding DropTarget, Source={x:Static local:LiveBrushes.Instance}}"/></DataTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -129,6 +139,38 @@ internal static class Styles {
       <TextBlock x:Name="Ic" Text="{Binding Icon, Mode=OneTime}" FontFamily="{DynamicResource IconFont}" FontSize="52" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <local:ShellImage Thumb="True" Cell="104" Width="104" Height="104" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,6,0,0"/>
       <TextBlock Grid.Row="1" Text="{Binding Name, Mode=OneTime}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" TextAlignment="Center" MaxHeight="36" Margin="6,2,6,0" VerticalAlignment="Top"/>
+    </Grid>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsDir, Mode=OneTime}" Value="True"><Setter TargetName="Ic" Property="Foreground" Value="{Binding Accent, Source={x:Static local:LiveBrushes.Instance}}"/></DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
+  <Style x:Key="MediumStyle" TargetType="ListBoxItem" BasedOn="{StaticResource TileStyle}">
+    <Setter Property="Width" Value="100"/>
+    <Setter Property="Height" Value="116"/>
+  </Style>
+  <DataTemplate x:Key="MediumTemplate">
+    <Grid Opacity="{Binding CutOpacity}">
+      <Grid.RowDefinitions><RowDefinition Height="76"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+      <TextBlock x:Name="Ic" Text="{Binding Icon, Mode=OneTime}" FontFamily="{DynamicResource IconFont}" FontSize="38" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <local:ShellImage Thumb="True" Cell="68" Width="68" Height="68" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,4,0,0"/>
+      <TextBlock Grid.Row="1" Text="{Binding Name, Mode=OneTime}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" TextAlignment="Center" MaxHeight="34" Margin="4,2,4,0" VerticalAlignment="Top"/>
+    </Grid>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsDir, Mode=OneTime}" Value="True"><Setter TargetName="Ic" Property="Foreground" Value="{Binding Accent, Source={x:Static local:LiveBrushes.Instance}}"/></DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
+  <Style x:Key="ListItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource TileStyle}">
+    <Setter Property="Width" Value="236"/>
+    <Setter Property="Height" Value="28"/>
+  </Style>
+  <DataTemplate x:Key="ListTemplate">
+    <Grid Opacity="{Binding CutOpacity}">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <TextBlock x:Name="Ic" Text="{Binding Icon, Mode=OneTime}" FontFamily="{DynamicResource IconFont}" FontSize="18" Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <local:ShellImage Cell="20" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <TextBlock Grid.Column="1" Text="{Binding Name, Mode=OneTime}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="2,0,6,0"/>
     </Grid>
     <DataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsDir, Mode=OneTime}" Value="True"><Setter TargetName="Ic" Property="Foreground" Value="{Binding Accent, Source={x:Static local:LiveBrushes.Instance}}"/></DataTrigger>

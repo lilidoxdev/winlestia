@@ -63,7 +63,7 @@ public sealed partial class MainWindow {
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr GetPropW(IntPtr hwnd, string name);
 
     const int DROPEFFECT_COPY = 1, DROPEFFECT_MOVE = 2, MK_SHIFT = 4, MK_CONTROL = 8;
-    const uint OwnTab = 1, OwnPath = 2, OwnExplorer = 3;
+    const uint OwnTab = 1, OwnPath = 2, OwnExplorer = 3, OwnPin = 4, OwnResetSort = 5;
     static readonly Guid ClsidDragDropHelper = new("4657278A-411B-11d2-839A-00C04FD918D0");
 
     sealed record DropSpot(string Path, FileItem? Item, TabView? Tab, bool Side);
@@ -107,7 +107,7 @@ public sealed partial class MainWindow {
             var src = e.OriginalSource as DependencyObject;
             for (var d = src; d != null; d = d is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(d) : null) if (d is ScrollBar) return;
             e.Handled = true;
-            Dispatcher.BeginInvoke(() => ShowShellMenu(false, src), DispatcherPriority.Input);
+            Dispatcher.BeginInvoke(() => ShowContextMenu(src), DispatcherPriority.Input);
         };
     }
 
@@ -198,6 +198,7 @@ public sealed partial class MainWindow {
     internal async Task<OpResult> DropFilesAsync(IReadOnlyList<string> files, string dest, bool move) {
         var watch = WatchSet(); watch.Add(Norm(dest));
         var result = await FileOps.Copy(Hwnd, files, dest, move, watch);
+        journal.Record(result);
         ApplyResult(result, string.Equals(Norm(dest), Norm(Active.Location), StringComparison.OrdinalIgnoreCase));
         return result;
     }
@@ -296,7 +297,10 @@ public sealed partial class MainWindow {
         if (menu == null) { items.Dispose(); return null; }
         var own = new List<(uint, string)>();
         if (!background && sel.All(i => i.IsDir)) own.Add((OwnTab, "Ouvrir dans un nouvel onglet"));
-        own.Add((OwnPath, "Copier le chemin")); own.Add((OwnExplorer, "Ouvrir dans Explorer"));
+        var pinTargets = background ? new List<string> { Active.Location } : sel.Select(i => i.FullPath).ToList();
+        own.Add((OwnPin, pinTargets.Count > 0 && pinTargets.All(QuickAccess.IsPinned) ? "Désépingler" : "Épingler dans Accès rapide"));
+        own.Add((OwnPath, "Copier le chemin d'accès\tCtrl+Maj+C")); own.Add((OwnExplorer, "Ouvrir dans Explorer"));
+        if (background) own.Add((OwnResetSort, "Rétablir le tri par défaut"));
         menu.Prepend(own);
         return new MenuSession { Items = items, Menu = menu, Sel = sel, Background = background };
     }
@@ -328,7 +332,9 @@ public sealed partial class MainWindow {
         if (id < ShellMenu.First) {
             switch (id) {
                 case OwnTab: foreach (var item in sel) AddTab(item.FullPath); break;
-                case OwnPath: try { Clipboard.SetText(string.Join("\r\n", s.Background ? new[] { Active.Location } : sel.Select(i => i.FullPath))); } catch (Exception ex) { Perf.Log("copy path: " + ex.Message); } break;
+                case OwnPath: CopyPaths(s.Background ? new List<FileItem>() : sel); break;
+                case OwnPin: TogglePin(s.Background ? new List<string> { Active.Location } : sel.Select(i => i.FullPath).ToList()); break;
+                case OwnResetSort: ResetSort(); break;
                 case OwnExplorer:
                     if (s.Background) PathRouter.LaunchExplorer(Active.Location);
                     else if (sel.Count == 1 && sel[0].IsDir) PathRouter.LaunchExplorer(sel[0].FullPath);
@@ -356,6 +362,24 @@ public sealed partial class MainWindow {
         bool ok = s.Menu.Invoke(Hwnd, id, at.X, at.Y, shift);
         if (ok && (s.Background || verb is "link" or "createshortcut" || verb.Contains("zip") || verb.Contains("extract") || verb.Contains("compress"))) return ReloadSoon();
         return Task.CompletedTask;
+    }
+
+    // "Copier le chemin d'accès": full paths, one per line, no quotes; nothing selected = the current folder.
+    internal static string PathsText(IReadOnlyList<FileItem> sel, string folder) => string.Join("\r\n", sel.Count == 0 ? new[] { folder } : sel.Select(i => i.FullPath));
+
+    internal void CopyPaths(IReadOnlyList<FileItem> sel) {
+        if (renaming != null || activeView == null) return;
+        string text = PathsText(sel, Active.Location);
+        if (text.Length == 0) return;
+        try { Clipboard.SetText(text); } catch (Exception ex) { Perf.Log("copy path: " + ex.Message); }
+    }
+
+    // All pinned -> unpin them, otherwise pin the missing ones. Only the quick access list changes.
+    internal bool TogglePin(IReadOnlyList<string> paths) {
+        if (paths.Count == 0) return false;
+        bool unpin = paths.All(QuickAccess.IsPinned);
+        foreach (var p in paths) { if (unpin) QuickAccess.Unpin(p); else QuickAccess.Pin(p); }
+        return !unpin;
     }
 
     // Until the folder watcher of step 5: one refresh after a command that may create files (the shell finishes those asynchronously).

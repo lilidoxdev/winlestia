@@ -48,7 +48,21 @@ def shell_palette():
         if data.get('mode')=='auto' and data.get('palette',{}).get('m3primary'):return {'palette':data['palette']}
     except (OSError,ValueError):pass
     return None
-def console_values(values,palette):
+FIXED={'light':{'m3surface':'#fff8f6','m3primary':'#895143','m3onSurface':'#261916'},'dark':{'m3surface':'#101518','m3primary':'#afd4f0','m3onSurface':'#e5ebef'}}
+def theme_mode(prefs):
+    # Same precedence as the shell: AutoTheme wins (Theme keeps its previous value), then custom, then Porcelaine (shell) / Nuit.
+    if prefs.get('AutoTheme',False):return 'auto'
+    if prefs.get('Theme')=='custom':return 'custom'
+    return 'light' if prefs.get('Theme') in ('porcelaine','shell') else 'dark'
+def resolve_palette(prefs,path='',bg='#182025'):
+    mode=theme_mode(prefs)
+    if mode=='auto':return (shell_palette() or generate_palette(path,bg)),mode
+    if mode=='custom':return make_palette(prefs.get('CustomPalette')),mode
+    return {'palette':dict(FIXED[mode])},mode
+def console_values(values,palette,mode='auto'):
+    if mode!='auto':
+        # Fixed and custom modes: the terminal uses the exact shell palette (surface, text, primary), translucent through acrylic.
+        values.update(glass=True,opacity=.70,unfocusedOpacity=.55);return values
     # Console background is always translucent dark grey (about 8% toward the palette neutral); text and accent follow the shell palette, lightened to stay readable on it.
     p=palette['palette'];neutral=p.get('m3surface',CONSOLE_GREY);background=blend(CONSOLE_GREY,neutral,.08) if lum(neutral)<.2 else CONSOLE_GREY
     foreground=lighten(p.get('m3onSurface','#f7f3f4'),background,7,.6);accent=lighten(p['m3primary'],background,4.5,.45)
@@ -123,14 +137,9 @@ def run(once=False):
         try:
             prefs,path,label,bg=inputs();current=(prefs.get('CustomGlass'),prefs.get('CustomGlassOpacity'),json.dumps(prefs.get('CustomPalette',{}),sort_keys=True),prefs.get('AutoTheme',False),prefs.get('Theme','nuit'),path,shell_palette(),Path(path).stat().st_mtime_ns if Path(path).is_file() else 0,bg,tuple(sorted(str(p) for p in (Path(os.environ['LOCALAPPDATA'])/'Packages').glob('Microsoft.WindowsTerminal*/LocalState/settings.json'))))
             if current!=signature:
-                palette=shell_palette()
-                if palette:pass
-                elif prefs.get('Theme')=='custom':palette=make_palette(prefs.get('CustomPalette'))
-                elif prefs.get('AutoTheme',False):palette=generate_palette(path,bg)
-                else:
-                    light=prefs.get('Theme') in ('porcelaine','shell');palette={'palette':{'m3surface':'#fff8f6' if light else '#101518','m3primary':'#895143' if light else '#afd4f0','m3onSurface':'#261916' if light else '#e5ebef'}}
-                values=theme_values(palette,label if prefs.get('AutoTheme') else prefs.get('Theme','nuit'))
-                values=console_values(values,palette)
+                palette,mode=resolve_palette(prefs,path,bg)
+                values=theme_values(palette,label if mode=='auto' else prefs.get('Theme','nuit'))
+                values=console_values(values,palette,mode)
                 apply(values);signature=current
                 (ROOT/'validation/sync-status.json').write_text(json.dumps({'ok':True,'source':label,'auto':prefs.get('AutoTheme',False),'updated':time.time()}),encoding='utf-8')
         except Exception as error:

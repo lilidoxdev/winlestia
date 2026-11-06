@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.components.filedialog
+import qs.components.controls
 import qs.config
 import Quickshell
 import Quickshell.Widgets
@@ -57,9 +58,24 @@ Item {
         anchors.right: parent.right
         anchors.topMargin: Appearance.padding.normal
         anchors.margins: Appearance.padding.large
+        anchors.rightMargin: Appearance.padding.large + settingsButton.width + Appearance.padding.small
 
-        nonAnimWidth: root.nonAnimWidth - anchors.margins * 2
+        nonAnimWidth: root.nonAnimWidth - anchors.leftMargin - anchors.rightMargin
         state: root.state
+    }
+
+    // Settings are always reachable from the dashboard (Ctrl+Alt+Space), even with the dock hidden.
+    IconButton {
+        id: settingsButton
+
+        objectName: "dashboardSettingsButton"
+        anchors.right: parent.right
+        anchors.rightMargin: Appearance.padding.large
+        anchors.verticalCenter: tabs.verticalCenter
+        anchors.verticalCenterOffset: -Appearance.padding.small
+        icon: "settings"
+        type: IconButton.Text
+        onClicked: Bridge.action("settings", {})
     }
 
     // Plain clipping, no layer: an OpacityMask layer recomposites its content and

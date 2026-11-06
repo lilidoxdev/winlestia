@@ -36,7 +36,7 @@ internal static class Perf {
         Task.Run(() => {
             try {
                 lock (gate) {
-                    file ??= Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia", "Files", "perf.log");
+                    file ??= Path.Combine(FilesSettings.Dir, "perf.log");
                     Directory.CreateDirectory(Path.GetDirectoryName(file)!);
                     File.AppendAllText(file, text);
                 }

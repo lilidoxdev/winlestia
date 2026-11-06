@@ -50,7 +50,7 @@ internal sealed partial class QtShellBridge {
             pinnedEntries[path]=e;foreach(var match in matches){seen.Add(match.Path);pinnedEntries[match.Path]=e;}result.Add(Value(e,matches,true));
         }
         foreach(var group in groups){
-            var e=pinnedEntries.GetValueOrDefault(group.Key)??entries.FirstOrDefault(e=>SamePath(e.Target,group.Key))??new Entry{Id="task:"+group.Key,Name=CatalogueWatchRules.IsPseudoPath(group.Key)?group.Value[0].Title:Path.GetFileNameWithoutExtension(group.Key),Target=group.Key,IconPath=group.Key};
+            var e=pinnedEntries.GetValueOrDefault(group.Key)??entries.FirstOrDefault(e=>SamePath(e.Target,group.Key))??new Entry{Id="task:"+group.Key,Name=CatalogueWatchRules.IsPseudoPath(group.Key)||group.Key.StartsWith("shell:",StringComparison.OrdinalIgnoreCase)?group.Value[0].Title:Path.GetFileNameWithoutExtension(group.Key),Target=group.Key,IconPath=group.Key};
             bool pinned=Store.State.TaskbarPins.Contains(e.Id)||Store.State.TaskbarPins.Contains(group.Key);
             var value=Value(e,group.Value,pinned);running.Add(value);if(seen.Add(group.Key))result.Add(value);
         }

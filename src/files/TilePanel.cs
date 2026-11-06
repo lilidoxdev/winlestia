@@ -8,7 +8,11 @@ using System.Windows.Media;
 namespace WinlestiaFiles;
 
 public sealed class TilePanel : VirtualizingPanel, IScrollInfo {
-    internal const double CellW = 132, CellH = 156;
+    public static readonly DependencyProperty CellWProperty = DependencyProperty.Register(nameof(CellW), typeof(double), typeof(TilePanel), new FrameworkPropertyMetadata(132.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
+    public static readonly DependencyProperty CellHProperty = DependencyProperty.Register(nameof(CellH), typeof(double), typeof(TilePanel), new FrameworkPropertyMetadata(156.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
+    public double CellW { get => (double)GetValue(CellWProperty); set => SetValue(CellWProperty, value); }
+    public double CellH { get => (double)GetValue(CellHProperty); set => SetValue(CellHProperty, value); }
+    internal int Cols => cols;
     ScrollViewer? owner;
     Size extent, viewport;
     double offsetY;
@@ -109,8 +113,8 @@ public sealed class TilePanel : VirtualizingPanel, IScrollInfo {
     public void LineDown() => SetVerticalOffset(offsetY + 48);
     public void PageUp() => SetVerticalOffset(offsetY - viewport.Height);
     public void PageDown() => SetVerticalOffset(offsetY + viewport.Height);
-    public void MouseWheelUp() => SetVerticalOffset(offsetY - CellH * 0.75);
-    public void MouseWheelDown() => SetVerticalOffset(offsetY + CellH * 0.75);
+    public void MouseWheelUp() => SetVerticalOffset(offsetY - Math.Max(CellH * 0.75, 64));
+    public void MouseWheelDown() => SetVerticalOffset(offsetY + Math.Max(CellH * 0.75, 64));
     public void LineLeft() { }
     public void LineRight() { }
     public void PageLeft() { }

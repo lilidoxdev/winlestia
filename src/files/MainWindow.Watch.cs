@@ -132,7 +132,7 @@ public sealed partial class MainWindow {
         return null;
     }
 
-    int Cols() => gridMode ? Math.Max(1, (int)((ListScroller()?.ViewportWidth ?? TilePanel.CellW) / TilePanel.CellW)) : 1;
+    int Cols() => gridMode ? Math.Max(1, (int)((ListScroller()?.ViewportWidth ?? Cell.W) / Cell.W)) : 1;
 
     ViewState Capture() {
         var s = new ViewState();
@@ -140,7 +140,7 @@ public sealed partial class MainWindow {
         var sv = ListScroller();
         if (sv != null) {
             s.Offset = sv.VerticalOffset;
-            int index = gridMode ? (int)(sv.VerticalOffset / TilePanel.CellH) * Cols() : (int)sv.VerticalOffset;
+            int index = gridMode ? (int)(sv.VerticalOffset / Cell.H) * Cols() : (int)sv.VerticalOffset;
             if (index > 0 && index < list.Items.Count && list.Items[index] is FileItem top) s.TopPath = top.FullPath;
         }
         return s;
@@ -160,7 +160,7 @@ public sealed partial class MainWindow {
         if (kind == Keep.Anchor && s.TopPath != null) {
             int at = -1;
             for (int i = 0; i < items.Count; i++) if (string.Equals(items[i].FullPath, s.TopPath, StringComparison.OrdinalIgnoreCase)) { at = i; break; }
-            if (at >= 0) target = gridMode ? (at / Cols()) * TilePanel.CellH : at;
+            if (at >= 0) target = gridMode ? (at / Cols()) * Cell.H : at;
         }
         if (Math.Abs(sv.VerticalOffset - target) < 0.5) return;
         list.UpdateLayout();                                               // the panel must know the new extent before the offset is clamped
@@ -199,25 +199,47 @@ public sealed partial class MainWindow {
     bool settingFilter;
 
     FrameworkElement BuildFilter() {
-        var icon = UI.Symbol("", "", 18); icon.Foreground = UI.Label; icon.Margin = new Thickness(M3.Sp2, 0, M3.Pad1, 0); icon.VerticalAlignment = VerticalAlignment.Center;
-        filterBox = new TextBox { Width = 170, Height = double.NaN, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = UI.White, CaretBrush = UI.White,
-            FontSize = M3.FontSmall, FontFamily = M3.Body, VerticalAlignment = VerticalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center, Template = AddressTemplate(), ToolTip = "Filtrer (Ctrl+F, Échap pour effacer)" };
+        var icon = UI.Glyph("", 16); icon.Foreground = UI.Label; icon.Margin = new Thickness(M3.Sp2, 0, M3.Pad1, 0); icon.VerticalAlignment = VerticalAlignment.Center;
+        filterBox = new TextBox { Background = Brushes.Transparent, BorderThickness = new Thickness(0), Foreground = UI.White, CaretBrush = UI.White,
+            FontSize = M3.FontSmall, FontFamily = M3.Body, VerticalAlignment = VerticalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center, Template = AddressTemplate(), ToolTip = "Rechercher (Ctrl+F ou Ctrl+E, Échap pour effacer)" };
+        searchHint = UI.Text("Rechercher", M3.FontSmall, UI.Label); searchHint.IsHitTestVisible = false; searchHint.VerticalAlignment = VerticalAlignment.Center; searchHint.TextTrimming = TextTrimming.CharacterEllipsis; searchHint.Margin = new Thickness(2, 0, 0, 0);
+        var field = new Grid(); field.Children.Add(filterBox); field.Children.Add(searchHint);
         filterBox.TextChanged += (_, _) => {
+            UpdateFilterChrome();
             if (settingFilter) return;
             filterTimer ??= new DispatcherTimer(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(120) };
             filterTimer.Tick -= ApplyFilter; filterTimer.Tick += ApplyFilter;
             filterTimer.Stop(); filterTimer.Start();                        // one-shot: ApplyFilter stops it
         };
         filterBox.PreviewKeyDown += (_, e) => {
-            if (e.Key == Key.Escape) { ClearFilter(true); e.Handled = true; }
+            if (e.Key == Key.Escape) { if (!Active.CancelDeep()) ClearFilter(true); UpdateStatus(); e.Handled = true; }
             else if (e.Key is Key.Down or Key.Enter) { list.Focus(); if (list.SelectedItem == null && list.Items.Count > 0) list.SelectedIndex = 0; e.Handled = true; }
         };
-        filterBox.LostKeyboardFocus += (_, _) => { if (filterBox.Text.Length == 0) filterHost.Visibility = Visibility.Collapsed; };
-        var close = UI.Flat(UI.Glyph("", 10), 24, new CornerRadius(12)); close.Width = 24; close.Margin = new Thickness(0, 0, M3.Pad1, 0); close.ToolTip = "Effacer le filtre (Échap)";
-        close.Click += (_, _) => ClearFilter(true);
-        var row = new StackPanel { Orientation = Orientation.Horizontal }; row.Children.Add(icon); row.Children.Add(filterBox); row.Children.Add(close);
-        filterHost = new Border { Height = 36, CornerRadius = new CornerRadius(18), Background = UI.T(M3Role.OnSurface, 15), Child = row, Visibility = Visibility.Collapsed, Margin = new Thickness(0, 0, M3.Sp2, 0) };
+        filterBox.GotKeyboardFocus += (_, _) => filterHost.BorderBrush = UI.T(M3Role.Primary);
+        filterBox.LostKeyboardFocus += (_, _) => filterHost.BorderBrush = UI.Hairline;
+        filterClose = UI.Flat(UI.Glyph("", 10), 24, new CornerRadius(12)); filterClose.Width = 24; filterClose.Margin = new Thickness(0, 0, M3.Pad1, 0); filterClose.ToolTip = "Effacer la recherche (Échap)";
+        filterClose.Click += (_, _) => ClearFilter(true);
+        deepToggle = UI.Flat("Sous-dossiers", 24, new CornerRadius(12)); deepToggle.Margin = new Thickness(0, 0, M3.Pad1, 0); deepToggle.Padding = new Thickness(M3.Pad3, 0, M3.Pad3, 0);
+        deepToggle.Focusable = false; deepToggle.FontSize = 11; deepToggle.ToolTip = "Rechercher dans les sous-dossiers";
+        deepToggle.Click += (_, _) => { Active.SetDeepOption(!Active.DeepOption); PaintDeep(Active); };
+        var row = new Grid();
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(field, 1); Grid.SetColumn(deepToggle, 2); Grid.SetColumn(filterClose, 3);
+        row.Children.Add(icon); row.Children.Add(field); row.Children.Add(deepToggle); row.Children.Add(filterClose);
+        // Always visible, to the right of the address zone; same surfaceContainer fill, accent border while it has the focus.
+        filterHost = new Border { Height = 36, Width = 250, CornerRadius = new CornerRadius(18), Background = UI.T(M3Role.SurfaceContainer), BorderBrush = UI.Hairline, BorderThickness = new Thickness(1), Child = row, SnapsToDevicePixels = true };
+        UpdateFilterChrome();
         return filterHost;
+    }
+
+    Button filterClose = null!;
+    // Placeholder while empty; the clear and sub-folder buttons only once there is something to clear.
+    void UpdateFilterChrome() {
+        if (filterBox == null || searchHint == null) return;
+        bool has = filterBox.Text.Length > 0;
+        searchHint.Visibility = has ? Visibility.Collapsed : Visibility.Visible;
+        filterClose.Visibility = deepToggle.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
     }
 
     void ApplyFilter(object? sender, EventArgs e) {
@@ -228,8 +250,15 @@ public sealed partial class MainWindow {
         if (Perf.Enabled) Perf.Log($"filter '{filterBox.Text}': {Perf.Ms(t):F1} ms ({Active.Items.Count}/{Active.Total})");
     }
 
+    Button deepToggle = null!;
+    void PaintDeep(FolderTab tab) {
+        if (deepToggle == null) return;
+        bool on = tab.DeepOption;
+        deepToggle.Foreground = on ? UI.T(M3Role.OnPrimaryContainer) : UI.White;
+        deepToggle.Background = on ? UI.T(M3Role.PrimaryContainer) : Brushes.Transparent;
+    }
+
     void ShowFilter(string? seed) {
-        filterHost.Visibility = Visibility.Visible;
         if (seed != null) { filterBox.Text = seed; }
         filterBox.Focus(); filterBox.CaretIndex = filterBox.Text.Length;
     }
@@ -237,7 +266,7 @@ public sealed partial class MainWindow {
     void ClearFilter(bool focusList) {
         filterTimer?.Stop();
         settingFilter = true; filterBox.Text = ""; settingFilter = false;
-        filterHost.Visibility = Visibility.Collapsed;
+        UpdateFilterChrome();
         if (activeView != null) Active.SetFilter("");
         if (focusList) list.Focus();
     }
@@ -245,15 +274,16 @@ public sealed partial class MainWindow {
     // Called from Refresh: the field mirrors the active tab's filter (cleared by navigation, kept per tab on switch).
     void SyncFilterUi(FolderTab tab) {
         if (filterBox == null) return;
+        PaintDeep(tab);
         if (filterTimer is { IsEnabled: true }) return;                     // the user is typing: the debounce will apply it
         if (filterBox.Text.Trim() == tab.Filter) return;
         settingFilter = true; filterBox.Text = tab.Filter; settingFilter = false;
-        filterHost.Visibility = tab.Filter.Length > 0 || filterBox.IsKeyboardFocusWithin ? Visibility.Visible : Visibility.Collapsed;
+        UpdateFilterChrome();
     }
 
     protected override void OnPreviewTextInput(TextCompositionEventArgs e) {
         base.OnPreviewTextInput(e);
-        if (e.Handled || activeView == null || e.Text.Length == 0 || char.IsControl(e.Text[0])) return;
+        if (e.Handled || activeView == null || e.Text.Length == 0 || char.IsControl(e.Text[0]) || char.IsWhiteSpace(e.Text[0])) return;
         if (!list.IsKeyboardFocusWithin || renameBox.IsKeyboardFocusWithin || addressBox.IsKeyboardFocusWithin) return;
         ShowFilter(e.Text); e.Handled = true;
     }

@@ -26,7 +26,7 @@ Window {
     property bool menuOpen:dockMenu.visible
     // Window previews (native bubble in the backend): requested after a hover delay, never while hidden / sliding / menu / dragging.
     property string previewId:""
-    readonly property bool previewAllowed:shown&&offset===0&&!menuOpen&&dragId===""&&Bridge.taskbarEnabled
+    readonly property bool previewAllowed:shown&&offset===0&&!menuOpen&&dragId===""&&(Bridge.settings.dockVisible??Bridge.taskbarEnabled)
     function previewRequest(item,cursor){
         if(!previewAllowed||item.modelData.count<1||item.modelData.hwnd<=0)return;
         previewEndTimer.stop();const c=item.mapToGlobal(item.width/2,0),p=item.mapToGlobal(cursor.x,cursor.y);
@@ -61,7 +61,7 @@ Window {
     height:68
     x:Bridge.screenX+(Bridge.screenWidth-width)/2
     y:Bridge.screenY+Bridge.screenHeight-height-(Bridge.screenFullscreen?12:Math.max(0,Config.border.thickness))
-    visible:Bridge.taskbarEnabled&&shownCore&&!Bridge.screenFullscreen&&!Bridge.dockQuiet
+    visible:(Bridge.settings.dockVisible??Bridge.taskbarEnabled)&&shownCore&&!Bridge.screenFullscreen&&!Bridge.dockQuiet
     Behavior on offset {Anim {duration:Appearance.anim.durations.expressiveFastSpatial;easing.bezierCurve:Appearance.anim.curves.emphasizedDecel}}
     // Fixed (never translated) clip box = dock contour bounds; only the content inside slides.
     Item {

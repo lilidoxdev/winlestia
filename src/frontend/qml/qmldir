@@ -11,3 +11,4 @@ ShellToolTip ShellToolTip.qml
 WindowsControls WindowsControls.qml
 WifiPane WifiPane.qml
 WorkspaceBrowser WorkspaceBrowser.qml
+DictationKeyButton DictationKeyButton.qml

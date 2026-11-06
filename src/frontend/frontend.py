@@ -4,8 +4,8 @@ import os as _os
 for _k in ("OPENBLAS_NUM_THREADS","OMP_NUM_THREADS","MKL_NUM_THREADS"):_os.environ.setdefault(_k,"1")
 import argparse, ctypes, io, json, os, queue, shutil, sys, threading, time, urllib.request, urllib.parse
 from pathlib import Path
-from PySide6.QtCore import QCoreApplication, QObject, Property, Signal, Slot, QThread, QTimer, QUrl, QRect, Qt, qInstallMessageHandler
-from PySide6.QtGui import QCursor, QFontDatabase, QKeySequence, QColor
+from PySide6.QtCore import QMetaObject, QCoreApplication,QObject, Property, Signal, Slot, QThread, QTimer, QUrl, QRect, Qt, qInstallMessageHandler
+from PySide6.QtGui import QCursor, QFontDatabase, QKeySequence, QColor, QRegion
 from PySide6.QtWidgets import QApplication, QFileDialog, QInputDialog, QLineEdit
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickWindow
@@ -24,7 +24,7 @@ from surface_geometry import SurfaceScene
 
 ROOT=Path(__file__).resolve().parent
 BACKEND=ROOT.parent/'Glass-v5'
-CONFIG=Path(os.environ.get('LOCALAPPDATA') or str(Path.home()/'AppData'/'Local'))/'Panneaux'/'Caelestia'
+CONFIG=Path(os.environ.get('WINLESTIA_DATA_DIR') or (Path(os.environ.get('LOCALAPPDATA') or str(Path.home()/'AppData'/'Local'))/'Panneaux'))/'Caelestia'   # honours WINLESTIA_DATA_DIR like the backend
 CONFIG.mkdir(parents=True,exist_ok=True)
 user32=ctypes.windll.user32
 user32.GetForegroundWindow.restype=ctypes.c_void_p
@@ -186,7 +186,10 @@ class Bridge(QObject):
     fullscreenScreens=Property('QVariantList',lambda s:list(s.fullscreen_names),notify=frameChanged)
     @Slot(str,int,result='QVariantMap')
     def paletteForScreen(self,name,revision):return self.walltheme.for_screen(name).get('palette',{})
-    themeMode=Property(str,lambda s:s._state.get('settings',{}).get('themeMode','dark' if s._dark else 'light'),notify=changed)
+    _theme_pending=None
+    def theme_pending_expire(self):
+        if self._theme_pending:self._theme_pending=None;self.changed.emit()
+    themeMode=Property(str,lambda s:s._theme_pending or s._state.get('settings',{}).get('themeMode','dark' if s._dark else 'light'),notify=changed)
     adaptivePalette=Property('QVariantMap',lambda s:make_palette(s.settings.get('customPalette'))['palette'] if s.themeMode=='custom' else s.current_theme().get('palette',{}) if s.themeMode=='auto' else {},notify=changed)
     wallpaperInfo=Property('QVariantMap',lambda s:s.current_theme(),notify=changed)
     _wpicker={}
@@ -276,6 +279,10 @@ class Bridge(QObject):
     networkKind=Property(str,lambda s:s._state.get('networkKind') if s._state.get('networkKind') in ('ethernet','wifi','none') else 'wifi',notify=changed)
     virtualDesktops=Property('QVariantMap',lambda s:s._state.get('virtualDesktops') if isinstance(s._state.get('virtualDesktops'),dict) else {},notify=changed)
     taskbarEnabled=Property(bool,lambda s:bool(s._state.get('taskbarEnabled',s.args.preview)),notify=changed)
+    # Surface visibility preferences: a hidden dock / rail is not polled, not shown and keeps no input mask.
+    dockVisible=Property(bool,lambda s:bool(s._state.get('settings',{}).get('dockVisible',True)),notify=changed)
+    bookmarksRailVisible=Property(bool,lambda s:bool(s._state.get('settings',{}).get('bookmarksRailVisible',True)),notify=changed)
+    socialRailVisible=Property(bool,lambda s:bool(s._state.get('settings',{}).get('socialRailVisible',True)),notify=changed)
     dictationState=Property(str,lambda s:s._dict['state'],notify=dictationChanged)
     dictationLevel=Property(float,lambda s:s._dict['level'],notify=dictationChanged)
     dictationLevels=Property('QVariantList',lambda s:s._dict['levels'],notify=dictationChanged)
@@ -340,7 +347,8 @@ class Bridge(QObject):
         if name=='customTheme':
             self._state.setdefault('settings',{}).update(themeMode='custom',customPalette=args.get('colors',DEFAULT),customGlass=bool(args.get('glass')),customGlassOpacity=args.get('opacity',.12));self.changed.emit();self.frameChanged.emit()
         if name=='theme':
-            self._state.setdefault('settings',{})['themeMode']=args.get('mode') if args.get('mode') in ('auto','custom') else 'dark' if args.get('dark') else 'light'
+            self._state.setdefault('settings',{})['themeMode']=self._theme_pending=args.get('mode') if args.get('mode') in ('auto','custom') else 'dark' if args.get('dark') else 'light'
+            QTimer.singleShot(2500,self.theme_pending_expire)
             if args.get('mode')!='auto':self._dark=bool(args.get('dark'))
             self.changed.emit();self.frameChanged.emit()
         if name=='preference' and args.get('key')=='dictationKey':self._state.setdefault('settings',{})['dictationKey']=int(args.get('value',0xA5));self.changed.emit()
@@ -658,6 +666,7 @@ class Bridge(QObject):
         if 'spectrum' in message and message['spectrum']!=getattr(self,'_spectrum',None):self._spectrum=message['spectrum'];self.spectrumChanged.emit()
         if 'state' in message:
             self.last_reply=time.monotonic()
+        if self._theme_pending and message.get('state',{}).get('settings',{}).get('themeMode')==self._theme_pending:self._theme_pending=None
         if 'state' in message and any(value!=self._state.get(key) for key,value in message['state'].items() if key!='diagnostics'):
             catalog_changed=any(self._state.get(key)!=message['state'].get(key) for key in ('apps','favorites','recent','websites','profiles','quickTabs'))
             for ident,(value,until) in list(self._pending_displays.items()):
@@ -805,10 +814,13 @@ class Bridge(QObject):
         elif self.top.isVisible() and panel_height<95 and now>self.opening_until:
             if not self.away_top:self.away_top=now
             if now-self.away_top>.55 and not self.args.preview:self.navigate('close')
-        if self.social_win:self.edge_rail(self.social_win,'right',point,geometry,full,now)
-        if self.bookmarks_win:self.edge_rail(self.bookmarks_win,'left',point,geometry,full,now)
-        if self.dock and self.taskbarEnabled and dock_full:self.edge_policy.away_since=0   # fullscreen: chrome stays hidden, no reveal and no timers; idle state resumes on exit
-        elif self.dock and self.taskbarEnabled:
+        if self.social_win and self.socialRailVisible:self.edge_rail(self.social_win,'right',point,geometry,full,now)
+        else:self.away_social=0
+        if self.bookmarks_win and self.bookmarksRailVisible:self.edge_rail(self.bookmarks_win,'left',point,geometry,full,now)
+        else:self.away_bookmarks=0
+        if self.dock and not self.dockVisible:self.edge_policy.away_since=0;self.client.subscription['dock']=False   # dock off: no bottom-edge tracking, nothing subscribed
+        elif self.dock and self.dockVisible and dock_full:self.edge_policy.away_since=0   # fullscreen: chrome stays hidden, no reveal and no timers; idle state resumes on exit
+        elif self.dock and self.dockVisible:
             self.client.subscription['dock']=bool(self.dock.property('shown'))
             dock_inside=self.dock.isVisible() and self.dock.geometry().adjusted(-8,-10,8,4).contains(point)
             menu_open=bool(self.dock.property('menuOpen'))
@@ -817,17 +829,33 @@ class Bridge(QObject):
             decision=self.edge_policy.update(now,bottom,dock_inside,dock_full,now<self.force_dock)
             if decision is True:self.shellEvent.emit('dock')
             elif decision is False and not self.args.preview:self.shellEvent.emit('dockHide')
+    def apply_surface_visibility(self,*args):
+        # A surface switched off in the settings is hidden for real (not just transparent) and its cached input mask is dropped, so re-enabling re-applies it.
+        if not self._state.get('settings'):return   # no snapshot yet: never hide a surface on defaults
+        flags=(self.dockVisible,self.socialRailVisible,self.bookmarksRailVisible)
+        if flags==getattr(self,'_surface_flags',None):return
+        self._surface_flags=flags
+        for win,on in zip((self.dock,self.social_win,self.bookmarks_win),flags):
+            if win is None or on:continue
+            if win.isVisible():win.setVisible(False)
+            win.setMask(QRegion())
+            if self.surface_scene:self.surface_scene.input_masks.pop(int(win.winId()),None)
     def pointer_pace(self):
         if self.quiet_slow() and not (self.top and self.top.isVisible()):
             if self.pointer.interval()!=500:self.pointer.setInterval(500)
             return
         point=QCursor.pos();geometry=(QApplication.screenAt(point) or QApplication.primaryScreen()).geometry();now=time.monotonic()
         # Adaptive pace: 90 ms while a reveal is active, the button is down (file drag) or the pointer is within 48 px of a screen edge; 250 ms otherwise.
-        near=min(point.y()-geometry.top(),geometry.bottom()-point.y(),point.x()-geometry.left(),geometry.right()-point.x())<=48
+        # Only edges that host a visible surface count: the top panel trigger always does, the bottom dock and the side rails only while enabled.
+        edges=[point.y()-geometry.top()]
+        if self.dockVisible:edges.append(geometry.bottom()-point.y())
+        if self.bookmarksRailVisible:edges.append(point.x()-geometry.left())
+        if self.socialRailVisible:edges.append(geometry.right()-point.x())
+        near=min(edges)<=48
         active=near or self.away_top or self.away_social or self.away_bookmarks or now<self.force_dock or getattr(self,'_file_drag_down',False) or bool(user32.GetAsyncKeyState(1)&0x8000)
         if self.top and self.top.isVisible() and float(self.top.property('panelHeight') or 0)>=95:active=True   # an open panel; the collapsed bar is covered by away_top / edge proximity
-        for win in (self.dock,self.social_win,self.bookmarks_win):
-            if win and (win.property('shown') or win.property('menuOpen')):active=True
+        for win,on in ((self.dock,self.dockVisible),(self.social_win,self.socialRailVisible),(self.bookmarks_win,self.bookmarksRailVisible)):
+            if win and on and (win.property('shown') or win.property('menuOpen')):active=True
         interval=90 if active else 250
         if self.pointer.interval()!=interval:self.pointer.setInterval(interval)
     def stop(self):
@@ -842,12 +870,20 @@ def main():
     os.environ.setdefault('QSG_RHI_BACKEND','d3d11')
     global TRANSLATOR
     app=QApplication(sys.argv);TRANSLATOR=Translator(CONFIG);app.installTranslator(TRANSLATOR);app.setApplicationName('Panneaux · Caelestia Windows');app.setQuitOnLastWindowClosed(False);qInstallMessageHandler(message_handler)
+    if args.backend_pid:
+        def watch_backend():
+            k32=ctypes.WinDLL('kernel32',use_last_error=True);k32.OpenProcess.argtypes=[ctypes.c_ulong,ctypes.c_bool,ctypes.c_ulong];k32.OpenProcess.restype=ctypes.c_void_p
+            k32.WaitForSingleObject.argtypes=[ctypes.c_void_p,ctypes.c_ulong];k32.WaitForSingleObject.restype=ctypes.c_ulong
+            handle=k32.OpenProcess(0x00100000,False,args.backend_pid)
+            if handle:k32.WaitForSingleObject(handle,0xFFFFFFFF)
+            QMetaObject.invokeMethod(app,'quit',Qt.QueuedConnection);time.sleep(3);os._exit(0)
+        threading.Thread(target=watch_backend,name='backend-watch',daemon=True).start()
     for font in (ROOT/'assets/fonts').glob('*.ttf'):QFontDatabase.addApplicationFont(str(font))
     bridge=Bridge(args);engine=QQmlApplicationEngine();bridge.engine=engine;engine.addImportPath(str(ROOT/'qml'));engine.addImageProvider('capture',bridge.capture.provider);engine.rootContext().setContextProperty('Bridge',bridge)
     bridge.changed.connect(bridge.theme_inputs_changed);QTimer.singleShot(0,bridge.theme_inputs_changed)
     engine.load(QUrl.fromLocalFile(str(ROOT/'qml/Main.qml')))
     if not engine.rootObjects():bridge.stop();return 1
-    root=engine.rootObjects()[0];bridge.top=root;bridge._window=root;bridge.dock=root.findChild(QObject,'bottomDock');bridge.social_win=root.findChild(QObject,'socialRail');bridge.bookmarks_win=root.findChild(QObject,'bookmarksRail');bridge.dictation_win=root.findChild(QObject,'dictationOverlay');bridge.windowChanged.emit();bridge.surface_scene=SurfaceScene(bridge);bridge.glass=NativeGlass(bridge)
+    root=engine.rootObjects()[0];bridge.top=root;bridge._window=root;bridge.dock=root.findChild(QObject,'bottomDock');bridge.social_win=root.findChild(QObject,'socialRail');bridge.bookmarks_win=root.findChild(QObject,'bookmarksRail');bridge.dictation_win=root.findChild(QObject,'dictationOverlay');bridge.windowChanged.emit();bridge.surface_scene=SurfaceScene(bridge);bridge.changed.connect(bridge.apply_surface_visibility);bridge.apply_surface_visibility();bridge.glass=NativeGlass(bridge)
     if os.environ.get('PANNEAUX_VERIFY_THICKNESS85')=='1':
         from validation85 import run
         run(bridge,root,app,QML_ISSUES,ROOT/'validation-8.5')
