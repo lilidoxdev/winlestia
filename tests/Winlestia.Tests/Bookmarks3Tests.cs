@@ -54,7 +54,10 @@ public class Bookmarks3Tests
     [Fact]
     public void CollectKeepsFirstUrlPerHostAndSkipsNonWeb()
     {
-        var nodes = new[] { new BNode { Url = "https://A.test/1" }, new BNode { Url = "https://a.test/2" }, new BNode { Url = "ftp://x/" } };
+        var nodes = new[]
+        {
+            new BNode { Url = "https://A.test/1" }, new BNode { Url = "https://a.test/2" }, new BNode { Url = "ftp://x/" },
+        };
         var hosts = new Dictionary<string, string>();
         BookmarksCore.Collect(nodes, hosts);
         Assert.Equal("https://A.test/1", Assert.Single(hosts).Value);
