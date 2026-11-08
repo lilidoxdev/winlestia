@@ -8,11 +8,11 @@
 
 <a href="https://discord.gg/5jXv7NRj3Q"><img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join the Winlestia Discord server" height="40"></a>
 
-[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0)
+[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.2)
 [![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
 
-[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
+[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.2) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
 
 <img src="docs/illustrations/desktop.webp" alt="Winlestia on a Windows 11 desktop" width="100%">
 
@@ -99,8 +99,8 @@ Also: a Files explorer, messenger and bookmark side rails, an optional push-to-t
 
 Requires **Windows 11 (64-bit)**. No administrator rights needed.
 
-1. Download [`Winlestia-Setup-0.9.0.exe`](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.0/Winlestia-Setup-0.9.0.exe) from the [release](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
-2. Check it: run `Get-FileHash .\Winlestia-Setup-0.9.0.exe -Algorithm SHA256` in PowerShell and compare the result with the SHA-256 printed in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.0).
+1. Download [`Winlestia-Setup-0.9.2.exe`](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.2/Winlestia-Setup-0.9.2.exe) from the [release](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.2).
+2. Check it: run `Get-FileHash .\Winlestia-Setup-0.9.2.exe -Algorithm SHA256` in PowerShell and compare the result with the SHA-256 printed in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.2).
 3. Run it. The binaries are **not code-signed**, so SmartScreen will likely warn: choose **More info**, then **Run anyway**.
 
 After installing, move the pointer to the bottom edge of the screen to reveal the dock. The setup wizard is in French only. Full guide, options, updating and uninstalling: [docs/INSTALL.md](docs/INSTALL.md).
@@ -153,6 +153,8 @@ All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` c
 - After uninstalling, the registry value `HKCU\Software\Winlestia\DisplayName` and the profile folder `%LOCALAPPDATA%\Panneaux` are kept so a later update can reuse them. To remove them, delete the folder and run `Remove-Item -Path HKCU:\Software\Winlestia -Recurse` in PowerShell.
 
 ## Roadmap
+
+**Shipped in 0.9.2:** redesigned settings in eight pages with search, palette editor, terminal that follows the light or dark theme, keyboard shortcuts page with rebinding, redesigned file manager, dock icons for packaged apps, separately hideable dock, bookmarks and social panel.
 
 **Shipped in 0.9.0:** Wi-Fi panel, per-display brightness, dashboard audio bars, fullscreen quiet mode, full-screen wallpaper switcher, richer command palette, settings search, tiling shortcuts, `winlestia` command line. See [CHANGELOG.md](CHANGELOG.md).
 
