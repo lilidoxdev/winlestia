@@ -57,7 +57,7 @@ internal sealed partial class QtShellBridge
     [BridgeAction("dictation")]
     void OnDictation(BridgeCall c)
     {
-        var d = dictation.Snapshot();
+        var d = system.DictationState();
         c.RawReply = JsonSerializer.Serialize(new
         {
             dictation = new
@@ -93,7 +93,7 @@ internal sealed partial class QtShellBridge
     {
         c.RawReply = JsonSerializer.Serialize(new
         {
-            spectrum = spectrum.Values
+            spectrum = system.SpectrumValues()
         }, Json);
     }
 }

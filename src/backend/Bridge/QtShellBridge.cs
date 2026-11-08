@@ -25,30 +25,33 @@ internal sealed partial class QtShellBridge : IDisposable
     readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
 
     readonly CancellationTokenSource cancellation = new();
-    readonly EventWaitHandle wake = new(false, EventResetMode.AutoReset, @"Local\PanneauxCaelestiaWake");
+    readonly EventWaitHandle wake;
     readonly Queue<(string name, long epoch)> events = new();
     long frontendEpoch;
     readonly Action networkChanged;
 
-    readonly ExplorerAppearance explorer = new();
-    readonly WindowTiler tiler = new();
-    readonly ScreenFrameReservations frame = new();
-    readonly WindowsWallpaper wallpaper = new();
-    readonly AudioMixerHost mixer = new();
+    // Services système lourds (registre, threads audio, Explorateur) : créés par le constructeur de production seulement ;
+    // les tests passent par `system` (IBridgeSystem), jamais par ces champs.
+    readonly ExplorerAppearance explorer = null!;
+    readonly WindowTiler tiler;
+    readonly ScreenFrameReservations frame;
+    readonly WindowsWallpaper wallpaper = null!;
+    readonly AudioMixerHost mixer = null!;
     bool mixerVisible;
-    readonly WindowsSpectrum spectrum = new();
-    readonly MediaController media = new();
-    readonly SystemAudio audio = new();
-    readonly WindowsConnections connections = new();
-    readonly WifiHost wifi = new();
+    readonly WindowsSpectrum spectrum = null!;
+    readonly MediaController media = null!;
+    readonly SystemAudio audio = null!;
+    readonly WindowsConnections connections = null!;
+    readonly WifiHost wifi = null!;
     bool wifiVisible;
     bool wifiSettingsOpened, bluetoothSettingsOpened;
-    readonly PcTelemetry telemetry = new();
+    readonly PcTelemetry telemetry = null!;
     readonly DictationService dictation;
-    readonly FileSearch fileSearch = new();
+    readonly FileSearch fileSearch;
+    readonly IBridgeSystem system;
 
     CliServer? cli;
-    readonly AudioBarsHost bars = new();
+    readonly AudioBarsHost bars;
     bool barsVisible;
     static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(500);
     readonly DispatcherTimer timer = new() { Interval = TickInterval };
@@ -98,9 +101,43 @@ internal sealed partial class QtShellBridge : IDisposable
 
     internal static bool KeepEvent(string name, long queuedEpoch, long currentEpoch) => name != "close" || queuedEpoch == currentEpoch;
 
+    // Constructeur d'essai : ni pipe, ni processus Qt, ni hooks ; tout ce qui touche l'OS vient de `parts`.
+    internal QtShellBridge(IBridgeOwner coordinator, RunOptions options, BridgeParts parts)
+    {
+        this.options = options;
+        owner = coordinator;
+        system = parts.System;
+        wake = parts.Wake;
+        tiler = parts.Tiler;
+        frame = parts.Frame;
+        fileSearch = parts.FileSearch;
+        bars = parts.Bars;
+        social = parts.Social;
+        bookmarks = parts.Bookmarks;
+        dictation = null!;
+        dismissal = null!;
+        networkChanged = null!;
+        root = cache = parts.Directory;
+    }
+
     internal QtShellBridge(IBridgeOwner coordinator, RunOptions options)
     {
         this.options = options;
+        system = new RealSystem(this);
+        wake = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\PanneauxCaelestiaWake");
+        explorer = new ExplorerAppearance();
+        tiler = new WindowTiler();
+        frame = new ScreenFrameReservations();
+        wallpaper = new WindowsWallpaper();
+        mixer = new AudioMixerHost();
+        spectrum = new WindowsSpectrum();
+        media = new MediaController();
+        audio = new SystemAudio();
+        connections = new WindowsConnections();
+        wifi = new WifiHost();
+        telemetry = new PcTelemetry();
+        fileSearch = new FileSearch();
+        bars = new AudioBarsHost();
         DialogOpen = Environment.GetEnvironmentVariable("PANNEAUX_VERIFY_MATERIAL84") == "1"
             || Environment.GetEnvironmentVariable("PANNEAUX_VERIFY_THICKNESS85") == "1";
         owner = coordinator;

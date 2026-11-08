@@ -43,21 +43,17 @@ internal sealed partial class QtShellBridge
     async Task OnExplorerPalette(BridgeCall c)
     {
         c.Notice = null;
-        await Task.Run(() => explorer.Sync(Text(c.Args, "accent"), Text(c.Args, "background"), Text(c.Args, "text")));
+        await Task.Run(() => system.SyncExplorerPalette(Text(c.Args, "accent"), Text(c.Args, "background"), Text(c.Args, "text")));
     }
 
     [BridgeAction("explorerFolder")]
     void OnExplorerFolder(BridgeCall c)
     {
-        using (var dialog =
-            new System.Windows.Forms.FolderBrowserDialog { Description = "Choisir le dossier à personnaliser",
-                UseDescriptionForTitle = true })
+        string? picked = system.PickFolder();
+        if (picked != null && !Store.State.ExplorerFolders.Contains(picked))
         {
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK && !Store.State.ExplorerFolders.Contains(dialog.SelectedPath))
-            {
-                Store.State.ExplorerFolders.Add(dialog.SelectedPath);
-                Store.Save();
-            }
+            Store.State.ExplorerFolders.Add(picked);
+            Store.Save();
         }
     }
 
@@ -66,7 +62,7 @@ internal sealed partial class QtShellBridge
     {
         Store.State.ExplorerTheme = false;
         Store.Save();
-        c.Notice = await Task.Run(() => explorer.Restore());
+        c.Notice = await Task.Run(() => system.RestoreExplorer());
     }
 
     [BridgeAction("explorerReport")]
@@ -87,27 +83,27 @@ internal sealed partial class QtShellBridge
     [BridgeAction("emptyRecycleBin")]
     void OnEmptyRecycleBin(BridgeCall c)
     {
-        RecycleActions.Empty();
+        system.EmptyRecycleBin();
     }
 
     [BridgeAction("desktopSwitch")]
     void OnDesktopSwitch(BridgeCall c)
     {
         int rel = (int)Math.Clamp(Number(c.Args, "relative"), -1, 1), to = (int)Number(c.Args, "index");
-        _ = Task.Run(() => VirtualDesktops.SwitchTo(to, rel));
+        _ = Task.Run(() => system.SwitchDesktop(to, rel));
     }
 
     [BridgeAction("desktopNew")]
     void OnDesktopNew(BridgeCall c)
     {
-        _ = Task.Run(() => VirtualDesktops.CreateNew());
+        _ = Task.Run(() => system.NewDesktop());
     }
 
     [BridgeAction("desktopClose")]
     void OnDesktopClose(BridgeCall c)
     {
         int at = (int)Number(c.Args, "index") - 1;
-        _ = Task.Run(() => VirtualDesktops.Close(at));
+        _ = Task.Run(() => system.CloseDesktop(at));
     }
 
     [BridgeAction("recycleFiles")]
@@ -146,13 +142,13 @@ internal sealed partial class QtShellBridge
     [BridgeAction("openFiles")]
     void OnOpenFiles(BridgeCall c)
     {
-        FilesDefaultHandler.Open();
+        system.OpenFilesHandler();
     }
 
     [BridgeAction("windowList")]
     async Task OnWindowList(BridgeCall c)
     {
-        c.WindowItems = await Task.Run(() => PaletteWindows().Take(60).ToArray());
+        c.WindowItems = await Task.Run(() => system.PaletteWindows().Take(60).ToArray());
     }
 
     [BridgeAction("fileSearch")]

@@ -99,7 +99,7 @@ internal sealed partial class PersonalizeWindow
     void Export()
     {
         var dialog = new SaveFileDialog { Title = "Exporter la personnalisation", Filter = "Personnalisation Winlestia|*.json",
-            FileName = "Panneaux-dj.json" };
+            FileName = "Winlestia-preferences.json" };
         if (dialog.ShowDialog(this) == true)
             File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(Store.State, Store.Json));
     }

@@ -268,12 +268,14 @@ internal static partial class Native
     }
     static bool RunPresent()
     {
+        // Nom historique conservé pour compatibilité (valeur "Panneaux" de la clé Run).
         using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
         return Convert.ToString(key?.GetValue("Panneaux", ""))?.Contains("Glass-v5", StringComparison.OrdinalIgnoreCase) == true;
     }
     static void DropRun()
     {
         using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+        // Nom historique conservé pour compatibilité (valeur "Panneaux" de la clé Run).
         key.DeleteValue("Panneaux", false);
     }
     static readonly object autostartGate = new(); static int autostartDesired = -1; // -1 : aucune demande en cours

@@ -52,6 +52,7 @@ internal sealed partial class QtShellBridge
         + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) && !SamePath(path, Environment.ProcessPath ?? "");
     void RefreshDockApps()
     {
+        // Nom historique conservé pour compatibilité (préfixe de titre des fenêtres Qt, défini dans les fichiers QML).
         var windows = TaskbarNative.Applications().Where(w => !w.Title.Contains("Caelestia") && !w.Title.StartsWith("Panneaux ·",
             StringComparison.Ordinal)).ToArray();
         var livePseudo = new HashSet<string>();

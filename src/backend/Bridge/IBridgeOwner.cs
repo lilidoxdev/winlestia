@@ -1,4 +1,6 @@
 // language: C# 12, file: IBridgeOwner.cs, target: Windows 11 / .NET 8, sous-ensemble du Coordinator réellement appelé par le pont
+using System;
+using System.Collections.Generic;
 namespace PanneauxGlass;
 
 // Couture étroite : le pont ne dépend plus du Coordinator concret (fenêtres WPF, bureau), seulement de ces appels. Le Coordinator
@@ -6,9 +8,9 @@ namespace PanneauxGlass;
 internal interface IBridgeOwner
 {
     IShortcutBindings Keys { get; }
-    ShortcutManager Shortcuts { get; }
-    ClipboardService QtClipboard { get; }
-    IconLoader Icons { get; }
+    IShortcutEditor Shortcuts { get; }
+    IClipboardService QtClipboard { get; }
+    IIconSource Icons { get; }
     bool TaskbarEnabled { get; }
 
     void SetTheme(string id);
@@ -46,4 +48,39 @@ internal interface IBridgeOwner
     void ToggleAlwaysOnTop();
     void TaskManager();
     void PinImage(System.Windows.Media.Imaging.BitmapImage image);
+}
+
+// Vues étroites des services concrets (presse-papiers, icônes, raccourcis) : le pont ne voit plus les classes WPF/Win32.
+internal interface IClipboardService
+{
+    IReadOnlyList<ClipboardItem> Items { get; }
+    void TogglePin(ClipboardItem item);
+    void CopyBack(ClipboardItem item);
+}
+
+internal interface IIconSource
+{
+    void Load(Entry entry, Action<System.Windows.Media.ImageSource> callback, string scope = "");
+    bool IsPlaceholder(System.Windows.Media.ImageSource image);
+    int FailureCount(Entry entry);
+    void ResetFailures();
+}
+
+internal interface IShortcutEditor
+{
+    object[] List();
+    object Status();
+    ShortcutResult Reset(string id);
+    ShortcutResult Apply(string id, string? combo);
+}
+
+// Adaptateur du ShortcutManager réel (ses membres restent internes et inchangés).
+internal sealed class ShortcutEditor : IShortcutEditor
+{
+    readonly ShortcutManager manager;
+    internal ShortcutEditor(ShortcutManager manager) => this.manager = manager;
+    public object[] List() => manager.List();
+    public object Status() => manager.Status();
+    public ShortcutResult Reset(string id) => manager.Reset(id);
+    public ShortcutResult Apply(string id, string? combo) => manager.Apply(id, combo);
 }

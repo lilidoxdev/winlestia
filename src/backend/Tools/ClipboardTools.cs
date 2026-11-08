@@ -19,7 +19,7 @@ using WinClipboard = Windows.ApplicationModel.DataTransfer.Clipboard;
 namespace PanneauxGlass;
 // Un observateur discret : il n'enregistre que ce que Windows a déjà mis dans le presse-papiers, et n'y écrit jamais
 // sauf si dj redemande un élément.
-internal sealed class ClipboardService : IDisposable
+internal sealed class ClipboardService : IClipboardService, IDisposable
 {
     // Intervalle de sondage du presse-papiers : réactif sans coûter de processeur.
     const int PollMs = 750;
@@ -28,7 +28,7 @@ internal sealed class ClipboardService : IDisposable
     bool busy, disposed; string last = ""; uint lastSequence;
     [DllImport("user32.dll")] static extern uint GetClipboardSequenceNumber();
     internal event Action? Changed;
-    internal IReadOnlyList<ClipboardItem> Items => items;
+    public IReadOnlyList<ClipboardItem> Items => items;
     internal ClipboardService()
     {
         folder = Path.Combine(Store.DataDir, "clipboard");
@@ -64,13 +64,13 @@ internal sealed class ClipboardService : IDisposable
         Save();
         Changed?.Invoke();
     }
-    internal void TogglePin(ClipboardItem item)
+    public void TogglePin(ClipboardItem item)
     {
         item.Pinned = !item.Pinned;
         Save();
         Changed?.Invoke();
     }
-    internal void CopyBack(ClipboardItem item)
+    public void CopyBack(ClipboardItem item)
     {
         try
         {

@@ -49,7 +49,7 @@ internal sealed partial class Coordinator
     }
     void BuildTray()
     {
-        tray.Show("Winlestia · dj");
+        tray.Show("Winlestia · " + UserName.First);
         // Shell Qt : l'icône de la zone de notification permet d'atteindre les réglages même sans dock
         // (le menu est affiché par le NotifyIcon lui-même au clic droit).
         if (Program.QtMode)

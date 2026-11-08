@@ -22,6 +22,7 @@ internal static partial class Native
     // schtasks peut durer jusqu'à 15 s : exécuté en fond, l'état demandé reste visible via Autostart pendant ce temps.
     internal static void SetAutostart(bool value)
     {
+        // Nom historique conservé pour compatibilité (valeur "Panneaux" de la clé Run des installations existantes).
         System.Threading.Volatile.Write(ref autostartDesired, value ? 1 : 0);
         System.Threading.Tasks.Task.Run(() => { lock (autostartGate) { try { if (value) { if (AutostartTask.Create()) DropRun(
             ); else { Store.Log(
@@ -48,7 +49,7 @@ internal static partial class Native
             throw new InvalidOperationException("Le Bureau Windows n’a pas retenu le réglage.");
     }
 }
-internal sealed class IconLoader : IDisposable
+internal sealed class IconLoader : IIconSource, IDisposable
 {
     [StructLayout(LayoutKind.Sequential)]
     struct Size
@@ -69,11 +70,12 @@ internal sealed class IconLoader : IDisposable
     readonly Thread worker; internal int LoadedCount => images.Count; internal int Failures;
     internal IconLoader()
     {
+        // Nom historique conservé pour compatibilité (nom de thread vu dans les journaux et débogueurs).
         worker = new Thread(Work) { IsBackground = true, Name = "Panneaux shell icons" };
         worker.SetApartmentState(ApartmentState.STA);
         worker.Start();
     }
-    internal void Load(Entry entry, Action<ImageSource> callback, string scope = "")
+    public void Load(Entry entry, Action<ImageSource> callback, string scope = "")
     {
         string key = entry.Id + "|" + entry.IconPath;
         if (images.TryGetValue(key, out var value))
@@ -173,8 +175,8 @@ internal sealed class IconLoader : IDisposable
             Store.Log("Icône de secours: " + entry.Name);
         return plate;
     }
-    internal bool IsPlaceholder(ImageSource image) => placeholders.TryGetValue(image, out _);
-    internal int FailureCount(Entry entry) => failed.TryGetValue(entry.Id + "|" + entry.IconPath, out var f) ? f.Count : 0;
+    public bool IsPlaceholder(ImageSource image) => placeholders.TryGetValue(image, out _);
+    public int FailureCount(Entry entry) => failed.TryGetValue(entry.Id + "|" + entry.IconPath, out var f) ? f.Count : 0;
     // Date d'écriture la plus récente de la source d'icône et de la cible (fichiers locaux seulement) ; une source qui
     // apparaît ou change donne à son icône une nouvelle série d'essais.
     static DateTime SourceStamp(Entry entry)
@@ -198,7 +200,7 @@ internal sealed class IconLoader : IDisposable
         }
         return stamp;
     }
-    internal void ResetFailures()
+    public void ResetFailures()
     {
         foreach (var item in failed)
             if (SourceStamp(item.Value.Entry) != item.Value.Stamp)

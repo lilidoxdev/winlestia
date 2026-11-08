@@ -18,28 +18,28 @@ internal sealed partial class QtShellBridge
     void OnDictationCapture(BridgeCall c)
     {
         if (Flag(c.Args, "enabled"))
-            dictation.BeginCapture();
+            system.BeginDictationCapture();
         else
-            dictation.EndCapture();
+            system.EndDictationCapture();
     }
 
     [BridgeAction("media")]
     async Task OnMedia(BridgeCall c)
     {
-        await media.CommandAsync(Text(c.Args, "action"), Number(c.Args, "value"));
+        await system.MediaCommand(Text(c.Args, "action"), Number(c.Args, "value"));
     }
 
     [BridgeAction("mediaVolume")]
     async Task OnMediaVolume(BridgeCall c)
     {
-        await mixer.SetMediaVolume(Math.Clamp(Number(c.Args, "value"), 0, 100));
+        await system.SetMediaVolume(Math.Clamp(Number(c.Args, "value"), 0, 100));
     }
 
     [BridgeAction("volume")]
     void OnVolume(BridgeCall c)
     {
-        audio.SetVolume(Math.Clamp(Number(c.Args, "value"), 0, 100));
-        sound = audio.Read();
+        system.SetVolume(Math.Clamp(Number(c.Args, "value"), 0, 100));
+        sound = system.ReadAudio();
     }
 
     [BridgeAction("brightness")]
@@ -50,8 +50,7 @@ internal sealed partial class QtShellBridge
             _ = SetDisplay((int)Number(c.Args, "id"), brightLevel, false);
         else
         {
-            Native.GetCursorPos(out var point);
-            await MonitorBrightness.SetAsync(point, brightLevel);
+            await system.SetBrightnessAtCursor(brightLevel);
             nextBrightness = DateTime.MinValue;
         }
     }
@@ -59,25 +58,25 @@ internal sealed partial class QtShellBridge
     [BridgeAction("wifiConnect")]
     void OnWifiConnect(BridgeCall c)
     {
-        _ = wifi.ConnectAsync(Text(c.Args, "ssid"), Text(c.Args, "password"));
+        _ = system.WifiConnect(Text(c.Args, "ssid"), Text(c.Args, "password"));
     }
 
     [BridgeAction("wifiForget")]
     void OnWifiForget(BridgeCall c)
     {
-        _ = wifi.ForgetAsync(Text(c.Args, "ssid"));
+        _ = system.WifiForget(Text(c.Args, "ssid"));
     }
 
     [BridgeAction("wifiPortal")]
     void OnWifiPortal(BridgeCall c)
     {
-        WifiHost.OpenPortal();
+        system.OpenWifiPortal();
     }
 
     [BridgeAction("wifiSettings")]
     void OnWifiSettings(BridgeCall c)
     {
-        WifiHost.OpenSettings(Text(c.Args, "page") == "location");
+        system.OpenWifiSettings(Text(c.Args, "page") == "location");
     }
 
     [BridgeAction("radio")]
@@ -87,7 +86,7 @@ internal sealed partial class QtShellBridge
             var radioWifi = Text(c.Args, "kind") == "wifi";
             try
             {
-                await connections.ToggleAsync(radioWifi ? RadioKind.WiFi : RadioKind.Bluetooth);
+                await system.ToggleRadio(radioWifi ? RadioKind.WiFi : RadioKind.Bluetooth);
             }
             catch (RadioAccessDeniedException)
             {
@@ -113,7 +112,7 @@ internal sealed partial class QtShellBridge
                 throw;
             }
         }
-        connection = await connections.ReadAsync();
+        connection = await system.ReadConnections();
     }
 
     [BridgeAction("audio")]
@@ -131,38 +130,38 @@ internal sealed partial class QtShellBridge
     [BridgeAction("sessionVolume")]
     async Task OnSessionVolume(BridgeCall c)
     {
-        await mixer.SetApplication(c.Id, Number(c.Args, "value"), null);
+        await system.SetApplication(c.Id, Number(c.Args, "value"), null);
     }
 
     [BridgeAction("sessionMute")]
     async Task OnSessionMute(BridgeCall c)
     {
-        await mixer.SetApplication(c.Id, null, Flag(c.Args, "muted"));
+        await system.SetApplication(c.Id, null, Flag(c.Args, "muted"));
     }
 
     [BridgeAction("deviceVolume")]
     async Task OnDeviceVolume(BridgeCall c)
     {
-        await mixer.SetDevice(c.Id, Number(c.Args, "value"), null, false);
+        await system.SetDevice(c.Id, Number(c.Args, "value"), null, false);
     }
 
     [BridgeAction("deviceMute")]
     async Task OnDeviceMute(BridgeCall c)
     {
-        await mixer.SetDevice(c.Id, null, Flag(c.Args, "muted"), false);
+        await system.SetDevice(c.Id, null, Flag(c.Args, "muted"), false);
     }
 
     [BridgeAction("deviceSelect")]
     async Task OnDeviceSelect(BridgeCall c)
     {
-        await mixer.SetDevice(c.Id, null, null, true);
-        sound = audio.Read();
+        await system.SetDevice(c.Id, null, null, true);
+        sound = system.ReadAudio();
     }
 
     [BridgeAction("masterMute")]
     void OnMasterMute(BridgeCall c)
     {
-        audio.SetMute(Flag(c.Args, "muted"));
-        sound = audio.Read();
+        system.SetMute(Flag(c.Args, "muted"));
+        sound = system.ReadAudio();
     }
 }

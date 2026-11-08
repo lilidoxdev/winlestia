@@ -69,7 +69,7 @@ jobs:
       - name: Resume de couverture
         shell: pwsh
         run: |
-          $floor = 15
+          $floor = 16
           $file = Get-ChildItem TestResults -Recurse -Filter coverage.cobertura.xml | Select-Object -First 1
           if (-not $file) { throw 'coverage.cobertura.xml introuvable.' }
           $root = ([xml](Get-Content $file.FullName -Raw)).coverage

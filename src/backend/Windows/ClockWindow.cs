@@ -116,6 +116,6 @@ internal sealed class ClockWindow : GlassWindow
         day.Text = char.ToUpper(label[0], CultureInfo.GetCultureInfo("fr-FR")) + label[1..];
         greeting.Text = Greeting(now);
     }
-    internal static string Greeting(DateTime at) => at.Hour switch { < 6 => "Bonne nuit, dj", < 12 => "Bonjour, dj", < 18
-        => "Bel après-midi, dj", _ => "Bonsoir, dj" };
+    internal static string Greeting(DateTime at) => (at.Hour switch { < 6 => "Bonne nuit, ", < 12 => "Bonjour, ", < 18
+        => "Bel après-midi, ", _ => "Bonsoir, " }) + UserName.First;
 }

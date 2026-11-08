@@ -22,6 +22,7 @@ public static class Store
             string? env = Environment.GetEnvironmentVariable("WINLESTIA_DATA_DIR");
             if (dirInit && dirEnv == env && dirCached != null)
                 return dirCached;
+            // Nom historique conservé pour compatibilité (dossier de données des installations existantes).
             string d = env is { Length: > 0 } o ? o : Path.Combine(Environment.GetFolderPath(
                 Environment.SpecialFolder.LocalApplicationData), "Panneaux");
             try

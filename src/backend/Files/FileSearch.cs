@@ -94,6 +94,12 @@ internal sealed class FileSearch : IDisposable
     long latest;
     FileSnapshot? snapshot;
     bool disposed;
+    readonly Func<string?, long, CancellationToken, Task<FileSnapshot>> query;
+
+    internal FileSearch() => query = QueryAsync;
+
+    // Couture d'essai : la requête (index Windows Search par défaut) est remplaçable, les tests ne touchent aucun index.
+    internal FileSearch(Func<string?, long, CancellationToken, Task<FileSnapshot>> query) => this.query = query;
 
     static string Profile => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
@@ -122,7 +128,7 @@ internal sealed class FileSearch : IDisposable
                 FileSnapshot result;
                 try
                 {
-                    result = await QueryAsync(term, generation, cts.Token);
+                    result = await query(term, generation, cts.Token);
                 }
                 catch (OperationCanceledException) { return; }
                 lock (gate)

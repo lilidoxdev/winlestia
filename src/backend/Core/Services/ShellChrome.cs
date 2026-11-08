@@ -75,7 +75,7 @@ internal static class ShellChrome
         logo.Margin = new Thickness(5, 0, 12, 0);
         brand.Children.Add(logo);
         brand.Children.Add(UI.Text("Winlestia", 18, null, true));
-        var dj = UI.Text(" / dj", 13, UI.Dim);
+        var dj = UI.Text(" / " + UserName.First, 13, UI.Dim);
         dj.VerticalAlignment = VerticalAlignment.Center;
         brand.Children.Add(dj);
         row.Children.Add(brand);

@@ -2,10 +2,9 @@
 // processus Qt ni service du bureau. Le propriétaire est factice ; Store pointe sur un dossier temporaire (aucune donnée utilisateur).
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 using PanneauxGlass;
 namespace Winlestia.Tests;
@@ -15,6 +14,7 @@ internal sealed class StubKeys : IShortcutBindings
 {
     internal readonly List<string> Calls = new();
     internal bool Accept = true;
+    // Le pont n'utilise pas Global : GlobalShortcut (RegisterHotKey) est exposé par IShortcutBindings, hors du périmètre du pont.
     public GlobalShortcut Global => throw new NotSupportedException();
     public string ShortcutStatus => "";
     public string PaletteStatus => "";
@@ -47,9 +47,11 @@ internal sealed class StubOwner : IBridgeOwner
     internal readonly StubKeys KeysStub = new();
     internal bool Taskbar;
     public IShortcutBindings Keys => KeysStub;
-    public ShortcutManager Shortcuts { get; set; } = null!;
-    public ClipboardService QtClipboard => throw new NotSupportedException();
-    public IconLoader Icons => throw new NotSupportedException();
+    public IShortcutEditor Shortcuts { get; set; } = new StubShortcuts();
+    internal readonly StubClipboard ClipboardStub = new();
+    internal readonly StubIcons IconsStub = new();
+    public IClipboardService QtClipboard => ClipboardStub;
+    public IIconSource Icons => IconsStub;
     public bool TaskbarEnabled => Taskbar;
     public void SetTheme(string id) => Calls.Add("SetTheme:" + id);
     public void SetTaskbar(bool enabled) => Calls.Add("SetTaskbar:" + enabled);
@@ -89,6 +91,7 @@ internal sealed class BridgeRig : IDisposable
 {
     internal readonly StubOwner Owner = new();
     internal readonly QtShellBridge Bridge;
+    internal readonly StubSystem Sys = new();
     internal readonly TempDir Dir = new();
     readonly Preferences state = Store.State;
     readonly List<Entry> entries = Store.Entries;
@@ -101,28 +104,18 @@ internal sealed class BridgeRig : IDisposable
         Store.State = new Preferences();
         Store.Entries = new List<Entry>();
         Store.Missing = new HashSet<string>();
-        // Sans constructeur : ni pipe, ni Process Qt, ni hooks, ni initialiseurs de champs (registre, threads audio, Explorateur).
-        Bridge = (QtShellBridge)RuntimeHelpers.GetUninitializedObject(typeof(QtShellBridge));
         var dispatcher = Dispatcher.CurrentDispatcher;
-        Set("owner", Owner);
-        Set("options", RunOptions.Default);
-        Set("dispatcher", dispatcher);
-        Set("cancellation", new CancellationTokenSource());
-        Set("wake", new EventWaitHandle(false, EventResetMode.AutoReset));
-        Set("events", new Queue<(string name, long epoch)>());
-        Set("icons", new Dictionary<string, string>());
-        Set("requested", new HashSet<string>());
-        Set("dockEntries", new Dictionary<string, Entry>());
-        Set("tiler", new WindowTiler());
-        Set("frame", new ScreenFrameReservations());
-        Set("fileSearch", new FileSearch());
-        Set("bars", new AudioBarsHost());
-        Set("social", new SocialService(dispatcher, () => { }));
-        Set("bookmarks", new BookmarksService(dispatcher, () => { }));
+        var social = new SocialService(dispatcher, () => { });
+        social.TestChime = _ => Owner.Calls.Add("Chime");
+        // Vrai constructeur d'essai : ni pipe, ni processus Qt, ni hook ; l'OS est remplacé par System (StubSystem).
+        Bridge = new QtShellBridge(Owner, RunOptions.Default, new BridgeParts(Sys, new EventWaitHandle(false, EventResetMode.AutoReset),
+            new WindowTiler(), new ScreenFrameReservations(), new FileSearch(CannedHits), new AudioBarsHost(), social,
+            new BookmarksService(dispatcher, () => { }), Dir.Path));
     }
 
-    void Set(string field, object value)
-        => typeof(QtShellBridge).GetField(field, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(Bridge, value);
+    static Task<FileSnapshot> CannedHits(string? term, long gen, CancellationToken token)
+        => Task.FromResult(new FileSnapshot(gen, FileSearch.Ok,
+            new[] { new FileHit("a.txt", "C:/Users/x/a.txt"), new FileHit("b.exe", "C:/Users/x/b.exe") }));
 
     internal Preferences Prefs => Store.State;
 
@@ -151,6 +144,18 @@ internal sealed class BridgeRig : IDisposable
         var frame = new DispatcherFrame();
         Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => frame.Continue = false));
         Dispatcher.PushFrame(frame);
+    }
+
+    // Pompe le dispatcher jusqu'à ce que `done` soit vrai (au plus 5 s) : les actions détachées répondent par BeginInvoke.
+    internal bool PumpUntil(Func<bool> done)
+    {
+        var until = DateTime.UtcNow.AddSeconds(5);
+        while (!done() && DateTime.UtcNow < until)
+        {
+            Pump();
+            Thread.Sleep(5);
+        }
+        return done();
     }
 
     public void Dispose()

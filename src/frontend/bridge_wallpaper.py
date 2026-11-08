@@ -88,9 +88,17 @@ class WallpaperMixin:
                     return
                 made = thumb_for(path)
                 if made:
-                    self.wallpaperThumbReady.emit(path, Path(made).as_uri())
+                    try:
+                        self.wallpaperThumbReady.emit(path, Path(made).as_uri())
+                    except RuntimeError:
+                        # Objet Qt déjà détruit à la fermeture : plus rien à notifier.
+                        return
 
         threading.Thread(target=run, daemon=True).start()
+
+    def stopWallpaperThumbs(self):
+        # À la fermeture : toute demande en cours est périmée, le thread de vignettes s'arrête avant d'émettre.
+        self._thumb_job = getattr(self, '_thumb_job', 0) + 1
 
     @Slot()
     def requestWallpaperPicker(self):

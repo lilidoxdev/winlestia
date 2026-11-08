@@ -479,6 +479,7 @@ class Bridge(
     dockQuiet = Property(bool, lambda s: s.dock_quiet(s._screen), notify=frameChanged)
 
     def stop(self):
+        self.stopWallpaperThumbs()
         if getattr(self, '_click_picker', None):
             self._click_picker.stop()
         if getattr(self, 'glass', None):

@@ -10,7 +10,7 @@ $taskBackup=Join-Path $taskRoot 'avant-installation'
 New-Item -ItemType Directory -Path $taskBackup -Force | Out-Null
 if(-not (Test-Path -LiteralPath $taskExecutable)){throw "Compiler Glass avant son activation."}
 $taskLinks=@((Join-Path $taskDesktop 'Panneaux.lnk'),(Join-Path $taskPrograms 'Panneaux - Espace personnel.lnk'),
-    (Join-Path $taskPrograms 'Panneaux Glass.lnk'))
+    (Join-Path $taskPrograms 'Winlestia.lnk'))
 $taskShell=New-Object -ComObject WScript.Shell
 foreach($taskPath in $taskLinks) {
     if(Test-Path -LiteralPath $taskPath) {
@@ -23,7 +23,7 @@ foreach($taskPath in $taskLinks) {
     $taskLink.Arguments='--show'
     $taskLink.WorkingDirectory=$taskRoot
     $taskLink.WindowStyle=1
-    $taskLink.Description='Panneaux Glass — espace personnel de dj'
+    $taskLink.Description='Winlestia — espace personnel'
     $taskLink.IconLocation=(Join-Path $taskRoot 'glass.ico')+',0'
     $taskLink.Save()
 }

@@ -34,7 +34,9 @@ internal sealed partial class SocialService : IDisposable
         QueueSave();
         Changed();
     }
-    internal void TestSound() => SocialChime.Play(Store.State.SocialVolume);
+    // Son d'essai : remplaçable par les tests pour ne rien jouer.
+    internal Action<int> TestChime { get; set; } = SocialChime.Play;
+    internal void TestSound() => TestChime(Store.State.SocialVolume);
 
     // ---- Environnement et vues -------------------------------------------------------------------------------
     Task<CoreWebView2Environment> GetEnvironment()

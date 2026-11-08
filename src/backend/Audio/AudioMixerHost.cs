@@ -22,6 +22,7 @@ internal sealed class AudioMixerHost : IDisposable
     }
     internal AudioMixerHost()
     {
+        // Nom historique conservé pour compatibilité (nom de thread vu dans les journaux).
         thread = new Thread(Loop) { IsBackground = true, Name = "Panneaux Audio" };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();

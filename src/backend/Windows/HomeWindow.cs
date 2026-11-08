@@ -58,7 +58,7 @@ internal sealed partial class HomeWindow : GlassWindow
         logo.Margin = new Thickness(0, 0, 16, 0);
         brand.Children.Add(logo);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text("Ton espace, dj", 29, null, true));
+        titles.Children.Add(UI.Text("Ton espace, " + UserName.First, 29, null, true));
         date = UI.Text("", 12, UI.Dim);
         date.Margin = new Thickness(0, 5, 0, 0);
         titles.Children.Add(date);

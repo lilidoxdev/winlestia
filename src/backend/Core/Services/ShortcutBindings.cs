@@ -5,6 +5,13 @@ namespace PanneauxGlass;
 
 internal enum HotkeyAction { None, Rescue, Palette, Settings, Wallpaper, Pin, Capture, Toggle }
 
+// Règle pure : quand les réglages sont ouverts, Palette, Capture et Toggle sont ignorés ; les autres actions passent toujours.
+internal static class ShortcutGateRules
+{
+    public static bool IsBlockedBySettings(HotkeyAction action, bool settingsOpen) => settingsOpen
+        && action is HotkeyAction.Palette or HotkeyAction.Capture or HotkeyAction.Toggle;
+}
+
 internal interface IShortcutBindings : IDisposable
 {
     GlobalShortcut Global { get; }

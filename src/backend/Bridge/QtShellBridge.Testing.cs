@@ -10,6 +10,12 @@ internal sealed partial class QtShellBridge
     // et la télémétrie. Renvoie la réponse brute éventuelle (null = réponse d'état à assembler).
     internal Task<string?> RunAction(string command, BridgeCall call) => actionTable.Run(this, command, call, Store.Log);
 
+    // Messages différés (réponse au prochain échange), lus par les tests.
+    internal string? LateNotice => lateNotice;
+    internal object? LateWallpaperPicker => lateWallpaperPicker;
+    internal AudioSnapshot? LastSound => sound;
+    internal Dictionary<string, Entry> DockEntries => dockEntries;
+
     // Évènements en attente, filtrés comme dans Handle, puis vidés.
     internal string[] DrainEvents()
     {
@@ -18,3 +24,15 @@ internal sealed partial class QtShellBridge
         return queued;
     }
 }
+
+// Pièces injectées dans le constructeur d'essai du pont : le banc de test les fournit, la production n'y passe pas.
+internal sealed record BridgeParts(
+    IBridgeSystem System,
+    System.Threading.EventWaitHandle Wake,
+    WindowTiler Tiler,
+    ScreenFrameReservations Frame,
+    FileSearch FileSearch,
+    AudioBarsHost Bars,
+    SocialService Social,
+    BookmarksService Bookmarks,
+    string Directory);

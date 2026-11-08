@@ -14,7 +14,7 @@ public class BridgeHandlerTests
     });
 
     [Fact]
-    public void RealTableCoversAtLeastOneHundredActions() => Assert.True(QtShellBridge.ActionNames.Count >= 100);
+    public void RealTableRegistersExactlyTheSchemaActions() => Assert.Equal(102, QtShellBridge.ActionNames.Count);
 
     [Fact]
     public void UnknownCommandLeavesTheStateReply() => With(r =>
@@ -420,7 +420,7 @@ public class BridgeHandlerTests
             var p = new Preferences();
             var g = new GlobalShortcut(IntPtr.Zero, p.Shortcut, p.PaletteShortcut, p.PinShortcut, p.CaptureShortcut,
                 p.WallpaperShortcut, p.SettingsShortcut);
-            r.Owner.Shortcuts = new ShortcutManager(g, () => p, () => { });
+            r.Owner.Shortcuts = new ShortcutEditor(new ShortcutManager(g, () => p, () => { }));
             string Combo() => ((dynamic)r.Owner.Shortcuts.List().First(o => (string)((dynamic)o).id == "palette")).combo;
             string before = Combo();
             r.Run("shortcut", "{\"id\":\"palette\",\"combo\":\"Ctrl+Alt+K\"}");

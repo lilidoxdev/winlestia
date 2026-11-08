@@ -5,9 +5,9 @@ namespace PanneauxGlass;
 internal sealed partial class Coordinator : IBridgeOwner
 {
     IShortcutBindings IBridgeOwner.Keys => Keys;
-    ShortcutManager IBridgeOwner.Shortcuts => Shortcuts;
-    ClipboardService IBridgeOwner.QtClipboard => QtClipboard;
-    IconLoader IBridgeOwner.Icons => Icons;
+    IShortcutEditor IBridgeOwner.Shortcuts => new ShortcutEditor(Shortcuts);
+    IClipboardService IBridgeOwner.QtClipboard => QtClipboard;
+    IIconSource IBridgeOwner.Icons => Icons;
     bool IBridgeOwner.TaskbarEnabled => TaskbarEnabled;
 
     void IBridgeOwner.SetTheme(string id) => SetTheme(id);

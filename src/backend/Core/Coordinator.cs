@@ -169,12 +169,12 @@ internal sealed partial class Coordinator : IDisposable
         switch (action)
         {
             case HotkeyAction.Rescue: Rescue(); break;
-            case HotkeyAction.Palette: if (!state.SettingsOpen) TogglePalette(); break;
+            case HotkeyAction.Palette: if (!ShortcutGateRules.IsBlockedBySettings(action, state.SettingsOpen)) TogglePalette(); break;
             case HotkeyAction.Settings: if (QtShell != null) QtShell.Send("settings"); else Settings(); break;
             case HotkeyAction.Wallpaper: QtShell?.Send("wallpaper-switcher"); break;
             case HotkeyAction.Pin: ToggleAlwaysOnTop(); break;
-            case HotkeyAction.Capture: if (!state.SettingsOpen) OpenCapture(); break;
-            case HotkeyAction.Toggle: if (!state.SettingsOpen) ToggleShortcut(); break;
+            case HotkeyAction.Capture: if (!ShortcutGateRules.IsBlockedBySettings(action, state.SettingsOpen)) OpenCapture(); break;
+            case HotkeyAction.Toggle: if (!ShortcutGateRules.IsBlockedBySettings(action, state.SettingsOpen)) ToggleShortcut(); break;
         }
         return IntPtr.Zero;
     }
