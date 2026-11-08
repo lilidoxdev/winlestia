@@ -12,10 +12,15 @@ internal static class UserName
     static string? cached;
     public static string First => cached ??= FirstOf(DisplayName(), Environment.UserName);
 
-    // Partie pure : premier mot du nom d'affichage, sinon repli sur le nom de session.
+    // Partie pure : prénom du nom d'affichage, sinon repli sur le nom de session.
+    // Active Directory rend parfois « Nom, Prénom » : la virgule inverse l'ordre, donc on prend ce qui la suit.
     internal static string FirstOf(string? display, string? fallback)
     {
-        string first = (display ?? "").Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+        string name = (display ?? "").Trim();
+        int comma = name.IndexOf(',');
+        if (comma >= 0)
+            name = name[(comma + 1)..];
+        string first = name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? "";
         if (first.Length == 0)
             first = (fallback ?? "").Trim();
         return first.Length == 0 ? "toi" : first;

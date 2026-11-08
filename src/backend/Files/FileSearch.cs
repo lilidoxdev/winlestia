@@ -60,6 +60,14 @@ internal static class FileQuery
         return sb.ToString();
     }
 
+    // Une ligne sans chemin est inutilisable (rien à révéler) ; sans nom d'affichage on retombe sur le nom de fichier.
+    internal static FileHit? ToHit(string? path, string? name)
+    {
+        if (string.IsNullOrEmpty(path))
+            return null;
+        return new FileHit(string.IsNullOrEmpty(name) ? Path.GetFileName(path) : name, path);
+    }
+
     internal static string EscapeLiteral(string text) => text.Replace("'", "''");
 
     static readonly HashSet<string> ExecutableExtensions = new(StringComparer.OrdinalIgnoreCase) {
@@ -189,8 +197,9 @@ internal sealed class FileSearch : IDisposable
             {
                 string path = Convert.ToString((object?)r.Fields.Item(0).Value) ?? "";
                 string name = Convert.ToString((object?)r.Fields.Item(1).Value) ?? "";
-                if (path.Length > 0)
-                    items.Add(new(name.Length > 0 ? name : Path.GetFileName(path), path));
+                var hit = FileQuery.ToHit(path, name);
+                if (hit != null)
+                    items.Add(hit);
                 r.MoveNext();
             }
             r.Close();

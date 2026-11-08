@@ -36,7 +36,7 @@ internal sealed partial class QtShellBridge
             {
                 try
                 {
-                    return system.CaptureWallpaper(shotTarget);
+                    return wallpaperPort.CaptureWallpaper(shotTarget);
                 }
                 catch (Exception ex)
                 {
@@ -57,7 +57,7 @@ internal sealed partial class QtShellBridge
     [BridgeAction("wallpaperChanged")]
     void OnWallpaperChanged(BridgeCall c)
     {
-        system.NotifyWallpaper();
+        wallpaperPort.NotifyWallpaper();
     }
 
     [BridgeAction("captureShortcutMode")]
@@ -129,7 +129,7 @@ internal sealed partial class QtShellBridge
     {
         _ = Task.Run(() =>
         {
-            var picked = system.WallpaperPicker();
+            var picked = wallpaperPort.WallpaperPicker();
             dispatcher.BeginInvoke((Action)(() => lateWallpaperPicker = picked));
         });
         // Détaché : le pipe sert une requête à la fois et le COM peut prendre 5 s.
@@ -144,12 +144,12 @@ internal sealed partial class QtShellBridge
         bool light = LightRendering;
         _ = Task.Run(() =>
         {
-            var done = system.ApplyWallpaper(wp, wd, light);
+            var done = wallpaperPort.ApplyWallpaper(wp, wd, light);
             var names = done.animated;
             dispatcher.BeginInvoke((Action)(() =>
             {
                 if (done.code == 0)
-                    system.NotifyWallpaper();
+                    wallpaperPort.NotifyWallpaper();
                 else
                     lateNotice = done.text;
                 lateWallpaperPicker = new

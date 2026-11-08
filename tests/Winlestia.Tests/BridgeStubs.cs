@@ -10,7 +10,7 @@ using PanneauxGlass;
 using Windows.Devices.Radios;
 namespace Winlestia.Tests;
 
-internal sealed class StubSystem : IBridgeSystem
+internal sealed class StubSystem : IAudioPort, IWifiPort, IDesktopPort, IWallpaperPort, IDisplayPort, IShellPort
 {
     readonly ConcurrentQueue<string> calls = new();
     internal string[] Calls => calls.ToArray();
@@ -114,15 +114,28 @@ internal sealed class StubSystem : IBridgeSystem
         Log("Brightness:" + N(level));
         return Task.CompletedTask;
     }
+    public Task<bool> SetDisplay(int id, double level)
+    {
+        Log("Display:" + id + ":" + N(level));
+        return Task.FromResult(true);
+    }
+    public IReadOnlyList<DisplayBrightness> Displays()
+    {
+        Log("Displays");
+        return Array.Empty<DisplayBrightness>();
+    }
+    // Jamais de vrai processus : on journalise seulement ce que le pont aurait lancé.
+    public void StartProcess(System.Diagnostics.ProcessStartInfo info)
+        => Log("Start:" + info.FileName + (info.ArgumentList.Count > 0 ? " " + string.Join(" ", info.ArgumentList) : ""));
     public bool ActivateApplication(long hwnd)
     {
         Log("Activate:" + hwnd);
         return WindowFound;
     }
-    public IEnumerable<object> PaletteWindows()
+    public IEnumerable<PaletteWindow> PaletteWindows()
     {
         Log("PaletteWindows");
-        return new object[] { new { hwnd = 1L, title = "Fenêtre", exe = "app" } };
+        return new[] { new PaletteWindow(1L, "Fenêtre", "app") };
     }
 
     public DictationSnapshot DictationState() => new("idle", 0.5, new[] { 0.1f }, "fr", "bonjour", "");
@@ -135,10 +148,10 @@ internal sealed class StubSystem : IBridgeSystem
         Log("ApplyWallpaper:" + path + ":" + display + ":" + light);
         return (Wallpaper.code, Wallpaper.text, new[] { "anim.mp4" });
     }
-    public object WallpaperPicker()
+    public WallpaperPickerView WallpaperPicker()
     {
         Log("WallpaperPicker");
-        return new { displays = Array.Empty<object>(), animated = new[] { "anim.mp4" } };
+        return new(Array.Empty<WallpaperDisplayView>(), new[] { "anim.mp4" });
     }
     public string? CaptureWallpaper(Native.Rect? target)
     {

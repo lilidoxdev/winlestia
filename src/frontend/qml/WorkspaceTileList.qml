@@ -216,7 +216,7 @@ ListView {
                     Item {
                         id: body
                         anchors.fill: parent
-                        // Hover lift with overshoot, press squash.
+                        // Léger soulèvement au survol (avec dépassement), écrasement à l'appui.
                         scale: tile.prs ? .96 : tile.hov && browser.fx ? 1.04 : 1
                         Behavior on scale {
                             WorkspaceSpring {}

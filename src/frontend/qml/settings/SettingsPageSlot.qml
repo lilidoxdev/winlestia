@@ -14,7 +14,7 @@ Item {
     id: slot
 
     property int index: 0
-    // Object given to pages (openCustomEditor, openDetectionGuide, openShortcutDialog).
+    // Objet transmis aux pages (openCustomEditor, openDetectionGuide, openShortcutDialog).
     property var host
     property string pendingAnchor
     readonly property var meta: SettingsIndex.pages[index]

@@ -462,7 +462,7 @@ def windows_source(bases, monitor, kind, spi=None):
 
 
 def resolve(monitors, names=None, bases=None, live=None, kind=None, spi=None):
-    # Renvoie {nom_moniteur: WallpaperSource}. names/bases/live/kind/spi sont injectables pour les tests.
+    # {nom_moniteur: WallpaperSource} ; names/bases/live/kind/spi sont injectables pour que les tests évitent le système réel.
     bases = bases or default_bases()
     names = process_names() if names is None else names
     monitors = monitors or [{'name': ''}]

@@ -19,7 +19,7 @@ def thumb_dir():
 
 
 def thumb_for(path):
-    # Renvoie le fichier de vignette de `path` (clé chemin+mtime), en le générant s'il manque ; '' en cas d'échec.
+    # Vignette de `path`, clé chemin+mtime pour invalider quand l'image change ; '' en cas d'échec.
     # Seule la taille réduite est décodée.
     try:
         stat = os.stat(path)

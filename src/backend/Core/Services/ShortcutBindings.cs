@@ -14,7 +14,6 @@ internal static class ShortcutGateRules
 
 internal interface IShortcutBindings : IDisposable
 {
-    GlobalShortcut Global { get; }
     string ShortcutStatus { get; }
     string PaletteStatus { get; }
     string PinStatus { get; }
@@ -45,7 +44,8 @@ internal sealed class ShortcutBindings : IShortcutBindings
         this.rebuildRail = rebuildRail;
         this.refreshLabels = refreshLabels;
     }
-    public GlobalShortcut Global { get; }
+    // Hors de l'interface : seul l'adaptateur réel a besoin de RegisterHotKey, les doublures n'ont rien à fabriquer.
+    GlobalShortcut Global { get; }
     public string ShortcutStatus => Global.Error;
     public string PaletteStatus => Global.PaletteError;
     public string PinStatus => Global.PinError;

@@ -58,25 +58,16 @@ internal sealed partial class SocialService
             foreach (var n in nets)
                 if (data.Counts.TryGetValue(n.Id, out int c))
                 {
-                    n.Count = Math.Clamp(c, 0, 999999);
+                    n.Count = SocialRules.RestoreCount(c, data.TitleNets == null || data.TitleNets.Contains(n.Id));
                     if (data.TitleNets == null)
-                    {
-                        n.Count = Math.Min(n.Count, 99);
                         n.U.Legacy = true;
-                    }
                     else if (data.TitleNets.Contains(n.Id))
-                    {
                         n.U.TitleSeen = true;
-                        n.Count = Math.Min(n.Count, 99);
-                    }
                 }
             if (data.History != null)
             {
-                history.AddRange(data.History.Where(h => h != null && nets.Any(x => x.Id == h.Net)).Select(h => new HistoryItem {
-                    Seq = h.Seq, Net = h.Net, Title = SocialRules.Clip(h.Title, 120),
-                    Body = SocialRules.Clip(h.Body, 140), Kind = h.Kind == "count" ? "count"
-                    : "notif", At = h.At }).OrderByDescending(h => h.Seq).Take(100));
-                nextSeq = Math.Max(Math.Max(1, data.NextSeq), history.Select(h => h.Seq).DefaultIfEmpty(0).Max() + 1);
+                history.AddRange(SocialRules.RestoreHistory(data.History, id => nets.Any(x => x.Id == id)));
+                nextSeq = SocialRules.NextSeqAfter(data.NextSeq, history.Select(h => h.Seq));
             }
             Store.Log("Social historique chargé : " + history.Count + " entrée(s), prochain seq " + nextSeq + (data.History == null
                 ? " (fichier sans historique)" : ""));

@@ -41,19 +41,22 @@ internal static partial class BookmarksCore
         }
     }
 
-    static void Assign(IEnumerable<BNode> nodes)
+    static void Assign(IEnumerable<BNode> nodes) => Assign(nodes, IconsDir);
+
+    // Une icône n'est associée que si le fichier du cache existe déjà : l'interface ne doit jamais pointer vers un fichier absent.
+    internal static void Assign(IEnumerable<BNode> nodes, string iconsDir)
     {
         foreach (var n in nodes)
         {
             if (n.Folder)
             {
-                Assign(n.Children);
+                Assign(n.Children, iconsDir);
                 continue;
             }
             string host = HostOf(n.Url);
             if (host.Length == 0)
                 continue;
-            string file = Path.Combine(IconsDir, Hash(host) + ".png");
+            string file = Path.Combine(iconsDir, Hash(host) + ".png");
             if (File.Exists(file))
                 n.Icon = new Uri(file).AbsoluteUri;
         }

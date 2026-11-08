@@ -26,9 +26,14 @@ internal static partial class BookmarksCore
         return browser + ":u" + Hash((node["url"]?.GetValue<string>() ?? "") + "|" + (node["name"]?.GetValue<string>() ?? ""))[..12];
     }
 
-    static List<BNode> ReadChromium(BrowserInfo b)
+    static List<BNode> ReadChromium(BrowserInfo b) => ParseChromium(ReadShared(b.BookmarksFile), b.Id);
+
+    // Partie pure : le JSON « Bookmarks » de Chromium vers l'arbre. Les bornes de nœuds et de profondeur protègent contre un fichier
+    // géant ou cyclique en apparence ; un dossier vide « Autres » ou « mobiles » n'est pas affiché.
+    internal static List<BNode> ParseChromium(ReadOnlySpan<byte> utf8, string browserId)
     {
-        var root = JsonNode.Parse(ReadShared(b.BookmarksFile))?["roots"];
+        var b = new BrowserInfo { Id = browserId };
+        var root = JsonNode.Parse(utf8)?["roots"];
         var result = new List<BNode>();
         if (root == null)
             return result;

@@ -1,5 +1,5 @@
 // C#12 / Handlers du pont Qt qui touchent l'OS (audio, Wi-Fi, bureaux, corbeille, fond d'écran, Explorateur, presse-papiers, outils) :
-// tous passent par IBridgeSystem / IBridgeOwner, donc par des doublures. Aucun effet réel : la corbeille n'est jamais vidée.
+// tous passent par les ports du pont / IBridgeOwner, donc par des doublures. Aucun effet réel : la corbeille n'est jamais vidée.
 using System;
 using System.IO;
 using System.Linq;
@@ -72,6 +72,25 @@ public class BridgeSystemTests
         r.Run("brightness", "{\"value\":150}");
         r.Run("brightness", "{\"value\":20}");
         Assert.Equal(new[] { "Brightness:100", "Brightness:20" }, r.Sys.Calls);
+    });
+
+    [Fact]
+    public void BrightnessWithAnIdTargetsThatDisplayAndRefreshesTheList() => With(r =>
+    {
+        r.Run("brightness", "{\"id\":2,\"value\":35}");
+        Assert.True(r.Sys.WaitFor("Display:2:35"));
+        Assert.True(r.PumpUntil(() => r.Sys.Calls.Contains("Displays")));
+        Assert.DoesNotContain("Brightness:35", r.Sys.Calls);
+    });
+
+    [Fact]
+    public void FileOpenLaunchesDocumentsDirectlyAndRevealsExecutables() => With(r =>
+    {
+        r.Run("fileSearch", "{\"term\":\"a\",\"gen\":3}");
+        Assert.True(r.PumpUntil(() => r.Run("fileResults").Call.FileItems != null));
+        r.Run("fileOpen", "{\"gen\":3,\"index\":0}");
+        r.Run("fileOpen", "{\"gen\":3,\"index\":1}");
+        Assert.Equal(new[] { "Start:C:/Users/x/a.txt", "Start:explorer.exe /select,C:/Users/x/b.exe" }, r.Sys.Calls);
     });
 
     [Fact]

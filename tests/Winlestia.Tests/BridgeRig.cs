@@ -14,8 +14,6 @@ internal sealed class StubKeys : IShortcutBindings
 {
     internal readonly List<string> Calls = new();
     internal bool Accept = true;
-    // Le pont n'utilise pas Global : GlobalShortcut (RegisterHotKey) est exposé par IShortcutBindings, hors du périmètre du pont.
-    public GlobalShortcut Global => throw new NotSupportedException();
     public string ShortcutStatus => "";
     public string PaletteStatus => "";
     public string PinStatus => "";
@@ -108,7 +106,8 @@ internal sealed class BridgeRig : IDisposable
         var social = new SocialService(dispatcher, () => { });
         social.TestChime = _ => Owner.Calls.Add("Chime");
         // Vrai constructeur d'essai : ni pipe, ni processus Qt, ni hook ; l'OS est remplacé par System (StubSystem).
-        Bridge = new QtShellBridge(Owner, RunOptions.Default, new BridgeParts(Sys, new EventWaitHandle(false, EventResetMode.AutoReset),
+        Bridge = new QtShellBridge(Owner, RunOptions.Default, new BridgeParts(Sys, Sys, Sys, Sys, Sys, Sys,
+            new EventWaitHandle(false, EventResetMode.AutoReset),
             new WindowTiler(), new ScreenFrameReservations(), new FileSearch(CannedHits), new AudioBarsHost(), social,
             new BookmarksService(dispatcher, () => { }), Dir.Path));
     }

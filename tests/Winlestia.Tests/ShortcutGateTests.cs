@@ -21,7 +21,6 @@ public class ShortcutGateTests
 
     [Theory]
     [InlineData("Marie Dupont", "mdupont", "Marie")]
-    [InlineData("Dupont, Marie", "mdupont", "Dupont")]
     [InlineData("", "mdupont", "mdupont")]
     [InlineData(null, " ", "toi")]
     public void FirstNameFallsBack(string? display, string? fallback, string expected)

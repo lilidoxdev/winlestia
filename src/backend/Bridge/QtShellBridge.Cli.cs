@@ -34,10 +34,10 @@ internal sealed partial class QtShellBridge
     // figée) restent hors du thread UI.
     // Fenêtres ouvertes pour la palette et `find windows` : les fenêtres du shell (titres « Panneaux · … ») sont exclues. Appelé
     // hors thread UI.
-    static IEnumerable<object> PaletteWindows()
+    static IEnumerable<PaletteWindow> PaletteWindows()
         => TaskbarNative.Applications()
             .Where(w => !w.Title.StartsWith("Panneaux ·", StringComparison.Ordinal))
-            .Select(w => (object)new { hwnd = w.Handle.ToInt64(), title = w.Title, exe = Path.GetFileNameWithoutExtension(w.Path) });
+            .Select(w => new PaletteWindow(w.Handle.ToInt64(), w.Title, Path.GetFileNameWithoutExtension(w.Path)));
     static async Task<(int code, string text)> WifiCli() => (0, await WifiHost.SummaryAsync());
     Task<(int code, string text)> RunCli(CliCommand c) => c.Kind == CliKind.Wifi ? WifiCli() : c.Kind == CliKind.FindWindows ? Task.Run((
         ) =>
@@ -248,14 +248,14 @@ internal sealed partial class QtShellBridge
     }
     async Task<bool> SetDisplay(int id, double level, bool osd)
     {
-        bool ok = await MonitorBrightness.SetDisplayAsync(id, level);
+        bool ok = await displayPort.SetDisplay(id, level);
         _ = dispatcher.BeginInvoke((Action)(() =>
         {
             if (disposed)
                 return;
             if (ok)
             {
-                displays = MonitorBrightness.Displays();
+                displays = displayPort.Displays();
                 if (osd && Store.State.Osd && !active && !Quiet)
                     Send("osd:brightness:" + (int)Math.Round(level));
             }

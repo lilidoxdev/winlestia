@@ -74,3 +74,43 @@ public class SocialRulesTests
         Assert.InRange(ratio, 0.24, 0.26);
     }
 }
+
+public class SocialRestoreTests
+{
+    static SocialService.HistoryItem H(int seq, string net, string kind = "notif", string title = "t")
+        => new() { Seq = seq, Net = net, Kind = kind, Title = title };
+
+    [Fact]
+    public void HistoryDropsUnknownNetworksAndNullsAndSortsNewestFirst()
+    {
+        var r = SocialRules.RestoreHistory(new SocialService.HistoryItem?[] { H(1, "a"), null, H(3, "zz"), H(2, "a") }, id => id == "a");
+        Assert.Equal(new[] { 2, 1 }, r.Select(h => h.Seq).ToArray());
+    }
+
+    [Fact]
+    public void HistoryClipsTextNormalizesKindAndKeepsHundred()
+    {
+        var items = Enumerable.Range(1, 130).Select(i => H(i, "a", i == 130 ? "weird" : "count", new string('x', 500)));
+        var r = SocialRules.RestoreHistory(items, _ => true);
+        Assert.Equal(100, r.Count);
+        Assert.Equal(130, r[0].Seq);
+        Assert.Equal("notif", r[0].Kind);
+        Assert.Equal("count", r[1].Kind);
+        Assert.Equal(120, r[0].Title.Length);
+    }
+
+    [Theory]
+    [InlineData(0, new[] { 5, 9 }, 10)]
+    [InlineData(50, new[] { 5 }, 50)]
+    [InlineData(-3, new int[0], 1)]
+    public void NextSeqExceedsEverySeen(int saved, int[] seqs, int expected)
+        => Assert.Equal(expected, SocialRules.NextSeqAfter(saved, seqs));
+
+    [Theory]
+    [InlineData(-5, false, 0)]
+    [InlineData(5000000, false, 999999)]
+    [InlineData(500, true, 99)]
+    [InlineData(7, true, 7)]
+    public void CountIsBoundedAndCappedWhenUntrusted(int saved, bool capped, int expected)
+        => Assert.Equal(expected, SocialRules.RestoreCount(saved, capped));
+}

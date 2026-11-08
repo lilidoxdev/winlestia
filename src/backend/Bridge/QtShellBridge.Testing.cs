@@ -27,7 +27,12 @@ internal sealed partial class QtShellBridge
 
 // Pièces injectées dans le constructeur d'essai du pont : le banc de test les fournit, la production n'y passe pas.
 internal sealed record BridgeParts(
-    IBridgeSystem System,
+    IAudioPort Audio,
+    IWifiPort Wifi,
+    IDesktopPort Desktop,
+    IWallpaperPort Wallpaper,
+    IDisplayPort Display,
+    IShellPort Shell,
     System.Threading.EventWaitHandle Wake,
     WindowTiler Tiler,
     ScreenFrameReservations Frame,

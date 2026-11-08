@@ -31,7 +31,7 @@ internal sealed partial class QtShellBridge : IDisposable
     readonly Action networkChanged;
 
     // Services système lourds (registre, threads audio, Explorateur) : créés par le constructeur de production seulement ;
-    // les tests passent par `system` (IBridgeSystem), jamais par ces champs.
+    // les tests passent par les ports (BridgePorts.cs), jamais par ces champs.
     readonly ExplorerAppearance explorer = null!;
     readonly WindowTiler tiler;
     readonly ScreenFrameReservations frame;
@@ -48,7 +48,12 @@ internal sealed partial class QtShellBridge : IDisposable
     readonly PcTelemetry telemetry = null!;
     readonly DictationService dictation;
     readonly FileSearch fileSearch;
-    readonly IBridgeSystem system;
+    readonly IAudioPort audioPort;
+    readonly IWifiPort wifiPort;
+    readonly IDesktopPort desktopPort;
+    readonly IWallpaperPort wallpaperPort;
+    readonly IDisplayPort displayPort;
+    readonly IShellPort shellPort;
 
     CliServer? cli;
     readonly AudioBarsHost bars;
@@ -106,7 +111,12 @@ internal sealed partial class QtShellBridge : IDisposable
     {
         this.options = options;
         owner = coordinator;
-        system = parts.System;
+        audioPort = parts.Audio;
+        wifiPort = parts.Wifi;
+        desktopPort = parts.Desktop;
+        wallpaperPort = parts.Wallpaper;
+        displayPort = parts.Display;
+        shellPort = parts.Shell;
         wake = parts.Wake;
         tiler = parts.Tiler;
         frame = parts.Frame;
@@ -123,7 +133,13 @@ internal sealed partial class QtShellBridge : IDisposable
     internal QtShellBridge(IBridgeOwner coordinator, RunOptions options)
     {
         this.options = options;
-        system = new RealSystem(this);
+        var real = new RealSystem(this);
+        audioPort = real;
+        wifiPort = real;
+        desktopPort = real;
+        wallpaperPort = real;
+        displayPort = real;
+        shellPort = real;
         wake = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\PanneauxCaelestiaWake");
         explorer = new ExplorerAppearance();
         tiler = new WindowTiler();

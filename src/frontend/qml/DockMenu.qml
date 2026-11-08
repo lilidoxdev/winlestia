@@ -1,4 +1,4 @@
-// Windows dock menus: bounded independent window, no full-screen input surface.
+// Menus du dock : fenêtre indépendante et bornée, jamais une surface d'entrée plein écran qui capterait les clics.
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls as C

@@ -48,7 +48,7 @@ internal sealed partial class QtShellBridge
     void OnActivate(BridgeCall c)
     {
         long hwnd = (long)Number(c.Args, "hwnd");
-        if (system.ActivateApplication(hwnd))
+        if (desktopPort.ActivateApplication(hwnd))
             return;
         if (dockEntries.TryGetValue(c.Id, out var pin))
             owner.Launch(pin);
@@ -65,7 +65,7 @@ internal sealed partial class QtShellBridge
     {
         string copied = Text(c.Args, "text");
         if (copied.Length <= 512)
-            system.SetClipboardText(copied);
+            shellPort.SetClipboardText(copied);
     }
 
     [BridgeAction("paletteRun")]
@@ -216,7 +216,7 @@ internal sealed partial class QtShellBridge
     [BridgeAction("quit")]
     void OnQuit(BridgeCall c)
     {
-        _ = dispatcher.BeginInvoke((Action)(() => system.Shutdown()));
+        _ = dispatcher.BeginInvoke((Action)(() => shellPort.Shutdown()));
     }
 
     [BridgeAction("favorite")]

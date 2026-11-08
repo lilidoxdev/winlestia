@@ -66,7 +66,7 @@ internal static partial class BookmarksCore
         catch { return false; }
     }
 
-    static string Hash(string text) => Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+    internal static string Hash(string text) => Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
 
     static SqliteConnection Open(string file)
     {

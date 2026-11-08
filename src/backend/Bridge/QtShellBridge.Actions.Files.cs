@@ -43,13 +43,13 @@ internal sealed partial class QtShellBridge
     async Task OnExplorerPalette(BridgeCall c)
     {
         c.Notice = null;
-        await Task.Run(() => system.SyncExplorerPalette(Text(c.Args, "accent"), Text(c.Args, "background"), Text(c.Args, "text")));
+        await Task.Run(() => shellPort.SyncExplorerPalette(Text(c.Args, "accent"), Text(c.Args, "background"), Text(c.Args, "text")));
     }
 
     [BridgeAction("explorerFolder")]
     void OnExplorerFolder(BridgeCall c)
     {
-        string? picked = system.PickFolder();
+        string? picked = shellPort.PickFolder();
         if (picked != null && !Store.State.ExplorerFolders.Contains(picked))
         {
             Store.State.ExplorerFolders.Add(picked);
@@ -62,7 +62,7 @@ internal sealed partial class QtShellBridge
     {
         Store.State.ExplorerTheme = false;
         Store.Save();
-        c.Notice = await Task.Run(() => system.RestoreExplorer());
+        c.Notice = await Task.Run(() => shellPort.RestoreExplorer());
     }
 
     [BridgeAction("explorerReport")]
@@ -83,27 +83,27 @@ internal sealed partial class QtShellBridge
     [BridgeAction("emptyRecycleBin")]
     void OnEmptyRecycleBin(BridgeCall c)
     {
-        system.EmptyRecycleBin();
+        shellPort.EmptyRecycleBin();
     }
 
     [BridgeAction("desktopSwitch")]
     void OnDesktopSwitch(BridgeCall c)
     {
         int rel = (int)Math.Clamp(Number(c.Args, "relative"), -1, 1), to = (int)Number(c.Args, "index");
-        _ = Task.Run(() => system.SwitchDesktop(to, rel));
+        _ = Task.Run(() => desktopPort.SwitchDesktop(to, rel));
     }
 
     [BridgeAction("desktopNew")]
     void OnDesktopNew(BridgeCall c)
     {
-        _ = Task.Run(() => system.NewDesktop());
+        _ = Task.Run(() => desktopPort.NewDesktop());
     }
 
     [BridgeAction("desktopClose")]
     void OnDesktopClose(BridgeCall c)
     {
         int at = (int)Number(c.Args, "index") - 1;
-        _ = Task.Run(() => system.CloseDesktop(at));
+        _ = Task.Run(() => desktopPort.CloseDesktop(at));
     }
 
     [BridgeAction("recycleFiles")]
@@ -142,13 +142,13 @@ internal sealed partial class QtShellBridge
     [BridgeAction("openFiles")]
     void OnOpenFiles(BridgeCall c)
     {
-        system.OpenFilesHandler();
+        shellPort.OpenFilesHandler();
     }
 
     [BridgeAction("windowList")]
     async Task OnWindowList(BridgeCall c)
     {
-        c.WindowItems = await Task.Run(() => system.PaletteWindows().Take(60).ToArray());
+        c.WindowItems = await Task.Run(() => desktopPort.PaletteWindows().Take(60).ToArray());
     }
 
     [BridgeAction("fileSearch")]
@@ -182,10 +182,10 @@ internal sealed partial class QtShellBridge
                 {
                     var selectInfo = new ProcessStartInfo("explorer.exe") { UseShellExecute = false };
                     selectInfo.ArgumentList.Add("/select," + filePath.Replace("\"", ""));
-                    Process.Start(selectInfo);
+                    shellPort.StartProcess(selectInfo);
                 }
                 else
-                    Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                    shellPort.StartProcess(new ProcessStartInfo(filePath) { UseShellExecute = true });
             }
             catch { c.Notice = "Impossible d’ouvrir ce fichier."; }
         }

@@ -1,4 +1,4 @@
-// language: C# 12, file: QtShellBridge.System.cs, target: Windows 11 / .NET 8, implémentation de production de IBridgeSystem
+// language: C# 12, file: QtShellBridge.System.cs, target: Windows 11 / .NET 8, implémentation de production des ports du pont
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +8,7 @@ namespace PanneauxGlass;
 internal sealed partial class QtShellBridge
 {
     // Délègue aux services du pont (champs lus à l'appel : ils sont affectés par le constructeur de production).
-    sealed class RealSystem : IBridgeSystem
+    sealed class RealSystem : IAudioPort, IWifiPort, IDesktopPort, IWallpaperPort, IDisplayPort, IShellPort
     {
         readonly QtShellBridge b;
         internal RealSystem(QtShellBridge bridge) => b = bridge;
@@ -37,7 +37,7 @@ internal sealed partial class QtShellBridge
         public void OpenFilesHandler() => FilesDefaultHandler.Open();
         public void SetClipboardText(string text) => System.Windows.Clipboard.SetText(text);
         public void Shutdown() => System.Windows.Application.Current.Shutdown();
-        public IEnumerable<object> PaletteWindows() => QtShellBridge.PaletteWindows();
+        public IEnumerable<PaletteWindow> PaletteWindows() => QtShellBridge.PaletteWindows();
 
         public string? PickFolder()
         {
@@ -45,6 +45,10 @@ internal sealed partial class QtShellBridge
                 UseDescriptionForTitle = true };
             return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
         }
+
+        public Task<bool> SetDisplay(int id, double level) => MonitorBrightness.SetDisplayAsync(id, level);
+        public IReadOnlyList<DisplayBrightness> Displays() => MonitorBrightness.Displays();
+        public void StartProcess(System.Diagnostics.ProcessStartInfo info) => System.Diagnostics.Process.Start(info);
 
         public async Task SetBrightnessAtCursor(double level)
         {
@@ -71,11 +75,9 @@ internal sealed partial class QtShellBridge
             var done = WallpaperApply.ApplyKnown(path, display, light);
             return (done.code, done.text, WallpaperApply.Animated());
         }
-        public object WallpaperPicker() => new
-        {
-            displays = WallpaperApply.List().Select(d => new { d.id, d.name, d.width, d.height, d.primary, d.path }).ToArray(),
-            animated = WallpaperApply.Animated()
-        };
+        public WallpaperPickerView WallpaperPicker() => new(
+            WallpaperApply.List().Select(d => new WallpaperDisplayView(d.id, d.name, d.width, d.height, d.primary, d.path)).ToArray(),
+            WallpaperApply.Animated());
         public string? CaptureWallpaper(Native.Rect? target) => WallpaperMedia.CaptureHost(target);
         public void SyncExplorerPalette(string accent, string background, string text) => b.explorer.Sync(accent, background, text);
         public string RestoreExplorer() => b.explorer.Restore();
