@@ -56,7 +56,7 @@ internal static class SystemTools
 internal sealed class LargeFilesWindow : GlassWindow
 {
     readonly StackPanel list = new(); readonly TextBlock status; readonly Button scan; CancellationTokenSource? cancel;
-    internal LargeFilesWindow(Coordinator coordinator) : base("Panneaux Glass — gros fichiers")
+    internal LargeFilesWindow(Coordinator coordinator) : base("Winlestia — gros fichiers")
     {
         Width = 680;
         Height = Math.Min(700, SystemParameters.WorkArea.Height - 80);
@@ -109,7 +109,7 @@ internal sealed class LargeFilesWindow : GlassWindow
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 0, 0, 8) };
         Grid.SetRow(scroll, 2);
         ContentHost.Children.Add(scroll);
-        var note = UI.Text("Rien n’est supprimé depuis Panneaux : chaque ligne ouvre l’Explorateur sur le fichier.", 10, UI.Dim);
+        var note = UI.Text("Rien n’est supprimé depuis Winlestia : chaque ligne ouvre l’Explorateur sur le fichier.", 10, UI.Dim);
         note.TextWrapping = TextWrapping.Wrap;
         Grid.SetRow(note, 3);
         ContentHost.Children.Add(note);

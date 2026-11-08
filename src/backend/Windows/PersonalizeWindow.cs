@@ -22,7 +22,7 @@ internal sealed partial class PersonalizeWindow : GlassWindow
     bool loaded;
     readonly DispatcherTimer applyTimer = new() { Interval = TimeSpan.FromMilliseconds(32) }, saveTimer = new() {
         Interval = TimeSpan.FromMilliseconds(SaveDebounceMs) };
-    internal PersonalizeWindow(Coordinator owner, string? boardId) : base("Panneaux Glass — personnalisation")
+    internal PersonalizeWindow(Coordinator owner, string? boardId) : base("Winlestia — personnalisation")
     {
         coordinator = owner;
         Width = 800;
@@ -79,7 +79,7 @@ internal sealed partial class PersonalizeWindow : GlassWindow
         AddSlider("Espacement des panneaux", 12, 48, Store.State.Gap, v => Store.State.Gap = v, v => Math.Round(v) + " px");
         AddSlider("Marge du Bureau", 20, 100, Store.State.Margin, v => Store.State.Margin = v, v => Math.Round(v) + " px");
         Section("LA BARRE DES TÂCHES ET LE BORD");
-        Check("Utiliser la barre Panneaux à la place de la barre Windows", coordinator.TaskbarEnabled, coordinator.SetTaskbar);
+        Check("Utiliser la barre Winlestia à la place de la barre Windows", coordinator.TaskbarEnabled, coordinator.SetTaskbar);
         Check("Afficher la poignée sur le bord gauche", Store.State.RailSide != "right", value => Store.State.RailSide = value ? "left"
             : "right");
         AddSlider("Largeur de la poignée", 40, 90, Store.State.RailWidth, v => Store.State.RailWidth = v, v => Math.Round(v) + " px");
@@ -94,7 +94,7 @@ internal sealed partial class PersonalizeWindow : GlassWindow
         Check("Replier après 1,8 seconde hors des panneaux", Store.State.AutoHide, value => Store.State.AutoHide = value);
         Check("Mettre le bord en pause pendant le plein écran", Store.State.PauseFullscreen, value =>
             Store.State.PauseFullscreen = value);
-        Check("Lancer Panneaux à l’ouverture de session", Native.Autostart, value => Native.SetAutostart(value));
+        Check("Lancer Winlestia à l’ouverture de session", Native.Autostart, value => Native.SetAutostart(value));
         Section("TES ACCÈS");
         var choices = new WrapPanel();
         foreach (var board in Store.State.Boards)
@@ -127,7 +127,7 @@ internal sealed partial class PersonalizeWindow : GlassWindow
         transfers.Children.Add(import);
         body.Children.Add(transfers);
         Section("LE BUREAU, TOUJOURS ACCESSIBLE");
-        Description("Le secours natif réaffiche et organise tes icônes, arrête Panneaux et désactive son démarrage automatique. Il " +
+        Description("Le secours natif réaffiche et organise tes icônes, arrête Winlestia et désactive son démarrage automatique. Il " +
             "fonctionne même lorsque l’interface ne répond plus.");
         var rescue = UI.Button("Retrouver le Bureau organisé", coordinator.Rescue);
         rescue.HorizontalAlignment = HorizontalAlignment.Left;

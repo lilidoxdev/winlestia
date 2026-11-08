@@ -14,7 +14,7 @@ internal sealed class FocusSetupWindow : GlassWindow
     readonly Coordinator owner; readonly TextBox field; readonly TextBlock preview, status; readonly ComboBox unit = new();
         readonly List<(Button Button, int Value)> presets = new();
     int amount = 25;
-    internal FocusSetupWindow(Coordinator coordinator) : base("Panneaux Glass — minuteur")
+    internal FocusSetupWindow(Coordinator coordinator) : base("Winlestia — minuteur")
     {
         owner = coordinator;
         Width = 560;

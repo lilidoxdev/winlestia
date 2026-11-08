@@ -17,7 +17,7 @@ internal sealed class WebShortcutWindow : GlassWindow
         readonly TextBlock status = UI.Text("Choisis ton image ou conserve le logo actuel.", 12, UI.Dim); readonly CheckBox glass = new() {
         Content = "Afficher un carré de verre derrière le logo" };
     readonly Button recrop; string sourcePath = ""; LogoCrop? crop; BitmapSource? selected; bool manualName;
-    internal WebShortcutWindow(Coordinator coordinator, WebShortcut? original, bool chooseImage = false) : base("Panneaux Glass — "
+    internal WebShortcutWindow(Coordinator coordinator, WebShortcut? original, bool chooseImage = false) : base("Winlestia — "
         + (original == null ? "ajouter un site" : "modifier un site"))
     {
         Width = 650;

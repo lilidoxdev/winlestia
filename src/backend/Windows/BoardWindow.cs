@@ -20,7 +20,7 @@ internal sealed partial class BoardWindow : GlassWindow
         readonly Border emblem = new();
     List<Entry> filtered = new(); int page, capacity = 24, columns = 6, rows = 3; string quick = "", renderKey = "", quickKey = "~";
         bool rendering; Point dragStart; DateTime blockClick;
-    internal BoardWindow(Coordinator coordinator, BoardState model) : base("Panneaux Glass — " + model.Title)
+    internal BoardWindow(Coordinator coordinator, BoardState model) : base("Winlestia — " + model.Title)
     {
         owner = coordinator;
         Model = model;

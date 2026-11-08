@@ -42,7 +42,7 @@ internal sealed class GlassMenu : GlassWindow
         menu.Show();
         menu.Activate();
     }
-    GlassMenu(Coordinator coordinator, Window parent, string title, List<MenuAction> actions) : base("Panneaux Glass — " + title)
+    GlassMenu(Coordinator coordinator, Window parent, string title, List<MenuAction> actions) : base("Winlestia — " + title)
     {
         Owner = parent;
         ShowInTaskbar = coordinator.PreviewMode;

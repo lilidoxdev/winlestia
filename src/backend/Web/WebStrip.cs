@@ -85,7 +85,7 @@ internal sealed class WebStrip : IDisposable
     }
     GlassWindow MakeWindow(string title, bool material)
     {
-        var window = new GlassWindow("Panneaux Glass — " + title) { Radius = 18, MaterialVisible = material,
+        var window = new GlassWindow("Winlestia — " + title) { Radius = 18, MaterialVisible = material,
             ShowInTaskbar = coordinator.PreviewMode };
         window.KeyDown += (_, e) => { if (e.Key == Key.Escape) coordinator.Collapse(); };
         windows.Add(window);

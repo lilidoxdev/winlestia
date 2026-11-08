@@ -19,14 +19,14 @@ internal static partial class BookmarksCore
     internal static string IconsDir => Path.Combine(WorkRoot, "icons");
     static readonly HashSet<string> NoIcon = new(); // hôtes sans icône trouvée : on ne recopie pas la base à chaque scan
 
-    static string HostOf(string url)
+    internal static string HostOf(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var u) || (u.Scheme != Uri.UriSchemeHttp && u.Scheme != Uri.UriSchemeHttps))
             return "";
         return u.Host.ToLowerInvariant();
     }
 
-    static void Collect(IEnumerable<BNode> nodes, Dictionary<string, string> hosts)
+    internal static void Collect(IEnumerable<BNode> nodes, Dictionary<string, string> hosts)
     {
         foreach (var n in nodes)
         {
@@ -116,7 +116,7 @@ internal static partial class BookmarksCore
         }
     }
 
-    static byte[]? Query(SqliteConnection connection, bool chromium, string url, string host)
+    internal static byte[]? Query(SqliteConnection connection, bool chromium, string url, string host)
     {
         string select = chromium
             ? "SELECT b.image_data FROM icon_mapping m JOIN favicon_bitmaps b ON b.icon_id=m.icon_id WHERE m.page_url{0} AND " +
@@ -139,7 +139,7 @@ internal static partial class BookmarksCore
         return null;
     }
 
-    static byte[]? ToPng32(byte[] data)
+    internal static byte[]? ToPng32(byte[] data)
     {
         try
         {

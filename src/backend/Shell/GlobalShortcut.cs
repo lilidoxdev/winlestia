@@ -103,7 +103,7 @@ internal sealed class GlobalShortcut : IDisposable
             && paletteId != 0) || (nextModifiers == pinModifiers && nextKey == pinKey && pinId != 0) || (nextModifiers == captureModifiers
             && nextKey == captureKey && captureId != 0))
         {
-            error = "Cette combinaison est déjà utilisée par Panneaux.";
+            error = "Cette combinaison est déjà utilisée par Winlestia.";
             return false;
         }
         if (wallpaperId != 0 && nextModifiers == wallpaperModifiers && nextKey == wallpaperKey)
@@ -196,7 +196,7 @@ internal sealed class GlobalShortcut : IDisposable
         if ((nextModifiers == modifiers && nextKey == key && customId != 0) || (nextModifiers == paletteModifiers && nextKey == paletteKey
             && paletteId != 0) || (nextModifiers == pinModifiers && nextKey == pinKey && pinId != 0))
         {
-            error = "Cette combinaison est déjà utilisée par Panneaux.";
+            error = "Cette combinaison est déjà utilisée par Winlestia.";
             return false;
         }
         if (captureId != 0 && nextModifiers == captureModifiers && nextKey == captureKey)
@@ -233,7 +233,7 @@ internal sealed class GlobalShortcut : IDisposable
         if ((nextModifiers == modifiers && nextKey == key && customId != 0) || (nextModifiers == paletteModifiers && nextKey == paletteKey
             && paletteId != 0))
         {
-            error = "Cette combinaison est déjà utilisée par Panneaux.";
+            error = "Cette combinaison est déjà utilisée par Winlestia.";
             return false;
         }
         if ((nextModifiers == captureModifiers && nextKey == captureKey && captureId != 0))

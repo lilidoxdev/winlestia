@@ -19,8 +19,8 @@ internal sealed partial class Coordinator : IDisposable
     internal readonly IconLoader Icons = new();
     internal readonly List<BoardWindow> Boards = new();
     readonly Window controller = new() { Width = 1, Height = 1, ShowInTaskbar = false, WindowStyle = WindowStyle.None };
-    readonly GlassWindow rail = new("Panneaux — poignée latérale"), toolbar = new("Panneaux Glass — commandes");
-    readonly GlassWindow leftArrow = new("Panneaux Glass — explorer à gauche"), rightArrow = new("Panneaux Glass — explorer à droite");
+    readonly GlassWindow rail = new("Winlestia — poignée latérale"), toolbar = new("Winlestia — commandes");
+    readonly GlassWindow leftArrow = new("Winlestia — explorer à gauche"), rightArrow = new("Winlestia — explorer à droite");
     internal QtShellBridge? QtShell;
     // Vue des raccourcis globaux pour la page de réglages (liste, réaffectation avec retour arrière, conflits)
     internal ShortcutManager Shortcuts = null!;
@@ -149,7 +149,7 @@ internal sealed partial class Coordinator : IDisposable
         if (!preview)
             Native.MigrateAutostart();
         Store.Save();
-        Store.Log("Démarrage Panneaux " + (typeof(Coordinator).Assembly.GetName().Version?.ToString(3) ?? "?") + " · preview="
+        Store.Log("Démarrage Winlestia " + (typeof(Coordinator).Assembly.GetName().Version?.ToString(3) ?? "?") + " · preview="
             + preview + " · t+" + (int)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds + " ms");
     }
     IntPtr Hook(IntPtr w, int msg, IntPtr wp, IntPtr lp, ref bool handled)

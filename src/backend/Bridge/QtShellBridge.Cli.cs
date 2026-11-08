@@ -218,7 +218,7 @@ internal sealed partial class QtShellBridge
         {
             if (Text(args, "action") == "pin")
             {
-                PinWindow.Open(owner, image);
+                owner.PinImage(image);
                 return "Capture épinglée";
             }
             string text = await OcrService.RecognizeAsync(image);

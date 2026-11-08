@@ -14,7 +14,7 @@ internal static class CornerProof
         UI.Install();
         Store.Load();
         var canvas = new Canvas();
-        var background = new Window { Title = "Panneaux Glass — contrôle des coins", Width = 1000, Height = 370,
+        var background = new Window { Title = "Winlestia — contrôle des coins", Width = 1000, Height = 370,
             WindowStyle = WindowStyle.None, ResizeMode = ResizeMode.NoResize, WindowStartupLocation = WindowStartupLocation.CenterScreen,
             Background = Brushes.Coral, Content = canvas, Topmost = true };
         for (int y = 0; y < 370; y += 24)
@@ -31,9 +31,9 @@ internal static class CornerProof
         Canvas.SetTop(title, 25);
         canvas.Children.Add(title);
         background.Loaded += (_, _) => { double x = background.Left, y = background.Top; Native.Layered = false;
-            var old = new GlassWindow("Panneaux Glass — ancien découpage") { Owner = background, ShowInTaskbar = true, Radius = 42 };
+            var old = new GlassWindow("Winlestia — ancien découpage") { Owner = background, ShowInTaskbar = true, Radius = 42 };
             old.ContentHost.Children.Add(UI.Text("Ancien", 20)); old.MoveInto(x + 35, y + 100, 440, 84, 0, false); Native.Layered = true;
-            var fixedWindow = new GlassWindow("Panneaux Glass — masque alpha") { Owner = background, ShowInTaskbar = true, Radius = 42 };
+            var fixedWindow = new GlassWindow("Winlestia — masque alpha") { Owner = background, ShowInTaskbar = true, Radius = 42 };
             fixedWindow.ContentHost.Children.Add(UI.Text("Masque alpha", 20)); fixedWindow.MoveInto(x + 525, y + 100, 440, 84, 0, false);
                 };
         background.KeyDown += (_, e) => { if (e.Key == System.Windows.Input.Key.Escape) System.Windows.Application.Current.Shutdown(); };

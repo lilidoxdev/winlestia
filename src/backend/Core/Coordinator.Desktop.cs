@@ -49,7 +49,7 @@ internal sealed partial class Coordinator
     }
     void BuildTray()
     {
-        tray.Show("Panneaux Glass · dj");
+        tray.Show("Winlestia · dj");
         // Shell Qt : l'icône de la zone de notification permet d'atteindre les réglages même sans dock
         // (le menu est affiché par le NotifyIcon lui-même au clic droit).
         if (Program.QtMode)
@@ -69,7 +69,7 @@ internal sealed partial class Coordinator
                 return;
             if (!state.Open)
                 Open();
-            GlassMenu.Open(this, DialogParent, state.Detailed ? (FrameworkElement)toolbar.ContentHost : home.ContentHost, "Panneaux",
+            GlassMenu.Open(this, DialogParent, state.Detailed ? (FrameworkElement)toolbar.ContentHost : home.ContentHost, "Winlestia",
                 new[]
                 {
                     new MenuAction("Ouvrir l’espace", "\uE8A9", Open),
@@ -79,7 +79,7 @@ internal sealed partial class Coordinator
                     new MenuAction("Personnaliser", "\uE713", () => Settings(), Separator: true),
                     new MenuAction("Actualiser les accès", "\uE72C", RefreshCatalogue),
                     new MenuAction("Retrouver le Bureau organisé", "\uE777", Rescue, Separator: true),
-                    new MenuAction("Quitter Panneaux", "\uE711", () => Application.Current.Shutdown())
+                    new MenuAction("Quitter Winlestia", "\uE711", () => Application.Current.Shutdown())
                 }, true);
         };
         tray.DoubleClicked += () => Open();

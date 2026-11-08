@@ -31,7 +31,7 @@ internal sealed class FocusTimer : GlassWindow
         timer.MoveInto(work.Right / scale - 24 - timer.Width, work.Bottom / scale - 24 - timer.Height, timer.Width, timer.Height, 0, true);
         timer.timer.Start();
     }
-    FocusTimer(Coordinator coordinator, int seconds) : base("Panneaux Glass — focus")
+    FocusTimer(Coordinator coordinator, int seconds) : base("Winlestia — focus")
     {
         owner = coordinator;
         Width = 300;

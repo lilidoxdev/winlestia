@@ -19,7 +19,7 @@ internal static class SocialChime
     // Timbre « verre » : FM 2:1 dont l'indice retombe vite (attaque cristalline, queue pure), un léger désaccord
     // gauche/droite pour la largeur, chaque note posée un peu plus à droite, puis un écho ping-pong discret.
     // Stéréo entrelacée, crête normalisée à 0,9 ; le volume est appliqué à la lecture.
-    static float[] Compose()
+    internal static float[] Compose()
     {
         const double length = 1.05;
         int frames = (int)(Rate * length);
@@ -69,7 +69,7 @@ internal static class SocialChime
         return mix;
     }
 
-    static byte[] Render(double volume)
+    internal static byte[] Render(double volume)
     {
         var mix = Signature.Value;
         var bytes = new byte[mix.Length * 2];

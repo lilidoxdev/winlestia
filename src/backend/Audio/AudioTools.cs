@@ -85,7 +85,7 @@ internal static class AudioSwitch
 internal sealed class AudioWindow : GlassWindow
 {
     readonly Coordinator owner; readonly StackPanel body = new(); readonly TextBlock status;
-    internal AudioWindow(Coordinator coordinator) : base("Panneaux Glass — son et micro")
+    internal AudioWindow(Coordinator coordinator) : base("Winlestia — son et micro")
     {
         owner = coordinator;
         Width = 560;

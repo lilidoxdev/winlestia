@@ -94,7 +94,7 @@ internal sealed partial class QtShellBridge
                     owner.OpenTools();
                     break;
                 case "taskmgr":
-                    SystemActions.TaskManager(owner);
+                    owner.TaskManager();
                     break;
                 case "calculator":
                     owner.LaunchTarget("calc.exe");

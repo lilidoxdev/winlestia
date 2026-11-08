@@ -49,7 +49,7 @@ internal sealed partial class ControlCenterWindow : GlassWindow
     int ticks, revision;
     double? pendingBrightness;
     string layoutKey = "";
-    internal ControlCenterWindow(Coordinator coordinator) : base("Panneaux Glass — centre de contrôle")
+    internal ControlCenterWindow(Coordinator coordinator) : base("Winlestia — centre de contrôle")
     {
         owner = coordinator;
         Radius = 38;

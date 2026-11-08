@@ -79,60 +79,66 @@ internal static partial class BookmarksCore
             string? copy = CopyDatabase(b.BookmarksFile, work);
             if (copy == null)
                 throw new IOException("places.sqlite illisible");
-            var rows = new Dictionary<int, (int type, int parent, string title, string guid, string url)>();
-            var order = new List<int>();
-            using (var connection = Open(copy))
-            {
-                using var command = connection.CreateCommand();
-                command.CommandText = "SELECT b.id,b.type,b.parent,COALESCE(b.title,''),b.guid,COALESCE(p.url,'') FROM moz_bookmarks b " +
-                    "LEFT JOIN moz_places p ON p.id=b.fk ORDER BY b.parent,b.position";
-                using var reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    int id = reader.GetInt32(0);
-                    rows[id] = (reader.GetInt32(1), reader.GetInt32(2), reader.GetString(3), reader.GetString(4), reader.GetString(5));
-                    order.Add(id);
-                }
-            }
-            int budget = MaxNodes;
-            List<BNode> Children(int parent, int depth)
-            {
-                var list = new List<BNode>();
-                if (depth > MaxDepth)
-                    return list;
-                foreach (int id in order)
-                {
-                    var r = rows[id];
-                    if (r.parent != parent || budget-- <= 0)
-                        continue;
-                    if (r.type == 2)
-                    {
-                        list.Add(new BNode { Id = b.Id + ":" + r.guid, Title = r.title, Folder = true, Children = Children(id, depth + 1)
-                            });
-                    }
-                    else if (r.type == 1 && r.url.Length > 0 && !r.url.StartsWith("place:", StringComparison.OrdinalIgnoreCase))
-                        list.Add(new BNode { Id = b.Id + ":" + r.guid, Title = r.title, Url = r.url });
-                }
-                return list;
-            }
-            int Find(string guid) => rows.Where(kv => kv.Value.guid == guid).Select(kv => kv.Key).DefaultIfEmpty(-1).First();
-            var result = new List<BNode>();
-            int toolbar = Find("toolbar_____"), menu = Find("menu________"), unfiled = Find("unfiled_____");
-            if (toolbar >= 0)
-                result.AddRange(Children(toolbar, 0));
-            var other = new List<BNode>();
-            if (menu >= 0)
-                other.AddRange(Children(menu, 0));
-            if (unfiled >= 0)
-                other.AddRange(Children(unfiled, 0));
-            if (other.Count > 0)
-                result.Add(new BNode { Id = b.Id + ":other", Title = "Autres favoris", Folder = true, Children = other });
-            return result;
+            return ParseFirefox(copy, b.Id);
         }
         finally
         {
             SqliteConnection.ClearAllPools();
             Safe.Try(() => Directory.Delete(work, true));
         }
+    }
+
+    // Arbre depuis une copie de places.sqlite : séparé de la copie de travail pour être testable sur un fichier temporaire.
+    internal static List<BNode> ParseFirefox(string copy, string browserId)
+    {
+        var rows = new Dictionary<int, (int type, int parent, string title, string guid, string url)>();
+        var order = new List<int>();
+        using (var connection = Open(copy))
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT b.id,b.type,b.parent,COALESCE(b.title,''),b.guid,COALESCE(p.url,'') FROM moz_bookmarks b " +
+                "LEFT JOIN moz_places p ON p.id=b.fk ORDER BY b.parent,b.position";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                int id = reader.GetInt32(0);
+                rows[id] = (reader.GetInt32(1), reader.GetInt32(2), reader.GetString(3), reader.GetString(4), reader.GetString(5));
+                order.Add(id);
+            }
+        }
+        int budget = MaxNodes;
+        List<BNode> Children(int parent, int depth)
+        {
+            var list = new List<BNode>();
+            if (depth > MaxDepth)
+                return list;
+            foreach (int id in order)
+            {
+                var r = rows[id];
+                if (r.parent != parent || budget-- <= 0)
+                    continue;
+                if (r.type == 2)
+                {
+                    list.Add(new BNode { Id = browserId + ":" + r.guid, Title = r.title, Folder = true, Children = Children(id, depth + 1)
+                        });
+                }
+                else if (r.type == 1 && r.url.Length > 0 && !r.url.StartsWith("place:", StringComparison.OrdinalIgnoreCase))
+                    list.Add(new BNode { Id = browserId + ":" + r.guid, Title = r.title, Url = r.url });
+            }
+            return list;
+        }
+        int Find(string guid) => rows.Where(kv => kv.Value.guid == guid).Select(kv => kv.Key).DefaultIfEmpty(-1).First();
+        var result = new List<BNode>();
+        int toolbar = Find("toolbar_____"), menu = Find("menu________"), unfiled = Find("unfiled_____");
+        if (toolbar >= 0)
+            result.AddRange(Children(toolbar, 0));
+        var other = new List<BNode>();
+        if (menu >= 0)
+            other.AddRange(Children(menu, 0));
+        if (unfiled >= 0)
+            other.AddRange(Children(unfiled, 0));
+        if (other.Count > 0)
+            result.Add(new BNode { Id = browserId + ":other", Title = "Autres favoris", Folder = true, Children = other });
+        return result;
     }
 }

@@ -119,6 +119,16 @@ internal static partial class BookmarksCore
         return list;
     }
 
+    internal static string BrowserIdFromProgId(string prog)
+    {
+        // OperaGX avant Opera : « OperaGX » contient aussi « Opera ».
+        foreach (var (needle, id) in new[] { ("MSEdge", "edge"), ("Chrome", "chrome"), ("Brave", "brave"), ("Firefox", "firefox"),
+            ("Vivaldi", "vivaldi"), ("OperaGX", "operagx"), ("Opera", "opera") })
+            if (prog.Contains(needle, StringComparison.OrdinalIgnoreCase))
+                return id;
+        return "";
+    }
+
     static string DefaultBrowserId()
     {
         try
@@ -126,20 +136,7 @@ internal static partial class BookmarksCore
             using var key = Registry.CurrentUser.OpenSubKey(
                 @"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice");
             string prog = (key?.GetValue("ProgId") as string) ?? "";
-            if (prog.Contains("MSEdge", StringComparison.OrdinalIgnoreCase))
-                return "edge";
-            if (prog.Contains("Chrome", StringComparison.OrdinalIgnoreCase))
-                return "chrome";
-            if (prog.Contains("Brave", StringComparison.OrdinalIgnoreCase))
-                return "brave";
-            if (prog.Contains("Firefox", StringComparison.OrdinalIgnoreCase))
-                return "firefox";
-            if (prog.Contains("Vivaldi", StringComparison.OrdinalIgnoreCase))
-                return "vivaldi";
-            if (prog.Contains("OperaGX", StringComparison.OrdinalIgnoreCase))
-                return "operagx";
-            if (prog.Contains("Opera", StringComparison.OrdinalIgnoreCase))
-                return "opera";
+            return BrowserIdFromProgId(prog);
         }
         catch (Exception ex) when (ex is System.Security.SecurityException or IOException or UnauthorizedAccessException)
         {
@@ -148,11 +145,14 @@ internal static partial class BookmarksCore
         return "";
     }
 
-    static string FirefoxProfile()
+    static string FirefoxProfile() => FirefoxProfileIn(Path.Combine(Roaming, @"Mozilla\Firefox"));
+
+    // Racine passée en paramètre : profiles.ini se teste sur un dossier temporaire sans toucher au vrai profil Firefox.
+    internal static string FirefoxProfileIn(string root)
     {
         try
         {
-            string root = Path.Combine(Roaming, @"Mozilla\Firefox"), ini = Path.Combine(root, "profiles.ini");
+            string ini = Path.Combine(root, "profiles.ini");
             if (!File.Exists(ini))
                 return "";
             var sections = new List<(string name, Dictionary<string, string> values)>();

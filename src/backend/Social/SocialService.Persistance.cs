@@ -73,7 +73,8 @@ internal sealed partial class SocialService
             if (data.History != null)
             {
                 history.AddRange(data.History.Where(h => h != null && nets.Any(x => x.Id == h.Net)).Select(h => new HistoryItem {
-                    Seq = h.Seq, Net = h.Net, Title = Clip(h.Title, 120), Body = Clip(h.Body, 140), Kind = h.Kind == "count" ? "count"
+                    Seq = h.Seq, Net = h.Net, Title = SocialRules.Clip(h.Title, 120),
+                    Body = SocialRules.Clip(h.Body, 140), Kind = h.Kind == "count" ? "count"
                     : "notif", At = h.At }).OrderByDescending(h => h.Seq).Take(100));
                 nextSeq = Math.Max(Math.Max(1, data.NextSeq), history.Select(h => h.Seq).DefaultIfEmpty(0).Max() + 1);
             }

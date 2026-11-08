@@ -20,7 +20,7 @@ internal sealed partial class QtShellBridge : IDisposable
 {
 
     uint frontendWindowPid;
-    readonly Coordinator owner;
+    IBridgeOwner owner;
     readonly RunOptions options;
     readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
 
@@ -98,7 +98,7 @@ internal sealed partial class QtShellBridge : IDisposable
 
     internal static bool KeepEvent(string name, long queuedEpoch, long currentEpoch) => name != "close" || queuedEpoch == currentEpoch;
 
-    internal QtShellBridge(Coordinator coordinator, RunOptions options)
+    internal QtShellBridge(IBridgeOwner coordinator, RunOptions options)
     {
         this.options = options;
         DialogOpen = Environment.GetEnvironmentVariable("PANNEAUX_VERIFY_MATERIAL84") == "1"

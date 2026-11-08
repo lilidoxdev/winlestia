@@ -28,7 +28,7 @@ internal sealed class PcStatusWindow : GlassWindow
     readonly TelemetryGraph ramGraph = new("#8CE4C3"), diskGraph = new("#F3CF91"), networkGraph = new("#96E6F5", false);
     readonly StackPanel driveRows = new(), storageHeat = new(); string storageKey = ""; int revision; bool closed; PcReading? latest;
     internal long Samples => telemetry.Samples; internal bool Sampling => telemetry.Running;
-    internal PcStatusWindow(Coordinator coordinator) : base("Panneaux Glass — état du PC")
+    internal PcStatusWindow(Coordinator coordinator) : base("Winlestia — état du PC")
     {
         owner = coordinator;
         Radius = 38;

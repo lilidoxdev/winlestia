@@ -27,7 +27,7 @@ internal static class Toast
             message.VerticalAlignment = VerticalAlignment.Center;
             message.Measure(new Size(420, 200));
             double width = Math.Clamp(message.DesiredSize.Width + 64, 150, 460), height = 48;
-            var toast = new GlassWindow("Panneaux Glass — confirmation") { Radius = 20 };
+            var toast = new GlassWindow("Winlestia — confirmation") { Radius = 20 };
             toast.ContentHost.Margin = new Thickness(17, 0, 17, 0);
             var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
             var glyph = UI.Glyph("\uE73E", 14);

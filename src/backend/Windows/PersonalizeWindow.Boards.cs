@@ -98,14 +98,14 @@ internal sealed partial class PersonalizeWindow
     }
     void Export()
     {
-        var dialog = new SaveFileDialog { Title = "Exporter la personnalisation", Filter = "Personnalisation Panneaux|*.json",
+        var dialog = new SaveFileDialog { Title = "Exporter la personnalisation", Filter = "Personnalisation Winlestia|*.json",
             FileName = "Panneaux-dj.json" };
         if (dialog.ShowDialog(this) == true)
             File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(Store.State, Store.Json));
     }
     void Import()
     {
-        var dialog = new OpenFileDialog { Title = "Importer une personnalisation Panneaux", Filter = "Personnalisation Panneaux|*.json" };
+        var dialog = new OpenFileDialog { Title = "Importer une personnalisation Winlestia", Filter = "Personnalisation Winlestia|*.json" };
         if (dialog.ShowDialog(this) != true)
             return;
         try

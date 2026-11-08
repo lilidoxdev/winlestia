@@ -71,7 +71,7 @@ static class CatalogueWatchRules
     static readonly Regex Excluded = new(
         @"uninstall|désinstall|documentation|\bhelp\b|\baide\b|release notes|changelog|readme|licen[cs]e|" +
         @"manuels?|pydoc|module docs|online documentation|Install Additional|update|mises? à jour|" +
-        @"disponibilité de mises|Panneaux|^Secours -|Swish Panel|Navigation privée|Windows Kits Feedback|Donate|" +
+        @"disponibilité de mises|Panneaux|Winlestia|^Secours -|Swish Panel|Navigation privée|Windows Kits Feedback|Donate|" +
         @"Support Center|EA Error Reporter", Ci);
     internal static bool IsExcludedName(string name) => Excluded.IsMatch(name);
     static readonly Regex Squirrel = new(

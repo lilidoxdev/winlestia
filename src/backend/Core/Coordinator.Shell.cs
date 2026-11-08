@@ -68,7 +68,7 @@ internal sealed partial class Coordinator
             new MenuAction("Applications et fichiers", "\uE8B7", () => ShowWorkspace()),
             new MenuAction("Personnaliser…", "\uE713", () => Settings(), Separator: true),
             new MenuAction("Rétablir la barre Windows", "\uE777", () => SetTaskbar(false)),
-            new MenuAction("Quitter Panneaux", "\uE711", () => Application.Current.Shutdown())
+            new MenuAction("Quitter Winlestia", "\uE711", () => Application.Current.Shutdown())
         }, true);
     internal void TaskbarAppMenu(Window parent, FrameworkElement anchor, Entry entry, bool pinned)
         => GlassMenu.Open(this, parent, anchor, entry.Name, new[]

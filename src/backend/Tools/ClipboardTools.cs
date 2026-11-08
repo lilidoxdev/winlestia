@@ -202,7 +202,7 @@ internal sealed class ClipboardWindow : GlassWindow
 {
     readonly Coordinator owner; readonly ClipboardService service; readonly StackPanel list = new(); readonly TextBox search;
         readonly TextBlock count, status;
-    internal ClipboardWindow(Coordinator coordinator, ClipboardService clipboard) : base("Panneaux Glass — presse-papiers")
+    internal ClipboardWindow(Coordinator coordinator, ClipboardService clipboard) : base("Winlestia — presse-papiers")
     {
         owner = coordinator;
         service = clipboard;
@@ -280,7 +280,7 @@ internal sealed class ClipboardWindow : GlassWindow
         footer.Children.Add(count);
         Grid.SetRow(footer, 3);
         ContentHost.Children.Add(footer);
-        status = UI.Text("Windows garde ces éléments tant que Panneaux tourne. Rien n’est envoyé sur Internet.", 10, UI.Dim);
+        status = UI.Text("Windows garde ces éléments tant que Winlestia tourne. Rien n’est envoyé sur Internet.", 10, UI.Dim);
         status.Margin = new Thickness(0, 8, 0, 0);
         status.TextWrapping = TextWrapping.Wrap;
         ContentHost.Children.Add(status);

@@ -232,7 +232,7 @@ internal sealed partial class ShellDockWindow : Window
         owner = coordinator;
         manager = taskbar;
         screen = target;
-        Title = "Panneaux — barre des tâches";
+        Title = "Winlestia — barre des tâches";
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
         ResizeMode = ResizeMode.NoResize;

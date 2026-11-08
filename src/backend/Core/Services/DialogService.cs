@@ -85,12 +85,12 @@ internal sealed class DialogService : IDialogService
     public bool Confirm(string text)
     {
         bool yes = false;
-        Scope(() => yes = MessageBox.Show(ActiveOwner(), text, "Panneaux Glass", MessageBoxButton.YesNo, MessageBoxImage.Question)
+        Scope(() => yes = MessageBox.Show(ActiveOwner(), text, "Winlestia", MessageBoxButton.YesNo, MessageBoxImage.Question)
             == MessageBoxResult.Yes);
         return yes;
     }
     public void Message(string text)
-        => Scope(() => MessageBox.Show(ActiveOwner(), text, "Panneaux Glass", MessageBoxButton.OK, MessageBoxImage.Information), false);
+        => Scope(() => MessageBox.Show(ActiveOwner(), text, "Winlestia", MessageBoxButton.OK, MessageBoxImage.Information), false);
     public string[] PickFiles()
     {
         var chosen = Array.Empty<string>();

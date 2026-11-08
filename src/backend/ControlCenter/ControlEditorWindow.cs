@@ -12,7 +12,7 @@ namespace PanneauxGlass;
 internal sealed class ControlEditorWindow : GlassWindow
 {
     readonly Coordinator owner; readonly StackPanel list = new();
-    internal ControlEditorWindow(Coordinator coordinator, bool addImmediately) : base("Panneaux Glass — personnaliser les commandes")
+    internal ControlEditorWindow(Coordinator coordinator, bool addImmediately) : base("Winlestia — personnaliser les commandes")
     {
         owner = coordinator;
         Width = 680;
@@ -151,7 +151,7 @@ internal sealed class WindowsShortcutEditor : GlassWindow
 {
     readonly Coordinator owner; readonly WindowsShortcut? original; readonly TextBox name = new(), target = new(), arguments = new();
         readonly TextBlock status; readonly Button iconButton; string glyph;
-    internal WindowsShortcutEditor(Coordinator coordinator, WindowsShortcut? shortcut) : base("Panneaux Glass — raccourci Windows")
+    internal WindowsShortcutEditor(Coordinator coordinator, WindowsShortcut? shortcut) : base("Winlestia — raccourci Windows")
     {
         owner = coordinator;
         original = shortcut;

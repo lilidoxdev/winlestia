@@ -14,7 +14,7 @@ internal sealed class NotesWindow : GlassWindow
     const int SaveDebounceMs = 500;
     readonly Coordinator owner; readonly TextBox editor = new(); readonly TextBlock status;
     readonly DispatcherTimer save = new() { Interval = TimeSpan.FromMilliseconds(SaveDebounceMs) };
-    internal NotesWindow(Coordinator coordinator) : base("Panneaux Glass — note rapide")
+    internal NotesWindow(Coordinator coordinator) : base("Winlestia — note rapide")
     {
         owner = coordinator;
         Width = 660;

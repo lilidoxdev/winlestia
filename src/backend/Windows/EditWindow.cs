@@ -15,7 +15,7 @@ namespace PanneauxGlass;
 
 internal sealed class EditWindow : GlassWindow
 {
-    internal EditWindow(Coordinator coordinator, Entry entry, bool custom) : base("Panneaux Glass — modifier un accès")
+    internal EditWindow(Coordinator coordinator, Entry entry, bool custom) : base("Winlestia — modifier un accès")
     {
         Width = 620;
         Height = 590;

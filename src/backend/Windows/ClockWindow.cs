@@ -18,7 +18,7 @@ internal sealed class ClockWindow : GlassWindow
     readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(TickMs) }; readonly RadialGradientBrush sheen = new() {
         RadiusX = .42, RadiusY = 1.5 }; readonly Button shortcutChip; double lastX = -1, lastY = -1;
     internal string Time => hour.Text; internal string Date => day.Text;
-    internal ClockWindow(Coordinator coordinator) : base("Panneaux Glass — heure et date")
+    internal ClockWindow(Coordinator coordinator) : base("Winlestia — heure et date")
     {
         owner = coordinator;
         Radius = 38;

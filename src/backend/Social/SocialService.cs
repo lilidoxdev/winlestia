@@ -38,8 +38,6 @@ internal sealed partial class SocialService : IDisposable
     }
     [DllImport("kernel32.dll")] static extern bool GlobalMemoryStatusEx(ref MemoryStatus status);
 
-    static readonly Regex TitleCount = new(@"^\s*\(([\d\s\u00a0\u202f,.]*\d\+?)\)", RegexOptions.Compiled);
-    static readonly Regex TitleCountGmail = new(@"\(([\d\s\u00a0\u202f,.]*\d\+?)\)\s*$", RegexOptions.Compiled);
     const ulong LowMemory = 4UL << 30, RecoveredMemory = 5UL << 30;
 
     internal sealed class HistoryItem

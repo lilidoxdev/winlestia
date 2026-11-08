@@ -227,7 +227,7 @@ internal static class OcrService
 }
 internal sealed class TextResultWindow : GlassWindow
 {
-    internal TextResultWindow(Coordinator owner, string title, string text) : base("Panneaux Glass — " + title)
+    internal TextResultWindow(Coordinator owner, string title, string text) : base("Winlestia — " + title)
     {
         Width = 620;
         Height = Math.Min(520, SystemParameters.WorkArea.Height - 90);

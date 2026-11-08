@@ -18,7 +18,7 @@ internal sealed class PromptWindow : GlassWindow
         var window = new PromptWindow(owner, title, label, value) { Owner = parent ?? owner.Anchor, ShowInTaskbar = owner.PreviewMode };
         return window.ShowDialog() == true ? window.answer : null;
     }
-    PromptWindow(Coordinator owner, string title, string label, string value) : base("Panneaux Glass — " + title)
+    PromptWindow(Coordinator owner, string title, string label, string value) : base("Winlestia — " + title)
     {
         Width = 520;
         Height = 300;
@@ -136,7 +136,7 @@ internal static class WorkspaceService
 internal sealed class WorkspaceWindow : GlassWindow
 {
     readonly Coordinator owner; readonly StackPanel list = new(); readonly TextBlock status;
-    internal WorkspaceWindow(Coordinator coordinator) : base("Panneaux Glass — profils d’espace")
+    internal WorkspaceWindow(Coordinator coordinator) : base("Winlestia — profils d’espace")
     {
         owner = coordinator;
         Width = 600;

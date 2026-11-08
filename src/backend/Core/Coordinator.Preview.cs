@@ -17,7 +17,7 @@ internal sealed partial class Coordinator
         var probe =
             new Window
             {
-                Title = "Panneaux Glass — test du bord",
+                Title = "Winlestia — test du bord",
                 WindowStyle = WindowStyle.None,
                 ResizeMode = ResizeMode.NoResize,
                 ShowInTaskbar = true,

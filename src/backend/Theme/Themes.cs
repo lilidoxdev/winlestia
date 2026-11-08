@@ -78,7 +78,7 @@ internal sealed class ThemeDefinition
 internal static class Theme
 {
     static readonly ThemeDefinition[] All ={
-        new(){Id="shell",Name="Atelier clair",Description="Crème, argile et cartes douces. Le nouveau bureau Panneaux.",Surface=C(
+        new(){Id="shell",Name="Atelier clair",Description="Crème, argile et cartes douces. Le nouveau bureau Winlestia.",Surface=C(
             252,248,243),HaloA=C(236,220,211),HaloB=C(233,222,214),RimA=C(219,206,197),RimB=C(219,206,197),Reflection=C(
             255,252,249),Accent=C(146,92,76),Text=C(64,51,50),Dim=C(130,107,100),Kind=SurfaceKind
             .Soft,Heading="sans",Tiles="grid",Frame="flat",Light=true,ReflectionGain=0,HaloGain=0,Signature="none",RadiusScale=.85},

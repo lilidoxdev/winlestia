@@ -149,7 +149,7 @@ internal sealed class CropViewport : FrameworkElement
 internal sealed class ImageCropWindow : GlassWindow
 {
     internal BitmapSource? Output; internal LogoCrop? Crop; readonly CropViewport viewport;
-    internal ImageCropWindow(string path, LogoCrop? original) : base("Panneaux Glass — recadrer l’image")
+    internal ImageCropWindow(string path, LogoCrop? original) : base("Winlestia — recadrer l’image")
     {
         Width = 650;
         Height = 750;

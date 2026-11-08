@@ -194,8 +194,8 @@ internal static class Program
             {
                 Store.Log("Démarrage: " + ex);
                 System.Windows.MessageBox.Show(
-                    "Panneaux Glass n’a pas démarré. Le secours reste disponible dans Documents\\SECOURS_BUREAU.exe.\n\n" + ex.Message,
-                                               "Panneaux Glass");
+                    "Winlestia n’a pas démarré. Le secours reste disponible dans Documents\\SECOURS_BUREAU.exe.\n\n" + ex.Message,
+                                               "Winlestia");
                 app.Shutdown(1);
             }
         };
@@ -218,7 +218,7 @@ internal static class Program
         var test =
             new Window
             {
-                Title = "Panneaux Glass — diagnostic WPF",
+                Title = "Winlestia — diagnostic WPF",
                 Width = 600,
                 Height = 360,
                 Background = Brushes.SteelBlue,

@@ -47,48 +47,6 @@ internal sealed partial class SocialService : IDisposable
         return environment;
     }
 
-    // null = titre non informatif (Gmail : mail ouvert, autre vue) : on ne touche à rien.
-    static readonly HashSet<string> GmailLists = new(StringComparer.OrdinalIgnoreCase) { "", "inbox", "starred", "snoozed", "sent",
-        "drafts", "imp", "chats", "scheduled", "all", "spam", "trash", "category", "label", "search" };
-    static readonly Regex GmailMessageId = new("^[A-Za-z0-9]{16,}$", RegexOptions.Compiled);
-
-    // Vue de liste Gmail (#inbox, #category/..., #label/x, #search/...) sans identifiant de message en dernier segment.
-    static bool GmailListView(string? source)
-    {
-        if (!Uri.TryCreate(source, UriKind.Absolute, out var u))
-            return false;
-        string[] parts = u.Fragment.TrimStart('#').Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0)
-            return true;
-        if (!GmailLists.Contains(parts[0]))
-            return false;
-        return !(parts.Length >= 2 && GmailMessageId.IsMatch(parts[^1]));
-    }
-
-    static int? ParseUnread(string id, string title, string? source = null)
-    {
-        if (id == "gmail")
-        {
-            if (!GmailListView(source) || !title.TrimEnd().EndsWith("Gmail", StringComparison.Ordinal))
-                return null;
-            var g = TitleCountGmail.Match(title.Split(" - ")[0]);
-            if (!g.Success)
-                return 0;
-            string gd = new string(g.Groups[1].Value.Where(char.IsDigit).ToArray());
-            return int.TryParse(gd, out int gv) ? Math.Min(gv, 99999) : null;
-        }
-        var m = TitleCount.Match(title);
-        if (m.Success)
-        {
-            string digits = new string(m.Groups[1].Value.Where(char.IsDigit).ToArray());
-            if (int.TryParse(digits, out int v))
-                return Math.Min(v, 99999);
-            return 1;
-        }
-        string t = title.TrimStart();
-        return t.Length > 0 && "•*●".IndexOf(t[0]) >= 0 ? 1 : 0;
-    }
-
     // Compteur = non-lus réels : pour un réseau dont le titre affiche un nombre, le titre fait foi (Count = titre).
     // Une chute à 0 n'efface le badge qu'après 5 s (une transition SPA ne compte pas). Son + historique seulement sur une vraie hausse.
     void OnTitleChanged(object? sender, object e)
@@ -96,7 +54,7 @@ internal sealed partial class SocialService : IDisposable
         var n = Owner(sender);
         if (n == null || n.Wv == null)
             return;
-        int? parsed = ParseUnread(n.Id, n.Wv.DocumentTitle ?? "", n.Wv.Source);
+        int? parsed = SocialRules.ParseUnread(n.Id, n.Wv.DocumentTitle ?? "", n.Wv.Source);
         var now = DateTime.UtcNow;
         n.TitleChangedAt = now;
         if (parsed == null)
@@ -190,7 +148,7 @@ internal sealed partial class SocialService : IDisposable
         e.Handled = true; // pas de toast Windows : seul le compteur et le son de Winlestia comptent
         var now = DateTime.UtcNow;
         n.LastNative = now;
-        string title = Clip(e.Notification?.Title, 120), body = Clip(e.Notification?.Body, 140);
+        string title = SocialRules.Clip(e.Notification?.Title, 120), body = SocialRules.Clip(e.Notification?.Body, 140);
         // La hausse de titre (+d) a déjà compté d messages : chaque notification arrivée dans les 3 s consomme un de ces d crédits
         // (pas de double compte) ; au-delà, c'est une vraie notification en plus et elle compte normalement.
         if (n.U.ConsumeCredit(now))
@@ -221,12 +179,6 @@ internal sealed partial class SocialService : IDisposable
     {
         var n = Owner(sender);
         Store.Log("Social processus " + (n?.Id ?? "?") + ": " + e.ProcessFailedKind);
-    }
-
-    static string Clip(string? text, int max)
-    {
-        text = (text ?? "").Replace('\r', ' ').Replace('\n', ' ').Trim();
-        return text.Length > max ? text[..max] : text;
     }
 
     HistoryItem AddHistory(Net n, string kind, string title, string body)

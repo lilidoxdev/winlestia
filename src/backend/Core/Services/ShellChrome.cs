@@ -30,7 +30,7 @@ internal static class ShellChrome
         hit.HorizontalContentAlignment = HorizontalAlignment.Stretch;
         hit.VerticalContentAlignment = VerticalAlignment.Stretch;
         hit.ToolTip = "Ouvrir ton espace · " + GlobalShortcut.Label(Store.State.Shortcut.Modifiers, Store.State.Shortcut.Key);
-        System.Windows.Automation.AutomationProperties.SetName(hit, "Ouvrir Panneaux Glass");
+        System.Windows.Automation.AutomationProperties.SetName(hit, "Ouvrir Winlestia");
         var layout = new Grid();
         layout.Children.Add(new Border
         {
@@ -74,7 +74,7 @@ internal static class ShellChrome
         var logo = UI.Glyph("\uE8A9", 22);
         logo.Margin = new Thickness(5, 0, 12, 0);
         brand.Children.Add(logo);
-        brand.Children.Add(UI.Text("Panneaux", 18, null, true));
+        brand.Children.Add(UI.Text("Winlestia", 18, null, true));
         var dj = UI.Text(" / dj", 13, UI.Dim);
         dj.VerticalAlignment = VerticalAlignment.Center;
         brand.Children.Add(dj);

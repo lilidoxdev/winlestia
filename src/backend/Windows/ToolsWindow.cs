@@ -14,7 +14,7 @@ internal sealed class ToolsWindow : GlassWindow
 {
     readonly Coordinator owner; readonly WrapPanel grid = new(); readonly List<(Button Button, string Name)> categories = new();
         string filter = "Tout";
-    internal ToolsWindow(Coordinator coordinator) : base("Panneaux Glass — atelier")
+    internal ToolsWindow(Coordinator coordinator) : base("Winlestia — atelier")
     {
         owner = coordinator;
         Width = 720;
@@ -88,7 +88,7 @@ internal sealed class ToolsWindow : GlassWindow
             "",()=>owner.OpenWorkspaces()),
         new("Confort","\uE70B","Papier pense-bête","Une feuille collée à l’écran : écris, place, garde","",()=>owner.OpenMemo()),
         new("Confort","\uE8C8","Presse-papiers","Tout ce que tu as copié, prêt à revenir","",()=>owner.OpenClipboard()),
-        new("Confort","\uE897","Aide et raccourcis","Les gestes de Panneaux, en une page","F1",()=>owner.OpenHelp())
+        new("Confort","\uE897","Aide et raccourcis","Les gestes de Winlestia, en une page","F1",()=>owner.OpenHelp())
     };
     void Build()
     {
@@ -153,7 +153,7 @@ internal sealed class ToolsWindow : GlassWindow
 internal sealed class HelpWindow : GlassWindow
 {
     readonly Coordinator owner;
-    internal HelpWindow(Coordinator coordinator) : base("Panneaux Glass — aide")
+    internal HelpWindow(Coordinator coordinator) : base("Winlestia — aide")
     {
         owner = coordinator;
         Width = 660;
@@ -180,7 +180,7 @@ internal sealed class HelpWindow : GlassWindow
         header.Children.Add(close);
         var titles = new StackPanel();
         titles.Children.Add(UI.Text("Trois gestes, et tout est là.", 26, null, true));
-        var sub = UI.Text("Panneaux reste discret : une poignée à droite, deux raccourcis, un atelier", 12, UI.Dim);
+        var sub = UI.Text("Winlestia reste discret : une poignée à droite, deux raccourcis, un atelier", 12, UI.Dim);
         sub.TextWrapping = TextWrapping.Wrap;
         sub.Margin = new Thickness(0, 7, 0, 0);
         titles.Children.Add(sub);

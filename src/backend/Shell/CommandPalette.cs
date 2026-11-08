@@ -25,7 +25,7 @@ internal sealed class CommandPalette : GlassWindow
         Margin = new Thickness(0, 14, 0, 0) }; readonly ScrollViewer scroll; readonly TextBlock hint, footer;
     readonly List<PaletteResult> results = new(); readonly List<Button> buttons = new(); readonly double maxHeight; int selected, headers;
         bool suppress;
-    internal CommandPalette(Coordinator coordinator) : base("Panneaux Glass — commande rapide")
+    internal CommandPalette(Coordinator coordinator) : base("Winlestia — commande rapide")
     {
         owner = coordinator;
         ShowActivated = true;
@@ -391,7 +391,7 @@ internal sealed class CommandPalette : GlassWindow
         new("Redémarrer l’Explorateur","Quand la barre des tâches se bloque","\uE72C",()=>owner.RestartExplorer()),
         new("Note rapide","Bloc-notes persistant","\uE70B",()=>owner.OpenNotes()),
         new("Minuteur","Régler une durée de focus","\uE917",()=>owner.OpenFocus()),
-        new("Aide et raccourcis","Les gestes de Panneaux, en une page","\uE897",()=>owner.OpenHelp()),
+        new("Aide et raccourcis","Les gestes de Winlestia, en une page","\uE897",()=>owner.OpenHelp()),
         new("Onglets rapides","Modifier cette commande rapide","\uE70F",()=>owner.EditQuickTabs()),
         new("Personnaliser","Thèmes, verre, raccourcis, quotidien","\uE713",()=>owner.Settings()),
         new("Commandes Windows","Connexions, son, luminosité","\uE7F4",()=>owner.ToggleControls()),

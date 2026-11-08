@@ -62,7 +62,7 @@ internal static class FrameVerification
             {
                 frame.Enable(false);
                 double scale = TaskbarNative.Scale(screens[0]);
-                probe = new Window { Title = "Vérification du cadre Panneaux", Width = 500, Height = 280, Left = (screens[0].Bounds.Left
+                probe = new Window { Title = "Vérification du cadre Winlestia", Width = 500, Height = 280, Left = (screens[0].Bounds.Left
                     + 100) / scale, Top = (screens[0].Bounds.Top + 100) / scale, ShowInTaskbar = false, ShowActivated = false,
                     WindowStartupLocation = WindowStartupLocation.Manual };
                 probe.Show();

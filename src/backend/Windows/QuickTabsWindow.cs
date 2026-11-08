@@ -30,7 +30,7 @@ internal sealed class QuickTabsWindow : GlassWindow
         ("\uE721","Recherche"),("\uE950","Moniteur"),("\uE722","Capture"),("\uE8D6","Musique"),("\uE774","Web"),("\uE734","Favori"),
         ("\uE756","Terminal"),("\uE7F4","Contrôles"),("\uE8A9","Espace"),("\uE7C3","Grille")
     };
-    internal QuickTabsWindow(Coordinator coordinator) : base("Panneaux Glass — onglets rapides")
+    internal QuickTabsWindow(Coordinator coordinator) : base("Winlestia — onglets rapides")
     {
         owner = coordinator;
         Width = 760;

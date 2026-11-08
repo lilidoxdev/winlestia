@@ -19,10 +19,10 @@ internal sealed partial class HomeWindow : GlassWindow
         }; readonly TextBlock date;
     string key = ""; int page;
     readonly RadialGradientBrush sheen = new() { RadiusX = .5, RadiusY = 1.6 }; double lastX = -1, lastY = -1;
-    internal HomeWindow(Coordinator coordinator) : base("Panneaux Glass — accueil")
+    internal HomeWindow(Coordinator coordinator) : base("Winlestia — accueil")
     {
         owner = coordinator;
-        System.Windows.Automation.AutomationProperties.SetName(this, "Panneaux Glass, accueil");
+        System.Windows.Automation.AutomationProperties.SetName(this, "Winlestia, accueil");
         Radius = 38;
         ContentHost.Margin = new Thickness(34, 28, 34, 27);
         foreach (var height in new[] { GridLength.Auto, new GridLength(1, GridUnitType.Star), GridLength.Auto })
@@ -205,7 +205,7 @@ internal sealed partial class HomeWindow : GlassWindow
         recentHead.Children.Add(recentCount);
         recentHead.Children.Add(UI.Text("Reprendre", 19, null, true));
         recent.Children.Add(recentHead);
-        var sub = UI.Text("Tes dernières ouvertures depuis Panneaux, la plus récente en premier", 12, UI.Dim);
+        var sub = UI.Text("Tes dernières ouvertures depuis Winlestia, la plus récente en premier", 12, UI.Dim);
         sub.Margin = new Thickness(0, 5, 0, 14);
         recent.Children.Add(sub);
         var history = Store.RecentEntries(Store.State.HomeScope).Take(10).ToList();
