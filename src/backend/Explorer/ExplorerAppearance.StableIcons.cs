@@ -11,7 +11,6 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-[assembly: InternalsVisibleTo("FolderIcons")]
 namespace PanneauxGlass;
 
 internal sealed partial class ExplorerAppearance

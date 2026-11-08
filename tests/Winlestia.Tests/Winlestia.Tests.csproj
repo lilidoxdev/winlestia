@@ -39,4 +39,14 @@
     <Compile Include="../../src/backend/**/*.cs" Exclude="../../src/backend/checkpoint-*/**;../../src/backend/obj/**;../../src/backend/bin/**" LinkBase="Backend" />
     <Compile Include="../../src/files/PathRouter.cs" Link="Files/PathRouter.cs" />
   </ItemGroup>
+  <!-- Echantillonneur FolderIcons.exe (processus separe) copie a cote des tests Desktop d'icones de dossiers. -->
+  <ItemGroup>
+    <ProjectReference Include="../FolderIcons/FolderIcons.csproj" ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+  <Target Name="CopyFolderIcons" AfterTargets="Build">
+    <ItemGroup>
+      <FolderIconsFile Include="../FolderIcons/bin/$(Configuration)/$(TargetFramework)/win-x64/FolderIcons.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FolderIconsFile)" DestinationFolder="$(OutDir)" />
+  </Target>
 </Project>
