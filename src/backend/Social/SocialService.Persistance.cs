@@ -100,9 +100,7 @@ internal sealed partial class SocialService
                 if (snapshot != null)
                 {
                     Directory.CreateDirectory(folder);
-                    string temp = CountsFile + ".tmp";
-                    File.WriteAllText(temp, JsonSerializer.Serialize(snapshot));
-                    File.Move(temp, CountsFile, true);
+                    Winlestia.Shared.AtomicFile.WriteAllText(CountsFile, JsonSerializer.Serialize(snapshot));
                 }
             }
             catch (Exception ex) { Store.Log("Social écriture: " + ex.Message); }

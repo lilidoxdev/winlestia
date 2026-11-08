@@ -1008,5 +1008,9 @@
  "Maj droit": "Mayús derecha",
  "Win gauche": "Win izquierda",
  "Win droit": "Win derecha",
- "Verr. maj.": "Bloq Mayús"
+ "Verr. maj.": "Bloq Mayús",
+ "Navigateur": "Navegador",
+ "Lecteur Windows": "Reproductor de Windows",
+ "Aucune session audio pour ce lecteur.": "Ninguna sesión de audio para este reproductor.",
+ "Cette application n’a plus de session audio. Relance sa lecture.": "Esta aplicación ya no tiene sesión de audio. Reinicia su reproducción."
 }

@@ -12,7 +12,8 @@ internal sealed class AudioMixerHost : IDisposable
     volatile bool enabled, disposed;
     internal volatile MixerApplication[] Applications = Array.Empty<MixerApplication>();
     internal volatile MixerDevice[] Devices = Array.Empty<MixerDevice>();
-    internal string MediaApp = ""; internal double MediaPeak;
+    internal volatile string MediaApp = "", MediaAumid = "";
+    internal double MediaPeak; internal volatile int MediaPid; internal double MediaVolume = -1;
     internal Task SetMediaVolume(double value) => Enqueue(m => m.SetMediaVolume(value));
     internal bool Running => enabled;
     internal volatile bool NativeRunning, Ready;
@@ -59,6 +60,8 @@ internal sealed class AudioMixerHost : IDisposable
         if (!enabled)
             return;
         MediaPeak = mixer.MediaPeak;
+        MediaPid = mixer.MediaPid;
+        MediaVolume = mixer.MediaVolume;
         Applications = mixer.Applications;
         Devices = mixer.Devices;
         Ready = true;
@@ -86,6 +89,7 @@ internal sealed class AudioMixerHost : IDisposable
                 {
                     var watch = System.Diagnostics.Stopwatch.StartNew();
                     mixer.MediaApp = MediaApp;
+                    mixer.MediaAumid = MediaAumid;
                     mixer.Refresh();
                     NativeRunning = true;
                     LastReadMilliseconds = watch.Elapsed.TotalMilliseconds;

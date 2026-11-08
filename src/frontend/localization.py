@@ -1,6 +1,7 @@
 # Python 3.12 / localization.py / Traductions de l'application Qt et détection de la langue de l'interface Windows.
 import ctypes
 import json
+from atomicfile import write_text as atomic_write_text
 from pathlib import Path
 from PySide6.QtCore import QTranslator
 
@@ -56,4 +57,4 @@ class Translator(QTranslator):
 
     def select(self, mode):
         self.mode = mode if mode in ('auto', 'fr', 'en', 'es') else 'auto'
-        self.path.write_text(json.dumps({'language': self.mode}), encoding='utf-8')
+        atomic_write_text(self.path, json.dumps({'language': self.mode}))

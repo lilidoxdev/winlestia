@@ -13,12 +13,22 @@ internal sealed record MixerApplication(string id, string name, string path, int
 internal sealed record MixerDevice(string id, string name, bool selected, double volume, bool muted, int flow);
 internal sealed class AudioMixer : IDisposable
 {
-    sealed record Session(string Id, string Name, string Path, int Pid, AudioSessionControl Control);
+    sealed record Session(string Id, string Name, string Path, int Pid, AudioSessionControl Control, AudioSessionInfo Info);
     readonly List<Session> sessions = new(); readonly List<MMDevice> endpoints = new(); DateTime nextScan, nextDeviceScan;
-    internal string MediaApp = ""; internal double MediaPeak
+    ProcessSnapshot processes = ProcessSnapshot.Capture(); bool mediaPidActive;
+    // Nom d'exécutable (sans extension) de la source média choisie, par exemple "firefox", et son AUMID brut ; l'un ou l'autre peut être
+    // vide.
+    internal string MediaApp = ""; internal string MediaAumid = ""; internal double MediaPeak
     {
         get; private set;
     }
+    // Processus racine des sessions audio correspondantes : la capture loopback de ce PID inclut ses processus enfants.
+    internal int MediaPid
+    {
+        get; private set;
+    }
+    // Volume le plus haut (0-100) parmi les sessions correspondantes, ou -1 si aucune ne correspond.
+    internal double MediaVolume { get; private set; } = -1;
     internal bool Running
     {
         get; private set;
@@ -34,6 +44,9 @@ internal sealed class AudioMixer : IDisposable
             nextScan = DateTime.UtcNow.AddSeconds(2);
         }
         MediaPeak = 0;
+        MediaPid = 0;
+        MediaVolume = -1;
+        mediaPidActive = false;
         var result = new List<MixerApplication>();
         foreach (var group in sessions.GroupBy(s => s.Id))
         {
@@ -47,7 +60,12 @@ internal sealed class AudioMixer : IDisposable
                     if (state == AudioSessionState.AudioSessionStateExpired)
                         continue;
                     var gain = s.Control.SimpleAudioVolume;
-                    if (MatchesMedia(s.Path) && !gain.Mute)
+                    if (MatchesMedia(s))
+                    {
+                        TrackMediaPid(s, state);
+                        MediaVolume = Math.Max(MediaVolume, gain.Volume * 100);
+                    }
+                    if (MatchesMedia(s) && !gain.Mute)
                         MediaPeak = Math.Max(MediaPeak, s.Control.AudioMeterInformation.MasterPeakValue);
                     volume = Math.Max(volume, gain.Volume * 100);
                     muted &= gain.Mute;
@@ -72,6 +90,7 @@ internal sealed class AudioMixer : IDisposable
     void Scan()
     {
         ClearSessions();
+        processes = ProcessSnapshot.Capture();
         using var enumerator = new MMDeviceEnumerator();
         foreach (var device in enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active))
         {
@@ -90,19 +109,15 @@ internal sealed class AudioMixer : IDisposable
                         int pid = (int)control.GetProcessID;
                         string name = "Sons système", path = "";
                         if (pid != 0)
-                        {
-                            try
-                            {
-                                using var process = Process.GetProcessById(pid);
-                                path = process.MainModule?.FileName ?? "";
-                                name = string.IsNullOrEmpty(path) ? process.ProcessName
-                                    : FileVersionInfo.GetVersionInfo(path).FileDescription ?? process.ProcessName;
-                            }
-                            catch { name = "Application " + pid; }
-                        }
+                            (name, path) = DescribeProcess(pid);
                         string key = pid == 0 ? "system" : !string.IsNullOrEmpty(path) ? path.ToLowerInvariant() : "pid:" + pid;
                         string id = "audio:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))[..20];
-                        sessions.Add(new(id, name, path, pid, control));
+                        string stem = System.IO.Path.GetFileNameWithoutExtension(path);
+                        if (stem.Length == 0)
+                            stem = processes.StemOf(pid);
+                        var ancestors = MediaSessionMatch.AncestorStems(pid, processes.ParentOf, processes.StemOf);
+                        var info = new AudioSessionInfo(pid, stem, ancestors, control.GetSessionIdentifier ?? "");
+                        sessions.Add(new(id, name, path, pid, control, info));
                         keep = true;
                     }
                     catch (System.Runtime.InteropServices.COMException)
@@ -116,6 +131,36 @@ internal sealed class AudioMixer : IDisposable
             {
                 // Session audio disparue pendant l'énumération : on passe à la suivante.
             }
+        }
+    }
+    // Process.MainModule échoue pour les processus protégés ou en cours de sortie ; QueryFullProcessImageName sert de repli.
+    static (string Name, string Path) DescribeProcess(int pid)
+    {
+        string processName = "";
+        string path = "";
+        try
+        {
+            using var process = Process.GetProcessById(pid);
+            processName = process.ProcessName;
+            path = process.MainModule?.FileName ?? "";
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or NotSupportedException
+            or System.ComponentModel.Win32Exception)
+        {
+            // Processus inaccessible : on retombe sur le chemin d'image ci-dessous.
+        }
+        if (path.Length == 0)
+            path = TaskbarNative.ProcessImagePath((uint)pid);
+        if (path.Length == 0)
+            return (processName.Length > 0 ? processName : "Application " + pid, "");
+        string fallbackName = processName.Length > 0 ? processName : System.IO.Path.GetFileNameWithoutExtension(path);
+        try
+        {
+            return (FileVersionInfo.GetVersionInfo(path).FileDescription ?? fallbackName, path);
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return (fallbackName, path);
         }
     }
     static MixerDevice[] ReadDevices()
@@ -150,13 +195,25 @@ internal sealed class AudioMixer : IDisposable
         }
         return result.OrderByDescending(d => d.selected).ThenBy(d => d.name).ToArray();
     }
-    bool MatchesMedia(string path) => !string.IsNullOrEmpty(MediaApp)
-        && System.IO.Path.GetFileNameWithoutExtension(path).Equals(MediaApp switch { "Microsoft Edge" => "msedge", "Google Chrome"
-        => "chrome", _ => MediaApp }, StringComparison.OrdinalIgnoreCase);
+    bool MatchesMedia(Session session)
+    {
+        if (MediaApp.Length == 0 && MediaAumid.Length == 0)
+            return false;
+        return MediaSessionMatch.Matches(session.Info, new MediaTarget(MediaApp, MediaAumid));
+    }
+    // Préfère une session qui produit réellement du son ; sinon la première session correspondante.
+    void TrackMediaPid(Session session, AudioSessionState state)
+    {
+        bool playing = state == AudioSessionState.AudioSessionStateActive;
+        if (session.Pid == 0 || (MediaPid != 0 && (mediaPidActive || !playing)))
+            return;
+        MediaPid = MediaSessionMatch.RootPid(session.Pid, MediaApp, processes.ParentOf, processes.StemOf);
+        mediaPidActive = playing;
+    }
     internal void SetMediaVolume(double value)
     {
         Refresh();
-        var ids = sessions.Where(s => MatchesMedia(s.Path)).Select(s => s.Id).Distinct().ToArray();
+        var ids = sessions.Where(MatchesMedia).Select(s => s.Id).Distinct().ToArray();
         if (ids.Length == 0)
             throw new InvalidOperationException("Aucune session audio pour ce lecteur.");
         foreach (var id in ids)

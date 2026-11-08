@@ -130,6 +130,7 @@ class StateMixin:
             self._state = message['state']
             self._dark = bool(self._state.get('dark'))
             self._player.data = self._state.get('media', {})
+            self._player.stamp = time.monotonic()
             if core_changed:
                 self.changed.emit()
             if perf_changed:

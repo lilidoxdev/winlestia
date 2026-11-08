@@ -1008,5 +1008,9 @@
  "Maj droit": "Maj droit",
  "Win gauche": "Win gauche",
  "Win droit": "Win droit",
- "Verr. maj.": "Verr. maj."
+ "Verr. maj.": "Verr. maj.",
+ "Navigateur": "Navigateur",
+ "Lecteur Windows": "Lecteur Windows",
+ "Aucune session audio pour ce lecteur.": "Aucune session audio pour ce lecteur.",
+ "Cette application n’a plus de session audio. Relance sa lecture.": "Cette application n’a plus de session audio. Relance sa lecture."
 }

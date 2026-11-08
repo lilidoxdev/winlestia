@@ -53,9 +53,17 @@ internal static class AutostartTask
 
     internal static bool Create()
     {
-        string xml = Path.Combine(Path.GetTempPath(), "winlestia-task-" + Guid.NewGuid().ToString("N") + ".xml");
+        string xml = "";
         try
         {
+            string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (string.IsNullOrEmpty(local))
+            {
+                Store.Log("Tâche de démarrage: dossier LocalApplicationData introuvable.");
+                return false;
+            }
+            xml = AutostartPolicy.PrivateTaskFile(local);
+            Directory.CreateDirectory(Path.GetDirectoryName(xml)!);
             string exe = Environment.ProcessPath!;
             File.WriteAllText(xml, AutostartPolicy.TaskXml(WindowsIdentity.GetCurrent().Name, exe, Path.GetDirectoryName(exe) ?? ""),
                 Encoding.Unicode);
@@ -70,7 +78,7 @@ internal static class AutostartTask
             return true;
         }
         catch (Exception ex) { Store.Log("Tâche de démarrage: " + ex.Message); return false; }
-        finally { Safe.Try(() => File.Delete(xml)); }
+        finally { Safe.Try(() => { if (xml.Length > 0) File.Delete(xml); }); }
     }
 
     internal static bool Delete()

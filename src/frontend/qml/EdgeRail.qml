@@ -36,6 +36,9 @@ Window {
         Bridge.screenHeight - 80))
     readonly property real fullHeight: panelW > 0 ? Math.max(baseHeight, Math.min(Bridge.screenHeight - 160, 520)) : baseHeight
     readonly property real bumpWidth: railW + panelW * reveal
+    // Largeur vive que ce rail réclame au bord de son écran : 0 replié ou masqué, rail + tiroir + marge du cadre + écart une fois déplié.
+    // Elle suit `reveal` : les voisins (le tableau de bord) s'écartent avec le rail au lieu d'être recouverts.
+    readonly property real reservedWidth: reveal * (railW + panelW + inset + Appearance.padding.large)
     readonly property real bumpHeight: baseHeight + (fullHeight - baseHeight) * reveal
     property real offset: shown ? 0 : railW
     // Largeur de bosse envoyée en dernier au fond natif (-1 sans verre natif) ;

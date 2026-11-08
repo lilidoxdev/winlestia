@@ -244,7 +244,7 @@ internal sealed partial class SocialService : IDisposable
             try
             {
                 Directory.CreateDirectory(folder);
-                File.WriteAllText(CountsFile, JsonSerializer.Serialize(MakeFile()));
+                Winlestia.Shared.AtomicFile.WriteAllText(CountsFile, JsonSerializer.Serialize(MakeFile()));
             }
             catch (Exception err) when (err is IOException or UnauthorizedAccessException or JsonException)
             {

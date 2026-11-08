@@ -19,9 +19,7 @@ internal sealed partial class ExplorerAppearance : IDisposable
     void Save(List<Backup> data)
     {
         Directory.CreateDirectory(root);
-        string temp = Manifest + ".tmp";
-        File.WriteAllText(temp, JsonSerializer.Serialize(data));
-        File.Move(temp, Manifest, true);
+        Winlestia.Shared.AtomicFile.WriteAllText(Manifest, JsonSerializer.Serialize(data));
     }
     static string Hash(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
     internal static string Known(string guid)

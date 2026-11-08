@@ -58,9 +58,7 @@ internal sealed partial class ExplorerAppearance
         lock (iconGate)
         {
             Directory.CreateDirectory(IconsDir);
-            string temp = StatePath + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(iconState ?? new()));
-            File.Move(temp, StatePath, true);
+            Winlestia.Shared.AtomicFile.WriteAllText(StatePath, JsonSerializer.Serialize(iconState ?? new()));
         }
     }
     // Dessine dans un fichier temporaire puis l'échange : les lecteurs (Explorateur) ne voient jamais un .ico à moitié écrit.

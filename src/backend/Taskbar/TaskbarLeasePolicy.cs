@@ -41,7 +41,7 @@ internal static class TaskbarLeasePolicy
     }
 
     internal static void Write(string path, TaskbarNative.Lease lease) =>
-        File.WriteAllText(path, Serialize(lease));
+        Winlestia.Shared.AtomicFile.WriteAllText(path, Serialize(lease));
 
     internal static string Serialize(TaskbarNative.Lease lease) => JsonSerializer.Serialize(lease, Store.Json);
 

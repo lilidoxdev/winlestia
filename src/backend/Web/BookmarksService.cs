@@ -275,8 +275,7 @@ internal sealed class BookmarksService : IDisposable
         var node = FindNode(tree, id);
         if (b == null || node == null || node.Folder || b.Exe.Length == 0)
             return;
-        if (!Uri.TryCreate(node.Url, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps
-            && uri.Scheme != Uri.UriSchemeFile))
+        if (!BookmarkUri.IsOpenable(node.Url, out var uri))
             return;
         try
         {

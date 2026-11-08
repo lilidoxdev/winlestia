@@ -6,6 +6,7 @@ import urllib.parse
 import urllib.request
 import time
 from app_state import CONFIG
+from atomicfile import write_text as atomic_write_text
 from PySide6.QtCore import QCoreApplication, Slot
 from PySide6.QtWidgets import QInputDialog, QLineEdit
 
@@ -94,7 +95,7 @@ class WeatherMixin:
             )
             if ok and city.strip():
                 self.city = city.strip()[:120]
-                (CONFIG / 'weather.json').write_text(json.dumps({'city': self.city}), encoding='utf-8')
+                atomic_write_text(CONFIG / 'weather.json', json.dumps({'city': self.city}))
                 self.weather_at = 0
                 self.refreshWeather()
         finally:

@@ -1008,5 +1008,9 @@
  "Maj droit": "Right Shift",
  "Win gauche": "Left Win",
  "Win droit": "Right Win",
- "Verr. maj.": "Caps Lock"
+ "Verr. maj.": "Caps Lock",
+ "Navigateur": "Browser",
+ "Lecteur Windows": "Windows player",
+ "Aucune session audio pour ce lecteur.": "No audio session for this player.",
+ "Cette application n’a plus de session audio. Relance sa lecture.": "This application no longer has an audio session. Restart its playback."
 }

@@ -19,6 +19,26 @@ Item {
     readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins
         * 2
 
+    // Largeur que l'hôte peut donner au tiroir (0 = sans contrainte). Les volets gardent leur mise en page naturelle et la
+    // vue entière est mise à l'échelle uniformément, jamais sous minScale (en dessous, l'hôte cesse de rétrécir).
+    property real availableWidth: 0
+    readonly property real minScale: 0.7
+    // La base d'échelle suit paneMaxWidth par un court glissement : un volet plus large mesuré tard adoucit l'échelle au lieu de la
+    // faire sauter ;
+    // les changements d'availableWidth dus au rail s'appliquent immédiatement.
+    property real scaleBasis: paneMaxWidth
+    Behavior on scaleBasis {
+        enabled: !Appearance.reducedEffects
+        Anim {
+            duration: Appearance.anim.durations.small
+        }
+    }
+    readonly property real viewScale: availableWidth > 0
+        ? Math.max(minScale, Math.min(1, (availableWidth - viewWrapper.anchors.margins * 2) / scaleBasis)) : 1
+    readonly property real minWidth: paneMaxWidth * minScale + viewWrapper.anchors.margins * 2
+    // Largeur du tiroir hors échelle (indépendante de l'échelle : l'hôte calcule le recouvrement sans boucle de liaison).
+    readonly property real naturalWidth: paneMaxWidth + viewWrapper.anchors.margins * 2
+
     // Taille fixe du contenu du tiroir : maximum des volets, ne fait que croître (à la première mesure d'un volet).
     property real paneMaxWidth: 966
     property real paneMaxHeight: 450
@@ -110,12 +130,16 @@ Item {
                 });
             }
 
-            anchors.fill: parent
+            // Disposé à la taille naturelle des volets, puis mis à l'échelle ; la taille implicite est l'empreinte mise à l'échelle.
+            width: root.paneMaxWidth
+            height: root.paneMaxHeight
+            scale: root.viewScale
+            transformOrigin: Item.TopLeft
 
             flickableDirection: Flickable.HorizontalFlick
 
-            implicitWidth: root.paneMaxWidth
-            implicitHeight: root.paneMaxHeight
+            implicitWidth: root.paneMaxWidth * root.viewScale
+            implicitHeight: root.paneMaxHeight * root.viewScale
 
             contentX: currentItem.cellX
             contentWidth: row.implicitWidth

@@ -43,6 +43,15 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # Composants natifs MSVC (ProcessAudio.dll...) compilés AVANT .NET : le csproj copie ProcessAudio.dll dans la sortie.
+      - name: Composants natifs
+        shell: pwsh
+        run: ./tools/build-native.ps1
+
       - name: Build
         shell: pwsh
         run: |
@@ -112,8 +121,8 @@ jobs:
           python -m compileall -q src/frontend src/terminal tools tests conftest.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-  # Test de fumee de l'installateur : fabrique le setup avec installer/build.ps1 -CI (composants natifs MSVC remplaces
-  # par des fichiers vides, voir l'en-tete du script). L'artefact prouve que la chaine payload + Inno Setup passe ;
+  # Test de fumee de l'installateur : fabrique le setup avec installer/build.ps1 -CI (composants natifs MSVC compiles
+  # par tools/build-native.ps1). L'artefact prouve que la chaine payload + Inno Setup passe ;
   # il n'est jamais une release.
   installer-smoke:
     needs: build-and-test
@@ -126,6 +135,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Composants natifs
+        shell: pwsh
+        run: ./tools/build-native.ps1
 
       - name: Inno Setup 6
         shell: pwsh

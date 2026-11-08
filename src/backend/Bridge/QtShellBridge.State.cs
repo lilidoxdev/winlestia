@@ -151,18 +151,9 @@ internal sealed partial class QtShellBridge
             },
             media = new
             {
-                volume = mixer.Applications
-                    .Where(a =>
-                        System.IO.Path.GetFileNameWithoutExtension(a.path).Equals(player?.App switch
-                        {
-                            "Microsoft Edge" => "msedge",
-                            "Google Chrome" => "chrome",
-                            _ => player?.App
-                        },
-                                                                                  StringComparison.OrdinalIgnoreCase))
-                    .Select(a => a.volume)
-                    .DefaultIfEmpty(70)
-                    .Max(),
+                volume = mixer.MediaVolume >= 0 ? Math.Round(mixer.MediaVolume) : 70,
+                durationKnown = player?.DurationKnown ?? true,
+                rate = player?.Rate ?? 1,
                 available = player?.Available ?? false,
                 app = player?.App ?? "",
                 title = player?.Title ?? "",

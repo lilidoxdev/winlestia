@@ -1,6 +1,7 @@
 # Python 3.12 / Windows 11. Correspondance locale du lanceur et arithmétique bornée ; ni eval ni exécution de shell.
 import ast, json, math, operator, os, re, shutil, threading, time, unicodedata
 from pathlib import Path
+from atomicfile import write_text as atomic_write_text
 
 
 def tr(text, language='fr'):
@@ -479,7 +480,7 @@ def _hidden_write(names):
     try:
         if names:
             f.parent.mkdir(parents=True, exist_ok=True)
-            f.write_text(json.dumps(sorted(names), ensure_ascii=False), encoding='utf-8')
+            atomic_write_text(f, json.dumps(sorted(names), ensure_ascii=False))
         elif f.exists():
             f.unlink()
     except OSError:

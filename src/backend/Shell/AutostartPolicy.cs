@@ -9,6 +9,11 @@ static class AutostartPolicy
 {
     internal const string TaskName = "WinlestiaShell";
 
+    // Le XML temporaire de la tâche vit dans le dossier utilisateur (LOCALAPPDATA, Panneaux, tmp), jamais dans le TEMP partagé ; nom
+    // unique par appel.
+    internal static string PrivateTaskFile(string localAppData) =>
+        System.IO.Path.Combine(localAppData, "Panneaux", "tmp", "winlestia-task-" + Guid.NewGuid().ToString("N") + ".xml");
+
     internal enum Step
     {
         None, CreateTaskThenDropRun

@@ -187,7 +187,7 @@ internal sealed class ClipboardService : IClipboardService, IDisposable
     {
         try
         {
-            File.WriteAllText(Path.Combine(folder, "history.json"), JsonSerializer.Serialize(items, Store.Json));
+            Winlestia.Shared.AtomicFile.WriteAllText(Path.Combine(folder, "history.json"), JsonSerializer.Serialize(items, Store.Json));
         }
         catch (Exception ex) { Store.Log("Presse-papiers sauvegarde: " + ex.Message); }
     }

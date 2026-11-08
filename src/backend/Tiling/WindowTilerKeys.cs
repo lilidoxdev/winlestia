@@ -244,7 +244,7 @@ internal sealed partial class WindowTiler
         try
         {
             Directory.CreateDirectory(Store.DataDir);
-            File.WriteAllText(ExclusionPath, string.Join("\n", excluded!.OrderBy(s => s, StringComparer.Ordinal)));
+            Winlestia.Shared.AtomicFile.WriteAllText(ExclusionPath, string.Join("\n", excluded!.OrderBy(s => s, StringComparer.Ordinal)));
         }
         catch (Exception ex) { Store.Log("Tuilage · exclusions non enregistrées : " + ex.Message); }
     }

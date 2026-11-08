@@ -112,7 +112,8 @@ def stop_previous_sync(command):
     script = next((p for p in paths if Path(p).name.lower() == 'sync_theme.py'), None)
     if not script:
         return
-    literal = script.replace("'", "''")
+    # PowerShell traite aussi les apostrophes typographiques comme délimiteurs
+    literal = re.sub("(['‘’‚‛])", lambda m: m.group(0) * 2, script)
     code = (
         "$target='"
         + literal

@@ -60,14 +60,26 @@ Window {
         pageMode === "capture" ? 620 :
         450 + (pageMode === "controls" ? mixerExtent + wifiExtent : 0)
 
+    // Réserve du rail social. Le rail est sa propre fenêtre collée au bord droit du même écran (Bridge.screenX/Width).
+    // Seul le recouvrement réel entre le tableau de bord centré et le rail est réservé : rien ne bouge tant qu'ils ne se touchent pas ;
+    // le panneau glisse alors vers la gauche (jusqu'à la marge d'écran) et seulement si cela ne suffit pas, les volets rétrécissent
+    // (drawer.maxWidth, échelle minimale dans Content). Sur une très petite largeur logique, le reste recouvre le tableau de bord.
+    readonly property bool railBound: pageMode === "dashboard"
+    readonly property real railLeft: Bridge.screenWidth - socialRail.reservedWidth
+    readonly property real dashboardOverlap: railBound ? Math.max(0, (Bridge.screenWidth + panelWidth) / 2 - railLeft) : 0
+    readonly property real dashboardShift: Math.min(dashboardOverlap, Math.max(0, (Bridge.screenWidth - panelWidth) / 2 - 8))
+    // L'ouverture du rail anime la réserve : panelWidth doit alors suivre le contenu mis à l'échelle image par image.
+    readonly property bool railMoving: socialRail.reservedWidth > 0 && socialRail.reveal < 1
     property real panelWidth: Math.ceil((pageMode === "dashboard" ? Math.max(600, drawer.implicitWidth || 854) : contentWidth) + 40)
     property real panelHeight: Bridge.fileDragNearTop ? 0 :
         Math.ceil(Math.max(1, pageMode === "dashboard" ?
             (vis.dashboard ? drawer.implicitHeight : peek ? 82 : 0) : extraHeight))
-    width: Math.max(Math.min(1600, Bridge.screenWidth - 16), Math.ceil(panelWidth))
+    // La largeur de fenêtre reste stable (large) sauf si le panneau est décalé par le rail : elle épouse alors le panneau pour rester à
+    // l'écran.
+    width: dashboardShift > 0 ? Math.ceil(panelWidth) + 16 : Math.max(Math.min(1600, Bridge.screenWidth - 16), Math.ceil(panelWidth))
     height: Math.max(Math.min(900, Bridge.screenHeight - Config.border.thickness), Math.ceil(panelHeight))
     Behavior on panelWidth {
-        enabled: !Appearance.reducedEffects
+        enabled: !Appearance.reducedEffects && !window.railMoving
         Anim {
             duration: Math.round(250 * (Bridge.settings.motionScale ?? 1))
             easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
@@ -83,7 +95,8 @@ Window {
     onPanelWidthChanged: Bridge.updateSurfaces()
     onPanelHeightChanged: Bridge.updateSurfaces()
     property int dashboardTab: drawer.dashState.currentTab
-    x: Bridge.screenX + (Bridge.screenWidth - width) / 2
+    // Centré sur l'écran, décalé vers la gauche du recouvrement réel avec le rail social.
+    x: Bridge.screenX + (Bridge.screenWidth - width) / 2 - dashboardShift
     y: Bridge.screenY + Math.max(0, Config.border.thickness)
     visible: panelHeight > 1 && !Bridge.screenFullscreen
     property int servicePage: pageMode === "dashboard" ? drawer.dashState.currentTab :
@@ -113,7 +126,13 @@ Window {
         if (mode === "dashboard" || mode === "media" || mode === "performance" || mode === "access") {
             extraOpen = false;
             pageMode = "dashboard";
-            drawer.dashState.currentTab = mode === "media" ? 1 : mode === "performance" ? 2 : mode === "access" ? 3 : 0;
+            // Les modes explicites choisissent leur onglet ; une ouverture simple ou une bascule garde le dernier onglet de la session.
+            if (mode === "media")
+                drawer.dashState.currentTab = 1;
+            else if (mode === "performance")
+                drawer.dashState.currentTab = 2;
+            else if (mode === "access")
+                drawer.dashState.currentTab = 3;
             vis.dashboard = true;
             peek = true;
         } else {
@@ -202,6 +221,7 @@ Window {
     // Tous les fonds sont dessinés une seule fois par la surface d'écran partagée.
     Dashboard.Wrapper {
         id: drawer
+        maxWidth: window.railBound ? Math.max(drawer.minWidth, railLeft - 16 - 40) : 0
         y: Math.min(0, window.panelHeight - implicitHeight)
         anchors.horizontalCenter: parent.horizontalCenter
         visibilities: vis
@@ -540,6 +560,8 @@ Window {
         id: bottomDock
         objectName: "bottomDock"
     }
-    SocialRail {}
+    SocialRail {
+        id: socialRail
+    }
     BookmarksRail {}
 }

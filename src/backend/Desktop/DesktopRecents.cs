@@ -165,7 +165,7 @@ internal static class DesktopRecents
                 try
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                    File.WriteAllText(file, JsonSerializer.Serialize(ordered));
+                    Winlestia.Shared.AtomicFile.WriteAllText(file, JsonSerializer.Serialize(ordered));
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
                 {

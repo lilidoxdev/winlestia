@@ -115,18 +115,13 @@ internal sealed partial class QtShellBridge
                 if (snapshot != null)
                 {
                     player = snapshot;
-                    mixer.MediaApp = snapshot.App;
-                    var stem = snapshot.App switch
-                    {
-                        "Microsoft Edge" => "msedge",
-                        "Google Chrome" => "chrome",
-                        _ => snapshot.App
-                    };
-                    spectrum.SetTarget(active && page == 1 && snapshot.Playing
-                        ? mixer.Applications.FirstOrDefault(a => Path.GetFileNameWithoutExtension(a.path).Equals(stem,
-                            StringComparison.OrdinalIgnoreCase))?.pid
-                            ?? 0
-                        : 0);
+                    mixer.MediaApp = snapshot.ExeStem;
+                    mixer.MediaAumid = snapshot.Aumid;
+                    // Technique : capture WASAPI process loopback (ProcessAudio.dll) sur le PID racine du lecteur choisi, avec
+                    // INCLUDE_TARGET_PROCESS_TREE, puis FFT de 2048 points fenêtrée de Hann dans WindowsSpectrum (48 bandes log).
+                    // Ni un vu-mètre, ni la sortie par défaut : le son d'une autre application (un appel) n'est pas capturé.
+                    // Au repos : un lecteur en pause ou terminé donne la cible 0, la capture est détruite et les barres retombent à zéro.
+                    spectrum.SetTarget(active && page == 1 && snapshot.Playing ? mixer.MediaPid : 0);
                     string key = snapshot.Title + snapshot.Artist;
                     if (snapshot.Artwork != null && key != artworkKey)
                     {

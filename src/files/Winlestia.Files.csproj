@@ -18,6 +18,7 @@
   <ItemGroup>
     <!-- Shared tokens, linked not copied. Theme/Store/UI/Motion are satisfied by BackendShim.cs (Visuals.cs and Themes.cs drag in GlassWindow, Native, Motion, Store...). -->
     <Compile Include="../backend/Core/Safe.cs" Link="Shared\Safe.cs" />
+    <Compile Include="../backend/Core/AtomicFile.cs" Link="Shared\AtomicFile.cs" />
     <Compile Include="../backend/Theme/Tokens.cs" Link="Shared\Tokens.cs" />
     <Compile Include="../backend/Theme/UiTokens.cs" Link="Shared\UiTokens.cs" />
     <Compile Include="../backend/Files/FilesPipe.cs" Link="Shared\FilesPipe.cs" />
