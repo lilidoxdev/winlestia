@@ -5,7 +5,7 @@ import qs.services
 import qs.config
 import "."
 
-// Small muted label, then a rounded card holding the rows of the section.
+// Petit libellé discret, puis une carte arrondie contenant les lignes de la section.
 ColumnLayout {
     id: section
 

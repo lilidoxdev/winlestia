@@ -14,7 +14,7 @@ Item {
     readonly property int current: info.current || 0
     property bool menuOpen: false
     property real wheelAcc: 0
-    // Right-click on a dot: Dock.qml opens the shared dock menu (kind "desktop") anchored on that dot. Not offered with a single desktop.
+    // Clic droit sur un point : Dock.qml ouvre le menu partagé du dock (kind « desktop ») ancré sur ce point. Absent avec un seul bureau.
     signal menuRequested(Item anchor, var data)
     visible: (Bridge.settings.desktopIndicator ?? true) && count > 0
     implicitWidth: visible ? pills.width + 8 + addButton.implicitWidth + 4 : 0

@@ -6,8 +6,8 @@ import qs.config
 import qs.services
 import "settings"
 
-// "Personnaliser": left column (search + pages), right side (the selected page). Modules live in settings/.
-// Entry point loaded by Main.qml; go(i) / openSection(name) are the jump API.
+// « Personnaliser » : colonne de gauche (recherche + pages), partie droite (la page choisie). Les modules sont dans settings/.
+// Point d'entrée chargé par Main.qml ; go(i) / openSection(name) forment l'API de navigation.
 Item {
     id: page
 
@@ -24,7 +24,7 @@ Item {
         slot.index = current;
     }
 
-    // "social" and "bookmarks" jump to those sections of the Applications page.
+    // « social » et « bookmarks » mènent à ces sections de la page Applications.
     function openSection(name: string): void {
         go(SettingsIndex.pageIndex("apps"));
         slot.jumpTo(name);
@@ -34,7 +34,7 @@ Item {
         customEditor.openEditor();
     }
 
-    // Created on first use (rare, owns two native windows).
+    // Créé à la première utilisation (rare, possède deux fenêtres natives).
     function openDetectionGuide(): void {
         if (!detectionGuide)
             detectionGuide = detectionComp.createObject(page);

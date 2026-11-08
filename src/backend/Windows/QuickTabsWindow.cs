@@ -268,13 +268,13 @@ internal sealed class QuickTabsWindow : GlassWindow
         uint Modifiers() => (ctrl.IsChecked == true ? 2u : 0) | (alt.IsChecked == true ? 1u : 0) | (shift.IsChecked == true ? 4u : 0);
         var apply = UI.Button("Appliquer", () =>
         {
-            if (!owner.SetPaletteShortcut(Modifiers(), key, out var error))
+            if (!owner.Keys.SetPaletteShortcut(Modifiers(), key, out var error))
             {
                 status.Text = error;
                 status.Foreground = UI.Brush("#F3CF91");
                 return;
             }
-            status.Text = "Actif : " + owner.PaletteLabel + " ouvre la commande rapide, même launcher fermé.";
+            status.Text = "Actif : " + owner.Keys.PaletteLabel + " ouvre la commande rapide, même launcher fermé.";
             status.Foreground = UI.Brush("#A0E7CF");
         });
         apply.Padding = new Thickness(14, 7, 14, 7);
@@ -282,8 +282,8 @@ internal sealed class QuickTabsWindow : GlassWindow
         System.Windows.Automation.AutomationProperties.SetName(apply, "Appliquer le raccourci de la commande rapide");
         row.Children.Add(apply);
         list.Children.Add(row);
-        status.Text = string.IsNullOrEmpty(owner.PaletteStatus) ? (Store.State.QuickTabs.Count) + " onglet"
-            + (Store.State.QuickTabs.Count == 1 ? "" : "s") + " · actif : " + owner.PaletteLabel : owner.PaletteStatus;
+        status.Text = string.IsNullOrEmpty(owner.Keys.PaletteStatus) ? (Store.State.QuickTabs.Count) + " onglet"
+            + (Store.State.QuickTabs.Count == 1 ? "" : "s") + " · actif : " + owner.Keys.PaletteLabel : owner.Keys.PaletteStatus;
         status.Foreground = UI.Dim;
     }
 }

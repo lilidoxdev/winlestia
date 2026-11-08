@@ -37,14 +37,17 @@ html,body{{width:100vw;height:100vh;overflow:hidden;background:#0a0613;font-fami
   background:rgba(10,6,19,.45);border:1px solid rgba(255,255,255,.16)}}
 #title,#end{{position:absolute;inset:0;opacity:0}}
 #title .bgp,#end .bgp{{position:absolute;inset:-40px;background:url("../wallpaper-aurora.svg") center/cover;filter:saturate(1.15)}}
-#title .shade,#end .shade{{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(10,6,19,.62),rgba(10,6,19,.18) 70%,rgba(10,6,19,0))}}
+#title .shade,#end .shade{{position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(10,6,19,.62),rgba(10,6,19,.18) 70%,rgba(10,6,19,0))}}
 .cen{{position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;text-align:center}}
-.mark{{width:250px;height:178px;background:url("../../../../src/frontend/assets/winlestia-mark.png") no-repeat;background-size:350px 350px;background-position:-53px -76px;
+.mark{{width:250px;height:178px;background:url("../../../../src/frontend/assets/winlestia-mark.png") no-repeat;
+  background-size:350px 350px;background-position:-53px -76px;
   filter:drop-shadow(0 0 22px rgba(214,150,255,.75)) drop-shadow(0 6px 22px rgba(60,20,120,.6))}}
 .nm{{font-weight:700;letter-spacing:-2px;line-height:1;display:flex;filter:drop-shadow(0 4px 24px rgba(120,40,200,.55))}}
 .nm span{{display:inline-block;background:linear-gradient(180deg,#fff 30%,#e6c9ff 100%);-webkit-background-clip:text;color:transparent}}
 .tg{{font-weight:500;color:rgba(255,255,255,.92);text-shadow:0 2px 14px rgba(20,8,40,.6)}}
-.url{{padding:12px 28px;border-radius:99px;font-weight:500;color:#f4e9ff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.26);
+.url{{padding:12px 28px;border-radius:99px;font-weight:500;color:#f4e9ff;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.26);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 20px rgba(10,6,19,.35)}}
 </style></head><body>
 <div id="root">
@@ -53,9 +56,11 @@ html,body{{width:100vw;height:100vh;overflow:hidden;background:#0a0613;font-fami
   <div id="card"><div id="cardin">{layers("c")}</div></div>
   <div id="cap"><div class="k" id="capk"></div><div class="s" id="caps"></div></div>
   <div id="title"><div class="bgp"></div><div class="shade"></div>
-    <div class="cen" id="tcen"><div class="mark" id="tmark"></div><div class="nm" id="tnm"></div><div class="tg" id="ttg">A port of Caelestia for Windows 11</div></div></div>
+    <div class="cen" id="tcen"><div class="mark" id="tmark"></div><div class="nm" id="tnm"></div>
+      <div class="tg" id="ttg">A port of Caelestia for Windows 11</div></div></div>
   <div id="end"><div class="bgp"></div><div class="shade"></div>
-    <div class="cen" id="ecen"><div class="mark" id="emark"></div><div class="nm" id="enm"></div><div class="tg" id="etg">Desktop shell for Windows 11</div><div class="url" id="eurl">{REPO_URL}</div></div></div>
+    <div class="cen" id="ecen"><div class="mark" id="emark"></div><div class="nm" id="enm"></div>
+      <div class="tg" id="etg">Desktop shell for Windows 11</div><div class="url" id="eurl">{REPO_URL}</div></div></div>
   <div id="foot">Motion design illustration</div>
 </div>
 <script src="timeline.js"></script>

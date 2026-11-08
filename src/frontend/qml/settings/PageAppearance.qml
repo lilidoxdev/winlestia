@@ -35,7 +35,8 @@ ColumnLayout {
                     spacing: Appearance.spacing.small
 
                     Repeater {
-                        // Preview swatches keep fixed colours on purpose: Porcelaine and Nuit never follow the wallpaper.
+                        // Les pastilles d'aperçu gardent volontairement des couleurs fixes : Porcelaine et Nuit ne suivent jamais le fond
+                        // d'écran.
                         model: [
                             {
                                 mode: "light",
@@ -82,7 +83,8 @@ ColumnLayout {
                             activeFocusOnTab: true
 
                             // L'action recolore le modèle ci-dessus, ce qui détruit ce délégué : tout lire avant de l'appeler.
-                            // Choosing "custom" only switches mode; the editor opens from the "Modifier ma palette" row below.
+                            // Choisir « custom » ne change que le mode ; l'éditeur s'ouvre depuis la ligne « Modifier ma palette » plus
+                            // bas.
                             function choose(): void {
                                 const m = modelData.mode, dark = modelData.dark ?? false;
                                 Bridge.action("theme", {

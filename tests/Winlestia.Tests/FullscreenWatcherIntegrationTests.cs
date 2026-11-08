@@ -1,4 +1,5 @@
-// C#12 / FullscreenWatcher / DESKTOP: opens real top-level windows (normal, captionless maximised, fullscreen) on the primary monitor and steals focus. Never run in CI.
+// C#12 / FullscreenWatcher / DESKTOP: opens real top-level windows (normal, captionless maximised, fullscreen) on the primary monitor and
+// steals focus. Never run in CI.
 using System;
 using System.Drawing;
 using System.Linq;
@@ -47,7 +48,8 @@ public class FullscreenWatcherIntegrationTests
     public void DetectsOnlyTrueFullscreenWindows() => Sta.Run(() =>
     {
         FullscreenWatcher.IncludeOwnProcessForTest = true;
-        FullscreenWatcher.IgnoredPids = () => System.Diagnostics.Process.GetProcessesByName("pythonw").Select(p => (uint)p.Id).ToArray();   // the running shell frontend (production ignores it too)
+        // the running shell frontend (production ignores it too)
+        FullscreenWatcher.IgnoredPids = () => System.Diagnostics.Process.GetProcessesByName("pythonw").Select(p => (uint)p.Id).ToArray();
         var screen = Screen.PrimaryScreen!;
         int fired = 0;
         Action onChanged = () => fired++;
@@ -56,28 +58,35 @@ public class FullscreenWatcherIntegrationTests
         try
         {
             Assert.True(Wait(() => FullscreenWatcher.Current.Length == 0, 500), "initial state is empty, got [" + Current() + "]");
-            var normal = new Form { StartPosition = FormStartPosition.Manual, Bounds = new Rectangle(screen.Bounds.X + 100, screen.Bounds.Y + 100, 600, 400) };
+            var normal = new Form { StartPosition = FormStartPosition.Manual,
+                Bounds = new Rectangle(screen.Bounds.X + 100, screen.Bounds.Y + 100, 600, 400) };
             normal.Show();
             Focus(normal);
-            Assert.False(Wait(() => FullscreenWatcher.Current.Length > 0, 500), "a normal window must not be counted as fullscreen, got [" + Current() + "]");
-            var wa = screen.WorkingArea;   // Electron-like maximized frameless window: work area plus ~8 px resize-border overhang, never the whole monitor
+            Assert.False(Wait(() => FullscreenWatcher.Current.Length > 0, 500),
+                "a normal window must not be counted as fullscreen, got [" + Current() + "]");
+            // Electron-like maximized frameless window: work area plus ~8 px resize-border overhang, never the whole monitor
+            var wa = screen.WorkingArea;
             var maxed = new Popup { StartPosition = FormStartPosition.Manual, Bounds = Rectangle.Inflate(wa, 8, 8) };
             maxed.Show();
             Focus(maxed);
-            Assert.False(Wait(() => FullscreenWatcher.Current.Length > 0, 600), "a maximized captionless window must not be counted, got [" + Current() + "]");
+            Assert.False(Wait(() => FullscreenWatcher.Current.Length > 0, 600),
+                "a maximized captionless window must not be counted, got [" + Current() + "]");
             maxed.Close();
-            var full = new Form { FormBorderStyle = FormBorderStyle.None, StartPosition = FormStartPosition.Manual, Bounds = screen.Bounds, TopMost = true };
+            var full = new Form { FormBorderStyle = FormBorderStyle.None, StartPosition = FormStartPosition.Manual, Bounds = screen.Bounds,
+                TopMost = true };
             full.Show();
             Focus(full);
             bool on = Wait(() => FullscreenWatcher.Current.Length == 1, 500);
             Assert.True(on, "fullscreen window is detected, current=[" + Current() + "]");
-            Assert.True(FullscreenWatcher.Current[0] == screen.DeviceName, "detected device is " + screen.DeviceName + ", got " + FullscreenWatcher.Current[0]);
+            Assert.True(FullscreenWatcher.Current[0] == screen.DeviceName,
+                "detected device is " + screen.DeviceName + ", got " + FullscreenWatcher.Current[0]);
             full.Bounds = new Rectangle(screen.Bounds.X + 100, screen.Bounds.Y + 100, 600, 400);
             Focus(full);
             Assert.True(Wait(() => FullscreenWatcher.Current.Length == 0, 800), "cleared after restore, got [" + Current() + "]");
             full.Bounds = screen.Bounds;
             Focus(full);
-            Assert.True(Wait(() => FullscreenWatcher.Current.Length == 1, 500), "second fullscreen entry is detected, got [" + Current() + "]");
+            Assert.True(Wait(() => FullscreenWatcher.Current.Length == 1, 500),
+                "second fullscreen entry is detected, got [" + Current() + "]");
             full.Close();
             normal.Close();
             Assert.True(Wait(() => FullscreenWatcher.Current.Length == 0, 800), "cleared after close, got [" + Current() + "]");

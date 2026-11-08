@@ -12,7 +12,7 @@ Rectangle {
         y: 18
         width: parent.width - 80
         height: Math.min(760, parent.height - 36)
-        // Mirrors Main.qml's extraBody: clip + opacity driven by the open flag.
+        // Reprend l'extraBody de Main.qml : rognage + opacité pilotés par le drapeau d'ouverture.
         clip: true
         opacity: root.open ? 1 : 0
         WorkspaceBrowser {

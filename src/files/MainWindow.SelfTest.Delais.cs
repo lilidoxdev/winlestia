@@ -5,49 +5,49 @@ namespace WinlestiaFiles;
 public sealed partial class MainWindow
 {
     // Attente de test : un tick du dispatcher : l'UI traite ses messages en attente.
-    const int PauseTickMs = 100;
+    internal const int PauseTickMs = 100;
     // Attente de test : un rendu WPF complet après un changement d'affichage.
-    const int PauseRenduMs = 150;
+    internal const int PauseRenduMs = 150;
     // Attente de test : la plus courte attente observable (minuteur ou relâchement d'un verrou).
-    const int PauseBreveMs = 200;
+    internal const int PauseBreveMs = 200;
     // Attente de test : une animation courte de l'interface.
-    const int PauseAnimationMs = 250;
+    internal const int PauseAnimationMs = 250;
     // Attente de test : une animation longue ou un survol temporisé.
-    const int PauseAnimationLongueMs = 300;
+    internal const int PauseAnimationLongueMs = 300;
     // Attente de test : une transition de page ou de dialogue.
-    const int PauseTransitionMs = 400;
+    internal const int PauseTransitionMs = 400;
     // Attente de test : les observateurs de fichiers et les temporisations antirebond ont eu le temps de tirer.
-    const int PauseStabilisationMs = 500;
+    internal const int PauseStabilisationMs = 500;
     // Attente de test : dépasser les temporisations antirebond de l'application.
-    const int PauseDebounceMs = 600;
+    internal const int PauseDebounceMs = 600;
     // Attente de test : la page est entièrement dessinée avant d'être manipulée.
-    const int PauseDessinMs = 700;
+    internal const int PauseDessinMs = 700;
     // Attente de test : la mise en page asynchrone est terminée.
-    const int PauseMiseEnPageMs = 800;
+    internal const int PauseMiseEnPageMs = 800;
     // Attente de test : une opération asynchrone brève est terminée.
-    const int PauseSecondeMs = 1000;
+    internal const int PauseSecondeMs = 1000;
     // Attente de test : une petite opération de fichier asynchrone est terminée.
-    const int PauseOperationMs = 1500;
+    internal const int PauseOperationMs = 1500;
     // Attente de test : la copie d'un petit fichier est terminée.
-    const int PauseCopieMs = 2000;
+    internal const int PauseCopieMs = 2000;
     // Attente de test : une sonde périodique de l'application a eu le temps de passer.
-    const int PauseSondeMs = 2500;
+    internal const int PauseSondeMs = 2500;
     // Attente de test : un scan en arrière-plan (palette, fond d'écran) est terminé.
-    const int PauseScanMs = 3000;
+    internal const int PauseScanMs = 3000;
     // Attente de test : le chargement initial d'un dossier volumineux est terminé.
-    const int PauseChargementMs = 4000;
+    internal const int PauseChargementMs = 4000;
     // Attente de test : une opération lente (réseau local, disque) est terminée.
-    const int PauseLongueMs = 5000;
+    internal const int PauseLongueMs = 5000;
     // Attente de test : délai maximal d'un événement attendu avant d'échouer le test.
     const int TimeoutEvenementMs = 8000;
     // Attente de test : une opération volumineuse est terminée.
-    const int PauseTresLongueMs = 10000;
+    internal const int PauseTresLongueMs = 10000;
     // Attente de test : délai maximal d'une attente moyenne avant d'échouer le test.
     const int TimeoutMoyenMs = 15000;
     // Attente de test : délai maximal d'une opération longue avant d'échouer le test.
     const int TimeoutLongMs = 25000;
     // Attente de test : un transfert complet est terminé.
-    const int PauseTransfertMs = 30000;
+    internal const int PauseTransfertMs = 30000;
     // Attente de test : délai maximal d'une opération de fichier avant d'échouer le test.
     const int TimeoutOperationMs = 40000;
     // Attente de test : délai maximal d'une suppression avant d'échouer le test.

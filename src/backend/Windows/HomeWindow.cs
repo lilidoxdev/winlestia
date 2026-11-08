@@ -34,12 +34,12 @@ internal sealed partial class HomeWindow : GlassWindow
         var actions = new StackPanel { Orientation = Orientation.Horizontal };
         DockPanel.SetDock(actions, Dock.Right);
         header.Children.Add(actions);
-        var palette = UI.Button(owner.PaletteLabel, () => owner.TogglePalette());
+        var palette = UI.Button(owner.Keys.PaletteLabel, () => owner.TogglePalette());
         palette.Padding = new Thickness(11, 7, 11, 7);
         palette.FontSize = 12;
         palette.Margin = new Thickness(0, 0, 6, 0);
         palette.VerticalAlignment = VerticalAlignment.Center;
-        palette.ToolTip = "Commande rapide · " + owner.PaletteLabel;
+        palette.ToolTip = "Commande rapide · " + owner.Keys.PaletteLabel;
         System.Windows.Automation.AutomationProperties.SetName(palette, "Ouvrir la commande rapide");
         actions.Children.Add(palette);
         var atelier = UI.Button("Atelier", () => owner.OpenTools());

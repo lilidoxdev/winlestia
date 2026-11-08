@@ -36,7 +36,7 @@ def main():
     query = root.findChild(QObject, 'workspaceQuery')
     frames = [0]
     view.frameSwapped.connect(lambda: frames.__setitem__(0, frames[0] + 1))
-    # Hidden: no rendering at all.
+    # Masqué : aucun rendu.
     R.pump(app, 300)
     f0 = frames[0]
     R.pump(app, 1500)
@@ -97,8 +97,8 @@ def main():
     QTest.keyClick(view, Qt.Key_Escape)
     R.pump(app, 300)
     QTest.mouseClick(view, Qt.LeftButton, Qt.NoModifier, QPoint(700, 745))
-    R.pump(app, 300)  # dismiss popup if Esc did not
-    # Regression: context menu must reopen every time (real mouse/wheel events only).
+    R.pump(app, 300)  # fermer la popup si Échap ne l'a pas fait
+    # Régression : le menu contextuel doit se rouvrir à chaque fois (vrais événements souris/molette uniquement).
     ctx = root.findChild(QObject, 'workspaceContext')
     mn = root.findChild(QObject, 'workspaceMenu')
     shown = lambda: (
@@ -235,7 +235,7 @@ def main():
     view.grabWindow().save(str(OUT / f'espace-list-{tag}.png'))
     QTest.mouseClick(view, Qt.LeftButton, Qt.NoModifier, QPoint(1312, 130))
     R.pump(app, 500)
-    # Esc: with text it must be consumed by the search field (clear), otherwise Main's shortcut closes.
+    # Échap : avec du texte, le champ de recherche le consomme (efface), sinon le raccourci de Main ferme.
     query.forceActiveFocus()
     query.setProperty('text', 'bl')
     R.pump(app, 300)
@@ -314,12 +314,12 @@ def main():
     view.grabWindow().save(str(OUT / f'espace-flat-{tag}.png'))
     b.setProperty('flatMode', False)
     R.pump(app, 400)
-    # Catalog change while open: incremental row update, no crash.
+    # Changement de catalogue pendant l'ouverture : mise à jour incrémentale des lignes, sans plantage.
     stub._apps = [dict(a, favorite=True) if a['id'] == 'e0' else a for a in stub._apps]
     stub.catalogChanged.emit()
     R.pump(app, 400)
     check('catalogChanged applied', root.findChild(QObject, 'workspaceBrowser').property('tileCount') > 0)
-    # Close / reopen: state survives, no frames while hidden again.
+    # Fermeture / réouverture : l'état survit, aucune image tant qu'il est de nouveau masqué.
     root.setProperty('open', False)
     R.pump(app, 600)
     f2 = frames[0]

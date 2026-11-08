@@ -1,4 +1,4 @@
-# Terminal scheme must follow the shell theme mode. Run: python -m unittest discover -s src/terminal/tests
+# Le schéma du terminal doit suivre le mode du thème du shell. Lancer : python -m unittest discover -s src/terminal/tests
 import sys, json, tempfile, unittest
 from pathlib import Path
 

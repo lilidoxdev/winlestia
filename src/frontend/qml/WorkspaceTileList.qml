@@ -194,7 +194,7 @@ ListView {
                 x: index * grid.cellWidth
                 width: grid.cellWidth
                 height: grid.cellHeight
-                // Entrance stagger: only the first rows ever have a non-final value, and only while grid.reveal runs.
+                // Décalage d'entrée : seules les premières lignes ont une valeur non finale, et seulement pendant grid.reveal.
                 readonly property real rt: (grid.reveal * 880 - Math.min(line.index, 6) * 55) / 340
                 readonly property real t: rt <= 0 ? 0 : rt >= 1 ? 1 : rt
                 readonly property bool current: browser.cur === flatIndex && grid.activeFocus
@@ -317,7 +317,7 @@ ListView {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            // Shared tooltip carries the full name and category (either may be elided).
+                            // L'info-bulle partagée porte le nom complet et la catégorie (l'un ou l'autre peut être tronqué).
                             onEntered: browser.hoverTip(tile,
                                 tile.name + (tile.category && (catText.truncated || nameText.truncated)
                                 ? " · " + tile.category : ""))

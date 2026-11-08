@@ -61,7 +61,8 @@ RowLayout {
                             id: browser.entries[0].id
                         });
                 }
-                // First Esc clears the text (overrides Main's Escape shortcut only when there is text); next Esc closes via Main.
+                // Un premier Échap vide le texte (prend le pas sur le raccourci Échap de Main seulement s'il y a du texte) ; le suivant
+                // ferme via Main.
                 Keys.onShortcutOverride: event => {
                     if (event.key === Qt.Key_Escape && query.text.length > 0)
                         event.accepted = true;

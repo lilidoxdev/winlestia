@@ -63,7 +63,7 @@ internal static class Uia
                 _ = e.Current.BoundingRectangle;
             }
             catch { return true; }
-            Task.Delay(PauseTickMs).Wait();
+            Task.Delay(MainWindow.PauseTickMs).Wait();
         }
         try
         {
@@ -195,10 +195,10 @@ internal static class Uia
                             if (boxes.Count == 0)
                                 continue;
                         }
-                        Task.Delay(PauseDessinMs).Wait();     // la page doit être entièrement dessinée avant la bascule
+                        Task.Delay(MainWindow.PauseDessinMs).Wait();     // la page doit être entièrement dessinée avant la bascule
                         log.AddRange(Dump(w).Select(l => "    " + l));
                         int n = boxes.Count(b => Act(b, true));
-                        Task.Delay(PauseStabilisationMs).Wait();
+                        Task.Delay(MainWindow.PauseStabilisationMs).Wait();
                         foreach (var bx in boxes)
                         {
                             try
@@ -249,7 +249,7 @@ internal static class Uia
                         break;
                 }
                 if (!done)
-                    Task.Delay(PauseRenduMs).Wait();
+                    Task.Delay(MainWindow.PauseRenduMs).Wait();
             }
             if (!done)
             {
@@ -274,7 +274,7 @@ internal static class Uia
                 }
                 break;
             }
-            Task.Delay(PauseTransitionMs).Wait();     // let the dialog switch page
+            Task.Delay(MainWindow.PauseTransitionMs).Wait();     // let the dialog switch page
         }
         return log;
     });

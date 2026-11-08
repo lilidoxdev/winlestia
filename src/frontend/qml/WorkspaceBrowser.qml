@@ -1,7 +1,9 @@
-// Windows library ("Ton espace"), composed from Caelestia's original typography, ripples, menus and motion.
-// Performance model: the catalog is indexed once per catalog change (off the open path), the tile model is a
-// persistent ListModel patched incrementally (never rebuilt on open or on filter), delegates are recycled, and
-// every animation is gated on visibility and on the "Effets allégés" preference.
+// Bibliothèque Windows (« Ton espace »), composée à partir de la typographie, des ondulations, des menus et du mouvement d'origine de
+// Caelestia.
+// Modèle de performance : le catalogue est indexé une fois par changement de catalogue (hors du chemin d'ouverture), le modèle de tuiles
+// est un
+// ListModel persistant corrigé de façon incrémentale (jamais reconstruit à l'ouverture ni au filtrage), les délégués sont recyclés, et
+// chaque animation dépend de la visibilité et de la préférence « Effets allégés ».
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as C
@@ -35,9 +37,9 @@ Item {
     property var secOrder: []
     property int cur: -1
     property var lineSigs: []
-    // "Effets allégés": no bounce, no stagger, no scale; only short fades (durations are already scaled down).
+    // « Effets allégés » : ni rebond, ni décalage, ni zoom ; seulement de courts fondus (les durées sont déjà réduites).
     readonly property bool fx: !Appearance.reducedEffects
-    // Entrance progress per region (1 = settled). Driven only by openAnim, which only runs while visible.
+    // Progression d'entrée par région (1 = terminée). Pilotée par openAnim seule, qui ne tourne que visible.
     property real pPanel: 1
     property real pSide: 1
     property real pHead: 1
@@ -52,7 +54,7 @@ Item {
         return String(text).toLocaleLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     }
 
-    // ---- Data: indexed once per catalog change, never on open -------------------------------------------------
+    // ---- Données : indexées une fois par changement de catalogue, jamais à l'ouverture ----------------------------
     property var index: []
     property var counts: ({
             apps: 0,
@@ -66,7 +68,8 @@ Item {
     function rebuild() {
         stale = false;
         const raw = Bridge.apps || [];
-        // Dedupe: normalized target path, else name + kind. Keep the entry with the best metadata (favorite, recent, category).
+        // Dédoublonnage : chemin cible normalisé, sinon nom + type. On garde l'entrée aux meilleures métadonnées (favori, récent,
+        // catégorie).
         const score = e => (e.favorite ? 4 : 0) + (e.recent >= 0 ? 2 : 0) + (e.category ? 1 : 0);
         const seen = new Map(), list = [];
         for (const e of raw) {
@@ -193,7 +196,7 @@ Item {
         return fold(e.category || "").startsWith("windows et peri");
     }
 
-    // ---- Sections: Favoris, Récents, categories A-Z, Dossiers, Outils Windows (or letters in flat A-Z mode) ----
+    // ---- Sections : Favoris, Récents, catégories A-Z, Dossiers, Outils Windows (ou lettres en mode plat A-Z) ----
     function buildSections() {
         const list = entries, out = [];
         if (flatMode) {
@@ -280,7 +283,7 @@ Item {
         return out;
     }
 
-    // ---- Line model: one row per tile line (or a zero-height stub for a collapsed section), patched in place ------
+    // ---- Modèle de lignes : une par ligne de tuiles (ou une souche de hauteur nulle pour une section repliée), corrigé sur place ----
     ListModel {
         id: rows
     }
@@ -375,7 +378,8 @@ Item {
         else
             firstBuild.start();
     }
-    // One-shot preload after the shell is idle; later catalog changes are debounced and also applied while hidden.
+    // Préchargement unique une fois le shell inactif ; les changements de catalogue suivants sont temporisés et appliqués aussi en étant
+    // masqué.
     Timer {
         id: firstBuild
         interval: 600
@@ -420,7 +424,7 @@ Item {
         }
     }
 
-    // ---- Open: scale + fade with a slight overshoot, regions stagger in. Stops when hidden. ------------------
+    // ---- Ouverture : zoom + fondu avec léger dépassement, les régions entrent en décalé. S'arrête une fois masqué. ----
     WorkspaceOpenAnim {
         id: openAnim
         browser: browser
@@ -478,9 +482,9 @@ Item {
     }
 
 
-    // Right-click menu: plain in-panel overlay, fully imperative. Root cause of "works only once": Menu.qml sets
-    // `expanded=false` itself when an item is picked, which destroyed a `expanded:context.opened` binding, so the menu
-    // stayed at height 0 / opacity 0 forever. Never bind `expanded`; openMenu/closeMenu own the whole state.
+    // Menu du clic droit : surcouche simple dans le panneau, entièrement impérative. Cause de « ne marche qu'une fois » : Menu.qml met
+    // `expanded=false` lui-même quand un élément est choisi, ce qui détruisait une liaison `expanded:context.opened`, et le menu
+    // restait à hauteur 0 / opacité 0. Ne jamais lier `expanded` ; openMenu/closeMenu gèrent tout l'état.
     WorkspaceContextMenu {
         id: context
         browser: browser
@@ -515,7 +519,7 @@ Item {
                     browser: browser
                     grid: grid
                 }
-                // Categories wrap onto several lines instead of clipping; the row collapses to one line by default.
+                // Les catégories passent à la ligne au lieu d'être rognées ; la rangée se replie sur une ligne par défaut.
                 WorkspaceChips {
                     id: chipsBox
                     browser: browser
@@ -546,7 +550,7 @@ Item {
             }
         }
     }
-    // One shared tooltip instead of a Popup per tile.
+    // Une seule info-bulle partagée au lieu d'une Popup par tuile.
     WorkspaceTip {
         id: tip
         browser: browser

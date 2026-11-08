@@ -322,9 +322,9 @@ internal sealed partial class QtShellBridge
             string error;
             bool success = Text(c.Args, "kind") switch
             {
-                "palette" => owner.SetPaletteShortcut(modifiers, key, out error),
-                "wallpaper" => owner.SetWallpaperShortcut(modifiers, key, out error),
-                _ => owner.SetShortcut(modifiers, key, "home", out error)
+                "palette" => owner.Keys.SetPaletteShortcut(modifiers, key, out error),
+                "wallpaper" => owner.Keys.SetWallpaperShortcut(modifiers, key, out error),
+                _ => owner.Keys.SetShortcut(modifiers, key, "home", out error)
             };
             c.Notice = success ? "Raccourci enregistré" : error;
             if (success)

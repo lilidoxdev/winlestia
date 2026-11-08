@@ -60,7 +60,7 @@ StyledRect {
         Item {
             Layout.fillWidth: true
             implicitHeight: browser.navY(6) + 48
-            // Sliding selection pill: one rectangle that springs between items.
+            // Pastille de sélection glissante : un seul rectangle qui rebondit d'un élément à l'autre.
             Rectangle {
                 width: parent.width
                 height: 48

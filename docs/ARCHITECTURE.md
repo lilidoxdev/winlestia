@@ -28,7 +28,19 @@ Instance unique : un mutex `Local\PanneauxGlassV5` et des événements nommés (
 
 ## Découpage des gros fichiers
 
-`Coordinator` et `QtShellBridge` sont des classes partielles découpées par domaine : `Coordinator.<Domaine>.cs` (Shell, Tools, Views, Tick, Boards, Preview, Palette, Feedback, Desktop, Catalogue) et `QtShellBridge.<Domaine>.cs` (Frontend, Pipe, Cli, Sampling, Icons, State, Actions). Aucun fichier ne dépasse environ 600 lignes.
+`Coordinator` et `QtShellBridge` sont des classes partielles découpées par domaine : `Coordinator.<Domaine>.cs` (Shell, Tools, Views, Layout, Boards, Preview, Palette, Feedback, Dialogs, Desktop, Catalogue) et `QtShellBridge.<Domaine>.cs` (Frontend, Pipe, Cli, Sampling, Icons, State, Actions). Aucun fichier `Coordinator.*` ne dépasse 350 lignes ; les fichiers sources restent sous 500 lignes.
+
+Le Coordinator ne fait plus qu'orchestrer. Les collaborateurs vivent dans `Core/Services/` derrière des interfaces :
+
+- `ShellState` : état partagé (ouvert, replié, détaillé, dialogue ouvert, épinglé…) lu par le Coordinator, le dialogue et la boucle d'horloge.
+- `IDialogService` (`Scope`, `ScopeAsync`, `Layers`, `Confirm`, `Message`, `PickFiles`, `PickFolder`) : portée des dialogues modaux.
+- `ILaunchService` (`Launch`, `Reveal`, `LaunchTarget`, `LaunchShortcut`, `WebSearch`, `AddPath`, `Rescue`) et `LaunchRules` (décisions pures).
+- `ITickController` (`Tick`) : poignée latérale et repli automatique ; `TickRules` garde les seuils.
+- `IShortcutBindings` : libellés, états, réaffectation et aiguillage des raccourcis globaux (`Resolve` renvoie un `HotkeyAction`).
+- `QuickTabRules` (cibles `glass:`), `LayoutRules` (disposition des panneaux) et `ShellChrome` (construction de la poignée et de la barre d'outils).
+- `ICatalogueService`, `IDesktopIconsService`, `ITrayService`, `IPreviewExportService` : catalogue, icônes du Bureau, zone de notification, export d'aperçu.
+
+Les règles pures (`*Rules`) sont testées dans `tests/Winlestia.Tests` sans fenêtre ni processus.
 
 ## Où lire la suite
 

@@ -4,7 +4,8 @@ import QtQuick
 
 // Barres audio de la sortie par défaut. Le backend ne capture que lorsque wanted est vrai
 // (tableau de bord ouvert, onglet Dash affiché, pas de plein écran, effets non réduits).
-// One light item: a Repeater of rectangles whose height follows Bridge.audioBars (0-100). Nothing moves when the levels stop changing.
+// Un seul élément léger : un Repeater de rectangles dont la hauteur suit Bridge.audioBars (0-100). Rien ne bouge quand les niveaux se
+// stabilisent.
 Item {
     id: root
 

@@ -85,7 +85,10 @@ foreach ($required in 'RETABLIR_BARRE_WINDOWS.exe','SECOURS_BUREAU.exe','GlassBa
         Write-Warning "CI : $required absent, remplace par un fichier vide (setup de fumee)."
         New-Item -ItemType File -Force -Path (Join-Path $nativeDir $required) | Out-Null
     }
-    if (-not (Test-Path (Join-Path $nativeDir $required))) { throw "Composant natif manquant : $required dans $nativeDir. Copie-le depuis une installation de Winlestia (Glass-v5) ou recompile-le (voir native\README.md)." }
+    if (-not (Test-Path (Join-Path $nativeDir $required))) {
+        throw ("Composant natif manquant : $required dans $nativeDir. " +
+            "Copie-le depuis une installation de Winlestia (Glass-v5) ou recompile-le (voir native\README.md).")
+    }
 }
 
 # Fichiers attendus à côté de l’exécutable mais hors du publish
@@ -111,7 +114,8 @@ if ($CI -and -not (Test-Path $qtGlass)) {
 }
 if (-not (Test-Path $qtGlass)) {
     cmd /c (Join-Path $root 'src\native\qtglass\build-qt-glass.cmd')
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $qtGlass)) { throw "QtGlassBackdrop.dll manquant dans build : compilation (src\native\qtglass\build-qt-glass.cmd) echouee." }
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $qtGlass)) {
+        throw "QtGlassBackdrop.dll manquant dans build : compilation (src\native\qtglass\build-qt-glass.cmd) echouee." }
 }
 $frontDest = Join-Path $payload 'Caelestia-Windows'
 robocopy (Join-Path $root 'src\frontend') $frontDest /E /NFL /NDL /NJH /NJS /NP `
@@ -156,7 +160,8 @@ Get-ChildItem $site -Filter 'Qt63D*.dll'          | Remove-Item -Force
 Get-ChildItem $site -Filter 'Qt6Quick3D*.dll'     | Remove-Item -Force
 Get-ChildItem $site -Filter 'Qt6Charts*.dll'      | Remove-Item -Force
 Get-ChildItem $site -Filter 'Qt6Multimedia*.dll'  | Remove-Item -Force
-Get-ChildItem $site -Filter '*.pyd' | Where-Object { $_.Name -match 'WebEngine|Pdf|3D|Quick3D|Charts|Multimedia|DataVisualization|Graphs' } | Remove-Item -Force
+Get-ChildItem $site -Filter '*.pyd' | Where-Object { $_.Name -match 'WebEngine|Pdf|3D|Quick3D|Charts|Multimedia|DataVisualization|Graphs'
+} | Remove-Item -Force
 
 # Lanceurs pip (pyside6-*.exe, f2py.exe...) : outils de developpement, jamais lances par l'application,
 # et chacun embarque le chemin de l'interpreteur de construction.
@@ -186,11 +191,14 @@ if ($probeCode -ne 0) { throw "Le frontend ne s'importe pas depuis le payload : 
 Write-Host 'Terminal Winlestia' -ForegroundColor Cyan
 $terminalDest = Join-Path $payload 'Winlestia-Terminal'
 New-Item -ItemType Directory -Force -Path $terminalDest | Out-Null
-foreach ($file in 'Profile.ps1','Banner.ps1','Colors.ps1','ConfigurePackagedCmd.ps1','Configure-Policy.ps1','sync_theme.py','install.py','theme-template.json','winlestia.ico') {
+foreach ($file in 'Profile.ps1','Banner.ps1','Colors.ps1','ConfigurePackagedCmd.ps1','Configure-Policy.ps1','sync_theme.py','install.py',
+    'theme-template.json','winlestia.ico') {
     Copy-Item (Join-Path $root "src\terminal\$file") $terminalDest -Force
 }
 foreach ($dir in 'clink','clink-profile') {
-    robocopy (Join-Path $root "src\terminal\$dir") (Join-Path $terminalDest $dir) /E /NFL /NDL /NJH /NJS /NP /XF '*.log' '*history*' '*.tmp' 'clink_errorlevel*' | Out-Null
+    $terminalSrc = Join-Path $root "src\terminal\$dir"
+    $terminalDst = Join-Path $terminalDest $dir
+    robocopy $terminalSrc $terminalDst /E /NFL /NDL /NJH /NJS /NP /XF '*.log' '*history*' '*.tmp' 'clink_errorlevel*' | Out-Null
 }
 Write-Host '→ Compilation du setup' -ForegroundColor Cyan
 $iscc = @(

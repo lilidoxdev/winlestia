@@ -1,21 +1,6 @@
 // language: C# 12, file: Coordinator.Palette.cs, target: Windows 11 / .NET 8 WPF, palette de recherche, onglets rapides et notes
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Threading;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Win32;
-using Forms = System.Windows.Forms;
 
 namespace PanneauxGlass;
 
@@ -24,166 +9,75 @@ internal sealed partial class Coordinator
     internal void ClosePalette() => palette?.Close();
     internal void TogglePalette()
     {
-        if (QtShell != null)
-        {
-            QtShell.Send("palette");
+        if (ForwardToQt("palette"))
             return;
-        }
-        if (paletteOpen)
-        {
+        if (state.PaletteOpen)
             palette?.Close();
-            return;
-        }
-        ShowPalette();
+        else
+            ShowPalette();
     }
     internal void ShowPalette()
     {
-        if (QtShell != null)
-        {
-            QtShell.Send("palette");
+        if (ForwardToQt("palette") || state.PaletteOpen)
             return;
-        }
-        if (paletteOpen)
-            return;
-        paletteOpen = true;
-        var dialog = new CommandPalette(this) { Owner = open ? Anchor : null, ShowInTaskbar = preview };
+        state.PaletteOpen = true;
+        var dialog = new CommandPalette(this) { Owner = OpenOwner, ShowInTaskbar = preview };
         palette = dialog;
-        DialogLayers(true);
+        dialogs.Layers(true);
         dialog.Closed += (_, _) =>
         {
-            paletteOpen = false;
+            state.PaletteOpen = false;
             if (ReferenceEquals(palette, dialog))
                 palette = null;
-            DialogLayers(settingsOpen);
-            awaySince = DateTime.MinValue;
+            dialogs.Layers(state.SettingsOpen);
+            state.AwaySince = DateTime.MinValue;
         };
         dialog.Show();
         Native.Raise(dialog);
     }
-    internal void OpenFocus() => RunControlDialog(open ? Anchor : null, () =>
-    {
-        var dialog =
-        new FocusSetupWindow(this) { Owner = open ? Anchor : null, ShowInTaskbar = preview };
-        dialog.ShowDialog();
-    });
-    internal void EditQuickTabs(Window? parent = null)
-    {
-        bool previous = settingsOpen;
-        settingsOpen = true;
-        DialogLayers(true);
-        try
-        {
-            var dialog = new QuickTabsWindow(this) { Owner = parent ?? Anchor, ShowInTaskbar = preview };
-            dialog.ShowDialog();
-        }
-        finally
-        {
-            settingsOpen = previous;
-            DialogLayers(previous);
-            awaySince = DateTime.MinValue;
-        }
-    }
+    internal void OpenFocus() => ShowModal(() => new FocusSetupWindow(this), OpenOwner);
+    internal void EditQuickTabs(Window? parent = null) => ShowModal(() => new QuickTabsWindow(this), parent ?? Anchor);
+    // Les onglets glass: pointent vers une vue du Coordinator ; tout le reste est un raccourci Windows.
     internal void RunQuickTab(WindowsShortcut tab)
     {
         string target = tab.Target ?? "";
-        if (target.StartsWith("glass:", StringComparison.OrdinalIgnoreCase))
+        if (!QuickTabRules.IsInternal(target))
         {
-            switch (target[6..].Trim().ToLowerInvariant())
-            {
-                case "home":
-                    ShowHome();
-                    break;
-                case "apps":
-                    ShowWorkspace("apps");
-                    break;
-                case "games":
-                    ShowWorkspace("games");
-                    break;
-                case "projects":
-                    ShowWorkspace("projects");
-                    break;
-                case "documents":
-                    ShowWorkspace("documents");
-                    break;
-                case "workspace":
-                    ShowWorkspace();
-                    break;
-                case "note":
-                    OpenNotes();
-                    break;
-                case "focus":
-                    OpenFocus();
-                    break;
-                case "settings":
-                    Settings();
-                    break;
-                case "tools":
-                    OpenTools();
-                    break;
-                case "capture":
-                    OpenCapture();
-                    break;
-                case "text":
-                    OpenCapture(textOnly: true);
-                    break;
-                case "clipboard":
-                    OpenClipboard();
-                    break;
-                case "audio":
-                    OpenAudio();
-                    break;
-                case "workspaces":
-                    OpenWorkspaces();
-                    break;
-                case "files":
-                    OpenLargeFiles();
-                    break;
-                case "help":
-                    OpenHelp();
-                    break;
-                case "pin":
-                    ToggleAlwaysOnTop();
-                    break;
-                case "memo":
-                    OpenMemo();
-                    break;
-                case "controls":
-                    ToggleControls();
-                    break;
-                case "pc":
-                    TogglePc();
-                    break;
-                case "palette":
-                    TogglePalette();
-                    break;
-                default:
-                    Message("Cet onglet rapide pointe vers une vue inconnue.\n" + target);
-                    break;
-            }
+            LaunchWindowsShortcut(tab);
             return;
         }
-        LaunchWindowsShortcut(tab);
+        switch (QuickTabRules.Parse(target))
+        {
+            case QuickTabView.Home: ShowHome(); break;
+            case QuickTabView.Apps: ShowWorkspace("apps"); break;
+            case QuickTabView.Games: ShowWorkspace("games"); break;
+            case QuickTabView.Projects: ShowWorkspace("projects"); break;
+            case QuickTabView.Documents: ShowWorkspace("documents"); break;
+            case QuickTabView.Workspace: ShowWorkspace(); break;
+            case QuickTabView.Note: OpenNotes(); break;
+            case QuickTabView.Focus: OpenFocus(); break;
+            case QuickTabView.Settings: Settings(); break;
+            case QuickTabView.Tools: OpenTools(); break;
+            case QuickTabView.Capture: OpenCapture(); break;
+            case QuickTabView.Text: OpenCapture(textOnly: true); break;
+            case QuickTabView.Clipboard: OpenClipboard(); break;
+            case QuickTabView.Audio: OpenAudio(); break;
+            case QuickTabView.Workspaces: OpenWorkspaces(); break;
+            case QuickTabView.Files: OpenLargeFiles(); break;
+            case QuickTabView.Help: OpenHelp(); break;
+            case QuickTabView.Pin: ToggleAlwaysOnTop(); break;
+            case QuickTabView.Memo: OpenMemo(); break;
+            case QuickTabView.Controls: ToggleControls(); break;
+            case QuickTabView.Pc: TogglePc(); break;
+            case QuickTabView.Palette: TogglePalette(); break;
+            default: Message("Cet onglet rapide pointe vers une vue inconnue.\n" + target); break;
+        }
     }
     internal void OpenNotes()
     {
-        RunControlDialog(open ? Anchor : null, () =>
-        {
-            var dialog = new NotesWindow(this) { Owner = open ? Anchor : null, ShowInTaskbar = preview };
-            dialog.ShowDialog();
-        });
-        awaySince = DateTime.MinValue;
+        ShowModal(() => new NotesWindow(this), OpenOwner);
+        state.AwaySince = DateTime.MinValue;
     }
     internal void StartFocus(int seconds) => FocusTimer.Start(this, seconds);
-    internal void WebSearch(string value, bool address = false)
-    {
-        try
-        {
-            if (address && !value.Contains("://"))
-                value = "https://" + value;
-            var target = address ? value : "https://duckduckgo.com/?q=" + Uri.EscapeDataString(value);
-            Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
-            CollapseImmediately();
-        }
-        catch (Exception ex) { Message("La recherche n’a pas pu s’ouvrir.\n" + ex.Message); }
-    }
+    internal void WebSearch(string value, bool address = false) => launcher.WebSearch(value, address);
 }

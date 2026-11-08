@@ -49,7 +49,8 @@ Window {
         dockItems = list;
     }
     property bool menuOpen: dockMenu.visible
-    // Window previews (native bubble in the backend): requested after a hover delay, never while hidden / sliding / menu / dragging.
+    // Aperçus de fenêtres (bulle native dans le backend) : demandés après un délai de survol, jamais pendant masqué / glissement / menu /
+    // déplacement.
     property string previewId: ""
     readonly property bool previewAllowed: shown && offset === 0 && !menuOpen && dragId === "" && (Bridge.settings.dockVisible
         ?? Bridge.taskbarEnabled)

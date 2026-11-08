@@ -12,7 +12,8 @@ try { (Get-Process -Id $PID).PriorityClass = 'BelowNormal' } catch {}
 $src   = $PSScriptRoot
 $out   = [IO.Path]::GetFullPath((Join-Path $src '..\..\illustrations'))
 $media = [IO.Path]::GetFullPath((Join-Path $src '..'))
-$edge  = @("${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe", "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+$edge  = @("${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe", "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe") |
+    Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $edge) { throw 'Microsoft Edge not found.' }
 $utf8  = New-Object System.Text.UTF8Encoding($false)
 $tmp   = Join-Path ([IO.Path]::GetTempPath()) 'winlestia-render'
@@ -34,7 +35,8 @@ $scenes = @(
   @{ n='v-workspaces'; frag=@('workspaces');  amb='';                wp='wallpaper-aurora.svg'; title='Workspaces'; shot=$true },
   @{ n='v-workspaces-warm'; frag=@('workspaces'); amb='tokens-warm.css'; wp='wallpaper-warm.svg'; title='Workspaces'; shot=$true },
   @{ n='v-workspaces-teal'; frag=@('workspaces'); amb='tokens-teal.css'; wp='wallpaper-teal.svg'; title='Workspaces'; shot=$true },
-  @{ n='v-dock-palette'; frag=@('dock');      amb='';                wp='wallpaper-aurora.svg'; title='Dock and quick command'; shot=$true },
+  @{ n='v-dock-palette'; frag=@('dock');      amb='';                wp='wallpaper-aurora.svg'; title='Dock and quick command';
+  shot=$true },
   @{ n='v-tools';      frag=@('outils');      amb='';                wp='wallpaper-aurora.svg'; title='Tools'; shot=$true },
   @{ n='v-settings';   frag=@('reglages');    amb='';                wp='wallpaper-aurora.svg'; title='Settings'; shot=$true },
   @{ n='banner';       page='banner.html';    w=1280; h=640; scale=2; dest=$media }
@@ -53,7 +55,8 @@ foreach ($s in $scenes) {
   if ($s.frag) {   # compose page = template + fragments
     $body = ($s.frag | ForEach-Object { [IO.File]::ReadAllText((Join-Path $src "fragments\$_.html"), $utf8) }) -join "`n"
     $amb  = if ($s.amb) { "<link rel=`"stylesheet`" href=`"$($s.amb)`">" } else { '' }
-    $html = $template.Replace('{{TITLE}}', $s.title).Replace('{{AMBIANCE}}', $amb).Replace('{{WALLPAPER}}', $s.wp).Replace('{{ICONS}}', $icons).Replace('{{BODY}}', $body)
+    $html = $template.Replace('{{TITLE}}', $s.title).Replace('{{AMBIANCE}}', $amb).Replace('{{WALLPAPER}}', $s.wp).Replace('{{ICONS}}',
+        $icons).Replace('{{BODY}}', $body)
     $page = "_$($s.n).html"
     [IO.File]::WriteAllText((Join-Path $src $page), $html, $utf8)
   } else { $page = $s.page }
@@ -69,14 +72,16 @@ foreach ($s in $scenes) {
   $img = [Drawing.Image]::FromFile($big)
   $dst = New-Object Drawing.Bitmap $ow, $oh
   $g = [Drawing.Graphics]::FromImage($dst)
-  $g.InterpolationMode = 'HighQualityBicubic'; $g.SmoothingMode = 'HighQuality'; $g.PixelOffsetMode = 'HighQuality'; $g.CompositingQuality = 'HighQuality'
+  $g.InterpolationMode = 'HighQualityBicubic'; $g.SmoothingMode = 'HighQuality'; $g.PixelOffsetMode = 'HighQuality';
+  $g.CompositingQuality = 'HighQuality'
   $g.DrawImage($img, 0, 0, $ow, $oh)
   $g.Dispose(); $img.Dispose()
   if ($Shots) { $dst.Save((Join-Path $dest "$($s.n).png"), [Drawing.Imaging.ImageFormat]::Png); $dst.Dispose() }
   else {
     $mid = Join-Path $tmp "$($s.n)-2x.png"
     $dst.Save($mid, [Drawing.Imaging.ImageFormat]::Png); $dst.Dispose()
-    & ffmpeg -v error -y -i $mid -vf scale=2000:-1:flags=lanczos -c:v libwebp -quality 90 -compression_level 6 (Join-Path $dest "$($s.n).webp")
+    $webp = Join-Path $dest "$($s.n).webp"
+    & ffmpeg -v error -y -i $mid -vf scale=2000:-1:flags=lanczos -c:v libwebp -quality 90 -compression_level 6 $webp
     if ($LASTEXITCODE -ne 0) { throw "ffmpeg failed for $($s.n)" }
   }
   Write-Host "ok $($s.n)"

@@ -239,7 +239,7 @@ internal sealed class ClipboardWindow : GlassWindow
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
-        var palette = UI.Button(owner.PaletteLabel, () => owner.TogglePalette());
+        var palette = UI.Button(owner.Keys.PaletteLabel, () => owner.TogglePalette());
         palette.FontSize = 11;
         palette.Padding = new Thickness(10, 6, 10, 6);
         palette.Margin = new Thickness(0, 14, 0, 10);

@@ -5,8 +5,8 @@ import qs.services
 import qs.config
 import "."
 
-// One setting: label + one-line grey description on the left, control(s) on the right.
-// Conditional rows (`shown`) animate height and opacity; the search pulses a row with pulse().
+// Un réglage : libellé + description grise d'une ligne à gauche, contrôle(s) à droite.
+// Les lignes conditionnelles (`shown`) animent hauteur et opacité ; la recherche fait pulser une ligne avec pulse().
 FocusScope {
     id: row
 
@@ -14,15 +14,15 @@ FocusScope {
     property string title: SettingsIndex.label(rowId)
     property string hint: SettingsIndex.desc(rowId)
     property color hintColor: Colours.palette.m3outline
-    // Accent-coloured value printed at the right of the title (sliders): "1864 ms".
+    // Valeur à la couleur d'accent affichée à droite du titre (curseurs) : « 1864 ms ».
     property string valueText
     property bool shown: true
-    // Indented sub-option that belongs to the row above.
+    // Sous-option en retrait qui dépend de la ligne au-dessus.
     property bool sub: false
-    // Control under the text, spanning the full width (sliders, option lists, chips).
+    // Contrôle sous le texte, sur toute la largeur (curseurs, listes d'options, pastilles).
     property bool below: false
     property bool dim: false
-    // The control activated when the row itself is clicked (switches).
+    // Le contrôle activé quand on clique la ligne elle-même (interrupteurs).
     property Item target: null
     default property alias control: ctl.data
 
@@ -40,7 +40,7 @@ FocusScope {
             target.toggle();
     }
 
-    // Brief highlight used by the search; skipped entirely with reduced effects.
+    // Surbrillance brève utilisée par la recherche ; ignorée avec les effets réduits.
     function pulse(): void {
         if (Appearance.reducedEffects)
             return;

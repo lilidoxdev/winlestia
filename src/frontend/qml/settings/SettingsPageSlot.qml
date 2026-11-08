@@ -7,8 +7,9 @@ import qs.services
 import qs.config
 import "."
 
-// Right side: big page title, then the page itself. Changing page is interruptible (fade out, swap, fade in);
-// a search jump scrolls to the row and pulses it.
+// Partie droite : grand titre de page, puis la page elle-même. Le changement de page est interruptible (fondu sortant, échange, fondu
+// entrant) ;
+// un saut depuis la recherche défile jusqu'à la ligne et la fait pulser.
 Item {
     id: slot
 
@@ -37,7 +38,7 @@ Item {
         return null;
     }
 
-    // Row or section with this id on the current page, or null.
+    // Ligne ou section portant cet id sur la page courante, ou null.
     function findRow(id: string): Item {
         return find(loader.item, id);
     }
@@ -55,7 +56,7 @@ Item {
         const it = findRow(id);
         if (!it)
             return;
-        // A row hidden by its condition is not reachable: fall back to nothing rather than scroll to a ghost.
+        // Une ligne masquée par sa condition est inatteignable : on ne fait rien plutôt que de défiler vers un fantôme.
         if (it.height <= 0) {
             Qt.callLater(slot.applyAnchor);
             return;

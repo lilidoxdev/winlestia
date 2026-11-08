@@ -5,7 +5,8 @@ import qs.services
 import qs.config
 import "."
 
-// Row of preset chips; the selected one is filled with the accent colour. Left/Right move the choice, Enter/Space pick.
+// Rangée de pastilles prédéfinies ; la sélectionnée est remplie de la couleur d'accent. Gauche/Droite changent le choix, Entrée/Espace
+// valident.
 Flow {
     id: chips
 

@@ -5,7 +5,7 @@ import qs.services
 import qs.config
 import "."
 
-// A key combination drawn as keycaps: "Ctrl+Alt+K" -> [Ctrl] [Alt] [K].
+// Une combinaison de touches dessinée en touches de clavier : « Ctrl+Alt+K » -> [Ctrl] [Alt] [K].
 Flow {
     id: caps
 

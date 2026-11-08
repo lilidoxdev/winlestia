@@ -1,4 +1,5 @@
-# Offscreen check of SocialRail.qml + the "Réseaux sociaux" settings tab with a real Bridge fed a fake `social` state.
+# Vérification hors écran de SocialRail.qml + de l'onglet « Réseaux sociaux » des réglages avec un vrai Bridge alimenté par un faux état
+# `social`.
 import os, sys, json, queue
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
@@ -344,7 +345,7 @@ def run():
 
     def after4():
         checks['historyClickOpen'] = any(c['command'] == 'socialOpen' and c['args'] == {'id': 'whatsapp'} for c in sent)
-        # same seq, changed title/body (count -> notif) must be updated in place
+        # même seq, titre/corps modifiés (count -> notif) : mise à jour sur place attendue
         h2 = [
             dict(history[0]),
             {**history[1], 'title': 'Carol', 'body': 'Nouveau texte', 'kind': 'notif'},

@@ -232,7 +232,7 @@ check(
 )
 check('no drawn row at or past the window bottom', all(s[4] < H for s in samples))
 
-# --- PNGs at about 0 / 25 / 50 / 75 % of the slide
+# --- PNG à environ 0 / 25 / 50 / 75 % du glissement
 for pct in (0, 25, 50, 75):
     dock.setProperty('shown', True)
     pump(900)
@@ -281,7 +281,7 @@ check(
     dock.property('visible') and float(dock.property('contentOpacity')) > 0.99,
 )
 grab('reduced-shown.png')
-# --- (3) toggling reducedEffects while hidden must never show the dock
+# --- (3) basculer reducedEffects pendant que le dock est masqué ne doit jamais l'afficher
 dock.setProperty('shown', False)
 pump(600)
 check('flip: hidden before test', not dock.property('visible'))

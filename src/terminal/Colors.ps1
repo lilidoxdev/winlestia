@@ -6,7 +6,9 @@ function global:Get-WinlestiaAnsi {
     if($index -and $env:WT_SESSION){return "$([char]27)[${index}m"}
     $hex=$global:WinlestiaPalette.$Name
     if(!$hex){$hex='#c4bafa'}
-    $r=[Convert]::ToInt32($hex.Substring(1,2),16);$g=[Convert]::ToInt32($hex.Substring(3,2),16);$b=[Convert]::ToInt32($hex.Substring(5,2),16)
+    $r=[Convert]::ToInt32($hex.Substring(1,2),16)
+    $g=[Convert]::ToInt32($hex.Substring(3,2),16)
+    $b=[Convert]::ToInt32($hex.Substring(5,2),16)
     "$([char]27)[38;2;$r;$g;${b}m"
 }
 function global:Update-WinlestiaPalette {
@@ -18,7 +20,11 @@ function global:Update-WinlestiaPalette {
         $global:WinlestiaPalette=[IO.File]::ReadAllText($path) | ConvertFrom-Json
         $global:WinlestiaPaletteStamp=$stamp
         if(!$SkipReadLine -and (Get-Module PSReadLine)){
-            Set-PSReadLineOption -Colors @{Command=(Get-WinlestiaAnsi accent);Keyword=(Get-WinlestiaAnsi secondary);Operator=(Get-WinlestiaAnsi accent);Type=(Get-WinlestiaAnsi secondary);Comment=(Get-WinlestiaAnsi muted)}
+            Set-PSReadLineOption -Colors @{
+                Command=(Get-WinlestiaAnsi accent);Keyword=(Get-WinlestiaAnsi secondary)
+                Operator=(Get-WinlestiaAnsi accent);Type=(Get-WinlestiaAnsi secondary)
+                Comment=(Get-WinlestiaAnsi muted)
+            }
         }
-    }catch{}
+    }catch{<# palette absente ou illisible : on garde les couleurs courantes #>}
 }

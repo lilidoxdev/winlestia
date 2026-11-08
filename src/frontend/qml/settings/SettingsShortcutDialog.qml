@@ -1,6 +1,7 @@
-// Shortcut capture. A focused window of its own: the dashboard is hidden while it owns the keyboard, like the former recorder.
-// Live keys are drawn as keycaps; the combination is sent to the backend (Bridge.action("shortcut", {id, combo})),
-// which answers with Bridge.settings.shortcutStatus. Escape cancels.
+// Capture de raccourci. Fenêtre focalisée à part : le tableau de bord est masqué tant qu'elle garde le clavier, comme l'ancien
+// enregistreur.
+// Les touches en direct sont dessinées en touches de clavier ; la combinaison part au backend (Bridge.action("shortcut", {id, combo})),
+// qui répond via Bridge.settings.shortcutStatus. Échap annule.
 import QtQuick
 import QtQuick.Window
 import QtQuick.Layouts
@@ -13,7 +14,7 @@ import "."
 Window {
     id: dlg
 
-    // Asks the page to scroll to the row of an action that already uses the combination.
+    // Demande à la page de défiler jusqu'à la ligne d'une action qui utilise déjà la combinaison.
     signal gotoShortcut(string id)
 
     property string shortcutId

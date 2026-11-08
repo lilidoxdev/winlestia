@@ -5,7 +5,7 @@ import qs.services
 import qs.config
 import "."
 
-// Inline list of options: the selected one shows a check. Up/Down move, Enter/Space pick.
+// Liste d'options en ligne : la sélectionnée affiche une coche. Haut/Bas déplacent, Entrée/Espace valident.
 ColumnLayout {
     id: list
 

@@ -33,7 +33,7 @@ internal sealed class ClockWindow : GlassWindow
             Cursor = Cursors.Hand, Background = Brushes.Transparent };
         time.Children.Add(hour);
         time.Children.Add(seconds);
-        time.ToolTip = "Ouvrir la commande rapide · " + owner.PaletteLabel;
+        time.ToolTip = "Ouvrir la commande rapide · " + owner.Keys.PaletteLabel;
         System.Windows.Automation.AutomationProperties.SetName(time, "Heure · ouvrir la commande rapide");
         time.MouseLeftButtonUp += (_, _) => owner.TogglePalette();
         var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(26, 0, 0, 0) };
@@ -49,7 +49,7 @@ internal sealed class ClockWindow : GlassWindow
         left.Children.Add(texts);
         var chips = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Right };
-        shortcutChip = Chip(owner.PaletteLabel, "Commande rapide · " + owner.PaletteLabel, "\uE721", () => owner.TogglePalette());
+        shortcutChip = Chip(owner.Keys.PaletteLabel, "Commande rapide · " + owner.Keys.PaletteLabel, "\uE721", () => owner.TogglePalette());
         chips.Children.Add(shortcutChip);
         chips.Children.Add(Chip("Note", "Note rapide", "\uE70B", () => owner.OpenNotes()));
         chips.Children.Add(Chip("Minuteur", "Régler un minuteur", "\uE917", () => owner.OpenFocus()));
@@ -91,8 +91,8 @@ internal sealed class ClockWindow : GlassWindow
     }
     internal void RefreshLabels()
     {
-        shortcutChip.Content = owner.PaletteLabel;
-        shortcutChip.ToolTip = "Commande rapide · " + owner.PaletteLabel;
+        shortcutChip.Content = owner.Keys.PaletteLabel;
+        shortcutChip.ToolTip = "Commande rapide · " + owner.Keys.PaletteLabel;
         System.Windows.Automation.AutomationProperties.SetName(shortcutChip, shortcutChip.ToolTip.ToString());
     }
     Button Chip(string label, string name, string glyph, Action action)

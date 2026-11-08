@@ -26,6 +26,7 @@ public class NetworkKindTests
         NetworkKindWatcher.Changed -= h;
         NetworkKindWatcher.RaiseChangedForTest(other);
         Assert.Equal(2, fired);
-        Assert.True(NetworkKindWatcher.Current is "ethernet" or "wifi" or "none", "Current is one of ethernet/wifi/none, got " + NetworkKindWatcher.Current);
+        Assert.True(NetworkKindWatcher.Current is "ethernet" or "wifi" or "none",
+            "Current is one of ethernet/wifi/none, got " + NetworkKindWatcher.Current);
     }
 }

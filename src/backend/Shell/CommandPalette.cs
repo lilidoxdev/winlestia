@@ -384,7 +384,7 @@ internal sealed class CommandPalette : GlassWindow
         new("Son et micro","Changer de casque ou couper le micro","\uE7F5",()=>owner.OpenAudio()),
         new("Profils d’espace","Rouvrir des applications et une disposition","\uE7C3",()=>owner.OpenWorkspaces()),
         new("Gros fichiers","Ce qui remplit le disque","\uE8B7",()=>owner.OpenLargeFiles()),
-        new("Épingler au premier plan","La fenêtre active reste devant · "+owner.PinShortcutLabel,
+        new("Épingler au premier plan","La fenêtre active reste devant · "+owner.Keys.PinShortcutLabel,
             "\uE840",()=>owner.ToggleAlwaysOnTop()),
         new("Notifications",SystemTools.NotificationsOn?"Couper les notifications Windows":"Rétablir les notifications","\uE7ED",()=>owner
             .ToggleNotifications()),

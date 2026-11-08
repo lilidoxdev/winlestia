@@ -1,22 +1,6 @@
 // language: C# 12, file: Coordinator.Tools.cs, target: Windows 11 / .NET 8 WPF, outils (capture, pipette, presse-papiers…) et raccourcis
 // globaux
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Threading;
-using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Win32;
-using Forms = System.Windows.Forms;
 
 namespace PanneauxGlass;
 
@@ -24,30 +8,36 @@ internal sealed partial class Coordinator
 {
     const int CaptureCollapseDelayMs = 260;
     const int ToolCollapseDelayMs = 180;
-    internal async void OpenCapture(bool textOnly = false)
+    // Avec le shell Qt, l'outil s'ouvre côté frontend : vrai quand la commande a été transmise et qu'il n'y a plus rien à faire ici.
+    bool ForwardToQt(string command)
     {
-        if (QtShell != null)
-        {
-            QtShell.Send(textOnly ? "capture-ocr" : "capture-select");
-            return;
-        }
+        if (QtShell == null)
+            return false;
+        QtShell.Send(command);
+        return true;
+    }
+    // Replie l'espace et laisse l'animation finir avant l'outil plein écran, sinon il capturerait ou masquerait le panneau.
+    async Task CollapseThen(int delayMs)
+    {
         CloseDialogs();
         CollapseImmediately();
-        await Task.Delay(CaptureCollapseDelayMs);
+        await Task.Delay(delayMs);
+    }
+    internal async void OpenCapture(bool textOnly = false)
+    {
+        if (ForwardToQt(textOnly ? "capture-ocr" : "capture-select"))
+            return;
+        await CollapseThen(CaptureCollapseDelayMs);
         CaptureOverlay.Begin(this, textOnly);
     }
     internal async void OpenColorPicker()
     {
-        CloseDialogs();
-        CollapseImmediately();
-        await Task.Delay(ToolCollapseDelayMs);
+        await CollapseThen(ToolCollapseDelayMs);
         ColorTools.OpenPicker(this);
     }
     internal async void OpenRuler()
     {
-        CloseDialogs();
-        CollapseImmediately();
-        await Task.Delay(ToolCollapseDelayMs);
+        await CollapseThen(ToolCollapseDelayMs);
         ColorTools.OpenRuler(this);
     }
     internal void OpenMemo()
@@ -57,136 +47,47 @@ internal sealed partial class Coordinator
     }
     internal void OpenClipboard()
     {
-        if (QtShell != null)
-        {
-            QtShell.Send("clipboard");
-            return;
-        }
-        OpenClipboardLegacy();
+        if (!ForwardToQt("clipboard"))
+            OpenClipboardLegacy();
     }
     internal ClipboardService QtClipboard => clipboard;
-    internal void OpenClipboardLegacy() => RunControlDialog(open ? Anchor : null, () =>
-    {
-        var dialog =
-        new ClipboardWindow(this, clipboard) { Owner = open ? Anchor : null, ShowInTaskbar = preview };
-        dialog.ShowDialog();
-    });
+    internal void OpenClipboardLegacy() => ShowModal(() => new ClipboardWindow(this, clipboard), OpenOwner);
     internal void OpenAudio()
     {
-        if (QtShell != null)
-        {
-            QtShell.Send("audio");
-            return;
-        }
-        OpenLegacyAudio();
+        if (!ForwardToQt("audio"))
+            ShowModal(() => new AudioWindow(this), OpenOwner);
     }
-    void OpenLegacyAudio() => RunControlDialog(open ? Anchor : null, () =>
-    {
-        var dialog =
-        new AudioWindow(this) { Owner = open ? Anchor : null, ShowInTaskbar = preview };
-        dialog.ShowDialog();
-    });
-    internal void OpenWorkspaces() => RunControlDialog(open ? Anchor : null, () =>
-    {
-        var dialog =
-        new WorkspaceWindow(this) { Owner = open ? Anchor : null, ShowInTaskbar = preview };
-        dialog.ShowDialog();
-    });
-    internal void OpenLargeFiles() => RunControlDialog(open ? Anchor : null, () =>
-    {
-        var dialog =
-        new LargeFilesWindow(this) { Owner = open ? Anchor : null, ShowInTaskbar = preview };
-        dialog.ShowDialog();
-    });
+    internal void OpenWorkspaces() => ShowModal(() => new WorkspaceWindow(this), OpenOwner);
+    internal void OpenLargeFiles() => ShowModal(() => new LargeFilesWindow(this), OpenOwner);
     internal void OpenTools()
     {
-        if (QtShell != null)
-        {
-            QtShell.Send("tools");
-            return;
-        }
-        OpenLegacyTools();
+        if (!ForwardToQt("tools"))
+            ShowModal(() => new ToolsWindow(this), OpenOwner);
     }
-    void OpenLegacyTools() => RunControlDialog(open ? Anchor : null, () =>
-    {
-        var dialog =
-        new ToolsWindow(this) { Owner = open ? Anchor : null, ShowInTaskbar = preview };
-        dialog.ShowDialog();
-    });
-    internal void OpenHelp()
-    {
-        RunControlDialog(open ? Anchor : null, () =>
-        {
-            var dialog = new HelpWindow(this) { Owner = open ? Anchor : null, ShowInTaskbar = preview };
-            dialog.ShowDialog();
-        });
-    }
+    internal void OpenHelp() => ShowModal(() => new HelpWindow(this), OpenOwner);
     internal void RefreshPaletteLabels()
     {
         if (paletteChip != null)
         {
-            paletteChip.Content = PaletteLabel;
-            paletteChip.ToolTip = "Commande rapide · " + PaletteLabel;
+            paletteChip.Content = Keys.PaletteLabel;
+            paletteChip.ToolTip = "Commande rapide · " + Keys.PaletteLabel;
         }
         clock.RefreshLabels();
         palette?.ReloadTabs();
     }
-    internal bool SetWallpaperShortcut(uint modifiers, uint key, out string error)
-    {
-        if (!shortcut.TrySetWallpaper(modifiers, key, out error))
-            return false;
-        Store.State.WallpaperShortcut = new()
-        {
-            Modifiers = modifiers,
-            Key = key
-        };
-        Store.Save();
-        return true;
-    }
-    internal bool SetPaletteShortcut(uint modifiers, uint key, out string error)
-    {
-        if (!shortcut.TrySetPalette(modifiers, key, out error))
-            return false;
-        Store.State.PaletteShortcut = new()
-        {
-            Modifiers = modifiers,
-            Key = key
-        };
-        Store.Save();
-        RefreshPaletteLabels();
-        return true;
-    }
-    internal bool SetShortcut(uint modifiers, uint key, string view, out string error)
-    {
-        if (!shortcut.TrySet(modifiers, key, out error))
-            return false;
-        Store.State.Shortcut = new()
-        {
-            Modifiers = modifiers,
-            Key = key,
-            View = view
-        };
-        Store.State.Shortcut.Normalize();
-        Store.Save();
-        BuildRail();
-        return true;
-    }
     internal void ToggleShortcut()
     {
-        if (QtShell != null)
-        {
-            QtShell.Send("toggle");
+        if (ForwardToQt("toggle"))
             return;
-        }
-        if (open)
+        if (state.Open)
         {
             Collapse();
             return;
         }
         var choice = Store.State.Shortcut.View;
-        bool full = choice == "workspace" || choice == "last" && detailed,
-            windows = choice == "controls" || choice == "last" && controlsExpanded,
-            status = choice == "pc" || choice == "last" && pcExpanded;
+        bool full = choice == "workspace" || choice == "last" && state.Detailed,
+            windows = choice == "controls" || choice == "last" && state.ControlsExpanded,
+            status = choice == "pc" || choice == "last" && state.PcExpanded;
         OpenView(full, windows, status);
     }
 }

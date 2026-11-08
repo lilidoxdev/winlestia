@@ -140,7 +140,7 @@ SettingsSection {
             }
         }
 
-        // Black to the brightest version of the current colour.
+        // Du noir à la version la plus claire de la couleur courante.
         Item {
             id: clarity
 

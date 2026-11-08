@@ -1,4 +1,5 @@
-// Winlestia custom theme studio: live dashboard preview on the left, role list, colour picker, hex + eyedropper and glass on the right.
+// Studio de thème personnalisé Winlestia : aperçu du tableau de bord à gauche ; liste des rôles, sélecteur de couleur, hex + pipette et
+// verre à droite.
 // Le chrome n'utilise que Colours.palette ; les couleurs éditées n'apparaissent que dans l'aperçu, les pastilles et le sélecteur.
 import QtQuick
 import QtQuick.Window

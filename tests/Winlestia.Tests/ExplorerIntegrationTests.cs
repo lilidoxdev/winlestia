@@ -15,11 +15,13 @@ public class ExplorerIntegrationTests
     [Fact]
     public void AllChecks() => Sta.Run(AllChecksSta);
     [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr h, int attribute, out uint value, int size);
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern IntPtr SHGetFileInfo(string path, uint attributes, ref Info info, uint size, uint flags);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern IntPtr SHGetFileInfo(string path, uint attributes, ref Info info,
+        uint size, uint flags);
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     struct Info
     {
-        public IntPtr Icon; public int Index; public uint Attributes; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string Display; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string Type;
+        public IntPtr Icon; public int Index; public uint Attributes; [MarshalAs(UnmanagedType.ByValTStr,
+            SizeConst = 260)] public string Display; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string Type;
     }
     [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr icon);
     static void AllChecksSta()
@@ -32,7 +34,8 @@ public class ExplorerIntegrationTests
         var service = Activator.CreateInstance(t, f, null, new object[] { Path.Combine(root, "state") }, null);
         ((System.Windows.Threading.DispatcherTimer)t.GetField("timer", f).GetValue(service)).Stop();
         object Call(string name, params object[] args) => t.GetMethod(name, f).Invoke(service, args);
-        string docRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "WinlestiaTest-" + Guid.NewGuid().ToString("N"));
+        string docRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "WinlestiaTest-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(docRoot);
         try
         {
@@ -40,7 +43,8 @@ public class ExplorerIntegrationTests
             {
                 fixture.Show();
                 Assert.True((bool)Call("ColourFrame", fixture.Handle, false), "applicationBorderAcceptsThemeColour");
-                Assert.True((uint)t.GetMethod("Colour", sf).Invoke(null, new object[] { "#afd4f0" }) == 0x00f0d4af, "themeColourUsesNativeRgbFormat");
+                Assert.True((uint)t.GetMethod("Colour", sf).Invoke(null, new object[] { "#afd4f0" }) == 0x00f0d4af,
+                    "themeColourUsesNativeRgbFormat");
                 Assert.True((bool)Call("RestoreFrame", fixture.Handle), "applicationBorderRestoresWindowsDefault");
                 fixture.Close();
             }
@@ -81,7 +85,8 @@ public class ExplorerIntegrationTests
             var budget = new[] { 1024 };
             t.GetMethod("ColourVisibleTree", f).Invoke(service, new object[] { many, budget });
             int themed = Directory.GetDirectories(many).Count(d => File.Exists(Path.Combine(d, "desktop.ini")));
-            Assert.True(themed + (File.Exists(Path.Combine(many, "desktop.ini")) ? 1 : 0) == 256 && budget[0] == 1024 - 256, "perLocationCapIs256");
+            Assert.True(themed + (File.Exists(Path.Combine(many, "desktop.ini")) ? 1 : 0) == 256 && budget[0] == 1024 - 256,
+                "perLocationCapIs256");
             Call("Restore");
             Assert.True(!Directory.GetDirectories(many).Any(d => File.Exists(Path.Combine(d, "desktop.ini"))), "capRestoresEverything");
             string shared = Path.Combine(docRoot, "shared");
@@ -89,12 +94,14 @@ public class ExplorerIntegrationTests
                 Directory.CreateDirectory(Path.Combine(shared, "s" + i));
             var small = new[] { 3 };
             t.GetMethod("ColourVisibleTree", f).Invoke(service, new object[] { shared, small });
-            Assert.True(small[0] == 0 && Directory.GetDirectories(shared).Count(d => File.Exists(Path.Combine(d, "desktop.ini"))) + (File.Exists(Path.Combine(shared, "desktop.ini")) ? 1 : 0) == 3, "passBudgetIsHonoured");
+            Assert.True(small[0] == 0 && Directory.GetDirectories(shared).Count(d => File.Exists(Path.Combine(d,
+                "desktop.ini"))) + (File.Exists(Path.Combine(shared, "desktop.ini")) ? 1 : 0) == 3, "passBudgetIsHonoured");
             Call("Restore");
             string outside = Path.Combine(root, "outside");
             Directory.CreateDirectory(Path.Combine(outside, "o1"));
             Call("ColourVisibleFolder", outside);
-            Assert.True(!File.Exists(Path.Combine(outside, "desktop.ini")) && !File.Exists(Path.Combine(outside, "o1", "desktop.ini")), "folderOutsidePersonalFoldersIsNotThemed");
+            Assert.True(!File.Exists(Path.Combine(outside, "desktop.ini")) && !File.Exists(Path.Combine(outside, "o1", "desktop.ini")),
+                "folderOutsidePersonalFoldersIsNotThemed");
             string idem = Path.Combine(docRoot, "idem");
             Directory.CreateDirectory(Path.Combine(idem, "k1"));
             Store.State.ExplorerTheme = true;
@@ -109,7 +116,9 @@ public class ExplorerIntegrationTests
             Assert.True(idemNotes > 0 && (int)t.GetField("NotifyCount", f).GetValue(service) == idemNotes, "noNotifyWhenNothingWritten");
             var t0 = new DateTime(2030, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             string dn = Path.Combine(root, "debounce");
-            Assert.True((bool)Call("Notify", dn, t0) && !(bool)Call("Notify", dn, t0.AddSeconds(9)) && (bool)Call("Notify", dn, t0.AddSeconds(11)) && (bool)Call("Notify", dn + "2", t0.AddSeconds(11)), "notifyDebouncedPerFolder");
+            Assert.True((bool)Call("Notify", dn, t0) && !(bool)Call("Notify", dn, t0.AddSeconds(9))
+                && (bool)Call("Notify", dn, t0.AddSeconds(11)) && (bool)Call("Notify", dn + "2", t0.AddSeconds(11)),
+                "notifyDebouncedPerFolder");
             string repo = Path.Combine(docRoot, "repo");
             Directory.CreateDirectory(Path.Combine(repo, ".git"));
             Directory.CreateDirectory(Path.Combine(repo, "src"));
@@ -119,17 +128,22 @@ public class ExplorerIntegrationTests
             Directory.CreateDirectory(Path.Combine(plain, "sub2", ".git"));
             Call("ColourVisibleFolder", repo);
             Call("ColourVisibleFolder", plain);
-            Assert.True(!File.Exists(Path.Combine(repo, "desktop.ini")) && !File.Exists(Path.Combine(repo, "src", "desktop.ini")) && !File.Exists(Path.Combine(plain, "sub2", "desktop.ini")) && File.Exists(Path.Combine(plain, "sub", "desktop.ini")), "gitFolderIsSkipped");
+            Assert.True(!File.Exists(Path.Combine(repo, "desktop.ini")) && !File.Exists(Path.Combine(repo, "src", "desktop.ini"))
+                && !File.Exists(Path.Combine(plain, "sub2", "desktop.ini")) && File.Exists(Path.Combine(plain, "sub", "desktop.ini")),
+                "gitFolderIsSkipped");
             Assert.True(!File.Exists(Path.Combine(plain, "node_modules", "desktop.ini")), "devFoldersAreSkipped");
             Call("Restore");
-            string userOpen = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "WinlestiaTest-" + Guid.NewGuid().ToString("N"));
+            string userOpen = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                "WinlestiaTest-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(Path.Combine(userOpen, "child"));
             try
             {
                 Call("ColourVisibleFolder", userOpen);
-                Assert.True(File.Exists(Path.Combine(userOpen, "desktop.ini")) && File.Exists(Path.Combine(userOpen, "child", "desktop.ini")), "openFolderUnderUserFolderIsThemed");
+                Assert.True(File.Exists(Path.Combine(userOpen, "desktop.ini"))
+                    && File.Exists(Path.Combine(userOpen, "child", "desktop.ini")), "openFolderUnderUserFolderIsThemed");
                 Call("Restore");
-                Assert.True(!File.Exists(Path.Combine(userOpen, "desktop.ini")) && !File.Exists(Path.Combine(userOpen, "child", "desktop.ini")), "openFolderRestores");
+                Assert.True(!File.Exists(Path.Combine(userOpen, "desktop.ini"))
+                    && !File.Exists(Path.Combine(userOpen, "child", "desktop.ini")), "openFolderRestores");
             }
             finally { TempDir.Delete(userOpen); }
             Store.State.ExplorerTheme = false;
@@ -193,20 +207,24 @@ public class ExplorerIntegrationTests
             Directory.SetLastWriteTimeUtc(legacy, DateTime.UtcNow);
             Directory.CreateDirectory(Path.Combine(root, "state"));
             string manifestPath = Path.Combine(root, "state", "manifest.json");
-            File.WriteAllText(manifestPath, JsonSerializer.Serialize(new[] { new { Folder = legacy, Attributes = 16, IniAttributes = 0 } }));
+            File.WriteAllText(manifestPath,
+                JsonSerializer.Serialize(new[] { new { Folder = legacy, Attributes = 16, IniAttributes = 0 } }));
             Call("RepairManifestDates");
-            Assert.True(Near(legacy, y2021) && File.ReadAllText(manifestPath).Contains("\"DateRepaired\":true"), "repairRunsForAlreadyThemedUnchangedFolder");
+            Assert.True(Near(legacy, y2021) && File.ReadAllText(manifestPath).Contains("\"DateRepaired\":true"),
+                "repairRunsForAlreadyThemedUnchangedFolder");
             Call("Restore");
             string existing = Path.Combine(root, "existing");
             Directory.CreateDirectory(existing);
             string ini = Path.Combine(existing, "desktop.ini");
-            byte[] original = Encoding.Unicode.GetPreamble().Concat(Encoding.Unicode.GetBytes("[.ShellClassInfo]\r\nInfoTip=Été personnel\r\nIconResource=C:\\Windows\\system32\\shell32.dll,3\r\n")).ToArray();
+            byte[] original = Encoding.Unicode.GetPreamble().Concat(Encoding.Unicode.GetBytes("[.ShellClassInfo]\r\nInfoTip=Été " +
+                "personnel\r\nIconResource=C:\\Windows\\system32\\shell32.dll,3\r\n")).ToArray();
             File.WriteAllBytes(ini, original);
             File.SetAttributes(ini, FileAttributes.Hidden | FileAttributes.System);
             var originalAttrs = File.GetAttributes(ini);
             Call("ApplyFolder", existing, red);
             Call("Restore");
-            Assert.True(File.ReadAllBytes(ini).SequenceEqual(original) && File.GetAttributes(ini) == originalAttrs, "existingIniBytesAndAttributesRestored");
+            Assert.True(File.ReadAllBytes(ini).SequenceEqual(original) && File.GetAttributes(ini) == originalAttrs,
+                "existingIniBytesAndAttributesRestored");
             Call("ApplyFolder", existing, red);
             File.SetAttributes(ini, FileAttributes.Normal);
             File.AppendAllText(ini, "\r\n;changed elsewhere");

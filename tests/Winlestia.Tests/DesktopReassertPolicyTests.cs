@@ -23,7 +23,8 @@ public class DesktopReassertPolicyTests
         q.Event(t);
         q.Ran(t.AddSeconds(1));
         q.Event(t.AddMilliseconds(2600));
-        Assert.True(q.Due(t.AddMilliseconds(3000)) && !q.Due(t.AddMilliseconds(2900)) || q.Delay(t.AddMilliseconds(2600)) >= TimeSpan.FromMilliseconds(400), "minGapTwoSeconds");
+        Assert.True(q.Due(t.AddMilliseconds(3000)) && !q.Due(t.AddMilliseconds(2900))
+            || q.Delay(t.AddMilliseconds(2600)) >= TimeSpan.FromMilliseconds(400), "minGapTwoSeconds");
         var f = new DesktopReassertPolicy();
         f.Event(t);
         f.Ran(t);
@@ -39,7 +40,8 @@ public class DesktopReassertPolicyTests
             s.Event(t.AddMilliseconds(i * 300));
         Assert.True(s.Due(t.AddSeconds(2)), "stormCappedByMaxWait");
         Assert.True(DesktopEventFilter.Relevant("WorkerW", ""), "filterWorkerW");
-        Assert.True(DesktopEventFilter.Relevant("SHELLDLL_DefView", "Progman") && DesktopEventFilter.Relevant("SHELLDLL_DefView", "WorkerW"), "filterDefViewOnDesktop");
+        Assert.True(DesktopEventFilter.Relevant("SHELLDLL_DefView", "Progman")
+            && DesktopEventFilter.Relevant("SHELLDLL_DefView", "WorkerW"), "filterDefViewOnDesktop");
         Assert.True(!DesktopEventFilter.Relevant("SHELLDLL_DefView", "CabinetWClass"), "filterDefViewInFolderWindow");
         Assert.True(!DesktopEventFilter.Relevant("Shell_TrayWnd", ""), "filterOtherClass");
         Assert.True(!DesktopReassertPolicy.StillWanted(0) && DesktopReassertPolicy.StillWanted(1), "hideIconsZeroStopsReassert");

@@ -1,21 +1,7 @@
-// language: C# 12, file: Coordinator.Desktop.cs, target: Windows 11 / .NET 8 WPF, icônes du bureau, reprise après redémarrage
-// d'Explorer
+// language: C# 12, file: Coordinator.Desktop.cs, target: Windows 11 / .NET 8 WPF, icônes du bureau, barre Windows, zone de notification
+// et reprise après redémarrage d'Explorer
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Threading;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Win32;
 using Forms = System.Windows.Forms;
 
 namespace PanneauxGlass;
@@ -23,6 +9,7 @@ namespace PanneauxGlass;
 internal sealed partial class Coordinator
 {
     readonly uint explorerCreated = TaskbarNative.RegisterWindowMessage("TaskbarCreated");
+    bool taskbarDeferred;
     // TaskbarCreated : Explorer vient de (re)démarrer. La barre différée au lancement est activée, puis le service du Bureau
     // réinstalle son hook.
     void ExplorerCreated()
@@ -41,15 +28,62 @@ internal sealed partial class Coordinator
         }
         desktopIcons.OnExplorerCreated();
     }
-    internal void RestoreDesktopIcons() => desktopIcons.Restore();
-    internal void Rescue()
+    // Au lancement, la barre Windows n'est remplacée que si Explorer est prêt ; sinon TaskbarCreated reprendra la main.
+    void StartTaskbar()
     {
-        string executable = Path.Combine(Store.Root, "SECOURS_BUREAU.exe");
-        if (!File.Exists(executable))
+        if (!preview && Store.State.ReplaceTaskbar)
         {
-            Message("Le secours indépendant est absent.\nDocuments\\SECOURS_BUREAU.exe peut également être utilisé.");
-            return;
+            if (!TaskbarNative.ExplorerReady())
+            {
+                taskbarDeferred = true;
+                Store.Log("Explorateur pas encore prêt : barre Windows laissée telle quelle jusqu'à TaskbarCreated.");
+            }
+            else if (!taskbar!.Enable())
+            {
+                Store.State.ReplaceTaskbar = false;
+                Store.Log("La barre Windows reste active : secours indisponible.");
+            }
         }
-        Process.Start(new ProcessStartInfo(executable) { UseShellExecute = true });
+        else if (preview && Program.DockPreview)
+            taskbar!.ShowPreview();
     }
+    void BuildTray()
+    {
+        tray.Show("Panneaux Glass · dj");
+        // Shell Qt : l'icône de la zone de notification permet d'atteindre les réglages même sans dock
+        // (le menu est affiché par le NotifyIcon lui-même au clic droit).
+        if (Program.QtMode)
+        {
+            var qtMenu = new Forms.ContextMenuStrip();
+            qtMenu.Items.Add("Ouvrir le tableau de bord", null, (_, _) => QtShell?.Send("toggle"));
+            qtMenu.Items.Add("Paramètres de Winlestia", null, (_, _) => QtShell?.Send("settings"));
+            qtMenu.Items.Add("Contrôles Windows", null, (_, _) => QtShell?.Send("controls"));
+            qtMenu.Items.Add(new Forms.ToolStripSeparator());
+            qtMenu.Items.Add("Retrouver le Bureau organisé", null, (_, _) => Rescue());
+            qtMenu.Items.Add("Quitter", null, (_, _) => Application.Current.Shutdown());
+            tray.SetMenu(qtMenu);
+        }
+        tray.RightClicked += () =>
+        {
+            if (QtShell != null)
+                return;
+            if (!state.Open)
+                Open();
+            GlassMenu.Open(this, DialogParent, state.Detailed ? (FrameworkElement)toolbar.ContentHost : home.ContentHost, "Panneaux",
+                new[]
+                {
+                    new MenuAction("Ouvrir l’espace", "\uE8A9", Open),
+                    new MenuAction("Commande rapide  ·  " + Keys.PaletteLabel, "\uE721", TogglePalette),
+                    new MenuAction("Note rapide", "\uE70B", OpenNotes),
+                    new MenuAction("Minuteur…", "\uE917", OpenFocus),
+                    new MenuAction("Personnaliser", "\uE713", () => Settings(), Separator: true),
+                    new MenuAction("Actualiser les accès", "\uE72C", RefreshCatalogue),
+                    new MenuAction("Retrouver le Bureau organisé", "\uE777", Rescue, Separator: true),
+                    new MenuAction("Quitter Panneaux", "\uE711", () => Application.Current.Shutdown())
+                }, true);
+        };
+        tray.DoubleClicked += () => Open();
+    }
+    internal void RestoreDesktopIcons() => desktopIcons.Restore();
+    internal void Rescue() => launcher.Rescue();
 }

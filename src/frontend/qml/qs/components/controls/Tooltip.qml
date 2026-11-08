@@ -86,7 +86,7 @@ Popup {
             const targetPos = target.mapToItem(parent, 0, 0);
             const targetCenterX = targetPos.x + target.width / 2;
 
-            // Get tooltip size (use width/height if available, otherwise implicit)
+            // Taille de l'info-bulle (width/height si disponibles, sinon implicites)
             const tooltipWidth = tooltipRect.width > 0 ? tooltipRect.width : tooltipRect.implicitWidth;
             const tooltipHeight = tooltipRect.height > 0 ? tooltipRect.height : tooltipRect.implicitHeight;
 

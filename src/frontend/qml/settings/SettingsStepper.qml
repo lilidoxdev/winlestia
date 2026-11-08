@@ -6,7 +6,7 @@ import qs.services
 import qs.config
 import "."
 
-// Inline "‹ value ›" selector over a list of values. Left/Right keys step too.
+// Sélecteur en ligne « ‹ valeur › » sur une liste de valeurs. Les touches Gauche/Droite avancent aussi.
 FocusScope {
     id: stepper
 

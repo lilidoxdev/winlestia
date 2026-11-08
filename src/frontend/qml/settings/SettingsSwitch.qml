@@ -2,7 +2,7 @@ import QtQuick
 import qs.components.controls
 import qs.config
 
-// StyledSwitch (knob shows a check when on, a cross when off) that keeps following the stored value after the user toggled it.
+// StyledSwitch (coche quand actif, croix quand inactif) qui continue de suivre la valeur enregistrée après un basculement de l'utilisateur.
 StyledSwitch {
     id: sw
 

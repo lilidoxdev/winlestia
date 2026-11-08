@@ -11,14 +11,18 @@ internal static class ShellProbe
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     struct FileInfo
     {
-        public IntPtr Icon; public int Index; public uint Attr; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string Display; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string Type;
+        public IntPtr Icon; public int Index; public uint Attr; [MarshalAs(UnmanagedType.ByValTStr,
+            SizeConst = 260)] public string Display; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string Type;
     }
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern IntPtr SHGetFileInfo(string path, uint attrs, ref FileInfo info, uint size, uint flags);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern IntPtr SHGetFileInfo(string path, uint attrs, ref FileInfo info,
+        uint size, uint flags);
     [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr icon);
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern void SHChangeNotify(uint kind, uint flags, string? a, IntPtr b);
     internal static D.Color Sample(string folder)
     {
-        var psi = new System.Diagnostics.ProcessStartInfo(Path.ChangeExtension(typeof(PanneauxGlass.Entry).Assembly.Location, null) == null ? "" : System.IO.Path.Combine(AppContext.BaseDirectory, "FolderIcons.exe"), "sample \"" + folder + "\"") { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+        var psi = new System.Diagnostics.ProcessStartInfo(Path.ChangeExtension(typeof(PanneauxGlass.Entry).Assembly.Location, null) == null
+            ? "" : System.IO.Path.Combine(AppContext.BaseDirectory, "FolderIcons.exe"),
+            "sample \"" + folder + "\"") { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
         using var p = System.Diagnostics.Process.Start(psi)!;
         string text = p.StandardOutput.ReadToEnd().Trim();
         p.WaitForExit();
@@ -53,7 +57,8 @@ internal static class ShellProbe
     {
         var t = typeof(PanneauxGlass.Entry).Assembly.GetType("PanneauxGlass.ExplorerAppearance")!;
         string tmp = path + ".tmp";
-        t.GetMethod("DrawIcon", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.Invoke(null, new object[] { tmp, hex, "folder" });
+        t.GetMethod("DrawIcon", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.Invoke(null,
+            new object[] { tmp, hex, "folder" });
         if (File.Exists(path))
             File.Replace(tmp, path, null);
         else
@@ -99,7 +104,8 @@ internal static class ShellProbe
         if (altPath)
             Draw(b, "#3c9cfa");
         Fixture(f, a);
-        var psi = new System.Diagnostics.ProcessStartInfo(System.IO.Path.Combine(AppContext.BaseDirectory, "FolderIcons.exe"), "watch \"" + f + "\" 9000") { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+        var psi = new System.Diagnostics.ProcessStartInfo(System.IO.Path.Combine(AppContext.BaseDirectory, "FolderIcons.exe"),
+            "watch \"" + f + "\" 9000") { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
         using var p = System.Diagnostics.Process.Start(psi)!;
         Thread.Sleep(2500);
         change(f, a, b);
@@ -112,11 +118,19 @@ internal static class ShellProbe
         var o = new System.Text.StringBuilder();
         Directory.CreateDirectory(dir);
         o.AppendLine(Scenario(dir, "w1-samepath-nonotify", (f, a, b) => Draw(a, "#3c9cfa"), false));
-        o.AppendLine(Scenario(dir, "w2-samepath-assoc", (f, a, b) => { Draw(a, "#3c9cfa"); SHChangeNotify(0x08000000, 0x1000 | 0x2000, null, IntPtr.Zero); }, false));
-        o.AppendLine(Scenario(dir, "w3-samepath-assoc+updatedir+ini", (f, a, b) => { Draw(a, "#3c9cfa"); SHChangeNotify(0x08000000, 0x1000 | 0x2000, null, IntPtr.Zero); Fixture(f, a); SHChangeNotify(0x2000, 5 | 0x3000, f, IntPtr.Zero); SHChangeNotify(0x1000, 5 | 0x3000, f, IntPtr.Zero); }, false));
-        o.AppendLine(Scenario(dir, "w4-altpath-iniRewrite+updatedir", (f, a, b) => { Fixture(f, b); SHChangeNotify(0x2000, 5 | 0x3000, f, IntPtr.Zero); }, true));
-        o.AppendLine(Scenario(dir, "w5-altpath-iniRewrite+updatedir+assoc", (f, a, b) => { Fixture(f, b); SHChangeNotify(0x08000000, 0x1000 | 0x2000, null, IntPtr.Zero); SHChangeNotify(0x2000, 5 | 0x3000, f, IntPtr.Zero); }, true));
-        o.AppendLine(Scenario(dir, "w6-samepath-UPDATEIMAGE(-1)+assoc", (f, a, b) => { Draw(a, "#3c9cfa"); SHChangeNotify(0x00008000, 0x1000, null, (IntPtr)(-1)); SHChangeNotify(0x08000000, 0x1000 | 0x2000, null, IntPtr.Zero); }, false));
+        o.AppendLine(Scenario(dir, "w2-samepath-assoc", (f, a, b) =>
+            { Draw(a, "#3c9cfa"); SHChangeNotify(0x08000000, 0x1000 | 0x2000, null, IntPtr.Zero); }, false));
+        o.AppendLine(Scenario(dir, "w3-samepath-assoc+updatedir+ini", (f, a, b) =>
+            { Draw(a, "#3c9cfa"); SHChangeNotify(0x08000000, 0x1000 | 0x2000, null, IntPtr.Zero); Fixture(f, a); SHChangeNotify(0x2000,
+            5 | 0x3000, f, IntPtr.Zero); SHChangeNotify(0x1000, 5 | 0x3000, f, IntPtr.Zero); }, false));
+        o.AppendLine(Scenario(dir, "w4-altpath-iniRewrite+updatedir", (f, a, b) =>
+            { Fixture(f, b); SHChangeNotify(0x2000, 5 | 0x3000, f, IntPtr.Zero); }, true));
+        o.AppendLine(Scenario(dir, "w5-altpath-iniRewrite+updatedir+assoc", (f, a, b) =>
+            { Fixture(f, b); SHChangeNotify(0x08000000, 0x1000 | 0x2000, null, IntPtr.Zero); SHChangeNotify(0x2000, 5 | 0x3000, f,
+            IntPtr.Zero); }, true));
+        o.AppendLine(Scenario(dir, "w6-samepath-UPDATEIMAGE(-1)+assoc", (f, a, b) =>
+            { Draw(a, "#3c9cfa"); SHChangeNotify(0x00008000, 0x1000, null, (IntPtr)(-1)); SHChangeNotify(0x08000000, 0x1000 | 0x2000, null,
+            IntPtr.Zero); }, false));
         return o.ToString();
     }
     internal static string Run(string dir)

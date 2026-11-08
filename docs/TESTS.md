@@ -18,7 +18,7 @@ Les tests de categorie `Desktop` (`[Trait("Category","Desktop")]` : audio, explo
 
 ### Couverture
 
-La CI collecte la couverture avec coverlet (`coverlet.collector`) et verifie un plancher (etape « Resume de couverture » de `.github/workflows/ci.yml`). Valeur mesuree le 2026-11-08 : 8,22 % des lignes (2116/25725), plancher 8 %. Le backend etant compile dans l'assembly de test, `tests/coverage.runsettings` active `IncludeTestAssembly` et exclut les fichiers de tests.
+La CI collecte la couverture avec coverlet (`coverlet.collector`) et verifie un plancher (etape « Resume de couverture » de `.github/workflows/ci.yml`). Valeur mesuree le 2026-11-08 : 11,16 % des lignes (3380/30266), plancher 10 %. Le backend etant compile dans l'assembly de test, `tests/coverage.runsettings` active `IncludeTestAssembly` et exclut les fichiers de tests.
 
 ```powershell
 dotnet test tests/Winlestia.Tests -c Release --filter "Category!=Desktop" --collect:"XPlat Code Coverage" --settings tests/coverage.runsettings --results-directory TestResults
@@ -30,7 +30,7 @@ Regle du cliquet : le plancher vaut toujours `floor(couverture mesuree)` (partie
 
 ### Style et fumee de l'installateur
 
-Le job `lint` de la CI echoue sur toute ligne de plus de 140 colonnes (`python tools/check_line_length.py`, perimetre : `src/**/*.cs`, `src/frontend/**/*.py|*.qml`, `src/terminal/**/*.py`, hors `src/terminal/clink` et `src/backend/VsCodeTheme*`) et sur `dotnet format whitespace --verify-no-changes` pour les trois projets. Le job `installer-smoke` execute `installer/build.ps1 -CI` (composants natifs MSVC remplaces par des fichiers vides) et publie le setup en artefact `winlestia-setup-smoke`.
+Le job `lint` de la CI echoue sur toute ligne de plus de 140 colonnes (`python tools/check_line_length.py`, perimetre : tous les `*.cs`, `*.py`, `*.qml`, `*.ps1` suivis par git, hors `src/terminal/clink`, `VsCodeTheme*` et fichiers generes) et sur `dotnet format whitespace --verify-no-changes` pour les trois projets. Le job `installer-smoke` execute `installer/build.ps1 -CI` (composants natifs MSVC remplaces par des fichiers vides) et publie le setup en artefact `winlestia-setup-smoke`.
 
 ### Winlestia Fichiers (harnais)
 
@@ -46,3 +46,13 @@ pytest -q
 `pytest.ini` collecte `tests/`, `src/frontend/tests/` et `src/terminal/tests/` (fichiers `test_*.py`). `conftest.py` force `QT_QPA_PLATFORM=offscreen`. Les scripts `check_*.py` / `render_*.py` restent des outils manuels ; `tools/prefs_shots.py` prend des captures et n'est pas un test.
 
 Les deux suites tournent en CI (`.github/workflows/ci.yml`). `Winlestia.sln` regroupe les projets `src/` et les tests.
+
+## Avant une release
+
+Etape manuelle, a faire par un humain sur un poste de bureau Windows 11 interactif, avant de tagger une version :
+
+```powershell
+dotnet test tests/Winlestia.Tests --filter "Category=Desktop"
+```
+
+Ces tests (audio, explorateur, icones de dossiers, tiling, bureaux virtuels, interop native, plein ecran) exigent une session de bureau reelle : fenetres visibles, shell Explorer, peripherique audio, plusieurs bureaux virtuels. Les runners GitHub Actions n'ont pas de session interactive, donc la CI les exclut (`Category!=Desktop`) et ne peut pas les remplacer. Fermer le shell Winlestia avant de lancer, puis consigner le resultat dans la PR de release.

@@ -1,5 +1,7 @@
-// Settings redesign backend checks: schema migration against a real legacy preferences file, and the shortcut pipeline (catalogue, reserved, conflicts, rebind, rollback, reset).
-// RegisterHotKey is replaced by an in-memory fake (GlobalShortcut.TestRegister), so no real hotkey of the running shell is touched. Data lives under %TEMP%\WinlestiaSettingsRefonte.
+// Settings redesign backend checks: schema migration against a real legacy preferences file, and the shortcut pipeline (catalogue,
+// reserved, conflicts, rebind, rollback, reset).
+// RegisterHotKey is replaced by an in-memory fake (GlobalShortcut.TestRegister), so no real hotkey of the running shell is touched. Data
+// lives under %TEMP%\WinlestiaSettingsRefonte.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +14,8 @@ public class SettingsMigrationAndShortcutsTests
     static void Check(bool ok, string name) => Assert.True(ok, name);
     static bool Same(JsonElement a, JsonElement b)
     {
-        bool boolA = a.ValueKind is JsonValueKind.True or JsonValueKind.False, boolB = b.ValueKind is JsonValueKind.True or JsonValueKind.False;
+        bool boolA = a.ValueKind is JsonValueKind.True or JsonValueKind.False,
+            boolB = b.ValueKind is JsonValueKind.True or JsonValueKind.False;
         if (a.ValueKind != b.ValueKind)
             return false;
         switch (a.ValueKind)
@@ -108,7 +111,8 @@ public class SettingsMigrationAndShortcutsTests
             + "]");
         Check(changed.Count == 0, "(m) every pre-existing key keeps its value after load+save");
         Check(dropped.Count == 0, "(m) no pre-existing key dropped from the JSON");
-        Check(after.RootElement.GetProperty("SettingsSchema").GetInt32() == 2 && after.RootElement.GetProperty("DockVisible").GetBoolean() == replace,
+        Check(after.RootElement.GetProperty("SettingsSchema").GetInt32() == 2
+            && after.RootElement.GetProperty("DockVisible").GetBoolean() == replace,
               "(m) new keys written");
         string text1 = File.ReadAllText(file);
         Store.Load();
@@ -119,7 +123,8 @@ public class SettingsMigrationAndShortcutsTests
         Store.State.DockVisible = !replace;
         Store.Save();
         Store.Load();
-        Check(Store.State.DockVisible == !replace && Store.State.ReplaceTaskbar == replace, "(m) DockVisible and ReplaceTaskbar are independent and persisted");
+        Check(Store.State.DockVisible == !replace && Store.State.ReplaceTaskbar == replace,
+            "(m) DockVisible and ReplaceTaskbar are independent and persisted");
         var p2 = new Preferences { ReplaceTaskbar = false };
         Store.MigrateSettings(p2);
         Check(p2.SettingsSchema == 2 && !p2.DockVisible, "(m) legacy ReplaceTaskbar=false -> DockVisible=false");
@@ -133,7 +138,8 @@ public class SettingsMigrationAndShortcutsTests
             Key = 0x41
         };
         p4.Normalize();
-        Check(p4.SettingsShortcut.Modifiers == 9 && p4.SettingsShortcut.Key == 0x53, "(m) invalid SettingsShortcut repaired to the default");
+        Check(p4.SettingsShortcut.Modifiers == 9 && p4.SettingsShortcut.Key == 0x53,
+            "(m) invalid SettingsShortcut repaired to the default");
     }
     // ---- shortcuts, with an in-memory RegisterHotKey ----
     static readonly Dictionary<int, (uint m, uint k)> reg = new();
@@ -152,7 +158,8 @@ public class SettingsMigrationAndShortcutsTests
         };
         GlobalShortcut.TestUnregister = (w, id) => reg.Remove(id);
         var p = new Preferences();
-        var g = new GlobalShortcut(IntPtr.Zero, p.Shortcut, p.PaletteShortcut, p.PinShortcut, p.CaptureShortcut, p.WallpaperShortcut, p.SettingsShortcut);
+        var g = new GlobalShortcut(IntPtr.Zero, p.Shortcut, p.PaletteShortcut, p.PinShortcut, p.CaptureShortcut, p.WallpaperShortcut,
+            p.SettingsShortcut);
         var saves = new[] { 0 };
         var m = new ShortcutManager(g, () => p, () => saves[0]++);
         return (g, m, p, saves);
@@ -172,7 +179,8 @@ public class SettingsMigrationAndShortcutsTests
         var (g, m, p, saves) = Rig();
         var ids = m.List().Select(o => (string)((dynamic)o).id).ToArray();
         Check(string.Join(",",
-                          ids) == "dashboard,dashboardFixed,settings,palette,wallpaper,capture,pin,dictation,rescue,tileFocus,tileSwap,tileFloat,tileGrow,tileShrink,tileExclude",
+                          ids) == "dashboard,dashboardFixed,settings,palette,wallpaper,capture,pin,dictation,rescue,"
+                          + "tileFocus,tileSwap,tileFloat,tileGrow,tileShrink,tileExclude",
               "(s) catalogue ids and order");
         Check(Combo(m, "dashboard") == "Ctrl+F1"
             && Combo(m, "settings") == "Win+Alt+S"
@@ -181,13 +189,16 @@ public class SettingsMigrationAndShortcutsTests
             && Combo(m, "pin") == "Ctrl+F8"
             && Combo(m, "palette") == "Ctrl+F2",
               "(s) default combos displayed");
-        Check(Combo(m, "dictation") == "AltGr" && Combo(m, "rescue") == "Ctrl+Alt+Backspace" && Combo(m, "dashboardFixed") == "Ctrl+Alt+Espace",
+        Check(Combo(m, "dictation") == "AltGr" && Combo(m, "rescue") == "Ctrl+Alt+Backspace"
+            && Combo(m, "dashboardFixed") == "Ctrl+Alt+Espace",
               "(s) dictation / rescue / fixed dashboard displayed");
         Check(g.SettingsActive && g.MatchesSettings(KeyOf(9, 0x53)), "(s) settings hotkey registered at startup and dispatched");
-        Check(ShortcutCombo.TryParse("ctrl+shift+f5", out var pm, out var pk) && pm == 6 && pk == 0x74 && ShortcutCombo.Format(pm, pk) == "Ctrl+Maj+F5",
+        Check(ShortcutCombo.TryParse("ctrl+shift+f5", out var pm, out var pk) && pm == 6 && pk == 0x74
+            && ShortcutCombo.Format(pm, pk) == "Ctrl+Maj+F5",
               "(s) parse/format Ctrl+Maj+F5");
         Check(ShortcutCombo.TryParse("Ctrl+Alt+Space", out pm, out pk) && pm == 3 && pk == 0x20, "(s) Space accepted");
-        Check(!ShortcutCombo.TryParse("Ctrl+", out _, out _) && !ShortcutCombo.TryParse("K", out _, out _) && !ShortcutCombo.TryParse("Ctrl+A+B", out _, out _),
+        Check(!ShortcutCombo.TryParse("Ctrl+", out _, out _) && !ShortcutCombo.TryParse("K", out _, out _)
+            && !ShortcutCombo.TryParse("Ctrl+A+B", out _, out _),
               "(s) malformed combos refused");
         foreach (var (id, c) in new[]
         {
@@ -215,7 +226,8 @@ public class SettingsMigrationAndShortcutsTests
         var c1 = m.Apply("palette", "Ctrl+F1");
         Check(!c1.Ok
             && c1.ConflictId == "dashboard"
-            && c1.Message == "Déjà utilisé par « Ouvrir le tableau de bord ». Choisissez une autre combinaison ou modifiez d’abord « Ouvrir le tableau de bord ».",
+            && c1.Message == "Déjà utilisé par « Ouvrir le tableau de bord ». Choisissez une autre combinaison ou modifiez d’abord « " +
+                "Ouvrir le tableau de bord ».",
               "(s) conflict with configurable dashboard, exact message");
         var c2 = m.Apply("capture", "Ctrl+Alt+Space");
         Check(!c2.Ok && c2.ConflictId == "dashboardFixed", "(s) conflict with the fixed dashboard shortcut");
@@ -235,7 +247,8 @@ public class SettingsMigrationAndShortcutsTests
         Check(saves[0] == baseSaves && p.PaletteShortcut.Key == 0x71, "(s) failed attempts neither saved nor changed prefs");
         int before = saves[0];
         var ok = m.Apply("palette", "Ctrl+Alt+K");
-        Check(ok.Ok && Combo(m, "palette") == "Ctrl+Alt+K" && p.PaletteShortcut.Modifiers == 3 && p.PaletteShortcut.Key == 0x4B && saves[0] == before + 1,
+        Check(ok.Ok && Combo(m, "palette") == "Ctrl+Alt+K" && p.PaletteShortcut.Modifiers == 3 && p.PaletteShortcut.Key == 0x4B
+            && saves[0] == before + 1,
               "(s) palette -> Ctrl+Alt+K saved");
         Check(reg.Values.Contains((3u, 0x4Bu)) && !reg.Values.Contains((2u, 0x71u)) && g.MatchesPalette(KeyOf(3, 0x4B)),
               "(s) old palette hotkey released, new registered and dispatched");
@@ -245,8 +258,10 @@ public class SettingsMigrationAndShortcutsTests
         Check(!rc.Ok && rc.ConflictId == "capture", "(s) reset blocked by the action now using the default combo");
         Check(m.Reset("capture").Ok && Combo(m, "capture") == "Ctrl+F3", "(s) reset capture -> Ctrl+F3");
         var rp = m.Reset("palette");
-        Check(rp.Ok && Combo(m, "palette") == "Ctrl+F2" && p.PaletteShortcut.Modifiers == 2 && p.PaletteShortcut.Key == 0x71, "(s) reset palette -> Ctrl+F2");
-        Check(!m.Reset("rescue").Ok && !m.Apply("rescue", "Ctrl+F5").Ok && !m.Apply("dictation", "Ctrl+F5").Ok && !m.Apply("tileFloat", "Ctrl+F5").Ok,
+        Check(rp.Ok && Combo(m, "palette") == "Ctrl+F2" && p.PaletteShortcut.Modifiers == 2 && p.PaletteShortcut.Key == 0x71,
+            "(s) reset palette -> Ctrl+F2");
+        Check(!m.Reset("rescue").Ok && !m.Apply("rescue", "Ctrl+F5").Ok && !m.Apply("dictation", "Ctrl+F5").Ok
+            && !m.Apply("tileFloat", "Ctrl+F5").Ok,
               "(s) non-configurable actions refuse changes");
         foreign.Add((3u, 0x4Au));
         int nonceBefore = (int)((dynamic)m.Status()).nonce;
@@ -263,17 +278,20 @@ public class SettingsMigrationAndShortcutsTests
               "(s) rollback: old pin hotkey still registered, prefs and save untouched");
         Check(g.MatchesPin(KeyOf(2, 0x77)), "(s) old pin hotkey still dispatches after rollback");
         dynamic st = m.Status();
-        Check((int)st.nonce == nonceBefore + 1 && (string)st.id == "pin" && !(bool)st.ok, "(s) shortcutStatus nonce increments, carries id/ok");
+        Check((int)st.nonce == nonceBefore + 1 && (string)st.id == "pin" && !(bool)st.ok,
+            "(s) shortcutStatus nonce increments, carries id/ok");
         GlobalShortcut.TestRegister = (w, id, mm, k) => (mm & ~0x4000u) == 3 && k == 0x4C ? 5 : 0;
         var denied = m.Apply("capture", "Ctrl+Alt+L");
-        Check(!denied.Ok && denied.Message.Contains("(5)") && Combo(m, "capture") == "Ctrl+F3", "(s) other Win32 error reported, previous binding kept");
+        Check(!denied.Ok && denied.Message.Contains("(5)") && Combo(m, "capture") == "Ctrl+F3",
+            "(s) other Win32 error reported, previous binding kept");
         Inactive();
         Collision();
         Dock();
         GlobalShortcut.TestRegister = null;
         GlobalShortcut.TestUnregister = null;
     }
-    // (a) a shortcut whose startup registration failed is reported inactive, and re-applying the same combo retries instead of saying "unchanged".
+    // (a) a shortcut whose startup registration failed is reported inactive, and re-applying the same combo retries instead of saying
+    // "unchanged".
     static void Inactive()
     {
         var (g0, m0, p0, s0) = Rig();
@@ -282,11 +300,14 @@ public class SettingsMigrationAndShortcutsTests
         foreign.Clear();
         foreign.Add((2u, 0x77u));   // another app owns Ctrl+F8 at startup
         var p = new Preferences();
-        var g = new GlobalShortcut(IntPtr.Zero, p.Shortcut, p.PaletteShortcut, p.PinShortcut, p.CaptureShortcut, p.WallpaperShortcut, p.SettingsShortcut);
+        var g = new GlobalShortcut(IntPtr.Zero, p.Shortcut, p.PaletteShortcut, p.PinShortcut, p.CaptureShortcut, p.WallpaperShortcut,
+            p.SettingsShortcut);
         var saves = new[] { 0 };
         var m = new ShortcutManager(g, () => p, () => saves[0]++);
-        Func<string, bool?> active = id => m.List().Select(o => (dynamic)o).Where(o => (string)o.id == id).Select(o => (bool?)(bool)o.active).FirstOrDefault();
-        Check(active("pin") == false && active("palette") == true && active("rescue") == true, "(a) failed registration listed active=false, others true");
+        Func<string, bool?> active = id =>
+            m.List().Select(o => (dynamic)o).Where(o => (string)o.id == id).Select(o => (bool?)(bool)o.active).FirstOrDefault();
+        Check(active("pin") == false && active("palette") == true && active("rescue") == true,
+            "(a) failed registration listed active=false, others true");
         var r = m.Apply("pin", "Ctrl+F8");
         Check(!r.Ok && r.Message == "Une autre application utilise déjà cette combinaison.",
               "(a) same combo while inactive retries and reports the real error, not 'inchangé'");
@@ -331,7 +352,8 @@ public class SettingsMigrationAndShortcutsTests
             File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Bridge", "QtShellBridge.Actions.Settings.cs")),
             @"\s+",
             "");
-        Check(src.Contains("case\"dockVisible\":Store.State.DockVisible=Flag(c.Args,\"enabled\");if(!Store.State.DockVisible&&owner.TaskbarEnabled)owner.SetTaskbar(false);"),
+        Check(src.Contains("case\"dockVisible\":Store.State.DockVisible=Flag(c.Args,\"enabled\");"
+                  + "if(!Store.State.DockVisible&&owner.TaskbarEnabled)owner.SetTaskbar(false);"),
               "(d) hiding the dock while it replaces the Windows bar restores the Windows bar");
     }
 }

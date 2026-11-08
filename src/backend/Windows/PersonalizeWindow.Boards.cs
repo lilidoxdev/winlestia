@@ -117,7 +117,7 @@ internal sealed partial class PersonalizeWindow
             File.Copy(Path.Combine(Store.Root, "preferences-glass.json"), Path.Combine(Store.Root, "preferences-avant-import.json"), true);
             var previousShortcut = Store.State.Shortcut;
             Store.State = state;
-            if (!coordinator.SetShortcut(state.Shortcut.Modifiers, state.Shortcut.Key, state.Shortcut.View, out var shortcutError))
+            if (!coordinator.Keys.SetShortcut(state.Shortcut.Modifiers, state.Shortcut.Key, state.Shortcut.View, out var shortcutError))
             {
                 Store.State.Shortcut = previousShortcut;
                 coordinator.Message(shortcutError);

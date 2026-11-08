@@ -1,4 +1,5 @@
-"""Terminal installer: portable paths, CMD AutoRun, PowerShell profiles, acrylic, idempotent reinstall and restore (no real registry or profiles touched)."""
+"""Installateur du terminal : chemins portables, AutoRun CMD, profils PowerShell, acrylique,
+reinstallation idempotente et restauration (ni registre ni profils reels touches)."""
 from pathlib import Path
 import tempfile, shutil, os, sys, importlib.util, json, subprocess
 
@@ -57,7 +58,9 @@ def test_install_idempotent_and_restore():
             module.configure()
             jsonc = base / 'settings-jsonc.json'
             jsonc.write_text('{// comment\n"url":"https://example.com/a//b", "items":[1,2,],}')
-            assert module.read_settings(jsonc) == {'url': 'https://example.com/a//b', 'items': [1, 2]}, 'JSONC: comments and trailing commas stripped, // inside strings kept'
+            assert module.read_settings(jsonc) == {'url': 'https://example.com/a//b', 'items': [1, 2]}, (
+                'JSONC: comments and trailing commas stripped, // inside strings kept'
+            )
             powershell = Path(os.environ['SystemRoot']) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
             with patch.object(subprocess, 'Popen', real_popen):
                 output = real_run(
@@ -77,14 +80,24 @@ def test_install_idempotent_and_restore():
                     timeout=20,
                     creationflags=0x08000000,
                 )
-            assert output.returncode == 0 and b'PSSecurityException' not in output.stderr, f'Banner.ps1 must run under Restricted policy: {output.stderr!r}'
+            assert output.returncode == 0 and b'PSSecurityException' not in output.stderr, (
+                f'Banner.ps1 must run under Restricted policy: {output.stderr!r}'
+            )
 
             p = documents / 'WindowsPowerShell/profile.ps1'
             data = json.loads(settings.read_text(encoding='utf-8-sig'))
-            assert p.read_text(encoding='utf-8-sig').count('# >>> Winlestia Terminal >>>') == 1, 'PowerShell profile block must be present exactly once after two configure() calls'
-            assert data['profiles']['defaults']['opacity'] == 65 and data['actions'] == [{'command': 'copy'}], 'opacity 65 set and user actions preserved'
-            assert '__WINLESTIA' not in (terminal / 'Profile.ps1').read_text(encoding='utf-8-sig'), 'Profile.ps1 placeholders must be substituted'
-            assert not (terminal / 'clink-profile/clink_start.cmd').read_bytes().startswith(b'\xef\xbb\xbf'), 'clink_start.cmd must be written without BOM'
+            assert p.read_text(encoding='utf-8-sig').count('# >>> Winlestia Terminal >>>') == 1, (
+                'PowerShell profile block must be present exactly once after two configure() calls'
+            )
+            assert data['profiles']['defaults']['opacity'] == 65 and data['actions'] == [{'command': 'copy'}], (
+                'opacity 65 set and user actions preserved'
+            )
+            assert '__WINLESTIA' not in (terminal / 'Profile.ps1').read_text(encoding='utf-8-sig'), (
+                'Profile.ps1 placeholders must be substituted'
+            )
+            assert not (terminal / 'clink-profile/clink_start.cmd').read_bytes().startswith(b'\xef\xbb\xbf'), (
+                'clink_start.cmd must be written without BOM'
+            )
             assert 'inject --quiet' in registry[(module.CMD, 'AutoRun')], 'CMD AutoRun must inject clink'
             module.restore()
             assert 'Winlestia Terminal >>>' not in p.read_text(encoding='utf-8-sig'), 'restore() must remove the PowerShell profile block'

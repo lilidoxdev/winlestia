@@ -22,7 +22,7 @@ Item {
     Rectangle {
         id: chipBg
         anchors.fill: parent
-        // Morphs from a rounded rectangle into a pill when selected.
+        // Passe d'un rectangle arrondi à une pastille une fois sélectionné.
         radius: chip.selected ? height / 2 : Appearance.rounding.small
         Behavior on radius {
             WorkspaceSpring {}

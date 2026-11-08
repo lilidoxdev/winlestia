@@ -88,7 +88,8 @@ Write-Host '-> Verre natif Qt' -ForegroundColor Cyan
 $qtGlass = Join-Path $root 'build\QtGlassBackdrop.dll'
 if (-not (Test-Path $qtGlass)) {
     cmd /c (Join-Path $root 'src\native\qtglass\build-qt-glass.cmd')
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $qtGlass)) { throw 'QtGlassBackdrop.dll manquant : compilation (src\native\qtglass\build-qt-glass.cmd) echouee.' }
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $qtGlass)) {
+        throw 'QtGlassBackdrop.dll manquant : compilation (src\native\qtglass\build-qt-glass.cmd) echouee.' }
 }
 
 Write-Host '-> Copie frontend' -ForegroundColor Cyan

@@ -33,13 +33,17 @@ def test_policy_override_restore_and_palette(monkeypatch):
             sync_theme.apply(values)
             assert json.loads((terminal / 'palette.json').read_text())['accent'] == color, f'palette.json accent must be {color}'
             data = json.loads(settings.read_text(encoding='utf-8-sig'))
-            assert next(s for s in data['schemes'] if s['name'] == 'Winlestia Glass')['blue'] == color, f'Winlestia Glass scheme blue must follow accent {color}'
+            glass = next(s for s in data['schemes'] if s['name'] == 'Winlestia Glass')
+            assert glass['blue'] == color, f'Winlestia Glass scheme blue must follow accent {color}'
         assert data['profiles']['defaults']['useAcrylic'], 'acrylic must be enabled in fresh settings'
         helper = root / 'src/terminal/Configure-Policy.ps1'
         state = base / 'policy.json'
         script = base / 'policy-test.ps1'
         script.write_text(
-            "$script:policy='Undefined'\nfunction Get-ExecutionPolicy {param($Scope) if($Scope -eq 'CurrentUser'){$script:policy}else{'Undefined'}}\nfunction Set-ExecutionPolicy {param($Scope,$ExecutionPolicy,[switch]$Force) $script:policy=[string]$ExecutionPolicy;throw 'ExecutionPolicyOverride'}\n. '"
+            "$script:policy='Undefined'\n"
+            "function Get-ExecutionPolicy {param($Scope) if($Scope -eq 'CurrentUser'){$script:policy}else{'Undefined'}}\n"
+            "function Set-ExecutionPolicy {param($Scope,$ExecutionPolicy,[switch]$Force) "
+            "$script:policy=[string]$ExecutionPolicy;throw 'ExecutionPolicyOverride'}\n. '"
             + str(helper).replace("'", "''")
             + "' -StatePath '"
             + str(state)

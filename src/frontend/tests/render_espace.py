@@ -126,7 +126,7 @@ def make_apps(n=372):
         a['target'] = 'C:/Apps/' + a['id'] + '.exe'
     for a in apps[:6]:
         a['category'] = 'Windows et périphériques'
-    # Duplicates (same target, empty category): the indexer must drop them (372 unique entries).
+    # Doublons (même cible, catégorie vide) : l'indexeur doit les écarter (372 entrées uniques).
     for k in range(5):
         d = dict(apps[10 + k])
         d['id'] = f'dup{k}'
@@ -212,7 +212,7 @@ def make_view(app, key, size=(1280, 820)):
     view.show()
     for _ in range(6):
         app.processEvents()
-    pump(app, 1200)  # shell idle: lets one-shot preload timers fire, like a real session
+    pump(app, 1200)  # shell au repos : laisse partir les minuteurs de préchargement uniques, comme une vraie session
     return view, stub, eng
 
 

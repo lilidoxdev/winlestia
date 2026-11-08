@@ -13,7 +13,10 @@ function Set-UserPolicy([string]$Value){
  if([string](Get-ExecutionPolicy -Scope CurrentUser) -ne $Value){throw 'La politique du compte n a pas ete appliquee.'}
 }
 if($Restore){
- if(Test-Path -LiteralPath $StatePath){$saved=Get-Content -LiteralPath $StatePath -Raw | ConvertFrom-Json;if($current -eq 'RemoteSigned' -and $saved.Changed){Set-UserPolicy $saved.Before}}
+ if(Test-Path -LiteralPath $StatePath){
+  $saved=Get-Content -LiteralPath $StatePath -Raw | ConvertFrom-Json
+  if($current -eq 'RemoteSigned' -and $saved.Changed){Set-UserPolicy $saved.Before}
+ }
  return
 }
 if($blocked){throw 'Une strategie administrateur bloque les profils non signes. Le theme PowerShell ne peut pas etre active sur ce poste.'}

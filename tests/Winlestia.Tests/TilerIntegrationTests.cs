@@ -31,7 +31,9 @@ public class TilerIntegrationTests
         var area = Forms.Screen.PrimaryScreen.WorkingArea;
         Forms.Form Add()
         {
-            var form = new Forms.Form { Text = "Winlestia dedicated tiling fixture " + windows.Count, StartPosition = Forms.FormStartPosition.Manual, Location = new Point(area.Left + 120 + windows.Count * 30, area.Top + 120), Size = new Size(420, 250), MinimumSize = new Size(160, 100) };
+            var form = new Forms.Form { Text = "Winlestia dedicated tiling fixture " + windows.Count,
+                StartPosition = Forms.FormStartPosition.Manual, Location = new Point(area.Left + 120 + windows.Count * 30, area.Top + 120),
+                Size = new Size(420, 250), MinimumSize = new Size(160, 100) };
             var requested = form.Bounds;
             windows.Add(form);
             form.Show();
@@ -63,12 +65,14 @@ public class TilerIntegrationTests
         {
             var value = type.GetMethod("Visible", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { form.Handle });
             var t = value.GetType();
-            return Rectangle.FromLTRB((int)t.GetField("Left").GetValue(value), (int)t.GetField("Top").GetValue(value), (int)t.GetField("Right").GetValue(value), (int)t.GetField("Bottom").GetValue(value));
+            return Rectangle.FromLTRB((int)t.GetField("Left").GetValue(value), (int)t.GetField("Top").GetValue(value),
+                (int)t.GetField("Right").GetValue(value), (int)t.GetField("Bottom").GetValue(value));
         }
         bool Neat()
         {
             var rects = windows.Where(w => !w.IsDisposed && w.WindowState != Forms.FormWindowState.Minimized).Select(Visible).ToArray();
-            return rects.All(r => area.Contains(r)) && !rects.SelectMany((a, i) => rects.Skip(i + 1).Select(b => a.IntersectsWith(b))).Any(x => x);
+            return rects.All(r => area.Contains(r))
+                && !rects.SelectMany((a, i) => rects.Skip(i + 1).Select(b => a.IntersectsWith(b))).Any(x => x);
         }
         try
         {
@@ -84,7 +88,8 @@ public class TilerIntegrationTests
             windows[0].WindowState = Forms.FormWindowState.Maximized;
             Forms.Application.DoEvents();
             Tick();
-            Assert.True(windows[0].WindowState == Forms.FormWindowState.Maximized && windows.Skip(1).Select(Visible).SequenceEqual(before), "manualMaximizeHeld");
+            Assert.True(windows[0].WindowState == Forms.FormWindowState.Maximized && windows.Skip(1).Select(Visible).SequenceEqual(before),
+                "manualMaximizeHeld");
             windows[0].WindowState = Forms.FormWindowState.Normal;
             Forms.Application.DoEvents();
             Tick();
@@ -114,7 +119,8 @@ public class TilerIntegrationTests
             Forms.Application.DoEvents();
             System.Threading.Thread.Sleep(100);
             Forms.Application.DoEvents();
-            Assert.True(windows.Where(w => !w.IsDisposed).All(w => { GetWindowRect(w.Handle, out var r); return r.Rect == original[w.Handle]; }), "disableRestoresOriginalGeometry");
+            Assert.True(windows.Where(w => !w.IsDisposed).All(w =>
+                { GetWindowRect(w.Handle, out var r); return r.Rect == original[w.Handle]; }), "disableRestoresOriginalGeometry");
             // Pure partition properties on a physical monitor with negative coordinates.
             var nativeRect = asm.GetType("PanneauxGlass.Native+Rect");
             var box = Activator.CreateInstance(nativeRect);
@@ -123,15 +129,18 @@ public class TilerIntegrationTests
             bool layouts = true;
             for (int n = 1; n <= 16; n++)
             {
-                var parts = (Array)type.GetMethod("Layout", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new[] { box, (object)n, (object)8 });
+                var parts = (Array)type.GetMethod("Layout", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null,
+                    new[] { box, (object)n, (object)8 });
                 layouts &= parts.Length == n;
                 var bounds = new List<Rectangle>();
                 foreach (var p in parts)
                 {
                     var t = p.GetType();
-                    bounds.Add(Rectangle.FromLTRB((int)t.GetField("Left").GetValue(p), (int)t.GetField("Top").GetValue(p), (int)t.GetField("Right").GetValue(p), (int)t.GetField("Bottom").GetValue(p)));
+                    bounds.Add(Rectangle.FromLTRB((int)t.GetField("Left").GetValue(p), (int)t.GetField("Top").GetValue(p),
+                        (int)t.GetField("Right").GetValue(p), (int)t.GetField("Bottom").GetValue(p)));
                 }
-                layouts &= bounds.All(r => r.Width > 0 && r.Height > 0 && new Rectangle(-1920, -1080, 1920, 1080).Contains(r)) && !bounds.SelectMany((a, i) => bounds.Skip(i + 1).Select(b => a.IntersectsWith(b))).Any(x => x);
+                layouts &= bounds.All(r => r.Width > 0 && r.Height > 0 && new Rectangle(-1920, -1080, 1920, 1080).Contains(r))
+                    && !bounds.SelectMany((a, i) => bounds.Skip(i + 1).Select(b => a.IntersectsWith(b))).Any(x => x);
             }
             Assert.True(layouts, "oneToSixteenNegativeMonitorPartitions");
         }

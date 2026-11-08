@@ -1,5 +1,5 @@
-# Offscreen check of the custom palette editor (qml/CustomThemeEditor.qml + ThemePreviewMock.qml).
-# Loads it with the real Bridge, changes colours, asserts the live preview follows, no QML warnings, optional PNG.
+# Vérification hors écran de l'éditeur de palette personnalisée (qml/CustomThemeEditor.qml + ThemePreviewMock.qml).
+# Le charge avec le vrai Bridge, change des couleurs, vérifie que l'aperçu suit, aucun avertissement QML, PNG optionnel.
 # Usage: python check_theme_editor.py [OUT_PNG]
 import os, sys, json, tempfile
 
@@ -110,7 +110,7 @@ def run():
     checks['mapSurface'] = same(media.property('color'), pal['m3surfaceContainer'])
     checks['mapTodayPrimary'] = today is not None and same(today.property('color'), pal['m3primary'])
     before = today.property('color').name()
-    # Edit "Principal" (index 2) through the real controls: pick role, then type hex.
+    # Modifier « Principal » (index 2) via les vrais contrôles : choisir le rôle, puis saisir l'hex.
     from PySide6.QtCore import QPointF
 
     ed.setProperty('selected', 2)
@@ -122,7 +122,7 @@ def run():
     checks['swatchChanged'] = find(ed, 'custom-swatch-primary').property('color').name() == '#2255cc'
     pal = make_palette(ed.property('draft').toVariant())['palette']
     checks['mapMatchesPython'] = same(today.property('color'), pal['m3primary'])
-    # Background edit changes the media card (surfaceContainer is derived from it).
+    # Modifier le fond change la carte média (surfaceContainer en est dérivé).
     cb = media.property('color').name()
     ed.setProperty('selected', 0)
     yield 100
@@ -145,7 +145,7 @@ def run():
         'customClarity',
     ):
         checks['has:' + n] = find(ed, n) is not None
-    # Eyedropper sits right of the hex field
+    # La pipette est à droite du champ hex
     h, eye = find(ed, 'customHex'), find(ed, 'customEyedropper')
     checks['eyedropperBesideHex'] = (
         eye.mapToItem(None, 0, 0).x() >= h.mapToItem(None, h.width(), 0).x() - 1
@@ -153,7 +153,7 @@ def run():
     )
     if OUT:
         OUT.parent.mkdir(parents=True, exist_ok=True)
-        # Offscreen screen is 800x600: first the stacked (narrow) layout, then the real 1366x768 size.
+        # L'écran hors écran fait 800x600 : d'abord la disposition empilée (étroite), puis la vraie taille 1366x768.
         ed.setProperty('glass', True)
         ed.setProperty('selected', 0)
         QMetaObject.invokeMethod(ed, 'putColor', Q_ARG('QString', '#14181c'), Q_ARG(bool, True))

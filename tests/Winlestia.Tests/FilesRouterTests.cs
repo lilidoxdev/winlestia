@@ -54,9 +54,12 @@ public class FilesRouterTests
             Assert.True(PathRouter.Clean("D:\"") == @"D:\", "rootDQuoteCleaned");
             Assert.True(Directory.Exists(@"Q:\") || IsExplorer("Q:\"", @"Q:\"), "rootUnusedDriveGoesToExplorerNormalised");
             Assert.True(IsExplorer("\\\\srv\\share\"", @"\\srv\share\"), "uncRootQuoteGetsBackslash");
-            Assert.True(PathRouter.Clean("\\\\srv\\share\"") == @"\\srv\share\" && PathRouter.Clean(@"\\srv\share\sub\") == @"\\srv\share\sub\", "uncRootCleanDirect");
-            Assert.True(Directory.Exists(@"C:\Program Files") && IsOwn("C:\\Program Files\"", @"C:\Program Files"), "programFilesDanglingQuote");
-            Assert.True(PathRouter.Clean(@"C:\Users\x") == @"C:\Users\x" && PathRouter.Clean("\"C:\\a b\"") == "\"C:\\a b\"" && PathRouter.Clean(null) == "", "normalPathUnchanged");
+            Assert.True(PathRouter.Clean("\\\\srv\\share\"") == @"\\srv\share\"
+                && PathRouter.Clean(@"\\srv\share\sub\") == @"\\srv\share\sub\", "uncRootCleanDirect");
+            Assert.True(Directory.Exists(@"C:\Program Files") && IsOwn("C:\\Program Files\"", @"C:\Program Files"),
+                "programFilesDanglingQuote");
+            Assert.True(PathRouter.Clean(@"C:\Users\x") == @"C:\Users\x" && PathRouter.Clean("\"C:\\a b\"") == "\"C:\\a b\""
+                && PathRouter.Clean(null) == "", "normalPathUnchanged");
             Assert.True(PathRouter.Clean("a\"\"") == "a\"", "onlyOneQuoteStripped");
             Assert.True(IsOwn(dir, dir), "normalFolderStillOwn");
         }

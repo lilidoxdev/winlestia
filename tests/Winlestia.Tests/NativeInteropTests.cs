@@ -20,7 +20,8 @@ public class NativeInteropTests
     [DllImport("user32.dll")] static extern int GetWindowRgn(IntPtr h, IntPtr r);
     static void AllChecksSta()
     {
-        Environment.SetEnvironmentVariable("WINLESTIA_DATA_DIR", Path.Combine(Path.GetTempPath(), "Winlestia95-data-" + Guid.NewGuid().ToString("N")));
+        Environment.SetEnvironmentVariable("WINLESTIA_DATA_DIR",
+            Path.Combine(Path.GetTempPath(), "Winlestia95-data-" + Guid.NewGuid().ToString("N")));
         var asm = typeof(Entry).Assembly;
         var flags = BindingFlags.Instance | BindingFlags.NonPublic;
         using var fixture = new Forms.Form { Text = "Winlestia 9.5 isolated fixture", Width = 400, Height = 250 };
@@ -57,8 +58,10 @@ public class NativeInteropTests
         prefs.TaskbarPins.AddRange(new[] { "a", "b", "c" });
         var bridgeType = asm.GetType("PanneauxGlass.QtShellBridge");
         var bridge = RuntimeHelpers.GetUninitializedObject(bridgeType);
-        bridgeType.GetField("dockEntries", flags).SetValue(bridge, new Dictionary<string, Entry> { { "a", new Entry { Id = "a", Target = Environment.ProcessPath } } });
-        bridgeType.GetMethod("DockAction", flags).Invoke(bridge, new object[] { JsonSerializer.SerializeToElement(new { id = "a", action = "reorder", index = 2 }) });
+        bridgeType.GetField("dockEntries", flags).SetValue(bridge, new Dictionary<string,
+            Entry> { { "a", new Entry { Id = "a", Target = Environment.ProcessPath } } });
+        bridgeType.GetMethod("DockAction", flags).Invoke(bridge,
+            new object[] { JsonSerializer.SerializeToElement(new { id = "a", action = "reorder", index = 2 }) });
         Assert.True(string.Join(",", prefs.TaskbarPins) == "b,c,a", "reorderMovesExistingPin");
         var saved = File.ReadAllText(Path.Combine(root, "preferences-glass.json"));
         Assert.True(saved.IndexOf("\"b\"") < saved.IndexOf("\"a\""), "pinOrderSaved");
@@ -67,7 +70,8 @@ public class NativeInteropTests
         var rows = Array.CreateInstance(recentType, 5);
         string[] names = { "ChatGPT", "OpenCode", "Freebuff", "Canada", "ChatGPT" };
         for (int i = 0; i < 5; i++)
-            rows.SetValue(Activator.CreateInstance(recentType, new object[] { new Entry { Id = names[i], Name = names[i], Target = names[i] }, DateTime.UtcNow.Date.AddMinutes(i) }), i);
+            rows.SetValue(Activator.CreateInstance(recentType,
+                new object[] { new Entry { Id = names[i], Name = names[i], Target = names[i] }, DateTime.UtcNow.Date.AddMinutes(i) }), i);
         var sorted = (Array)orderType.GetMethod("Sort", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { rows });
         var sortedNames = new List<string>();
         foreach (var row in sorted)
@@ -80,15 +84,20 @@ public class NativeInteropTests
         prefs.CustomGlass = true;
         prefs.CustomGlassOpacity = .21;
         store.GetMethod("Save").Invoke(null, null);
-        var customSaved = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(Path.Combine(root, "preferences-glass.json")), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        Assert.True(customSaved.CustomPalette["primary"] == "#ff315b" && customSaved.CustomGlass && Math.Abs(customSaved.CustomGlassOpacity - .21) < .001, "customPaletteAndGlassPersist");
-        var pinned = (Entry)bridgeType.GetMethod("PersistDockEntry", flags).Invoke(bridge, new object[] { new Entry { Id = "volatile-catalogue-id", Name = "Fixture", Target = Environment.ProcessPath, IconPath = Environment.ProcessPath } });
+        var customSaved = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(Path.Combine(root, "preferences-glass.json")),
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        Assert.True(customSaved.CustomPalette["primary"] == "#ff315b" && customSaved.CustomGlass
+            && Math.Abs(customSaved.CustomGlassOpacity - .21) < .001, "customPaletteAndGlassPersist");
+        var pinned = (Entry)bridgeType.GetMethod("PersistDockEntry", flags).Invoke(bridge,
+            new object[] { new Entry { Id = "volatile-catalogue-id", Name = "Fixture", Target = Environment.ProcessPath,
+            IconPath = Environment.ProcessPath } });
         prefs.TaskbarPins.Clear();
         prefs.TaskbarPins.Add(pinned.Id);
         store.GetMethod("Save").Invoke(null, null);
         store.GetMethod("Load").Invoke(null, null);
         var reloaded = (Preferences)store.GetField("State").GetValue(null);
-        Assert.True(reloaded.TaskbarPins.Count == 1 && reloaded.TaskbarPins[0] == pinned.Id && reloaded.Custom.Exists(e => e.Id == pinned.Id && e.Target == Environment.ProcessPath), "dockPinAndMetadataSurviveReload");
+        Assert.True(reloaded.TaskbarPins.Count == 1 && reloaded.TaskbarPins[0] == pinned.Id
+            && reloaded.Custom.Exists(e => e.Id == pinned.Id && e.Target == Environment.ProcessPath), "dockPinAndMetadataSurviveReload");
         var recycle = asm.GetType("PanneauxGlass.RecycleActions");
         string za = Path.Combine(root, "a"), zb = Path.Combine(root, "b");
         Directory.CreateDirectory(za);
@@ -96,10 +105,13 @@ public class NativeInteropTests
         File.WriteAllText(Path.Combine(za, "été.txt"), "one");
         File.WriteAllText(Path.Combine(zb, "été.txt"), "two");
         string zip = Path.Combine(root, "fixture.zip");
-        recycle.GetMethod("Zip", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { new[] { Path.Combine(za, "été.txt"), Path.Combine(zb, "été.txt") }, zip });
+        recycle.GetMethod("Zip", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null,
+            new object[] { new[] { Path.Combine(za, "été.txt"), Path.Combine(zb, "été.txt") }, zip });
         using (var archive = System.IO.Compression.ZipFile.OpenRead(zip))
         {
-            Assert.True(archive.Entries.Count == 2 && archive.Entries[0].FullName != archive.Entries[1].FullName && File.ReadAllText(Path.Combine(za, "été.txt")) == "one" && File.ReadAllText(Path.Combine(zb, "été.txt")) == "two", "zipMultiFileDuplicateNamesPreservesOriginals");
+            Assert.True(archive.Entries.Count == 2 && archive.Entries[0].FullName != archive.Entries[1].FullName
+                && File.ReadAllText(Path.Combine(za, "été.txt")) == "one" && File.ReadAllText(Path.Combine(zb, "été.txt")) == "two",
+                "zipMultiFileDuplicateNamesPreservesOriginals");
         }
     }
 }

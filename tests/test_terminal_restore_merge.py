@@ -77,14 +77,14 @@ def test_restore_merges_user_edits_and_guards_autorun():
         module, terminal, local, settings, registry = load(a, USER)
         run(a, local, module.configure)
         state = load_json(module.STATE / 'state.json')
-        assert state['version'] == 2 and PKG in state['wt'], "(a): state['version'] == 2 and PKG in state['wt']"
+        assert state['version'] == 2 and PKG in state['wt']
         assert (
             state['wt'][PKG]['original']['theme'] == module.ABSENT
             and state['wt'][PKG]['original']['defaults']['opacity'] == module.ABSENT
-        ), "(a): state['wt'][PKG]['original']['theme'] == module.ABSENT and state['wt']"
+        )
         data = load_json(settings)
-        assert data['theme'] == 'Winlestia' and data['profiles']['defaults']['opacity'] == 65, "(a): data['theme'] == 'Winlestia' and data['profiles']['defaults']['opacity"
-        assert {s['name'] for s in data['schemes']} >= {'UserScheme', 'Winlestia Glass'}, "(a): {s['name'] for s in data['schemes']} >= {'UserScheme', 'Winlestia Glas"
+        assert data['theme'] == 'Winlestia' and data['profiles']['defaults']['opacity'] == 65
+        assert {s['name'] for s in data['schemes']} >= {'UserScheme', 'Winlestia Glass'}
         data['profiles']['list'].append({'name': 'New', 'guid': '{2}'})
         data['profiles']['defaults']['fontSize'] = 14
         data['profiles']['defaults']['opacity'] = 90
@@ -97,17 +97,17 @@ def test_restore_merges_user_edits_and_guards_autorun():
         assert d['fontSize'] == 14 and d['opacity'] == 90, d
         assert d['font'] == {'face': 'Original'} and 'colorScheme' not in d and 'useAcrylic' not in d, d
         assert [s['name'] for s in data['schemes']] == ['UserScheme'] and 'themes' not in data and 'theme' not in data, data
-        assert data['userKey'] == 'keep' and data['actions'] == [{'command': 'copy'}], "(a): data['userKey'] == 'keep' and data['actions'] == [{'command': 'copy'}]"
+        assert data['userKey'] == 'keep' and data['actions'] == [{'command': 'copy'}]
         # sauvegarde conservée, jamais recopiée par-dessus
-        assert (module.STATE / (PKG + '.json')).read_bytes() == backup_before, "(a): (module.STATE / (PKG + '.json')).read_bytes() == backup_before"
-        assert not (module.STATE / 'state.json').exists() and (module.STATE / 'state.restored.json').exists(), "(a): not (module.STATE / 'state.json').exists() and (module.STATE / 'state."
-        assert not any(k[1] == 'WinlestiaTerminalTheme' for k in registry) and (module.CMD, 'AutoRun') not in registry, "(a): not any(k[1] == 'WinlestiaTerminalTheme' for k in registry) and (modul"
+        assert (module.STATE / (PKG + '.json')).read_bytes() == backup_before
+        assert not (module.STATE / 'state.json').exists() and (module.STATE / 'state.restored.json').exists()
+        assert not any(k[1] == 'WinlestiaTerminalTheme' for k in registry) and (module.CMD, 'AutoRun') not in registry
         # seconde restauration (désinstallation après une mise à jour non cochée) : sans effet
         run(a, local, module.restore)
-        assert load_json(settings) == data, "(a): load_json(settings) == data"
+        assert load_json(settings) == data
         # re-install after restore captures fresh originals
         run(a, local, module.configure)
-        assert load_json(module.STATE / 'state.json')['wt'][PKG]['original']['defaults']['font'] == {'face': 'Original'}, "(a): load_json(module.STATE / 'state.json')['wt'][PKG]['original']['default"
+        assert load_json(module.STATE / 'state.json')['wt'][PKG]['original']['defaults']['font'] == {'face': 'Original'}
         # les valeurs de sync_theme enregistrées via note_written comptent comme les nôtres
         module.note_written(PKG, opacity=40)
         data = load_json(settings)
@@ -115,7 +115,7 @@ def test_restore_merges_user_edits_and_guards_autorun():
         settings.write_text(json.dumps(data))
         run(a, local, module.restore)
         # retour à la valeur trouvée à la seconde installation
-        assert load_json(settings)['profiles']['defaults']['opacity'] == 90, "(a): load_json(settings)['profiles']['defaults']['opacity'] == 90"
+        assert load_json(settings)['profiles']['defaults']['opacity'] == 90
         # une valeur utilisateur égale à ce que nous avons écrit est indiscernable et rétablie ; un thème changé par
         # l'utilisateur est conservé
         a2 = base / 'a2'
@@ -136,9 +136,9 @@ def test_restore_merges_user_edits_and_guards_autorun():
         registry[(module.CMD, 'AutoRun')] = 'echo hi'
         run(b, local, module.configure)
         inj = module.injection()
-        assert registry[(module.CMD, 'AutoRun')] == 'echo hi & ' + inj, "(b): registry[(module.CMD, 'AutoRun')] == 'echo hi & ' + inj"
+        assert registry[(module.CMD, 'AutoRun')] == 'echo hi & ' + inj
         run(b, local, module.configure)
-        assert registry[(module.CMD, 'AutoRun')] == 'echo hi & ' + inj, "(b): registry[(module.CMD, 'AutoRun')] == 'echo hi & ' + inj"  # idempotent
+        assert registry[(module.CMD, 'AutoRun')] == 'echo hi & ' + inj  # idempotent
         registry[(module.CMD, 'AutoRun')] += ' & mycmd'
         run(b, local, module.restore)
         assert registry[(module.CMD, 'AutoRun')] == 'echo hi & mycmd', registry
@@ -159,7 +159,7 @@ def test_restore_merges_user_edits_and_guards_autorun():
         run(b3, local, module.configure)
         registry[(module.CMD, 'AutoRun')] = 'something else'
         run(b3, local, module.restore)
-        assert registry[(module.CMD, 'AutoRun')] == 'something else', "(b): registry[(module.CMD, 'AutoRun')] == 'something else'"
+        assert registry[(module.CMD, 'AutoRun')] == 'something else'
 
         # une mise à jour ne doit pas capturer des ajouts ultérieurs de l'utilisateur comme 'written'.
         b4 = base / 'b4'
@@ -174,7 +174,7 @@ def test_restore_merges_user_edits_and_guards_autorun():
         assert registry[(module.CMD, 'AutoRun')] == 'echo hi & mycmd', registry
         # note_written ne crée jamais state.json et tolère son absence.
         module.note_written(PKG, opacity=1)
-        assert not (module.STATE / 'state.json').exists(), "(b): not (module.STATE / 'state.json').exists()"
+        assert not (module.STATE / 'state.json').exists()
 
         # (c) un state.json v1 (sans manifeste) se restaure encore.
         c = base / 'c'
@@ -219,7 +219,7 @@ def test_restore_merges_user_edits_and_guards_autorun():
         v = load_json(module.STATE / 'state.json')
         module.save(module.STATE / 'state.json', json.dumps({k: v[k] for k in ('profiles', 'autorun', 'sync')}))
         module.note_written(PKG, opacity=40)  # v1 : pas de KeyError, aucun changement
-        assert 'version' not in load_json(module.STATE / 'state.json'), "(c): 'version' not in load_json(module.STATE / 'state.json')"
+        assert 'version' not in load_json(module.STATE / 'state.json')
 
         # (d) pas de state.json : la restauration ne change rien.
         d_ = base / 'd'
@@ -232,7 +232,7 @@ def test_restore_merges_user_edits_and_guards_autorun():
             settings.read_bytes() == before
             and registry == {(module.CMD, 'AutoRun'): 'echo hi'}
             and not (terminal / 'theme-sync.stop').exists()
-        ), "(d): settings.read_bytes() == before and registry == {(module.CMD, 'AutoRun"
+        )
 
         # sync_theme ne doit pas toucher à Windows Terminal sans intégration (pas de state.json).
         sys.path.insert(0, str(r / 'src/terminal'))
@@ -250,4 +250,4 @@ def test_restore_merges_user_edits_and_guards_autorun():
             patch.object(sync_theme, 'apply', side_effect=AssertionError('sync wrote')),
         ):
             sync_theme.run(True)
-        assert settings.read_bytes() == before, "(d): settings.read_bytes() == before"
+        assert settings.read_bytes() == before

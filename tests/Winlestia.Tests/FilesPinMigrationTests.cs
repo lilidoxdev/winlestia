@@ -6,7 +6,8 @@ using PanneauxGlass;
 namespace Winlestia.Tests;
 internal class State // in-memory stand-in for the three Preferences members the migration touches
 {
-    public bool FilesPinRemoved; public List<string> TaskbarPins = new(); public List<Entry> Custom = new(); public bool Run(string exe, List<string> ids) => FilesPinMigration.Apply(ref FilesPinRemoved, TaskbarPins, Custom, exe, ids);
+    public bool FilesPinRemoved; public List<string> TaskbarPins = new(); public List<Entry> Custom = new(); public bool Run(string exe,
+        List<string> ids) => FilesPinMigration.Apply(ref FilesPinRemoved, TaskbarPins, Custom, exe, ids);
 }
 public class FilesPinMigrationTests
 {
@@ -43,7 +44,8 @@ public class FilesPinMigrationTests
             s.Custom.Add(E("c1", "Autre", @"C:\x.exe"));
             var ids = new List<string>();
             s.Run(exe, ids);
-            Assert.True(s.TaskbarPins.SequenceEqual(new[] { "a", "b" }) && s.Custom.Count == 1 && ids.Count == 0 && s.FilesPinRemoved, "otherPinsAndEntriesUntouched");
+            Assert.True(s.TaskbarPins.SequenceEqual(new[] { "a", "b" }) && s.Custom.Count == 1 && ids.Count == 0 && s.FilesPinRemoved,
+                "otherPinsAndEntriesUntouched");
         }
         {
             var s = S(id);

@@ -4,16 +4,16 @@ import qs.components.controls
 import qs.config
 import "."
 
-// Row with a thin accent slider; the live value is printed at the right of the title in the accent colour.
+// Ligne avec un fin curseur d'accent ; la valeur en direct s'affiche à droite du titre à la couleur d'accent.
 SettingsRow {
     id: row
 
     property real from: 0
     property real to: 100
     property real stepSize: 1
-    // Stored value; follows the backend while the handle is not held.
+    // Valeur enregistrée ; suit le backend tant que la poignée n'est pas tenue.
     property real value: 0
-    // Send only when the handle is released.
+    // Envoyer seulement au relâchement de la poignée.
     property bool commitOnRelease: false
     property alias slider: sl
 

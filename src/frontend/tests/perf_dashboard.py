@@ -180,7 +180,7 @@ def main():
             QThread.msleep(1)
         first = clock.nsecsElapsed() / 1e6 - a  # switch -> next swapped frame
         wait(600)
-        if os.environ.get('SHOT_DIR'):  # SHOT_TAG=before|after: idle screenshot of each tab, for visual diffs
+        if os.environ.get('SHOT_DIR'):  # SHOT_TAG=before|after : capture au repos de chaque onglet, pour comparer visuellement
             Path(os.environ['SHOT_DIR']).mkdir(parents=True, exist_ok=True)
             view.grabWindow().save(
                 str(Path(os.environ['SHOT_DIR']) / f"{os.environ.get('SHOT_TAG', 'shot')}-tab{tab}.png")
@@ -194,13 +194,13 @@ def main():
             'frames': summ(ivs),
         }
     res['live'] = {}
-    # Inactive tabs must be idle: check each loaded pane while tab 0 is current.
+    # Les onglets inactifs doivent être au repos : vérifier chaque volet chargé pendant que l'onglet 0 est courant.
     for i in range(4):
         s = stats(i)
         s = s.toVariant() if hasattr(s, 'toVariant') else s
         res['live'][f'tab{i}'] = s
     res['dbg'] = [round(x) for x in frames[-6:]] + [len(frames), round(clock.nsecsElapsed() / 1e6)]
-    # Cost of one Bridge.changed emit (every Bridge binding re-evaluates), all tabs loaded.
+    # Coût d'une émission Bridge.changed (toutes les liaisons Bridge se réévaluent), tous les onglets chargés.
     res['changed_emit_ms'] = {}
     for tab in (0, 3):
         QMetaObject.invokeMethod(root, 'setTab', Q_ARG('QVariant', tab))
@@ -213,7 +213,7 @@ def main():
         for _ in range(20):
             stub.perfChanged.emit()
         res.setdefault('perfChanged_emit_ms', {})[f'active_tab{tab}'] = round((time.perf_counter() - ts) * 1000 / 20, 2)
-    # Simulated mouse drag on the view: neighbour panes must be visible mid-drag.
+    # Glissement souris simulé sur la vue : les volets voisins doivent être visibles en cours de glissement.
     try:
         from PySide6.QtTest import QTest
         from PySide6.QtCore import Qt, QPoint

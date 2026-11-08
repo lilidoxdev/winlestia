@@ -73,7 +73,8 @@ QtObject {
         return 0;
     }
 
-    // page = index in `pages`; section = muted label of the section holding the row; anchor = row to show when this one is hidden.
+    // page = index dans `pages` ; section = libellé discret de la section contenant la ligne ; anchor = ligne à montrer quand celle-ci est
+    // masquée.
     // kw : mots de recherche supplémentaires (français et anglais), jamais affichés.
     readonly property var entries: [
         {

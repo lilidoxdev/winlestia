@@ -19,7 +19,7 @@ Item {
     readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins
         * 2
 
-    // Fixed drawer content size: max over panes, only ever grows (when a pane is first measured).
+    // Taille fixe du contenu du tiroir : maximum des volets, ne fait que croître (à la première mesure d'un volet).
     property real paneMaxWidth: 966
     property real paneMaxHeight: 450
 

@@ -1,4 +1,4 @@
-# Python 3.12 / Qt 6.10 / Windows. Real native window visibility, with the dashboard initially hidden.
+# Python 3.12 / Qt 6.10 / Windows. Visibilité réelle de la fenêtre native, tableau de bord initialement masqué.
 import ctypes, json, os, sys
 from pathlib import Path
 from types import SimpleNamespace

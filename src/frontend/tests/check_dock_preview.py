@@ -186,7 +186,7 @@ check('no dockPreviewEnd before the 200 ms grace', not ends(), ends())
 pump(250)
 check('dockPreviewEnd after exit', len(ends()) == 1 and ends()[0][2] - t1 >= 0.19, ends())
 
-# quick re-hover while a preview is open -> short (120 ms) delay, cancels the pending end
+# nouveau survol rapide pendant un aperçu ouvert -> délai court (120 ms), annule la fin en attente
 stub.log.clear()
 QTest.mouseMove(dock, QPoint(ex, ey))
 pump(700)
@@ -197,7 +197,7 @@ QTest.mouseMove(dock, QPoint(ex, ey))
 pump(400)
 check('leaving and re-entering within the grace does not send dockPreviewEnd', not ends(), ends())
 
-# dock hides while a preview is open -> immediate end (now)
+# le dock se masque pendant un aperçu ouvert -> fin immédiate (now)
 dock.setProperty('shown', False)
 pump(50)
 check(

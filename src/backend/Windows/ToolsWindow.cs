@@ -75,7 +75,7 @@ internal sealed class ToolsWindow : GlassWindow
         new("Écran","\uE790","Pipette de couleur","Agrandit sous le curseur et copie le code hexadécimal",
             "",()=>owner.OpenColorPicker()),
         new("Écran","\uE7A3","Règle pixel","Mesure une distance à l’écran, en pixels et en centimètres","",()=>owner.OpenRuler()),
-        new("Système","\uE840","Toujours au premier plan","Une fenêtre reste devant toutes les autres",owner.PinShortcutLabel,()=>owner
+        new("Système","\uE840","Toujours au premier plan","Une fenêtre reste devant toutes les autres",owner.Keys.PinShortcutLabel,()=>owner
             .ToggleAlwaysOnTop()),
         new("Système","\uE7F5","Son et micro","Change de casque ou coupe le micro en un clic","",()=>owner.OpenAudio()),
         new("Système","\uE7ED","Notifications","Coupe ou rétablit les notifications Windows",SystemTools
@@ -229,8 +229,8 @@ internal sealed class HelpWindow : GlassWindow
             "Approche le pointeur du bord droit de l’écran, ou utilise le raccourci global. Un deuxième appui replie tout, avec les " +
             "fenêtres ouvertes depuis l’espace.");
         Row(GlobalShortcut.Label(Store.State.Shortcut.Modifiers, Store.State.Shortcut.Key), "Ouvre ou replie ton espace");
-        Row(owner.PaletteLabel, "Commande rapide : applications, sites, calculs, minuteur, actions");
-        Row(owner.PinShortcutLabel, "Toujours au premier plan : épingle la fenêtre active");
+        Row(owner.Keys.PaletteLabel, "Commande rapide : applications, sites, calculs, minuteur, actions");
+        Row(owner.Keys.PinShortcutLabel, "Toujours au premier plan : épingle la fenêtre active");
         Row("Ctrl 1 … Ctrl 4", "Applications, Jeux, Projets, Documents");
         Row("Ctrl F", "Place le curseur dans la recherche");
         Row("Ctrl H", "Revient à l’accueil");

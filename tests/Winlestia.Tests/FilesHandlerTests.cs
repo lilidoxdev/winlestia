@@ -1,5 +1,7 @@
-// C#12 / FilesHandler: register / restore round-trips on a SANDBOX registry root (HKCU\Software\WinlestiaTest\Sandbox\<run>\Classes, no shell effect), plus the crash-guard decisions.
-// The real HKCU\Software\Classes is never written; its Directory\shell and Drive\shell defaults are only read before/after to prove they did not move. The sandbox is deleted at the end.
+// C#12 / FilesHandler: register / restore round-trips on a SANDBOX registry root (HKCU\Software\WinlestiaTest\Sandbox\<run>\Classes, no
+// shell effect), plus the crash-guard decisions.
+// The real HKCU\Software\Classes is never written; its Directory\shell and Drive\shell defaults are only read before/after to prove they
+// did not move. The sandbox is deleted at the end.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +23,8 @@ public class FilesHandlerTests
     {
         n++;
         string root = SandboxRoot + @"\" + run + @"\c" + n;
-        return new HandlerOptions { Base = Registry.CurrentUser, ClassesPath = root + @"\Classes", BackupPath = Path.Combine(tmp, "b" + n + ".json"), Notify = false };
+        return new HandlerOptions { Base = Registry.CurrentUser, ClassesPath = root + @"\Classes",
+            BackupPath = Path.Combine(tmp, "b" + n + ".json"), Notify = false };
     }
     static RegistryKey? Open(HandlerOptions o, string rel) => o.Base.OpenSubKey(o.ClassesPath + @"\" + rel);
     static string? Def(HandlerOptions o, string rel)
@@ -71,7 +74,8 @@ public class FilesHandlerTests
                 var res = FilesHandler.Register(o, exe);
                 Assert.True(res.Ok, "noPrior_registerOk");
                 Assert.True(Def(o, @"Directory\shell") == "winlestia" && Def(o, @"Drive\shell") == "winlestia", "noPrior_directoryDefault");
-                Assert.True(Def(o, @"Directory\shell\winlestia\command") == Cmd(exe) && Def(o, @"Drive\shell\winlestia\command") == Cmd(exe), "noPrior_command");
+                Assert.True(Def(o, @"Directory\shell\winlestia\command") == Cmd(exe)
+                    && Def(o, @"Drive\shell\winlestia\command") == Cmd(exe), "noPrior_command");
                 Assert.True(Def(o, @"Directory\shell\winlestia") == "Ouvrir avec Winlestia Fichiers", "noPrior_label");
                 using (var k = Open(o, @"Directory\shell\winlestia"))
                     Assert.True((k?.GetValue("MUIVerb") as string) == "Ouvrir avec Winlestia Fichiers", "noPrior_muiverb");
@@ -99,7 +103,9 @@ public class FilesHandlerTests
                 Assert.True(Def(o, @"Directory\shell") == "none", "prior_directoryDefaultBack");
                 Assert.True(!HasDef(o, @"Drive\shell") && Exists(o, @"Drive\shell"), "prior_driveDefaultAbsent");
                 Assert.True(!Exists(o, @"Directory\shell\winlestia") && !Exists(o, @"Drive\shell\winlestia"), "prior_ourSubkeysGone");
-                Assert.True(Def(o, @"Directory\shell\foo\command") == "C:\\foo.exe \"%1\"" && Def(o, @"Drive\shell\bar\command") == "bar.exe" && Def(o, @"Directory\Background\shell\baz\command") == "baz.exe", "prior_otherVerbsIntact");
+                Assert.True(Def(o, @"Directory\shell\foo\command") == "C:\\foo.exe \"%1\""
+                    && Def(o, @"Drive\shell\bar\command") == "bar.exe" && Def(o, @"Directory\Background\shell\baz\command") == "baz.exe",
+                    "prior_otherVerbsIntact");
             }
             // 3. ExpandString default kept unexpanded
             {
@@ -108,7 +114,9 @@ public class FilesHandlerTests
                 FilesHandler.Register(o, exe);
                 FilesHandler.Restore(o);
                 using var k = Open(o, @"Directory\shell");
-                Assert.True(k != null && k.GetValueKind("") == RegistryValueKind.ExpandString && (k.GetValue("", null, RegistryValueOptions.DoNotExpandEnvironmentNames) as string) == @"%SystemRoot%\x", "expand_kindAndTextKept");
+                Assert.True(k != null && k.GetValueKind("") == RegistryValueKind.ExpandString
+                    && (k.GetValue("", null, RegistryValueOptions.DoNotExpandEnvironmentNames) as string) == @"%SystemRoot%\x",
+                    "expand_kindAndTextKept");
             }
             // 4. double register idempotent (the second one, with another exe, keeps the TRUE originals)
             {
@@ -119,9 +127,11 @@ public class FilesHandlerTests
                 var second = FilesHandler.Register(o, exe2);
                 Assert.True(second.Ok, "double_secondOk");
                 Assert.True(File.ReadAllText(o.BackupPath) == first, "double_backupUnchanged");
-                Assert.True(Def(o, @"Directory\shell\winlestia\command") == Cmd(exe2) && FilesHandler.IsRegistered(o, exe2), "double_commandFollowsNewExe");
+                Assert.True(Def(o, @"Directory\shell\winlestia\command") == Cmd(exe2) && FilesHandler.IsRegistered(o, exe2),
+                    "double_commandFollowsNewExe");
                 FilesHandler.Restore(o);
-                Assert.True(Def(o, @"Directory\shell") == "none" && !Exists(o, @"Directory\shell\winlestia"), "double_restoreGivesOriginal");
+                Assert.True(Def(o, @"Directory\shell") == "none" && !Exists(o, @"Directory\shell\winlestia"),
+                    "double_restoreGivesOriginal");
                 Assert.True(FilesHandler.Restore(o).Ok && Def(o, @"Directory\shell") == "none", "double_restoreTwiceOk");
             }
             // 5. restore without backup
@@ -132,7 +142,8 @@ public class FilesHandlerTests
                 File.Delete(o.BackupPath);
                 var res = FilesHandler.Restore(o);
                 Assert.True(res.Ok, "nobackup_ok");
-                Assert.True(!Exists(o, @"Directory\shell\winlestia") && !Exists(o, @"Drive\shell\winlestia") && !HasDef(o, @"Directory\shell") && !HasDef(o, @"Drive\shell"), "nobackup_ourKeysAndDefaultGone");
+                Assert.True(!Exists(o, @"Directory\shell\winlestia") && !Exists(o, @"Drive\shell\winlestia")
+                    && !HasDef(o, @"Directory\shell") && !HasDef(o, @"Drive\shell"), "nobackup_ourKeysAndDefaultGone");
                 Assert.True(Def(o, @"Directory\shell\foo\command") == "foo.exe", "nobackup_foreignVerbKept");
             }
             {
@@ -140,7 +151,8 @@ public class FilesHandlerTests
                 Seed(o, @"Directory\shell", "keepme");
                 Seed(o, @"Directory\shell\winlestia\command", "x.exe");
                 FilesHandler.Restore(o);
-                Assert.True(Def(o, @"Directory\shell") == "keepme" && !Exists(o, @"Directory\shell\winlestia"), "nobackup_foreignDefaultKept");
+                Assert.True(Def(o, @"Directory\shell") == "keepme" && !Exists(o, @"Directory\shell\winlestia"),
+                    "nobackup_foreignDefaultKept");
             }
             {
                 var o = Fresh();
@@ -152,7 +164,8 @@ public class FilesHandlerTests
                 var o = Fresh();
                 FilesHandler.Register(o, exe);
                 File.WriteAllText(o.BackupPath, "{not json");
-                Assert.True(FilesHandler.Restore(o).Ok && !Exists(o, @"Directory\shell\winlestia") && !HasDef(o, @"Directory\shell") && !File.Exists(o.BackupPath), "corruptBackup_restoreOk");
+                Assert.True(FilesHandler.Restore(o).Ok && !Exists(o, @"Directory\shell\winlestia") && !HasDef(o, @"Directory\shell")
+                    && !File.Exists(o.BackupPath), "corruptBackup_restoreOk");
             }
             // 7. register refuses a missing exe and writes nothing
             {
@@ -167,7 +180,8 @@ public class FilesHandlerTests
                 {
                     Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT", SandboxRoot + @"\" + run + @"\env");
                     var o = HandlerOptions.FromEnvironment();
-                    Assert.True(o.ClassesPath == SandboxRoot + @"\" + run + @"\env\Classes" && !o.Notify && o.BackupPath.EndsWith("handler-backup.sandbox.json"), "env_overrideApplied");
+                    Assert.True(o.ClassesPath == SandboxRoot + @"\" + run + @"\env\Classes" && !o.Notify
+                        && o.BackupPath.EndsWith("handler-backup.sandbox.json"), "env_overrideApplied");
                     Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT", @"Software\Classes");
                     bool threw = false;
                     try
@@ -178,7 +192,8 @@ public class FilesHandlerTests
                     Assert.True(threw, "env_realRootRefused");
                     Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT", null);
                     var d = HandlerOptions.FromEnvironment();
-                    Assert.True(d.ClassesPath == @"Software\Classes" && d.Notify && d.BackupPath.EndsWith("handler-backup.json"), "env_defaultIsRealClasses");
+                    Assert.True(d.ClassesPath == @"Software\Classes" && d.Notify && d.BackupPath.EndsWith("handler-backup.json"),
+                        "env_defaultIsRealClasses");
                 }
                 finally { Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT", old); }
             }
@@ -191,11 +206,14 @@ public class FilesHandlerTests
                 Assert.True(!FilesHandlerGuard.ShouldTrip(new long[] { t - 61000, t - 1000, t }, t), "guard_61sIsOutside");
                 Assert.True(FilesHandlerGuard.Prune(new long[] { t - 90000, t - 10, t }, t).Count == 2, "guard_pruneKeepsWindow");
                 Assert.True(FilesHandlerGuard.DecideDefaults(false, true, false) == (true, true), "defaults_firstRunEnables");
-                Assert.True(FilesHandlerGuard.DecideDefaults(true, true, false) == (false, false) && FilesHandlerGuard.DecideDefaults(true, false, true) == (false, false), "defaults_alreadyDoneNever");
+                Assert.True(FilesHandlerGuard.DecideDefaults(true, true, false) == (false, false)
+                    && FilesHandlerGuard.DecideDefaults(true, false, true) == (false, false), "defaults_alreadyDoneNever");
                 Assert.True(FilesHandlerGuard.DecideDefaults(false, false, false) == (false, false), "defaults_exeMissingRetries");
                 Assert.True(FilesHandlerGuard.DecideDefaults(false, true, true) == (false, true), "defaults_trippedMarksOnly");
-                Assert.True(FilesHandlerGuard.DecideStartup(false, true, false) == HandlerStartup.Nothing && FilesHandlerGuard.DecideStartup(false, false, true) == HandlerStartup.Nothing, "decide_prefOffNothing");
-                Assert.True(FilesHandlerGuard.DecideStartup(true, false, false) == HandlerStartup.RestoreAndDisable, "decide_exeMissingRestores");
+                Assert.True(FilesHandlerGuard.DecideStartup(false, true, false) == HandlerStartup.Nothing
+                    && FilesHandlerGuard.DecideStartup(false, false, true) == HandlerStartup.Nothing, "decide_prefOffNothing");
+                Assert.True(FilesHandlerGuard.DecideStartup(true, false, false) == HandlerStartup.RestoreAndDisable,
+                    "decide_exeMissingRestores");
                 Assert.True(FilesHandlerGuard.DecideStartup(true, true, true) == HandlerStartup.TrippedDisable, "decide_trippedDisables");
                 Assert.True(FilesHandlerGuard.DecideStartup(true, true, false) == HandlerStartup.Ensure, "decide_okEnsures");
             }
@@ -207,9 +225,11 @@ public class FilesHandlerTests
                 string dir = Path.Combine(tmp, "guard1");
                 long t = 5_000_000;
                 bool a = FilesHandlerGuard.RecordStartupCrash(dir, t, o), b = FilesHandlerGuard.RecordStartupCrash(dir, t + 1000, o);
-                Assert.True(!a && !b && Def(o, @"Directory\shell") == "winlestia" && !File.Exists(Path.Combine(dir, FilesHandlerGuard.FlagFile)), "guardIO_twoDoNotTrip");
+                Assert.True(!a && !b && Def(o, @"Directory\shell") == "winlestia"
+                    && !File.Exists(Path.Combine(dir, FilesHandlerGuard.FlagFile)), "guardIO_twoDoNotTrip");
                 bool c = FilesHandlerGuard.RecordStartupCrash(dir, t + 2000, o);
-                Assert.True(c && Def(o, @"Directory\shell") == "none" && !Exists(o, @"Directory\shell\winlestia") && File.Exists(Path.Combine(dir, FilesHandlerGuard.FlagFile)), "guardIO_thirdTripsAndRestores");
+                Assert.True(c && Def(o, @"Directory\shell") == "none" && !Exists(o, @"Directory\shell\winlestia")
+                    && File.Exists(Path.Combine(dir, FilesHandlerGuard.FlagFile)), "guardIO_thirdTripsAndRestores");
                 Assert.True(FilesHandlerGuard.ConsumeFlag(dir) && !FilesHandlerGuard.ConsumeFlag(dir), "guardIO_flagConsumedOnce");
             }
             {
@@ -231,7 +251,8 @@ public class FilesHandlerTests
                     any |= FilesHandlerGuard.RecordStartupCrash(dir, t + i * 40000, o);
                 Assert.True(!any && FilesHandler.IsRegistered(o, exe), "guardIO_spreadCrashesDoNotTrip");
             }
-            // 11. (review 2) our own value is never backed up: Default already "winlestia" + missing backup -> restore leaves Default absent
+            // 11. (review 2) our own value is never backed up: Default already "winlestia" + missing backup -> restore leaves Default
+            // absent
             {
                 var o = Fresh();
                 Seed(o, @"Directory\shell", "winlestia");
@@ -240,7 +261,8 @@ public class FilesHandlerTests
                 FilesHandler.Register(o, exe);
                 File.Delete(o.BackupPath);   // backup captured at the 2nd register would have been wrong; here: lose it, restore without
                 FilesHandler.Restore(o);
-                Assert.True(!HasDef(o, @"Directory\shell") && !Exists(o, @"Directory\shell\winlestia") && Def(o, @"Directory\shell\foo\command") == "foo.exe", "ownValue_restoreLeavesDefaultAbsent");
+                Assert.True(!HasDef(o, @"Directory\shell") && !Exists(o, @"Directory\shell\winlestia")
+                    && Def(o, @"Directory\shell\foo\command") == "foo.exe", "ownValue_restoreLeavesDefaultAbsent");
             }
             {
                 var o = Fresh();
@@ -262,7 +284,8 @@ public class FilesHandlerTests
                 }
                 finally { FilesHandler.FaultHook = null; }
                 Assert.True(!res.Ok && res.Message.Contains("boom") && res.Message.Contains("rolled back"), "rollback_reportsFailure");
-                Assert.True(Def(o, @"Directory\shell") == "none" && !Exists(o, @"Directory\shell\winlestia") && !Exists(o, "Drive") && !File.Exists(o.BackupPath), "rollback_directoryRestored");
+                Assert.True(Def(o, @"Directory\shell") == "none" && !Exists(o, @"Directory\shell\winlestia") && !Exists(o, "Drive")
+                    && !File.Exists(o.BackupPath), "rollback_directoryRestored");
             }
             // 13. (review 4) a foreign Default set after register is kept, our verb key still goes
             {
@@ -284,21 +307,30 @@ public class FilesHandlerTests
                 Assert.True(Def(o, @"Directory\shell") == "foreign", "foreignDefault_keptEvenWithPriorValue");
             }
             // 14. (review 6) only real crashes count
-            Assert.True(FilesHandlerGuard.CountsAsCrash(new NullReferenceException()) && FilesHandlerGuard.CountsAsCrash(new InvalidOperationException()) && FilesHandlerGuard.CountsAsCrash(new OutOfMemoryException()), "counts_nullRefCounts");
-            Assert.True(!FilesHandlerGuard.CountsAsCrash(new UnauthorizedAccessException()) && !FilesHandlerGuard.CountsAsCrash(new FileNotFoundException()) && !FilesHandlerGuard.CountsAsCrash(new DirectoryNotFoundException()) && !FilesHandlerGuard.CountsAsCrash(new PathTooLongException()) && !FilesHandlerGuard.CountsAsCrash(new ArgumentException()) && !FilesHandlerGuard.CountsAsCrash(new NotSupportedException()), "counts_pathProblemsDoNot");
+            Assert.True(FilesHandlerGuard.CountsAsCrash(new NullReferenceException())
+                && FilesHandlerGuard.CountsAsCrash(new InvalidOperationException())
+                && FilesHandlerGuard.CountsAsCrash(new OutOfMemoryException()), "counts_nullRefCounts");
+            Assert.True(!FilesHandlerGuard.CountsAsCrash(new UnauthorizedAccessException())
+                && !FilesHandlerGuard.CountsAsCrash(new FileNotFoundException())
+                && !FilesHandlerGuard.CountsAsCrash(new DirectoryNotFoundException())
+                && !FilesHandlerGuard.CountsAsCrash(new PathTooLongException()) && !FilesHandlerGuard.CountsAsCrash(new ArgumentException())
+                && !FilesHandlerGuard.CountsAsCrash(new NotSupportedException()), "counts_pathProblemsDoNot");
             // 15. (review 8) backup override only under %TEMP%
             {
-                string? oldRoot = Environment.GetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT"), oldB = Environment.GetEnvironmentVariable("WINLESTIA_FILES_HANDLER_BACKUP");
+                string? oldRoot = Environment.GetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT"),
+                    oldB = Environment.GetEnvironmentVariable("WINLESTIA_FILES_HANDLER_BACKUP");
                 try
                 {
                     Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT", SandboxRoot + @"\" + run + @"\env2");
                     Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_BACKUP", @"C:\Windows\evil.json");
-                    Assert.True(HandlerOptions.FromEnvironment().BackupPath.EndsWith("handler-backup.sandbox.json"), "backupEnv_outsideTempIgnored");
+                    Assert.True(HandlerOptions.FromEnvironment().BackupPath.EndsWith("handler-backup.sandbox.json"),
+                        "backupEnv_outsideTempIgnored");
                     string mine = Path.Combine(tmp, "mine.json");
                     Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_BACKUP", mine);
                     Assert.True(HandlerOptions.FromEnvironment().BackupPath == Path.GetFullPath(mine), "backupEnv_underTempHonoured");
                 }
-                finally { Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT", oldRoot); Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_BACKUP", oldB); }
+                finally { Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT",
+                    oldRoot); Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_BACKUP", oldB); }
             }
         }
         finally

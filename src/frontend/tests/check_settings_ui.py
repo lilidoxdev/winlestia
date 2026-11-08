@@ -1,6 +1,6 @@
-# Offscreen check of the redesigned settings (ShellPreferences + qml/settings/*).
-# Loads with zero QML warnings, visits every page at 1280x800 and 640x720 in fr/en/es (PNG per page),
-# verifies that every SettingsIndex entry has a live row on its page, and that a search navigates.
+# Vérification hors écran des réglages refondus (ShellPreferences + qml/settings/*).
+# Charge sans aucun avertissement QML, visite chaque page en 1280x800 et 640x720 en fr/en/es (un PNG par page),
+# vérifie que chaque entrée de SettingsIndex a une ligne vivante sur sa page, et qu'une recherche navigue.
 # Usage: python check_settings_ui.py [OUT_DIR]
 import os, sys, json, tempfile
 
@@ -289,8 +289,8 @@ def run():
                 continue
             root.resize(w, h)
             yield 700
-            # PySide deadlocks when a Python QTranslator is called from the QML loader threads while loadData blocks:
-            # compile every page translator-less first, then install the translator and retranslate on the main thread.
+            # PySide se bloque quand un QTranslator Python est appelé depuis les threads du chargeur QML pendant que loadData bloque :
+            # compiler d'abord chaque page sans traducteur, puis installer le traducteur et retraduire sur le thread principal.
             for page in range(8):
                 root.setProperty('pageTo', -1)
                 root.setProperty('pageTo', page)
@@ -319,7 +319,7 @@ def run():
                 miss = [x for x in entries if x not in seen and x not in dynamic]
                 checks['everyIndexEntryHasRow'] = not miss
                 missing.extend(miss)
-                # Search: type, Enter on the first hit, the page must change.
+                # Recherche : saisir, Entrée sur le premier résultat, la page doit changer.
                 root.setProperty('pageTo', 0)
                 yield 600
                 search = find(root, 'prefsSearch')
@@ -337,7 +337,7 @@ def run():
                 checks['search:noHitsEmpty'] = find(root, 'prefsResult0') is None
                 search.setProperty('text', '')
                 yield 300
-                # Shortcut dialog opens, a failed status is shown, then it closes.
+                # La boîte de raccourci s'ouvre, un statut d'échec s'affiche, puis elle se ferme.
                 root.setProperty('pageTo', 3)
                 yield 600
                 btn = find(root, 'shortcutEdit-palette')

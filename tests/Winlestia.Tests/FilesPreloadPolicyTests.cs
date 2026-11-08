@@ -38,18 +38,22 @@ public class FilesPreloadPolicyTests
             p.OnExit(75, 10, false, true);
             Assert.True(p.OnExit(75, 10 + M, false, true) == PreloadAction.Recycle, "afterStopTheClockStillAdvances");
         }
-        Assert.True(P().OnExit(75, 0, true, true) == PreloadAction.None && P().OnExit(1, 0, true, true) == PreloadAction.None, "quittingNeverRelaunches");
-        Assert.True(P().OnExit(75, 0, false, false) == PreloadAction.None && P().OnExit(1, 0, false, false) == PreloadAction.None, "prefOffNeverRelaunches");
+        Assert.True(P().OnExit(75, 0, true, true) == PreloadAction.None && P().OnExit(1, 0, true, true) == PreloadAction.None,
+            "quittingNeverRelaunches");
+        Assert.True(P().OnExit(75, 0, false, false) == PreloadAction.None && P().OnExit(1, 0, false, false) == PreloadAction.None,
+            "prefOffNeverRelaunches");
         Assert.True(P().OnExit(1, 0, false, true) == PreloadAction.Crash, "crashRestartsOnce");
         {
             var p = P();
             p.Starts = 2;
-            Assert.True(p.OnExit(1, 0, false, true) == PreloadAction.None && p.OnExit(0, 0, false, true) == PreloadAction.None, "crashLimitReached");
+            Assert.True(p.OnExit(1, 0, false, true) == PreloadAction.None && p.OnExit(0, 0, false, true) == PreloadAction.None,
+                "crashLimitReached");
         }
         {
             var p = P();
             p.Starts = 2;
-            Assert.True(p.OnExit(75, 0, false, true) == PreloadAction.Recycle && p.MayLaunch(true, true, false) && !p.MayLaunch(false, true, false), "recycleNotCountedAgainstCrashLimit");
+            Assert.True(p.OnExit(75, 0, false, true) == PreloadAction.Recycle && p.MayLaunch(true, true, false)
+                && !p.MayLaunch(false, true, false), "recycleNotCountedAgainstCrashLimit");
         }
         {
             var p = P();
@@ -57,6 +61,7 @@ public class FilesPreloadPolicyTests
             p.OnExit(75, 0, false, true);
             Assert.True(p.Starts == 1 && p.OnExit(1, 5, false, true) == PreloadAction.Crash, "recycleLeavesStartsAlone");
         }
-        Assert.True(!P().MayLaunch(true, false, false) && !P().MayLaunch(true, true, true) && !P().MayLaunch(false, false, false) && P().MayLaunch(false, true, false), "launchGateRespectsPrefAndQuit");
+        Assert.True(!P().MayLaunch(true, false, false) && !P().MayLaunch(true, true, true) && !P().MayLaunch(false, false, false)
+            && P().MayLaunch(false, true, false), "launchGateRespectsPrefAndQuit");
     }
 }

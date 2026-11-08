@@ -47,7 +47,7 @@ COMMANDS = [
     ('hibernate', 'Hibernation', 'Hibernate · hiberner le PC (confirmation demandée)', 'downloading', 'session'),
 ]
 
-# Windows Settings pages: (ms-settings URI, fr, en, es, extra keywords). Only these URIs can be opened from the palette.
+# Pages Paramètres Windows : (URI ms-settings, fr, en, es, mots-clés). Seules ces URI peuvent être ouvertes depuis la palette.
 SETTINGS_PAGES = (
     ('ms-settings:network-wifi', 'Wi-Fi', 'Wi-Fi', 'Wi-Fi', 'wifi reseau sans fil network wireless'),
     ('ms-settings:network', 'Réseau et Internet', 'Network & internet', 'Red e Internet', 'reseau network ethernet'),

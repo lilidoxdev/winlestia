@@ -1,20 +1,8 @@
 // language: C# 12, file: Coordinator.Preview.cs, target: Windows 11 / .NET 8 WPF, aperçus de QA et export de la mise en page
+
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Threading;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Win32;
 using Forms = System.Windows.Forms;
 
 namespace PanneauxGlass;
@@ -43,7 +31,7 @@ internal sealed partial class Coordinator
         probe.Show();
     }
     internal void ExportPreview(string file = "preview-layout.png") => previewExport.Export(file);
-    internal bool PaletteActivity => paletteOpen;
+    internal bool PaletteActivity => state.PaletteOpen;
     internal bool PaletteVisible => palette?.IsVisible == true;
     internal void PreviewPalette()
     {

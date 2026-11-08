@@ -102,7 +102,7 @@ APPS = [
     ('spotify', 'Spotify', 'apps'),
     ('blender', 'Blender', 'projects'),
 ]
-# Synthetic stand-in icons (no id 'notes' -> exercises the letter fallback). Generated once in the temp dir.
+# Icônes de remplacement synthétiques (pas d'id 'notes' -> exerce le repli sur la lettre). Générées une fois dans le dossier temporaire.
 ICON_COLORS = {
     'discord': '#5865F2',
     'claude': '#D97757',

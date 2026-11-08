@@ -1,4 +1,5 @@
-// C#12 / WindowsSpectrum / DESKTOP: plays a real 440 Hz sine on the default audio output (very low gain) and reads the process-loopback spectrum. Never run in CI.
+// C#12 / WindowsSpectrum / DESKTOP: plays a real 440 Hz sine on the default audio output (very low gain) and reads the process-loopback
+// spectrum. Never run in CI.
 using System;
 using System.Reflection;
 using System.Threading;

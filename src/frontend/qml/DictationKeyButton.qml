@@ -1,4 +1,5 @@
-// Single-key capture for push-to-talk dictation. Windows virtual-key code captured by the backend (modifier-only keys allowed).
+// Capture d'une seule touche pour la dictée push-to-talk. Code de touche virtuelle Windows capturé par le backend (touches de modification
+// seules autorisées).
 import QtQuick
 import QtQuick.Window
 import qs.components

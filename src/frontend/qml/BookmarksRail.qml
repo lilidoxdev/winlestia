@@ -31,7 +31,7 @@ EdgeRail {
         return e === "running" ? qsTr("Fermez %1 pour supprimer un favori.").arg(browserName) : e === "unsupported"
             ? qsTr("Suppression non prise en charge pour ce navigateur.") : e === "notfound" ? qsTr("Favori introuvable.") : e;
     }
-    // Folders unfold in place: ids of the open ones; the ListModel `flat` holds the visible rows and is synced by id.
+    // Les dossiers se déplient sur place : ids des dossiers ouverts ; le ListModel `flat` contient les lignes visibles, synchronisé par id.
     property var openIds: ({})
     property string lastSig: ""
     readonly property real gearBlock: 40 + 1 + 2 * Appearance.spacing.normal
@@ -387,7 +387,8 @@ EdgeRail {
             enabled: menu.visible
             onActivated: menu.visible = false
         }
-        // The backend answers a first delete with error "sync" when browser sync is active: ask again, then repeat with confirmSync.
+        // Le backend répond « sync » à une première suppression quand la synchro du navigateur est active : redemander, puis répéter avec
+        // confirmSync.
         Connections {
             target: Bridge
             function onChanged() {

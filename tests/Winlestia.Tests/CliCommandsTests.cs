@@ -31,7 +31,8 @@ public class CliCommandsTests
         Assert.True(!P("desktop 99", out _), "desktop99Refused");
         Assert.True(!P("desktop -1", out _), "desktopMinusRefused");
         Assert.True(!P("desktop close 1", out _) && !P("desktop close", out _), "desktopCloseRefused");
-        foreach (var bad in new[] { "quit", "exit", "shutdown", "restart", "logoff", "signout", "delete", "reboot", "desktopClose", "explorerRestore", "emptyRecycleBin", "recycleFiles", "paletteRun", "preference" })
+        foreach (var bad in new[] { "quit", "exit", "shutdown", "restart", "logoff", "signout", "delete", "reboot", "desktopClose",
+            "explorerRestore", "emptyRecycleBin", "recycleFiles", "paletteRun", "preference" })
             Assert.True(!P(bad, out _), "refused_" + bad);
         Assert.True(P("find windows", out c) && c!.Kind == CliKind.FindWindows, "findWindows");
         Assert.True(!P("find windows all", out _) && !P("find", out _) && !P("find windows2", out _), "findWindowsExtraRefused");
@@ -69,21 +70,33 @@ public class CliCommandsTests
         Assert.True(!CliCommands.ValidWallpaper(@"C:\a.txt:x.png", yes, out _), "wallpaperStreamRefused");
         Assert.True(!CliCommands.ValidWallpaper("", yes, out _), "wallpaperEmptyRefused");
         Assert.True(!CliCommands.ValidWallpaper(@"C:\" + new string('a', 300) + ".png", yes, out _), "wallpaperTooLongRefused");
-        Assert.True(!CliCommands.TryParse("wallpaper C:\a.png --display".Split(' '), out _, out var e1) && e1.Contains("needs a display id"), "displayNoValueRefused");
-        Assert.True(!CliCommands.TryParse("wallpaper C:\a.png --display x".Split(' '), out _, out var e2) && e2.Contains("number"), "displayNonNumericRefused");
-        Assert.True(!CliCommands.TryParse("wallpaper --display 2 C:\a.png".Split(' '), out _, out var e3) && e3.Contains("after the image path"), "displayBeforePathRefused");
-        Assert.True(!CliCommands.TryParse("wallpaper --display".Split(' '), out _, out var e4) && e4.Contains("--display"), "displayOnlyRefused");
+        Assert.True(!CliCommands.TryParse("wallpaper C:\a.png --display".Split(' '), out _, out var e1)
+            && e1.Contains("needs a display id"), "displayNoValueRefused");
+        Assert.True(!CliCommands.TryParse("wallpaper C:\a.png --display x".Split(' '), out _, out var e2) && e2.Contains("number"),
+            "displayNonNumericRefused");
+        Assert.True(!CliCommands.TryParse("wallpaper --display 2 C:\a.png".Split(' '), out _, out var e3)
+            && e3.Contains("after the image path"), "displayBeforePathRefused");
+        Assert.True(!CliCommands.TryParse("wallpaper --display".Split(' '), out _, out var e4) && e4.Contains("--display"),
+            "displayOnlyRefused");
         Assert.True(P("wallpaper list", out c) && c!.Kind == CliKind.WallpaperList, "wallpaperListParses");
-        Assert.True(P("wallpaper C:\a.png", out c) && c!.Kind == CliKind.Wallpaper && c.Number == 0 && c.Arg == @"C:.png", "wallpaperPathAllDisplays");
-        Assert.True(CliCommands.TryParse(new[] { "wallpaper", @"C:.png", "--display", "2" }, out c, out _) && c!.Kind == CliKind.Wallpaper && c.Number == 2 && c.Arg == @"C:.png", "wallpaperDisplayParses");
-        Assert.True(!CliCommands.TryParse(new[] { "wallpaper", @"C:.png", "--display", "0" }, out _, out _), "wallpaperDisplayZeroRefused");
-        Assert.True(!CliCommands.TryParse(new[] { "wallpaper", @"C:.png", "--display", "x" }, out _, out _), "wallpaperDisplayWordRefused");
-        Assert.True(!CliCommands.TryParse(new[] { "wallpaper", @"C:.png", "--screen", "1" }, out _, out _), "wallpaperDisplayFlagTypoRefused");
-        Assert.True(CliCommands.HelpText.Contains("wallpaper list") && CliCommands.HelpText.Contains("--display"), "wallpaperListHelpListed");
+        Assert.True(P("wallpaper C:\a.png", out c) && c!.Kind == CliKind.Wallpaper && c.Number == 0 && c.Arg == @"C:.png",
+            "wallpaperPathAllDisplays");
+        Assert.True(CliCommands.TryParse(new[] { "wallpaper", @"C:.png", "--display", "2" }, out c, out _) && c!.Kind == CliKind.Wallpaper
+            && c.Number == 2 && c.Arg == @"C:.png", "wallpaperDisplayParses");
+        Assert.True(!CliCommands.TryParse(new[] { "wallpaper", @"C:.png", "--display", "0" }, out _, out _),
+            "wallpaperDisplayZeroRefused");
+        Assert.True(!CliCommands.TryParse(new[] { "wallpaper", @"C:.png", "--display", "x" }, out _, out _),
+            "wallpaperDisplayWordRefused");
+        Assert.True(!CliCommands.TryParse(new[] { "wallpaper", @"C:.png", "--screen", "1" }, out _, out _),
+            "wallpaperDisplayFlagTypoRefused");
+        Assert.True(CliCommands.HelpText.Contains("wallpaper list") && CliCommands.HelpText.Contains("--display"),
+            "wallpaperListHelpListed");
         Assert.True(WallpaperLogic.Animated(new string?[] { "explorer", "chrome", null, "" }).Length == 0, "animatedNone");
         Assert.True(WallpaperLogic.Animated(new string?[] { "Wallpaper64" }).SequenceEqual(new[] { "Wallpaper Engine" }), "animatedEngine");
-        Assert.True(WallpaperLogic.Animated(new string?[] { "LIVELY.EXE", "wallpaper.service.exe" }).SequenceEqual(new[] { "Lively Wallpaper", "Wallpaper X" }), "animatedExeSuffixAndCase");
-        Assert.True(WallpaperLogic.Animated(new string?[] { "DesktopHut Studio", "DesktopHut Studio", "wallpaper32" }).SequenceEqual(new[] { "DesktopHut", "Wallpaper Engine" }), "animatedDesktopHutDeduped");
+        Assert.True(WallpaperLogic.Animated(new string?[] { "LIVELY.EXE",
+            "wallpaper.service.exe" }).SequenceEqual(new[] { "Lively Wallpaper", "Wallpaper X" }), "animatedExeSuffixAndCase");
+        Assert.True(WallpaperLogic.Animated(new string?[] { "DesktopHut Studio", "DesktopHut Studio",
+            "wallpaper32" }).SequenceEqual(new[] { "DesktopHut", "Wallpaper Engine" }), "animatedDesktopHutDeduped");
         Assert.True(WallpaperLogic.Animated(new string?[] { "mylively", "wallpaper" }).Length == 0, "animatedNoPartialMatch");
         Assert.True(WallpaperLogic.DisplayName(1, 1920, 1080, true) == "Display 1 (1920x1080) primary", "displayNamePrimary");
         Assert.True(P("quiet", out c) && c!.Kind == CliKind.Quiet && c.Arg == "", "quietParses");
@@ -101,7 +114,9 @@ public class CliCommandsTests
         Assert.True(QuietPolicy.Effective(QuietForce.On, false), "quietForcedOnWins");
         Assert.True(!QuietPolicy.Effective(QuietForce.Off, true), "quietForcedOffWins");
         Assert.True(QuietPolicy.Effective(QuietForce.Auto, true) && !QuietPolicy.Effective(QuietForce.Auto, false), "quietAutoFollows");
-        Assert.True(!QuietPolicy.Detected(false, 1) && !QuietPolicy.Detected(true, 0) && QuietPolicy.Detected(true, 2), "quietDetectedNeedsPref");
-        Assert.True(QuietPolicy.TryParse("ON", out var qf) && qf == QuietForce.On && !QuietPolicy.TryParse("x", out _) && QuietPolicy.Label(QuietForce.Auto) == "auto", "quietParseForce");
+        Assert.True(!QuietPolicy.Detected(false, 1) && !QuietPolicy.Detected(true, 0) && QuietPolicy.Detected(true, 2),
+            "quietDetectedNeedsPref");
+        Assert.True(QuietPolicy.TryParse("ON", out var qf) && qf == QuietForce.On && !QuietPolicy.TryParse("x", out _)
+            && QuietPolicy.Label(QuietForce.Auto) == "auto", "quietParseForce");
     }
 }

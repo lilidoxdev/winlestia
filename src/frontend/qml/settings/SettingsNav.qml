@@ -7,8 +7,8 @@ import qs.services
 import qs.config
 import "."
 
-// Left column: search field, then the page list (icon pill + title + subtitle). While a query is typed the
-// list is replaced by the matching rows. Narrow: icon-only; the search expands the column over the page.
+// Colonne de gauche : champ de recherche, puis liste des pages (pastille d'icône + titre + sous-titre). Pendant une recherche, la
+// liste est remplacée par les lignes correspondantes. Étroit : icônes seules ; la recherche étend la colonne sur la page.
 Item {
     id: nav
 
@@ -29,7 +29,7 @@ Item {
         return String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’‘]/g, "'").toLowerCase();
     }
 
-    // Static rows + rows that only exist at run time (one per shortcut, one per social network).
+    // Lignes statiques + lignes qui n'existent qu'à l'exécution (une par raccourci, une par réseau social).
     function allEntries(): var {
         const out = SettingsIndex.entries.slice();
         for (const sc of (Bridge.settings.shortcuts ?? []))
@@ -96,7 +96,7 @@ Item {
     onCurrentChanged: focusIndex = current
 
     Rectangle {
-        // Over the page while the compact column is expanded by the search.
+        // Au-dessus de la page quand la colonne compacte est étendue par la recherche.
         anchors.fill: parent
         anchors.margins: -Appearance.padding.small
         visible: nav.compact && nav.wide
@@ -171,7 +171,7 @@ Item {
                 Keys.onEnterPressed: nav.openResult(resultList.currentIndex)
             }
 
-            // Collapsed (compact) column: the magnifier opens the field.
+            // Colonne repliée (compacte) : la loupe ouvre le champ.
             MouseArea {
                 anchors.fill: parent
                 visible: !nav.wide
@@ -212,7 +212,7 @@ Item {
 
                 objectName: "prefsNav"
                 width: navFlick.width
-                // Inset so the focus ring (drawn 2 px outside each pill) is never cut by the flickable clip.
+                // Marge pour que l'anneau de focus (dessiné 2 px hors de chaque pastille) ne soit jamais coupé par le rognage du flickable.
                 height: navColumn.implicitHeight + nav.ringInset * 2
                 activeFocusOnTab: true
 
@@ -263,7 +263,7 @@ Item {
                             width: navColumn.width
                             spacing: 2
 
-                            // Group separator: a gap with a thin divider.
+                            // Séparateur de groupe : un espace avec un fin trait.
                             Item {
                                 visible: slot.index > 0 && SettingsIndex.pages[slot.index - 1].group !== slot.modelData.group
                                 width: parent.width

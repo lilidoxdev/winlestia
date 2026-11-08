@@ -1,4 +1,4 @@
-// Right-edge hidden rail of social networks: an EdgeRail instance with a history drawer.
+// Rail caché au bord droit pour les réseaux sociaux : une instance d'EdgeRail avec un tiroir d'historique.
 import QtQuick
 import QtQuick.Window
 import QtQuick.Layouts
@@ -141,7 +141,7 @@ EdgeRail {
             }
         }
     }
-    // Chevron: right of the logo column (frame side), toggles the history drawer.
+    // Chevron : à droite de la colonne de logos (côté cadre), ouvre/ferme le tiroir d'historique.
     Item {
         id: chevron
         objectName: "socialChevron"
@@ -162,7 +162,7 @@ EdgeRail {
             color: Colours.palette.m3onSurfaceVariant
         }
     }
-    // History drawer between logos and chevron: clipped container, content fixed in size and fading in once the bump is mostly open.
+    // Tiroir d'historique entre logos et chevron : conteneur rogné, contenu de taille fixe, en fondu une fois la bosse presque ouverte.
     Item {
         id: drawerClip
         objectName: "socialDrawer"
@@ -205,7 +205,7 @@ EdgeRail {
                 for (let i = hist.count - 1; i >= 0; i--)
                     if (!seqs[hist.get(i).seq])
                         hist.remove(i);
-                // Same seq can come back changed (count -> notif): update in place.
+                // Un même seq peut revenir modifié (count -> notif) : mise à jour sur place.
                 const index = {};
                 for (let i = 0; i < hist.count; i++)
                     index[hist.get(i).seq] = i;
@@ -262,7 +262,7 @@ EdgeRail {
                     panel.sync(Bridge.social.history);
                 }
             }
-            // Relative-time refresh: only while the drawer exists and the rail is on screen.
+            // Rafraîchissement du temps relatif : seulement si le tiroir existe et que le rail est à l'écran.
             Timer {
                 interval: 60000
                 repeat: true

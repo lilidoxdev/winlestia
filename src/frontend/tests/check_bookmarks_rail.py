@@ -185,7 +185,7 @@ def run():
     checks['zoneContainsTiles'] = all(z.contains(QPoint(rail.x() + q.x(), rail.y() + q.y())) for q in pts)
     checks['zoneExcludesRight'] = not z.contains(QPoint(rail.x() + round(W) + 40, rail.y() + round(rail.height() / 2)))
 
-    # content inside the displayed bump while sliding in
+    # contenu dans la bosse affichée pendant le glissement d'entrée
     def sample():
         bw = rail.property('bumpWidth')
         off = rail.property('offset')
@@ -252,7 +252,7 @@ def step_folder2(n0):
     )
     global keep
     keep = {r.property('id'): r for r in rows()}
-    # sync by id: new row on top, renamed folder, reordered tail; surviving delegates must be the same objects
+    # synchro par id : nouvelle ligne en tête, dossier renommé, fin réordonnée ; les délégués survivants doivent être les mêmes objets
     new = [it('edge:n', 'November')] + [dict(x, title='Bravo2') if x['id'] == 'edge:b' else x for x in BM['items']]
     push(items=new)
     QTimer.singleShot(250, step_sync)
@@ -288,7 +288,7 @@ def step_hide():
     checks['hideAction'] = any(
         c['command'] == 'bookmarksHide' and c['args'] == {'id': 'edge:n'} for c in sent
     ) and not menu.property('visible')
-    # folders that cannot be deleted in the browser
+    # dossiers non supprimables dans le navigateur
     other = next(r for r in rows() if r.property('id') == 'edge:other')
     rail.setProperty('shown', True)
     pos = center(rail, other)

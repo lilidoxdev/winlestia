@@ -4,8 +4,9 @@ import qs.components
 import qs.config
 import qs.services
 
-// Static, non-interactive mock of the dashboard (qml/qs/modules/dashboard) painted with an edited custom palette.
-// Fixed design size; the host scales it. Colour roles follow the real dashboard files:
+// Maquette statique, non interactive, du tableau de bord (qml/qs/modules/dashboard) peinte avec une palette personnalisée en cours
+// d'édition.
+// Taille de conception fixe ; l'hôte la met à l'échelle. Les rôles de couleur suivent les vrais fichiers du tableau de bord :
 //   Tabs: current = primary, others = onSurfaceVariant, separator = outlineVariant
 //   Weather: city onSurface, date onSurfaceVariant, temp primary, icon secondary, chips primary/secondary/tertiary
 //   User: avatar surfaceContainerHigh, rows primary / secondary / tertiary
@@ -13,14 +14,14 @@ import qs.services
 //   Calendar: title primary, chevrons tertiary, weekend secondary, other days onSurfaceVariant, today primary + onPrimary
 //   Resources: bars primary / secondary / tertiary on surfaceContainerHigh
 //   Media: ring primary, title primary, album outline, artist secondary, controls onSurface
-// The five colours are mapped to m3 roles exactly like custom_palette.py::_build.
+// Les cinq couleurs sont associées aux rôles m3 exactement comme custom_palette.py::_build.
 Item {
     id: mock
 
     // { background, text, primary, secondary, tertiary } as #rrggbb
     property var colors: ({})
     property bool glass: false
-    // Alpha of the panel when glass is on (0..1).
+    // Alpha du panneau quand le verre est actif (0..1).
     property real glassAlpha: 0.12
     readonly property var p: derive(colors)
     readonly property alias panel: panelBg
