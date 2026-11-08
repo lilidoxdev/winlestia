@@ -64,9 +64,15 @@ internal static class SocialRules
     // ne doit pas gonfler l'interface) et on garde les 100 plus récentes.
     internal static List<SocialService.HistoryItem> RestoreHistory(
         IEnumerable<SocialService.HistoryItem?> saved, Func<string, bool> knownNet)
-        => saved.Where(h => h != null && knownNet(h.Net)).Select(h => new SocialService.HistoryItem {
-            Seq = h!.Seq, Net = h.Net, Title = Clip(h.Title, 120), Body = Clip(h.Body, 140),
-            Kind = h.Kind == "count" ? "count" : "notif", At = h.At }).OrderByDescending(h => h.Seq).Take(100).ToList();
+        => saved.Where(h => h != null && knownNet(h.Net)).Select(h => new SocialService.HistoryItem
+        {
+            Seq = h!.Seq,
+            Net = h.Net,
+            Title = Clip(h.Title, 120),
+            Body = Clip(h.Body, 140),
+            Kind = h.Kind == "count" ? "count" : "notif",
+            At = h.At
+        }).OrderByDescending(h => h.Seq).Take(100).ToList();
 
     // Le prochain numéro doit dépasser tout Seq déjà présent, même si le champ NextSeq du fichier est absent ou en retard.
     internal static int NextSeqAfter(int savedNext, IEnumerable<int> seqs)

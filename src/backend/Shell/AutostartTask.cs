@@ -27,9 +27,13 @@ internal static class AutostartTask
     {
         try
         {
-            var info = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "schtasks.exe"), arguments) {
+            var info = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "schtasks.exe"), arguments)
+            {
                 UseShellExecute = false,
-                CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
             using var process = Process.Start(info)!;
             var output = process.StandardOutput.ReadToEndAsync();
             var error = process.StandardError.ReadToEndAsync();

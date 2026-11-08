@@ -398,8 +398,19 @@ internal static class VirtualDesktops
 
     static bool SendKey(ushort vk, bool up)
     {
-        var input = new INPUT { type = 1, U = new InputUnion { ki = new KEYBDINPUT { wVk = vk, dwFlags = (up ? 2u : 0u) | (IsExtended(vk)
-            ? 1u : 0u) } } };
+        var input = new INPUT
+        {
+            type = 1,
+            U = new InputUnion
+            {
+                ki = new KEYBDINPUT
+                {
+                    wVk = vk,
+                    dwFlags = (up ? 2u : 0u) | (IsExtended(vk)
+            ? 1u : 0u)
+                }
+            }
+        };
         return SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>()) == 1;
     }
 
@@ -448,7 +459,8 @@ internal static class VirtualDesktops
     {
         public IntPtr hwnd; public uint message; public IntPtr wParam, lParam; public uint time; public int ptX, ptY, lPrivate;
     }
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid,
+    [DllImport("user32.dll")]
+    static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid,
         uint thread,
         uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);

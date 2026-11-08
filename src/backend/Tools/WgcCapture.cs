@@ -25,10 +25,12 @@ internal static class WgcCapture
         IntPtr CreateForWindow(IntPtr window, ref Guid iid); IntPtr CreateForMonitor(IntPtr monitor, ref Guid iid);
     }
     [DllImport("combase.dll")] static extern int RoGetActivationFactory(IntPtr classId, ref Guid iid, out IntPtr factory);
-    [DllImport("combase.dll", CharSet = CharSet.Unicode)] static extern int WindowsCreateString(string source, int length,
+    [DllImport("combase.dll", CharSet = CharSet.Unicode)]
+    static extern int WindowsCreateString(string source, int length,
         out IntPtr hstring);
     [DllImport("combase.dll")] static extern int WindowsDeleteString(IntPtr hstring);
-    [DllImport("d3d11.dll")] static extern int D3D11CreateDevice(IntPtr adapter, int driverType, IntPtr software, uint flags,
+    [DllImport("d3d11.dll")]
+    static extern int D3D11CreateDevice(IntPtr adapter, int driverType, IntPtr software, uint flags,
         IntPtr levels,
         uint count, uint sdk, out IntPtr device, out int level, out IntPtr context);
     [DllImport("d3d11.dll")] static extern int CreateDirect3D11DeviceFromDXGIDevice(IntPtr dxgi, out IntPtr graphicsDevice);
@@ -44,9 +46,13 @@ internal static class WgcCapture
             int count = Num(2, 8, 1, 16), size = Num(3, 320, 64, 1024), interval = Num(4, 400, 100, 2000), budget = Num(5, 4300, 1000,
                 5000);
             Native.Rect? monitor = args.Length > 9 && int.TryParse(args[6], out int mx) && int.TryParse(args[7], out int my)
-                && int.TryParse(args[8], out int mw) && int.TryParse(args[9], out int mh) && mw > 0 ? new Native.Rect { Left = mx,
+                && int.TryParse(args[8], out int mw) && int.TryParse(args[9], out int mh) && mw > 0 ? new Native.Rect
+                {
+                    Left = mx,
                     Top = my,
-                Right = mx + mw, Bottom = my + mh } : null;
+                    Right = mx + mw,
+                    Bottom = my + mh
+                } : null;
             return Task.Run(() => Run(folder, count, size, interval, budget, monitor)).GetAwaiter().GetResult() > 0 ? 0 : 1;
         }
         catch (Exception ex) { Store.Log("Capture WGC: " + ex.Message); return 2; }
@@ -69,8 +75,15 @@ internal static class WgcCapture
             return GraphicsCaptureItem.FromAbi(item);
         }
         catch { return null; }
-        finally { if (item != IntPtr.Zero) Marshal.Release(item); if (factory != IntPtr.Zero) Marshal.Release(factory);
-            if (hs != IntPtr.Zero) WindowsDeleteString(hs); }
+        finally
+        {
+            if (item != IntPtr.Zero)
+                Marshal.Release(item);
+            if (factory != IntPtr.Zero)
+                Marshal.Release(factory);
+            if (hs != IntPtr.Zero)
+                WindowsDeleteString(hs);
+        }
     }
 
     static async Task<int> Run(string folder, int count, int size, int interval, int budget, Native.Rect? monitor)
@@ -121,8 +134,8 @@ internal static class WgcCapture
                 catch (Exception)
                 {
                     // Propriété absente selon la version de Windows : comportement par défaut.
-                // Windows 11 seulement, peut exiger la capacité sans bordure : un échec signifie seulement que la bordure du système
-                // reste pendant la capture d'environ 3 s
+                    // Windows 11 seulement, peut exiger la capacité sans bordure : un échec signifie seulement que la bordure du système
+                    // reste pendant la capture d'environ 3 s
                 }
                 session.StartCapture();
                 long lastSaved = -interval;

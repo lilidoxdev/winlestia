@@ -66,11 +66,24 @@ internal static class ShellChrome
         toolbar.Height = LayoutRules.ToolbarHeight;
         toolbar.ContentHost.Margin = new Thickness(18, 10, 12, 10);
         var row = new Grid();
-        row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        var brand = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 30, 0) };
+        row.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
+        row.ColumnDefinitions.Add(new()
+        {
+            Width = new GridLength(1, GridUnitType.Star)
+        });
+        row.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
+        var brand = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 30, 0)
+        };
         var logo = UI.Glyph("\uE8A9", 22);
         logo.Margin = new Thickness(5, 0, 12, 0);
         brand.Children.Add(logo);

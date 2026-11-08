@@ -11,10 +11,12 @@ internal static class DesktopView
 {
     // Laisse l'Explorateur appliquer la bascule des icônes avant de relire leur état.
     const int IconToggleSettleMs = 250;
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string? cls,
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string? cls,
         string? name);
     [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
-    [DllImport("user32.dll")] static extern IntPtr SendMessageTimeout(IntPtr hwnd, uint msg, IntPtr w, IntPtr l, uint flags, uint timeout,
+    [DllImport("user32.dll")]
+    static extern IntPtr SendMessageTimeout(IntPtr hwnd, uint msg, IntPtr w, IntPtr l, uint flags, uint timeout,
         out IntPtr result);
 
     static IntPtr DefView()

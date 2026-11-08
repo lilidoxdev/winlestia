@@ -43,8 +43,13 @@ internal sealed class ControlEditorWindow : GlassWindow
         title.Children.Add(sub);
         header.Children.Add(title);
         ContentHost.Children.Add(header);
-        var scroll = new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Padding = new Thickness(0,
-            0, 8, 0) };
+        var scroll = new ScrollViewer
+        {
+            Content = list,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            Padding = new Thickness(0,
+            0, 8, 0)
+        };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var footer = new DockPanel { Margin = new Thickness(0, 20, 0, 0) };
@@ -78,31 +83,63 @@ internal sealed class ControlEditorWindow : GlassWindow
         {
             var row = new DockPanel { Margin = new Thickness(0, 10, 0, 0) };
             var order = new StackPanel { Orientation = Orientation.Horizontal };
-            var up = UI.IconButton("\uE70E", "Monter " + ControlCenterWindow.ModuleName(id), () => { int index = prefs.Modules.IndexOf(id);
-                if (index > 0) { prefs.Modules.RemoveAt(index); prefs.Modules.Insert(index - 1, id); Changed(); } });
+            var up = UI.IconButton("\uE70E", "Monter " + ControlCenterWindow.ModuleName(id), () =>
+            {
+                int index = prefs.Modules.IndexOf(id);
+                if (index > 0)
+                {
+                    prefs.Modules.RemoveAt(index);
+                    prefs.Modules.Insert(index - 1, id);
+                    Changed();
+                }
+            });
             up.IsEnabled = prefs.Modules.IndexOf(id) > 0;
-            var down = UI.IconButton("\uE70D", "Descendre " + ControlCenterWindow.ModuleName(id), () => {
-                int index = prefs.Modules.IndexOf(id); if (index < prefs.Modules.Count - 1) { prefs.Modules.RemoveAt(index);
-                prefs.Modules.Insert(index + 1, id); Changed(); } });
+            var down = UI.IconButton("\uE70D", "Descendre " + ControlCenterWindow.ModuleName(id), () =>
+            {
+                int index = prefs.Modules.IndexOf(id);
+                if (index < prefs.Modules.Count - 1)
+                {
+                    prefs.Modules.RemoveAt(index);
+                    prefs.Modules.Insert(index + 1, id);
+                    Changed();
+                }
+            });
             down.IsEnabled = prefs.Modules.IndexOf(id) < prefs.Modules.Count - 1;
             order.Children.Add(up);
             order.Children.Add(down);
             DockPanel.SetDock(order, Dock.Right);
             row.Children.Add(order);
             var check = new CheckBox { Content = ControlCenterWindow.ModuleName(id), IsChecked = !prefs.HiddenModules.Contains(id) };
-            check.Click += (_, _) => { if (check.IsChecked == true) prefs.HiddenModules.Remove(id);
-                else if (!prefs.HiddenModules.Contains(id)) prefs.HiddenModules.Add(id); Changed(); };
+            check.Click += (_, _) =>
+            {
+                if (check.IsChecked == true)
+                    prefs.HiddenModules.Remove(id);
+                else if (!prefs.HiddenModules.Contains(id))
+                    prefs.HiddenModules.Add(id);
+                Changed();
+            };
             row.Children.Add(check);
             list.Children.Add(row);
         }
         var sliders = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 22) };
         foreach (bool isVolume in new[] { true, false })
         {
-            var check = new CheckBox { Content = isVolume ? "Curseur volume" : "Curseur luminosité", IsChecked = isVolume
+            var check = new CheckBox
+            {
+                Content = isVolume ? "Curseur volume" : "Curseur luminosité",
+                IsChecked = isVolume
                 ? prefs.ShowVolume
-                : prefs.ShowBrightness, Margin = new Thickness(0, 0, 20, 0) };
-            check.Click += (_, _) => { if (isVolume) prefs.ShowVolume = check.IsChecked == true;
-                else prefs.ShowBrightness = check.IsChecked == true; Changed(); };
+                : prefs.ShowBrightness,
+                Margin = new Thickness(0, 0, 20, 0)
+            };
+            check.Click += (_, _) =>
+            {
+                if (isVolume)
+                    prefs.ShowVolume = check.IsChecked == true;
+                else
+                    prefs.ShowBrightness = check.IsChecked == true;
+                Changed();
+            };
             sliders.Children.Add(check);
         }
         list.Children.Add(sliders);
@@ -118,8 +155,11 @@ internal sealed class ControlEditorWindow : GlassWindow
             actions.Children.Add(up);
             actions.Children.Add(down);
             actions.Children.Add(UI.IconButton("\uE70F", "Modifier " + shortcut.Name, () => Edit(shortcut)));
-            actions.Children.Add(UI.IconButton("\uE711", "Retirer le raccourci " + shortcut.Name, () => { prefs.Shortcuts.Remove(shortcut);
-                Changed(); }));
+            actions.Children.Add(UI.IconButton("\uE711", "Retirer le raccourci " + shortcut.Name, () =>
+            {
+                prefs.Shortcuts.Remove(shortcut);
+                Changed();
+            }));
             DockPanel.SetDock(actions, Dock.Right);
             row.Children.Add(actions);
             var name = UI.Button("", () => Edit(shortcut));
@@ -143,14 +183,22 @@ internal sealed class ControlEditorWindow : GlassWindow
     }
     void Edit(WindowsShortcut? shortcut)
     {
-        owner.RunControlDialog(this, () => { var dialog = new WindowsShortcutEditor(owner, shortcut) { Owner = this,
-            ShowInTaskbar = owner.PreviewMode }; if (dialog.ShowDialog() == true) Changed(); });
+        owner.RunControlDialog(this, () =>
+        {
+            var dialog = new WindowsShortcutEditor(owner, shortcut)
+            {
+                Owner = this,
+                ShowInTaskbar = owner.PreviewMode
+            };
+            if (dialog.ShowDialog() == true)
+                Changed();
+        });
     }
 }
 internal sealed class WindowsShortcutEditor : GlassWindow
 {
     readonly Coordinator owner; readonly WindowsShortcut? original; readonly TextBox name = new(), target = new(), arguments = new();
-        readonly TextBlock status; readonly Button iconButton; string glyph;
+    readonly TextBlock status; readonly Button iconButton; string glyph;
     internal WindowsShortcutEditor(Coordinator coordinator, WindowsShortcut? shortcut) : base("Winlestia — raccourci Windows")
     {
         owner = coordinator;
@@ -226,22 +274,34 @@ internal sealed class WindowsShortcutEditor : GlassWindow
         panel.Children.Add(label);
     }
     void OpenPresets() => GlassMenu.Open(owner, this, presetAnchor, "Commandes Windows", ControlPreferences.Library().Select(s
-        => new MenuAction(s.Name, s.Glyph, () => { name.Text = s.Name; target.Text = s.Target; arguments.Text = s.Arguments;
-        glyph = s.Glyph; iconButton.Content = ControlCenterWindow.IconLabel(glyph, "Choisir l’icône", 13); })).ToArray());
+        => new MenuAction(s.Name, s.Glyph, () =>
+        {
+            name.Text = s.Name;
+            target.Text = s.Target;
+            arguments.Text = s.Arguments;
+            glyph = s.Glyph;
+            iconButton.Content = ControlCenterWindow.IconLabel(glyph, "Choisir l’icône", 13);
+        })).ToArray());
     void OpenIcons()
     {
         var icons = new[] { ("Réglages", "\uE713"), ("Volume", "\uE767"), ("Wi-Fi", "\uE701"), ("Bluetooth", "\uE702"), ("Écran",
             "\uE7F4"),
             ("Capture", "\uE722"), ("Musique", "\uE8D6"), ("Dossier", "\uE8B7"), ("Calculatrice", "\uE8EF"), ("Horloge", "\uE917"),
             ("Applications", "\uE71D"), ("Réseau", "\uE839"), ("Alimentation", "\uE7E8"), ("Personnalisation", "\uE790") };
-        GlassMenu.Open(owner, this, iconButton, "Icône du raccourci", icons.Select(i => new MenuAction(i.Item1, i.Item2, () => {
-            glyph = i.Item2; iconButton.Content = ControlCenterWindow.IconLabel(glyph, "Choisir l’icône", 13); },
+        GlassMenu.Open(owner, this, iconButton, "Icône du raccourci", icons.Select(i => new MenuAction(i.Item1, i.Item2, () =>
+        {
+            glyph = i.Item2;
+            iconButton.Content = ControlCenterWindow.IconLabel(glyph, "Choisir l’icône", 13);
+        },
             glyph == i.Item2)).ToArray());
     }
     void ChooseFile()
     {
-        var picker = new Microsoft.Win32.OpenFileDialog { Title = "Choisir une application ou un raccourci",
-            Filter = "Applications et raccourcis|*.exe;*.lnk|Tous les fichiers|*.*" };
+        var picker = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Choisir une application ou un raccourci",
+            Filter = "Applications et raccourcis|*.exe;*.lnk|Tous les fichiers|*.*"
+        };
         if (picker.ShowDialog(this) == true)
         {
             target.Text = picker.FileName;

@@ -14,7 +14,7 @@ internal sealed class TelemetryGraph : FrameworkElement
     const int SlideMs = 240;
     internal const int Capacity = 60;
     readonly List<(double? a, double? b)> history = new(); readonly DrawingVisual visual = new();
-        readonly TranslateTransform translation = new();
+    readonly TranslateTransform translation = new();
     readonly Color color; readonly Brush stroke, secondary; readonly bool percent;
     internal int Count => history.Count;
     internal TelemetryGraph(string hex, bool percent = true)
@@ -66,8 +66,11 @@ internal sealed class TelemetryGraph : FrameworkElement
         translation.X = 0;
         if (animate && history.Count > 1 && Store.State.Motion > 0)
         {
-            var motion = new DoubleAnimation(step, 0, TimeSpan.FromMilliseconds(SlideMs * Store.State.Motion)) {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }, FillBehavior = FillBehavior.Stop };
+            var motion = new DoubleAnimation(step, 0, TimeSpan.FromMilliseconds(SlideMs * Store.State.Motion))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+                FillBehavior = FillBehavior.Stop
+            };
             Timeline.SetDesiredFrameRate(motion, 60);
             translation.BeginAnimation(TranslateTransform.XProperty, motion);
         }
@@ -100,8 +103,12 @@ internal sealed class TelemetryGraph : FrameworkElement
             }
         }
         line.Freeze();
-        var pen = new Pen(brush.CloneCurrentValue(), 1.8) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round,
-            LineJoin = PenLineJoin.Round };
+        var pen = new Pen(brush.CloneCurrentValue(), 1.8)
+        {
+            StartLineCap = PenLineCap.Round,
+            EndLineCap = PenLineCap.Round,
+            LineJoin = PenLineJoin.Round
+        };
         pen.Freeze();
         drawing.DrawGeometry(null, pen, line);
         if (last.HasValue)

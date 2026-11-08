@@ -37,9 +37,22 @@ internal sealed partial class SocialService
         }
     }
 
-    CountsFile_ MakeFile() => new() { NextSeq = nextSeq, BootTicks = bootUtc.Ticks, Counts = nets.ToDictionary(n => n.Id, n => n.Count),
-        TitleNets = nets.Where(n => n.U.TitleSeen).Select(n => n.Id).ToList(), History = history.Select(h => new HistoryItem { Seq = h.Seq,
-        Net = h.Net, Title = h.Title, Body = h.Body, Kind = h.Kind, At = h.At }).ToList() };
+    CountsFile_ MakeFile() => new()
+    {
+        NextSeq = nextSeq,
+        BootTicks = bootUtc.Ticks,
+        Counts = nets.ToDictionary(n => n.Id, n => n.Count),
+        TitleNets = nets.Where(n => n.U.TitleSeen).Select(n => n.Id).ToList(),
+        History = history.Select(h => new HistoryItem
+        {
+            Seq = h.Seq,
+            Net = h.Net,
+            Title = h.Title,
+            Body = h.Body,
+            Kind = h.Kind,
+            At = h.At
+        }).ToList()
+    };
 
     void LoadCounts()
     {
@@ -81,10 +94,24 @@ internal sealed partial class SocialService
         if (saveQueued || disposed)
             return;
         saveQueued = true;
-        _ = Task.Run(async () => { try { await Task.Delay(SaveDebounceMs); if (disposed) return; dispatcher.Invoke(()
-            => saveQueued = false); WriteNow(); } catch (Exception err) { Store.Log("SocialService.QueueSave : " + err.GetType().Name
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(SaveDebounceMs);
+                if (disposed)
+                    return;
+                dispatcher.Invoke(()
+            => saveQueued = false);
+                WriteNow();
+            }
+            catch (Exception err)
+            {
+                Store.Log("SocialService.QueueSave : " + err.GetType().Name
                 + ": "
-            + err.Message); } });
+            + err.Message);
+            }
+        });
     }
 
     void WriteNow()

@@ -70,8 +70,10 @@ internal static class FilesHandler
 
     sealed class Backup
     {
-        public int Version { get; set; } = 1; public string Exe { get; set; } = ""; public Dictionary<string, Entry> Entries { get; set;
-            } = new();
+        public int Version { get; set; } = 1; public string Exe { get; set; } = ""; public Dictionary<string, Entry> Entries
+        {
+            get; set;
+        } = new();
     }
     sealed class Entry
     {

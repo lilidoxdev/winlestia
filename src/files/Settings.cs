@@ -65,8 +65,11 @@ internal static class FilesSettings
 
     static readonly object gate = new();
     static SettingsData? data;
-    static readonly JsonSerializerOptions Options = new() { WriteIndented = true,
-        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    static readonly JsonSerializerOptions Options = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
 
     internal static string Dir => Environment.GetEnvironmentVariable("WINLESTIA_FILES_DATA_DIR") is { Length: > 0 } d ? d
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia", "Files");

@@ -78,8 +78,17 @@ public sealed partial class MainWindow
             row.Children.Add(icon);
             row.Children.Add(texts);
             var root = d.Root;
-            var card = new Border { Width = 300, Padding = new Thickness(M3.Sp3), Margin = new Thickness(0, 0, M3.Sp2, M3.Sp2),
-                CornerRadius = new CornerRadius(M3.Normal), Background = UI.Tint, Child = row, Cursor = Cursors.Hand, ToolTip = root };
+            var card = new Border
+            {
+                Width = 300,
+                Padding = new Thickness(M3.Sp3),
+                Margin = new Thickness(0, 0, M3.Sp2, M3.Sp2),
+                CornerRadius = new CornerRadius(M3.Normal),
+                Background = UI.Tint,
+                Child = row,
+                Cursor = Cursors.Hand,
+                ToolTip = root
+            };
             card.MouseLeftButtonUp += (_, e) => { if (e.ClickCount <= 1) Active.Go(root); };
             card.MouseRightButtonUp += (_, e) => { ShowContextMenu(null, root); e.Handled = true; };
             thisPcWrap.Children.Add(card);

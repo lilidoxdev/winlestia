@@ -63,16 +63,24 @@ internal sealed class GlassMenu : GlassWindow
         caption.Margin = new Thickness(14, 9, 10, 13);
         ContentHost.Children.Add(caption);
         var list = new StackPanel();
-        var scroll = new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        var scroll = new ScrollViewer
+        {
+            Content = list,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var buttons = new List<Button>();
         foreach (var action in actions)
         {
             if (action.Separator)
-                list.Children.Add(new Border { Height = 1, Background = UI.T(M3Role.OnSurface, 0x22), Margin = new Thickness(13, 4, 13, 5)
-                    });
+                list.Children.Add(new Border
+                {
+                    Height = 1,
+                    Background = UI.T(M3Role.OnSurface, 0x22),
+                    Margin = new Thickness(13, 4, 13, 5)
+                });
             var button = UI.Button("", () => { Dismiss(); Dispatcher.BeginInvoke(action.Run); });
             button.Height = 41;
             button.Padding = new Thickness(12, 0, 12, 0);
@@ -114,11 +122,29 @@ internal sealed class GlassMenu : GlassWindow
         }
         Closing += (_, _) => dismissing = true;
         Deactivated += (_, _) => Dismiss();
-        Loaded += (_, _) => { Motion.Reveal(ContentHost); int selected = Math.Max(0, actions.FindIndex(x => x.Selected));
-            if (buttons.Count > 0) buttons[selected].Focus(); };
-        PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) { Dismiss(); e.Handled = true; } if (e.Key is Key.Down or Key.Up) {
-            int i = buttons.FindIndex(x => x.IsKeyboardFocused); if (buttons.Count > 0) buttons[(i + (e.Key == Key.Down ? 1
-            : buttons.Count - 1) + buttons.Count) % buttons.Count].Focus(); e.Handled = true; } };
+        Loaded += (_, _) =>
+        {
+            Motion.Reveal(ContentHost);
+            int selected = Math.Max(0, actions.FindIndex(x => x.Selected));
+            if (buttons.Count > 0)
+                buttons[selected].Focus();
+        };
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+            {
+                Dismiss();
+                e.Handled = true;
+            }
+            if (e.Key is Key.Down or Key.Up)
+            {
+                int i = buttons.FindIndex(x => x.IsKeyboardFocused);
+                if (buttons.Count > 0)
+                    buttons[(i + (e.Key == Key.Down ? 1
+                : buttons.Count - 1) + buttons.Count) % buttons.Count].Focus();
+                e.Handled = true;
+            }
+        };
     }
     internal static string CategoryGlyph(string label)
     {

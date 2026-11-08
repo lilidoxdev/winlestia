@@ -103,9 +103,11 @@ public sealed partial class MainWindow
     [DllImport("ole32.dll")] static extern int RegisterDragDrop(IntPtr hwnd, IDropTarget target);
     [DllImport("ole32.dll")] static extern int RevokeDragDrop(IntPtr hwnd);
     [DllImport("ole32.dll")] static extern void ReleaseStgMedium(ref STGMEDIUM medium);
-    [DllImport("shell32.dll")] static extern int SHDoDragDrop(IntPtr hwnd, IntPtr dataObject, IntPtr dropSource, int okEffects,
+    [DllImport("shell32.dll")]
+    static extern int SHDoDragDrop(IntPtr hwnd, IntPtr dataObject, IntPtr dropSource, int okEffects,
         out int effect);
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern uint DragQueryFileW(IntPtr hdrop, uint index,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    static extern uint DragQueryFileW(IntPtr hdrop, uint index,
         StringBuilder? buffer,
         uint cch);
     [DllImport("user32.dll")] static extern bool GetCursorPos(out NPoint p);
@@ -140,8 +142,10 @@ public sealed partial class MainWindow
             swallowedPress = null;
             if (e.ClickCount != 1 || Keyboard.Modifiers != ModifierKeys.None || renaming != null)
                 return;
-            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem {
-                DataContext: FileItem item })
+            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem
+                {
+                    DataContext: FileItem item
+                })
                 return;
             dragItem = item;
             dragFrom = e.GetPosition(this);
@@ -229,8 +233,14 @@ public sealed partial class MainWindow
 
     internal static string[] ReadFiles(ComIDataObject data)
     {
-        var format = new FORMATETC { cfFormat = 15 /* CF_HDROP */, ptd = IntPtr.Zero, dwAspect = DVASPECT.DVASPECT_CONTENT, lindex = -1,
-            tymed = TYMED.TYMED_HGLOBAL };
+        var format = new FORMATETC
+        {
+            cfFormat = 15 /* CF_HDROP */,
+            ptd = IntPtr.Zero,
+            dwAspect = DVASPECT.DVASPECT_CONTENT,
+            lindex = -1,
+            tymed = TYMED.TYMED_HGLOBAL
+        };
         try
         {
             if (data.QueryGetData(ref format) != 0)

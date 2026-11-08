@@ -16,7 +16,8 @@ internal sealed class DesktopIconsGuard : IDisposable
     {
         public IntPtr Hwnd; public uint Message; public UIntPtr W; public IntPtr L; public uint Time; public int X, Y;
     }
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
+    [DllImport("user32.dll")]
+    static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
         uint thread, uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] static extern int GetMessage(out Msg message, IntPtr hwnd, uint min, uint max);
@@ -28,7 +29,7 @@ internal sealed class DesktopIconsGuard : IDisposable
     [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
 
     readonly Func<bool> managed; readonly Action reassert, relinquished; readonly object gate = new();
-        readonly DesktopReassertPolicy policy = new(); readonly Timer timer;
+    readonly DesktopReassertPolicy policy = new(); readonly Timer timer;
     Thread? thread; uint threadId; WinEventProc? proc; bool active, running, disposed, forced; int logged;
 
     internal bool Installed
@@ -86,8 +87,15 @@ internal sealed class DesktopIconsGuard : IDisposable
                     {
                     }
             }
-            finally { if (a != IntPtr.Zero) UnhookWinEvent(a); if (b != IntPtr.Zero) UnhookWinEvent(b);
-                if (c != IntPtr.Zero) UnhookWinEvent(c); }
+            finally
+            {
+                if (a != IntPtr.Zero)
+                    UnhookWinEvent(a);
+                if (b != IntPtr.Zero)
+                    UnhookWinEvent(b);
+                if (c != IntPtr.Zero)
+                    UnhookWinEvent(c);
+            }
         })
         {
             IsBackground = true,

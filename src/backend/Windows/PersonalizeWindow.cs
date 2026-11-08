@@ -20,8 +20,13 @@ internal sealed partial class PersonalizeWindow : GlassWindow
     readonly StackPanel body = new();
     readonly WrapPanel themeGrid = new();
     bool loaded;
-    readonly DispatcherTimer applyTimer = new() { Interval = TimeSpan.FromMilliseconds(32) }, saveTimer = new() {
-        Interval = TimeSpan.FromMilliseconds(SaveDebounceMs) };
+    readonly DispatcherTimer applyTimer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(32)
+    }, saveTimer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(SaveDebounceMs)
+    };
     internal PersonalizeWindow(Coordinator owner, string? boardId) : base("Winlestia — personnalisation")
     {
         coordinator = owner;

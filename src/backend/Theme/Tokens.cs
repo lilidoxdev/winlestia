@@ -312,7 +312,7 @@ internal sealed class M3Palette
 internal enum M3Role
 {
     Surface, SurfaceLow, SurfaceContainer, SurfaceHigh, SurfaceHighest, OnSurface, OnSurfaceVariant, Primary, OnPrimary, PrimaryContainer,
-        OnPrimaryContainer, SecondaryContainer, OnSecondaryContainer, Outline, OutlineVariant, Error, OnError
+    OnPrimaryContainer, SecondaryContainer, OnSecondaryContainer, Outline, OutlineVariant, Error, OnError
 }
 
 // Jetons de conception partagés avec AppearanceConfig.qml (arrondis, espacements, marges, typographie, mouvement).

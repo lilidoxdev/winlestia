@@ -115,8 +115,12 @@ internal sealed partial class FolderTab
             Load(Location);
     }
 
-    internal void SetSort(SortColumn column) => SetSort(Sort with { Column = column, Ascending = Sort.Column == column ? !Sort.Ascending
-        : true });
+    internal void SetSort(SortColumn column) => SetSort(Sort with
+    {
+        Column = column,
+        Ascending = Sort.Column == column ? !Sort.Ascending
+        : true
+    });
     internal void SetSort(SortSpec spec)
     {
         if (Sort == spec)
@@ -138,9 +142,22 @@ internal sealed partial class FolderTab
         Task.Run(() =>
         {
             var sorted = FileSort.Sorted(source, spec);
-            ui.InvokeAsync(() => { if (mine != sortGeneration || !ReferenceEquals(source, all) || disposed) return; sorting = false;
-                all = sorted; if (deepMode) deep = FileSort.Sorted(deep, Sort); Mutating?.Invoke(this, Keep.Offset); try {
-                items.Reset(Visible()); } finally { Mutating?.Invoke(this, null); } Changed?.Invoke(this); },
+            ui.InvokeAsync(() =>
+            {
+                if (mine != sortGeneration || !ReferenceEquals(source, all) || disposed)
+                    return;
+                sorting = false;
+                all = sorted;
+                if (deepMode)
+                    deep = FileSort.Sorted(deep, Sort);
+                Mutating?.Invoke(this, Keep.Offset);
+                try
+                {
+                    items.Reset(Visible());
+                }
+                finally { Mutating?.Invoke(this, null); }
+                Changed?.Invoke(this);
+            },
                 DispatcherPriority.Background);
         });
     }

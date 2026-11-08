@@ -53,7 +53,7 @@ internal sealed class ColorPickerWindow : Window
     readonly StackPanel swatches = new() { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 10, 0, 0) };
     readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(90) };
     readonly Coordinator owner; System.Windows.Media.Color current = Colors.White; bool sampling = true; IntPtr hook;
-        Native.LowLevelMouseProc? procedure;
+    Native.LowLevelMouseProc? procedure;
     internal ColorPickerWindow(Coordinator coordinator)
     {
         owner = coordinator;
@@ -66,11 +66,20 @@ internal sealed class ColorPickerWindow : Window
         Width = 224;
         Height = 376;
         WindowStartupLocation = WindowStartupLocation.Manual;
-        var card = new Border { CornerRadius = new CornerRadius(22),
+        var card = new Border
+        {
+            CornerRadius = new CornerRadius(22),
             Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(246, 20, 27, 38)),
-            BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(96, 255, 255, 255)), BorderThickness = new Thickness(1),
-            Padding = new Thickness(12), Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 30, ShadowDepth = 8,
-            Opacity = .5 } };
+            BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(96, 255, 255, 255)),
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(12),
+            Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                BlurRadius = 30,
+                ShadowDepth = 8,
+                Opacity = .5
+            }
+        };
         var stack = new StackPanel();
         // Une sortie toujours visible, en plus du clic global qui choisit déjà la couleur.
         var head = new DockPanel { Margin = new Thickness(2, 0, 2, 9) };
@@ -86,20 +95,43 @@ internal sealed class ColorPickerWindow : Window
         DockPanel.SetDock(shut, Dock.Right);
         head.Children.Add(shut);
         stack.Children.Add(head);
-        var frame = new Border { CornerRadius = new CornerRadius(14), Clip = new RectangleGeometry(new Rect(0, 0, 188, 188), 14, 14),
-            Child = new Grid() };
+        var frame = new Border
+        {
+            CornerRadius = new CornerRadius(14),
+            Clip = new RectangleGeometry(new Rect(0, 0, 188, 188), 14, 14),
+            Child = new Grid()
+        };
         RenderOptions.SetBitmapScalingMode(preview, BitmapScalingMode.NearestNeighbor);
         ((Grid)frame.Child).Children.Add(preview);
         var cross = new Grid { IsHitTestVisible = false };
-        cross.Children.Add(new Border { Width = 1, Height = 188, Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(120,
-            255, 255, 255)), HorizontalAlignment = HorizontalAlignment.Center });
-        cross.Children.Add(new Border { Height = 1, Width = 188, Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(120,
-            255, 255, 255)), VerticalAlignment = VerticalAlignment.Center });
+        cross.Children.Add(new Border
+        {
+            Width = 1,
+            Height = 188,
+            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(120,
+            255, 255, 255)),
+            HorizontalAlignment = HorizontalAlignment.Center
+        });
+        cross.Children.Add(new Border
+        {
+            Height = 1,
+            Width = 188,
+            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(120,
+            255, 255, 255)),
+            VerticalAlignment = VerticalAlignment.Center
+        });
         ((Grid)frame.Child).Children.Add(cross);
         stack.Children.Add(frame);
         var line = new DockPanel { Margin = new Thickness(2, 11, 2, 0) };
-        var dot = new Border { Width = 20, Height = 20, CornerRadius = new CornerRadius(6), Background = Brushes.White,
-            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0) };
+        var dot = new Border
+        {
+            Width = 20,
+            Height = 20,
+            CornerRadius = new CornerRadius(6),
+            Background = Brushes.White,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 10, 0)
+        };
         dot.Name = "swatch";
         line.Children.Add(dot);
         var texts = new StackPanel();
@@ -117,11 +149,23 @@ internal sealed class ColorPickerWindow : Window
         var history = Store.State.ColorHistory.ToList();
         foreach (var value in history.Take(6))
             swatches.Children.Add(Swatch(value));
-        MouseLeftButtonUp += (_, e) => { if (e.OriginalSource is Border border && border.Name == "swatch"
-            && border.Tag is string saved) Copy(saved); else Copy(Hex(current)); };
+        MouseLeftButtonUp += (_, e) =>
+        {
+            if (e.OriginalSource is Border border && border.Name == "swatch"
+            && border.Tag is string saved)
+                Copy(saved);
+            else
+                Copy(Hex(current));
+        };
         MouseRightButtonUp += (_, _) => Close();
-        PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) Close(); if (e.Key == Key.C
-            && Keyboard.Modifiers == ModifierKeys.Control) Copy(Hex(current)); };
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+                Close();
+            if (e.Key == Key.C
+            && Keyboard.Modifiers == ModifierKeys.Control)
+                Copy(Hex(current));
+        };
         timer.Tick += (_, _) => Sample();
         Loaded += (_, _) => { Sample(); timer.Start(); Install(); Activate(); Focus(); };
         Closed += (_, _) => { timer.Stop(); Remove(); };
@@ -129,9 +173,20 @@ internal sealed class ColorPickerWindow : Window
     Border Swatch(string value)
     {
         var color = Parse(value);
-        var dot = new Border { Width = 24, Height = 24, CornerRadius = new CornerRadius(7), Margin = new Thickness(0, 0, 6, 0),
-            Background = new SolidColorBrush(color), BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(90, 255, 255,
-            255)), BorderThickness = new Thickness(1), Tag = value, Cursor = Cursors.Hand, ToolTip = value };
+        var dot = new Border
+        {
+            Width = 24,
+            Height = 24,
+            CornerRadius = new CornerRadius(7),
+            Margin = new Thickness(0, 0, 6, 0),
+            Background = new SolidColorBrush(color),
+            BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(90, 255, 255,
+            255)),
+            BorderThickness = new Thickness(1),
+            Tag = value,
+            Cursor = Cursors.Hand,
+            ToolTip = value
+        };
         dot.MouseLeftButtonUp += (_, e) => { Copy(value); e.Handled = true; };
         return dot;
     }
@@ -251,8 +306,11 @@ internal sealed class ColorPickerWindow : Window
 internal sealed class RulerOverlay : Window
 {
     readonly Canvas canvas = new(); readonly TextBlock label = UI.Text("", 12, UI.White);
-        readonly System.Windows.Shapes.Line line = new() {
-        Stroke = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 226, 120)), StrokeThickness = 2 };
+    readonly System.Windows.Shapes.Line line = new()
+    {
+        Stroke = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 226, 120)),
+        StrokeThickness = 2
+    };
     readonly TextBlock hint = UI.Text("Clique un premier point · Échap pour fermer", 12, UI.White);
     bool started, finished; System.Windows.Point origin, corner; double scaleX = 1, scaleY = 1;
     internal RulerOverlay(Coordinator coordinator)
@@ -272,9 +330,14 @@ internal sealed class RulerOverlay : Window
         Height = SystemParameters.VirtualScreenHeight;
         Content = canvas;
         canvas.Children.Add(line);
-        var box = new Border { CornerRadius = new CornerRadius(10),
-            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(220, 18, 26, 36)), Padding = new Thickness(8, 5, 8, 5),
-            Child = label, Visibility = Visibility.Collapsed };
+        var box = new Border
+        {
+            CornerRadius = new CornerRadius(10),
+            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(220, 18, 26, 36)),
+            Padding = new Thickness(8, 5, 8, 5),
+            Child = label,
+            Visibility = Visibility.Collapsed
+        };
         box.Name = "box";
         canvas.Children.Add(box);
         hint.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(200, 18, 26, 36));
@@ -283,13 +346,35 @@ internal sealed class RulerOverlay : Window
         Canvas.SetLeft(hint, 20);
         Canvas.SetTop(hint, 20);
         canvas.Children.Add(hint);
-        MouseLeftButtonDown += (_, e) => { var point = e.GetPosition(this); if (!started || finished) { started = true; finished = false;
-            origin = corner = point; hint.Text = "Clique le second point · clic droit pour recommencer"; } else { finished = true;
-            corner = point; hint.Text = "Mesure terminée · Échap pour fermer"; } Update(point); };
+        MouseLeftButtonDown += (_, e) =>
+        {
+            var point = e.GetPosition(this);
+            if (!started || finished)
+            {
+                started = true;
+                finished = false;
+                origin = corner = point;
+                hint.Text = "Clique le second point · clic droit pour recommencer";
+            }
+            else
+            {
+                finished = true;
+                corner = point;
+                hint.Text = "Mesure terminée · Échap pour fermer";
+            }
+            Update(point);
+        };
         MouseMove += (_, e) => { if (started && !finished) Update(e.GetPosition(this)); };
-        MouseRightButtonDown += (_, _) => { started = finished = false; line.Visibility = Visibility.Collapsed;
-            hint.Text = "Clique un premier point · Échap pour fermer"; var box = canvas.Children.OfType<Border>().FirstOrDefault(b
-            => b.Name == "box"); if (box != null) box.Visibility = Visibility.Collapsed; };
+        MouseRightButtonDown += (_, _) =>
+        {
+            started = finished = false;
+            line.Visibility = Visibility.Collapsed;
+            hint.Text = "Clique un premier point · Échap pour fermer";
+            var box = canvas.Children.OfType<Border>().FirstOrDefault(b
+            => b.Name == "box");
+            if (box != null)
+                box.Visibility = Visibility.Collapsed;
+        };
         PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) Close(); };
         Loaded += (_, _) => { var dpi = VisualTreeHelper.GetDpi(this); scaleX = dpi.DpiScaleX; scaleY = dpi.DpiScaleY; };
     }

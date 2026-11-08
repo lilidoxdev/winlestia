@@ -60,11 +60,23 @@ internal sealed partial class ShellDockWindow : Window
             AddApp(entry, matching, true);
         }
         if (apps.Children.Count > 0 && windows.Any(w => !represented.Contains(w.Handle)))
-            apps.Children.Add(new Border { Width = 1, Height = 23, Background = UI.Alpha(Theme.Current.Dim, 50), Margin = new Thickness(9,
-                0, 9, 0) });
+            apps.Children.Add(new Border
+            {
+                Width = 1,
+                Height = 23,
+                Background = UI.Alpha(Theme.Current.Dim, 50),
+                Margin = new Thickness(9,
+                0, 9, 0)
+            });
         foreach (var window in windows.Where(w => !represented.Contains(w.Handle)))
-            AddApp(new Entry { Id = string.IsNullOrWhiteSpace(window.RealPath) ? "window:" + window.Handle.ToInt64() : "running:"
-                + window.RealPath.ToLowerInvariant(), Name = window.Title, Target = window.RealPath, IconPath = window.RealPath }, window,
+            AddApp(new Entry
+            {
+                Id = string.IsNullOrWhiteSpace(window.RealPath) ? "window:" + window.Handle.ToInt64() : "running:"
+                + window.RealPath.ToLowerInvariant(),
+                Name = window.Title,
+                Target = window.RealPath,
+                IconPath = window.RealPath
+            }, window,
                 false);
         SizePill();
     }
@@ -75,8 +87,14 @@ internal sealed partial class ShellDockWindow : Window
     }
     void AddApp(Entry entry, TaskbarNative.AppWindow? window, bool pinned)
     {
-        var button = Button(entry.Name, () => { owner.CollapseImmediately(); if (window != null) TaskbarNative.Activate(window);
-            else owner.Launch(entry); });
+        var button = Button(entry.Name, () =>
+        {
+            owner.CollapseImmediately();
+            if (window != null)
+                TaskbarNative.Activate(window);
+            else
+                owner.Launch(entry);
+        });
         var stack = new Grid();
         var image = new Image { Width = 28, Height = 28, Stretch = Stretch.Uniform };
         stack.Children.Add(image);
@@ -84,9 +102,15 @@ internal sealed partial class ShellDockWindow : Window
         if (window != null)
         {
             bool active = Native.GetForegroundWindow() == window.Handle;
-            stack.Children.Add(new Border { Height = 3, Width = active ? 16 : 4, CornerRadius = new CornerRadius(2),
+            stack.Children.Add(new Border
+            {
+                Height = 3,
+                Width = active ? 16 : 4,
+                CornerRadius = new CornerRadius(2),
                 Background = UI.Accent,
-                VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, -3) });
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Margin = new Thickness(0, 0, 0, -3)
+            });
             button.Background = active ? UI.Alpha(Theme.Current.Accent, 24) : Brushes.Transparent;
         }
         button.Content = stack;
@@ -209,12 +233,18 @@ internal sealed partial class ShellDockWindow : Window
         PlacePhysical();
         if (Motion.On)
         {
-            var animation = new System.Windows.Media.Animation.DoubleAnimation(start, 0, Motion.Duration(MotionKind.FastSpatial)) {
-                EasingFunction = Motion.Ease, FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop };
+            var animation = new System.Windows.Media.Animation.DoubleAnimation(start, 0, Motion.Duration(MotionKind.FastSpatial))
+            {
+                EasingFunction = Motion.Ease,
+                FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop
+            };
             animation.Completed += (_, _) => { if (version == motionVersion) slide.BeginAnimation(TranslateTransform.YProperty, null); };
             slide.BeginAnimation(TranslateTransform.YProperty, animation);
             pill.BeginAnimation(UIElement.OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(.3, 1,
-                Motion.Duration(MotionKind.FastEffects)) { FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop });
+                Motion.Duration(MotionKind.FastEffects))
+            {
+                FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop
+            });
         }
     }
     internal void Conceal(bool immediate = false)
@@ -232,11 +262,21 @@ internal sealed partial class ShellDockWindow : Window
             slide.Y = 0;
             return;
         }
-        var animation = new System.Windows.Media.Animation.DoubleAnimation(from, HostHeight, Motion.Duration(MotionKind.FastEffects)) {
-            EasingFunction = Motion.Curve(MotionKind.FastEffects), FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop };
-        animation.Completed += (_, _) => { if (version == motionVersion) { Hide(); slide.BeginAnimation(TranslateTransform.YProperty,
+        var animation = new System.Windows.Media.Animation.DoubleAnimation(from, HostHeight, Motion.Duration(MotionKind.FastEffects))
+        {
+            EasingFunction = Motion.Curve(MotionKind.FastEffects),
+            FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop
+        };
+        animation.Completed += (_, _) =>
+        {
+            if (version == motionVersion)
+            {
+                Hide();
+                slide.BeginAnimation(TranslateTransform.YProperty,
             null);
-            slide.Y = 0; } };
+                slide.Y = 0;
+            }
+        };
         slide.BeginAnimation(TranslateTransform.YProperty, animation);
     }
     IntPtr Hook(IntPtr w, int msg, IntPtr wp, IntPtr lp, ref bool handled)
@@ -252,8 +292,13 @@ internal sealed partial class ShellDockWindow : Window
         {
             registered = false;
             last = default;
-            Dispatcher.BeginInvoke((Action)(() => { TaskbarNative.HideExplorer(); if (owner.QtShell == null) Register(); manager.Refresh();
-                }));
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                TaskbarNative.HideExplorer();
+                if (owner.QtShell == null)
+                    Register();
+                manager.Refresh();
+            }));
         }
         return IntPtr.Zero;
     }

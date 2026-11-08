@@ -129,8 +129,18 @@ internal sealed partial class ExplorerAppearance
                 if (!migrationStarted && !state.Migrated)
                 {
                     migrationStarted = true;
-                    _ = Task.Run(async () => { try { await MigrateAsync(); } catch (Exception ex) { Store.Log("Migration icônes: "
-                        + ex.Message); } });
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await MigrateAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            Store.Log("Migration icônes: "
+                        + ex.Message);
+                        }
+                    });
                 }
             }
         }
@@ -148,8 +158,14 @@ internal sealed partial class ExplorerAppearance
                 _ = Task.Run(() => RefreshShellAsync(gen));
             }
         }
-        catch (Exception ex) { Store.Log("Icônes dossier régénération: " + ex.Message); if (!disposed
-            && ++iconRetry <= 3) lock (iconGate) iconTimer?.Change(5000, Timeout.Infinite); }
+        catch (Exception ex)
+        {
+            Store.Log("Icônes dossier régénération: " + ex.Message);
+            if (!disposed
+            && ++iconRetry <= 3)
+                lock (iconGate)
+                    iconTimer?.Change(5000, Timeout.Infinite);
+        }
     }
     // Rafraîchissement du shell après modification des fichiers d'icônes : un ASSOCCHANGED (flush nowait), puis SHCNE_UPDATEITEM par
     // dossier du manifeste en lots bornés (64 par 250 ms ; 32 par 500 ms avec effets réduits). Ne touche jamais à ie4uinit /

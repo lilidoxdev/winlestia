@@ -37,14 +37,15 @@ internal sealed partial class DictationService : IDisposable
         public uint Key, Scan, Flags, Time; public UIntPtr Extra;
     }
     delegate IntPtr Callback(int code, IntPtr message, IntPtr data);
-    [DllImport("user32.dll", SetLastError = true)] static extern IntPtr SetWindowsHookExW(int id, Callback callback, IntPtr module,
+    [DllImport("user32.dll", SetLastError = true)]
+    static extern IntPtr SetWindowsHookExW(int id, Callback callback, IntPtr module,
         uint thread);
     [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(IntPtr hook);
     [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr message, IntPtr data);
 
     readonly Dispatcher dispatcher; readonly Action<string> send; readonly Callback callback;
     IntPtr hook; volatile int key = 0xA5; volatile bool held, disposed, swallowedCtrl; volatile bool capturing; volatile bool enabledPref;
-        volatile int pendingUp; volatile string lastLang = "fr";
+    volatile int pendingUp; volatile string lastLang = "fr";
 
     // --- état partagé (lu par la commande « dictation ») -----------------------------------------
     readonly object gate = new();
@@ -52,7 +53,7 @@ internal sealed partial class DictationService : IDisposable
 
     // --- capture --------------------------------------------------------------------------------
     WasapiCapture? capture; List<float>? samples; int sourceRate = 48000; readonly float[] window = new float[Fft]; int windowFill;
-        int recordingId; bool recording;
+    int recordingId; bool recording;
     readonly Complex[] fftBuffer = new Complex[Fft];
 
     // --- Whisper --------------------------------------------------------------------------------
@@ -72,8 +73,18 @@ internal sealed partial class DictationService : IDisposable
         unloadTimer = new Timer(_ => Unload(), null, Timeout.Infinite, Timeout.Infinite);
         idleTimer = new Timer(_ => { lock (gate) { if (state is "done" or "error") state = "idle"; } }, null, Timeout.Infinite,
             Timeout.Infinite);
-        suspendTimer = new Timer(_ => { if (capturing && !disposed) dispatcher.BeginInvoke(DispatcherPriority.Normal, () => {
-            if (capturing) { EndCapture(); send("dictation:keycancel"); } }); }, null, Timeout.Infinite, Timeout.Infinite);
+        suspendTimer = new Timer(_ =>
+        {
+            if (capturing && !disposed)
+                dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
+                {
+                    if (capturing)
+                    {
+                        EndCapture();
+                        send("dictation:keycancel");
+                    }
+                });
+        }, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     internal DictationSnapshot Snapshot()
@@ -284,8 +295,16 @@ internal sealed partial class DictationService : IDisposable
                 Array.Clear(levels);
             }
             // chargement paresseux pendant l'enregistrement
-            _ = GetFactory().ContinueWith(t => { if (t.IsCompletedSuccessfully) lock (gate) { if (state == "loading"
-                && recording) state = "listening"; } });
+            _ = GetFactory().ContinueWith(t =>
+            {
+                if (t.IsCompletedSuccessfully)
+                    lock (gate)
+                    {
+                        if (state == "loading"
+                && recording)
+                            state = "listening";
+                    }
+            });
             var device = new WasapiCapture();
             int id = ++recordingId;
             sourceRate = device.WaveFormat.SampleRate;

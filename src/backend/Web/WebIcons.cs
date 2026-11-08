@@ -21,8 +21,10 @@ internal static class WebIcons
 {
     // Garde-fou contre un HTML pathologique (retour arrière coûteux) : la page distante n'est pas fiable.
     const int RegexTimeoutMs = 100;
-    static readonly HttpClient client = new(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All }) {
-        Timeout = TimeSpan.FromSeconds(5) };
+    static readonly HttpClient client = new(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All })
+    {
+        Timeout = TimeSpan.FromSeconds(5)
+    };
     const int ImageLimit = 2 * 1024 * 1024;
     internal static Uri Parse(string input)
     {

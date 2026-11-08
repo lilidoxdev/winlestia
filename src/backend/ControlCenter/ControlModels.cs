@@ -7,14 +7,19 @@ namespace PanneauxGlass;
 
 public sealed class WindowsShortcut
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString("N"); public string Name { get; set; } = ""; public string Target { get; set;
-        } = ""; public string Arguments { get; set; } = ""; public string Glyph { get; set; } = "\uE713";
+    public string Id { get; set; } = Guid.NewGuid().ToString("N"); public string Name { get; set; } = ""; public string Target
+    {
+        get; set;
+    } = ""; public string Arguments { get; set; } = ""; public string Glyph { get; set; } = "\uE713";
 }
 public sealed class ControlPreferences
 {
     public List<string> Modules { get; set; } = new() { "connections", "media", "levels", "actions", "shortcuts" };
-    public List<string> HiddenModules { get; set; } = new(); public bool ShowVolume { get; set; } = true; public bool ShowBrightness { get;
-        set; } = true;
+    public List<string> HiddenModules { get; set; } = new(); public bool ShowVolume { get; set; } = true; public bool ShowBrightness
+    {
+        get;
+        set;
+    } = true;
     public List<WindowsShortcut> Shortcuts { get; set; } = Defaults(); public string MediaApp { get; set; } = "";
     public static List<WindowsShortcut> Defaults() => new(){
         new(){Id="capture",Name="Capture",Target="ms-screenclip:",Glyph="\uE722"},new(

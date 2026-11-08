@@ -14,7 +14,7 @@ namespace PanneauxGlass;
 internal sealed class WebStrip : IDisposable
 {
     readonly Coordinator coordinator; readonly List<GlassWindow> windows = new(); string signature = "~"; double right, top, available;
-        bool placed, visible;
+    bool placed, visible;
     const double Tile = 56, Gap = 10;
     internal IEnumerable<GlassWindow> Windows => windows;
     internal WebStrip(Coordinator owner)
@@ -60,7 +60,9 @@ internal sealed class WebStrip : IDisposable
             catch { image.Source = FallbackImage(); }
             button.Content = image;
             PrepareButton(window, button);
-            button.MouseRightButtonUp += (_, e) => { GlassMenu.Open(coordinator, window, button, site.Name, new[] {
+            button.MouseRightButtonUp += (_, e) =>
+            {
+                GlassMenu.Open(coordinator, window, button, site.Name, new[] {
                 new MenuAction("Ouvrir dans le navigateur", "\uE774", () => Launch(site)), new MenuAction("Modifier ce site…",
                     "\uE70F", ()
                 => coordinator.AddWebsite(site)), new MenuAction("Image et recadrage…", "\uE7A8", () => coordinator.AddWebsite(site,
@@ -68,7 +70,9 @@ internal sealed class WebStrip : IDisposable
                 new MenuAction("Déplacer vers la gauche", "\uE72B", () => Move(site, 1), Separator: true),
                 new MenuAction("Déplacer vers la droite", "\uE72A", () => Move(site, -1)), new MenuAction("Retirer ce raccourci",
                     "\uE738",
-                () => { Store.State.Websites.Remove(site); Store.Save(); Refresh(); }, Separator: true) }, true); e.Handled = true; };
+                () => { Store.State.Websites.Remove(site); Store.Save(); Refresh(); }, Separator: true) }, true);
+                e.Handled = true;
+            };
         }
         if (overflow)
         {
@@ -85,8 +89,12 @@ internal sealed class WebStrip : IDisposable
     }
     GlassWindow MakeWindow(string title, bool material)
     {
-        var window = new GlassWindow("Winlestia — " + title) { Radius = 18, MaterialVisible = material,
-            ShowInTaskbar = coordinator.PreviewMode };
+        var window = new GlassWindow("Winlestia — " + title)
+        {
+            Radius = 18,
+            MaterialVisible = material,
+            ShowInTaskbar = coordinator.PreviewMode
+        };
         window.KeyDown += (_, e) => { if (e.Key == Key.Escape) coordinator.Collapse(); };
         windows.Add(window);
         return window;

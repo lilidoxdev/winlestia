@@ -27,7 +27,7 @@ internal static class TaskbarNative
             get; set;
         }
         public List<long> Visible { get; set; } = new(); public string Ready { get; set; } = ""; public string Release { get; set; } = "";
-            public long ParentStart
+        public long ParentStart
         {
             get; set;
         }
@@ -38,7 +38,7 @@ internal static class TaskbarNative
     }
     [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        static extern bool QueryFullProcessImageName(IntPtr process,
+    static extern bool QueryFullProcessImageName(IntPtr process,
         uint flags, StringBuilder buffer, ref uint size);
     [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
     // PROCESS_QUERY_LIMITED_INFORMATION ouvre aussi la plupart des processus élevés, que Process.MainModule refuse.
@@ -72,12 +72,14 @@ internal static class TaskbarNative
     interface IPropertyStore
     {
         [PreserveSig] int GetCount(out uint count); [PreserveSig] int GetAt(uint index, out PropKey key); [PreserveSig]
-            int GetValue(ref PropKey key, out PropVariant value); [PreserveSig] int SetValue(ref PropKey key, ref PropVariant value);
-            [PreserveSig] int Commit();
+        int GetValue(ref PropKey key, out PropVariant value); [PreserveSig] int SetValue(ref PropKey key, ref PropVariant value);
+        [PreserveSig] int Commit();
     }
-    [DllImport("shell32.dll")] static extern int SHGetPropertyStoreForWindow(IntPtr window, ref Guid iid,
+    [DllImport("shell32.dll")]
+    static extern int SHGetPropertyStoreForWindow(IntPtr window, ref Guid iid,
         [MarshalAs(UnmanagedType.Interface)] out IPropertyStore? store);
-    [DllImport("propsys.dll", CharSet = CharSet.Unicode)] static extern int PropVariantToStringAlloc(ref PropVariant value,
+    [DllImport("propsys.dll", CharSet = CharSet.Unicode)]
+    static extern int PropVariantToStringAlloc(ref PropVariant value,
         out IntPtr text);
     [DllImport("ole32.dll")] static extern int PropVariantClear(ref PropVariant value);
     internal static string AppUserModelId(IntPtr window)
@@ -127,9 +129,11 @@ internal static class TaskbarNative
     [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr window, uint command);
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr window, out uint pid);
     [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr window, uint attribute, out int value, int size);
-    [DllImport("user32.dll")] internal static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height,
+    [DllImport("user32.dll")]
+    internal static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height,
         uint flags);
-    [DllImport("user32.dll")] internal static extern IntPtr SetWinEventHook(uint first, uint last, IntPtr module, WinEvent callback,
+    [DllImport("user32.dll")]
+    internal static extern IntPtr SetWinEventHook(uint first, uint last, IntPtr module, WinEvent callback,
         uint pid, uint thread, uint flags);
     [DllImport("user32.dll")] internal static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] static extern IntPtr MonitorFromPoint(Native.Point point, uint flags);
@@ -167,8 +171,14 @@ internal static class TaskbarNative
         {
             Store.Log("TaskbarNative.LaunchPath : " + ex.GetType().Name + ": " + ex.Message);
         }
-        finally { if (link != null && Marshal.IsComObject(link)) Marshal.ReleaseComObject(link); if (shell != null
-            && Marshal.IsComObject(shell)) Marshal.ReleaseComObject(shell); }
+        finally
+        {
+            if (link != null && Marshal.IsComObject(link))
+                Marshal.ReleaseComObject(link);
+            if (shell != null
+            && Marshal.IsComObject(shell))
+                Marshal.ReleaseComObject(shell);
+        }
         linkTargets[path] = target;
         return target;
     }

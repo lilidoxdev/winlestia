@@ -21,17 +21,27 @@ internal static class WebFixture
         string icon = Path.Combine(Store.Root, "web-icons", "fixture.png");
         WebIcons.Default(icon);
         byte[] png = File.ReadAllBytes(icon);
-        var replies = Task.Run(async () => { for (int i = 0; i < 2; i++) {
-            using var socket = await server.AcceptTcpClientAsync(deadline.Token); using var stream = socket.GetStream();
-            using var reader = new StreamReader(stream, Encoding.ASCII, false, 1024, true);
-            string first = await reader.ReadLineAsync(deadline.Token) ?? "";
-            while (!string.IsNullOrEmpty(await reader.ReadLineAsync(deadline.Token))) { } bool image = first.Contains("/logo.png");
-            byte[] body = image ? png
-            : Encoding.UTF8.GetBytes(
-            "<html><head><title>Fixture Panneaux</title><link rel='icon' href='/logo.png' type='image/png'></head></html>");
-            byte[] header = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: " + (image ? "image/png"
-            : "text/html") + "\r\nContent-Length: " + body.Length + "\r\n\r\n"); await stream.WriteAsync(header, deadline.Token);
-            await stream.WriteAsync(body, deadline.Token); } });
+        var replies = Task.Run(async () =>
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                using var socket = await server.AcceptTcpClientAsync(deadline.Token);
+                using var stream = socket.GetStream();
+                using var reader = new StreamReader(stream, Encoding.ASCII, false, 1024, true);
+                string first = await reader.ReadLineAsync(deadline.Token) ?? "";
+                while (!string.IsNullOrEmpty(await reader.ReadLineAsync(deadline.Token)))
+                {
+                }
+                bool image = first.Contains("/logo.png");
+                byte[] body = image ? png
+                : Encoding.UTF8.GetBytes(
+                "<html><head><title>Fixture Panneaux</title><link rel='icon' href='/logo.png' type='image/png'></head></html>");
+                byte[] header = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: " + (image ? "image/png"
+                : "text/html") + "\r\nContent-Length: " + body.Length + "\r\n\r\n");
+                await stream.WriteAsync(header, deadline.Token);
+                await stream.WriteAsync(body, deadline.Token);
+            }
+        });
         bool discovered = false;
         try
         {

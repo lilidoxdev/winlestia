@@ -184,8 +184,14 @@ internal sealed class ImageCropWindow : GlassWindow
             Width = new GridLength(65)
         });
         zoomRow.Children.Add(UI.Text("Zoom", 13, UI.Dim));
-        var slider = new Slider { Minimum = .1, Maximum = 6, Value = viewport.Zoom, SmallChange = .05, Margin = new Thickness(8, 0, 12, 0)
-            };
+        var slider = new Slider
+        {
+            Minimum = .1,
+            Maximum = 6,
+            Value = viewport.Zoom,
+            SmallChange = .05,
+            Margin = new Thickness(8, 0, 12, 0)
+        };
         System.Windows.Automation.AutomationProperties.SetName(slider, "Zoom de l’image");
         Grid.SetColumn(slider, 1);
         zoomRow.Children.Add(slider);

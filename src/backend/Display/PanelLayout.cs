@@ -28,8 +28,13 @@ public sealed class PanelPlacement
     }
     internal bool Valid => double.IsFinite(X) && double.IsFinite(Y) && double.IsFinite(Width) && double.IsFinite(Height) && Width > 0
         && Height > 0;
-    internal static PanelPlacement Capture(Rect r, Rect bounds) => new() { X = (r.X - bounds.X) / bounds.Width,
-        Y = (r.Y - bounds.Y) / bounds.Height, Width = r.Width / bounds.Width, Height = r.Height / bounds.Height };
+    internal static PanelPlacement Capture(Rect r, Rect bounds) => new()
+    {
+        X = (r.X - bounds.X) / bounds.Width,
+        Y = (r.Y - bounds.Y) / bounds.Height,
+        Width = r.Width / bounds.Width,
+        Height = r.Height / bounds.Height
+    };
     internal Rect Resolve(Rect bounds) => PanelLayout.Clamp(new Rect(bounds.X + X * bounds.Width, bounds.Y + Y * bounds.Height,
         Width * bounds.Width, Height * bounds.Height), bounds);
 }
@@ -109,16 +114,44 @@ internal sealed class PanelInteraction
         t.Template = new ControlTemplate(typeof(Thumb)) { VisualTree = factory };
         System.Windows.Automation.AutomationProperties.SetName(t, edge == "move" ? "Déplacer " + window.Model.Title : "Redimensionner "
             + window.Model.Title + " " + edge);
-        t.DragStarted += (_, _) => { owner.BeginLayoutInteraction(); initial = new Rect(window.Left, window.Top, window.Width,
-            window.Height); Native.GetCursorPos(out cursor); scale = VisualTreeHelper.GetDpi(window).DpiScaleX;
-            window.ContentHost.CacheMode = null; };
-        t.DragDelta += (_, _) => { Native.GetCursorPos(out var now); var rect = PanelLayout.Drag(initial, owner.PanelBounds,
-            (now.X - cursor.X) / scale, (now.Y - cursor.Y) / scale, edge); window.Left = rect.X; window.Top = rect.Y;
-            window.Width = rect.Width; window.Height = rect.Height; };
-        t.DragCompleted += (_, e) => { if (e.Canceled) { window.Left = initial.X; window.Top = initial.Y; window.Width = initial.Width;
-            window.Height = initial.Height; } else window.Model.Placement = PanelPlacement.Capture(new Rect(window.Left, window.Top,
-            window.Width, window.Height), owner.PanelBounds); window.ContentHost.CacheMode = new BitmapCache { EnableClearType = true,
-            SnapsToDevicePixels = true }; owner.EndLayoutInteraction(); };
+        t.DragStarted += (_, _) =>
+        {
+            owner.BeginLayoutInteraction();
+            initial = new Rect(window.Left, window.Top, window.Width,
+            window.Height);
+            Native.GetCursorPos(out cursor);
+            scale = VisualTreeHelper.GetDpi(window).DpiScaleX;
+            window.ContentHost.CacheMode = null;
+        };
+        t.DragDelta += (_, _) =>
+        {
+            Native.GetCursorPos(out var now);
+            var rect = PanelLayout.Drag(initial, owner.PanelBounds,
+            (now.X - cursor.X) / scale, (now.Y - cursor.Y) / scale, edge);
+            window.Left = rect.X;
+            window.Top = rect.Y;
+            window.Width = rect.Width;
+            window.Height = rect.Height;
+        };
+        t.DragCompleted += (_, e) =>
+        {
+            if (e.Canceled)
+            {
+                window.Left = initial.X;
+                window.Top = initial.Y;
+                window.Width = initial.Width;
+                window.Height = initial.Height;
+            }
+            else
+                window.Model.Placement = PanelPlacement.Capture(new Rect(window.Left, window.Top,
+                window.Width, window.Height), owner.PanelBounds);
+            window.ContentHost.CacheMode = new BitmapCache
+            {
+                EnableClearType = true,
+                SnapsToDevicePixels = true
+            };
+            owner.EndLayoutInteraction();
+        };
         return t;
     }
 }

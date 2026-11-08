@@ -18,8 +18,12 @@ internal sealed partial class PersonalizeWindow : GlassWindow
     // l'autre.
     static FrameworkElement Preview(ThemeDefinition theme)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 11, 0, 0),
-            VerticalAlignment = VerticalAlignment.Bottom };
+        var row = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Margin = new Thickness(0, 11, 0, 0),
+            VerticalAlignment = VerticalAlignment.Bottom
+        };
         var accent = new SolidColorBrush(Color.FromArgb(190, theme.Accent.R, theme.Accent.G, theme.Accent.B));
         var quiet = new SolidColorBrush(Color.FromArgb(70, theme.Text.R, theme.Text.G, theme.Text.B));
         int round = Math.Max(2, (int)(6 * theme.RadiusScale));

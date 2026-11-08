@@ -152,16 +152,20 @@ internal static class FilesDefaultHandler
                         return;
                     if (File.Exists(ExePath))
                     {
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(ExePath) { UseShellExecute = false
-                            })?.Dispose();
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(ExePath)
+                        {
+                            UseShellExecute = false
+                        })?.Dispose();
                         return;
                     }
                 }
                 catch (Exception ex) { Store.Log("FilesDefaultHandler open: " + ex.Message); }
                 try
                 {
-                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe") { UseShellExecute = true
-                        })?.Dispose();
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe")
+                    {
+                        UseShellExecute = true
+                    })?.Dispose();
                 }
                 catch (Exception ex) { Store.Log("FilesDefaultHandler explorer: " + ex.Message); }
             }
@@ -195,10 +199,19 @@ internal static class FilesDefaultHandler
     {
         string dir = FilesHandler.DataDir;
         Directory.CreateDirectory(dir);
-        watcher = new FileSystemWatcher(dir, FilesHandlerGuard.FlagFile) { NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
-            };
-        FileSystemEventHandler h = (_, _) => Task.Run(async () => { await Task.Delay(FlagDebounceMs); try { Check(); }
-            catch (Exception ex) { Store.Log("FilesDefaultHandler: " + ex.Message); } });
+        watcher = new FileSystemWatcher(dir, FilesHandlerGuard.FlagFile)
+        {
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
+        };
+        FileSystemEventHandler h = (_, _) => Task.Run(async () =>
+        {
+            await Task.Delay(FlagDebounceMs);
+            try
+            {
+                Check();
+            }
+            catch (Exception ex) { Store.Log("FilesDefaultHandler: " + ex.Message); }
+        });
         watcher.Created += h;
         watcher.Changed += h;
         watcher.EnableRaisingEvents = true;

@@ -63,8 +63,14 @@ internal sealed partial class CaptureOverlay : Window
         var eraser = Tool("\uE75C", "Gomme", () => { });
         pen.Click += (_, _) =>
             Mode(InkCanvasEditingMode.Ink,
-                 new DrawingAttributes { Color = Color.FromRgb(255, 86, 86), Width = 3, Height = 3, FitToCurve = true,
-                     StylusTip = StylusTip.Ellipse },
+                 new DrawingAttributes
+                 {
+                     Color = Color.FromRgb(255, 86, 86),
+                     Width = 3,
+                     Height = 3,
+                     FitToCurve = true,
+                     StylusTip = StylusTip.Ellipse
+                 },
                  pen);
         highlight.Click += (_, _) =>
             Mode(InkCanvasEditingMode.Ink,
@@ -195,9 +201,11 @@ internal static class OcrService
                 return;
             }
             SystemActions.Copy(owner, text, "Texte");
-            var window = new TextResultWindow(owner, "Texte lu par Windows", text) { Owner = owner.Anchor,
+            var window = new TextResultWindow(owner, "Texte lu par Windows", text)
+            {
+                Owner = owner.Anchor,
                 ShowInTaskbar = owner.PreviewMode
-                };
+            };
             window.ShowDialog();
         }
         catch (Exception ex) { owner.Message("La lecture du texte a échoué.\n" + ex.Message); }

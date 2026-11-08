@@ -145,9 +145,9 @@ internal sealed class GlassLevel : RangeBase
     {
         GlassLevel Level => (GlassLevel)Owner; internal LevelPeer(GlassLevel owner) : base(owner) { }
         protected override string GetClassNameCore() => "GlassLevel";
-            protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Slider;
-            public override object? GetPattern(PatternInterface pattern) => pattern == PatternInterface.RangeValue ? this
-            : base.GetPattern(pattern);
+        protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Slider;
+        public override object? GetPattern(PatternInterface pattern) => pattern == PatternInterface.RangeValue ? this
+        : base.GetPattern(pattern);
         public bool IsReadOnly => !Level.IsEnabled; public double LargeChange => Level.LargeChange; public double SmallChange
             => Level.SmallChange; public double Maximum => Level.Maximum; public double Minimum => Level.Minimum; public double Value
             => Level.Value;

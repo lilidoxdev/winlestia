@@ -104,9 +104,17 @@ public sealed partial class MainWindow
         row.Children.Add(deepToggle);
         row.Children.Add(filterClose);
         // Toujours visible, à droite de la zone d'adresse ; même fond surfaceContainer, bordure d'accent quand il a le focus.
-        filterHost = new Border { Height = 36, Width = 250, CornerRadius = new CornerRadius(18),
+        filterHost = new Border
+        {
+            Height = 36,
+            Width = 250,
+            CornerRadius = new CornerRadius(18),
             Background = UI.T(M3Role.SurfaceContainer),
-            BorderBrush = UI.Hairline, BorderThickness = new Thickness(1), Child = row, SnapsToDevicePixels = true };
+            BorderBrush = UI.Hairline,
+            BorderThickness = new Thickness(1),
+            Child = row,
+            SnapsToDevicePixels = true
+        };
         UpdateFilterChrome();
         return filterHost;
     }

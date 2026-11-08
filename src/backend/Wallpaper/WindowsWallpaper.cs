@@ -16,7 +16,7 @@ internal sealed class WindowsWallpaper : IDisposable
     // par révision.
     readonly System.Threading.Timer debounce; readonly object gate = new(); volatile bool disposed, forced; int revision;
     readonly List<FileSystemWatcher> watchers = new(); readonly ManualResetEvent stop = new(false);
-        readonly System.Collections.Concurrent.ConcurrentDictionary<IntPtr, byte> hostChildren = new();
+    readonly System.Collections.Concurrent.ConcurrentDictionary<IntPtr, byte> hostChildren = new();
     Thread? registryThread, hookThread; uint hookThreadId; WinEventProc? hookProc;
     internal volatile WallpaperMonitor[] Monitors = Array.Empty<WallpaperMonitor>();
     internal int Revision => Volatile.Read(ref revision);
@@ -24,8 +24,17 @@ internal sealed class WindowsWallpaper : IDisposable
     {
         // Revision n'avance que si les moniteurs diffèrent vraiment, ou si un changement d'hôte animé / de config de l'application de
         // fond a été vu : un UserPreferenceChanged parasite (par exemple après explorerPalette) ne doit pas relancer une capture.
-        debounce = new System.Threading.Timer(_ => { bool changed = Read(); if (forced) { forced = false; changed = true;
-            } if (changed) Interlocked.Increment(ref revision); }, null, Timeout.Infinite, Timeout.Infinite);
+        debounce = new System.Threading.Timer(_ =>
+        {
+            bool changed = Read();
+            if (forced)
+            {
+                forced = false;
+                changed = true;
+            }
+            if (changed)
+                Interlocked.Increment(ref revision);
+        }, null, Timeout.Infinite, Timeout.Infinite);
         Notify(0);
         try
         {
@@ -128,8 +137,10 @@ internal sealed class WindowsWallpaper : IDisposable
     {
         if (!Directory.Exists(folder))
             return;
-        var w = new FileSystemWatcher(folder, name) { NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size
-            };
+        var w = new FileSystemWatcher(folder, name)
+        {
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size
+        };
         FileSystemEventHandler on = (_, _) => Notify(500, true);
         w.Changed += on;
         w.Created += on;
@@ -370,19 +381,23 @@ internal static class WallpaperNative
     {
         public IntPtr hwnd; public uint message; public IntPtr wParam, lParam; public uint time; public int x, y;
     }
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] internal static extern int RegOpenKeyExW(IntPtr key, string sub, int options,
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int RegOpenKeyExW(IntPtr key, string sub, int options,
         int sam, out IntPtr result);
-    [DllImport("advapi32.dll")] internal static extern int RegNotifyChangeKeyValue(IntPtr key, bool subtree, int filter, IntPtr evt,
+    [DllImport("advapi32.dll")]
+    internal static extern int RegNotifyChangeKeyValue(IntPtr key, bool subtree, int filter, IntPtr evt,
         bool async);
     [DllImport("advapi32.dll")] internal static extern int RegCloseKey(IntPtr key);
-    [DllImport("user32.dll")] internal static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
+    [DllImport("user32.dll")]
+    internal static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
         uint tid, uint flags);
     [DllImport("user32.dll")] internal static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] internal static extern int GetMessage(out Msg msg, IntPtr hwnd, uint min, uint max);
     [DllImport("user32.dll")] internal static extern bool PostThreadMessage(uint thread, uint msg, IntPtr w, IntPtr l);
     [DllImport("kernel32.dll")] internal static extern uint GetCurrentThreadId();
     [DllImport("user32.dll")] internal static extern IntPtr GetParent(IntPtr hwnd);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] internal static extern int GetClassName(IntPtr hwnd, System.Text.StringBuilder sb,
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    internal static extern int GetClassName(IntPtr hwnd, System.Text.StringBuilder sb,
         int max);
     [DllImport("user32.dll")] internal static extern bool EnumChildWindows(IntPtr parent, EnumProc proc, IntPtr l);
     [DllImport("user32.dll")] internal static extern bool EnumWindows(EnumProc proc, IntPtr l);
@@ -394,7 +409,8 @@ internal static class WallpaperNative
 internal interface IDesktopWallpaper
 {
     [PreserveSig] int SetWallpaper([MarshalAs(UnmanagedType.LPWStr)] string monitor, [MarshalAs(UnmanagedType.LPWStr)] string wallpaper);
-    [PreserveSig] int GetWallpaper([MarshalAs(UnmanagedType.LPWStr)] string monitor,
+    [PreserveSig]
+    int GetWallpaper([MarshalAs(UnmanagedType.LPWStr)] string monitor,
         [MarshalAs(UnmanagedType.LPWStr)] out string wallpaper);
     [PreserveSig] int GetMonitorDevicePathAt(uint index, [MarshalAs(UnmanagedType.LPWStr)] out string monitor);
     [PreserveSig] int GetMonitorDevicePathCount(out uint count);

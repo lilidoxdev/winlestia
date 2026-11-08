@@ -62,8 +62,11 @@ static class Program
                 {
                     line = reader.ReadLineAsync(limit.Token).AsTask().GetAwaiter().GetResult();
                 }
-                catch (OperationCanceledException) { Console.Error.WriteLine("winlestia: the shell did not answer within 8 seconds.");
-                    return 3; }
+                catch (OperationCanceledException)
+                {
+                    Console.Error.WriteLine("winlestia: the shell did not answer within 8 seconds.");
+                    return 3;
+                }
             }
             if (line == null)
             {

@@ -58,8 +58,20 @@ internal static class DwmThumb
     }
     internal static void Place(IntPtr thumb, Rectangle destination)
     {
-        var props = new Props { Flags = 1 | 4 | 8 | 0x10, Dest = new Native.Rect { Left = destination.Left, Top = destination.Top,
-            Right = destination.Right, Bottom = destination.Bottom }, Opacity = 255, Visible = 1, ClientOnly = 0 };
+        var props = new Props
+        {
+            Flags = 1 | 4 | 8 | 0x10,
+            Dest = new Native.Rect
+            {
+                Left = destination.Left,
+                Top = destination.Top,
+                Right = destination.Right,
+                Bottom = destination.Bottom
+            },
+            Opacity = 255,
+            Visible = 1,
+            ClientOnly = 0
+        };
         try
         {
             DwmUpdateThumbnailProperties(thumb, ref props);
@@ -84,9 +96,10 @@ internal sealed partial class DockPreviewForm : Form
     sealed class Tile
     {
         public long Hwnd; public string Title = ""; public Bitmap? Icon; public bool Pending; public IntPtr Thumb; public Size Source;
-            public Rectangle Bounds, Area;
+        public Rectangle Bounds, Area;
     }
-    [DllImport("user32.dll")] static extern IntPtr SendMessageTimeoutW(IntPtr window, uint message, IntPtr wp, IntPtr lp, uint flags,
+    [DllImport("user32.dll")]
+    static extern IntPtr SendMessageTimeoutW(IntPtr window, uint message, IntPtr wp, IntPtr lp, uint flags,
         uint timeout, out IntPtr result);
     [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW")] static extern IntPtr GetClassLongPtr(IntPtr window, int index);
     // Thread UI uniquement ; les bitmaps appartiennent à cette classe (les HICON empruntés sont copiés, jamais détruits) et sont
@@ -108,7 +121,7 @@ internal sealed partial class DockPreviewForm : Form
         }
     }
     readonly List<Tile> tiles = new(); readonly bool live; readonly int maxWidth; readonly Font font, small; int hover = -1;
-        Rectangle overflowArea;
+    Rectangle overflowArea;
     internal int OverflowCount
     {
         get; private set;

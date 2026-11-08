@@ -25,10 +25,19 @@ internal static class ControlPerformanceProbe
         TimeSpan last = TimeSpan.Zero;
         double until = 0, cpu = 0;
         int step = -1;
-        EventHandler render = (_, e) => { if (!clock.IsRunning || clock.Elapsed.TotalMilliseconds > until
-            || e is not RenderingEventArgs frame) return; if (last != TimeSpan.Zero) {
-            double delta = (frame.RenderingTime - last).TotalMilliseconds; if (delta > 0 && delta < 150) frames.Add(delta);
-            } last = frame.RenderingTime; };
+        EventHandler render = (_, e) =>
+        {
+            if (!clock.IsRunning || clock.Elapsed.TotalMilliseconds > until
+            || e is not RenderingEventArgs frame)
+                return;
+            if (last != TimeSpan.Zero)
+            {
+                double delta = (frame.RenderingTime - last).TotalMilliseconds;
+                if (delta > 0 && delta < 150)
+                    frames.Add(delta);
+            }
+            last = frame.RenderingTime;
+        };
         CompositionTarget.Rendering += render;
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         timer.Tick += (_, _) =>

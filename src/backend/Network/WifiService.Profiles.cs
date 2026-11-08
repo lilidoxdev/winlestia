@@ -250,8 +250,15 @@ internal sealed partial class WifiHost : IDisposable
             int connectCode;
             try
             {
-                var parameters = new WlanNative.ConnectionParameters { Mode = 0, Profile = name, Ssid = IntPtr.Zero, Bssids = IntPtr.Zero,
-                    BssType = 1, Flags = 0 };
+                var parameters = new WlanNative.ConnectionParameters
+                {
+                    Mode = 0,
+                    Profile = name,
+                    Ssid = IntPtr.Zero,
+                    Bssids = IntPtr.Zero,
+                    BssType = 1,
+                    Flags = 0
+                };
                 connectCode = WlanNative.WlanConnect(handle, ref iface, ref parameters, IntPtr.Zero);
             }
             finally { Marshal.FreeHGlobal(name); }

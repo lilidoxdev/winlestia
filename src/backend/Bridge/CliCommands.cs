@@ -9,7 +9,7 @@ namespace PanneauxGlass;
 internal enum CliKind
 {
     Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, WallpaperList, Palette, FindWindows, FindFiles,
-        Brightness, BrightnessSet, Visualizer, Quiet, Wifi
+    Brightness, BrightnessSet, Visualizer, Quiet, Wifi
 }
 
 internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0, int Value = 0);

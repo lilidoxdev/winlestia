@@ -20,16 +20,17 @@ internal sealed class OutsideDismiss : IDisposable
     [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr message, IntPtr data);
     [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(Native.Point point);
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint first, uint last, IntPtr module, ForegroundCallback callback,
+    [DllImport("user32.dll")]
+    static extern IntPtr SetWinEventHook(uint first, uint last, IntPtr module, ForegroundCallback callback,
         uint process, uint thread, uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("kernel32.dll")] static extern IntPtr GetModuleHandleW(string? name);
     [DllImport("kernel32.dll")] static extern uint GetCurrentProcessId();
     [DllImport("kernel32.dll")] static extern uint GetTickCount();
     readonly Func<IntPtr, bool>? additionalOwnership; readonly MouseCallback mouseCallback; readonly ForegroundCallback foregroundCallback;
-        readonly Action close; readonly Func<bool> enabled; readonly Dispatcher dispatcher;
-            readonly uint processId = GetCurrentProcessId();
-        IntPtr mouseHook, foregroundHook, openingForeground; bool disposed, active; uint generation, armedAt; int pendingReasons;
+    readonly Action close; readonly Func<bool> enabled; readonly Dispatcher dispatcher;
+    readonly uint processId = GetCurrentProcessId();
+    IntPtr mouseHook, foregroundHook, openingForeground; bool disposed, active; uint generation, armedAt; int pendingReasons;
     internal OutsideDismiss(Action dismiss, Func<bool> canDismiss, Func<IntPtr, bool>? owns = null)
     {
         additionalOwnership = owns;
@@ -37,11 +38,32 @@ internal sealed class OutsideDismiss : IDisposable
         enabled = canDismiss;
         dispatcher = Dispatcher.CurrentDispatcher;
         mouseCallback = Mouse;
-        clicks.Tick += (_, _) => { bool down = (GetAsyncKeyState(1) & 0x8000) != 0 || (GetAsyncKeyState(2) & 0x8000) != 0; if (down
-            && !wasDown && enabled()) { Native.GetCursorPos(out var p); if (!Own(WindowFromPoint(p))) Queue(false); } wasDown = down; };
-        foregroundCallback = (_, _, hwnd, _, _, _, time) => { DesktopRecents.Observe(hwnd); if (!active
-            || unchecked((int)(time - armedAt)) < 0) return; if (Own(hwnd)) { openingForeground = IntPtr.Zero; return;
-            } if (hwnd != openingForeground) Queue(true); };
+        clicks.Tick += (_, _) =>
+        {
+            bool down = (GetAsyncKeyState(1) & 0x8000) != 0 || (GetAsyncKeyState(2) & 0x8000) != 0;
+            if (down
+            && !wasDown && enabled())
+            {
+                Native.GetCursorPos(out var p);
+                if (!Own(WindowFromPoint(p)))
+                    Queue(false);
+            }
+            wasDown = down;
+        };
+        foregroundCallback = (_, _, hwnd, _, _, _, time) =>
+        {
+            DesktopRecents.Observe(hwnd);
+            if (!active
+            || unchecked((int)(time - armedAt)) < 0)
+                return;
+            if (Own(hwnd))
+            {
+                openingForeground = IntPtr.Zero;
+                return;
+            }
+            if (hwnd != openingForeground)
+                Queue(true);
+        };
         foregroundHook = SetWinEventHook(3, 3, IntPtr.Zero, foregroundCallback, 0, 0, 0);
     }
     readonly DispatcherTimer clicks = new() { Interval = TimeSpan.FromMilliseconds(35) }; bool wasDown;

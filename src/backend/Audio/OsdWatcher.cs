@@ -77,8 +77,14 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
     {
         int volume = (int)Math.Round(Math.Clamp(data.MasterVolume, 0, 1) * 100);
         bool muted = data.Muted;
-        _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || (volume == lastMic && muted == lastMicMuted)) return; lastMic = volume;
-            lastMicMuted = muted; extra?.Invoke("osd:mic:" + volume + ":" + (muted ? 1 : 0)); }));
+        _ = dispatcher.BeginInvoke((Action)(() =>
+        {
+            if (disposed || (volume == lastMic && muted == lastMicMuted))
+                return;
+            lastMic = volume;
+            lastMicMuted = muted;
+            extra?.Invoke("osd:mic:" + volume + ":" + (muted ? 1 : 0));
+        }));
     }
     // Luminosité : événement WMI uniquement (écrans internes) ; les écrans externes DDC seuls ne déclenchent rien et rien n'est
     // affiché.
@@ -88,10 +94,24 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
         {
             var watcher = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM WmiMonitorBrightnessEvent"));
             watcher.Scope = new ManagementScope(@"root\wmi");
-            watcher.EventArrived += (_, e) => { try { int value = Math.Clamp(Convert.ToInt32(e.NewEvent["Brightness"]), 0, 100);
-                _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || value == lastBrightness) return; lastBrightness = value;
-                extra?.Invoke("osd:brightness:" + value); })); } catch (Exception) {
-                /* Événement WMI fréquent : une valeur illisible est ignorée. */ } };
+            watcher.EventArrived += (_, e) =>
+            {
+                try
+                {
+                    int value = Math.Clamp(Convert.ToInt32(e.NewEvent["Brightness"]), 0, 100);
+                    _ = dispatcher.BeginInvoke((Action)(() =>
+                    {
+                        if (disposed || value == lastBrightness)
+                            return;
+                        lastBrightness = value;
+                        extra?.Invoke("osd:brightness:" + value);
+                    }));
+                }
+                catch (Exception)
+                {
+                    /* Événement WMI fréquent : une valeur illisible est ignorée. */
+                }
+            };
             watcher.Start();
             brightnessWatcher = watcher;
         }
@@ -110,8 +130,14 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
     {
         int volume = (int)Math.Round(Math.Clamp(data.MasterVolume, 0, 1) * 100);
         bool muted = data.Muted;
-        _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || (volume == lastVolume && muted == lastMuted)) return;
-            lastVolume = volume; lastMuted = muted; changed(volume, muted); }));
+        _ = dispatcher.BeginInvoke((Action)(() =>
+        {
+            if (disposed || (volume == lastVolume && muted == lastMuted))
+                return;
+            lastVolume = volume;
+            lastMuted = muted;
+            changed(volume, muted);
+        }));
     }
     public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId)
     {

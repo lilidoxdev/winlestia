@@ -29,8 +29,18 @@ internal static class PerformanceProbe
         double cpu = 0;
         int step = 0;
         bool recording = false;
-        EventHandler rendering = (_, e) => { if (!recording || e is not RenderingEventArgs r) return; if (last != TimeSpan.Zero) {
-            double ms = (r.RenderingTime - last).TotalMilliseconds; if (ms > 0 && ms < 150) frames.Add(ms); } last = r.RenderingTime; };
+        EventHandler rendering = (_, e) =>
+        {
+            if (!recording || e is not RenderingEventArgs r)
+                return;
+            if (last != TimeSpan.Zero)
+            {
+                double ms = (r.RenderingTime - last).TotalMilliseconds;
+                if (ms > 0 && ms < 150)
+                    frames.Add(ms);
+            }
+            last = r.RenderingTime;
+        };
         CompositionTarget.Rendering += rendering;
         timer.Tick += (_, _) =>
         {

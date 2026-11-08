@@ -17,9 +17,9 @@ internal sealed partial class BoardWindow : GlassWindow
     readonly Coordinator owner; internal BoardState Model; readonly TextBlock heading, caption, pageText; readonly Button selector,
         previous, next, star;
     readonly StackPanel filters = new() { Orientation = Orientation.Horizontal }; readonly Grid itemsHost = new();
-        readonly Border emblem = new();
+    readonly Border emblem = new();
     List<Entry> filtered = new(); int page, capacity = 24, columns = 6, rows = 3; string quick = "", renderKey = "", quickKey = "~";
-        bool rendering; Point dragStart; DateTime blockClick;
+    bool rendering; Point dragStart; DateTime blockClick;
     internal BoardWindow(Coordinator coordinator, BoardState model) : base("Winlestia — " + model.Title)
     {
         owner = coordinator;
@@ -69,8 +69,13 @@ internal sealed partial class BoardWindow : GlassWindow
         Grid.SetColumn(titleHit, 1);
         header.Children.Add(titleHit);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Top };
-        star = UI.IconButton("\uE734", "Favoris · " + model.Title, () => { Model.FavoritesOnly = !Model.FavoritesOnly; page = 0;
-            Store.Save(); Refresh(); });
+        star = UI.IconButton("\uE734", "Favoris · " + model.Title, () =>
+        {
+            Model.FavoritesOnly = !Model.FavoritesOnly;
+            page = 0;
+            Store.Save();
+            Refresh();
+        });
         star.Margin = new Thickness(0, 0, 7, 0);
         actions.Children.Add(star);
         var add = UI.IconButton("\uE710", "Ajouter un accès à " + model.Title, () => owner.AddAccess(model.Id));
@@ -125,11 +130,22 @@ internal sealed partial class BoardWindow : GlassWindow
         new PanelInteraction(this, owner, titleHit);
         PreviewMouseWheel += (_, e) => { if (e.Delta != 0) { Turn(e.Delta < 0 ? 1 : -1); e.Handled = true; } };
         AllowDrop = true;
-        DragOver += (_, e) => { e.Effects = e.Data.GetDataPresent("PanneauxEntry") ? DragDropEffects.Move
-            : e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Link : DragDropEffects.None; e.Handled = true; };
+        DragOver += (_, e) =>
+        {
+            e.Effects = e.Data.GetDataPresent("PanneauxEntry") ? DragDropEffects.Move
+            : e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Link : DragDropEffects.None;
+            e.Handled = true;
+        };
         Drop += (_, e) => HandleDrop(e, null);
-        KeyDown += (_, e) => { if (e.Key == Key.Escape) owner.Collapse(); if (e.Key == Key.PageDown) Turn(1);
-            if (e.Key == Key.PageUp) Turn(-1); };
+        KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+                owner.Collapse();
+            if (e.Key == Key.PageDown)
+                Turn(1);
+            if (e.Key == Key.PageUp)
+                Turn(-1);
+        };
         IsVisibleChanged += (_, _) => { if (!IsVisible) { owner.Icons.CancelScope(Model.Id); renderKey = ""; } };
     }
     bool MatchQuick(Entry entry)

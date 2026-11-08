@@ -80,12 +80,18 @@ public static class Store
         if (!File.Exists(path))
             return new T();
         string text;
-        try { text = File.ReadAllText(path, Encoding.UTF8); }
+        try
+        {
+            text = File.ReadAllText(path, Encoding.UTF8);
+        }
         catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
         {
             // Transitoire (verrou, antivirus...) : le fichier n'est pas connu comme corrompu, on ne touche jamais au disque ici.
             System.Threading.Thread.Sleep(50);
-            try { text = File.ReadAllText(path, Encoding.UTF8); }
+            try
+            {
+                text = File.ReadAllText(path, Encoding.UTF8);
+            }
             catch (Exception ex2) when (ex2 is IOException || ex2 is UnauthorizedAccessException)
             {
                 Log(Path.GetFileName(path) + ": lecture impossible: " + ex2.Message);
@@ -93,7 +99,10 @@ public static class Store
             }
         }
         catch (Exception ex) { return Recover<T>(path, ex); }
-        try { return JsonSerializer.Deserialize<T>(text, Json) ?? new T(); }
+        try
+        {
+            return JsonSerializer.Deserialize<T>(text, Json) ?? new T();
+        }
         catch (Exception ex) { return Recover<T>(path, ex); }
     }
     static bool InDataDir(string path)
@@ -116,7 +125,10 @@ public static class Store
                 {
                     Log(Path.GetFileName(path) + ": restauré depuis .bak");
                     // La bonne copie redevient le principal : sinon le prochain Save écraserait le .bak sain par le principal corrompu.
-                    try { File.Copy(bak, path, true); }
+                    try
+                    {
+                        File.Copy(bak, path, true);
+                    }
                     catch (Exception ex2) { Log(Path.GetFileName(path) + ": restauration du principal impossible: " + ex2.Message); }
                     return recovered;
                 }
@@ -204,8 +216,17 @@ public static class Store
                 }
             }
         }
-        catch (Exception ex) { try { Log("Migration: " + ex.Message); } catch (
-            Exception) { /* Le journal ne peut pas se journaliser lui-même. */ } }
+        catch (Exception ex)
+        {
+            try
+            {
+                Log("Migration: " + ex.Message);
+            }
+            catch (
+            Exception)
+            { /* Le journal ne peut pas se journaliser lui-même. */
+            }
+        }
     }
     static void CopyTree(string from, string to)
     {

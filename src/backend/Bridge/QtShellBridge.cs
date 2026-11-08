@@ -175,8 +175,12 @@ internal sealed partial class QtShellBridge : IDisposable
 
         dictation = new DictationService(dispatcher, Send);
         osdWatcher = new OsdWatcher(dispatcher,
-                                    (volume, muted) => { if (Store.State.Osd && !active && !Quiet) Send("osd:volume:" + volume + ":" + (
-                                        muted ? 1 : 0)); },
+                                    (volume, muted) =>
+                                    {
+                                        if (Store.State.Osd && !active && !Quiet)
+                                            Send("osd:volume:" + volume + ":" + (
+                                        muted ? 1 : 0));
+                                    },
                                     line => { if (Store.State.Osd && !active && !Quiet) Send(line); });
         dictation.KeyCaptured = vk =>
         {
@@ -210,8 +214,12 @@ internal sealed partial class QtShellBridge : IDisposable
         AttachFrontendJob(frontend);
         Store.Log("Frontend lancé · t+" + (int)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds + " ms");
         // Sans console, une trace Python disparaîtrait : on la garde dans glass.log.
-        frontend.ErrorDataReceived += (_, line) => { if (!disposed && !string.IsNullOrWhiteSpace(line.Data)) Store.Log("Qt · "
-            + line.Data); };
+        frontend.ErrorDataReceived += (_, line) =>
+        {
+            if (!disposed && !string.IsNullOrWhiteSpace(line.Data))
+                Store.Log("Qt · "
+            + line.Data);
+        };
         frontend.BeginErrorReadLine();
         frontend.EnableRaisingEvents = true;
         frontend.Exited += (_, _) => _ = dispatcher.BeginInvoke((Action)(() =>
@@ -239,8 +247,20 @@ internal sealed partial class QtShellBridge : IDisposable
         _ = social.Start();
         bookmarks = new BookmarksService(dispatcher, () => Send("bookmarks"));
         bookmarks.Start();
-        networkChanged = () => { if (!disposed) { try { wake.Set(); } catch (
-            ObjectDisposedException) { /* Signal déjà libéré à l'arrêt : plus personne à réveiller. */ } } };
+        networkChanged = () =>
+        {
+            if (!disposed)
+            {
+                try
+                {
+                    wake.Set();
+                }
+                catch (
+            ObjectDisposedException)
+                { /* Signal déjà libéré à l'arrêt : plus personne à réveiller. */
+                }
+            }
+        };
         NetworkKindWatcher.Changed += networkChanged;
         NetworkKindWatcher.Start();
         VirtualDesktops.Changed += networkChanged;

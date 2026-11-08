@@ -24,12 +24,41 @@ internal static partial class Native
     {
         // Nom historique conservé pour compatibilité (valeur "Panneaux" de la clé Run des installations existantes).
         System.Threading.Volatile.Write(ref autostartDesired, value ? 1 : 0);
-        System.Threading.Tasks.Task.Run(() => { lock (autostartGate) { try { if (value) { if (AutostartTask.Create()) DropRun(
-            ); else { Store.Log(
-            "Démarrage: tâche indisponible, repli sur la clé Run."); using var key = Registry.CurrentUser.CreateSubKey(
-            @"Software\Microsoft\Windows\CurrentVersion\Run"); key.SetValue("Panneaux",
-            "\"" + Environment.ProcessPath + "\""); } } else { AutostartTask.Delete(); DropRun(); } } catch (Exception ex) { Store.Log(
-            "Démarrage: " + ex.Message); } finally { System.Threading.Volatile.Write(ref autostartDesired, -1); } } });
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            lock (autostartGate)
+            {
+                try
+                {
+                    if (value)
+                    {
+                        if (AutostartTask.Create())
+                            DropRun(
+            );
+                        else
+                        {
+                            Store.Log(
+            "Démarrage: tâche indisponible, repli sur la clé Run.");
+                            using var key = Registry.CurrentUser.CreateSubKey(
+            @"Software\Microsoft\Windows\CurrentVersion\Run");
+                            key.SetValue("Panneaux",
+            "\"" + Environment.ProcessPath + "\"");
+                        }
+                    }
+                    else
+                    {
+                        AutostartTask.Delete();
+                        DropRun();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Store.Log(
+            "Démarrage: " + ex.Message);
+                }
+                finally { System.Threading.Volatile.Write(ref autostartDesired, -1); }
+            }
+        });
     }
     internal static bool DesktopHidden()
     {
@@ -42,7 +71,11 @@ internal static partial class Native
         if (!File.Exists(helper))
             throw new FileNotFoundException("Le composant natif du Bureau est absent.");
         using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(helper, hidden ? "--hide --silent"
-            : "--show-only --silent") { UseShellExecute = false, CreateNoWindow = true });
+            : "--show-only --silent")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true
+        });
         if (process == null || !process.WaitForExit(3000) || process.ExitCode != 0)
             throw new InvalidOperationException("Le Bureau Windows n’a pas appliqué le réglage.");
         if (DesktopHidden() != hidden || !DesktopView.Enforce(hidden))
@@ -61,7 +94,8 @@ internal sealed class IconLoader : IIconSource, IDisposable
     {
         [PreserveSig] int GetImage(Size size, uint flags, out IntPtr bitmap);
     }
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)] static extern int SHCreateItemFromParsingName(string path,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
+    static extern int SHCreateItemFromParsingName(string path,
         IntPtr bind, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out IImageFactory factory);
     readonly BlockingCollection<(Entry entry, Action<ImageSource> callback)> jobs = new(); readonly ConcurrentDictionary<string,
         ImageSource> images = new();
@@ -136,8 +170,13 @@ internal sealed class IconLoader : IIconSource, IDisposable
                 pending.Remove(key);
             }
             var result = image;
-            System.Windows.Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (
-                !disposed) foreach (var listener in listeners) listener.Callback(result); }));
+            System.Windows.Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() =>
+            {
+                if (
+                !disposed)
+                    foreach (var listener in listeners)
+                        listener.Callback(result);
+            }));
         }
     }
     // Une tuile lettre ou dossier remplace une extraction échouée mais n'est jamais retenue comme icône : le chargement

@@ -85,8 +85,14 @@ public sealed partial class MainWindow
     }
 
     // Taille de cellule des vues en tuiles (Détails : seule la hauteur de ligne compte).
-    (double W, double H) Cell => view switch { ViewMode.Large => (132, 156), ViewMode.Medium => (104, 120), ViewMode.List => (240, 32), _
-        => (1, Styles.RowHeight) };
+    (double W, double H) Cell => view switch
+    {
+        ViewMode.Large => (132, 156),
+        ViewMode.Medium => (104, 120),
+        ViewMode.List => (240, 32),
+        _
+        => (1, Styles.RowHeight)
+    };
 
     // Ancien point d'entrée à deux états (le test de défilement des grandes icônes).
     internal void SetView(bool grid) => SetView(grid ? ViewMode.Large : ViewMode.Details);
@@ -131,8 +137,13 @@ public sealed partial class MainWindow
     // Quatre boutons visibles dans la ligne d'état (sans voler le focus : les raccourcis continuent de marcher après un clic).
     FrameworkElement ViewBar()
     {
-        var bar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, M3.Sp2, 0) };
+        var bar = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, M3.Sp2, 0)
+        };
         (ViewMode Mode, string Glyph, string Tip)[] defs = {
             (ViewMode.List, "☰", "Liste (Ctrl+Maj+5)"), (ViewMode.Details, "▤", "Détails (Ctrl+Maj+6)"),
             (ViewMode.Medium, "▦", "Icônes moyennes (Ctrl+Maj+3)"), (ViewMode.Large, "▣", "Grandes icônes (Ctrl+Maj+2)") };
@@ -168,8 +179,10 @@ public sealed partial class MainWindow
 
     static void Bind(ColumnDefinition column, string property) =>
         System.Windows.Data.BindingOperations.SetBinding(column, ColumnDefinition.WidthProperty,
-            new System.Windows.Data.Binding(property) {
-            Source = ColumnLayout.Instance });
+            new System.Windows.Data.Binding(property)
+            {
+                Source = ColumnLayout.Instance
+            });
 
     FrameworkElement Header()
     {
@@ -189,8 +202,14 @@ public sealed partial class MainWindow
         {
             var label = UI.Text(text, M3.FontSmall, UI.Label, true);
             label.TextTrimming = TextTrimming.CharacterEllipsis;
-            var row = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = right ? HorizontalAlignment.Right
-                : HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center, Margin = pad };
+            var row = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = right ? HorizontalAlignment.Right
+                : HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = pad
+            };
             row.Children.Add(label);
             if (column is { } c)
             {
@@ -201,14 +220,24 @@ public sealed partial class MainWindow
                 chevrons[(int)c] = chevron;
                 row.Children.Add(chevron);
             }
-            var cell = new Border { Child = row, Background = Brushes.Transparent, CornerRadius = new CornerRadius(8),
-                Cursor = column == null ? Cursors.Arrow : Cursors.Hand, ClipToBounds = true };
+            var cell = new Border
+            {
+                Child = row,
+                Background = Brushes.Transparent,
+                CornerRadius = new CornerRadius(8),
+                Cursor = column == null ? Cursors.Arrow : Cursors.Hand,
+                ClipToBounds = true
+            };
             if (column is { } sortBy)
             {
                 cell.MouseEnter += (_, _) => cell.Background = UI.Tint;
                 cell.MouseLeave += (_, _) => cell.Background = Brushes.Transparent;
-                cell.MouseLeftButtonUp += (_, _) => ApplySort(Active.Sort with { Column = sortBy, Ascending = Active.Sort.Column == sortBy
-                    ? !Active.Sort.Ascending : true });
+                cell.MouseLeftButtonUp += (_, _) => ApplySort(Active.Sort with
+                {
+                    Column = sortBy,
+                    Ascending = Active.Sort.Column == sortBy
+                    ? !Active.Sort.Ascending : true
+                });
             }
             Grid.SetColumn(cell, col);
             Grid.SetColumnSpan(cell, span);
@@ -217,10 +246,23 @@ public sealed partial class MainWindow
         }
         void Grip(int col, string column)
         {
-            var line = new Border { Width = 1, Margin = new Thickness(0, 6, 0, 6), Background = UI.Hairline,
-                HorizontalAlignment = HorizontalAlignment.Left, IsHitTestVisible = false };
-            var thumb = new Thumb { Width = 8, Background = Brushes.Transparent, Cursor = Cursors.SizeWE,
-                HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(-4, 0, 0, 0), Opacity = 0 };
+            var line = new Border
+            {
+                Width = 1,
+                Margin = new Thickness(0, 6, 0, 6),
+                Background = UI.Hairline,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                IsHitTestVisible = false
+            };
+            var thumb = new Thumb
+            {
+                Width = 8,
+                Background = Brushes.Transparent,
+                Cursor = Cursors.SizeWE,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(-4, 0, 0, 0),
+                Opacity = 0
+            };
             thumb.DragDelta += (_, e) => ColumnLayout.Instance.Resize(column, -e.HorizontalChange);
             thumb.MouseDoubleClick += (_, _) => { };
             Grid.SetColumn(line, col);

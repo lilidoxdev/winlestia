@@ -14,7 +14,8 @@ namespace WinlestiaFiles;
 
 internal static class PaletteLoader
 {
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool SystemParametersInfo(uint action, uint size,
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    static extern bool SystemParametersInfo(uint action, uint size,
         StringBuilder value, uint flags);
 
     // La palette par défaut est déjà à l'écran ; ceci la remplace sur place quand le choix enregistré diffère. Pas de scrutation :
@@ -33,10 +34,16 @@ internal static class PaletteLoader
             catch (Exception ex) { App.CrashLog(ex); return; }
             if (palette == null)
                 return;
-            ui.BeginInvoke(() => { long t = System.Diagnostics.Stopwatch.GetTimestamp(); Perf.Mark("palette apply begin");
-                Theme.Current.Set(palette); UI.RepaintAll(); applied(); Perf.Log($"palette UI-thread cost {Perf.Ms(t):F1} ms");
+            ui.BeginInvoke(() =>
+            {
+                long t = System.Diagnostics.Stopwatch.GetTimestamp();
+                Perf.Mark("palette apply begin");
+                Theme.Current.Set(palette);
+                UI.RepaintAll();
+                applied();
+                Perf.Log($"palette UI-thread cost {Perf.Ms(t):F1} ms");
                 Perf.Log($"palette applied ({(Store.State.AutoTheme ? "wallpaper" : Store.State.Theme)}) after {Perf.Ms(started):F0} ms");
-                });
+            });
         });
     }
 
@@ -129,10 +136,16 @@ internal static class PaletteLoader
             string file = ShellFile, dir = Path.GetDirectoryName(file)!;
             if (!Directory.Exists(dir))
                 return;
-            watcher = new FileSystemWatcher(dir, Path.GetFileName(file)) {
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime };
-            FileSystemEventHandler h = (_, _) => { debounce?.Dispose(); debounce = new Timer(_ => Refresh(ui, applied), null, 400,
-                Timeout.Infinite); };
+            watcher = new FileSystemWatcher(dir, Path.GetFileName(file))
+            {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime
+            };
+            FileSystemEventHandler h = (_, _) =>
+            {
+                debounce?.Dispose();
+                debounce = new Timer(_ => Refresh(ui, applied), null, 400,
+                Timeout.Infinite);
+            };
             watcher.Created += h;
             watcher.Changed += h;
             watcher.Renamed += (_, _) => h(null, null!);

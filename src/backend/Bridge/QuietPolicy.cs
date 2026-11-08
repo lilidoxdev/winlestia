@@ -21,8 +21,13 @@ internal static class QuietPolicy
     internal static bool Detected(bool enabled, int fullscreenMonitors) => enabled && fullscreenMonitors > 0;
 
     // A forced state wins over detection; auto follows detection.
-    internal static bool Effective(QuietForce forced, bool detected) => forced switch { QuietForce.On => true, QuietForce.Off => false, _
-        => detected };
+    internal static bool Effective(QuietForce forced, bool detected) => forced switch
+    {
+        QuietForce.On => true,
+        QuietForce.Off => false,
+        _
+        => detected
+    };
 
     internal static string Label(QuietForce forced) => forced switch { QuietForce.On => "on", QuietForce.Off => "off", _ => "auto" };
 

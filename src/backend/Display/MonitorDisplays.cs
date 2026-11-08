@@ -18,7 +18,8 @@ internal static partial class MonitorBrightness
     struct MonitorInfoEx
     {
         public uint Size; public int L1, T1, R1, B1, L2, T2, R2, B2; public uint Flags; [MarshalAs(UnmanagedType.ByValTStr,
-            SizeConst = 32)] public string Device;
+            SizeConst = 32)]
+        public string Device;
     }
     [StructLayout(LayoutKind.Sequential)]
     struct ConfigHeader
@@ -34,13 +35,15 @@ internal static partial class MonitorBrightness
     struct TargetName
     {
         public ConfigHeader Header; public uint Flags, Technology; public ushort Manufacturer, Product; public uint Connector;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string Name; [MarshalAs(UnmanagedType.ByValTStr,
-            SizeConst = 128)] public string Path;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string Name; [MarshalAs(UnmanagedType.ByValTStr,
+        SizeConst = 128)]
+        public string Path;
     }
     [DllImport("user32.dll")] static extern bool EnumDisplayMonitors(IntPtr dc, IntPtr clip, EnumProc proc, IntPtr data);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfoEx info);
     [DllImport("user32.dll")] static extern int GetDisplayConfigBufferSizes(uint flags, out uint paths, out uint modes);
-    [DllImport("user32.dll")] static extern int QueryDisplayConfig(uint flags, ref uint paths, byte[] pathInfo, ref uint modes,
+    [DllImport("user32.dll")]
+    static extern int QueryDisplayConfig(uint flags, ref uint paths, byte[] pathInfo, ref uint modes,
         byte[] modeInfo, IntPtr topology);
     [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")] static extern int GetSourceName(ref SourceName info);
     [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")] static extern int GetTargetName(ref TargetName info);
@@ -57,9 +60,18 @@ internal static partial class MonitorBrightness
     static List<(int id, IntPtr monitor)> Screens()
     {
         var found = new List<(int, IntPtr)>();
-        EnumProc proc = (monitor, _, _, _) => { var info = new MonitorInfoEx { Size = (uint)Marshal.SizeOf<MonitorInfoEx>(), Device = "" };
-            if (GetMonitorInfo(monitor, ref info)) { int id = BrightnessPolicy.IdFromDevice(info.Device); if (id > 0 && found.All(f
-            => f.Item1 != id)) found.Add((id, monitor)); } return true; };
+        EnumProc proc = (monitor, _, _, _) =>
+        {
+            var info = new MonitorInfoEx { Size = (uint)Marshal.SizeOf<MonitorInfoEx>(), Device = "" };
+            if (GetMonitorInfo(monitor, ref info))
+            {
+                int id = BrightnessPolicy.IdFromDevice(info.Device);
+                if (id > 0 && found.All(f
+            => f.Item1 != id))
+                    found.Add((id, monitor));
+            }
+            return true;
+        };
         try
         {
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, proc, IntPtr.Zero);
@@ -87,12 +99,31 @@ internal static partial class MonitorBrightness
             for (int i = 0; i < np; i++)
             {
                 int o = i * 72;
-                var source = new SourceName { Header = new ConfigHeader { Type = 1, Size = (uint)Marshal.SizeOf<SourceName>(),
-                    LuidLow = BitConverter.ToUInt32(paths, o), LuidHigh = BitConverter.ToInt32(paths, o + 4),
-                    Id = BitConverter.ToUInt32(paths, o + 8) }, Device = "" };
-                var target = new TargetName { Header = new ConfigHeader { Type = 2, Size = (uint)Marshal.SizeOf<TargetName>(),
-                    LuidLow = BitConverter.ToUInt32(paths, o + 20), LuidHigh = BitConverter.ToInt32(paths, o + 24),
-                    Id = BitConverter.ToUInt32(paths, o + 28) }, Name = "", Path = "" };
+                var source = new SourceName
+                {
+                    Header = new ConfigHeader
+                    {
+                        Type = 1,
+                        Size = (uint)Marshal.SizeOf<SourceName>(),
+                        LuidLow = BitConverter.ToUInt32(paths, o),
+                        LuidHigh = BitConverter.ToInt32(paths, o + 4),
+                        Id = BitConverter.ToUInt32(paths, o + 8)
+                    },
+                    Device = ""
+                };
+                var target = new TargetName
+                {
+                    Header = new ConfigHeader
+                    {
+                        Type = 2,
+                        Size = (uint)Marshal.SizeOf<TargetName>(),
+                        LuidLow = BitConverter.ToUInt32(paths, o + 20),
+                        LuidHigh = BitConverter.ToInt32(paths, o + 24),
+                        Id = BitConverter.ToUInt32(paths, o + 28)
+                    },
+                    Name = "",
+                    Path = ""
+                };
                 if (GetSourceName(ref source) != 0 || GetTargetName(ref target) != 0)
                     continue;
                 int id = BrightnessPolicy.IdFromDevice(source.Device);

@@ -111,8 +111,11 @@ internal static partial class BookmarksCore
             if (root is JsonObject obj)
                 obj.Remove("checksum");
             string temp = file + ".winlestia.tmp";
-            File.WriteAllText(temp, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }), new UTF8Encoding(false));
+            File.WriteAllText(temp, root.ToJsonString(new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            }), new UTF8Encoding(false));
             try
             {
                 File.Replace(temp, file, null);

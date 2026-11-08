@@ -11,7 +11,7 @@ namespace PanneauxGlass;
 internal sealed class AppCatalogueWatcher : IDisposable
 {
     readonly Dispatcher dispatcher; readonly Func<List<Entry>, int> add; readonly Func<List<string>, int> remove; readonly Action refresh;
-        readonly Action? tick; System.Threading.Timer? poll; readonly RefreshThrottle throttle = new();
+    readonly Action? tick; System.Threading.Timer? poll; readonly RefreshThrottle throttle = new();
     readonly List<FileSystemWatcher> watchers = new(); readonly object gate = new(); readonly BurstDebounce burst = new();
     readonly Dictionary<string, int> paths = new(StringComparer.OrdinalIgnoreCase);
     System.Threading.Timer? timer, refreshTimer; bool disposed, wantRefresh;
@@ -42,9 +42,12 @@ internal sealed class AppCatalogueWatcher : IDisposable
                     Store.Log("Veille du menu Démarrer : dossier absent (" + folder + ").");
                     continue;
                 }
-                var watcher = new FileSystemWatcher(root) { IncludeSubdirectories = true,
+                var watcher = new FileSystemWatcher(root)
+                {
+                    IncludeSubdirectories = true,
                     NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite,
-                    InternalBufferSize = 65536 };
+                    InternalBufferSize = 65536
+                };
                 watcher.Created += (_, e) => Event(e.FullPath, true, false);
                 watcher.Changed += (_, e) => Event(e.FullPath, true, true);
                 watcher.Deleted += (_, e) => Event(e.FullPath, false, false);
@@ -98,8 +101,20 @@ internal sealed class AppCatalogueWatcher : IDisposable
         if (!present)
         {
             // La suppression est immédiate : l'entrée quitte le catalogue tout de suite, l'inventaire qui suit réécrit catalog.json.
-            dispatcher.BeginInvoke((Action)(() => { if (disposed) return; if (remove(new List<string> { path }) > 0) lock (gate) {
-                if (disposed) return; wantRefresh = true; burst.Touch(DateTime.UtcNow); Arm(CatalogueWatchRules.Debounce); } }));
+            dispatcher.BeginInvoke((Action)(() =>
+            {
+                if (disposed)
+                    return;
+                if (remove(new List<string> { path }) > 0)
+                    lock (gate)
+                    {
+                        if (disposed)
+                            return;
+                        wantRefresh = true;
+                        burst.Touch(DateTime.UtcNow);
+                        Arm(CatalogueWatchRules.Debounce);
+                    }
+            }));
             return;
         }
         lock (gate)
@@ -196,8 +211,15 @@ internal sealed class AppCatalogueWatcher : IDisposable
             if (wait > TimeSpan.Zero)
             {
                 if (refreshTimer == null)
-                    refreshTimer = new System.Threading.Timer(_ => { lock (gate) { refreshTimer?.Dispose(); refreshTimer = null;
-                        } dispatcher.BeginInvoke((Action)RequestRefresh); }, null, wait, System.Threading.Timeout.InfiniteTimeSpan);
+                    refreshTimer = new System.Threading.Timer(_ =>
+                    {
+                        lock (gate)
+                        {
+                            refreshTimer?.Dispose();
+                            refreshTimer = null;
+                        }
+                        dispatcher.BeginInvoke((Action)RequestRefresh);
+                    }, null, wait, System.Threading.Timeout.InfiniteTimeSpan);
                 return;
             }
             throttle.Ran(DateTime.UtcNow);
@@ -227,8 +249,15 @@ internal sealed class AppCatalogueWatcher : IDisposable
             }
             string icon = CatalogueWatchRules.IconSource(iconLocation, resolved, p => p.Length > 0 && !p.StartsWith(@"\\",
                 StringComparison.Ordinal) && (File.Exists(p) || Directory.Exists(p)));
-            return new Entry { Id = CatalogueWatchRules.ShortcutId(name, resolved, arguments), Name = name, Target = file,
-                Section = "Applications", Category = "Autres logiciels", IconPath = icon };
+            return new Entry
+            {
+                Id = CatalogueWatchRules.ShortcutId(name, resolved, arguments),
+                Name = name,
+                Target = file,
+                Section = "Applications",
+                Category = "Autres logiciels",
+                IconPath = icon
+            };
         }
         catch (Exception ex) { Store.Log("Veille du menu Démarrer : " + ex.Message); return null; }
     }
@@ -255,10 +284,15 @@ internal sealed class AppCatalogueWatcher : IDisposable
             return true;
         }
         catch { return false; }
-        finally { if (link != null
-            && System.Runtime.InteropServices.Marshal.IsComObject(link)) System.Runtime.InteropServices.Marshal.ReleaseComObject(link);
+        finally
+        {
+            if (link != null
+            && System.Runtime.InteropServices.Marshal.IsComObject(link))
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(link);
             if (shell != null
-            && System.Runtime.InteropServices.Marshal.IsComObject(shell)) System.Runtime.InteropServices.Marshal.ReleaseComObject(shell); }
+            && System.Runtime.InteropServices.Marshal.IsComObject(shell))
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(shell);
+        }
     }
     public void Dispose()
     {

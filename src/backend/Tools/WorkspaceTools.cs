@@ -44,8 +44,12 @@ internal sealed class PromptWindow : GlassWindow
         error = UI.Text("", 11, UI.Brush("#F3CF91"));
         error.Margin = new Thickness(2, 8, 0, 0);
         root.Children.Add(error);
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 18, 0, 0) };
+        var actions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 18, 0, 0)
+        };
         actions.Children.Add(UI.Button("Annuler", () => DialogResult = false));
         var ok = UI.Button("Valider", Accept);
         ok.MinWidth = 110;
@@ -97,9 +101,13 @@ internal static class WorkspaceService
         }
         var profile = new WorkspaceProfile { Name = name, Targets = targets.Take(16).ToList() };
         foreach (var board in Store.State.Boards)
-            profile.Layout[board.Id] = board.Placement is { Valid: true } placement ? new PanelPlacement { X = placement.X,
+            profile.Layout[board.Id] = board.Placement is { Valid: true } placement ? new PanelPlacement
+            {
+                X = placement.X,
                 Y = placement.Y,
-                Width = placement.Width, Height = placement.Height } : null;
+                Width = placement.Width,
+                Height = placement.Height
+            } : null;
         return profile;
     }
     internal static void Open(Coordinator owner, WorkspaceProfile profile)
@@ -123,8 +131,13 @@ internal static class WorkspaceService
         {
             if (!profile.Layout.TryGetValue(board.Id, out var placement))
                 continue;
-            board.Placement = placement is null ? null : new PanelPlacement { X = placement.X, Y = placement.Y, Width = placement.Width,
-                Height = placement.Height };
+            board.Placement = placement is null ? null : new PanelPlacement
+            {
+                X = placement.X,
+                Y = placement.Y,
+                Width = placement.Width,
+                Height = placement.Height
+            };
         }
         Store.Save();
         owner.Arrange(false);
@@ -169,8 +182,13 @@ internal sealed class WorkspaceWindow : GlassWindow
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
-        var scroll = new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 16, 0, 10) };
+        var scroll = new ScrollViewer
+        {
+            Content = list,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Margin = new Thickness(0, 16, 0, 10)
+        };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var footer = new DockPanel();
@@ -209,9 +227,15 @@ internal sealed class WorkspaceWindow : GlassWindow
     }
     FrameworkElement Row(WorkspaceProfile profile, int index)
     {
-        var card = new Border { CornerRadius = new CornerRadius(17), Background = UI.T(M3Role.OnSurface, 0x0C),
-            BorderBrush = UI.T(M3Role.OnSurface, 0x1C), BorderThickness = new Thickness(1), Padding = new Thickness(12),
-            Margin = new Thickness(0, 0, 0, 8) };
+        var card = new Border
+        {
+            CornerRadius = new CornerRadius(17),
+            Background = UI.T(M3Role.OnSurface, 0x0C),
+            BorderBrush = UI.T(M3Role.OnSurface, 0x1C),
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(12),
+            Margin = new Thickness(0, 0, 0, 8)
+        };
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new()
         {
@@ -242,17 +266,30 @@ internal sealed class WorkspaceWindow : GlassWindow
         open.FontSize = 12;
         open.Padding = new Thickness(12, 7, 12, 7);
         tools.Children.Add(open);
-        var update = UI.IconButton("\uE72C", "Remplacer par l’espace actuel", () => { var captured = WorkspaceService.Capture(owner,
-            profile.Name); profile.Targets = captured.Targets; profile.Layout = captured.Layout; Store.Save(); Refresh(); });
+        var update = UI.IconButton("\uE72C", "Remplacer par l’espace actuel", () =>
+        {
+            var captured = WorkspaceService.Capture(owner,
+            profile.Name);
+            profile.Targets = captured.Targets;
+            profile.Layout = captured.Layout;
+            Store.Save();
+            Refresh();
+        });
         update.Width = 30;
         update.Height = 30;
         update.Margin = new Thickness(6, 0, 0, 0);
         update.Background = Brushes.Transparent;
         update.BorderBrush = Brushes.Transparent;
         tools.Children.Add(update);
-        var remove = UI.IconButton("\uE74D", "Supprimer cet espace", () => { if (!owner.Confirm("Supprimer l’espace « " + profile.Name
-            + " » ?\n\nLes applications ne sont pas fermées.")) return; Store.State.Workspaces.Remove(profile); Store.Save(); Refresh();
-                });
+        var remove = UI.IconButton("\uE74D", "Supprimer cet espace", () =>
+        {
+            if (!owner.Confirm("Supprimer l’espace « " + profile.Name
+            + " » ?\n\nLes applications ne sont pas fermées."))
+                return;
+            Store.State.Workspaces.Remove(profile);
+            Store.Save();
+            Refresh();
+        });
         remove.Width = 30;
         remove.Height = 30;
         remove.Margin = new Thickness(2, 0, 0, 0);

@@ -7,11 +7,26 @@ namespace PanneauxGlass;
 // l'implémente par délégation (Core/Coordinator.BridgeOwner.cs) ; les tests fournissent un propriétaire factice.
 internal interface IBridgeOwner
 {
-    IShortcutBindings Keys { get; }
-    IShortcutEditor Shortcuts { get; }
-    IClipboardService QtClipboard { get; }
-    IIconSource Icons { get; }
-    bool TaskbarEnabled { get; }
+    IShortcutBindings Keys
+    {
+        get;
+    }
+    IShortcutEditor Shortcuts
+    {
+        get;
+    }
+    IClipboardService QtClipboard
+    {
+        get;
+    }
+    IIconSource Icons
+    {
+        get;
+    }
+    bool TaskbarEnabled
+    {
+        get;
+    }
 
     void SetTheme(string id);
     void SetTaskbar(bool enabled);
@@ -53,7 +68,10 @@ internal interface IBridgeOwner
 // Vues étroites des services concrets (presse-papiers, icônes, raccourcis) : le pont ne voit plus les classes WPF/Win32.
 internal interface IClipboardService
 {
-    IReadOnlyList<ClipboardItem> Items { get; }
+    IReadOnlyList<ClipboardItem> Items
+    {
+        get;
+    }
     void TogglePin(ClipboardItem item);
     void CopyBack(ClipboardItem item);
 }

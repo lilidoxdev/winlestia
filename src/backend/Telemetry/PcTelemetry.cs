@@ -34,12 +34,34 @@ internal sealed class PcTelemetry : IDisposable
         cancellation?.Dispose();
         cancellation = new();
         var token = cancellation.Token;
-        worker = Task.Run(async () => { try { using var source = new PcTelemetrySource(quick); while (!token.IsCancellationRequested) {
-            long start = Environment.TickCount64; var reading = source.Read(); if (token.IsCancellationRequested) break;
-            Interlocked.Increment(ref samples); publish(reading); await Task.Delay((int)Math.Max(1, Math.Max(1000,
-            interval) - (Environment.TickCount64 - start)), token).ConfigureAwait(false); } } catch (OperationCanceledException) {
-            /* Arrêt demandé : fin normale de la boucle. */ } catch (Exception ex) { Store.Log("État PC: " + ex);
-            if (!token.IsCancellationRequested) error?.Invoke(ex.Message); } }, token);
+        worker = Task.Run(async () =>
+        {
+            try
+            {
+                using var source = new PcTelemetrySource(quick);
+                while (!token.IsCancellationRequested)
+                {
+                    long start = Environment.TickCount64;
+                    var reading = source.Read();
+                    if (token.IsCancellationRequested)
+                        break;
+                    Interlocked.Increment(ref samples);
+                    publish(reading);
+                    await Task.Delay((int)Math.Max(1, Math.Max(1000,
+                    interval) - (Environment.TickCount64 - start)), token).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                /* Arrêt demandé : fin normale de la boucle. */
+            }
+            catch (Exception ex)
+            {
+                Store.Log("État PC: " + ex);
+                if (!token.IsCancellationRequested)
+                    error?.Invoke(ex.Message);
+            }
+        }, token);
     }
     internal async Task StopAsync()
     {
@@ -65,14 +87,14 @@ internal sealed class PcTelemetry : IDisposable
 internal sealed class PcTelemetrySource : IDisposable
 {
     readonly Computer computer = new() { IsCpuEnabled = true, IsStorageEnabled = true, IsMemoryEnabled = true };
-        readonly NvidiaTelemetry nvidia = new();
+    readonly NvidiaTelemetry nvidia = new();
     readonly DiskCounters disk = new(); readonly string cpuName; string sensorNote = ""; bool hardwareOpen;
     IHardware[] cpus = Array.Empty<IHardware>(), gpus = Array.Empty<IHardware>(), storage = Array.Empty<IHardware>();
     HeatReading[] heat = Array.Empty<HeatReading>(), memoryHeat = Array.Empty<HeatReading>();
-        DriveReading[] drives = Array.Empty<DriveReading>(); double? cpuTemperature; string? cpuTempSource;
-        readonly CpuTempChain tempChain = new();
+    DriveReading[] drives = Array.Empty<DriveReading>(); double? cpuTemperature; string? cpuTempSource;
+    readonly CpuTempChain tempChain = new();
     readonly Dictionary<string, (long received, long sent)> previousNetwork = new();
-        NetworkInterface[] adapters = Array.Empty<NetworkInterface>();
+    NetworkInterface[] adapters = Array.Empty<NetworkInterface>();
     ulong previousIdle, previousKernel, previousUser; long lastNetwork; long nextSlow, nextCpu, nextAdapters;
     internal PcTelemetrySource(bool quick = false)
     {
@@ -248,10 +270,13 @@ internal sealed class PcTelemetrySource : IDisposable
             AvailableVirtual, AvailableExtendedVirtual;
     }
     [DllImport("kernel32.dll",
-        SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)] static extern bool GetSystemTimes(out ulong idle, out ulong kernel,
+        SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    static extern bool GetSystemTimes(out ulong idle, out ulong kernel,
         out ulong user);
     [DllImport("kernel32.dll",
-        SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)] static extern bool GlobalMemoryStatusEx(ref MemoryStatus status);
+        SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)] static extern bool GlobalMemoryStatusEx(ref MemoryStatus status);
 }
 
 internal sealed class DiskCounters : IDisposable
@@ -294,10 +319,12 @@ internal sealed class DiskCounters : IDisposable
         [FieldOffset(0)] internal uint Status; [FieldOffset(8)] internal double Value;
     }
     [DllImport("pdh.dll", CharSet = CharSet.Unicode)] static extern uint PdhOpenQueryW(string? source, UIntPtr data, out IntPtr query);
-    [DllImport("pdh.dll", CharSet = CharSet.Unicode)] static extern uint PdhAddEnglishCounterW(IntPtr query, string path, UIntPtr data,
+    [DllImport("pdh.dll", CharSet = CharSet.Unicode)]
+    static extern uint PdhAddEnglishCounterW(IntPtr query, string path, UIntPtr data,
         out IntPtr counter);
     [DllImport("pdh.dll")] static extern uint PdhCollectQueryData(IntPtr query);
-    [DllImport("pdh.dll")] static extern uint PdhGetFormattedCounterValue(IntPtr counter, uint format, out uint type,
+    [DllImport("pdh.dll")]
+    static extern uint PdhGetFormattedCounterValue(IntPtr counter, uint format, out uint type,
         out FormattedValue value);
     [DllImport("pdh.dll")] static extern uint PdhCloseQuery(IntPtr query);
 }

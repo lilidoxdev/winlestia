@@ -195,10 +195,11 @@ internal static partial class FullscreenWatcher
     struct MONITORINFOEX
     {
         public int cbSize; public RECT rcMonitor, rcWork; public uint dwFlags; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            public string szDevice;
+        public string szDevice;
     }
 
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid,
+    [DllImport("user32.dll")]
+    static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid,
         uint thread,
         uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
@@ -218,7 +219,8 @@ internal static partial class FullscreenWatcher
     [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc cb, IntPtr l);
     [DllImport("kernel32.dll")] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
     [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool QueryFullProcessImageName(IntPtr h, uint flags,
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    static extern bool QueryFullProcessImageName(IntPtr h, uint flags,
         StringBuilder s, ref int n);
     [DllImport("shell32.dll")] static extern int SHQueryUserNotificationState(out int state);
 }

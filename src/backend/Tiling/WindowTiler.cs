@@ -35,20 +35,25 @@ internal sealed partial class WindowTiler : IDisposable
     [DllImport("user32.dll")] static extern bool GetClientRect(IntPtr h, out Native.Rect rect);
     [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr h, ref Native.Point point);
     [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr h, int attribute, out int value, int size);
-    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int ExtendedBounds(IntPtr h, int attribute,
+    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")]
+    static extern int ExtendedBounds(IntPtr h, int attribute,
         out Native.Rect value, int size);
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
+    [DllImport("user32.dll")]
+    static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
         uint thread, uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] static extern IntPtr BeginDeferWindowPos(int count);
-    [DllImport("user32.dll")] static extern IntPtr DeferWindowPos(IntPtr hdwp, IntPtr h, IntPtr after, int x, int y, int cx, int cy,
+    [DllImport("user32.dll")]
+    static extern IntPtr DeferWindowPos(IntPtr hdwp, IntPtr h, IntPtr after, int x, int y, int cx, int cy,
         uint flags);
     [DllImport("user32.dll")] static extern bool EndDeferWindowPos(IntPtr hdwp);
     delegate void WinEventProc(IntPtr hook, uint ev, IntPtr h, int idObject, int idChild, uint thread, uint time);
     const int AnimationMs = 120;
-    readonly Dictionary<IntPtr, Managed> managed = new(); readonly DispatcherTimer timer = new() {
-        Interval = TimeSpan.FromMilliseconds(ResyncMs) }; readonly Func<IEnumerable<IntPtr>> source; readonly bool fixtureSource;
-        bool enabled, disposed;
+    readonly Dictionary<IntPtr, Managed> managed = new(); readonly DispatcherTimer timer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(ResyncMs)
+    }; readonly Func<IEnumerable<IntPtr>> source; readonly bool fixtureSource;
+    bool enabled, disposed;
     sealed class Motion
     {
         internal Native.Rect From, To, Shadow; internal IntPtr Monitor; internal long Started; internal Native.Rect? Applied;
@@ -160,8 +165,14 @@ internal sealed partial class WindowTiler : IDisposable
                 }
             }
             int Lerp(int a, int b) => (int)Math.Round(a + (b - a) * ease);
-            var frame = t >= 1 ? motion.To : new Native.Rect { Left = Lerp(motion.From.Left, motion.To.Left), Top = Lerp(motion.From.Top,
-                motion.To.Top), Right = Lerp(motion.From.Right, motion.To.Right), Bottom = Lerp(motion.From.Bottom, motion.To.Bottom) };
+            var frame = t >= 1 ? motion.To : new Native.Rect
+            {
+                Left = Lerp(motion.From.Left, motion.To.Left),
+                Top = Lerp(motion.From.Top,
+                motion.To.Top),
+                Right = Lerp(motion.From.Right, motion.To.Right),
+                Bottom = Lerp(motion.From.Bottom, motion.To.Bottom)
+            };
             if (!(motion.Applied is Native.Rect applied && applied.Left == frame.Left && applied.Top == frame.Top
                 && applied.Right == frame.Right && applied.Bottom == frame.Bottom))
             {
@@ -186,9 +197,18 @@ internal sealed partial class WindowTiler : IDisposable
         nameProc = OnNameChange;
         timer.Tick += (_, _) => Tick();
         animation.Tick += (_, _) => Animate();
-        coalesce.Tick += (_, _) => { coalesce.Stop(); if ((GetAsyncKeyState(1) & 0x8000) != 0) {
-            coalesce.Interval = TimeSpan.FromMilliseconds(DragRetryMs); coalesce.Start(); return;
-            } coalesce.Interval = TimeSpan.FromMilliseconds(25); Tick(); };
+        coalesce.Tick += (_, _) =>
+        {
+            coalesce.Stop();
+            if ((GetAsyncKeyState(1) & 0x8000) != 0)
+            {
+                coalesce.Interval = TimeSpan.FromMilliseconds(DragRetryMs);
+                coalesce.Start();
+                return;
+            }
+            coalesce.Interval = TimeSpan.FromMilliseconds(25);
+            Tick();
+        };
     }
     // Hooks WinEvent (hors contexte, thread UI) : seuls les événements de fenêtres de premier niveau déclenchent un Tick regroupé
     // environ 25 ms plus tard.

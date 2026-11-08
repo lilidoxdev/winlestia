@@ -45,9 +45,18 @@ internal static class SystemTools
             Safe.Try(() => process.Kill());
         }
         var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(ExplorerRestartMs) };
-        timer.Tick += (_, _) => { timer.Stop(); try { Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true }); }
-            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException) {
-            Store.Log("FileTools.RestartExplorer : " + ex.GetType().Name + ": " + ex.Message); } };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            try
+            {
+                Process.Start(new ProcessStartInfo("explorer.exe") { UseShellExecute = true });
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                Store.Log("FileTools.RestartExplorer : " + ex.GetType().Name + ": " + ex.Message);
+            }
+        };
         timer.Start();
     }
     internal static string Size(long bytes) => bytes >= 1L << 30 ? Math.Round(bytes / (double)(1L << 30), 1) + " Go" : bytes >= 1L << 20
@@ -105,8 +114,13 @@ internal sealed class LargeFilesWindow : GlassWindow
         var first = UI.EmptyState("", "", "Aucun dossier choisi",
             "Choisis un dossier pour voir ses fichiers de plus de 200 Mo, du plus lourd au plus léger.", "Choisir un dossier…", Choose);
         list.Children.Add(first);
-        var scroll = new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 0, 0, 8) };
+        var scroll = new ScrollViewer
+        {
+            Content = list,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Margin = new Thickness(0, 0, 0, 8)
+        };
         Grid.SetRow(scroll, 2);
         ContentHost.Children.Add(scroll);
         var note = UI.Text("Rien n’est supprimé depuis Winlestia : chaque ligne ouvre l’Explorateur sur le fichier.", 10, UI.Dim);
@@ -119,8 +133,12 @@ internal sealed class LargeFilesWindow : GlassWindow
     }
     void Choose()
     {
-        using var picker = new System.Windows.Forms.FolderBrowserDialog { Description = "Choisir le dossier à analyser",
-            UseDescriptionForTitle = true, ShowNewFolderButton = false };
+        using var picker = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = "Choisir le dossier à analyser",
+            UseDescriptionForTitle = true,
+            ShowNewFolderButton = false
+        };
         if (picker.ShowDialog() != System.Windows.Forms.DialogResult.OK)
             return;
         Scan(picker.SelectedPath);
@@ -158,8 +176,12 @@ internal sealed class LargeFilesWindow : GlassWindow
     }
     static List<(string Path, long Size)> Find(string folder, CancellationToken token)
     {
-        var options = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true,
-            AttributesToSkip = FileAttributes.ReparsePoint };
+        var options = new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+            AttributesToSkip = FileAttributes.ReparsePoint
+        };
         var result = new List<(string, long)>();
         foreach (string path in Directory.EnumerateFiles(folder, "*", options))
         {
@@ -180,8 +202,15 @@ internal sealed class LargeFilesWindow : GlassWindow
     }
     FrameworkElement Row((string Path, long Size) file, int index)
     {
-        var card = new Border { CornerRadius = new CornerRadius(14), Padding = new Thickness(11), Margin = new Thickness(0, 0, 0, 6),
-            Background = UI.Brush("#0AFFFFFF"), BorderBrush = UI.Brush("#18FFFFFF"), BorderThickness = new Thickness(1) };
+        var card = new Border
+        {
+            CornerRadius = new CornerRadius(14),
+            Padding = new Thickness(11),
+            Margin = new Thickness(0, 0, 0, 6),
+            Background = UI.Brush("#0AFFFFFF"),
+            BorderBrush = UI.Brush("#18FFFFFF"),
+            BorderThickness = new Thickness(1)
+        };
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new()
         {
@@ -209,10 +238,19 @@ internal sealed class LargeFilesWindow : GlassWindow
         size.VerticalAlignment = VerticalAlignment.Center;
         Grid.SetColumn(size, 1);
         grid.Children.Add(size);
-        var reveal = UI.IconButton("\uE8B7", "Afficher dans l’Explorateur", () => { try { Process.Start("explorer.exe", "/select,\""
-            + file.Path + "\""); }
+        var reveal = UI.IconButton("\uE8B7", "Afficher dans l’Explorateur", () =>
+        {
+            try
+            {
+                Process.Start("explorer.exe", "/select,\""
+            + file.Path + "\"");
+            }
             catch (Exception err) when (err is IOException or UnauthorizedAccessException or System.ComponentModel
-            .Win32Exception or InvalidOperationException) { Store.Log("FileTools.Row : " + err.GetType().Name + ": " + err.Message); } });
+            .Win32Exception or InvalidOperationException)
+            {
+                Store.Log("FileTools.Row : " + err.GetType().Name + ": " + err.Message);
+            }
+        });
         reveal.Width = 28;
         reveal.Height = 28;
         reveal.Margin = new Thickness(8, 0, 0, 0);

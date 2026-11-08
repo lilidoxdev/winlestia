@@ -14,7 +14,8 @@ internal sealed record WallpaperDisplay(int id, string device, string name, int 
 internal static class WallpaperApply
 {
     static readonly Guid Clsid = new("C2CF3110-460E-4FC1-B9D0-8A1C0C9CC4BD");
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool SystemParametersInfo(uint action,
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern bool SystemParametersInfo(uint action,
         uint param, string value, uint flags);
 
     // COM exige un thread STA et doit rester hors du thread UI : on utilise un thread dédié, abandonné après 5 s (un explorer figé ne
@@ -27,9 +28,22 @@ internal static class WallpaperApply
     {
         T result = fallback;
         var abandon = new Abandon();
-        var thread = new Thread(() => { try { result = work(abandon); } catch (Exception ex) { Store.Log("Fond d’écran: "
-            + ex.Message); }
-            }) { IsBackground = true, Name = "Wallpaper STA" };
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                result = work(abandon);
+            }
+            catch (Exception ex)
+            {
+                Store.Log("Fond d’écran: "
+            + ex.Message);
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "Wallpaper STA"
+        };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
         expired = !thread.Join(5000);

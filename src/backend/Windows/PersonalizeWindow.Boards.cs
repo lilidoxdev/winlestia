@@ -79,8 +79,14 @@ internal sealed partial class PersonalizeWindow
             button.ToolTip = color;
             colors.Children.Add(button);
         }
-        var hex = new TextBox { Text = model.Accent, Width = 108, Margin = new Thickness(4, 0, 0, 0), FontSize = 11,
-            Padding = new Thickness(8, 4, 8, 4) };
+        var hex = new TextBox
+        {
+            Text = model.Accent,
+            Width = 108,
+            Margin = new Thickness(4, 0, 0, 0),
+            FontSize = 11,
+            Padding = new Thickness(8, 4, 8, 4)
+        };
         hex.LostFocus += (_, _) =>
         {
             try
@@ -98,8 +104,12 @@ internal sealed partial class PersonalizeWindow
     }
     void Export()
     {
-        var dialog = new SaveFileDialog { Title = "Exporter la personnalisation", Filter = "Personnalisation Winlestia|*.json",
-            FileName = "Winlestia-preferences.json" };
+        var dialog = new SaveFileDialog
+        {
+            Title = "Exporter la personnalisation",
+            Filter = "Personnalisation Winlestia|*.json",
+            FileName = "Winlestia-preferences.json"
+        };
         if (dialog.ShowDialog(this) == true)
             File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(Store.State, Store.Json));
     }

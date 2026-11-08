@@ -185,8 +185,15 @@ internal sealed partial class SocialService : IDisposable
 
     HistoryItem AddHistory(Net n, string kind, string title, string body)
     {
-        var item = new HistoryItem { Seq = nextSeq++, Net = n.Id, Title = title, Body = body, Kind = kind,
-            At = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
+        var item = new HistoryItem
+        {
+            Seq = nextSeq++,
+            Net = n.Id,
+            Title = title,
+            Body = body,
+            Kind = kind,
+            At = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        };
         history.Insert(0, item);
         if (history.Count > 100)
             history.RemoveRange(100, history.Count - 100);

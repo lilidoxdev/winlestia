@@ -43,9 +43,10 @@ internal static partial class Thumbs
     struct SHFILEINFO
     {
         public IntPtr hIcon; public int iIcon; public uint attrs; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string name;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string type;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string type;
     }
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern IntPtr SHGetFileInfo(string path, uint attributes,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    static extern IntPtr SHGetFileInfo(string path, uint attributes,
         ref SHFILEINFO info, uint size, uint flags);
     [DllImport("shell32.dll", PreserveSig = true)] static extern int SHGetImageList(int list, ref Guid riid, out IntPtr imageList);
     [DllImport("comctl32.dll")] static extern IntPtr ImageList_GetIcon(IntPtr list, int index, uint flags);

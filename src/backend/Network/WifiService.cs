@@ -30,24 +30,31 @@ static class WlanNative
         public int Mode; public IntPtr Profile; public IntPtr Ssid; public IntPtr Bssids; public int BssType; public int Flags;
     }
     const string Dll = "wlanapi.dll";
-    [DllImport(Dll)] internal static extern int WlanOpenHandle(uint clientVersion, IntPtr reserved, out uint negotiated,
+    [DllImport(Dll)]
+    internal static extern int WlanOpenHandle(uint clientVersion, IntPtr reserved, out uint negotiated,
         out IntPtr handle);
     [DllImport(Dll)] internal static extern int WlanCloseHandle(IntPtr handle, IntPtr reserved);
     [DllImport(Dll)] internal static extern int WlanEnumInterfaces(IntPtr handle, IntPtr reserved, out IntPtr list);
     [DllImport(Dll)] internal static extern int WlanScan(IntPtr handle, ref Guid iface, IntPtr ssid, IntPtr raw, IntPtr reserved);
-    [DllImport(Dll)] internal static extern int WlanGetAvailableNetworkList(IntPtr handle, ref Guid iface, uint flags, IntPtr reserved,
+    [DllImport(Dll)]
+    internal static extern int WlanGetAvailableNetworkList(IntPtr handle, ref Guid iface, uint flags, IntPtr reserved,
         out IntPtr list);
-    [DllImport(Dll)] internal static extern int WlanSetProfile(IntPtr handle, ref Guid iface, uint flags, IntPtr xml, IntPtr security,
+    [DllImport(Dll)]
+    internal static extern int WlanSetProfile(IntPtr handle, ref Guid iface, uint flags, IntPtr xml, IntPtr security,
         [MarshalAs(UnmanagedType.Bool)] bool overwrite, IntPtr reserved, out uint reason);
-    [DllImport(Dll)] internal static extern int WlanConnect(IntPtr handle, ref Guid iface, ref ConnectionParameters parameters,
+    [DllImport(Dll)]
+    internal static extern int WlanConnect(IntPtr handle, ref Guid iface, ref ConnectionParameters parameters,
         IntPtr reserved);
     [DllImport(Dll)] internal static extern int WlanDisconnect(IntPtr handle, ref Guid iface, IntPtr reserved);
-    [DllImport(Dll, CharSet = CharSet.Unicode)] internal static extern int WlanDeleteProfile(IntPtr handle, ref Guid iface, string profile,
+    [DllImport(Dll, CharSet = CharSet.Unicode)]
+    internal static extern int WlanDeleteProfile(IntPtr handle, ref Guid iface, string profile,
         IntPtr reserved);
-    [DllImport(Dll, CharSet = CharSet.Unicode)] internal static extern int WlanGetProfile(IntPtr handle, ref Guid iface, string profile,
+    [DllImport(Dll, CharSet = CharSet.Unicode)]
+    internal static extern int WlanGetProfile(IntPtr handle, ref Guid iface, string profile,
         IntPtr reserved, out IntPtr xml, ref uint flags, out uint access);
     [DllImport(Dll)] internal static extern void WlanFreeMemory(IntPtr memory);
-    [DllImport(Dll)] internal static extern int WlanRegisterNotification(IntPtr handle, uint source,
+    [DllImport(Dll)]
+    internal static extern int WlanRegisterNotification(IntPtr handle, uint source,
         [MarshalAs(UnmanagedType.Bool)] bool ignoreDuplicate, NotifyCallback? callback, IntPtr context, IntPtr reserved,
             out uint previous);
 }
@@ -230,8 +237,17 @@ internal sealed partial class WifiHost : IDisposable
         lock (gate)
             stillOpen = open;
         if (stillOpen)
-            _ = Task.Run(() => { try { Refresh(false); } catch (Exception) {
-                /* Rafraîchissement périodique : un échec est retenté au tick suivant, sans journal répété. */ } });
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    Refresh(false);
+                }
+                catch (Exception)
+                {
+                    /* Rafraîchissement périodique : un échec est retenté au tick suivant, sans journal répété. */
+                }
+            });
     }
 
     internal static void OpenPortal()
@@ -248,8 +264,10 @@ internal sealed partial class WifiHost : IDisposable
     {
         try
         {
-            Process.Start(new ProcessStartInfo(location ? "ms-settings:privacy-location" : "ms-settings:network-wifi") {
-                UseShellExecute = true })?.Dispose();
+            Process.Start(new ProcessStartInfo(location ? "ms-settings:privacy-location" : "ms-settings:network-wifi")
+            {
+                UseShellExecute = true
+            })?.Dispose();
         }
         catch (Exception ex) { Store.Log("Wi-Fi: réglages: " + ex.GetType().Name); }
     }

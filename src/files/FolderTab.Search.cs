@@ -104,8 +104,13 @@ internal sealed partial class FolderTab
     {
         try
         {
-            var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true,
-                ReturnSpecialDirectories = false, AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System };
+            var options = new EnumerationOptions
+            {
+                IgnoreInaccessible = true,
+                RecurseSubdirectories = true,
+                ReturnSpecialDirectories = false,
+                AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System
+            };
             var types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var walk = new System.IO.Enumeration.FileSystemEnumerable<FileItem>(root, (ref System.IO.Enumeration.FileSystemEntry e) =>
             {

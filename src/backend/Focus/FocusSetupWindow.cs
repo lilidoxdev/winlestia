@@ -12,7 +12,7 @@ namespace PanneauxGlass;
 internal sealed class FocusSetupWindow : GlassWindow
 {
     readonly Coordinator owner; readonly TextBox field; readonly TextBlock preview, status; readonly ComboBox unit = new();
-        readonly List<(Button Button, int Value)> presets = new();
+    readonly List<(Button Button, int Value)> presets = new();
     int amount = 25;
     internal FocusSetupWindow(Coordinator coordinator) : base("Winlestia — minuteur")
     {
@@ -46,8 +46,13 @@ internal sealed class FocusSetupWindow : GlassWindow
         foreach (int value in new[] { 5, 10, 15, 25, 45, 60, 90 })
         {
             int chosen = value;
-            var chip = UI.Button(value + " min", () => { unit.SelectedIndex = 0; amount = chosen;
-                field.Text = chosen.ToString(CultureInfo.InvariantCulture); RefreshChips(); });
+            var chip = UI.Button(value + " min", () =>
+            {
+                unit.SelectedIndex = 0;
+                amount = chosen;
+                field.Text = chosen.ToString(CultureInfo.InvariantCulture);
+                RefreshChips();
+            });
             chip.Padding = new Thickness(15, 9, 15, 9);
             chip.Margin = new Thickness(0, 0, 8, 8);
             chip.FontSize = 13;
@@ -93,8 +98,12 @@ internal sealed class FocusSetupWindow : GlassWindow
         status.Margin = new Thickness(0, 6, 0, 0);
         status.TextWrapping = TextWrapping.Wrap;
         body.Children.Add(status);
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 18, 0, 0) };
+        var actions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 18, 0, 0)
+        };
         var cancel = UI.Button("Annuler", Close);
         actions.Children.Add(cancel);
         var start = UI.Button("Démarrer", Begin);
@@ -104,15 +113,24 @@ internal sealed class FocusSetupWindow : GlassWindow
         System.Windows.Automation.AutomationProperties.SetName(start, "Démarrer le focus");
         actions.Children.Add(start);
         body.Children.Add(actions);
-        field.TextChanged += (_, _) => { if (int.TryParse(field.Text.Trim(), out int value) && value is >= 1 and <= 86400) amount = value;
-            RefreshChips(); };
+        field.TextChanged += (_, _) =>
+        {
+            if (int.TryParse(field.Text.Trim(), out int value) && value is >= 1 and <= 86400)
+                amount = value;
+            RefreshChips();
+        };
         unit.SelectionChanged += (_, _) => RefreshChips();
         field.PreviewKeyDown += (_, e) => { if (e.Key == System.Windows.Input.Key.Enter) { Begin(); e.Handled = true; } };
         Loaded += (_, _) => { ApplyGlass(); field.Focus(); field.SelectAll(); RefreshChips(); };
         KeyDown += (_, e) => { if (e.Key == System.Windows.Input.Key.Escape) Close(); };
     }
-    int Seconds() => unit.SelectedIndex switch { 1 => Math.Clamp(amount, 1, 24) * 3600, 2 => Math.Clamp(amount, 1, 86400), _
-        => Math.Clamp(amount, 1, 1440) * 60 };
+    int Seconds() => unit.SelectedIndex switch
+    {
+        1 => Math.Clamp(amount, 1, 24) * 3600,
+        2 => Math.Clamp(amount, 1, 86400),
+        _
+        => Math.Clamp(amount, 1, 1440) * 60
+    };
     void RefreshChips()
     {
         foreach (var (button, value) in presets)

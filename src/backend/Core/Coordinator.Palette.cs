@@ -48,29 +48,75 @@ internal sealed partial class Coordinator
         }
         switch (QuickTabRules.Parse(target))
         {
-            case QuickTabView.Home: ShowHome(); break;
-            case QuickTabView.Apps: ShowWorkspace("apps"); break;
-            case QuickTabView.Games: ShowWorkspace("games"); break;
-            case QuickTabView.Projects: ShowWorkspace("projects"); break;
-            case QuickTabView.Documents: ShowWorkspace("documents"); break;
-            case QuickTabView.Workspace: ShowWorkspace(); break;
-            case QuickTabView.Note: OpenNotes(); break;
-            case QuickTabView.Focus: OpenFocus(); break;
-            case QuickTabView.Settings: Settings(); break;
-            case QuickTabView.Tools: OpenTools(); break;
-            case QuickTabView.Capture: OpenCapture(); break;
-            case QuickTabView.Text: OpenCapture(textOnly: true); break;
-            case QuickTabView.Clipboard: OpenClipboard(); break;
-            case QuickTabView.Audio: OpenAudio(); break;
-            case QuickTabView.Workspaces: OpenWorkspaces(); break;
-            case QuickTabView.Files: OpenLargeFiles(); break;
-            case QuickTabView.Help: OpenHelp(); break;
-            case QuickTabView.Pin: ToggleAlwaysOnTop(); break;
-            case QuickTabView.Memo: OpenMemo(); break;
-            case QuickTabView.Controls: ToggleControls(); break;
-            case QuickTabView.Pc: TogglePc(); break;
-            case QuickTabView.Palette: TogglePalette(); break;
-            default: Message("Cet onglet rapide pointe vers une vue inconnue.\n" + target); break;
+            case QuickTabView.Home:
+                ShowHome();
+                break;
+            case QuickTabView.Apps:
+                ShowWorkspace("apps");
+                break;
+            case QuickTabView.Games:
+                ShowWorkspace("games");
+                break;
+            case QuickTabView.Projects:
+                ShowWorkspace("projects");
+                break;
+            case QuickTabView.Documents:
+                ShowWorkspace("documents");
+                break;
+            case QuickTabView.Workspace:
+                ShowWorkspace();
+                break;
+            case QuickTabView.Note:
+                OpenNotes();
+                break;
+            case QuickTabView.Focus:
+                OpenFocus();
+                break;
+            case QuickTabView.Settings:
+                Settings();
+                break;
+            case QuickTabView.Tools:
+                OpenTools();
+                break;
+            case QuickTabView.Capture:
+                OpenCapture();
+                break;
+            case QuickTabView.Text:
+                OpenCapture(textOnly: true);
+                break;
+            case QuickTabView.Clipboard:
+                OpenClipboard();
+                break;
+            case QuickTabView.Audio:
+                OpenAudio();
+                break;
+            case QuickTabView.Workspaces:
+                OpenWorkspaces();
+                break;
+            case QuickTabView.Files:
+                OpenLargeFiles();
+                break;
+            case QuickTabView.Help:
+                OpenHelp();
+                break;
+            case QuickTabView.Pin:
+                ToggleAlwaysOnTop();
+                break;
+            case QuickTabView.Memo:
+                OpenMemo();
+                break;
+            case QuickTabView.Controls:
+                ToggleControls();
+                break;
+            case QuickTabView.Pc:
+                TogglePc();
+                break;
+            case QuickTabView.Palette:
+                TogglePalette();
+                break;
+            default:
+                Message("Cet onglet rapide pointe vers une vue inconnue.\n" + target);
+                break;
         }
     }
     internal void OpenNotes()

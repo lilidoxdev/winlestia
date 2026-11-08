@@ -145,10 +145,14 @@ internal sealed partial class QtShellBridge
         }
         foreach (var group in groups)
         {
-            var e = pinnedEntries.GetValueOrDefault(group.Key) ?? entries.FirstOrDefault(e => SamePath(e.Target, group.Key)) ?? new Entry {
-                Id = "task:" + group.Key, Name = CatalogueWatchRules.IsPseudoPath(group.Key) || group.Key.StartsWith("shell:",
+            var e = pinnedEntries.GetValueOrDefault(group.Key) ?? entries.FirstOrDefault(e => SamePath(e.Target, group.Key)) ?? new Entry
+            {
+                Id = "task:" + group.Key,
+                Name = CatalogueWatchRules.IsPseudoPath(group.Key) || group.Key.StartsWith("shell:",
                 StringComparison.OrdinalIgnoreCase) ? group.Value[0].Title : Path.GetFileNameWithoutExtension(group.Key),
-                Target = group.Key, IconPath = group.Key };
+                Target = group.Key,
+                IconPath = group.Key
+            };
             bool pinned = Store.State.TaskbarPins.Contains(e.Id) || Store.State.TaskbarPins.Contains(group.Key);
             var value = Value(e, group.Value, pinned);
             running.Add(value);
@@ -188,21 +192,33 @@ internal sealed partial class QtShellBridge
                         string path = process.MainModule?.FileName ?? "";
                         if (!CanStop(path) || !paths.Add(path))
                             continue;
-                        result.Add(known.FirstOrDefault(e => SamePath(e.Target, path)) ?? new Entry { Id = "background:" + path,
-                            Name = FileVersionInfo.GetVersionInfo(path).FileDescription ?? process.ProcessName, Target = path,
-                            IconPath = path });
+                        result.Add(known.FirstOrDefault(e => SamePath(e.Target, path)) ?? new Entry
+                        {
+                            Id = "background:" + path,
+                            Name = FileVersionInfo.GetVersionInfo(path).FileDescription ?? process.ProcessName,
+                            Target = path,
+                            IconPath = path
+                        });
                     }
                     catch (Exception)
                     {
                         // Processus fermé ou inaccessible : ignoré.
                     }
-            dispatcher.BeginInvoke((Action)(() => { scanningBackground = false; if (!disposed) { backgroundEntries = result.ToArray();
-                nextTasks = DateTime.MinValue; } }));
+            dispatcher.BeginInvoke((Action)(() =>
+            {
+                scanningBackground = false;
+                if (!disposed)
+                {
+                    backgroundEntries = result.ToArray();
+                    nextTasks = DateTime.MinValue;
+                }
+            }));
         });
     }
     // Fenêtres à pseudo-chemin : l'icône vient de la fenêtre elle-même (WM_GETICON avec délai, puis l'icône de classe), jamais d'un
     // fichier.
-    [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW")] static extern IntPtr SendMessageTimeoutW(IntPtr window, uint message,
+    [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW")]
+    static extern IntPtr SendMessageTimeoutW(IntPtr window, uint message,
         IntPtr wp, IntPtr lp, uint flags, uint timeout, out IntPtr result);
     [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW")] static extern IntPtr GetClassLongPtrW(IntPtr window, int index);
     readonly Dictionary<string, int> windowIconTries = new();
@@ -249,8 +265,20 @@ internal sealed partial class QtShellBridge
                 bitmap.Freeze();
                 string file = WindowIconFile(entry.Id);
                 SaveImage(bitmap, file);
-                dispatcher.BeginInvoke((Action)(() => { if (disposed) return; if (windowIconTries.ContainsKey(entry.Id)) {
-                    icons[entry.Id] = file; iconRevision++; } else { Safe.Try(() => File.Delete(file)); } }));
+                dispatcher.BeginInvoke((Action)(() =>
+                {
+                    if (disposed)
+                        return;
+                    if (windowIconTries.ContainsKey(entry.Id))
+                    {
+                        icons[entry.Id] = file;
+                        iconRevision++;
+                    }
+                    else
+                    {
+                        Safe.Try(() => File.Delete(file));
+                    }
+                }));
             }
             catch { dispatcher.BeginInvoke((Action)(() => { if (tries < 3) requested.Remove(entry.Id); })); }
         });

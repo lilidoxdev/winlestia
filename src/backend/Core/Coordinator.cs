@@ -34,7 +34,10 @@ internal sealed partial class Coordinator : IDisposable
     readonly ShellState state = new();
     CommandPalette? palette;
     Button? paletteChip;
-    internal Rect PanelBounds { get; private set; }
+    internal Rect PanelBounds
+    {
+        get; private set;
+    }
     static readonly TimeSpan TimerInterval = TimeSpan.FromMilliseconds(120);
     Window DialogParent => QtShell != null ? controller : state.Detailed ? toolbar : home;
     readonly DispatcherTimer timer = new() { Interval = TimerInterval }, debounce = new() { Interval = TimerInterval };
@@ -53,9 +56,18 @@ internal sealed partial class Coordinator : IDisposable
     bool disposed;
     Forms.Screen? currentScreen;
     // Indicateurs partagés avec les fenêtres : l'API publique du Coordinator reste inchangée, l'état vit dans ShellState.
-    internal bool PopupOpen { get => state.PopupOpen; set => state.PopupOpen = value; }
-    internal bool FavoritesOnly { get => state.FavoritesOnly; set => state.FavoritesOnly = value; }
-    internal bool Pinned { get => state.Pinned; set => state.Pinned = value; }
+    internal bool PopupOpen
+    {
+        get => state.PopupOpen; set => state.PopupOpen = value;
+    }
+    internal bool FavoritesOnly
+    {
+        get => state.FavoritesOnly; set => state.FavoritesOnly = value;
+    }
+    internal bool Pinned
+    {
+        get => state.Pinned; set => state.Pinned = value;
+    }
     internal bool PreviewMode => preview;
     // Fenêtres glass dans l'ordre d'animation du repli (l'index décale chaque glissement) ; la poignée est gérée à part.
     IEnumerable<GlassWindow> Glass => Boards.Cast<GlassWindow>()
@@ -168,13 +180,33 @@ internal sealed partial class Coordinator : IDisposable
         handled = action != HotkeyAction.None;
         switch (action)
         {
-            case HotkeyAction.Rescue: Rescue(); break;
-            case HotkeyAction.Palette: if (!ShortcutGateRules.IsBlockedBySettings(action, state.SettingsOpen)) TogglePalette(); break;
-            case HotkeyAction.Settings: if (QtShell != null) QtShell.Send("settings"); else Settings(); break;
-            case HotkeyAction.Wallpaper: QtShell?.Send("wallpaper-switcher"); break;
-            case HotkeyAction.Pin: ToggleAlwaysOnTop(); break;
-            case HotkeyAction.Capture: if (!ShortcutGateRules.IsBlockedBySettings(action, state.SettingsOpen)) OpenCapture(); break;
-            case HotkeyAction.Toggle: if (!ShortcutGateRules.IsBlockedBySettings(action, state.SettingsOpen)) ToggleShortcut(); break;
+            case HotkeyAction.Rescue:
+                Rescue();
+                break;
+            case HotkeyAction.Palette:
+                if (!ShortcutGateRules.IsBlockedBySettings(action, state.SettingsOpen))
+                    TogglePalette();
+                break;
+            case HotkeyAction.Settings:
+                if (QtShell != null)
+                    QtShell.Send("settings");
+                else
+                    Settings();
+                break;
+            case HotkeyAction.Wallpaper:
+                QtShell?.Send("wallpaper-switcher");
+                break;
+            case HotkeyAction.Pin:
+                ToggleAlwaysOnTop();
+                break;
+            case HotkeyAction.Capture:
+                if (!ShortcutGateRules.IsBlockedBySettings(action, state.SettingsOpen))
+                    OpenCapture();
+                break;
+            case HotkeyAction.Toggle:
+                if (!ShortcutGateRules.IsBlockedBySettings(action, state.SettingsOpen))
+                    ToggleShortcut();
+                break;
         }
         return IntPtr.Zero;
     }

@@ -14,8 +14,10 @@ namespace PanneauxGlass;
 internal sealed class WebShortcutWindow : GlassWindow
 {
     readonly TextBox url = new(), name = new(); readonly Image preview = new() { Width = 84, Height = 84, Stretch = Stretch.Uniform };
-        readonly TextBlock status = UI.Text("Choisis ton image ou conserve le logo actuel.", 12, UI.Dim); readonly CheckBox glass = new() {
-        Content = "Afficher un carré de verre derrière le logo" };
+    readonly TextBlock status = UI.Text("Choisis ton image ou conserve le logo actuel.", 12, UI.Dim); readonly CheckBox glass = new()
+    {
+        Content = "Afficher un carré de verre derrière le logo"
+    };
     readonly Button recrop; string sourcePath = ""; LogoCrop? crop; BitmapSource? selected; bool manualName;
     internal WebShortcutWindow(Coordinator coordinator, WebShortcut? original, bool chooseImage = false) : base("Winlestia — "
         + (original == null ? "ajouter un site" : "modifier un site"))
@@ -65,9 +67,18 @@ internal sealed class WebShortcutWindow : GlassWindow
         {
             Width = new GridLength(1, GridUnitType.Star)
         });
-        var previewFrame = new Border { Width = 96, Height = 96, CornerRadius = new CornerRadius(21), Background = UI.Brush("#12FFFFFF"),
-            BorderBrush = UI.Brush("#28FFFFFF"), BorderThickness = new Thickness(1), Child = preview,
-            HorizontalAlignment = HorizontalAlignment.Left, AllowDrop = true };
+        var previewFrame = new Border
+        {
+            Width = 96,
+            Height = 96,
+            CornerRadius = new CornerRadius(21),
+            Background = UI.Brush("#12FFFFFF"),
+            BorderBrush = UI.Brush("#28FFFFFF"),
+            BorderThickness = new Thickness(1),
+            Child = preview,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            AllowDrop = true
+        };
         imageRow.Children.Add(previewFrame);
         var imageTools = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         var choose = UI.Button("Choisir mon image…", () => ChooseImage());
@@ -80,11 +91,20 @@ internal sealed class WebShortcutWindow : GlassWindow
         Grid.SetColumn(imageTools, 1);
         imageRow.Children.Add(imageTools);
         form.Children.Add(imageRow);
-        previewFrame.DragOver += (_, e) => { e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy
-            : DragDropEffects.None; e.Handled = true; };
-        previewFrame.Drop += (_, e) => { if (e.Data.GetData(DataFormats.FileDrop) is string[] files
-            && files.Length > 0) CropImage(files[0],
-            null); e.Handled = true; };
+        previewFrame.DragOver += (_, e) =>
+        {
+            e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy
+            : DragDropEffects.None;
+            e.Handled = true;
+        };
+        previewFrame.Drop += (_, e) =>
+        {
+            if (e.Data.GetData(DataFormats.FileDrop) is string[] files
+            && files.Length > 0)
+                CropImage(files[0],
+            null);
+            e.Handled = true;
+        };
         if (original != null && File.Exists(original.IconPath))
         {
             try
@@ -107,8 +127,12 @@ internal sealed class WebShortcutWindow : GlassWindow
         status.Height = 35;
         status.TextWrapping = TextWrapping.Wrap;
         form.Children.Add(status);
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 12, 0, 0) };
+        var actions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 12, 0, 0)
+        };
         actions.Children.Add(UI.Button("Annuler", Close));
         var save = UI.Button(original == null ? "Ajouter le site" : "Enregistrer", () => Save(coordinator, original));
         save.IsDefault = true;
@@ -117,16 +141,31 @@ internal sealed class WebShortcutWindow : GlassWindow
         actions.Children.Add(save);
         form.Children.Add(actions);
         name.TextChanged += (_, _) => { if (name.IsKeyboardFocusWithin) manualName = true; };
-        url.TextChanged += (_, _) => { if (manualName) return; try { var uri = WebIcons.Parse(url.Text);
-            name.Text = uri.Host.StartsWith("www.") ? uri.Host[4..] : uri.Host; } catch (Exception) {
-            /* URL incomplète pendant la frappe : le nom reste inchangé. */ } };
+        url.TextChanged += (_, _) =>
+        {
+            if (manualName)
+                return;
+            try
+            {
+                var uri = WebIcons.Parse(url.Text);
+                name.Text = uri.Host.StartsWith("www.") ? uri.Host[4..] : uri.Host;
+            }
+            catch (Exception)
+            {
+                /* URL incomplète pendant la frappe : le nom reste inchangé. */
+            }
+        };
         Loaded += (_, _) => { url.Focus(); if (chooseImage) Dispatcher.BeginInvoke((Action)ChooseImage); };
         KeyDown += (_, e) => { if (e.Key == Key.Escape) Close(); };
     }
     void ChooseImage()
     {
-        var dialog = new OpenFileDialog { Title = "Choisir le logo du site",
-            Filter = "Images|*.png;*.jpg;*.jpeg;*.ico;*.bmp;*.gif;*.tif;*.tiff|Tous les fichiers|*.*", CheckFileExists = true };
+        var dialog = new OpenFileDialog
+        {
+            Title = "Choisir le logo du site",
+            Filter = "Images|*.png;*.jpg;*.jpeg;*.ico;*.bmp;*.gif;*.tif;*.tiff|Tous les fichiers|*.*",
+            CheckFileExists = true
+        };
         if (dialog.ShowDialog(this) == true)
             CropImage(dialog.FileName, null);
     }
@@ -149,8 +188,11 @@ internal sealed class WebShortcutWindow : GlassWindow
                 status.Foreground = UI.Brush("#ACE8CC");
             }
         }
-        catch (Exception ex) { status.Text = "Cette image ne peut pas être ouverte : " + ex.Message;
-            status.Foreground = UI.Brush("#F1C7A5"); }
+        catch (Exception ex)
+        {
+            status.Text = "Cette image ne peut pas être ouverte : " + ex.Message;
+            status.Foreground = UI.Brush("#F1C7A5");
+        }
     }
     void Save(Coordinator coordinator, WebShortcut? original)
     {

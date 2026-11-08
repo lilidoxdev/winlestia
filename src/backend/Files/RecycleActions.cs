@@ -31,9 +31,14 @@ internal static class RecycleActions
         var valid = Existing(paths);
         if (valid.Length == 0)
             return null;
-        var dialog = new Microsoft.Win32.SaveFileDialog { Title = "Créer une archive ZIP", Filter = "Archive ZIP|*.zip",
-            DefaultExt = ".zip", FileName = "Winlestia-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".zip",
-            InitialDirectory = Path.GetDirectoryName(valid[0]) };
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Créer une archive ZIP",
+            Filter = "Archive ZIP|*.zip",
+            DefaultExt = ".zip",
+            FileName = "Winlestia-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".zip",
+            InitialDirectory = Path.GetDirectoryName(valid[0])
+        };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
     internal static void Zip(string[] paths, string destination)

@@ -294,8 +294,19 @@ internal sealed partial class Sidebar
             if (i >= 0 && label != QuickAccess.Entries[i].Label)
                 QuickAccess.SetLabel(i, label);
         }
-        box.KeyDown += (_, k) => { if (k.Key == System.Windows.Input.Key.Enter) { Finish(true); k.Handled = true; }
-            else if (k.Key == System.Windows.Input.Key.Escape) { Finish(false); k.Handled = true; } };
+        box.KeyDown += (_, k) =>
+        {
+            if (k.Key == System.Windows.Input.Key.Enter)
+            {
+                Finish(true);
+                k.Handled = true;
+            }
+            else if (k.Key == System.Windows.Input.Key.Escape)
+            {
+                Finish(false);
+                k.Handled = true;
+            }
+        };
         box.LostKeyboardFocus += (_, _) => Finish(true);
         box.MouseDown += (_, m) => m.Handled = true;
         box.Loaded += (_, _) => { box.Focus(); box.SelectAll(); };

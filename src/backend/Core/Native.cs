@@ -70,7 +70,8 @@ internal static partial class Native
     [DllImport("user32.dll")] internal static extern bool GetCursorPos(out Point point);
     [DllImport("user32.dll")] internal static extern IntPtr GetForegroundWindow();
     internal delegate IntPtr LowLevelMouseProc(int code, IntPtr message, IntPtr data);
-    [DllImport("user32.dll", SetLastError = true)] internal static extern IntPtr SetWindowsHookExW(int id, LowLevelMouseProc procedure,
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern IntPtr SetWindowsHookExW(int id, LowLevelMouseProc procedure,
         IntPtr module, uint thread);
     [DllImport("user32.dll")] internal static extern bool UnhookWindowsHookEx(IntPtr hook);
     [DllImport("user32.dll")] internal static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr message, IntPtr data);
@@ -106,7 +107,8 @@ internal static partial class Native
     [DllImport("user32.dll")] static extern bool SetWindowCompositionAttribute(IntPtr hwnd, ref CompositionData data);
     [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
     [DllImport("dwmapi.dll")] static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref Margins margins);
-    [DllImport("user32.dll", SetLastError = true)] internal static extern bool RegisterHotKey(IntPtr hwnd, int id, uint modifiers,
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern bool RegisterHotKey(IntPtr hwnd, int id, uint modifiers,
         uint key);
     [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr window, IntPtr insertAfter, int x, int y, int cx, int cy, uint flags);
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr window);
@@ -196,8 +198,13 @@ internal static partial class Native
         var source = HwndSource.FromHwnd(hwnd);
         if (source?.CompositionTarget != null)
             source.CompositionTarget.BackgroundColor = Colors.Transparent;
-        var margins = window.AllowsTransparency || Theme.Current.Opaque ? new Margins() : new Margins { Left = -1, Right = -1, Top = -1,
-            Bottom = -1 };
+        var margins = window.AllowsTransparency || Theme.Current.Opaque ? new Margins() : new Margins
+        {
+            Left = -1,
+            Right = -1,
+            Top = -1,
+            Bottom = -1
+        };
         DwmExtendFrameIntoClientArea(hwnd, ref margins);
         int dark = light ? 0 : 1;
         DwmSetWindowAttribute(hwnd, 20, ref dark, 4);
@@ -210,9 +217,14 @@ internal static partial class Native
         int backdrop = 1;
         DwmSetWindowAttribute(hwnd, 38, ref backdrop, 4);
         // L'acrylique d'accent garde les quatre surfaces indépendantes translucides quand le focus passe de l'une à l'autre.
-        var policy = new Accent { State = window.AllowsTransparency || Theme.Current.Opaque ? 0 : 4, Flags = window.AllowsTransparency
-            || Theme.Current.Opaque ? 0 : 2, Gradient = unchecked((int)(((uint)(tint * 255) << 24) | (light ? 0x00F8F3ECu
-            : 0x003C2418u))) };
+        var policy = new Accent
+        {
+            State = window.AllowsTransparency || Theme.Current.Opaque ? 0 : 4,
+            Flags = window.AllowsTransparency
+            || Theme.Current.Opaque ? 0 : 2,
+            Gradient = unchecked((int)(((uint)(tint * 255) << 24) | (light ? 0x00F8F3ECu
+            : 0x003C2418u)))
+        };
         IntPtr memory = Marshal.AllocHGlobal(Marshal.SizeOf<Accent>());
         try
         {
@@ -293,11 +305,34 @@ internal static partial class Native
     // jamais un démarrage désactivé : sans valeur Run, rien n'est créé, et le verrou sérialise avec SetAutostart.
     internal static void MigrateAutostart()
     {
-        System.Threading.Tasks.Task.Run(() => { lock (autostartGate) { try { AutostartTask.Refresh(); if (AutostartPolicy.Plan(RunPresent(
-            ), Environment.ProcessPath ?? "") == AutostartPolicy.Step.CreateTaskThenDropRun) { if (AutostartPolicy.DropRunAfter(
-            AutostartTask.Create())) { DropRun(); Store.Log(
-            "Démarrage migré de la clé Run vers la tâche WinlestiaShell."); } else Store.Log(
-            "Démarrage: clé Run conservée (tâche indisponible)."); } } catch (Exception ex) { Store.Log("Migration du démarrage: "
-            + ex.Message); } } });
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            lock (autostartGate)
+            {
+                try
+                {
+                    AutostartTask.Refresh();
+                    if (AutostartPolicy.Plan(RunPresent(
+            ), Environment.ProcessPath ?? "") == AutostartPolicy.Step.CreateTaskThenDropRun)
+                    {
+                        if (AutostartPolicy.DropRunAfter(
+            AutostartTask.Create()))
+                        {
+                            DropRun();
+                            Store.Log(
+            "Démarrage migré de la clé Run vers la tâche WinlestiaShell.");
+                        }
+                        else
+                            Store.Log(
+            "Démarrage: clé Run conservée (tâche indisponible).");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Store.Log("Migration du démarrage: "
+            + ex.Message);
+                }
+            }
+        });
     }
 }

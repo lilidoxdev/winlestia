@@ -24,8 +24,11 @@ internal static class SystemActions
         if (!SetSuspendState(false, false, false))
             owner.Message("La mise en veille n’a pas pu être déclenchée sur ce PC.");
     }
-    internal static void Screenshot(Coordinator owner) => owner.LaunchWindowsShortcut(new WindowsShortcut { Name = "Capture",
-        Target = "ms-screenclip:" });
+    internal static void Screenshot(Coordinator owner) => owner.LaunchWindowsShortcut(new WindowsShortcut
+    {
+        Name = "Capture",
+        Target = "ms-screenclip:"
+    });
     internal static void TaskManager(Coordinator owner)
     {
         owner.CollapseImmediately();
@@ -63,8 +66,11 @@ internal static class SystemActions
         try
         {
             var parts = command.Split(' ', 2);
-            Process.Start(new ProcessStartInfo(parts[0], parts.Length > 1 ? parts[1] : "") { UseShellExecute = false, CreateNoWindow = true
-                });
+            Process.Start(new ProcessStartInfo(parts[0], parts.Length > 1 ? parts[1] : "")
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
         }
         catch (Exception ex) { owner.Message("La commande « " + command + " » n’a pas pu être lancée.\n" + ex.Message); }
     }

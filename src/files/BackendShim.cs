@@ -89,8 +89,10 @@ internal static class Store
             string path = Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_FILE") is { Length: > 0 } over ? over
                 : Path.Combine(DataDir, "preferences-glass.json");
             if (File.Exists(path))
-                prefs = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(path), new JsonSerializerOptions {
-                    PropertyNameCaseInsensitive = true }) ?? prefs;
+                prefs = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(path), new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? prefs;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {

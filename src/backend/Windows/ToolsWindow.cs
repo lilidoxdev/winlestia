@@ -13,7 +13,7 @@ internal sealed record ToolCard(string Category, string Glyph, string Title, str
 internal sealed class ToolsWindow : GlassWindow
 {
     readonly Coordinator owner; readonly WrapPanel grid = new(); readonly List<(Button Button, string Name)> categories = new();
-        string filter = "Tout";
+    string filter = "Tout";
     internal ToolsWindow(Coordinator coordinator) : base("Winlestia — atelier")
     {
         owner = coordinator;
@@ -61,8 +61,13 @@ internal sealed class ToolsWindow : GlassWindow
         }
         Grid.SetRow(chips, 1);
         ContentHost.Children.Add(chips);
-        var scroll = new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 6, 0) };
+        var scroll = new ScrollViewer
+        {
+            Content = grid,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Padding = new Thickness(0, 0, 6, 0)
+        };
         Grid.SetRow(scroll, 2);
         ContentHost.Children.Add(scroll);
         Loaded += (_, _) => { ApplyGlass(); Build(); };
@@ -99,9 +104,18 @@ internal sealed class ToolsWindow : GlassWindow
         int index = 0;
         foreach (var card in cards)
         {
-            var border = new Border { Width = 306, MinHeight = 104, Margin = new Thickness(0, 0, 10, 10), Padding = new Thickness(13),
-                CornerRadius = new CornerRadius(20), Background = UI.T(M3Role.OnSurface, 0x0E), BorderBrush = UI.T(M3Role.OnSurface, 0x20),
-                BorderThickness = new Thickness(1), Cursor = Cursors.Hand };
+            var border = new Border
+            {
+                Width = 306,
+                MinHeight = 104,
+                Margin = new Thickness(0, 0, 10, 10),
+                Padding = new Thickness(13),
+                CornerRadius = new CornerRadius(20),
+                Background = UI.T(M3Role.OnSurface, 0x0E),
+                BorderBrush = UI.T(M3Role.OnSurface, 0x20),
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand
+            };
             var layout = new Grid();
             layout.ColumnDefinitions.Add(new()
             {
@@ -111,9 +125,15 @@ internal sealed class ToolsWindow : GlassWindow
             {
                 Width = new GridLength(1, GridUnitType.Star)
             });
-            var bulb = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(12), Background = UI.T(M3Role.OnSurface,
+            var bulb = new Border
+            {
+                Width = 36,
+                Height = 36,
+                CornerRadius = new CornerRadius(12),
+                Background = UI.T(M3Role.OnSurface,
                 0x1C),
-                VerticalAlignment = VerticalAlignment.Top };
+                VerticalAlignment = VerticalAlignment.Top
+            };
             var glyph = UI.Glyph(card.Glyph, 17);
             bulb.Child = glyph;
             layout.Children.Add(bulb);
@@ -135,10 +155,18 @@ internal sealed class ToolsWindow : GlassWindow
             border.Child = layout;
             border.MouseLeftButtonUp += (_, _) => { Close(); Dispatcher.BeginInvoke(card.Run); };
             System.Windows.Automation.AutomationProperties.SetName(border, card.Title);
-            border.MouseEnter += (_, _) => { border.Background = UI.T(M3Role.OnSurface, 0x1B); border.BorderBrush = UI.T(M3Role.OnSurface,
-                0x48); };
-            border.MouseLeave += (_, _) => { border.Background = UI.T(M3Role.OnSurface, 0x0E); border.BorderBrush = UI.T(M3Role.OnSurface,
-                0x20); };
+            border.MouseEnter += (_, _) =>
+            {
+                border.Background = UI.T(M3Role.OnSurface, 0x1B);
+                border.BorderBrush = UI.T(M3Role.OnSurface,
+                0x48);
+            };
+            border.MouseLeave += (_, _) =>
+            {
+                border.Background = UI.T(M3Role.OnSurface, 0x0E);
+                border.BorderBrush = UI.T(M3Role.OnSurface,
+                0x20);
+            };
             Motion.Stagger(border, index++);
             grid.Children.Add(border);
         }
@@ -186,8 +214,12 @@ internal sealed class HelpWindow : GlassWindow
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 18, 0, 12) };
+        var scroll = new ScrollViewer
+        {
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Margin = new Thickness(0, 18, 0, 12)
+        };
         var body = new StackPanel();
         scroll.Content = body;
         Grid.SetRow(scroll, 1);

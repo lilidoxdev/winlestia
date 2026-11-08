@@ -24,8 +24,13 @@ internal sealed partial class ControlCenterWindow : GlassWindow
     readonly DispatcherTimer mediaNotice = new() { Interval = TimeSpan.FromMilliseconds(MediaNoticeMs) };
     int mediaEvents, mediaReads, audioReads;
     long activeSince;
-    readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(1) }, brightnessTimer = new() {
-        Interval = TimeSpan.FromMilliseconds(90) };
+    readonly DispatcherTimer timer = new()
+    {
+        Interval = TimeSpan.FromSeconds(1)
+    }, brightnessTimer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(90)
+    };
     readonly Grid body = new();
     readonly TextBlock subtitle, note;
     readonly GlassLevel volume = new("Volume système"), brightness = new("Luminosité de l’écran") { Glyph = "\uE706" };
@@ -38,9 +43,15 @@ internal sealed partial class ControlCenterWindow : GlassWindow
         muteLabel = UI.Text("Son activé", 12);
     readonly Image cover = new() { Width = 48, Height = 48, Stretch = Stretch.UniformToFill };
     readonly Button play, previous, next, mute, sessionPicker;
-    readonly Slider progress = new() { Minimum = 0, Maximum = 1, Height = 21, IsMoveToPointEnabled = true, SmallChange = 5,
+    readonly Slider progress = new()
+    {
+        Minimum = 0,
+        Maximum = 1,
+        Height = 21,
+        IsMoveToPointEnabled = true,
+        SmallChange = 5,
         LargeChange = 15
-        };
+    };
     readonly Dictionary<string, (Button button, TextBlock status)> radios = new();
     AudioSnapshot audioState = new(false, 0, false, "Sortie Windows");
     ConnectionSnapshot? connectionState;

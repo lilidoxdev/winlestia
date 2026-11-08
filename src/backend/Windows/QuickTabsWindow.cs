@@ -62,9 +62,14 @@ internal sealed class QuickTabsWindow : GlassWindow
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 18, 0, 10), Content = list,
-            Padding = new Thickness(0, 0, 6, 0) };
+        var scroll = new ScrollViewer
+        {
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Margin = new Thickness(0, 18, 0, 10),
+            Content = list,
+            Padding = new Thickness(0, 0, 6, 0)
+        };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         status = UI.Text("", 12, UI.Dim);
@@ -82,9 +87,15 @@ internal sealed class QuickTabsWindow : GlassWindow
         {
             var tab = tabs[index];
             int position = index;
-            var card = new Border { CornerRadius = new CornerRadius(18), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 8),
-                Background = UI.T(M3Role.OnSurface, 0x0C), BorderBrush = UI.T(M3Role.OnSurface, 0x20), BorderThickness = new Thickness(1)
-                    };
+            var card = new Border
+            {
+                CornerRadius = new CornerRadius(18),
+                Padding = new Thickness(10),
+                Margin = new Thickness(0, 0, 0, 8),
+                Background = UI.T(M3Role.OnSurface, 0x0C),
+                BorderBrush = UI.T(M3Role.OnSurface, 0x20),
+                BorderThickness = new Thickness(1)
+            };
             var row = new Grid();
             row.ColumnDefinitions.Add(new()
             {
@@ -112,11 +123,24 @@ internal sealed class QuickTabsWindow : GlassWindow
             Button glyphTarget = icon;
             icon.Click += (_, _) => PickGlyph(glyphTarget, tab);
             row.Children.Add(icon);
-            var name = new TextBox { Text = tab.Name, FontSize = 13, Padding = new Thickness(10, 6, 10, 6), Margin = new Thickness(0, 0, 8,
-                0), VerticalContentAlignment = VerticalAlignment.Center };
+            var name = new TextBox
+            {
+                Text = tab.Name,
+                FontSize = 13,
+                Padding = new Thickness(10, 6, 10, 6),
+                Margin = new Thickness(0, 0, 8,
+                0),
+                VerticalContentAlignment = VerticalAlignment.Center
+            };
             System.Windows.Automation.AutomationProperties.SetName(name, "Nom de l’onglet " + tab.Name);
-            name.TextChanged += (_, _) => { if (string.IsNullOrWhiteSpace(name.Text)) return; tab.Name = name.Text.Trim(); Store.Save();
-                owner.RefreshPaletteLabels(); };
+            name.TextChanged += (_, _) =>
+            {
+                if (string.IsNullOrWhiteSpace(name.Text))
+                    return;
+                tab.Name = name.Text.Trim();
+                Store.Save();
+                owner.RefreshPaletteLabels();
+            };
             Grid.SetColumn(name, 1);
             row.Children.Add(name);
             Button target = UI.Button(Label(tab.Target), () => { });
@@ -142,8 +166,13 @@ internal sealed class QuickTabsWindow : GlassWindow
             down.Height = 32;
             down.Margin = new Thickness(0, 0, 4, 0);
             tools.Children.Add(down);
-            var remove = UI.IconButton("\uE74D", "Retirer " + tab.Name, () => { tabs.Remove(tab); Store.Save(); Rebuild();
-                owner.RefreshPaletteLabels(); });
+            var remove = UI.IconButton("\uE74D", "Retirer " + tab.Name, () =>
+            {
+                tabs.Remove(tab);
+                Store.Save();
+                Rebuild();
+                owner.RefreshPaletteLabels();
+            });
             remove.Width = 32;
             remove.Height = 32;
             tools.Children.Add(remove);
@@ -191,15 +220,23 @@ internal sealed class QuickTabsWindow : GlassWindow
     {
         var actions = new List<MenuAction>();
         foreach (var view in Views)
-            actions.Add(new MenuAction(view.Name, view.Glyph, () => { tab.Target = view.Target; Store.Save(); Rebuild();
-                owner.RefreshPaletteLabels(); }, string.Equals(tab.Target, view.Target, StringComparison.OrdinalIgnoreCase)));
+            actions.Add(new MenuAction(view.Name, view.Glyph, () =>
+            {
+                tab.Target = view.Target;
+                Store.Save();
+                Rebuild();
+                owner.RefreshPaletteLabels();
+            }, string.Equals(tab.Target, view.Target, StringComparison.OrdinalIgnoreCase)));
         actions.Add(new MenuAction("Choisir une application…", "\uE8B7", () => PickApplication(tab), true));
         GlassMenu.Open(owner, this, anchor, "Cible de l’onglet", actions.ToArray());
     }
     void PickApplication(WindowsShortcut tab)
     {
-        var picker = new OpenFileDialog { Title = "Choisir l’application de cet onglet",
-            Filter = "Applications et raccourcis|*.exe;*.lnk;*.bat;*.cmd;*.url|Tous les fichiers|*.*" };
+        var picker = new OpenFileDialog
+        {
+            Title = "Choisir l’application de cet onglet",
+            Filter = "Applications et raccourcis|*.exe;*.lnk;*.bat;*.cmd;*.url|Tous les fichiers|*.*"
+        };
         if (picker.ShowDialog(this) != true)
             return;
         tab.Target = picker.FileName;
@@ -259,8 +296,11 @@ internal sealed class QuickTabsWindow : GlassWindow
             row.Children.Add(check);
         Button? keyButton = null;
         keyButton = UI.Button(GlobalShortcut.KeyName(key) + "  ⌄", () => GlassMenu.Open(owner, this, keyButton!,
-            "Touche de la commande rapide", GlobalShortcut.Keys.Select(k => new MenuAction(GlobalShortcut.KeyName(k), "\uE765", () => {
-            key = k; keyButton!.Content = GlobalShortcut.KeyName(k) + "  ⌄"; }, key == k))));
+            "Touche de la commande rapide", GlobalShortcut.Keys.Select(k => new MenuAction(GlobalShortcut.KeyName(k), "\uE765", () =>
+            {
+                key = k;
+                keyButton!.Content = GlobalShortcut.KeyName(k) + "  ⌄";
+            }, key == k))));
         keyButton.MinWidth = 84;
         keyButton.Margin = new Thickness(0, 0, 14, 8);
         System.Windows.Automation.AutomationProperties.SetName(keyButton, "Choisir la touche de la commande rapide");

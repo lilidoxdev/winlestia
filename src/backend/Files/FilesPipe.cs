@@ -36,7 +36,8 @@ internal static class FilesPipe
 
     [DllImport("user32.dll")] static extern bool AllowSetForegroundWindow(int pid);
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool WaitNamedPipe(string name,
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern bool WaitNamedPipe(string name,
         int timeoutMs);
 
     // File.Exists sur un chemin de canal s'y connecterait (et consommerait une instance du serveur) ; WaitNamedPipe se contente de sonder.

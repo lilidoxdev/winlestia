@@ -67,9 +67,13 @@ internal sealed partial class FolderTab
                     added = new List<FileItem>();
                     if (whole)
                     {
-                        var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = false,
-                            ReturnSpecialDirectories = false, AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System
-                            };
+                        var options = new EnumerationOptions
+                        {
+                            IgnoreInaccessible = true,
+                            RecurseSubdirectories = false,
+                            ReturnSpecialDirectories = false,
+                            AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System
+                        };
                         var fresh = new Dictionary<string, FileItem>(StringComparer.OrdinalIgnoreCase);
                         foreach (var e in new DirectoryInfo(loc).EnumerateFileSystemInfos("*", options))
                         {

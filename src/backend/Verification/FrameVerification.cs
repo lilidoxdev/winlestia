@@ -53,8 +53,11 @@ internal static class FrameVerification
             });
             passed &= ok;
         }
-        app.Exit += (_, _) => File.WriteAllText(Path.Combine(Store.Root, "frame-verification.json"), JsonSerializer.Serialize(new {
-            allPassed = passed, checks }, new JsonSerializerOptions { WriteIndented = true }));
+        app.Exit += (_, _) => File.WriteAllText(Path.Combine(Store.Root, "frame-verification.json"), JsonSerializer.Serialize(new
+        {
+            allPassed = passed,
+            checks
+        }, new JsonSerializerOptions { WriteIndented = true }));
         Window? probe = null;
         app.Startup += (_, _) =>
         {
@@ -62,9 +65,18 @@ internal static class FrameVerification
             {
                 frame.Enable(false);
                 double scale = TaskbarNative.Scale(screens[0]);
-                probe = new Window { Title = "Vérification du cadre Winlestia", Width = 500, Height = 280, Left = (screens[0].Bounds.Left
-                    + 100) / scale, Top = (screens[0].Bounds.Top + 100) / scale, ShowInTaskbar = false, ShowActivated = false,
-                    WindowStartupLocation = WindowStartupLocation.Manual };
+                probe = new Window
+                {
+                    Title = "Vérification du cadre Winlestia",
+                    Width = 500,
+                    Height = 280,
+                    Left = (screens[0].Bounds.Left
+                    + 100) / scale,
+                    Top = (screens[0].Bounds.Top + 100) / scale,
+                    ShowInTaskbar = false,
+                    ShowActivated = false,
+                    WindowStartupLocation = WindowStartupLocation.Manual
+                };
                 probe.Show();
                 probe.WindowState = WindowState.Maximized;
             }

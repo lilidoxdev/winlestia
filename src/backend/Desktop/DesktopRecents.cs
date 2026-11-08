@@ -15,7 +15,7 @@ internal static class DesktopRecents
     internal static readonly Dictionary<string, Entry> Entries = new(); static readonly Dictionary<string,
         Recent> history = new(StringComparer.OrdinalIgnoreCase);
     static readonly ConcurrentQueue<(uint pid, DateTime at)> queue = new(); static readonly AutoResetEvent wake = new(false);
-        static readonly string file = Path.Combine(Store.DataDir, "recent-launches.json");
+    static readonly string file = Path.Combine(Store.DataDir, "recent-launches.json");
     static readonly Thread worker; static uint lastPid; static object[] values = Array.Empty<object>(); static DateTime nextScan;
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
     static DesktopRecents()
@@ -159,8 +159,15 @@ internal static class DesktopRecents
                     Entries.Clear();
                     foreach (var item in ordered)
                         Entries[item.Entry.Id] = item.Entry;
-                    values = ordered.Take(24).Select(r => new { id = r.Entry.Id, name = r.Entry.Name, kind = "systemRecent",
-                        icon = Directory.Exists(r.Entry.Target) ? "folder" : "apps", comment = r.Entry.Target, at = r.At }).ToArray();
+                    values = ordered.Take(24).Select(r => new
+                    {
+                        id = r.Entry.Id,
+                        name = r.Entry.Name,
+                        kind = "systemRecent",
+                        icon = Directory.Exists(r.Entry.Target) ? "folder" : "apps",
+                        comment = r.Entry.Target,
+                        at = r.At
+                    }).ToArray();
                 }
                 try
                 {

@@ -155,8 +155,12 @@ internal sealed partial class ControlCenterWindow
         header.Children.Add(texts);
         stack.Children.Add(header);
         var transport =
-            new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 9, 0, 0) };
+            new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 9, 0, 0)
+            };
         previous.Margin = new Thickness(0, 0, 10, 0);
         next.Margin = new Thickness(10, 0, 0, 0);
         transport.Children.Add(previous);

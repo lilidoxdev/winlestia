@@ -23,8 +23,10 @@ internal sealed class ClipboardService : IClipboardService, IDisposable
 {
     // Intervalle de sondage du presse-papiers : réactif sans coûter de processeur.
     const int PollMs = 750;
-    readonly List<ClipboardItem> items = new(); readonly string folder; readonly DispatcherTimer timer = new() {
-        Interval = TimeSpan.FromMilliseconds(PollMs) };
+    readonly List<ClipboardItem> items = new(); readonly string folder; readonly DispatcherTimer timer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(PollMs)
+    };
     bool busy, disposed; string last = ""; uint lastSequence;
     [DllImport("user32.dll")] static extern uint GetClipboardSequenceNumber();
     internal event Action? Changed;
@@ -201,7 +203,7 @@ internal sealed class ClipboardService : IClipboardService, IDisposable
 internal sealed class ClipboardWindow : GlassWindow
 {
     readonly Coordinator owner; readonly ClipboardService service; readonly StackPanel list = new(); readonly TextBox search;
-        readonly TextBlock count, status;
+    readonly TextBlock count, status;
     internal ClipboardWindow(Coordinator coordinator, ClipboardService clipboard) : base("Winlestia — presse-papiers")
     {
         owner = coordinator;
@@ -262,14 +264,24 @@ internal sealed class ClipboardWindow : GlassWindow
         searchRow.Children.Add(search);
         Grid.SetRow(searchRow, 1);
         ContentHost.Children.Add(searchRow);
-        var scroll = new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 0, 0, 10) };
+        var scroll = new ScrollViewer
+        {
+            Content = list,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Margin = new Thickness(0, 0, 0, 10)
+        };
         Grid.SetRow(scroll, 2);
         ContentHost.Children.Add(scroll);
         var footer = new DockPanel();
         var actions = new StackPanel { Orientation = Orientation.Horizontal };
-        var clear = UI.Button("Vider", () => {
-            if (owner.Confirm("Vider l’historique du presse-papiers ?\n\nLes éléments épinglés restent.")) { service.Clear(); } });
+        var clear = UI.Button("Vider", () =>
+        {
+            if (owner.Confirm("Vider l’historique du presse-papiers ?\n\nLes éléments épinglés restent."))
+            {
+                service.Clear();
+            }
+        });
         clear.FontSize = 12;
         clear.Padding = new Thickness(12, 7, 12, 7);
         actions.Children.Add(clear);
@@ -288,8 +300,14 @@ internal sealed class ClipboardWindow : GlassWindow
         service.Changed += Refresh;
         Closed += (_, _) => { service.Changed -= Refresh; };
         Loaded += (_, _) => { ApplyGlass(); Refresh(); search.Focus(); };
-        KeyDown += (_, e) => { if (e.Key == Key.Escape) Close(); if (e.Key == Key.F
-            && Keyboard.Modifiers == ModifierKeys.Control) search.Focus(); };
+        KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+                Close();
+            if (e.Key == Key.F
+            && Keyboard.Modifiers == ModifierKeys.Control)
+                search.Focus();
+        };
     }
     void Refresh()
     {
@@ -315,9 +333,16 @@ internal sealed class ClipboardWindow : GlassWindow
     }
     FrameworkElement Row(ClipboardItem item, int index)
     {
-        var row = new Border { CornerRadius = new CornerRadius(16), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 7),
-            Background = UI.T(M3Role.OnSurface, 0x0C), BorderBrush = UI.T(M3Role.OnSurface, 0x1C), BorderThickness = new Thickness(1),
-            Cursor = Cursors.Hand };
+        var row = new Border
+        {
+            CornerRadius = new CornerRadius(16),
+            Padding = new Thickness(10),
+            Margin = new Thickness(0, 0, 0, 7),
+            Background = UI.T(M3Role.OnSurface, 0x0C),
+            BorderBrush = UI.T(M3Role.OnSurface, 0x1C),
+            BorderThickness = new Thickness(1),
+            Cursor = Cursors.Hand
+        };
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new()
         {
@@ -350,15 +375,31 @@ internal sealed class ClipboardWindow : GlassWindow
                 Store.Log("ClipboardTools.Row : " + ex.GetType().Name + ": " + ex.Message);
             }
             image.Clip = new RectangleGeometry(new Rect(0, 0, 42, 42), 9, 9);
-            grid.Children.Add(new Border { Width = 42, Height = 42, CornerRadius = new CornerRadius(9), Background = UI.T(M3Role.OnSurface,
-                0x18), Child = image, VerticalAlignment = VerticalAlignment.Center });
+            grid.Children.Add(new Border
+            {
+                Width = 42,
+                Height = 42,
+                CornerRadius = new CornerRadius(9),
+                Background = UI.T(M3Role.OnSurface,
+                0x18),
+                Child = image,
+                VerticalAlignment = VerticalAlignment.Center
+            });
         }
         else
         {
             var glyph = UI.Glyph("\uE8C8", 17);
             glyph.HorizontalAlignment = HorizontalAlignment.Center;
-            grid.Children.Add(new Border { Width = 42, Height = 42, CornerRadius = new CornerRadius(9), Background = UI.T(M3Role.OnSurface,
-                0x18), Child = glyph, VerticalAlignment = VerticalAlignment.Center });
+            grid.Children.Add(new Border
+            {
+                Width = 42,
+                Height = 42,
+                CornerRadius = new CornerRadius(9),
+                Background = UI.T(M3Role.OnSurface,
+                0x18),
+                Child = glyph,
+                VerticalAlignment = VerticalAlignment.Center
+            });
         }
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 8, 0) };
         var preview = UI.Text(item.Kind == "image" ? "Image copiée" : item.Text.Replace("\r", " ").Replace("\n", "  "), 12);
@@ -388,8 +429,14 @@ internal sealed class ClipboardWindow : GlassWindow
         Grid.SetColumn(tools, 2);
         grid.Children.Add(tools);
         row.Child = grid;
-        row.MouseLeftButtonUp += (_, e) => { if (e.OriginalSource is Button) return; service.CopyBack(item);
-            owner.ShowToast("Élément copié"); Close(); };
+        row.MouseLeftButtonUp += (_, e) =>
+        {
+            if (e.OriginalSource is Button)
+                return;
+            service.CopyBack(item);
+            owner.ShowToast("Élément copié");
+            Close();
+        };
         Motion.Stagger(row, index);
         return row;
     }

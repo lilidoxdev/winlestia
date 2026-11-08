@@ -9,10 +9,11 @@ internal sealed class WindowsSpectrum : IDisposable
 {
     [DllImport("ProcessAudio.dll", CallingConvention = CallingConvention.Cdecl)] static extern IntPtr AudioCreate(uint pid);
     [DllImport("ProcessAudio.dll", CallingConvention = CallingConvention.Cdecl)] static extern void AudioDestroy(IntPtr handle);
-    [DllImport("ProcessAudio.dll", CallingConvention = CallingConvention.Cdecl)] static extern int AudioRead(IntPtr handle,
+    [DllImport("ProcessAudio.dll", CallingConvention = CallingConvention.Cdecl)]
+    static extern int AudioRead(IntPtr handle,
         [Out] float[] data, int count, out uint serial);
     readonly object gate = new(); readonly AutoResetEvent wake = new(false); readonly Thread thread; volatile int requested;
-        volatile bool disposed; double[] values = new double[48];
+    volatile bool disposed; double[] values = new double[48];
     internal WindowsSpectrum()
     {
         thread = new Thread(Loop) { IsBackground = true, Name = "Winlestia process FFT" };

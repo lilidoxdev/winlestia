@@ -62,13 +62,14 @@ internal sealed class WindowsDockKey : IDisposable
         public uint Key, Scan, Flags, Time; public UIntPtr Extra;
     }
     delegate IntPtr Callback(int code, IntPtr message, IntPtr data);
-    [DllImport("user32.dll", SetLastError = true)] static extern IntPtr SetWindowsHookExW(int id, Callback callback, IntPtr module,
+    [DllImport("user32.dll", SetLastError = true)]
+    static extern IntPtr SetWindowsHookExW(int id, Callback callback, IntPtr module,
         uint thread);
     [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(IntPtr hook);
     [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr message, IntPtr data);
     [DllImport("user32.dll")] static extern void keybd_event(byte key, byte scan, uint flags, UIntPtr extra);
     readonly Callback callback; readonly DockKeyPolicy policy = new(); readonly Action reveal;
-        readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher; IntPtr hook;
+    readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher; IntPtr hook;
     internal WindowsDockKey(Action action)
     {
         reveal = action;

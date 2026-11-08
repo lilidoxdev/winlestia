@@ -12,7 +12,10 @@ internal sealed class BridgeActionAttribute : Attribute
 {
     internal BridgeActionAttribute(string name) => Name = name;
 
-    internal string Name { get; }
+    internal string Name
+    {
+        get;
+    }
 }
 
 // Entrées et sorties d'une requête. Les sorties (Notice, …) deviennent les clés de la réponse JSON.
@@ -24,17 +27,44 @@ internal sealed class BridgeCall
         Id = id;
     }
 
-    internal JsonElement Args { get; }
-    internal string Id { get; }
-    internal string? Notice { get; set; }
-    internal object? WallpaperCapture { get; set; }
-    internal object? BookmarksItems { get; set; }
-    internal object? WindowItems { get; set; }
-    internal object? WallpaperPicker { get; set; }
-    internal object? FileItems { get; set; }
+    internal JsonElement Args
+    {
+        get;
+    }
+    internal string Id
+    {
+        get;
+    }
+    internal string? Notice
+    {
+        get; set;
+    }
+    internal object? WallpaperCapture
+    {
+        get; set;
+    }
+    internal object? BookmarksItems
+    {
+        get; set;
+    }
+    internal object? WindowItems
+    {
+        get; set;
+    }
+    internal object? WallpaperPicker
+    {
+        get; set;
+    }
+    internal object? FileItems
+    {
+        get; set;
+    }
 
     // Réponse complète qui court-circuite l'état (sondes rapides du frontend : dictée, barres audio, spectre).
-    internal string? RawReply { get; set; }
+    internal string? RawReply
+    {
+        get; set;
+    }
 }
 
 internal sealed partial class QtShellBridge

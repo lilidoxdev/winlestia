@@ -30,6 +30,12 @@ internal static class LaunchRules
     }
     // Rubrique d'affichage d'un accès ajouté à la main selon le panneau qui le reçoit.
     internal static string SectionFor(string board)
-        => board switch { "apps" => "Applications", "games" => "Jeux", "projects" => "Projets", _ => "Dossiers" };
+        => board switch
+        {
+            "apps" => "Applications",
+            "games" => "Jeux",
+            "projects" => "Projets",
+            _ => "Dossiers"
+        };
     internal static string SelectArguments(string target) => "/select,\"" + target + "\"";
 }

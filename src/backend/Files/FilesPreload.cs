@@ -74,9 +74,19 @@ internal static class FilesPreload
         p.Exited += (_, _) => OnExited(p);
         // BelowNormal seulement pendant qu'il construit sa fenêtre cachée ; le résident repasse ensuite en Normal pour qu'une ouverture
         // ultérieure ne soit pas affamée.
-        Task.Run(async () => { await Task.Delay(NormalPriorityDelayMs).ConfigureAwait(false); try {
-            if (!p.HasExited) p.PriorityClass = ProcessPriorityClass.Normal; } catch (InvalidOperationException) {
-            /* Processus déjà terminé : plus de priorité à rétablir. */ } });
+        Task.Run(async () =>
+        {
+            await Task.Delay(NormalPriorityDelayMs).ConfigureAwait(false);
+            try
+            {
+                if (!p.HasExited)
+                    p.PriorityClass = ProcessPriorityClass.Normal;
+            }
+            catch (InvalidOperationException)
+            {
+                /* Processus déjà terminé : plus de priorité à rétablir. */
+            }
+        });
     }
 
     static void OnExited(Process p)
@@ -93,17 +103,33 @@ internal static class FilesPreload
         switch (policy.OnExit(code, Environment.TickCount64, quitting, Store.State.FilesPreload))
         {
             case PreloadAction.Crash:
-                Task.Run(async () => { await Task.Delay(CrashRelaunchDelayMs).ConfigureAwait(false); try { Launch(); }
-                    catch (Exception err) { Store.Log("FilesPreload.OnExited : " + err.GetType().Name + ": " + err.Message); } });
+                Task.Run(async () =>
+                {
+                    await Task.Delay(CrashRelaunchDelayMs).ConfigureAwait(false);
+                    try
+                    {
+                        Launch();
+                    }
+                    catch (Exception err) { Store.Log("FilesPreload.OnExited : " + err.GetType().Name + ": " + err.Message); }
+                });
                 break;
             case PreloadAction.Recycle:
                 Store.Log("FilesPreload: resident recycled (exit 75), relaunch in " + DelayMs / 1000 + " s");
                 lock (policy)
                 {
                     recycleTimer?.Dispose();
-                    recycleTimer = new Timer(_ => { try { Launch(true); } catch (Exception ex) { Store.Log("FilesPreload: "
-                        + ex.Message); }
-                        }, null, DelayMs, Timeout.Infinite);
+                    recycleTimer = new Timer(_ =>
+                    {
+                        try
+                        {
+                            Launch(true);
+                        }
+                        catch (Exception ex)
+                        {
+                            Store.Log("FilesPreload: "
+                        + ex.Message);
+                        }
+                    }, null, DelayMs, Timeout.Infinite);
                 }
                 break;
             case PreloadAction.StopTooFast:
@@ -123,8 +149,14 @@ internal static class FilesPreload
         lock (policy)
         {
             paletteTimer?.Dispose();
-            paletteTimer = new Timer(_ => { try { FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "palette"), 150); }
-                catch (Exception err) { Store.Log("FilesPreload.NotifyPalette : " + err.GetType().Name + ": " + err.Message); } }, null,
+            paletteTimer = new Timer(_ =>
+            {
+                try
+                {
+                    FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "palette"), 150);
+                }
+                catch (Exception err) { Store.Log("FilesPreload.NotifyPalette : " + err.GetType().Name + ": " + err.Message); }
+            }, null,
                 600, Timeout.Infinite);
         }
     }

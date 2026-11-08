@@ -20,7 +20,7 @@ internal sealed class CpuTempChain : IDisposable
     sealed class Source(string name, Func<double?> read, bool hardware = false)
     {
         internal readonly bool Hardware = hardware; internal bool EverWorked; internal readonly string Name = name;
-            internal readonly Func<double?> Read = read; internal long RetryAt; internal bool Logged; internal int Fails;
+        internal readonly Func<double?> Read = read; internal long RetryAt; internal bool Logged; internal int Fails;
     }
     readonly Source[] sources; readonly Func<long> clock; readonly Action<string> log;
     sealed record Reading(double Value, string Source, long At);
@@ -64,8 +64,19 @@ internal sealed class CpuTempChain : IDisposable
                 nextProbe = now + 10000;
                 Volatile.Write(ref busySince, now);
                 int gen = Volatile.Read(ref generation);
-                Task.Run(() => { try { Probe(gen); } catch (Exception ex) { log("Température CPU: " + ex.Message); } finally {
-                    if (gen == Volatile.Read(ref generation)) Volatile.Write(ref busy, 0); } });
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        Probe(gen);
+                    }
+                    catch (Exception ex) { log("Température CPU: " + ex.Message); }
+                    finally
+                    {
+                        if (gen == Volatile.Read(ref generation))
+                            Volatile.Write(ref busy, 0);
+                    }
+                });
             }
         }
         var c = Volatile.Read(ref cached);
@@ -142,8 +153,11 @@ internal sealed class CpuTempChain : IDisposable
         var scope = new ManagementScope(ns, new ConnectionOptions { Timeout = TimeSpan.FromSeconds(2) });
         scope.Connect();
         using var searcher = new ManagementObjectSearcher(scope,
-            new ObjectQuery("SELECT Name,Value,Identifier FROM Sensor WHERE SensorType='Temperature'"), new EnumerationOptions {
-            Timeout = TimeSpan.FromSeconds(2), ReturnImmediately = true });
+            new ObjectQuery("SELECT Name,Value,Identifier FROM Sensor WHERE SensorType='Temperature'"), new EnumerationOptions
+            {
+                Timeout = TimeSpan.FromSeconds(2),
+                ReturnImmediately = true
+            });
         double? best = null;
         int rank = 9;
         using var results = searcher.Get();
@@ -174,8 +188,11 @@ internal sealed class CpuTempChain : IDisposable
         var scope = new ManagementScope(@"root\wmi", new ConnectionOptions { Timeout = TimeSpan.FromSeconds(2) });
         scope.Connect();
         using var searcher = new ManagementObjectSearcher(scope,
-            new ObjectQuery("SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature"), new EnumerationOptions {
-            Timeout = TimeSpan.FromSeconds(2), ReturnImmediately = true });
+            new ObjectQuery("SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature"), new EnumerationOptions
+            {
+                Timeout = TimeSpan.FromSeconds(2),
+                ReturnImmediately = true
+            });
         double? best = null;
         using var results = searcher.Get();
         foreach (ManagementBaseObject o in results)
@@ -246,10 +263,12 @@ internal sealed class CpuTempChain : IDisposable
         internal IntPtr Name; internal uint Status; internal uint Pad; internal double Value;
     }
     [DllImport("pdh.dll", CharSet = CharSet.Unicode)] static extern uint PdhOpenQueryW(string? source, UIntPtr data, out IntPtr query);
-    [DllImport("pdh.dll", CharSet = CharSet.Unicode)] static extern uint PdhAddEnglishCounterW(IntPtr query, string path, UIntPtr data,
+    [DllImport("pdh.dll", CharSet = CharSet.Unicode)]
+    static extern uint PdhAddEnglishCounterW(IntPtr query, string path, UIntPtr data,
         out IntPtr counter);
     [DllImport("pdh.dll")] static extern uint PdhCollectQueryData(IntPtr query);
-    [DllImport("pdh.dll")] static extern uint PdhGetFormattedCounterArrayW(IntPtr counter, uint format, ref uint size, out uint count,
+    [DllImport("pdh.dll")]
+    static extern uint PdhGetFormattedCounterArrayW(IntPtr counter, uint format, ref uint size, out uint count,
         IntPtr buffer);
     [DllImport("pdh.dll")] static extern uint PdhCloseQuery(IntPtr query);
 }

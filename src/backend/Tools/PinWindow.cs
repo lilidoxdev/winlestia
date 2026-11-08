@@ -79,8 +79,12 @@ internal sealed class PinWindow : Window
         {
             string folder = Path.Combine(Store.DataDir, "pins");
             Directory.CreateDirectory(folder);
-            var pinned = new PinNote { Kind = "image", Width = Math.Min(420, image.PixelWidth * (96 / Math.Max(1, image.DpiX))),
-                Angle = -2.6 };
+            var pinned = new PinNote
+            {
+                Kind = "image",
+                Width = Math.Min(420, image.PixelWidth * (96 / Math.Max(1, image.DpiX))),
+                Angle = -2.6
+            };
             pinned.ImagePath = Path.Combine(folder, pinned.Id + ".png");
             using (var stream = File.Create(pinned.ImagePath))
             {
@@ -158,8 +162,10 @@ internal sealed class PinWindow : Window
         Native.ClickThrough(handle, open);
         Topmost = true;
         BeginAnimation(OpacityProperty,
-                       new DoubleAnimation(Opacity, open ? note.Opacity * .78 : note.Opacity, Motion.Span(180)) {
-                           EasingFunction = Motion.Ease });
+                       new DoubleAnimation(Opacity, open ? note.Opacity * .78 : note.Opacity, Motion.Span(180))
+                       {
+                           EasingFunction = Motion.Ease
+                       });
     }
     internal static void CloseAll()
     {
@@ -284,8 +290,17 @@ internal sealed class PinWindow : Window
                 RenderTransform = new RotateTransform(-3),
                 ToolTip = "Glisser par le ruban pour déplacer"
             };
-        tape.MouseLeftButtonDown += (_, _) => { try { DragMove(); } catch (InvalidOperationException) {
-            /* DragMove lève si le bouton est déjà relâché : glissement sans objet. */ } };
+        tape.MouseLeftButtonDown += (_, _) =>
+        {
+            try
+            {
+                DragMove();
+            }
+            catch (InvalidOperationException)
+            {
+                /* DragMove lève si le bouton est déjà relâché : glissement sans objet. */
+            }
+        };
         root.Children.Add(tape);
         var close = UI.IconButton("\uE711", "Détacher et supprimer ce papier", Detach);
         close.Width = 24;
@@ -336,8 +351,10 @@ internal sealed class PinWindow : Window
                                     {
                                         EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = .45 }
                                     });
-            drop.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-18, 0, Motion.Span(420)) { EasingFunction = Motion.Ease
-                });
+            drop.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-18, 0, Motion.Span(420))
+            {
+                EasingFunction = Motion.Ease
+            });
             card.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, Motion.Span(180)));
             Schedule();
         };
@@ -407,7 +424,9 @@ internal sealed class PinWindow : Window
     }
     void Animate(double angle)
     {
-        rotation.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(angle, Motion.Span(220)) { EasingFunction = Motion.Ease
-            });
+        rotation.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(angle, Motion.Span(220))
+        {
+            EasingFunction = Motion.Ease
+        });
     }
 }

@@ -16,11 +16,26 @@ internal static class ShortcutCombo
     internal static string Format(uint modifiers, uint key) => string.Join("+", new[] { (modifiers & 8) != 0 ? "Win" : "",
         (modifiers & 2) != 0 ? "Ctrl" : "", (modifiers & 1) != 0 ? "Alt" : "", (modifiers & 4) != 0 ? "Maj" : "", KeyText(key) }.Where(t
         => t.Length > 0));
-    internal static string KeyText(uint key) => key switch { >= 0x70 and <= 0x87 => "F" + (key - 0x6F), 0x20 => "Espace", 0x08
-        => "Backspace", 0x09 => "Tab", 0x0D => "Entrée", 0x25 => "←", 0x26 => "↑", 0x27 => "→", 0x28 => "↓", 0x2C =>
-            "Impr. écran", 0xBB
-        => "Plus", 0xBD => "Moins", _ => key is >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A ? ((char)key).ToString() : "0x"
-        + key.ToString("X2") };
+    internal static string KeyText(uint key) => key switch
+    {
+        >= 0x70 and <= 0x87 => "F" + (key - 0x6F),
+        0x20 => "Espace",
+        0x08
+        => "Backspace",
+        0x09 => "Tab",
+        0x0D => "Entrée",
+        0x25 => "←",
+        0x26 => "↑",
+        0x27 => "→",
+        0x28 => "↓",
+        0x2C =>
+            "Impr. écran",
+        0xBB
+        => "Plus",
+        0xBD => "Moins",
+        _ => key is >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A ? ((char)key).ToString() : "0x"
+        + key.ToString("X2")
+    };
     static uint KeyFrom(string token)
     {
         string t = token.Trim().ToLowerInvariant();
@@ -151,10 +166,22 @@ internal static class ShortcutCatalog
     };
     internal static ShortcutDef? Find(string id) => All.FirstOrDefault(d => d.Id == id);
     // Nom affiché de la touche de dictée (code de touche virtuelle).
-    internal static string DictationKeyName(int vk) => vk switch { 0xA5 => "AltGr", 0xA4 => "Alt gauche", 0xA2 => "Ctrl gauche", 0xA3
-        => "Ctrl droit", 0xA0 => "Maj gauche", 0xA1 => "Maj droit", 0x5B => "Win gauche", 0x5C => "Win droit", 0x14 => "Verr. maj.",
-        >= 0x70 and <= 0x87 => "F" + (vk - 0x6F), >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A => ((char)vk).ToString(), _ => "Touche " + vk
-        };
+    internal static string DictationKeyName(int vk) => vk switch
+    {
+        0xA5 => "AltGr",
+        0xA4 => "Alt gauche",
+        0xA2 => "Ctrl gauche",
+        0xA3
+        => "Ctrl droit",
+        0xA0 => "Maj gauche",
+        0xA1 => "Maj droit",
+        0x5B => "Win gauche",
+        0x5C => "Win droit",
+        0x14 => "Verr. maj.",
+        >= 0x70 and <= 0x87 => "F" + (vk - 0x6F),
+        >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A => ((char)vk).ToString(),
+        _ => "Touche " + vk
+    };
 }
 // Applique un changement de raccourci venant de la page de réglages : valide, rejette les combinaisons réservées à Windows, détecte
 // tous les conflits (configurables, fixes et tuilage), relie avec retour arrière, persiste.
@@ -201,11 +228,26 @@ internal sealed class ShortcutManager
     }
     internal static string DefaultCombo(ShortcutDef d) => d.Id == "dictation" ? "" : d.Configurable
         ? ShortcutCombo.Format(d.DefaultModifiers, d.DefaultKey) : d.FixedCombo;
-    internal object[] List() => ShortcutCatalog.All.Select(d => (object)new { id = d.Id, group = d.Group, label = d.Label,
-        combo = ComboOf(d), defaultCombo = DefaultCombo(d), configurable = d.Configurable, reason = d.Reason, scope = d.Scope,
-        active = !d.Configurable || hotkeys.IsActive(d.Id) }).ToArray();
-    internal object Status() => new { nonce, id = lastId, ok = last?.Ok ?? true, message = last?.Message ?? "",
-        conflictId = last?.ConflictId ?? "" };
+    internal object[] List() => ShortcutCatalog.All.Select(d => (object)new
+    {
+        id = d.Id,
+        group = d.Group,
+        label = d.Label,
+        combo = ComboOf(d),
+        defaultCombo = DefaultCombo(d),
+        configurable = d.Configurable,
+        reason = d.Reason,
+        scope = d.Scope,
+        active = !d.Configurable || hotkeys.IsActive(d.Id)
+    }).ToArray();
+    internal object Status() => new
+    {
+        nonce,
+        id = lastId,
+        ok = last?.Ok ?? true,
+        message = last?.Message ?? "",
+        conflictId = last?.ConflictId ?? ""
+    };
     // Première autre liaison qui utilise déjà cette combinaison (fixes et tuilage inclus), ou null.
     internal ShortcutDef? FindConflict(string id, uint m, uint k)
     {

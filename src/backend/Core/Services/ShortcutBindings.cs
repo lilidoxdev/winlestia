@@ -3,7 +3,10 @@ using System;
 
 namespace PanneauxGlass;
 
-internal enum HotkeyAction { None, Rescue, Palette, Settings, Wallpaper, Pin, Capture, Toggle }
+internal enum HotkeyAction
+{
+    None, Rescue, Palette, Settings, Wallpaper, Pin, Capture, Toggle
+}
 
 // Règle pure : quand les réglages sont ouverts, Palette, Capture et Toggle sont ignorés ; les autres actions passent toujours.
 internal static class ShortcutGateRules
@@ -14,15 +17,42 @@ internal static class ShortcutGateRules
 
 internal interface IShortcutBindings : IDisposable
 {
-    string ShortcutStatus { get; }
-    string PaletteStatus { get; }
-    string PinStatus { get; }
-    string WallpaperStatus { get; }
-    string CaptureStatus { get; }
-    string PaletteLabel { get; }
-    string PinShortcutLabel { get; }
-    string WallpaperLabel { get; }
-    string CaptureShortcutLabel { get; }
+    string ShortcutStatus
+    {
+        get;
+    }
+    string PaletteStatus
+    {
+        get;
+    }
+    string PinStatus
+    {
+        get;
+    }
+    string WallpaperStatus
+    {
+        get;
+    }
+    string CaptureStatus
+    {
+        get;
+    }
+    string PaletteLabel
+    {
+        get;
+    }
+    string PinShortcutLabel
+    {
+        get;
+    }
+    string WallpaperLabel
+    {
+        get;
+    }
+    string CaptureShortcutLabel
+    {
+        get;
+    }
     bool SetShortcut(uint modifiers, uint key, string view, out string error);
     bool SetPaletteShortcut(uint modifiers, uint key, out string error);
     bool SetPinShortcut(uint modifiers, uint key, out string error);
@@ -45,7 +75,10 @@ internal sealed class ShortcutBindings : IShortcutBindings
         this.refreshLabels = refreshLabels;
     }
     // Hors de l'interface : seul l'adaptateur réel a besoin de RegisterHotKey, les doublures n'ont rien à fabriquer.
-    GlobalShortcut Global { get; }
+    GlobalShortcut Global
+    {
+        get;
+    }
     public string ShortcutStatus => Global.Error;
     public string PaletteStatus => Global.PaletteError;
     public string PinStatus => Global.PinError;
@@ -63,7 +96,11 @@ internal sealed class ShortcutBindings : IShortcutBindings
     {
         if (!Global.TrySetWallpaper(modifiers, key, out error))
             return false;
-        Store.State.WallpaperShortcut = new() { Modifiers = modifiers, Key = key };
+        Store.State.WallpaperShortcut = new()
+        {
+            Modifiers = modifiers,
+            Key = key
+        };
         Store.Save();
         return true;
     }
@@ -71,7 +108,11 @@ internal sealed class ShortcutBindings : IShortcutBindings
     {
         if (!Global.TrySetPalette(modifiers, key, out error))
             return false;
-        Store.State.PaletteShortcut = new() { Modifiers = modifiers, Key = key };
+        Store.State.PaletteShortcut = new()
+        {
+            Modifiers = modifiers,
+            Key = key
+        };
         Store.Save();
         refreshLabels();
         return true;
@@ -80,7 +121,11 @@ internal sealed class ShortcutBindings : IShortcutBindings
     {
         if (!Global.TrySetPin(modifiers, key, out error))
             return false;
-        Store.State.PinShortcut = new() { Modifiers = modifiers, Key = key };
+        Store.State.PinShortcut = new()
+        {
+            Modifiers = modifiers,
+            Key = key
+        };
         Store.Save();
         refreshLabels();
         return true;
@@ -89,7 +134,11 @@ internal sealed class ShortcutBindings : IShortcutBindings
     {
         if (!Global.TrySetCapture(modifiers, key, out error))
             return false;
-        Store.State.CaptureShortcut = new() { Modifiers = modifiers, Key = key };
+        Store.State.CaptureShortcut = new()
+        {
+            Modifiers = modifiers,
+            Key = key
+        };
         Store.Save();
         refreshLabels();
         return true;
@@ -98,7 +147,12 @@ internal sealed class ShortcutBindings : IShortcutBindings
     {
         if (!Global.TrySet(modifiers, key, out error))
             return false;
-        Store.State.Shortcut = new() { Modifiers = modifiers, Key = key, View = view };
+        Store.State.Shortcut = new()
+        {
+            Modifiers = modifiers,
+            Key = key,
+            View = view
+        };
         Store.State.Shortcut.Normalize();
         Store.Save();
         rebuildRail();

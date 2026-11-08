@@ -64,8 +64,15 @@ internal static partial class UI
     {
         var symbols = M3.Symbols;
         return symbols != null
-            ? new TextBlock { Text = material, FontFamily = symbols, FontSize = size, Foreground = White,
-                VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center }
+            ? new TextBlock
+            {
+                Text = material,
+                FontFamily = symbols,
+                FontSize = size,
+                Foreground = White,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            }
             : Glyph(fluent, size);
     }
     internal static Button TextButton(string label, Action action)
@@ -82,10 +89,22 @@ internal static partial class UI
     {
         var icon = Symbol(material, fluent, 30);
         icon.Foreground = T(M3Role.OnSecondaryContainer);
-        var disc = new Border { Width = 64, Height = 64, CornerRadius = new CornerRadius(32), Background = T(M3Role.SecondaryContainer),
-            Child = icon, HorizontalAlignment = HorizontalAlignment.Center };
-        var stack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-            MaxWidth = 340, Margin = new Thickness(M3.Sp5) };
+        var disc = new Border
+        {
+            Width = 64,
+            Height = 64,
+            CornerRadius = new CornerRadius(32),
+            Background = T(M3Role.SecondaryContainer),
+            Child = icon,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        var stack = new StackPanel
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            MaxWidth = 340,
+            Margin = new Thickness(M3.Sp5)
+        };
         stack.Children.Add(disc);
         var heading = Text(title, M3.FontTitle, White, true);
         heading.TextAlignment = TextAlignment.Center;

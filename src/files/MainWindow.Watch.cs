@@ -38,12 +38,14 @@ public sealed partial class MainWindow
     {
         public IntPtr Pidl; [MarshalAs(UnmanagedType.Bool)] public bool Recursive;
     }
-    [DllImport("shell32.dll")] static extern uint SHChangeNotifyRegister(IntPtr hwnd, int sources, int events, uint message, int count,
+    [DllImport("shell32.dll")]
+    static extern uint SHChangeNotifyRegister(IntPtr hwnd, int sources, int events, uint message, int count,
         ref NotifyEntry entries);
     [DllImport("shell32.dll")] static extern bool SHChangeNotifyDeregister(uint id);
     [DllImport("shell32.dll")] static extern IntPtr SHChangeNotification_Lock(IntPtr change, uint pid, out IntPtr pidls, out int events);
     [DllImport("shell32.dll")] static extern bool SHChangeNotification_Unlock(IntPtr handle);
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern int SHParseDisplayName(string name, IntPtr bind, out IntPtr pidl,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    static extern int SHParseDisplayName(string name, IntPtr bind, out IntPtr pidl,
         uint attrsIn, out uint attrsOut);
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern bool SHGetPathFromIDListW(IntPtr pidl, StringBuilder path);
     [DllImport("ole32.dll")] static extern void CoTaskMemFree(IntPtr pointer);

@@ -17,12 +17,23 @@ namespace PanneauxGlass;
 internal sealed partial class HomeWindow
 {
     readonly MediaController shellMedia = new(); readonly DispatcherTimer mediaTick = new() { Interval = TimeSpan.FromSeconds(1) };
-    readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal }; readonly Grid shellPage = new() { Margin = new Thickness(0,
-        20, 0, 0) };
+    readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal }; readonly Grid shellPage = new()
+    {
+        Margin = new Thickness(0,
+        20, 0, 0)
+    };
     readonly Grid tabArea = new() { Height = 49, Margin = new Thickness(0, 20, 0, 0) }; readonly TranslateTransform tabOffset = new();
-        readonly Border tabMarker = new() { Height = 3, Width = 62, CornerRadius = new CornerRadius(2), Background = UI.Accent,
-        HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Bottom, IsHitTestVisible = false };
-        TextBlock? dashboardTime;
+    readonly Border tabMarker = new()
+    {
+        Height = 3,
+        Width = 62,
+        CornerRadius = new CornerRadius(2),
+        Background = UI.Accent,
+        HorizontalAlignment = HorizontalAlignment.Left,
+        VerticalAlignment = VerticalAlignment.Bottom,
+        IsHitTestVisible = false
+    };
+    TextBlock? dashboardTime;
     readonly List<(Button button, string id)> tabButtons = new(); ScrollViewer dashboardScroll = null!; ShellPerformanceView? performance;
     string selectedPage = "dashboard"; int shellTheme = -1; bool shellClosed, mediaBusy, seeking; TextBlock? miniTitle, miniArtist,
         songTitle, songArtist, songApp, positionLabel; Image? miniCover, songCover; Button? playButton, miniPlay, previousButton,
@@ -67,12 +78,25 @@ internal sealed partial class HomeWindow
         tabs.Children.Add(theme);
         IsVisibleChanged += (_, _) => _ = ShellLifecycle();
         Closed += (_, _) => { shellClosed = true; mediaTick.Stop(); shellMedia.Dispose(); performance?.Dispose(); };
-        mediaTick.Tick += async (_, _) => { if (dashboardTime != null) dashboardTime.Text = DateTime.Now.ToString("HH:mm");
-            await ReadMedia(); };
+        mediaTick.Tick += async (_, _) =>
+        {
+            if (dashboardTime != null)
+                dashboardTime.Text = DateTime.Now.ToString("HH:mm");
+            await ReadMedia();
+        };
         shellMedia.Changed += async () => await ReadMedia();
-        PreviewKeyDown += (_, e) => { if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.Left or Key.Right) { var ids = new[] {
-            "dashboard", "music", "performance", "spaces" }; int index = Array.IndexOf(ids, selectedPage); SelectPage(ids[(index
-            + (e.Key == Key.Right ? 1 : 3)) % 4]); e.Handled = true; } };
+        PreviewKeyDown += (_, e) =>
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.Left or Key.Right)
+            {
+                var ids = new[] {
+            "dashboard", "music", "performance", "spaces" };
+                int index = Array.IndexOf(ids, selectedPage);
+                SelectPage(ids[(index
+            + (e.Key == Key.Right ? 1 : 3)) % 4]);
+                e.Handled = true;
+            }
+        };
         SelectPage("dashboard");
     }
     internal void SelectPage(string id)
@@ -118,11 +142,20 @@ internal sealed partial class HomeWindow
         tabMarker.Width = Math.Max(24, button.ActualWidth - 26);
         if (animate && Motion.On)
             tabOffset.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(previous, target,
-                Motion.Duration(MotionKind.DefaultSpatial)) { EasingFunction = Motion.Ease, FillBehavior = FillBehavior.Stop });
+                Motion.Duration(MotionKind.DefaultSpatial))
+            {
+                EasingFunction = Motion.Ease,
+                FillBehavior = FillBehavior.Stop
+            });
     }
-    static Border ShellCard(UIElement child, Thickness? padding = null) => new() { CornerRadius = new CornerRadius(22),
+    static Border ShellCard(UIElement child, Thickness? padding = null) => new()
+    {
+        CornerRadius = new CornerRadius(22),
         Background = new SolidColorBrush(Theme.Mix(Theme.Current.Surface, Theme.Current.Accent, Theme.Current.Light ? .085 : .12)),
-        Padding = padding ?? new Thickness(22), Margin = new Thickness(0, 0, 12, 12), Child = child };
+        Padding = padding ?? new Thickness(22),
+        Margin = new Thickness(0, 0, 12, 12),
+        Child = child
+    };
     static TextBlock Detail(string text)
     {
         var block = UI.Text(text, 12, UI.Dim);
@@ -159,8 +192,14 @@ internal sealed partial class HomeWindow
         calendar.Children.Add(month);
         var days = new UniformGrid { Columns = 7 };
         foreach (var d in new[] { "L", "M", "M", "J", "V", "S", "D" })
-            days.Children.Add(new TextBlock { Text = d, Foreground = UI.Dim, TextAlignment = TextAlignment.Center, FontSize = 10,
-                Margin = new Thickness(0, 0, 0, 7) });
+            days.Children.Add(new TextBlock
+            {
+                Text = d,
+                Foreground = UI.Dim,
+                TextAlignment = TextAlignment.Center,
+                FontSize = 10,
+                Margin = new Thickness(0, 0, 0, 7)
+            });
         var first = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         int offset = ((int)first.DayOfWeek + 6) % 7;
         for (int n = 0; n < 42; n++)
@@ -169,18 +208,36 @@ internal sealed partial class HomeWindow
             var label = UI.Text(day.Day.ToString(), 11, day.Month == first.Month ? UI.White : UI.Dim);
             label.TextAlignment = TextAlignment.Center;
             label.VerticalAlignment = VerticalAlignment.Center;
-            days.Children.Add(new Border { Height = 25, CornerRadius = new CornerRadius(12), Background = day.Date == DateTime.Today
-                ? UI.Alpha(Theme.Current.Accent, 60) : Brushes.Transparent, Child = label });
+            days.Children.Add(new Border
+            {
+                Height = 25,
+                CornerRadius = new CornerRadius(12),
+                Background = day.Date == DateTime.Today
+                ? UI.Alpha(Theme.Current.Accent, 60) : Brushes.Transparent,
+                Child = label
+            });
         }
         calendar.Children.Add(days);
         var cal = ShellCard(calendar);
         Grid.SetColumn(cal, 1);
         grid.Children.Add(cal);
         var music = new StackPanel { HorizontalAlignment = HorizontalAlignment.Stretch };
-        miniCover = new Image { Width = 70, Height = 70, Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center
-            };
-        music.Children.Add(new Border { CornerRadius = new CornerRadius(35), Clip = new EllipseGeometry(new Point(35, 35), 35, 35),
-            Width = 70, Height = 70, Background = UI.Alpha(Theme.Current.Accent, 40), Child = miniCover });
+        miniCover = new Image
+        {
+            Width = 70,
+            Height = 70,
+            Stretch = Stretch.UniformToFill,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        music.Children.Add(new Border
+        {
+            CornerRadius = new CornerRadius(35),
+            Clip = new EllipseGeometry(new Point(35, 35), 35, 35),
+            Width = 70,
+            Height = 70,
+            Background = UI.Alpha(Theme.Current.Accent, 40),
+            Child = miniCover
+        });
         miniTitle = UI.Text("Aucune lecture", 15, null, true);
         miniTitle.TextTrimming = TextTrimming.CharacterEllipsis;
         miniTitle.TextAlignment = TextAlignment.Center;
@@ -235,9 +292,17 @@ internal sealed partial class HomeWindow
             Width = new GridLength(1.2, GridUnitType.Star)
         });
         songCover = new Image { Width = 240, Height = 240, Stretch = Stretch.UniformToFill };
-        var art = new Border { Width = 240, Height = 240, Background = UI.Alpha(Theme.Current.Accent, 30),
-            CornerRadius = new CornerRadius(120), Clip = new EllipseGeometry(new Point(120, 120), 120, 120), Child = songCover,
-            VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+        var art = new Border
+        {
+            Width = 240,
+            Height = 240,
+            Background = UI.Alpha(Theme.Current.Accent, 30),
+            CornerRadius = new CornerRadius(120),
+            Clip = new EllipseGeometry(new Point(120, 120), 120, 120),
+            Child = songCover,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         content.Children.Add(art);
         var details = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(26, 0, 12, 0) };
         songApp = Detail("TON LECTEUR WINDOWS");
@@ -261,8 +326,13 @@ internal sealed partial class HomeWindow
         timeline = new Slider { Minimum = 0, Maximum = 1, IsEnabled = false, IsMoveToPointEnabled = true };
         System.Windows.Automation.AutomationProperties.SetName(timeline, "Progression de la musique");
         timeline.PreviewMouseLeftButtonDown += (_, _) => seeking = true;
-        timeline.AddHandler(UIElement.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(async (_, _) => { if (!seeking) return;
-            seeking = false; await MediaCommand("seek", timeline.Value); }), true);
+        timeline.AddHandler(UIElement.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(async (_, _) =>
+        {
+            if (!seeking)
+                return;
+            seeking = false;
+            await MediaCommand("seek", timeline.Value);
+        }), true);
         details.Children.Add(timeline);
         positionLabel = Detail("—");
         details.Children.Add(positionLabel);

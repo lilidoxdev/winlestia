@@ -24,7 +24,10 @@ internal sealed class DialogService : IDialogService
 {
     sealed class DialogOwner : Forms.IWin32Window
     {
-        public IntPtr Handle { get; }
+        public IntPtr Handle
+        {
+            get;
+        }
         public DialogOwner(Window window) => Handle = new WindowInteropHelper(window).Handle;
     }
     readonly ShellState state;

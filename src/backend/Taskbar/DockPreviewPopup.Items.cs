@@ -313,8 +313,13 @@ internal sealed class DockPreviewHost : IDisposable
     System.Windows.Forms.Timer CreateTimer()
     {
         var t = new System.Windows.Forms.Timer();
-        t.Tick += (_, _) => { t.Enabled = false; if (form != null && !form.IsDisposed && form.Bounds.Contains(Cursor.Position)) return;
-            Close(); };
+        t.Tick += (_, _) =>
+        {
+            t.Enabled = false;
+            if (form != null && !form.IsDisposed && form.Bounds.Contains(Cursor.Position))
+                return;
+            Close();
+        };
         return t;
     }
     internal void Close()

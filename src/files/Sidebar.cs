@@ -23,7 +23,8 @@ internal sealed partial class Sidebar
 {
     // Fusionne les rafales de messages d'arrivée de lecteur en une seule vérification.
     const int RecheckDebounceMs = 500;
-    [DllImport("shell32.dll")] static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid id, uint flags,
+    [DllImport("shell32.dll")]
+    static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid id, uint flags,
         IntPtr token,
         out IntPtr path);
     [DllImport("ole32.dll")] static extern void CoTaskMemFree(IntPtr pointer);
@@ -37,9 +38,9 @@ internal sealed partial class Sidebar
     sealed class Entry
     {
         internal string Path = ""; internal Border Pill = null!; internal TextBlock Icon = null!; internal TextBlock Text = null!;
-            internal bool Hot, Active, Drop;
+        internal bool Hot, Active, Drop;
         internal Grid Row = null!; internal StackPanel Texts = null!; internal bool Quick; internal TargetKind Kind;
-            internal TextBlock? WarnIcon, FileIcon; internal TextBlock BaseIcon = null!;
+        internal TextBlock? WarnIcon, FileIcon; internal TextBlock BaseIcon = null!;
     }
 
     readonly Action<string, bool> go;
@@ -78,8 +79,12 @@ internal sealed partial class Sidebar
             BorderBrush = UI.Hairline,
             BorderThickness = new Thickness(1),
             ClipToBounds = true,
-            Child = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = host }
+            Child = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Content = host
+            }
         };
         Load();
     }

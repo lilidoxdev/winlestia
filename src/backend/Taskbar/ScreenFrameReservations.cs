@@ -18,15 +18,20 @@ internal sealed class ScreenFrameReservations : IDisposable
     sealed class Edge : IDisposable
     {
         readonly HwndSource source; readonly Forms.Screen screen; readonly uint edge, message;
-            readonly uint explorerRestart = TaskbarNative.RegisterWindowMessage("TaskbarCreated"); int inset; bool placing, closed;
-            Native.Rect last;
+        readonly uint explorerRestart = TaskbarNative.RegisterWindowMessage("TaskbarCreated"); int inset; bool placing, closed;
+        Native.Rect last;
         internal Edge(Forms.Screen screen, uint edge, int inset)
         {
             this.screen = screen;
             this.edge = edge;
             this.inset = inset;
-            source = new HwndSource(new HwndSourceParameters("Panneaux · marge du cadre") { WindowStyle = unchecked((int)0x80000000),
-                ExtendedWindowStyle = 0x08000080, Width = 1, Height = 1 });
+            source = new HwndSource(new HwndSourceParameters("Panneaux · marge du cadre")
+            {
+                WindowStyle = unchecked((int)0x80000000),
+                ExtendedWindowStyle = 0x08000080,
+                Width = 1,
+                Height = 1
+            });
             source.AddHook(Hook);
             message = TaskbarNative.RegisterWindowMessage("PanneauxFrame-" + source.Handle);
             var data = TaskbarNative.Data(source.Handle);
@@ -109,17 +114,27 @@ internal sealed class ScreenFrameReservations : IDisposable
         }
     }
     readonly List<Edge> edges = new(); readonly Dictionary<IntPtr, (Native.Rect original, Native.Rect placed)> adjusted = new();
-        readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
+    readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
     readonly DispatcherTimer fullscreenCheck = new() { Interval = TimeSpan.FromMilliseconds(FullscreenCheckMs) };
     readonly DispatcherTimer changes = new() { Interval = TimeSpan.FromMilliseconds(ChangeDebounceMs) };
-        readonly TaskbarNative.WinEvent callback;
-        readonly List<IntPtr> hooks = new(); readonly HashSet<IntPtr> pending = new(); bool enabled, disposed;
+    readonly TaskbarNative.WinEvent callback;
+    readonly List<IntPtr> hooks = new(); readonly HashSet<IntPtr> pending = new(); bool enabled, disposed;
     internal ScreenFrameReservations()
     {
         fullscreenCheck.Tick += (_, _) => Constrain(Native.GetForegroundWindow());
-        callback = (_, kind, h, obj, child, _, _) => { if (h == IntPtr.Zero || obj != 0 || child != 0 || Native.Owns(h)) return;
-            dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (!enabled || disposed) return; pending.Add(h);
-            changes.Stop(); changes.Start(); })); };
+        callback = (_, kind, h, obj, child, _, _) =>
+        {
+            if (h == IntPtr.Zero || obj != 0 || child != 0 || Native.Owns(h))
+                return;
+            dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() =>
+            {
+                if (!enabled || disposed)
+                    return;
+                pending.Add(h);
+                changes.Stop();
+                changes.Start();
+            }));
+        };
         changes.Tick += (_, _) => { changes.Stop(); foreach (var h in pending.ToArray()) Constrain(h); pending.Clear(); };
     }
     internal void Enable(bool constrainWindows = true)
@@ -165,7 +180,8 @@ internal sealed class ScreenFrameReservations : IDisposable
     [DllImport("user32.dll")] static extern bool GetClientRect(IntPtr h, out Native.Rect rect);
     [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr h, ref Native.Point point);
     readonly Dictionary<IntPtr, (IntPtr original, string shape)> rounded = new();
-    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int ExtendedBounds(IntPtr h, int attribute,
+    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")]
+    static extern int ExtendedBounds(IntPtr h, int attribute,
         out Native.Rect value, int size);
     [DllImport("gdi32.dll")] static extern bool EqualRgn(IntPtr first, IntPtr second);
     [DllImport("gdi32.dll")] static extern IntPtr CreateRoundRectRgn(int l, int t, int r, int b, int ew, int eh);

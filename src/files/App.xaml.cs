@@ -153,8 +153,11 @@ public partial class App : Application
                     }
                     handedOff = true;
                 }
-                var psi = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false,
-                    WorkingDirectory = Path.IsPathRooted(r.Cwd) ? r.Cwd : Environment.CurrentDirectory };
+                var psi = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!)
+                {
+                    UseShellExecute = false,
+                    WorkingDirectory = Path.IsPathRooted(r.Cwd) ? r.Cwd : Environment.CurrentDirectory
+                };
                 foreach (var a in r.Args)
                     psi.ArgumentList.Add(a);
                 System.Diagnostics.Process.Start(psi)?.Dispose();
@@ -316,8 +319,10 @@ internal static class Program
     static readonly long born = System.Diagnostics.Stopwatch.GetTimestamp();
     internal static TimeSpan Uptime => System.Diagnostics.Stopwatch.GetElapsedTime(born);
     [System.Runtime.InteropServices.DllImport("shell32.dll",
-        CharSet = System.Runtime.InteropServices.CharSet.Unicode)] static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
-    [System.Runtime.InteropServices.DllImport("shell32.dll")] static extern int GetCurrentProcessExplicitAppUserModelID([System.Runtime
+        CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
+    [System.Runtime.InteropServices.DllImport("shell32.dll")]
+    static extern int GetCurrentProcessExplicitAppUserModelID([System.Runtime
         .InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] out string appId);
     internal const string AppId = "Winlestia.Files";
     internal static string? CurrentAppId()

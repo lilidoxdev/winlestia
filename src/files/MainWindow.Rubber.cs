@@ -52,8 +52,19 @@ public sealed partial class MainWindow
             list.CaptureMouse();
             e.Handled = true;
         };
-        list.PreviewMouseMove += (_, e) => { if (rubbing) { if (e.LeftButton != MouseButtonState.Pressed) { list.ReleaseMouseCapture();
-            RubberEnd(); } else RubberMove(e.GetPosition(list)); } };
+        list.PreviewMouseMove += (_, e) =>
+        {
+            if (rubbing)
+            {
+                if (e.LeftButton != MouseButtonState.Pressed)
+                {
+                    list.ReleaseMouseCapture();
+                    RubberEnd();
+                }
+                else
+                    RubberMove(e.GetPosition(list));
+            }
+        };
         list.PreviewMouseLeftButtonUp += (_, _) => { if (rubbing) { list.ReleaseMouseCapture(); RubberEnd(); } };
         list.LostMouseCapture += (_, _) => { if (rubbing) RubberEnd(); };
     }

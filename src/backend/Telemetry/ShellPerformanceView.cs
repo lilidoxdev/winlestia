@@ -13,7 +13,7 @@ namespace PanneauxGlass;
 internal sealed class ShellPerformanceView : Border, IDisposable
 {
     readonly PcTelemetry telemetry = new(); readonly SemaphoreSlim lifecycle = new(1, 1);
-        readonly System.Collections.Generic.List<Border> plates = new(); bool active, closed; int version;
+    readonly System.Collections.Generic.List<Border> plates = new(); bool active, closed; int version;
     readonly TextBlock stamp = UI.Text("Préparation des mesures…", 12, UI.Dim), cpu = UI.Text("—", 35, null, true),
         cpuDetail = UI.Text("Processeur", 12, UI.Dim), gpu = UI.Text("—", 35, null, true), gpuDetail = UI.Text("Carte graphique", 12,
         UI.Dim), ram = UI.Text("—", 35, null, true), ramDetail = UI.Text("Mémoire", 12, UI.Dim), network = UI.Text("—", 24, null,
@@ -69,8 +69,13 @@ internal sealed class ShellPerformanceView : Border, IDisposable
     }
     Border Plate(UIElement child)
     {
-        var plate = new Border { CornerRadius = new CornerRadius(22), Padding = new Thickness(22), Margin = new Thickness(0, 0, 12, 12),
-            Child = child };
+        var plate = new Border
+        {
+            CornerRadius = new CornerRadius(22),
+            Padding = new Thickness(22),
+            Margin = new Thickness(0, 0, 12, 12),
+            Child = child
+        };
         plates.Add(plate);
         RefreshTheme();
         return plate;
@@ -98,9 +103,20 @@ internal sealed class ShellPerformanceView : Border, IDisposable
                 return;
             }
             stamp.Text = "Préparation des capteurs…";
-            telemetry.Start(reading => Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (active && !closed
-                && expected == version) Update(reading); })), error: message => Dispatcher.BeginInvoke((Action)(() => { if (active
-                && !closed && expected == version) { stamp.Text = "Mesures indisponibles"; stamp.ToolTip = message; } })), quick: true);
+            telemetry.Start(reading => Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() =>
+            {
+                if (active && !closed
+                && expected == version)
+                    Update(reading);
+            })), error: message => Dispatcher.BeginInvoke((Action)(() =>
+            {
+                if (active
+                && !closed && expected == version)
+                {
+                    stamp.Text = "Mesures indisponibles";
+                    stamp.ToolTip = message;
+                }
+            })), quick: true);
         }
         catch (Exception ex) { Store.Log("Page performances: " + ex.Message); }
         finally { lifecycle.Release(); }

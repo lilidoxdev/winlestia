@@ -41,8 +41,11 @@ internal sealed partial class QtShellBridge
 
         public string? PickFolder()
         {
-            using var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "Choisir le dossier à personnaliser",
-                UseDescriptionForTitle = true };
+            using var dialog = new System.Windows.Forms.FolderBrowserDialog
+            {
+                Description = "Choisir le dossier à personnaliser",
+                UseDescriptionForTitle = true
+            };
             return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
         }
 

@@ -26,11 +26,11 @@ internal sealed class GlobalShortcut : IDisposable
 {
     readonly IntPtr window; int customId, paletteId, pinId, captureId, wallpaperId, settingsId; uint modifiers, key, paletteModifiers,
         paletteKey, pinModifiers, pinKey, captureModifiers, captureKey, wallpaperModifiers, wallpaperKey, settingsModifiers, settingsKey;
-        bool legacy, rescue;
+    bool legacy, rescue;
     // Point d'injection de l'enregistrement : les tests les remplacent (code d'erreur 0 = enregistré) pour ne toucher aucun vrai
     // raccourci. LastCode contient l'erreur Win32 du dernier enregistrement échoué (1409 = déjà pris).
     internal static Func<IntPtr, int, uint, uint, int>? TestRegister; internal static Func<IntPtr, int, bool>? TestUnregister;
-        internal static int LastCode;
+    internal static int LastCode;
     static bool Reg(IntPtr w, int id, uint m, uint k)
     {
         if (TestRegister != null)
@@ -51,11 +51,21 @@ internal sealed class GlobalShortcut : IDisposable
         }
         Native.UnregisterHotKey(w, id);
     }
-    internal string Error { get; private set; } = ""; internal string PaletteError { get; private set; } = ""; internal string PinError {
-        get; private set; } = ""; internal string CaptureError { get; private set; } = ""; internal string WallpaperError { get;
-        private set; } = ""; internal string SettingsError { get; private set; } = "";
-    internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences) : this(hwnd, preferences, new() { Modifiers = 2, Key = 0x71
-        }) { }
+    internal string Error { get; private set; } = ""; internal string PaletteError { get; private set; } = ""; internal string PinError
+    {
+        get; private set;
+    } = ""; internal string CaptureError { get; private set; } = ""; internal string WallpaperError
+    {
+        get;
+        private set;
+    } = ""; internal string SettingsError { get; private set; } = "";
+    internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences) : this(hwnd, preferences, new()
+    {
+        Modifiers = 2,
+        Key = 0x71
+    })
+    {
+    }
     internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences, ShortcutPreferences? palette = null,
         ShortcutPreferences? pin = null, ShortcutPreferences? capture = null, ShortcutPreferences? wallpaper = null,
         ShortcutPreferences? settings = null)
@@ -86,9 +96,17 @@ internal sealed class GlobalShortcut : IDisposable
     internal bool MatchesCapture(int id) => id == captureId && captureId != 0;
     internal bool MatchesWallpaper(int id) => id == wallpaperId && wallpaperId != 0;
     internal bool MatchesSettings(int id) => id == settingsId && settingsId != 0;
-    internal bool SettingsActive => settingsId != 0; internal bool IsActive(string id) => id switch { "dashboard" => customId != 0,
-        "palette" => paletteId != 0, "wallpaper" => wallpaperId != 0, "capture" => captureId != 0, "pin" => pinId != 0, "settings"
-        => settingsId != 0, _ => true }; internal bool WallpaperRegistered => wallpaperId != 0;
+    internal bool SettingsActive => settingsId != 0; internal bool IsActive(string id) => id switch
+    {
+        "dashboard" => customId != 0,
+        "palette" => paletteId != 0,
+        "wallpaper" => wallpaperId != 0,
+        "capture" => captureId != 0,
+        "pin" => pinId != 0,
+        "settings"
+        => settingsId != 0,
+        _ => true
+    }; internal bool WallpaperRegistered => wallpaperId != 0;
     internal uint WallpaperModifiers => wallpaperModifiers; internal uint WallpaperKey => wallpaperKey; internal bool WallpaperActive
         => wallpaperId != 0;
     internal bool TrySetWallpaper(uint nextModifiers, uint nextKey, out string error)

@@ -27,7 +27,8 @@ internal static class TilingLatencyVerification
         }
     }   // WS_EX_TOOLWINDOW : invisible pour le tiler de l'application en cours
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")] static extern IntPtr Style(IntPtr h, int index);
-    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int Bounds(IntPtr h, int attribute,
+    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")]
+    static extern int Bounds(IntPtr h, int attribute,
         out Native.Rect value,
         int size);
     static void Pump(int ms)
@@ -49,9 +50,14 @@ internal static class TilingLatencyVerification
     static Dictionary<long, Native.Rect> Snapshot(HashSet<IntPtr> own)
     {
         var map = new Dictionary<long, Native.Rect>();
-        TaskbarNative.EnumWindows((h, _) => { if (!own.Contains(h) && TaskbarNative.IsWindowVisible(h) && (Style(h,
+        TaskbarNative.EnumWindows((h, _) =>
+        {
+            if (!own.Contains(h) && TaskbarNative.IsWindowVisible(h) && (Style(h,
             -16).ToInt64() & 0x40000) != 0 && (Style(h, -20).ToInt64() & 0x80) == 0 && Native.Title(h).Length > 0
-            && TaskbarNative.GetWindowRect(h, out var r)) map[h.ToInt64()] = r; return true; }, IntPtr.Zero);
+            && TaskbarNative.GetWindowRect(h, out var r))
+                map[h.ToInt64()] = r;
+            return true;
+        }, IntPtr.Zero);
         return map;
     }
     internal static int Run()
@@ -75,9 +81,12 @@ internal static class TilingLatencyVerification
             {
                 for (int n = 1; n <= 4; n++)
                 {
-                    var form = new ToolForm { Text = "Tiling latency test " + run + "-" + n,
+                    var form = new ToolForm
+                    {
+                        Text = "Tiling latency test " + run + "-" + n,
                         StartPosition = Forms.FormStartPosition.Manual,
-                        Bounds = new(work.Left + 60 + n * 20, work.Top + 60 + n * 20, 420, 300) };
+                        Bounds = new(work.Left + 60 + n * 20, work.Top + 60 + n * 20, 420, 300)
+                    };
                     var slot = WindowTiler.Layout(area, n, gap)[n - 1];
                     forms.Add(form);
                     long start = Stopwatch.GetTimestamp();
@@ -115,8 +124,13 @@ internal static class TilingLatencyVerification
             }
             // fenêtre affichée sans titre, titrée 100 ms plus tard : doit être placée dans les 150 ms suivant le changement de titre
             {
-                var form = new ToolForm { Text = "", StartPosition = Forms.FormStartPosition.Manual, Bounds = new(work.Left + 80, work.Top
-                    + 80, 420, 300) };
+                var form = new ToolForm
+                {
+                    Text = "",
+                    StartPosition = Forms.FormStartPosition.Manual,
+                    Bounds = new(work.Left + 80, work.Top
+                    + 80, 420, 300)
+                };
                 forms.Add(form);
                 form.Show();
                 var h = form.Handle;

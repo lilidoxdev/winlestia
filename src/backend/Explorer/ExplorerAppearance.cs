@@ -58,11 +58,13 @@ internal sealed partial class ExplorerAppearance : IDisposable
         public IntPtr Logo;
         public uint LogoLength;
     }
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern int SHGetSetFolderCustomSettings(ref Settings settings,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    static extern int SHGetSetFolderCustomSettings(ref Settings settings,
         string path,
         uint flags);
     [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)] static extern bool PathMakeSystemFolderW(string path);
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern void SHChangeNotify(uint kind, uint flags, string? first,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    static extern void SHChangeNotify(uint kind, uint flags, string? first,
         IntPtr second);
     [DllImport("shell32.dll")] static extern int SHGetKnownFolderPath(ref Guid id, uint flags, IntPtr token, out IntPtr path);
     [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr window, int attribute, ref uint value, int size);
@@ -125,8 +127,12 @@ internal sealed partial class ExplorerAppearance : IDisposable
                 try
                 {
                     var w =
-                        new FileSystemWatcher(path) { NotifyFilter = NotifyFilters.DirectoryName, IncludeSubdirectories = false,
-                            EnableRaisingEvents = true };
+                        new FileSystemWatcher(path)
+                        {
+                            NotifyFilter = NotifyFilters.DirectoryName,
+                            IncludeSubdirectories = false,
+                            EnableRaisingEvents = true
+                        };
                     FileSystemEventHandler h = (_, _) => RequestScan();
                     w.Created += h;
                     w.Deleted += h;
@@ -295,7 +301,8 @@ internal sealed partial class ExplorerAppearance : IDisposable
     [DllImport("user32.dll")] static extern IntPtr GetAncestor(IntPtr h, uint flags);
     readonly WinEventProc? hookProc;
     delegate void WinEventProc(IntPtr hook, uint evt, IntPtr hwnd, int id, int child, uint thread, uint time);
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid,
+    [DllImport("user32.dll")]
+    static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid,
         uint thread,
         uint flags);
 }

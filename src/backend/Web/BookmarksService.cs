@@ -14,8 +14,10 @@ namespace PanneauxGlass;
 
 internal sealed class BookmarkItem
 {
-    public string id { get; set; } = ""; public string title { get; set; } = ""; public string url { get; set; } = ""; public string icon {
-        get; set; } = ""; public bool folder
+    public string id { get; set; } = ""; public string title { get; set; } = ""; public string url { get; set; } = ""; public string icon
+    {
+        get; set;
+    } = ""; public bool folder
     {
         get; set;
     }
@@ -31,7 +33,7 @@ internal sealed class BookmarksService : IDisposable
     readonly DispatcherTimer notifyTimer = new() { Interval = TimeSpan.FromMilliseconds(NotifyDebounceMs) };
     List<BrowserInfo> browsers = new(); List<BNode> tree = new();
     string loaded = "", error = ""; volatile bool dirty; bool busy = true, scanning, pending, disposed;
-        DateTime lastScan = DateTime.MinValue;
+    DateTime lastScan = DateTime.MinValue;
     FileSystemWatcher? watcher;
     int version, cachedVersion = -1; object? cachedItems; int cachedHidden;
 
@@ -128,7 +130,7 @@ internal sealed class BookmarksService : IDisposable
     sealed class ScanResult
     {
         public List<BrowserInfo> Browsers = new(); public string Chosen = ""; public List<BNode> Tree = new(); public string Error = "";
-            public int Urls, IconsCreated;
+        public int Urls, IconsCreated;
     }
 
     ScanResult Scan(string preferred)
@@ -146,8 +148,12 @@ internal sealed class BookmarksService : IDisposable
             result.Urls = BookmarksCore.CountUrls(result.Tree);
             result.IconsCreated = BookmarksCore.BuildIcons(chosen, result.Tree);
         }
-        catch (Exception ex) { result.Error = "Lecture impossible (" + ex.GetType().Name + ")"; Store.Log("Favoris lecture : "
-            + ex.GetType().Name); }
+        catch (Exception ex)
+        {
+            result.Error = "Lecture impossible (" + ex.GetType().Name + ")";
+            Store.Log("Favoris lecture : "
+            + ex.GetType().Name);
+        }
         return result;
     }
 
@@ -207,8 +213,12 @@ internal sealed class BookmarksService : IDisposable
             return;
         try
         {
-            var w = new FileSystemWatcher(b.ProfileDir) { Filter = b.Chromium ? "Bookmarks" : "places.sqlite*",
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size, IncludeSubdirectories = false };
+            var w = new FileSystemWatcher(b.ProfileDir)
+            {
+                Filter = b.Chromium ? "Bookmarks" : "places.sqlite*",
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
+                IncludeSubdirectories = false
+            };
             w.Changed += OnFile;
             w.Created += OnFile;
             w.Renamed += OnFile;

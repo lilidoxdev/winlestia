@@ -17,9 +17,17 @@ internal sealed partial class BoardWindow : GlassWindow
     Button CreateTile(Entry entry, double icon, int number = 0)
     {
         string mode = Theme.Current.Tiles;
-        var button = new Button { Background = Brushes.Transparent, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(1),
-            Padding = new Thickness(6), Margin = new Thickness(4, 3, 4, 3), HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = entry.Name + "\n" + entry.Category + "\n" + entry.Target };
+        var button = new Button
+        {
+            Background = Brushes.Transparent,
+            BorderBrush = Brushes.Transparent,
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(6),
+            Margin = new Thickness(4, 3, 4, 3),
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            VerticalContentAlignment = VerticalAlignment.Stretch,
+            ToolTip = entry.Name + "\n" + entry.Category + "\n" + entry.Target
+        };
         System.Windows.Automation.AutomationProperties.SetName(button, entry.Name);
         FrameworkElement content;
         if (mode == "list")
@@ -64,8 +72,14 @@ internal sealed partial class BoardWindow : GlassWindow
             {
                 Height = GridLength.Auto
             });
-            var picture = new Image { Width = Math.Clamp(icon * .72, 34, 50), Height = Math.Clamp(icon * .72, 34, 50),
-                Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
+            var picture = new Image
+            {
+                Width = Math.Clamp(icon * .72, 34, 50),
+                Height = Math.Clamp(icon * .72, 34, 50),
+                Stretch = Stretch.Uniform,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top
+            };
             RenderOptions.SetBitmapScalingMode(picture, BitmapScalingMode.HighQuality);
             owner.Icons.Load(entry, source => picture.Source = source, Model.Id);
             cell.Children.Add(picture);
@@ -113,8 +127,14 @@ internal sealed partial class BoardWindow : GlassWindow
             ordinal.FontFamily = UI.Mono;
             ordinal.VerticalAlignment = VerticalAlignment.Center;
             row.Children.Add(ordinal);
-            var picture = new Image { Width = 22, Height = 22, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Center };
+            var picture = new Image
+            {
+                Width = 22,
+                Height = 22,
+                Stretch = Stretch.Uniform,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center
+            };
             RenderOptions.SetBitmapScalingMode(picture, BitmapScalingMode.HighQuality);
             owner.Icons.Load(entry, source => picture.Source = source, Model.Id);
             Grid.SetColumn(picture, 1);
@@ -146,8 +166,14 @@ internal sealed partial class BoardWindow : GlassWindow
             chevron.Opacity = .8;
             DockPanel.SetDock(chevron, Dock.Right);
             row.Children.Add(chevron);
-            var picture = new Image { Width = 34, Height = 34, Stretch = Stretch.Uniform, Margin = new Thickness(4, 0, 16, 0),
-                VerticalAlignment = VerticalAlignment.Center };
+            var picture = new Image
+            {
+                Width = 34,
+                Height = 34,
+                Stretch = Stretch.Uniform,
+                Margin = new Thickness(4, 0, 16, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
             RenderOptions.SetBitmapScalingMode(picture, BitmapScalingMode.HighQuality);
             owner.Icons.Load(entry, source => picture.Source = source, Model.Id);
             DockPanel.SetDock(picture, Dock.Left);
@@ -172,8 +198,13 @@ internal sealed partial class BoardWindow : GlassWindow
             button.HorizontalContentAlignment = HorizontalAlignment.Stretch;
             button.VerticalContentAlignment = VerticalAlignment.Top;
             var card = new StackPanel();
-            var picture = new Image { Width = Math.Clamp(icon * .62, 30, 44), Height = Math.Clamp(icon * .62, 30, 44),
-                Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left };
+            var picture = new Image
+            {
+                Width = Math.Clamp(icon * .62, 30, 44),
+                Height = Math.Clamp(icon * .62, 30, 44),
+                Stretch = Stretch.Uniform,
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
             RenderOptions.SetBitmapScalingMode(picture, BitmapScalingMode.HighQuality);
             owner.Icons.Load(entry, source => picture.Source = source, Model.Id);
             card.Children.Add(picture);
@@ -220,9 +251,18 @@ internal sealed partial class BoardWindow : GlassWindow
         button.Click += (_, _) => { if (DateTime.UtcNow >= blockClick) owner.Launch(entry); };
         button.MouseRightButtonUp += (_, e) => { OpenEntryMenu(entry, button); e.Handled = true; };
         button.PreviewMouseLeftButtonDown += (_, e) => dragStart = e.GetPosition(button);
-        button.PreviewMouseMove += (_, e) => { if (e.LeftButton != MouseButtonState.Pressed) return; var point = e.GetPosition(button);
-            if ((point - dragStart).Length < 9) return; blockClick = DateTime.UtcNow.AddMilliseconds(450); DragDrop.DoDragDrop(button,
-            new DataObject("PanneauxEntry", entry.Id), DragDropEffects.Move); blockClick = DateTime.UtcNow.AddMilliseconds(450); };
+        button.PreviewMouseMove += (_, e) =>
+        {
+            if (e.LeftButton != MouseButtonState.Pressed)
+                return;
+            var point = e.GetPosition(button);
+            if ((point - dragStart).Length < 9)
+                return;
+            blockClick = DateTime.UtcNow.AddMilliseconds(450);
+            DragDrop.DoDragDrop(button,
+            new DataObject("PanneauxEntry", entry.Id), DragDropEffects.Move);
+            blockClick = DateTime.UtcNow.AddMilliseconds(450);
+        };
         button.AllowDrop = true;
         button.Drop += (_, e) => HandleDrop(e, entry.Id);
         return button;

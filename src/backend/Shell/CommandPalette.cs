@@ -21,10 +21,12 @@ internal sealed class CommandPalette : GlassWindow
     const int OpenFadeMs = 170;
     // Apparition de la palette : assez longue pour être perçue, assez courte pour ne pas gêner la saisie.
     const int OpenScaleMs = 220;
-    readonly Coordinator owner; readonly TextBox query = new(); readonly StackPanel list = new(); readonly WrapPanel tabs = new() {
-        Margin = new Thickness(0, 14, 0, 0) }; readonly ScrollViewer scroll; readonly TextBlock hint, footer;
+    readonly Coordinator owner; readonly TextBox query = new(); readonly StackPanel list = new(); readonly WrapPanel tabs = new()
+    {
+        Margin = new Thickness(0, 14, 0, 0)
+    }; readonly ScrollViewer scroll; readonly TextBlock hint, footer;
     readonly List<PaletteResult> results = new(); readonly List<Button> buttons = new(); readonly double maxHeight; int selected, headers;
-        bool suppress;
+    bool suppress;
     internal CommandPalette(Coordinator coordinator) : base("Winlestia — commande rapide")
     {
         owner = coordinator;
@@ -87,14 +89,27 @@ internal sealed class CommandPalette : GlassWindow
         close.Margin = new Thickness(8, 0, 4, 0);
         Grid.SetColumn(close, 2);
         bar.Children.Add(close);
-        var plate = new Border { CornerRadius = new CornerRadius(20), Background = UI.T(M3Role.OnSurface, 0x12),
-            BorderBrush = UI.T(M3Role.OnSurface, 0x26), BorderThickness = new Thickness(1), Child = bar, Height = 58 };
+        var plate = new Border
+        {
+            CornerRadius = new CornerRadius(20),
+            Background = UI.T(M3Role.OnSurface, 0x12),
+            BorderBrush = UI.T(M3Role.OnSurface, 0x26),
+            BorderThickness = new Thickness(1),
+            Child = bar,
+            Height = 58
+        };
         ContentHost.Children.Add(plate);
         Grid.SetRow(tabs, 1);
         ContentHost.Children.Add(tabs);
-        scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 10, 0, 10), Padding = new Thickness(0,
-            0, 6, 0), Content = list };
+        scroll = new ScrollViewer
+        {
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Margin = new Thickness(0, 10, 0, 10),
+            Padding = new Thickness(0,
+            0, 6, 0),
+            Content = list
+        };
         Grid.SetRow(scroll, 2);
         ContentHost.Children.Add(scroll);
         var footerRow = new Grid { Margin = new Thickness(13, 0, 4, 0) };
@@ -114,9 +129,29 @@ internal sealed class CommandPalette : GlassWindow
         Grid.SetRow(footerRow, 3);
         ContentHost.Children.Add(footerRow);
         query.TextChanged += (_, _) => { hint.Visibility = query.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed; Update(); };
-        query.PreviewKeyDown += (_, e) => { if (e.Key == Key.Down) { Move(1); e.Handled = true; return; } if (e.Key == Key.Up) { Move(-1);
-            e.Handled = true; return; } if (e.Key == Key.Enter) { var choice = results.Count == 0 ? null : results[Math.Clamp(selected, 0,
-            results.Count - 1)]; if (choice != null) Run(choice); e.Handled = true; } };
+        query.PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Down)
+            {
+                Move(1);
+                e.Handled = true;
+                return;
+            }
+            if (e.Key == Key.Up)
+            {
+                Move(-1);
+                e.Handled = true;
+                return;
+            }
+            if (e.Key == Key.Enter)
+            {
+                var choice = results.Count == 0 ? null : results[Math.Clamp(selected, 0,
+                results.Count - 1)];
+                if (choice != null)
+                    Run(choice);
+                e.Handled = true;
+            }
+        };
         PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) { Close(); e.Handled = true; } };
         Deactivated += (_, _) => { if (!suppress) Close(); };
         Closing += (_, _) => suppress = true;
@@ -131,12 +166,18 @@ internal sealed class CommandPalette : GlassWindow
         ContentHost.RenderTransformOrigin = new Point(.5, .42);
         ContentHost.RenderTransform = scale;
         var ease = new QuinticEase { EasingMode = EasingMode.EaseOut };
-        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(.965, 1, TimeSpan.FromMilliseconds(OpenScaleMs)) {
-            EasingFunction = ease });
-        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(.965, 1, TimeSpan.FromMilliseconds(OpenScaleMs)) {
-            EasingFunction = ease });
-        ContentHost.BeginAnimation(OpacityProperty, new DoubleAnimation(.2, 1, TimeSpan.FromMilliseconds(OpenFadeMs)) {
-            EasingFunction = ease });
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(.965, 1, TimeSpan.FromMilliseconds(OpenScaleMs))
+        {
+            EasingFunction = ease
+        });
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(.965, 1, TimeSpan.FromMilliseconds(OpenScaleMs))
+        {
+            EasingFunction = ease
+        });
+        ContentHost.BeginAnimation(OpacityProperty, new DoubleAnimation(.2, 1, TimeSpan.FromMilliseconds(OpenFadeMs))
+        {
+            EasingFunction = ease
+        });
     }
     void BuildTabs()
     {
@@ -258,9 +299,16 @@ internal sealed class CommandPalette : GlassWindow
         {
             // Une plaque arrondie derrière chaque logo : les vraies icônes d'application restent lisibles sur le verre comme sur le
             // papier.
-            var plate = new Border { Width = 30, Height = 30, CornerRadius = new CornerRadius(9), Background = UI.Alpha(UI.White.Color,
+            var plate = new Border
+            {
+                Width = 30,
+                Height = 30,
+                CornerRadius = new CornerRadius(9),
+                Background = UI.Alpha(UI.White.Color,
                 12),
-                HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 9, 0) };
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 0, 9, 0)
+            };
             var image = new Image { Width = 23, Height = 23, Stretch = Stretch.Uniform };
             RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
             plate.Child = image;
@@ -367,8 +415,12 @@ internal sealed class CommandPalette : GlassWindow
             => owner.Launch(entry), entry));
     }
     void AddSite(WebShortcut site) => Add(new PaletteResult(site.Name, "Site · " + Short(site.Url), "\uE774", ()
-        => owner.WebSearch(site.Url, true), string.IsNullOrWhiteSpace(site.IconPath) ? null : new Entry { Id = "web:" + site.Id,
-        IconPath = site.IconPath, Target = site.IconPath }));
+        => owner.WebSearch(site.Url, true), string.IsNullOrWhiteSpace(site.IconPath) ? null : new Entry
+        {
+            Id = "web:" + site.Id,
+            IconPath = site.IconPath,
+            Target = site.IconPath
+        }));
     // Les actions vivent dans la palette : un seul champ couvre applications, sites et gestes système du quotidien.
     // Un seul champ pour tous les gestes du quotidien : le lanceur, les outils d'atelier et les interrupteurs système.
     List<PaletteResult> Commands(string text) => new List<PaletteResult>{

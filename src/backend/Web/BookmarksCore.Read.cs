@@ -124,8 +124,13 @@ internal static partial class BookmarksCore
                     continue;
                 if (r.type == 2)
                 {
-                    list.Add(new BNode { Id = browserId + ":" + r.guid, Title = r.title, Folder = true, Children = Children(id, depth + 1)
-                        });
+                    list.Add(new BNode
+                    {
+                        Id = browserId + ":" + r.guid,
+                        Title = r.title,
+                        Folder = true,
+                        Children = Children(id, depth + 1)
+                    });
                 }
                 else if (r.type == 1 && r.url.Length > 0 && !r.url.StartsWith("place:", StringComparison.OrdinalIgnoreCase))
                     list.Add(new BNode { Id = browserId + ":" + r.guid, Title = r.title, Url = r.url });

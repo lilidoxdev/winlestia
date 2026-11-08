@@ -31,7 +31,8 @@ internal sealed partial class QtShellBridge
         int infoClass,
         IntPtr info,
         uint length);
-    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)] static extern bool AssignProcessToJobObject(
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool AssignProcessToJobObject(
         IntPtr job, IntPtr process);
     static void AttachFrontendJob(Process process)
     {

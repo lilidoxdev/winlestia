@@ -79,10 +79,21 @@ internal sealed class NotesWindow : GlassWindow
         ContentHost.Children.Add(footer);
         save.Tick += (_, _) => { save.Stop(); Persist(); };
         editor.TextChanged += (_, _) => { if (!IsLoaded) return; save.Stop(); save.Start(); status.Text = "Modifié …"; };
-        editor.PreviewKeyDown += (_, e) => { if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control) {
-            SystemActions.Copy(owner, editor.Text, "Note"); e.Handled = true; } };
-        Loaded += (_, _) => { editor.Focus(); editor.CaretIndex = editor.Text.Length; status.Text = editor.Text.Length == 0
-            ? "Une idée, une commande, un lien : tout reste ici." : "Enregistré"; };
+        editor.PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                SystemActions.Copy(owner, editor.Text, "Note");
+                e.Handled = true;
+            }
+        };
+        Loaded += (_, _) =>
+        {
+            editor.Focus();
+            editor.CaretIndex = editor.Text.Length;
+            status.Text = editor.Text.Length == 0
+            ? "Une idée, une commande, un lien : tout reste ici." : "Enregistré";
+        };
         Closed += (_, _) => { save.Stop(); Persist(); };
     }
     void Persist()

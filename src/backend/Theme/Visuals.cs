@@ -134,8 +134,12 @@ internal static partial class UI
         };
     internal static Button Button(string label, Action action)
     {
-        var b = new Button { Content = label, HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center };
+        var b = new Button
+        {
+            Content = label,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center
+        };
         b.Click += (_, _) => action();
         Motion.BindButton(b);
         return b;

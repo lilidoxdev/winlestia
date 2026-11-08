@@ -107,8 +107,19 @@ internal static class ShellLiveCheck
             Check(favorites.SequenceEqual(Store.State.Favorites), "Favoris conservés pendant toute la navigation");
         }
         catch (Exception ex) { Check(false, ex.ToString()); }
-        finally { owner.SetTheme(originalTheme); File.WriteAllText(Path.Combine(Store.Root, "verification-shell-live.json"),
-            JsonSerializer.Serialize(new { At = DateTimeOffset.Now, Passed = checks.Count - failed, Failed = failed, Checks = checks },
-            Store.Json)); Application.Current.Shutdown(failed == 0 ? 0 : 1); }
+        finally
+        {
+            owner.SetTheme(originalTheme);
+            File.WriteAllText(Path.Combine(Store.Root, "verification-shell-live.json"),
+            JsonSerializer.Serialize(new
+            {
+                At = DateTimeOffset.Now,
+                Passed = checks.Count - failed,
+                Failed = failed,
+                Checks = checks
+            },
+            Store.Json));
+            Application.Current.Shutdown(failed == 0 ? 0 : 1);
+        }
     }
 }

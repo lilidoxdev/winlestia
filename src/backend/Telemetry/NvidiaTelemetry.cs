@@ -70,20 +70,26 @@ internal sealed class NvidiaTelemetry : IDisposable
     [DllImport("nvml.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlInit_v2();
     [DllImport("nvml.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlShutdown();
     [DllImport("nvml.dll"),
-        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetCount_v2(out uint count);
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    static extern int nvmlDeviceGetCount_v2(out uint count);
     [DllImport("nvml.dll"),
-        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetHandleByIndex_v2(uint index,
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    static extern int nvmlDeviceGetHandleByIndex_v2(uint index,
         out IntPtr device);
     [DllImport("nvml.dll", CharSet = CharSet.Ansi),
-        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetName(IntPtr device, StringBuilder name,
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    static extern int nvmlDeviceGetName(IntPtr device, StringBuilder name,
         uint length);
     [DllImport("nvml.dll"),
-        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetUtilizationRates(IntPtr device,
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    static extern int nvmlDeviceGetUtilizationRates(IntPtr device,
         out Utilization utilization);
     [DllImport("nvml.dll"),
-        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetTemperature(IntPtr device, uint sensor,
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    static extern int nvmlDeviceGetTemperature(IntPtr device, uint sensor,
         out uint temperature);
     [DllImport("nvml.dll"),
-        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetMemoryInfo(IntPtr device,
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    static extern int nvmlDeviceGetMemoryInfo(IntPtr device,
         out Memory memory);
 }

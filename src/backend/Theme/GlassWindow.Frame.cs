@@ -250,8 +250,10 @@ internal partial class GlassWindow : Window
     {
         if (!Motion.On || !IsVisible)
             return;
-        ContentHost.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(.72, 1, Motion.Span(230)) { EasingFunction = Motion.Ease
-            });
+        ContentHost.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(.72, 1, Motion.Span(230))
+        {
+            EasingFunction = Motion.Ease
+        });
         var glow = new DoubleAnimation(.55, 1, Motion.Span(320)) { EasingFunction = Motion.Ease };
         ambient.BeginAnimation(UIElement.OpacityProperty, glow);
     }

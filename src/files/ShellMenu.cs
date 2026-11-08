@@ -24,7 +24,8 @@ internal struct NPoint
 [ComImport, Guid("000214E6-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IShellFolder
 {
-    [PreserveSig] int ParseDisplayName(IntPtr hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string name, out uint eaten,
+    [PreserveSig]
+    int ParseDisplayName(IntPtr hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string name, out uint eaten,
         out IntPtr pidl, ref uint attrs);
     [PreserveSig] int EnumObjects(IntPtr hwnd, uint flags, out IntPtr enumIdList);
     [PreserveSig] int BindToObject(IntPtr pidl, IntPtr pbc, ref Guid riid, out IntPtr ppv);
@@ -32,7 +33,8 @@ internal interface IShellFolder
     [PreserveSig] int CompareIDs(IntPtr lParam, IntPtr pidl1, IntPtr pidl2);
     [PreserveSig] int CreateViewObject(IntPtr hwnd, ref Guid riid, out IntPtr ppv);
     [PreserveSig] int GetAttributesOf(uint cidl, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0)] IntPtr[] apidl, ref uint attrs);
-    [PreserveSig] int GetUIObjectOf(IntPtr hwnd, uint cidl, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] IntPtr[] apidl,
+    [PreserveSig]
+    int GetUIObjectOf(IntPtr hwnd, uint cidl, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] IntPtr[] apidl,
         ref Guid riid, IntPtr reserved, out IntPtr ppv);
     [PreserveSig] int GetDisplayNameOf(IntPtr pidl, uint flags, IntPtr strret);
     [PreserveSig] int SetNameOf(IntPtr hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string name, uint flags, out IntPtr newPidl);
@@ -42,8 +44,8 @@ internal interface IShellFolder
 internal struct CmInvokeInfoEx
 {
     public uint cbSize, fMask; public IntPtr hwnd, lpVerb, lpParameters, lpDirectory; public int nShow; public uint dwHotKey;
-        public IntPtr hIcon, lpTitle,
-        lpVerbW, lpParametersW, lpDirectoryW, lpTitleW; public NPoint ptInvoke;
+    public IntPtr hIcon, lpTitle,
+    lpVerbW, lpParametersW, lpDirectoryW, lpTitleW; public NPoint ptInvoke;
 }
 
 [ComImport, Guid("000214e4-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -80,7 +82,8 @@ internal sealed class ShellItems : IDisposable
     internal static Guid IidContextMenu = new("000214e4-0000-0000-c000-000000000046"),
         IidDataObject = new("0000010e-0000-0000-C000-000000000046");
 
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern int SHParseDisplayName(string name, IntPtr bc, out IntPtr pidl,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    static extern int SHParseDisplayName(string name, IntPtr bc, out IntPtr pidl,
         uint sfgaoIn, out uint sfgaoOut);
     [DllImport("shell32.dll")] static extern int SHBindToParent(IntPtr pidl, ref Guid riid, out IntPtr ppv, out IntPtr pidlLast);
     [DllImport("ole32.dll")] static extern void CoTaskMemFree(IntPtr pointer);
@@ -221,13 +224,15 @@ internal sealed class ShellMenu : IDisposable
 
     [DllImport("user32.dll")] static extern IntPtr CreatePopupMenu();
     [DllImport("user32.dll")] static extern bool DestroyMenu(IntPtr menu);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool InsertMenuW(IntPtr menu, uint position, uint flags, UIntPtr id,
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    static extern bool InsertMenuW(IntPtr menu, uint position, uint flags, UIntPtr id,
         string? text);
     [DllImport("user32.dll")] static extern uint TrackPopupMenuEx(IntPtr menu, uint flags, int x, int y, IntPtr hwnd, IntPtr tpm);
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hwnd);
     [DllImport("user32.dll")] static extern int GetMenuItemCount(IntPtr menu);
     [DllImport("user32.dll")] static extern IntPtr GetSubMenu(IntPtr menu, int position);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool GetMenuItemInfoW(IntPtr menu, uint item, bool byPosition,
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    static extern bool GetMenuItemInfoW(IntPtr menu, uint item, bool byPosition,
         ref MenuItemInfo info);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern IntPtr LoadLibraryW(string name);
     [DllImport("kernel32.dll")] static extern IntPtr GetProcAddress(IntPtr module, IntPtr ordinal);
@@ -236,7 +241,7 @@ internal sealed class ShellMenu : IDisposable
     struct MenuItemInfo
     {
         public uint cbSize, fMask, fType, fState, wID; public IntPtr hSubMenu, hbmpChecked, hbmpUnchecked, dwItemData, dwTypeData;
-            public uint cch; public IntPtr hbmpItem;
+        public uint cch; public IntPtr hbmpItem;
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate int SetPreferredAppModeFn(int mode);
@@ -360,8 +365,15 @@ internal sealed class ShellMenu : IDisposable
 
     internal bool Invoke(IntPtr hwnd, uint id, int x, int y, bool shift)
     {
-        var info = new CmInvokeInfoEx { fMask = CMIC_MASK_UNICODE | CMIC_MASK_PTINVOKE | (shift ? CMIC_MASK_SHIFT_DOWN : 0), hwnd = hwnd,
-            lpVerb = (IntPtr)(id - First), lpVerbW = (IntPtr)(id - First), nShow = 1, ptInvoke = new NPoint(x, y) };
+        var info = new CmInvokeInfoEx
+        {
+            fMask = CMIC_MASK_UNICODE | CMIC_MASK_PTINVOKE | (shift ? CMIC_MASK_SHIFT_DOWN : 0),
+            hwnd = hwnd,
+            lpVerb = (IntPtr)(id - First),
+            lpVerbW = (IntPtr)(id - First),
+            nShow = 1,
+            ptInvoke = new NPoint(x, y)
+        };
         info.cbSize = (uint)Marshal.SizeOf<CmInvokeInfoEx>();
         try
         {

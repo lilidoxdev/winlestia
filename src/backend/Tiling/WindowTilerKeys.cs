@@ -54,8 +54,13 @@ internal sealed partial class WindowTiler
             return;
         try
         {
-            keySink = new HwndSource(new HwndSourceParameters("PanneauxTilerKeys") { ParentWindow = new IntPtr(-3), WindowStyle = 0,
-                Width = 0, Height = 0 });
+            keySink = new HwndSource(new HwndSourceParameters("PanneauxTilerKeys")
+            {
+                ParentWindow = new IntPtr(-3),
+                WindowStyle = 0,
+                Width = 0,
+                Height = 0
+            });
             keySink.AddHook(KeyHook);
             foreach (var b in Bindings)
             {
@@ -140,8 +145,13 @@ internal sealed partial class WindowTiler
         int cur = Array.FindIndex(screens, s => s.DeviceName == tiles[a].screen);
         if (cur < 0)
             return;
-        int t = TileLogic.Neighbor(screens.Select(s => new Native.Rect { Left = s.Bounds.Left, Top = s.Bounds.Top, Right = s.Bounds.Right,
-            Bottom = s.Bounds.Bottom }).ToList(), cur, dir);
+        int t = TileLogic.Neighbor(screens.Select(s => new Native.Rect
+        {
+            Left = s.Bounds.Left,
+            Top = s.Bounds.Top,
+            Right = s.Bounds.Right,
+            Bottom = s.Bounds.Bottom
+        }).ToList(), cur, dir);
         if (t < 0 || tiles.Any(p => p.Value.screen == screens[t].DeviceName))
             return;
         var w = screens[t].WorkingArea;

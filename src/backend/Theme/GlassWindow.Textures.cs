@@ -142,8 +142,11 @@ internal partial class GlassWindow
         var group = new DrawingGroup();
         foreach (var (x, y, r) in new[] { (0.16, 0.78, 0.26), (0.84, 0.18, 0.22), (0.66, 0.92, 0.16), (0.34, 0.12, 0.12) })
         {
-            group.Children.Add(new GeometryDrawing(new RadialGradientBrush { GradientStops = new() { new(theme.Halo(40, 0), 0),
-                new(Colors.Transparent, 1) } },
+            group.Children.Add(new GeometryDrawing(new RadialGradientBrush
+            {
+                GradientStops = new() { new(theme.Halo(40, 0), 0),
+                new(Colors.Transparent, 1) }
+            },
                                                    null,
                                                    new EllipseGeometry(new Point(x, y), r, r * .7)));
         }

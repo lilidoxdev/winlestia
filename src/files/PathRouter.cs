@@ -68,8 +68,10 @@ internal static class PathRouter
     internal static void LaunchExplorer(string arg)
     {
         arg = Clean(arg);
-        var info = new ProcessStartInfo(Path.Combine(Environment.GetEnvironmentVariable("WINDIR") ?? @"C:\Windows", "explorer.exe")) {
-            UseShellExecute = false };
+        var info = new ProcessStartInfo(Path.Combine(Environment.GetEnvironmentVariable("WINDIR") ?? @"C:\Windows", "explorer.exe"))
+        {
+            UseShellExecute = false
+        };
         if (!string.IsNullOrWhiteSpace(arg))
             info.ArgumentList.Add(arg);
         Process.Start(info)?.Dispose();

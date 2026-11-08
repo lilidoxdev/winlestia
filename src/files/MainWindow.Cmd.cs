@@ -24,7 +24,7 @@ public sealed partial class MainWindow
     sealed class Cmd
     {
         internal readonly Button Button; internal readonly TextBlock Label; readonly TextBlock glyph; readonly Func<bool> enabled;
-            readonly bool accent, small;
+        readonly bool accent, small;
         internal bool Hot, Down;
         internal Cmd(string glyphCode, string? text, string tip, bool chevron, bool small, bool accent, Action click, Func<bool> enabled)
         {
@@ -126,8 +126,14 @@ public sealed partial class MainWindow
             row.Children.Add(c.Button);
             return c;
         }
-        void Sep() => row.Children.Add(new Border { Width = 1, Height = 20, Margin = new Thickness(M3.Pad2, 0, M3.Pad2, 0),
-            Background = UI.Hairline, SnapsToDevicePixels = true });
+        void Sep() => row.Children.Add(new Border
+        {
+            Width = 1,
+            Height = 20,
+            Margin = new Thickness(M3.Pad2, 0, M3.Pad2, 0),
+            Background = UI.Hairline,
+            SnapsToDevicePixels = true
+        });
         Add("", "Nouveau", "Nouveau dossier (Ctrl+Maj+N)", () => Fire(NewFolderAsync), () => RealFolder, false, true);
         Sep();
         Add("", null, "Couper (Ctrl+X)", () => CopySelected(true), () => RealFolder && SelCount > 0);
@@ -154,15 +160,25 @@ public sealed partial class MainWindow
         Grid.SetColumn(cmdUndo.Button, 1);
         grid.Children.Add(row);
         grid.Children.Add(cmdUndo.Button);
-        grid.SizeChanged += (_, e) => { bool compact = e.NewSize.Width < 640; foreach (var c in cmds) c.SetCompact(compact);
-            foreach (var c in quickCmds) c.SetCompact(e.NewSize.Width < 800); };
+        grid.SizeChanged += (_, e) =>
+        {
+            bool compact = e.NewSize.Width < 640;
+            foreach (var c in cmds)
+                c.SetCompact(compact);
+            foreach (var c in quickCmds)
+                c.SetCompact(e.NewSize.Width < 800);
+        };
         journal.Changed += () => Dispatcher.BeginInvoke(UpdateCommands);
         Activated += (_, _) => UpdateCommands();
         SourceInitialized += (_, _) => HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(CmdHook);
         UpdateCommands();
-        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 0, 0, 1),
+        return new Border
+        {
+            Child = grid,
+            BorderBrush = UI.Hairline,
+            BorderThickness = new Thickness(0, 0, 0, 1),
             SnapsToDevicePixels = true
-            };
+        };
     }
 
     IntPtr CmdHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -206,8 +222,12 @@ public sealed partial class MainWindow
         status.Margin = new Thickness(M3.Sp3, 0, M3.Sp3, 0);
         status.VerticalAlignment = VerticalAlignment.Center;
         status.TextTrimming = TextTrimming.CharacterEllipsis;
-        selActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center,
-            Visibility = Visibility.Collapsed };
+        selActions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            VerticalAlignment = VerticalAlignment.Center,
+            Visibility = Visibility.Collapsed
+        };
         void Quick(string g, string text, string tip, Action a)
         {
             var c = new Cmd(g, text, tip, false, true, false, a, () => true);
@@ -223,9 +243,13 @@ public sealed partial class MainWindow
         grid.Children.Add(status);
         grid.Children.Add(selActions);
         grid.Children.Add(viewBar);
-        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 1, 0, 0),
+        return new Border
+        {
+            Child = grid,
+            BorderBrush = UI.Hairline,
+            BorderThickness = new Thickness(0, 1, 0, 0),
             SnapsToDevicePixels = true
-            };
+        };
     }
 
     static string FormatBytes(long size) => size < 1024 ? size + " o" : size < 1024 * 1024 ? Math.Ceiling(size / 1024.0) + " Ko"

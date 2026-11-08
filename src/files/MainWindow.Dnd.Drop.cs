@@ -130,8 +130,14 @@ public sealed partial class MainWindow
         {
             var target = spot.Tab;
             var timer = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher) { Interval = TimeSpan.FromMilliseconds(TabHoverMs) };
-            timer.Tick += (_, _) => { timer.Stop(); if (ReferenceEquals(tabTimer, timer)) tabTimer = null;
-                if (tabs.Contains(target)) Activate(target); };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                if (ReferenceEquals(tabTimer, timer))
+                    tabTimer = null;
+                if (tabs.Contains(target))
+                    Activate(target);
+            };
             tabTimer = timer;
             timer.Start();
         }

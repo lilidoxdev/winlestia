@@ -28,7 +28,8 @@ public sealed partial class MainWindow
     [DllImport("user32.dll")] static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
     [DllImport("user32.dll")] static extern uint GetClipboardSequenceNumber();
     [DllImport("user32.dll")] static extern uint GetDoubleClickTime();
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)] static extern int SHOpenWithDialog(IntPtr parent,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
+    static extern int SHOpenWithDialog(IntPtr parent,
         ref OpenAsInfo info);
     const int WM_CLIPBOARDUPDATE = 0x031D;
 
@@ -40,8 +41,12 @@ public sealed partial class MainWindow
 
     readonly TextBox renameBox = new();
     readonly TextBlock renameError = UI.Text("", M3.FontSmall, UI.T(M3Role.Error));
-    readonly StackPanel renamePanel = new() { HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
-        Visibility = Visibility.Collapsed };
+    readonly StackPanel renamePanel = new()
+    {
+        HorizontalAlignment = HorizontalAlignment.Left,
+        VerticalAlignment = VerticalAlignment.Top,
+        Visibility = Visibility.Collapsed
+    };
     FileItem? renaming;
     int clickArm;
     (FileItem item, bool alone, bool onName)? pressed;
@@ -100,15 +105,21 @@ public sealed partial class MainWindow
         Grid.SetRowSpan(renamePanel, 2);
         Panel.SetZIndex(renamePanel, 10);
         listHost.Children.Add(renamePanel);
-        list.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, e) => { if (renaming != null
-            && e.VerticalChange != 0 && !PlaceRename(renaming)) CancelRename(); }));
+        list.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, e) =>
+        {
+            if (renaming != null
+            && e.VerticalChange != 0 && !PlaceRename(renaming))
+                CancelRename();
+        }));
 
         list.PreviewMouseLeftButtonDown += (_, e) =>
         {
             clickArm++;
             pressed = null;
-            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem {
-                DataContext: FileItem item })
+            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem
+                {
+                    DataContext: FileItem item
+                })
                 return;
             if (e.ClickCount == 1 && Keyboard.Modifiers == ModifierKeys.None)
                 pressed = (item, list.SelectedItems.Count == 1 && ReferenceEquals(list.SelectedItem, item), e.OriginalSource is TextBlock t
@@ -125,8 +136,10 @@ public sealed partial class MainWindow
         {
             if (e.ChangedButton != MouseButton.Middle)
                 return;
-            if (e.OriginalSource is DependencyObject src && ItemsControl.ContainerFromElement(list, src) is ListBoxItem {
-                DataContext: FileItem { IsDir: true } dir })
+            if (e.OriginalSource is DependencyObject src && ItemsControl.ContainerFromElement(list, src) is ListBoxItem
+                {
+                    DataContext: FileItem { IsDir: true } dir
+                })
             {
                 AddTab(dir.FullPath);
                 e.Handled = true;
@@ -139,8 +152,15 @@ public sealed partial class MainWindow
             clipSource?.AddHook(ClipHook);
             AddClipboardFormatListener(Hwnd);
         };
-        Closed += (_, _) => { if (clipSource != null) { RemoveClipboardFormatListener(clipSource.Handle); clipSource.RemoveHook(ClipHook);
-            clipSource = null; } };
+        Closed += (_, _) =>
+        {
+            if (clipSource != null)
+            {
+                RemoveClipboardFormatListener(clipSource.Handle);
+                clipSource.RemoveHook(ClipHook);
+                clipSource = null;
+            }
+        };
     }
 
     // La barre d'outils : pas de vol de focus, pour que les raccourcis fonctionnent juste après un clic.

@@ -19,7 +19,8 @@ internal enum CtxKind
 
 public sealed partial class MainWindow
 {
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern bool SHObjectProperties(IntPtr hwnd, uint type, string obj,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    static extern bool SHObjectProperties(IntPtr hwnd, uint type, string obj,
         string? page);
     [DllImport("shell32.dll")] static extern int SHMultiFileProperties(IntPtr dataObject, uint flags);
 

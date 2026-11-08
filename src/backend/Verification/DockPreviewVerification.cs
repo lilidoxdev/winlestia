@@ -61,8 +61,15 @@ internal static class DockPreviewVerification
         var forms = new List<Form>();
         Form Make(string title, Color color, int x)
         {
-            var f = new Form { Text = title, BackColor = color, StartPosition = FormStartPosition.Manual, Location = new Point(x, 80),
-                Size = new Size(360, 240), ShowInTaskbar = false };
+            var f = new Form
+            {
+                Text = title,
+                BackColor = color,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(x, 80),
+                Size = new Size(360, 240),
+                ShowInTaskbar = false
+            };
             f.Controls.Add(new Label { Text = title, AutoSize = true, Font = new Font("Segoe UI", 20), Location = new Point(20, 20) });
             forms.Add(f);
             f.Show();
@@ -152,8 +159,15 @@ internal static class DockPreviewVerification
             // Cap: 2 tiles per row x 3 rows = 6 shown, 8 windows (3 above + 5 tiny extra) -> "+2" indicator.
             for (int i = 0; i < 5; i++)
             {
-                var extra = new Form { Text = "Preview extra " + i, StartPosition = FormStartPosition.Manual, Location = new Point(wa.Left
-                    + 20 + i * 30, wa.Top + 20), Size = new Size(120, 80), ShowInTaskbar = false };
+                var extra = new Form
+                {
+                    Text = "Preview extra " + i,
+                    StartPosition = FormStartPosition.Manual,
+                    Location = new Point(wa.Left
+                    + 20 + i * 30, wa.Top + 20),
+                    Size = new Size(120, 80),
+                    ShowInTaskbar = false
+                };
                 forms.Add(extra);
                 extra.Show();
             }

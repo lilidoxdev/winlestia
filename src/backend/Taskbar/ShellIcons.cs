@@ -45,8 +45,18 @@ internal static class ShellIcons
         var group = new DrawingGroup();
         group.Children.Add(drawing);
         group.Freeze();
-        return new Viewbox { Width = size, Height = size, Child = new Image { Source = new DrawingImage(group), Width = 24, Height = 24,
-            Stretch = Stretch.Uniform } };
+        return new Viewbox
+        {
+            Width = size,
+            Height = size,
+            Child = new Image
+            {
+                Source = new DrawingImage(group),
+                Width = 24,
+                Height = 24,
+                Stretch = Stretch.Uniform
+            }
+        };
     }
     internal static Button Button(string icon, string label, Action action, double size = 21)
     {

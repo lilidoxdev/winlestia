@@ -47,7 +47,7 @@ internal sealed partial class SocialService : IDisposable
             get; set;
         }
         public string Net { get; set; } = ""; public string Title { get; set; } = ""; public string Body { get; set; } = "";
-            public string Kind { get; set; } = "notif"; public long At
+        public string Kind { get; set; } = "notif"; public long At
         {
             get; set;
         }
@@ -62,7 +62,7 @@ internal sealed partial class SocialService : IDisposable
             get => U.Count; set => U.Count = value;
         }
         public bool Connected, Navigating, Creating, Wanted, Suspended, ForceClose, Armed, Arming;
-            public DateTime HiddenSince = DateTime.MinValue;
+        public DateTime HiddenSince = DateTime.MinValue;
         public DateTime LastNative = DateTime.MinValue, TitleChangedAt = DateTime.MinValue, NextCheck = DateTime.MinValue;
         public System.Windows.Window? Win; public CoreWebView2Controller? Ctl; public CoreWebView2? Wv;
     }
@@ -125,8 +125,16 @@ internal sealed partial class SocialService : IDisposable
         volume = Store.State.SocialVolume,
         history = history.Select(h => new { seq = h.Seq, net = h.Net, title = h.Title, body = h.Body, kind = h.Kind, at = h.At })
             .ToArray(),
-        networks = nets.Select(n => new { id = n.Id, name = n.Name, enabled = Enabled(n), connected = n.Connected,
-            muted = Store.State.SocialNetMuted.GetValueOrDefault(n.Id), count = n.Count, busy = n.Creating || n.Navigating }).ToArray()
+        networks = nets.Select(n => new
+        {
+            id = n.Id,
+            name = n.Name,
+            enabled = Enabled(n),
+            connected = n.Connected,
+            muted = Store.State.SocialNetMuted.GetValueOrDefault(n.Id),
+            count = n.Count,
+            busy = n.Creating || n.Navigating
+        }).ToArray()
     };
 
     // Coalesce les rafales : au plus un push "social" toutes les 250 ms.
@@ -251,8 +259,13 @@ internal sealed partial class SocialService : IDisposable
                 var env = await GetEnvironment();
                 var opt = env.CreateCoreWebView2ControllerOptions();
                 opt.ProfileName = n.Id;
-                var host = new System.Windows.Window { ShowInTaskbar = false, Width = 1, Height = 1,
-                    WindowStyle = System.Windows.WindowStyle.None };
+                var host = new System.Windows.Window
+                {
+                    ShowInTaskbar = false,
+                    Width = 1,
+                    Height = 1,
+                    WindowStyle = System.Windows.WindowStyle.None
+                };
                 var handle = new WindowInteropHelper(host).EnsureHandle();
                 var ctl = await env.CreateCoreWebView2ControllerAsync(handle, opt);
                 try

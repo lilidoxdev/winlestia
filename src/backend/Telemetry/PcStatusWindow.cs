@@ -57,8 +57,12 @@ internal sealed class PcStatusWindow : GlassWindow
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
         var content = new StackPanel();
-        var scroll = new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        var scroll = new ScrollViewer
+        {
+            Content = content,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var pair = new Grid { Margin = new Thickness(0, 0, 0, 12) };
@@ -170,10 +174,21 @@ internal sealed class PcStatusWindow : GlassWindow
             storageKey = "";
             foreach (var graph in new[] { cpu.Graph, gpu.Graph, ramGraph, diskGraph, networkGraph })
                 graph.Reset();
-            telemetry.Start(reading => Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (version == revision
-                && IsVisible) Update(reading); })), error: message => Dispatcher.BeginInvoke((Action)(() => { if (version == revision
-                && IsVisible) { live.Text = "Collecte indisponible · réouvre le panneau"; live.Foreground = UI.Brush("#F3CF91");
-                live.ToolTip = message; } })));
+            telemetry.Start(reading => Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() =>
+            {
+                if (version == revision
+                && IsVisible)
+                    Update(reading);
+            })), error: message => Dispatcher.BeginInvoke((Action)(() =>
+            {
+                if (version == revision
+                && IsVisible)
+                {
+                    live.Text = "Collecte indisponible · réouvre le panneau";
+                    live.Foreground = UI.Brush("#F3CF91");
+                    live.ToolTip = message;
+                }
+            })));
         }
         catch (Exception ex) { Store.Log("Cycle état PC: " + ex); }
         finally { lifecycle.Release(); }
@@ -238,8 +253,12 @@ internal sealed class PcStatusWindow : GlassWindow
             row.Children.Add(UI.Text(drive.Name.TrimEnd('\\'), 10, null, true));
             var track = new Grid { Height = 5, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 12, 0) };
             track.Children.Add(new Border { CornerRadius = new CornerRadius(3), Background = UI.T(M3Role.OnSurface, 0x19) });
-            var fill = new Border { CornerRadius = new CornerRadius(3), Background = UI.Brush(used > .9 ? "#F3B58D" : "#E8C58B"),
-                HorizontalAlignment = HorizontalAlignment.Left };
+            var fill = new Border
+            {
+                CornerRadius = new CornerRadius(3),
+                Background = UI.Brush(used > .9 ? "#F3B58D" : "#E8C58B"),
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
             track.Children.Add(fill);
             track.SizeChanged += (_, _) => fill.Width = track.ActualWidth * used;
             Grid.SetColumn(track, 1);
@@ -282,9 +301,16 @@ internal sealed class PcStatusWindow : GlassWindow
         row.Children.Add(UI.Text(name, 12, null, true));
         return row;
     }
-    static Border Card(UIElement child) => new() { CornerRadius = new CornerRadius(24),
-        Background = new LinearGradientBrush(UI.Color("#1DFFFFFF"), UI.Color("#0BFFFFFF"), 90), BorderBrush = UI.T(M3Role.OnSurface, 0x27),
-        BorderThickness = new Thickness(1), Padding = new Thickness(15, 12, 15, 12), Margin = new Thickness(0, 0, 0, 12), Child = child };
+    static Border Card(UIElement child) => new()
+    {
+        CornerRadius = new CornerRadius(24),
+        Background = new LinearGradientBrush(UI.Color("#1DFFFFFF"), UI.Color("#0BFFFFFF"), 90),
+        BorderBrush = UI.T(M3Role.OnSurface, 0x27),
+        BorderThickness = new Thickness(1),
+        Padding = new Thickness(15, 12, 15, 12),
+        Margin = new Thickness(0, 0, 0, 12),
+        Child = child
+    };
     internal static string Pct(double? value) => value.HasValue ? Math.Round(value.Value).ToString("0", CultureInfo.CurrentCulture) + " %"
         : "—";
     internal static string Temp(double? value) => value.HasValue ? value.Value.ToString("0", CultureInfo.CurrentCulture) + " °C"

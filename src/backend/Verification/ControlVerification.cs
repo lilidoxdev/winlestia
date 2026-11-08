@@ -57,8 +57,12 @@ internal static class ControlVerification
             Check(copy.Controls.Modules.SequenceEqual(preferences.Controls.Modules) && copy.Controls.HiddenModules.Contains("connections")
                 && !copy.Controls.ShowBrightness && copy.Controls.Shortcuts.Last().Name == "Écran personnalisé",
                 "Persistance des modules, ordre, icônes et raccourcis");
-            var invalid = new ControlPreferences { Modules = new() { "invalid", "media", "media" }, HiddenModules = new() { "invalid",
-                "levels" } };
+            var invalid = new ControlPreferences
+            {
+                Modules = new() { "invalid", "media", "media" },
+                HiddenModules = new() { "invalid",
+                "levels" }
+            };
             invalid.Normalize();
             Check(invalid.Modules.Count == 5 && invalid.Modules.Distinct().Count() == 5 && invalid.HiddenModules.SequenceEqual(new[] {
                 "levels" }), "Configuration de modules invalide récupérée");
@@ -147,14 +151,14 @@ internal static class ControlVerification
         finally { Store.State = saved; }
         File.WriteAllText(Path.Combine(Store.Root, writeTest ? "verification-controls-write.json" : "verification-controls.json"),
             JsonSerializer.Serialize(new
-        {
-            At = DateTimeOffset.Now,
-            Passed = checks.Count - failed,
-            Failed = failed,
-            WriteTest = writeTest,
-            Live = live,
-            Checks = checks
-        }, Store.Json));
+            {
+                At = DateTimeOffset.Now,
+                Passed = checks.Count - failed,
+                Failed = failed,
+                WriteTest = writeTest,
+                Live = live,
+                Checks = checks
+            }, Store.Json));
         return failed == 0 ? 0 : 1;
     }
 }
