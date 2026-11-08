@@ -18,7 +18,7 @@ Les tests de categorie `Desktop` (`[Trait("Category","Desktop")]` : audio, explo
 
 ### Couverture
 
-La CI collecte la couverture avec coverlet (`coverlet.collector`) et verifie un plancher (etape « Resume de couverture » de `.github/workflows/ci.yml`). Valeur mesuree le 2026-11-09 : 17,20 % des lignes, plancher 17 %. Le backend etant compile dans l'assembly de test, `tests/coverage.runsettings` active `IncludeTestAssembly` et exclut les fichiers de tests.
+La CI collecte la couverture avec coverlet (`coverlet.collector`) et verifie un plancher (etape « Resume de couverture » de `.github/workflows/ci.yml`). Valeur mesuree en Release (comme la CI) le 2026-11-09 : 16,22 % des lignes, plancher 16 %. Une mesure en Debug donne environ un point de plus ; seule la valeur Release fait foi. Le backend etant compile dans l'assembly de test, `tests/coverage.runsettings` active `IncludeTestAssembly` et exclut les fichiers de tests.
 
 ```powershell
 dotnet test tests/Winlestia.Tests -c Release --filter "Category!=Desktop" --collect:"XPlat Code Coverage" --settings tests/coverage.runsettings --results-directory TestResults
