@@ -1,4 +1,4 @@
-// language: C# 12, file: PerformanceProbe.cs, target: Windows 11 / .NET 8 WPF, repeatable local motion benchmark
+// C# 12, fichier PerformanceProbe.cs, cible Windows 11 / .NET 8 WPF, banc d'essai local et répétable de l'animation
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +12,8 @@ namespace PanneauxGlass;
 
 internal static class PerformanceProbe
 {
+    // Laisse l'interface se stabiliser avant l'étape de mesure suivante.
+    const int SettleMs = 1100;
     internal static void Run(Coordinator coordinator, string filename, bool full = false)
     {
         coordinator.Pinned = true;
@@ -27,7 +29,8 @@ internal static class PerformanceProbe
         double cpu = 0;
         int step = 0;
         bool recording = false;
-        EventHandler rendering = (_, e) => { if (!recording || e is not RenderingEventArgs r) return; if (last != TimeSpan.Zero) { double ms = (r.RenderingTime - last).TotalMilliseconds; if (ms > 0 && ms < 150) frames.Add(ms); } last = r.RenderingTime; };
+        EventHandler rendering = (_, e) => { if (!recording || e is not RenderingEventArgs r) return; if (last != TimeSpan.Zero) {
+            double ms = (r.RenderingTime - last).TotalMilliseconds; if (ms > 0 && ms < 150) frames.Add(ms); } last = r.RenderingTime; };
         CompositionTarget.Rendering += rendering;
         timer.Tick += (_, _) =>
         {
@@ -37,7 +40,7 @@ internal static class PerformanceProbe
                 cpu = process.TotalProcessorTime.TotalMilliseconds;
                 clock.Start();
                 recording = true;
-                timer.Interval = TimeSpan.FromMilliseconds(1100);
+                timer.Interval = TimeSpan.FromMilliseconds(SettleMs);
             }
             if (step < 12)
             {
@@ -60,7 +63,8 @@ internal static class PerformanceProbe
             process.Refresh();
             CompositionTarget.Rendering -= rendering;
             frames.Sort();
-            double Percentile(double p) => frames.Count == 0 ? 0 : frames[Math.Min(frames.Count - 1, (int)Math.Ceiling(frames.Count * p) - 1)];
+            double Percentile(double p) => frames.Count == 0 ? 0 : frames[Math.Min(frames.Count - 1,
+                (int)Math.Ceiling(frames.Count * p) - 1)];
             var report = new
             {
                 At = DateTimeOffset.Now,

@@ -1,4 +1,5 @@
-// C# 12 / AudioBars.cs / Pure DSP for the dashboard visualizer: samples in, bar levels 0-1 out. No I/O, no audio API, nothing kept but the levels.
+// C# 12 / AudioBars.cs / DSP pur pour le visualiseur du tableau de bord : échantillons en entrée, niveaux de barres 0-1 en sortie. Aucune
+// E/S, aucune API audio, seuls les niveaux sont conservés.
 using System;
 
 namespace PanneauxGlass;
@@ -8,7 +9,8 @@ internal sealed class AudioBars
     internal const int Bars = 28, FftSize = 1024;
     const double LowHz = 50, HighHz = 16000, FloorDb = -60, Rise = 0.6, Fall = 0.12, Epsilon = 0.004;
 
-    readonly double[] re = new double[FftSize], im = new double[FftSize], window = new double[FftSize], raw = new double[Bars], levels = new double[Bars];
+    readonly double[] re = new double[FftSize], im = new double[FftSize], window = new double[FftSize], raw = new double[Bars],
+        levels = new double[Bars];
     readonly double[] cos = new double[FftSize / 2], sin = new double[FftSize / 2];
 
     internal AudioBars()
@@ -34,7 +36,8 @@ internal sealed class AudioBars
         }
     }
 
-    // Takes the last FftSize mono samples (zero padded when fewer) and updates the smoothed levels: fast rise, slow fall.
+    // Prend les FftSize derniers échantillons mono (complétés par des zéros s'il y en a moins) et met à jour les niveaux lissés : montée
+    // rapide, descente lente.
     internal void Update(ReadOnlySpan<float> mono, int sampleRate)
     {
         Analyze(mono, sampleRate);
@@ -46,7 +49,7 @@ internal sealed class AudioBars
         }
     }
 
-    // No input: levels fall toward zero and reach exactly zero.
+    // Sans entrée : les niveaux retombent vers zéro et l'atteignent exactement.
     internal void Decay()
     {
         for (int b = 0; b < Bars; b++)
@@ -58,7 +61,8 @@ internal sealed class AudioBars
 
     internal void Reset() => Array.Clear(levels);
 
-    // Band edges are logarithmic between LowHz and min(HighHz, Nyquist). Returns the unsmoothed levels (valid until the next call).
+    // Les bornes des bandes sont logarithmiques entre LowHz et min(HighHz, Nyquist). Renvoie les niveaux non lissés (valides jusqu'au
+    // prochain appel).
     internal ReadOnlySpan<double> Analyze(ReadOnlySpan<float> mono, int sampleRate)
     {
         Array.Clear(raw);
@@ -83,7 +87,8 @@ internal sealed class AudioBars
         for (int b = 0; b < Bars; b++)
         {
             double f0 = LowHz * Math.Pow(ratio, (double)b / Bars), f1 = LowHz * Math.Pow(ratio, (double)(b + 1) / Bars);
-            int lo = Math.Clamp((int)Math.Floor(f0 / binHz), 1, FftSize / 2 - 1), hi = Math.Clamp((int)Math.Ceiling(f1 / binHz), lo + 1, FftSize / 2);
+            int lo = Math.Clamp((int)Math.Floor(f0 / binHz), 1, FftSize / 2 - 1), hi = Math.Clamp((int)Math.Ceiling(f1 / binHz), lo + 1,
+                FftSize / 2);
             double peak = 0;
             for (int k = lo; k < hi; k++)
                 peak = Math.Max(peak, Math.Sqrt(re[k] * re[k] + im[k] * im[k]));

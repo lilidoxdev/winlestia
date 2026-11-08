@@ -1,4 +1,4 @@
-// C#12 / DesktopRecents.cs / Windows11. Bounded chronological history, one background STA, no Shell COM on UI.
+// C# 12 / DesktopRecents.cs / Windows 11. Historique chronologique borné, un STA d'arrière-plan, aucun COM du shell sur l'UI.
 using System;
 using System.IO;
 using System.Linq;
@@ -12,8 +12,10 @@ namespace PanneauxGlass;
 internal static class DesktopRecents
 {
     internal sealed record Recent(Entry Entry, DateTime At);
-    internal static readonly Dictionary<string, Entry> Entries = new(); static readonly Dictionary<string, Recent> history = new(StringComparer.OrdinalIgnoreCase);
-    static readonly ConcurrentQueue<(uint pid, DateTime at)> queue = new(); static readonly AutoResetEvent wake = new(false); static readonly string file = Path.Combine(Store.DataDir, "recent-launches.json");
+    internal static readonly Dictionary<string, Entry> Entries = new(); static readonly Dictionary<string,
+        Recent> history = new(StringComparer.OrdinalIgnoreCase);
+    static readonly ConcurrentQueue<(uint pid, DateTime at)> queue = new(); static readonly AutoResetEvent wake = new(false);
+        static readonly string file = Path.Combine(Store.DataDir, "recent-launches.json");
     static readonly Thread worker; static uint lastPid; static object[] values = Array.Empty<object>(); static DateTime nextScan;
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
     static DesktopRecents()
@@ -83,7 +85,10 @@ internal static class DesktopRecents
                 {
                     using var process = System.Diagnostics.Process.GetProcessById((int)item.pid);
                     string path = process.MainModule?.FileName ?? "";
-                    if (path.StartsWith(Path.GetFullPath(Path.Combine(Store.Root, "..")) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || !File.Exists(path) || path.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.Windows) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                    if (path.StartsWith(Path.GetFullPath(Path.Combine(Store.Root, "..")) + Path.DirectorySeparatorChar,
+                        StringComparison.OrdinalIgnoreCase) || !File.Exists(path)
+                        || path.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.Windows) + Path.DirectorySeparatorChar,
+                        StringComparison.OrdinalIgnoreCase))
                         continue;
                     Put(new()
                     {
@@ -102,7 +107,8 @@ internal static class DesktopRecents
                 nextScan = DateTime.UtcNow.AddSeconds(15);
                 try
                 {
-                    foreach (string linkPath in Directory.EnumerateFiles(Environment.GetFolderPath(Environment.SpecialFolder.Recent), "*.lnk").OrderByDescending(File.GetLastWriteTimeUtc).Take(64))
+                    foreach (string linkPath in Directory.EnumerateFiles(Environment.GetFolderPath(Environment.SpecialFolder.Recent),
+                        "*.lnk").OrderByDescending(File.GetLastWriteTimeUtc).Take(64))
                     {
                         DateTime at = File.GetLastWriteTimeUtc(linkPath);
                         string target = "";
@@ -153,7 +159,8 @@ internal static class DesktopRecents
                     Entries.Clear();
                     foreach (var item in ordered)
                         Entries[item.Entry.Id] = item.Entry;
-                    values = ordered.Take(24).Select(r => new { id = r.Entry.Id, name = r.Entry.Name, kind = "systemRecent", icon = Directory.Exists(r.Entry.Target) ? "folder" : "apps", comment = r.Entry.Target, at = r.At }).ToArray();
+                    values = ordered.Take(24).Select(r => new { id = r.Entry.Id, name = r.Entry.Name, kind = "systemRecent",
+                        icon = Directory.Exists(r.Entry.Target) ? "folder" : "apps", comment = r.Entry.Target, at = r.At }).ToArray();
                 }
                 try
                 {
@@ -172,5 +179,6 @@ internal static class DesktopRecents
 
 internal static class RecentOrdering
 {
-    internal static DesktopRecents.Recent[] Sort(IEnumerable<DesktopRecents.Recent> source) => source.GroupBy(r => r.Entry.Target, StringComparer.OrdinalIgnoreCase).Select(g => g.MaxBy(r => r.At)!).OrderByDescending(r => r.At).Take(64).ToArray();
+    internal static DesktopRecents.Recent[] Sort(IEnumerable<DesktopRecents.Recent> source) => source.GroupBy(r => r.Entry.Target,
+        StringComparer.OrdinalIgnoreCase).Select(g => g.MaxBy(r => r.At)!).OrderByDescending(r => r.At).Take(64).ToArray();
 }

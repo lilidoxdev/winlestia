@@ -1,5 +1,7 @@
-// Step 5: auto refresh (shell change notifications on the ACTIVE tab's folder only), filter field, selection / scroll preservation.
-// No timer runs while idle: the only timers are one-shot (100 ms burst coalescing after an event, 120 ms filter debounce after a key press).
+// Étape 5 : rafraîchissement auto (notifications de changement du shell sur le dossier de l'onglet ACTIF uniquement), champ de filtre,
+// conservation de la sélection / du défilement.
+// Aucun minuteur ne tourne au repos : les seuls minuteurs sont à usage unique (100 ms de regroupement de rafale après un événement, 120 ms
+// d'antirebond du filtre après une frappe).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,6 +20,10 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Regroupe les notifications du système de fichiers d'une même rafale.
+    const int BurstFlushMs = 100;
+    // Regroupe les frappes du filtre avant de recalculer la liste.
+    const int FilterDebounceMs = 120;
     // ---- shell change notifications ---------------------------------------------------------------------------
 
     const int WmChange = 0x8000 + 0x57;                                   // WM_APP + n
@@ -32,15 +38,18 @@ public sealed partial class MainWindow
     {
         public IntPtr Pidl; [MarshalAs(UnmanagedType.Bool)] public bool Recursive;
     }
-    [DllImport("shell32.dll")] static extern uint SHChangeNotifyRegister(IntPtr hwnd, int sources, int events, uint message, int count, ref NotifyEntry entries);
+    [DllImport("shell32.dll")] static extern uint SHChangeNotifyRegister(IntPtr hwnd, int sources, int events, uint message, int count,
+        ref NotifyEntry entries);
     [DllImport("shell32.dll")] static extern bool SHChangeNotifyDeregister(uint id);
     [DllImport("shell32.dll")] static extern IntPtr SHChangeNotification_Lock(IntPtr change, uint pid, out IntPtr pidls, out int events);
     [DllImport("shell32.dll")] static extern bool SHChangeNotification_Unlock(IntPtr handle);
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern int SHParseDisplayName(string name, IntPtr bind, out IntPtr pidl, uint attrsIn, out uint attrsOut);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern int SHParseDisplayName(string name, IntPtr bind, out IntPtr pidl,
+        uint attrsIn, out uint attrsOut);
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern bool SHGetPathFromIDListW(IntPtr pidl, StringBuilder path);
     [DllImport("ole32.dll")] static extern void CoTaskMemFree(IntPtr pointer);
 
-    static readonly bool NoWatch = Environment.GetEnvironmentVariable("WINLESTIA_FILES_NOWATCH") == "1";   // test isolation: the older ops/dnd selftests hold FileItem references that a refresh may replace
+    // test isolation: the older ops/dnd selftests hold FileItem references that a refresh may replace
+    static readonly bool NoWatch = Environment.GetEnvironmentVariable("WINLESTIA_FILES_NOWATCH") == "1";
     uint watchId; string watchPath = "";
     bool hookAdded;
     readonly HashSet<string> changed = new(StringComparer.OrdinalIgnoreCase);
@@ -68,7 +77,7 @@ public sealed partial class MainWindow
             WatchFolder(Active.Location);
     }
 
-    // Re-registers only when the watched folder differs (tab switch, navigation); one registration at a time.
+    // Ne se réinscrit que si le dossier surveillé change (changement d'onglet, navigation) ; une seule inscription à la fois.
     void WatchFolder(string path)
     {
         if (closed || !hookAdded || NoWatch)
@@ -77,7 +86,8 @@ public sealed partial class MainWindow
             return;
         StopWatch();
         var hwnd = new WindowInteropHelper(this).Handle;
-        if (hwnd == IntPtr.Zero || path.Length == 0 || path.StartsWith("shell:", StringComparison.OrdinalIgnoreCase) || path.StartsWith("::", StringComparison.Ordinal))
+        if (hwnd == IntPtr.Zero || path.Length == 0 || path.StartsWith("shell:", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("::", StringComparison.Ordinal))
             return;
         IntPtr pidl = IntPtr.Zero;
         try
@@ -141,7 +151,7 @@ public sealed partial class MainWindow
             }
             if (burst == null)
             {
-                burst = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(100) };
+                burst = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(BurstFlushMs) };
                 burst.Tick += FlushChanges;
             }
             if (!burst.IsEnabled)
@@ -152,7 +162,8 @@ public sealed partial class MainWindow
         return IntPtr.Zero;
     }
 
-    bool Under(string path) => string.Equals(Path.GetDirectoryName(path)?.TrimEnd('\\'), watchPath.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
+    bool Under(string path) => string.Equals(Path.GetDirectoryName(path)?.TrimEnd('\\'), watchPath.TrimEnd('\\'),
+        StringComparison.OrdinalIgnoreCase);
 
     void FlushChanges(object? sender, EventArgs e)
     {
@@ -211,7 +222,7 @@ public sealed partial class MainWindow
         return s;
     }
 
-    // keepScroll: anchor (the first visible row stays first when it still exists) or the raw offset.
+    // keepScroll : ancre (la première ligne visible reste la première si elle existe encore) ou décalage brut.
     void Restore(ViewState s, Keep kind)
     {
         var items = Active.Items;
@@ -248,7 +259,8 @@ public sealed partial class MainWindow
         }
         if (Math.Abs(sv.VerticalOffset - target) < 0.5)
             return;
-        list.UpdateLayout();                                               // the panel must know the new extent before the offset is clamped
+        // the panel must know the new extent before the offset is clamped
+        list.UpdateLayout();
         sv.ScrollToVerticalOffset(target);
     }
 
@@ -277,7 +289,7 @@ public sealed partial class MainWindow
         tab.Notice += (_, message) => Toast(message);
     }
 
-    // ---- tab switch: keep each tab's selection and scroll ---------------------------------------------------------
+    // ---- changement d'onglet : conserver la sélection et le défilement de chaque onglet ----
 
     readonly Dictionary<TabView, ViewState> saved = new();
 
@@ -332,7 +344,7 @@ public sealed partial class MainWindow
             UpdateFilterChrome();
             if (settingFilter)
                 return;
-            filterTimer ??= new DispatcherTimer(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(120) };
+            filterTimer ??= new DispatcherTimer(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(FilterDebounceMs) };
             filterTimer.Tick -= ApplyFilter;
             filterTimer.Tick += ApplyFilter;
             filterTimer.Stop();
@@ -381,14 +393,16 @@ public sealed partial class MainWindow
         row.Children.Add(field);
         row.Children.Add(deepToggle);
         row.Children.Add(filterClose);
-        // Always visible, to the right of the address zone; same surfaceContainer fill, accent border while it has the focus.
-        filterHost = new Border { Height = 36, Width = 250, CornerRadius = new CornerRadius(18), Background = UI.T(M3Role.SurfaceContainer), BorderBrush = UI.Hairline, BorderThickness = new Thickness(1), Child = row, SnapsToDevicePixels = true };
+        // Toujours visible, à droite de la zone d'adresse ; même fond surfaceContainer, bordure d'accent quand il a le focus.
+        filterHost = new Border { Height = 36, Width = 250, CornerRadius = new CornerRadius(18), Background = UI.T(M3Role.SurfaceContainer),
+            BorderBrush = UI.Hairline, BorderThickness = new Thickness(1), Child = row, SnapsToDevicePixels = true };
         UpdateFilterChrome();
         return filterHost;
     }
 
     Button filterClose = null!;
-    // Placeholder while empty; the clear and sub-folder buttons only once there is something to clear.
+    // Texte indicatif tant qu'il est vide ; les boutons d'effacement et de sous-dossiers n'apparaissent qu'une fois qu'il y a quelque chose
+    // à effacer.
     void UpdateFilterChrome()
     {
         if (filterBox == null || searchHint == null)
@@ -442,7 +456,7 @@ public sealed partial class MainWindow
             list.Focus();
     }
 
-    // Called from Refresh: the field mirrors the active tab's filter (cleared by navigation, kept per tab on switch).
+    // Appelé depuis Refresh : le champ reflète le filtre de l'onglet actif (effacé par la navigation, conservé par onglet au changement).
     void SyncFilterUi(FolderTab tab)
     {
         if (filterBox == null)

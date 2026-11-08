@@ -1,4 +1,4 @@
-# Python3.12 / custom_palette.py / Five user colours mapped to shared Winlestia material roles.
+# Python3.12 / custom_palette.py / Cinq couleurs utilisateur associées aux rôles Material partagés de Winlestia.
 from functools import lru_cache
 import re
 

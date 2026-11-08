@@ -1,4 +1,4 @@
-# Python 3.12 / wallpaper_thumbs.py / cached 480 px JPEG thumbnails for the wallpaper switcher.
+# Python 3.12 / wallpaper_thumbs.py / vignettes JPEG de 480 px en cache pour le sélecteur de fonds.
 import hashlib, os
 from pathlib import Path
 from PySide6.QtCore import QSize
@@ -19,7 +19,8 @@ def thumb_dir():
 
 
 def thumb_for(path):
-    # Returns the thumbnail file for `path` (path+mtime key), generating it if missing; '' on failure. Only the scaled size is ever decoded.
+    # Renvoie le fichier de vignette de `path` (clé chemin+mtime), en le générant s'il manque ; '' en cas d'échec.
+    # Seule la taille réduite est décodée.
     try:
         stat = os.stat(path)
         key = hashlib.sha1(f'{path.lower()}|{stat.st_mtime_ns}|{stat.st_size}'.encode('utf-8')).hexdigest()[:24]

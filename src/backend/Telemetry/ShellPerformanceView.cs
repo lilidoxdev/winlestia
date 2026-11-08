@@ -1,4 +1,4 @@
-// language: C# 12, file: ShellPerformanceView.cs, target: Windows 11 / .NET 8 WPF, demand-driven native performance page
+// C# 12, fichier ShellPerformanceView.cs, cible Windows 11 / .NET 8 WPF, page de performance native à la demande
 using System;
 using System.Linq;
 using System.Threading;
@@ -12,9 +12,14 @@ namespace PanneauxGlass;
 
 internal sealed class ShellPerformanceView : Border, IDisposable
 {
-    readonly PcTelemetry telemetry = new(); readonly SemaphoreSlim lifecycle = new(1, 1); readonly System.Collections.Generic.List<Border> plates = new(); bool active, closed; int version;
-    readonly TextBlock stamp = UI.Text("Préparation des mesures…", 12, UI.Dim), cpu = UI.Text("—", 35, null, true), cpuDetail = UI.Text("Processeur", 12, UI.Dim), gpu = UI.Text("—", 35, null, true), gpuDetail = UI.Text("Carte graphique", 12, UI.Dim), ram = UI.Text("—", 35, null, true), ramDetail = UI.Text("Mémoire", 12, UI.Dim), network = UI.Text("—", 24, null, true), networkDetail = UI.Text("Connexion réseau", 12, UI.Dim), storage = UI.Text("—", 15, null, true);
-    readonly TelemetryGraph cpuGraph = new("#A77967"), gpuGraph = new("#8E819D"), ramGraph = new("#7C9581"), netGraph = new("#A77967", false);
+    readonly PcTelemetry telemetry = new(); readonly SemaphoreSlim lifecycle = new(1, 1);
+        readonly System.Collections.Generic.List<Border> plates = new(); bool active, closed; int version;
+    readonly TextBlock stamp = UI.Text("Préparation des mesures…", 12, UI.Dim), cpu = UI.Text("—", 35, null, true),
+        cpuDetail = UI.Text("Processeur", 12, UI.Dim), gpu = UI.Text("—", 35, null, true), gpuDetail = UI.Text("Carte graphique", 12,
+        UI.Dim), ram = UI.Text("—", 35, null, true), ramDetail = UI.Text("Mémoire", 12, UI.Dim), network = UI.Text("—", 24, null, true),
+        networkDetail = UI.Text("Connexion réseau", 12, UI.Dim), storage = UI.Text("—", 15, null, true);
+    readonly TelemetryGraph cpuGraph = new("#A77967"), gpuGraph = new("#8E819D"), ramGraph = new("#7C9581"), netGraph = new("#A77967",
+        false);
     internal bool Sampling => telemetry.Running;
     internal long Samples => telemetry.Samples;
     internal ShellPerformanceView(Coordinator owner)
@@ -62,7 +67,8 @@ internal sealed class ShellPerformanceView : Border, IDisposable
     }
     Border Plate(UIElement child)
     {
-        var plate = new Border { CornerRadius = new CornerRadius(22), Padding = new Thickness(22), Margin = new Thickness(0, 0, 12, 12), Child = child };
+        var plate = new Border { CornerRadius = new CornerRadius(22), Padding = new Thickness(22), Margin = new Thickness(0, 0, 12, 12),
+            Child = child };
         plates.Add(plate);
         RefreshTheme();
         return plate;
@@ -70,7 +76,8 @@ internal sealed class ShellPerformanceView : Border, IDisposable
     internal void RefreshTheme()
     {
         foreach (var plate in plates)
-            plate.Background = new SolidColorBrush(Theme.Mix(Theme.Current.Surface, Theme.Current.Accent, Theme.Current.Light ? .085 : .12));
+            plate.Background = new SolidColorBrush(Theme.Mix(Theme.Current.Surface, Theme.Current.Accent, Theme.Current.Light ? .085
+                : .12));
     }
     internal async void SetActive(bool value)
     {
@@ -89,14 +96,17 @@ internal sealed class ShellPerformanceView : Border, IDisposable
                 return;
             }
             stamp.Text = "Préparation des capteurs…";
-            telemetry.Start(reading => Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (active && !closed && expected == version) Update(reading); })), error: message => Dispatcher.BeginInvoke((Action)(() => { if (active && !closed && expected == version) { stamp.Text = "Mesures indisponibles"; stamp.ToolTip = message; } })), quick: true);
+            telemetry.Start(reading => Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (active && !closed
+                && expected == version) Update(reading); })), error: message => Dispatcher.BeginInvoke((Action)(() => { if (active
+                && !closed && expected == version) { stamp.Text = "Mesures indisponibles"; stamp.ToolTip = message; } })), quick: true);
         }
         catch (Exception ex) { Store.Log("Page performances: " + ex.Message); }
         finally { lifecycle.Release(); }
     }
     static string Percent(double? value) => value.HasValue ? Math.Round(value.Value) + " %" : "—";
     static string Heat(double? value) => value.HasValue ? Math.Round(value.Value) + " °C" : "Température —";
-    static string Rate(double? value) => value.HasValue ? (value >= 1048576 ? (value / 1048576).Value.ToString("0.0") + " Mo/s" : (value / 1024).Value.ToString("0.0") + " Ko/s") : "—";
+    static string Rate(double? value) => value.HasValue ? (value >= 1048576 ? (value / 1048576).Value.ToString("0.0") + " Mo/s"
+        : (value / 1024).Value.ToString("0.0") + " Ko/s") : "—";
     void Update(PcReading value)
     {
         stamp.Text = "● En direct · " + value.At.ToLocalTime().ToString("HH:mm:ss");
@@ -109,12 +119,14 @@ internal sealed class ShellPerformanceView : Border, IDisposable
         gpuGraph.Push(graphics?.Load);
         double used = value.MemoryTotal > 0 ? (value.MemoryTotal - value.MemoryAvailable) / (double)value.MemoryTotal * 100 : 0;
         ram.Text = Percent(value.MemoryTotal > 0 ? used : null);
-        ramDetail.Text = ((value.MemoryTotal - value.MemoryAvailable) / 1073741824d).ToString("0.0") + " / " + (value.MemoryTotal / 1073741824d).ToString("0.0") + " Go utilisés";
+        ramDetail.Text = ((value.MemoryTotal - value.MemoryAvailable) / 1073741824d).ToString("0.0") + " / "
+            + (value.MemoryTotal / 1073741824d).ToString("0.0") + " Go utilisés";
         ramGraph.Push(value.MemoryTotal > 0 ? used : null);
         network.Text = "↓ " + Rate(value.Download);
         networkDetail.Text = "↑ " + Rate(value.Upload) + " · " + value.Network;
         netGraph.Push(value.Download, value.Upload);
-        storage.Text = string.Join("\n\n", value.Drives.Select(d => d.Name + "   " + (d.Free / 1073741824d).ToString("0") + " Go libres / " + (d.Total / 1073741824d).ToString("0") + " Go"));
+        storage.Text = string.Join("\n\n", value.Drives.Select(d => d.Name + "   " + (d.Free / 1073741824d).ToString("0") + " Go libres / "
+            + (d.Total / 1073741824d).ToString("0") + " Go"));
     }
     public void Dispose()
     {

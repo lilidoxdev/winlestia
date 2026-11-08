@@ -1,4 +1,5 @@
-// C# 12 / OsdWatcher.cs / Windows .NET 8. Event-driven (no polling) default-output volume/mute change notifications for the Qt OSD.
+// C# 12 / OsdWatcher.cs / Windows .NET 8. Notifications de volume/sourdine de la sortie par défaut pilotées par événements (sans sondage)
+// pour l'OSD Qt.
 using System;
 using System.Management;
 using System.Windows.Threading;
@@ -9,7 +10,8 @@ namespace PanneauxGlass;
 internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
 {
     readonly Dispatcher dispatcher; readonly Action<int, bool> changed; readonly Action<string>? extra;
-    MMDeviceEnumerator? devices; MMDevice? endpoint; MMDevice? mic; ManagementEventWatcher? brightnessWatcher; int lastBrightness = -1, lastMic = -1; bool lastMicMuted; bool disposed; int lastVolume = -1; bool lastMuted;
+    MMDeviceEnumerator? devices; MMDevice? endpoint; MMDevice? mic; ManagementEventWatcher? brightnessWatcher; int lastBrightness = -1,
+        lastMic = -1; bool lastMicMuted; bool disposed; int lastVolume = -1; bool lastMuted;
     internal OsdWatcher(Dispatcher dispatcher, Action<int, bool> changed, Action<string>? extra = null)
     {
         this.dispatcher = dispatcher;
@@ -75,16 +77,20 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
     {
         int volume = (int)Math.Round(Math.Clamp(data.MasterVolume, 0, 1) * 100);
         bool muted = data.Muted;
-        _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || (volume == lastMic && muted == lastMicMuted)) return; lastMic = volume; lastMicMuted = muted; extra?.Invoke("osd:mic:" + volume + ":" + (muted ? 1 : 0)); }));
+        _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || (volume == lastMic && muted == lastMicMuted)) return; lastMic = volume;
+            lastMicMuted = muted; extra?.Invoke("osd:mic:" + volume + ":" + (muted ? 1 : 0)); }));
     }
-    // Brightness: WMI event only (internal panels); external DDC-only screens raise nothing and nothing is shown.
+    // Luminosité : événement WMI uniquement (écrans internes) ; les écrans externes DDC seuls ne déclenchent rien et rien n'est affiché.
     void StartBrightness()
     {
         try
         {
             var watcher = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM WmiMonitorBrightnessEvent"));
             watcher.Scope = new ManagementScope(@"root\wmi");
-            watcher.EventArrived += (_, e) => { try { int value = Math.Clamp(Convert.ToInt32(e.NewEvent["Brightness"]), 0, 100); _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || value == lastBrightness) return; lastBrightness = value; extra?.Invoke("osd:brightness:" + value); })); } catch (Exception) { /* Événement WMI fréquent : une valeur illisible est ignorée. */ } };
+            watcher.EventArrived += (_, e) => { try { int value = Math.Clamp(Convert.ToInt32(e.NewEvent["Brightness"]), 0, 100);
+                _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || value == lastBrightness) return; lastBrightness = value;
+                extra?.Invoke("osd:brightness:" + value); })); } catch (Exception) {
+                /* Événement WMI fréquent : une valeur illisible est ignorée. */ } };
             watcher.Start();
             brightnessWatcher = watcher;
         }
@@ -103,7 +109,8 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
     {
         int volume = (int)Math.Round(Math.Clamp(data.MasterVolume, 0, 1) * 100);
         bool muted = data.Muted;
-        _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || (volume == lastVolume && muted == lastMuted)) return; lastVolume = volume; lastMuted = muted; changed(volume, muted); }));
+        _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || (volume == lastVolume && muted == lastMuted)) return;
+            lastVolume = volume; lastMuted = muted; changed(volume, muted); }));
     }
     public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId)
     {

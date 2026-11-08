@@ -1,10 +1,11 @@
-# Python 3.12 / Windows 11. Local launcher matching and bounded arithmetic; no eval or shell execution.
+# Python 3.12 / Windows 11. Correspondance locale du lanceur et arithmétique bornée ; ni eval ni exécution de shell.
 import ast, json, math, operator, os, re, shutil, threading, time, unicodedata
 from pathlib import Path
 
 
 def tr(text, language='fr'):
-    # Same table as the QML qsTr(); French stays the source text. Matching always uses the French originals.
+    # Même table que le qsTr() du QML ; le français reste le texte source. La correspondance utilise toujours les
+    # originaux français.
     try:
         from localization import TABLE
     except ImportError:
@@ -175,7 +176,8 @@ def settings_results(words, language='fr', limit=4):
 
 
 def window_results(needle, windows, limit=5, language='fr'):
-    # Open windows whose title or executable name contains every typed word; the shell's own windows (titles "Panneaux · ...") are left out.
+    # Fenêtres ouvertes dont le titre ou le nom d'exécutable contient chaque mot saisi ; les fenêtres du shell (titres
+    # « Panneaux · ... ») sont exclues.
     words = fold(needle).split()
     ranked = []
     for entry in windows or []:
@@ -315,7 +317,8 @@ def palette_search(query, state, language='fr', windows=None):
                 )
     for key, name, detail, icon, kind in COMMANDS:
         if kind == 'session':
-            # Session actions are destructive: whole-query prefix of the name, an explicit keyword or the id, at least 3 letters, never a substring.
+            # Les actions de session sont destructrices : préfixe de la requête entière sur le nom, mot-clé explicite
+            # ou identifiant, au moins 3 lettres, jamais une sous-chaîne.
             if len(needle) < 3 or not any(
                 c.startswith(needle) for c in [fold(name), key, *SESSION_KEYWORDS.get(key, ())]
             ):
@@ -344,12 +347,13 @@ _emoji_index = None
 
 
 def emoji_choices(query):
-    # Bundled table read on first use only; matches every typed word against French and English keywords (accent-insensitive).
+    # Table embarquée lue à la première utilisation seulement ; chaque mot saisi est comparé aux mots-clés français et
+    # anglais (sans tenir compte des accents).
     global _emoji_index
     if _emoji_index is None:
-        from emoji_data import EMOJI_ROWS
+        from emoji_data import emoji_rows
 
-        _emoji_index = [(glyph, fold(fr + ' ' + en), fr.split(' ')[0]) for glyph, fr, en in EMOJI_ROWS]
+        _emoji_index = [(glyph, fold(fr + ' ' + en), fr.split(' ')[0]) for glyph, fr, en in emoji_rows()]
     words = fold(query).split()
     return [
         {'id': glyph, 'name': glyph, 'comment': label, 'kind': 'emoji'}
@@ -358,7 +362,8 @@ def emoji_choices(query):
     ]
 
 
-# Wallpaper picker data: scanned only when the launcher wallpaper mode asks for it, scanned on a worker thread at most every 30 s, capped.
+# Données du sélecteur de fonds : balayées seulement quand le mode fond d'écran du lanceur le demande, sur un thread
+# de travail au plus toutes les 30 s, en nombre borné.
 WALL_EXT = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
 _walls = []
 _walls_at = -100.0
@@ -377,7 +382,8 @@ def user_wallpaper_dir():
 
 
 def bundled_wallpaper_dir():
-    # Installed: <app>\wallpapers next to <app>\Caelestia-Windows; from the sources: <repo>ssets\wallpapers. Read-only.
+    # Installé : <app>\wallpapers à côté de <app>\Caelestia-Windows ; depuis les sources : <repo>\assets\wallpapers.
+    # Lecture seule.
     here = Path(__file__).resolve().parent
     for candidate in (here.parent / 'wallpapers', here.parent.parent / 'assets' / 'wallpapers'):
         if candidate.is_dir():
@@ -410,12 +416,13 @@ def _under(path, folder):
 
 
 def wallpaper_deletable(path):
-    # Only files from the user folder; never bundled or Pictures images.
+    # Uniquement les fichiers du dossier utilisateur ; jamais les images embarquées ni celles de Images.
     return _under(path, user_wallpaper_dir()) and os.path.splitext(path)[1].lower() in WALL_EXT and os.path.isfile(path)
 
 
 def wallpaper_import(paths):
-    # Copies picked images into the user folder (unique name on collision); returns the new paths in order.
+    # Copie les images choisies dans le dossier utilisateur (nom unique en cas de collision) ; renvoie les nouveaux
+    # chemins dans l'ordre.
     dest = user_wallpaper_dir()
     added = []
     try:
@@ -458,7 +465,8 @@ def hidden_wallpaper_file():
 
 
 def wallpaper_hidden():
-    # File names (lower case) of bundled wallpapers the user hid; the install folder itself is never touched.
+    # Noms de fichiers (en minuscules) des fonds embarqués que l'utilisateur a masqués ; le dossier d'installation
+    # n'est jamais touché.
     try:
         data = json.loads(hidden_wallpaper_file().read_text(encoding='utf-8'))
     except (OSError, ValueError):
@@ -480,7 +488,7 @@ def _hidden_write(names):
 
 
 def wallpaper_hide(path):
-    # Only bundled images can be hidden.
+    # Seules les images embarquées peuvent être masquées.
     if not _under(path, bundled_wallpaper_dir()) or os.path.splitext(path)[1].lower() not in WALL_EXT:
         return False
     return _hidden_write(wallpaper_hidden() | {os.path.basename(path).lower()})
@@ -535,7 +543,8 @@ def wallpaper_scan(limit=200):
 
 
 def wallpaper_refresh(done, force=False):
-    # Worker-thread scan, at most once per 30 s; `done` is called from the worker when the cache was replaced.
+    # Balayage sur thread de travail, au plus une fois par 30 s ; `done` est appelé depuis le worker quand le cache a
+    # été remplacé.
     global _walls_at, _scanning, _rescan
     now = time.monotonic()
     if _scanning:

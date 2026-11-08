@@ -1,6 +1,6 @@
 """Sonde bureau (compositeur réel) : coins et jointures de l'anneau de verre natif ; DLL en argument ou build/QtGlassBackdrop.dll."""
-# Hosts are larger than their ring strip on purpose: the blur kernel must develop fully
-# inside the native window, so the strip the user sees never carries a hard border.
+# Les hôtes sont volontairement plus grands que leur bande d'anneau : le noyau de flou doit se développer entièrement
+# dans la fenêtre native, pour que la bande vue par l'utilisateur ne porte jamais de bordure dure.
 import sys, ctypes, json
 from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, QUrl

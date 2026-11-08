@@ -325,13 +325,6 @@
       },
       "required": []
     },
-    "launchKnown": {
-      "args": {
-        "args": "array<string>"
-      },
-      "required": [],
-      "ignoredByServer": true
-    },
     "masterMute": {
       "args": {
         "muted": "boolean"

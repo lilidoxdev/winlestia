@@ -1,4 +1,5 @@
-// C# 12 / .NET 8 / Windows 11. GPL-3.0-or-later. Panneau de favoris (bord gauche) : état, actions, surveillance du fichier (drapeau seulement).
+// C# 12 / .NET 8 / Windows 11. GPL-3.0-or-later. Panneau de favoris (bord gauche) : état, actions, surveillance du fichier (drapeau
+// seulement).
 // Lecture, analyse et favicons hors fil UI ; l'état n'est modifié que sur le dispatcher. Aucune URL ni aucun titre dans glass.log.
 
 using System;
@@ -13,7 +14,8 @@ namespace PanneauxGlass;
 
 internal sealed class BookmarkItem
 {
-    public string id { get; set; } = ""; public string title { get; set; } = ""; public string url { get; set; } = ""; public string icon { get; set; } = ""; public bool folder
+    public string id { get; set; } = ""; public string title { get; set; } = ""; public string url { get; set; } = ""; public string icon {
+        get; set; } = ""; public bool folder
     {
         get; set;
     }
@@ -22,11 +24,14 @@ internal sealed class BookmarkItem
 
 internal sealed class BookmarksService : IDisposable
 {
+    // Regroupe les changements rapprochés en une seule notification vers l'interface.
+    const int NotifyDebounceMs = 250;
 
     readonly Dispatcher dispatcher; readonly Action changed;
-    readonly DispatcherTimer notifyTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
+    readonly DispatcherTimer notifyTimer = new() { Interval = TimeSpan.FromMilliseconds(NotifyDebounceMs) };
     List<BrowserInfo> browsers = new(); List<BNode> tree = new();
-    string loaded = "", error = ""; volatile bool dirty; bool busy = true, scanning, pending, disposed; DateTime lastScan = DateTime.MinValue;
+    string loaded = "", error = ""; volatile bool dirty; bool busy = true, scanning, pending, disposed;
+        DateTime lastScan = DateTime.MinValue;
     FileSystemWatcher? watcher;
     int version, cachedVersion = -1; object? cachedItems; int cachedHidden;
 
@@ -50,7 +55,8 @@ internal sealed class BookmarksService : IDisposable
 
     internal void Start()
     {
-        _ = Task.Run(() => { Safe.Try(() => Directory.Delete(Path.Combine(BookmarksCore.WorkRoot, "tmp"), true)); }).ContinueWith(t => dispatcher.BeginInvoke(() => { if (!disposed) _ = Rescan(); }));
+        _ = Task.Run(() => { Safe.Try(() => Directory.Delete(Path.Combine(BookmarksCore.WorkRoot, "tmp"), true)); }).ContinueWith(t
+            => dispatcher.BeginInvoke(() => { if (!disposed) _ = Rescan(); }));
     }
 
     BrowserInfo? Loaded => browsers.FirstOrDefault(b => b.Id == loaded);
@@ -121,14 +127,16 @@ internal sealed class BookmarksService : IDisposable
     // ---- Analyse hors fil UI ------------------------------------------------------------------------------------
     sealed class ScanResult
     {
-        public List<BrowserInfo> Browsers = new(); public string Chosen = ""; public List<BNode> Tree = new(); public string Error = ""; public int Urls, IconsCreated;
+        public List<BrowserInfo> Browsers = new(); public string Chosen = ""; public List<BNode> Tree = new(); public string Error = "";
+            public int Urls, IconsCreated;
     }
 
     ScanResult Scan(string preferred)
     {
         var result = new ScanResult { Browsers = BookmarksCore.Detect() };
         var installed = result.Browsers.Where(b => b.Installed).ToList();
-        var chosen = installed.FirstOrDefault(b => b.Id == preferred) ?? installed.FirstOrDefault(b => b.IsDefault) ?? installed.FirstOrDefault();
+        var chosen = installed.FirstOrDefault(b => b.Id == preferred) ?? installed.FirstOrDefault(b => b.IsDefault)
+            ?? installed.FirstOrDefault();
         if (chosen == null)
             return result;
         result.Chosen = chosen.Id;
@@ -138,7 +146,8 @@ internal sealed class BookmarksService : IDisposable
             result.Urls = BookmarksCore.CountUrls(result.Tree);
             result.IconsCreated = BookmarksCore.BuildIcons(chosen, result.Tree);
         }
-        catch (Exception ex) { result.Error = "Lecture impossible (" + ex.GetType().Name + ")"; Store.Log("Favoris lecture : " + ex.GetType().Name); }
+        catch (Exception ex) { result.Error = "Lecture impossible (" + ex.GetType().Name + ")"; Store.Log("Favoris lecture : "
+            + ex.GetType().Name); }
         return result;
     }
 
@@ -171,7 +180,8 @@ internal sealed class BookmarksService : IDisposable
             lastScan = DateTime.UtcNow;
             version++;
             Watch();
-            Store.Log("Favoris : " + (loaded.Length == 0 ? "aucun navigateur" : loaded + " " + result.Urls + " favoris, " + result.IconsCreated + " icônes créées"));
+            Store.Log("Favoris : " + (loaded.Length == 0 ? "aucun navigateur" : loaded + " " + result.Urls + " favoris, "
+                + result.IconsCreated + " icônes créées"));
         }
         catch (Exception ex) { error = "Lecture impossible"; Store.Log("Favoris : " + ex.GetType().Name); }
         finally
@@ -197,7 +207,8 @@ internal sealed class BookmarksService : IDisposable
             return;
         try
         {
-            var w = new FileSystemWatcher(b.ProfileDir) { Filter = b.Chromium ? "Bookmarks" : "places.sqlite*", NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size, IncludeSubdirectories = false };
+            var w = new FileSystemWatcher(b.ProfileDir) { Filter = b.Chromium ? "Bookmarks" : "places.sqlite*",
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size, IncludeSubdirectories = false };
             w.Changed += OnFile;
             w.Created += OnFile;
             w.Renamed += OnFile;
@@ -264,7 +275,8 @@ internal sealed class BookmarksService : IDisposable
         var node = FindNode(tree, id);
         if (b == null || node == null || node.Folder || b.Exe.Length == 0)
             return;
-        if (!Uri.TryCreate(node.Url, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeFile))
+        if (!Uri.TryCreate(node.Url, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps
+            && uri.Scheme != Uri.UriSchemeFile))
             return;
         try
         {
@@ -310,7 +322,8 @@ internal sealed class BookmarksService : IDisposable
         }
         error = "";
         Changed();
-        string? code = await Task.Run(() => BookmarksCore.DeleteChromium(b, id, confirmSync, Path.Combine(BookmarksCore.WorkRoot, "backups")));
+        string? code = await Task.Run(() => BookmarksCore.DeleteChromium(b, id, confirmSync, Path.Combine(BookmarksCore.WorkRoot,
+            "backups")));
         if (disposed)
             return;
         error = code switch

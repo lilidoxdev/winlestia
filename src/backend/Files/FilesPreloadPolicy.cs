@@ -1,4 +1,4 @@
-// Pure restart decisions for the resident Winlestia Fichiers (no Store, no Process): linked into tests/FilesPreloadPolicy.
+// Décisions pures de relance du Winlestia Fichiers résident (ni Store ni Process) : liées dans tests/FilesPreloadPolicy.
 using System;
 
 namespace PanneauxGlass;
@@ -10,14 +10,16 @@ internal enum PreloadAction
 
 internal sealed class FilesPreloadPolicy
 {
-    internal const int RecycleExitCode = 75;          // the resident left on purpose after too many native menus (see src/files/App.xaml.cs)
+    // the resident left on purpose after too many native menus (see src/files/App.xaml.cs)
+    internal const int RecycleExitCode = 75;
     internal const int MinRecycleIntervalMs = 60000;  // two recycle exits closer than this mean something is looping
-    internal const int CrashLimit = 2;                // launches per backend session, the first one included (a recycle is not a crash and is not counted)
+    // launches per backend session, the first one included (a recycle is not a crash and is not counted)
+    internal const int CrashLimit = 2;
 
     long lastRecycle = long.MinValue;
     internal int Starts;                              // counts launches that are not recycles
 
-    // Called when the resident process exited. nowMs is a monotonic clock.
+    // Appelé quand le processus résident s'est terminé. nowMs est une horloge monotone.
     internal PreloadAction OnExit(int exitCode, long nowMs, bool quitting, bool prefOn)
     {
         if (quitting || !prefOn)
@@ -31,6 +33,6 @@ internal sealed class FilesPreloadPolicy
         return Starts < CrashLimit ? PreloadAction.Crash : PreloadAction.None;
     }
 
-    // Launch gate: crash restarts and the first launch are limited, recycle launches are not.
+    // Barrière de lancement : les relances après plantage et le premier lancement sont limités, pas les lancements de recyclage.
     internal bool MayLaunch(bool recycle, bool prefOn, bool quitting) => prefOn && !quitting && (recycle || Starts < CrashLimit);
 }

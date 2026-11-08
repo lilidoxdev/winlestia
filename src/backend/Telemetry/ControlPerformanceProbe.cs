@@ -1,4 +1,4 @@
-// language: C# 12, file: ControlPerformanceProbe.cs, target: Windows 11 / .NET 8 WPF, home/control transition measurement
+// C# 12, fichier ControlPerformanceProbe.cs, cible Windows 11 / .NET 8 WPF, mesure de la transition accueil/contrôles
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +12,8 @@ namespace PanneauxGlass;
 
 internal static class ControlPerformanceProbe
 {
+    // Laisse le panneau finir son animation d'ouverture avant la mesure suivante.
+    const int SettleMs = 1100;
     internal static void Run(Coordinator coordinator)
     {
         coordinator.Pinned = true;
@@ -23,7 +25,10 @@ internal static class ControlPerformanceProbe
         TimeSpan last = TimeSpan.Zero;
         double until = 0, cpu = 0;
         int step = -1;
-        EventHandler render = (_, e) => { if (!clock.IsRunning || clock.Elapsed.TotalMilliseconds > until || e is not RenderingEventArgs frame) return; if (last != TimeSpan.Zero) { double delta = (frame.RenderingTime - last).TotalMilliseconds; if (delta > 0 && delta < 150) frames.Add(delta); } last = frame.RenderingTime; };
+        EventHandler render = (_, e) => { if (!clock.IsRunning || clock.Elapsed.TotalMilliseconds > until
+            || e is not RenderingEventArgs frame) return; if (last != TimeSpan.Zero) {
+            double delta = (frame.RenderingTime - last).TotalMilliseconds; if (delta > 0 && delta < 150) frames.Add(delta);
+            } last = frame.RenderingTime; };
         CompositionTarget.Rendering += render;
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         timer.Tick += (_, _) =>
@@ -32,7 +37,7 @@ internal static class ControlPerformanceProbe
             {
                 coordinator.ToggleControls();
                 step = 0;
-                timer.Interval = TimeSpan.FromMilliseconds(1100);
+                timer.Interval = TimeSpan.FromMilliseconds(SettleMs);
                 return;
             }
             if (step == 0)
@@ -54,7 +59,8 @@ internal static class ControlPerformanceProbe
             CompositionTarget.Rendering -= render;
             process.Refresh();
             frames.Sort();
-            double Percentile(double percentile) => frames.Count == 0 ? 0 : frames[Math.Clamp((int)Math.Ceiling(frames.Count * percentile) - 1, 0, frames.Count - 1)];
+            double Percentile(double percentile) => frames.Count == 0 ? 0
+                : frames[Math.Clamp((int)Math.Ceiling(frames.Count * percentile) - 1, 0, frames.Count - 1)];
             File.WriteAllText(Path.Combine(Store.Root, "motion-controls-5.3.json"), JsonSerializer.Serialize(new
             {
                 At = DateTimeOffset.Now,
@@ -62,14 +68,16 @@ internal static class ControlPerformanceProbe
                 Frames = frames.Count,
                 ElapsedMs = clock.Elapsed.TotalMilliseconds,
                 CpuMs = process.TotalProcessorTime.TotalMilliseconds - cpu,
-                TotalCpuPercent = (process.TotalProcessorTime.TotalMilliseconds - cpu) / clock.Elapsed.TotalMilliseconds / Environment.ProcessorCount * 100,
+                TotalCpuPercent = (process.TotalProcessorTime.TotalMilliseconds - cpu) / clock.Elapsed.TotalMilliseconds / Environment
+                    .ProcessorCount * 100,
                 WorkingSetMB = process.WorkingSet64 / 1048576d,
                 PrivateMB = process.PrivateMemorySize64 / 1048576d,
                 FrameP50Ms = Percentile(.5),
                 FrameP95Ms = Percentile(.95),
                 FrameP99Ms = Percentile(.99),
                 Over25Ms = frames.Count(f => f > 25),
-                Note = "Intervalles WPF pendant les 360 ms suivant chaque transition ; ne mesure pas les présentations DWM ni les FPS d’un jeu."
+                Note = "Intervalles WPF pendant les 360 ms suivant chaque transition ; ne mesure pas les présentations DWM ni les FPS " +
+                    "d’un jeu."
             }, Store.Json));
             System.Windows.Application.Current.Shutdown();
         };

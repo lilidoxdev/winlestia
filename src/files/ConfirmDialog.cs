@@ -1,4 +1,4 @@
-// Unified modal confirmation (M3 card, error-coloured action). Used for the permanent delete (Shift+Del) only.
+// Confirmation modale unifiée (carte M3, action en couleur d'erreur). Utilisée uniquement pour la suppression définitive (Maj+Suppr).
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;

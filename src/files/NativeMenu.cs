@@ -1,4 +1,5 @@
-// Small Win32 popup menu for our own commands (sort, quick access): same system dark/light popup theme as the shell menu, modal, returns the chosen id (0 = dismissed).
+// Petit menu contextuel Win32 pour nos propres commandes (tri, accès rapide) : même thème sombre/clair système que le menu du shell, modal,
+// renvoie l'id choisi (0 = fermé sans choix).
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -7,10 +8,11 @@ namespace WinlestiaFiles;
 
 internal static class NativeMenu
 {
-    // A null entry is a separator.
+    // Une entrée null est un séparateur.
     internal sealed record Item(uint Id, string Text, bool Checked = false, bool Disabled = false, IReadOnlyList<Item?>? Sub = null);
 
-    const uint MF_GRAYED = 0x1, MF_DISABLED = 0x2, MF_CHECKED = 0x8, MF_SEPARATOR = 0x800, MF_POPUP = 0x10, TPM_RIGHTBUTTON = 0x2, TPM_RETURNCMD = 0x100;
+    const uint MF_GRAYED = 0x1, MF_DISABLED = 0x2, MF_CHECKED = 0x8, MF_SEPARATOR = 0x800, MF_POPUP = 0x10, TPM_RIGHTBUTTON = 0x2,
+        TPM_RETURNCMD = 0x100;
     [DllImport("user32.dll")] static extern IntPtr CreatePopupMenu();
     [DllImport("user32.dll")] static extern bool DestroyMenu(IntPtr menu);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool AppendMenuW(IntPtr menu, uint flags, UIntPtr id, string? text);

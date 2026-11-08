@@ -107,7 +107,7 @@ def wrapped(engine, url):
                 report['fullscreenNoDock'] = spec[2] is None
                 b.top.grabWindow().save(str(root / 'build/personalization0652.png'))
 
-                # Native monitor coordinates intentionally differ from Qt's offscreen geometry.
+                # Les coordonnées natives des moniteurs diffèrent volontairement de la géométrie hors écran de Qt.
                 def info(handle, pointer):
                     value = ctypes.cast(pointer, ctypes.POINTER(f.MonitorInfo)).contents
                     value.name = b._screen.name()

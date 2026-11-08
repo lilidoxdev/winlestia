@@ -1,4 +1,4 @@
-// language: C# 12, file: GlobalShortcut.cs, target: Windows 11 / .NET 8 WPF, two independent atomic RegisterHotKey bindings
+// C# 12, fichier GlobalShortcut.cs, cible Windows 11 / .NET 8 WPF, deux liaisons RegisterHotKey atomiques indépendantes
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,13 +20,17 @@ public sealed class ShortcutPreferences
             View = "controls";
     }
 }
-// Four user bindings share one message window: the launcher (3/4), the palette (5/6), pin (7/8) and capture (9/10).
-// Each replacement reserves the new combination before releasing the previous one.
+// Quatre liaisons utilisateur partagent une fenêtre de messages : le lanceur (3/4), la palette (5/6), l'épingle (7/8) et la capture (9/10).
+// Chaque remplacement réserve la nouvelle combinaison avant de libérer la précédente.
 internal sealed class GlobalShortcut : IDisposable
 {
-    readonly IntPtr window; int customId, paletteId, pinId, captureId, wallpaperId, settingsId; uint modifiers, key, paletteModifiers, paletteKey, pinModifiers, pinKey, captureModifiers, captureKey, wallpaperModifiers, wallpaperKey, settingsModifiers, settingsKey; bool legacy, rescue;
-    // Registration seam: tests replace these (error code 0 = registered) so no real hotkey is touched. LastCode holds the Win32 error of the last failed registration (1409 = already taken).
-    internal static Func<IntPtr, int, uint, uint, int>? TestRegister; internal static Func<IntPtr, int, bool>? TestUnregister; internal static int LastCode;
+    readonly IntPtr window; int customId, paletteId, pinId, captureId, wallpaperId, settingsId; uint modifiers, key, paletteModifiers,
+        paletteKey, pinModifiers, pinKey, captureModifiers, captureKey, wallpaperModifiers, wallpaperKey, settingsModifiers, settingsKey;
+        bool legacy, rescue;
+    // Point d'injection de l'enregistrement : les tests les remplacent (code d'erreur 0 = enregistré) pour ne toucher aucun vrai raccourci.
+    // LastCode contient l'erreur Win32 du dernier enregistrement échoué (1409 = déjà pris).
+    internal static Func<IntPtr, int, uint, uint, int>? TestRegister; internal static Func<IntPtr, int, bool>? TestUnregister;
+        internal static int LastCode;
     static bool Reg(IntPtr w, int id, uint m, uint k)
     {
         if (TestRegister != null)
@@ -47,9 +51,13 @@ internal sealed class GlobalShortcut : IDisposable
         }
         Native.UnregisterHotKey(w, id);
     }
-    internal string Error { get; private set; } = ""; internal string PaletteError { get; private set; } = ""; internal string PinError { get; private set; } = ""; internal string CaptureError { get; private set; } = ""; internal string WallpaperError { get; private set; } = ""; internal string SettingsError { get; private set; } = "";
+    internal string Error { get; private set; } = ""; internal string PaletteError { get; private set; } = ""; internal string PinError {
+        get; private set; } = ""; internal string CaptureError { get; private set; } = ""; internal string WallpaperError { get;
+        private set; } = ""; internal string SettingsError { get; private set; } = "";
     internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences) : this(hwnd, preferences, new() { Modifiers = 2, Key = 0x71 }) { }
-    internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences, ShortcutPreferences? palette = null, ShortcutPreferences? pin = null, ShortcutPreferences? capture = null, ShortcutPreferences? wallpaper = null, ShortcutPreferences? settings = null)
+    internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences, ShortcutPreferences? palette = null,
+        ShortcutPreferences? pin = null, ShortcutPreferences? capture = null, ShortcutPreferences? wallpaper = null,
+        ShortcutPreferences? settings = null)
     {
         window = hwnd;
         legacy = Reg(window, 1, 0x4003, 0x20);
@@ -65,7 +73,8 @@ internal sealed class GlobalShortcut : IDisposable
             Store.Log("Raccourci des paramètres · " + Label(settings.Modifiers, settings.Key) + " refusé : " + settingsFailure);
         if (wallpaper != null && !TrySetWallpaper(wallpaper.Modifiers, wallpaper.Key, out var failure))
         {
-            Store.Log("Sélecteur de fonds d’écran · " + Label(wallpaper.Modifiers, wallpaper.Key) + " refusé : " + failure + " · repli sur Ctrl + Alt + W");
+            Store.Log("Sélecteur de fonds d’écran · " + Label(wallpaper.Modifiers, wallpaper.Key) + " refusé : " + failure
+                + " · repli sur Ctrl + Alt + W");
             if (!TrySetWallpaper(3, 0x57, out failure))
                 Store.Log("Sélecteur de fonds d’écran · repli refusé : " + failure);
         }
@@ -76,8 +85,11 @@ internal sealed class GlobalShortcut : IDisposable
     internal bool MatchesCapture(int id) => id == captureId && captureId != 0;
     internal bool MatchesWallpaper(int id) => id == wallpaperId && wallpaperId != 0;
     internal bool MatchesSettings(int id) => id == settingsId && settingsId != 0;
-    internal bool SettingsActive => settingsId != 0; internal bool IsActive(string id) => id switch { "dashboard" => customId != 0, "palette" => paletteId != 0, "wallpaper" => wallpaperId != 0, "capture" => captureId != 0, "pin" => pinId != 0, "settings" => settingsId != 0, _ => true }; internal bool WallpaperRegistered => wallpaperId != 0;
-    internal uint WallpaperModifiers => wallpaperModifiers; internal uint WallpaperKey => wallpaperKey; internal bool WallpaperActive => wallpaperId != 0;
+    internal bool SettingsActive => settingsId != 0; internal bool IsActive(string id) => id switch { "dashboard" => customId != 0,
+        "palette" => paletteId != 0, "wallpaper" => wallpaperId != 0, "capture" => captureId != 0, "pin" => pinId != 0, "settings"
+        => settingsId != 0, _ => true }; internal bool WallpaperRegistered => wallpaperId != 0;
+    internal uint WallpaperModifiers => wallpaperModifiers; internal uint WallpaperKey => wallpaperKey; internal bool WallpaperActive
+        => wallpaperId != 0;
     internal bool TrySetWallpaper(uint nextModifiers, uint nextKey, out string error)
     {
         error = "";
@@ -86,7 +98,9 @@ internal sealed class GlobalShortcut : IDisposable
             error = "Choisis Ctrl, Alt ou Windows et une touche. Ctrl + Alt + Retour arrière est réservé au secours.";
             return false;
         }
-        if ((nextModifiers == modifiers && nextKey == key && customId != 0) || (nextModifiers == paletteModifiers && nextKey == paletteKey && paletteId != 0) || (nextModifiers == pinModifiers && nextKey == pinKey && pinId != 0) || (nextModifiers == captureModifiers && nextKey == captureKey && captureId != 0))
+        if ((nextModifiers == modifiers && nextKey == key && customId != 0) || (nextModifiers == paletteModifiers && nextKey == paletteKey
+            && paletteId != 0) || (nextModifiers == pinModifiers && nextKey == pinKey && pinId != 0) || (nextModifiers == captureModifiers
+            && nextKey == captureKey && captureId != 0))
         {
             error = "Cette combinaison est déjà utilisée par Panneaux.";
             return false;
@@ -100,7 +114,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison (" + code + ").";
+            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison ("
+                + code + ").";
             WallpaperError = error;
             return false;
         }
@@ -129,7 +144,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison (" + code + ").";
+            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison ("
+                + code + ").";
             SettingsError = error;
             return false;
         }
@@ -141,8 +157,9 @@ internal sealed class GlobalShortcut : IDisposable
         SettingsError = "";
         return true;
     }
-    // One entry point for the settings page: the new combination is registered first, the old one is released only once Windows accepted it, so a refusal leaves the previous binding untouched (rollback by construction).
-    // LastCode == 1409 after a false return means another application owns the combination.
+    // Un seul point d'entrée pour la page de réglages : la nouvelle combinaison est enregistrée d'abord, l'ancienne n'est libérée qu'une
+    // fois Windows d'accord, donc un refus laisse la liaison précédente intacte (retour arrière par construction).
+    // LastCode == 1409 après un retour false signifie qu'une autre application possède la combinaison.
     internal bool TryRebind(string id, uint nextModifiers, uint nextKey, out string error)
     {
         LastCode = 0;
@@ -173,7 +190,8 @@ internal sealed class GlobalShortcut : IDisposable
             error = "Choisis Ctrl ou Alt et une touche de fonction.";
             return false;
         }
-        if ((nextModifiers == modifiers && nextKey == key && customId != 0) || (nextModifiers == paletteModifiers && nextKey == paletteKey && paletteId != 0) || (nextModifiers == pinModifiers && nextKey == pinKey && pinId != 0))
+        if ((nextModifiers == modifiers && nextKey == key && customId != 0) || (nextModifiers == paletteModifiers && nextKey == paletteKey
+            && paletteId != 0) || (nextModifiers == pinModifiers && nextKey == pinKey && pinId != 0))
         {
             error = "Cette combinaison est déjà utilisée par Panneaux.";
             return false;
@@ -187,7 +205,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison (" + code + ").";
+            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison ("
+                + code + ").";
             CaptureError = error;
             return false;
         }
@@ -207,7 +226,8 @@ internal sealed class GlobalShortcut : IDisposable
             error = "Choisis Ctrl ou Alt et une touche de fonction.";
             return false;
         }
-        if ((nextModifiers == modifiers && nextKey == key && customId != 0) || (nextModifiers == paletteModifiers && nextKey == paletteKey && paletteId != 0))
+        if ((nextModifiers == modifiers && nextKey == key && customId != 0) || (nextModifiers == paletteModifiers && nextKey == paletteKey
+            && paletteId != 0))
         {
             error = "Cette combinaison est déjà utilisée par Panneaux.";
             return false;
@@ -226,7 +246,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison (" + code + ").";
+            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison ("
+                + code + ").";
             PinError = error;
             return false;
         }
@@ -270,7 +291,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Ce raccourci est déjà utilisé. Choisis une autre combinaison ; le précédent reste actif." : "Windows refuse ce raccourci (" + code + "). Le précédent reste actif.";
+            error = code == 1409 ? "Ce raccourci est déjà utilisé. Choisis une autre combinaison ; le précédent reste actif."
+                : "Windows refuse ce raccourci (" + code + "). Le précédent reste actif.";
             Error = error;
             return false;
         }
@@ -304,7 +326,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Ce raccourci est déjà utilisé. Choisis une autre combinaison ; le précédent reste actif." : "Windows refuse ce raccourci (" + code + "). Le précédent reste actif.";
+            error = code == 1409 ? "Ce raccourci est déjà utilisé. Choisis une autre combinaison ; le précédent reste actif."
+                : "Windows refuse ce raccourci (" + code + "). Le précédent reste actif.";
             PaletteError = error;
             return false;
         }
@@ -316,11 +339,17 @@ internal sealed class GlobalShortcut : IDisposable
         PaletteError = "";
         return true;
     }
-    internal static bool Valid(uint modifiers, uint key) => (modifiers & ~7u) == 0 && (modifiers & 3) != 0 && (key is >= 0x70 and <= 0x87 && key != 0x7B || key is >= 0x41 and <= 0x5A || key is >= 0x30 and <= 0x39 || key == 0x20) && !(modifiers == 3 && key == 0x08);
-    internal static bool ValidWallpaper(uint modifiers, uint key) => (modifiers & ~15u) == 0 && (modifiers & 11u) != 0 && (key is >= 0x70 and <= 0x87 && key != 0x7B || key is >= 0x41 and <= 0x5A || key is >= 0x30 and <= 0x39 || key == 0x20) && !(modifiers == 3 && key == 0x08);
-    internal static IEnumerable<uint> Keys => Enumerable.Range(0x70, 24).Where(k => k != 0x7B).Concat(Enumerable.Range(0x41, 26)).Concat(Enumerable.Range(0x30, 10)).Append(0x20).Select(k => (uint)k);
-    internal static string KeyName(uint key) => key is >= 0x70 and <= 0x87 ? "F" + (key - 0x6F) : key == 0x20 ? "Espace" : ((char)key).ToString();
-    internal static string Label(uint modifiers, uint key) => ((modifiers & 2) != 0 ? "Ctrl + " : "") + ((modifiers & 1) != 0 ? "Alt + " : "") + ((modifiers & 4) != 0 ? "Maj + " : "") + ((modifiers & 8) != 0 ? "Win + " : "") + KeyName(key);
+    internal static bool Valid(uint modifiers, uint key) => (modifiers & ~7u) == 0 && (modifiers & 3) != 0 && (key is >= 0x70 and <= 0x87
+        && key != 0x7B || key is >= 0x41 and <= 0x5A || key is >= 0x30 and <= 0x39 || key == 0x20) && !(modifiers == 3 && key == 0x08);
+    internal static bool ValidWallpaper(uint modifiers, uint key) => (modifiers & ~15u) == 0 && (modifiers & 11u) != 0
+        && (key is >= 0x70 and <= 0x87 && key != 0x7B || key is >= 0x41 and <= 0x5A || key is >= 0x30 and <= 0x39 || key == 0x20)
+        && !(modifiers == 3 && key == 0x08);
+    internal static IEnumerable<uint> Keys => Enumerable.Range(0x70, 24).Where(k => k != 0x7B).Concat(Enumerable.Range(0x41,
+        26)).Concat(Enumerable.Range(0x30, 10)).Append(0x20).Select(k => (uint)k);
+    internal static string KeyName(uint key) => key is >= 0x70 and <= 0x87 ? "F" + (key - 0x6F) : key == 0x20 ? "Espace"
+        : ((char)key).ToString();
+    internal static string Label(uint modifiers, uint key) => ((modifiers & 2) != 0 ? "Ctrl + " : "") + ((modifiers & 1) != 0 ? "Alt + "
+        : "") + ((modifiers & 4) != 0 ? "Maj + " : "") + ((modifiers & 8) != 0 ? "Win + " : "") + KeyName(key);
     public void Dispose()
     {
         if (customId != 0)

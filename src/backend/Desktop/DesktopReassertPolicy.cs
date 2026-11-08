@@ -1,4 +1,5 @@
-// Pure timing and class rules for re-applying the hidden desktop icons (no Store, no WinEvent): linked into tests/DesktopReassert.
+// Règles pures de temporisation et de classes pour réappliquer le masquage des icônes du bureau (sans Store ni WinEvent) : liées dans
+// tests/DesktopReassert.
 using System;
 
 namespace PanneauxGlass;
@@ -14,7 +15,8 @@ static class DesktopEventFilter
 // et silence de 1,5 s après chaque exécution : SECOURS_BUREAU change lui-même la vue, ses événements ne relancent rien.
 sealed class DesktopReassertPolicy
 {
-    internal static readonly TimeSpan Debounce = TimeSpan.FromMilliseconds(400), MinGap = TimeSpan.FromSeconds(2), Mute = TimeSpan.FromMilliseconds(1500), Follow = TimeSpan.FromSeconds(3), MaxWait = TimeSpan.FromSeconds(2);
+    internal static readonly TimeSpan Debounce = TimeSpan.FromMilliseconds(400), MinGap = TimeSpan.FromSeconds(2),
+        Mute = TimeSpan.FromMilliseconds(1500), Follow = TimeSpan.FromSeconds(3), MaxWait = TimeSpan.FromSeconds(2);
     DateTime lastRun = DateTime.MinValue, due = DateTime.MaxValue, pendingSince = DateTime.MaxValue; bool follow;
 
     // Retourne false si l'événement est ignoré (silence après une exécution). force : redémarrage d'Explorer.

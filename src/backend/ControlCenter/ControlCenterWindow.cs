@@ -1,4 +1,4 @@
-// language: C# 12, file: ControlCenterWindow.cs, target: Windows 11 / .NET 8 WPF
+// C# 12, fichier ControlCenterWindow.cs, cible Windows 11 / .NET 8 WPF
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,16 +13,19 @@ using Windows.Devices.Radios;
 
 namespace PanneauxGlass;
 
-internal sealed class ControlCenterWindow : GlassWindow
+internal sealed partial class ControlCenterWindow : GlassWindow
 {
+    // Regroupe les rafales d'événements média (changement de piste) en une seule relecture.
+    const int MediaNoticeMs = 250;
     readonly Coordinator owner;
     readonly SystemAudio audio = new();
     readonly WindowsConnections connections = new();
     readonly MediaController media = new();
-    readonly DispatcherTimer mediaNotice = new() { Interval = TimeSpan.FromMilliseconds(250) };
+    readonly DispatcherTimer mediaNotice = new() { Interval = TimeSpan.FromMilliseconds(MediaNoticeMs) };
     int mediaEvents, mediaReads, audioReads;
     long activeSince;
-    readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(1) }, brightnessTimer = new() { Interval = TimeSpan.FromMilliseconds(90) };
+    readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(1) }, brightnessTimer = new() {
+        Interval = TimeSpan.FromMilliseconds(90) };
     readonly Grid body = new();
     readonly TextBlock subtitle, note;
     readonly GlassLevel volume = new("Volume système"), brightness = new("Luminosité de l’écran") { Glyph = "\uE706" };
@@ -35,7 +38,8 @@ internal sealed class ControlCenterWindow : GlassWindow
         muteLabel = UI.Text("Son activé", 12);
     readonly Image cover = new() { Width = 48, Height = 48, Stretch = Stretch.UniformToFill };
     readonly Button play, previous, next, mute, sessionPicker;
-    readonly Slider progress = new() { Minimum = 0, Maximum = 1, Height = 21, IsMoveToPointEnabled = true, SmallChange = 5, LargeChange = 15 };
+    readonly Slider progress = new() { Minimum = 0, Maximum = 1, Height = 21, IsMoveToPointEnabled = true, SmallChange = 5, LargeChange = 15
+        };
     readonly Dictionary<string, (Button button, TextBlock status)> radios = new();
     AudioSnapshot audioState = new(false, 0, false, "Sortie Windows");
     ConnectionSnapshot? connectionState;
@@ -233,9 +237,17 @@ internal sealed class ControlCenterWindow : GlassWindow
         if (roundTemplate == null)
         {
             roundTemplate = (ControlTemplate)System.Windows.Markup.XamlReader.Parse("""
-        <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" TargetType="Button">
-          <Grid><Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="100"/><Border x:Name="shine" Background="White" Opacity="0" CornerRadius="100"/><ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/></Grid>
-          <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="shine" Property="Opacity" Value="0.12"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="shine" Property="Opacity" Value="0.24"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="shine" Property="Opacity" Value="0.16"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.3"/></Trigger></ControlTemplate.Triggers>
+        <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" TargetType="Button">
+          <Grid><Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="100"/><Border x:Name="shine" Background="White" Opacity="0"
+            CornerRadius="100"/><ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center"
+            VerticalAlignment="Center"/></Grid>
+          <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="shine" Property="Opacity"
+            Value="0.12"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="shine" Property="Opacity" Value="0.24"/>
+            </Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="shine" Property="Opacity" Value="0.16"/>
+            </Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.3"/></Trigger>
+            </ControlTemplate.Triggers>
         </ControlTemplate>
         """);
             roundTemplate.Seal();
@@ -283,7 +295,7 @@ internal sealed class ControlCenterWindow : GlassWindow
         {
             Width = new GridLength(1, GridUnitType.Star)
         });
-        // Persistent controls are reparented only when the module layout changes.
+        // Les contrôles persistants ne sont rattachés à un nouveau parent que lorsque la disposition des modules change.
         foreach (var element in new FrameworkElement[]
         {
             volume,
@@ -362,277 +374,6 @@ internal sealed class ControlCenterWindow : GlassWindow
         else if (element.Parent is ContentControl control)
             control.Content = null;
     }
-    FrameworkElement ConnectionsCard()
-    {
-        radios.Clear();
-        var grid = new UniformGrid { Columns = 2, Rows = 2 };
-        foreach (var item in new[]
-        {
-            ("wifi", "\uE701", "Wi-Fi"),
-            ("bluetooth", "\uE702", "Bluetooth"),
-            ("network", "\uE839", "Réseau"),
-            ("settings", "\uE713", "Réglages")
-        })
-        {
-            var stack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(1, 1, 1, 3) };
-            var button = Circle(UI.IconButton(item.Item2, item.Item3, () => ConnectionAction(item.Item1)));
-            button.Width = 43;
-            button.Height = 43;
-            button.Margin = new Thickness(0, 0, 0, 4);
-            stack.Children.Add(button);
-            var label = UI.Text(item.Item3, 11, null, true);
-            label.HorizontalAlignment = HorizontalAlignment.Center;
-            stack.Children.Add(label);
-            var status = UI.Text(item.Item1 == "settings" ? "Windows" : "…", 9, UI.Dim);
-            status.HorizontalAlignment = HorizontalAlignment.Center;
-            status.TextTrimming = TextTrimming.CharacterEllipsis;
-            status.MaxWidth = 80;
-            stack.Children.Add(status);
-            radios[item.Item1] = (button, status);
-            button.MouseRightButtonUp += (_, e) =>
-            {
-                OpenSetting(item.Item1 == "wifi"
-                ? "network-wifi"
-                : item.Item1 == "bluetooth" ? "bluetooth" : item.Item1 == "network" ? "network-status" : "");
-                e.Handled = true;
-            };
-            grid.Children.Add(stack);
-        }
-        var card = Card(grid);
-        card.Height = 184;
-        return card;
-    }
-    FrameworkElement ActionsCard()
-    {
-        var grid = new UniformGrid { Columns = 2, Rows = 2 };
-        void Tile(string glyph, string label, string hint, Action run)
-        {
-            var stack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(1, 1, 1, 3) };
-            var button = Circle(UI.IconButton(glyph, label, run));
-            button.Width = 43;
-            button.Height = 43;
-            button.Margin = new Thickness(0, 0, 0, 4);
-            stack.Children.Add(button);
-            var text = UI.Text(label, 11, null, true);
-            text.HorizontalAlignment = HorizontalAlignment.Center;
-            stack.Children.Add(text);
-            var note = UI.Text(hint, 9, UI.Dim);
-            note.HorizontalAlignment = HorizontalAlignment.Center;
-            note.TextTrimming = TextTrimming.CharacterEllipsis;
-            note.MaxWidth = 96;
-            stack.Children.Add(note);
-            grid.Children.Add(stack);
-        }
-        Tile("\uE72E", "Verrouiller", "Session Windows", () => SystemActions.Lock(owner));
-        Tile("\uE722", "Capture", "Zone d’écran", () => SystemActions.Screenshot(owner));
-        Tile("\uE74D", "Corbeille", "Vider · confirmation", () => SystemActions.EmptyBin(owner));
-        var power = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(1, 1, 1, 3) };
-        Button? powerButton = null;
-        powerButton = Circle(UI.IconButton("\uE7E8",
-                                           "Alimentation",
-                                           () =>
-                                               GlassMenu.Open(owner,
-                                                              this,
-                                                              powerButton!,
-                                                              "Alimentation",
-                                                              new[]
-                                                              {
-                                                                  new MenuAction("Redémarrer", "\uE72C", () => SystemActions.Power(owner, true)),
-                                                                  new MenuAction("Éteindre", "\uE7E8", () => SystemActions.Power(owner, false)),
-                                                                  new MenuAction("Mettre en veille", "\uE708", () => SystemActions.Sleep(owner))
-                                                              })));
-        powerButton.Width = 43;
-        powerButton.Height = 43;
-        powerButton.Margin = new Thickness(0, 0, 0, 4);
-        power.Children.Add(powerButton);
-        var powerLabel = UI.Text("Alimentation", 11, null, true);
-        powerLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        power.Children.Add(powerLabel);
-        var powerHint = UI.Text("Éteindre · veille", 9, UI.Dim);
-        powerHint.HorizontalAlignment = HorizontalAlignment.Center;
-        power.Children.Add(powerHint);
-        grid.Children.Add(power);
-        var card = Card(grid);
-        card.Height = 184;
-        return card;
-    }
-    FrameworkElement MediaCard()
-    {
-        var stack = new StackPanel();
-        var header = new Grid();
-        header.ColumnDefinitions.Add(new()
-        {
-            Width = GridLength.Auto
-        });
-        header.ColumnDefinitions.Add(new()
-        {
-            Width = new GridLength(1, GridUnitType.Star)
-        });
-        var artContent = new Grid();
-        var placeholder = UI.Glyph("\uE8D6", 25);
-        placeholder.Opacity = .7;
-        artContent.Children.Add(placeholder);
-        artContent.Children.Add(cover);
-        var art =
-            new Border
-            {
-                Width = 48,
-                Height = 48,
-                CornerRadius = new CornerRadius(13),
-                Clip = new RectangleGeometry(new Rect(0, 0, 48, 48), 13, 13),
-                Background = UI.Brush("#20FFFFFF"),
-                Child = artContent,
-                Margin = new Thickness(0, 0, 10, 0)
-            };
-        header.Children.Add(art);
-        var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        appName.FontSize = 9;
-        appName.Margin = new Thickness(0, 0, 0, 4);
-        texts.Children.Add(appName);
-        foreach (var text in new[] { mediaTitle, artist })
-        {
-            text.TextTrimming = TextTrimming.CharacterEllipsis;
-            texts.Children.Add(text);
-        }
-        Grid.SetColumn(texts, 1);
-        header.Children.Add(texts);
-        stack.Children.Add(header);
-        var transport =
-            new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 9, 0, 0) };
-        previous.Margin = new Thickness(0, 0, 10, 0);
-        next.Margin = new Thickness(10, 0, 0, 0);
-        transport.Children.Add(previous);
-        transport.Children.Add(play);
-        transport.Children.Add(next);
-        stack.Children.Add(transport);
-        stack.Children.Add(progress);
-        var times = new DockPanel();
-        DockPanel.SetDock(duration, Dock.Right);
-        times.Children.Add(duration);
-        times.Children.Add(elapsed);
-        stack.Children.Add(times);
-        var layout = new Grid();
-        layout.Children.Add(stack);
-        sessionPicker.HorizontalAlignment = HorizontalAlignment.Right;
-        sessionPicker.VerticalAlignment = VerticalAlignment.Top;
-        sessionPicker.Margin = new Thickness(0, -7, -6, 0);
-        layout.Children.Add(sessionPicker);
-        appName.Margin = new Thickness(0, 0, 15, 4);
-        var card = Card(layout);
-        card.Height = 184;
-        return card;
-    }
-    FrameworkElement Levels()
-    {
-        var grid = new Grid();
-        grid.ColumnDefinitions.Add(new()
-        {
-            Width = new GridLength(1, GridUnitType.Star)
-        });
-        grid.ColumnDefinitions.Add(new()
-        {
-            Width = new GridLength(12)
-        });
-        int col = 2;
-        var prefs = Store.State.Controls;
-        foreach (var level in new[] { volume, brightness })
-        {
-            if (level == volume && !prefs.ShowVolume || level == brightness && !prefs.ShowBrightness)
-                continue;
-            grid.ColumnDefinitions.Add(new()
-            {
-                Width = new GridLength(88)
-            });
-            grid.ColumnDefinitions.Add(new()
-            {
-                Width = new GridLength(12)
-            });
-            var stack = new StackPanel();
-            stack.Children.Add(level);
-            var caption = UI.Text(level == volume ? "Volume" : "Luminosité", 11, UI.Dim);
-            caption.HorizontalAlignment = HorizontalAlignment.Center;
-            caption.Margin = new Thickness(0, 8, 0, 0);
-            if (level == brightness)
-            {
-                var link = UI.Button("Luminosité  ›", () => OpenSetting("display"));
-                link.FontSize = 11;
-                link.Foreground = UI.Dim;
-                link.Background = Brushes.Transparent;
-                link.BorderBrush = Brushes.Transparent;
-                link.Padding = new Thickness(0);
-                link.Margin = new Thickness(0, 8, 0, 0);
-                link.ToolTip = "Réglages écran · ouvre les options Windows";
-                stack.Children.Add(link);
-            }
-            else
-                stack.Children.Add(caption);
-            Grid.SetColumn(stack, col);
-            grid.Children.Add(stack);
-            col += 2;
-        }
-        var options = new StackPanel();
-        var output = new StackPanel();
-        var outputTitle = IconLabel("\uE7F5", "Sortie audio", 12);
-        output.Children.Add(outputTitle);
-        device.TextTrimming = TextTrimming.CharacterEllipsis;
-        device.Margin = new Thickness(0, 9, 0, 0);
-        output.Children.Add(device);
-        var change = UI.Text("Choisir la sortie   ›", 10, UI.Dim);
-        change.Margin = new Thickness(0, 5, 0, 0);
-        output.Children.Add(change);
-        var outputButton = UI.Button("", () => OpenSetting("sound"));
-        outputButton.Content = output;
-        outputButton.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-        outputButton.Padding = new Thickness(13, 13, 13, 13);
-        System.Windows.Automation.AutomationProperties.SetName(outputButton, "Choisir la sortie audio dans Windows");
-        options.Children.Add(outputButton);
-        mute.Margin = new Thickness(0, 10, 0, 10);
-        options.Children.Add(mute);
-        var screen = UI.Button("", () => OpenSetting("quiethours"));
-        screen.Content = IconLabel("\uE708", "Concentration", 12);
-        screen.ToolTip = "Ouvrir les paramètres de concentration Windows";
-        screen.HorizontalContentAlignment = HorizontalAlignment.Left;
-        screen.Padding = new Thickness(13, 11, 13, 11);
-        options.Children.Add(screen);
-        grid.Children.Add(options);
-        return grid;
-    }
-    FrameworkElement Shortcuts()
-    {
-        var stack = new StackPanel();
-        var title = UI.Text("Raccourcis Windows", 13, null, true);
-        title.Margin = new Thickness(2, 0, 0, 12);
-        stack.Children.Add(title);
-        var grid = new UniformGrid { Columns = 4 };
-        foreach (var shortcut in Store.State.Controls.Shortcuts)
-        {
-            var tile = new StackPanel { Margin = new Thickness(0, 0, 0, 11) };
-            var button = Circle(UI.IconButton(shortcut.Glyph, shortcut.Name, () => owner.LaunchWindowsShortcut(shortcut)));
-            button.Width = 48;
-            button.Height = 48;
-            button.Background = new LinearGradientBrush(UI.Color("#30FFFFFF"), UI.Color("#13FFFFFF"), 80);
-            tile.Children.Add(button);
-            var label = UI.Text(shortcut.Name, 10, UI.Dim);
-            label.TextTrimming = TextTrimming.CharacterEllipsis;
-            label.TextAlignment = TextAlignment.Center;
-            label.Margin = new Thickness(1, 6, 1, 0);
-            label.ToolTip = shortcut.Name;
-            tile.Children.Add(label);
-            grid.Children.Add(tile);
-        }
-        var add = new StackPanel { Margin = new Thickness(0, 0, 0, 11) };
-        var plus = Circle(UI.IconButton("\uE710", "Ajouter un raccourci Windows", () => owner.EditControls(this, true)));
-        plus.Width = 48;
-        plus.Height = 48;
-        add.Children.Add(plus);
-        var text = UI.Text("Ajouter", 10, UI.Dim);
-        text.TextAlignment = TextAlignment.Center;
-        text.Margin = new Thickness(0, 6, 0, 0);
-        add.Children.Add(text);
-        grid.Children.Add(add);
-        stack.Children.Add(grid);
-        return stack;
-    }
     bool Enabled(string module) => !Store.State.Controls.HiddenModules.Contains(module);
     void RefreshServices()
     {
@@ -690,263 +431,4 @@ internal sealed class ControlCenterWindow : GlassWindow
         media.Stop();
         audio.Dispose();
     }
-    async Task StartMedia()
-    {
-        try
-        {
-            await media.StartAsync();
-            await RefreshMedia();
-        }
-        catch (Exception ex)
-        {
-            mediaTitle.Text = "Lecture indisponible";
-            artist.Text = "Ouvrir les commandes audio Windows";
-            Store.Log("SMTC: " + ex.Message);
-        }
-    }
-    void RefreshAudio()
-    {
-        if (!IsVisible)
-            return;
-        audioReads++;
-        var updated = audio.Read();
-        if (updated == audioState)
-            return;
-        audioState = updated;
-        syncing = true;
-        try
-        {
-            volume.IsEnabled = audioState.Available;
-            if (!volume.Dragging)
-                volume.Value = audioState.Volume;
-            volume.Glyph = audioState.Muted || audioState.Volume < 1 ? "\uE74F" : "\uE767";
-            volume.InvalidateVisual();
-            volume.ToolTip = audioState.Available ? "Volume système · glisser ou utiliser la molette" : "Aucune sortie audio disponible";
-            device.Text = audioState.Device;
-            device.ToolTip = audioState.Device;
-            mute.IsEnabled = audioState.Available;
-            mute.Content = IconLabel(audioState.Muted ? "\uE74F" : "\uE767", audioState.Muted ? "Son coupé" : "Son activé", 12);
-        }
-        finally { syncing = false; }
-    }
-    async Task RefreshMedia()
-    {
-        if (!IsVisible || !Enabled("media") || refreshingMedia)
-            return;
-        refreshingMedia = true;
-        mediaReads++;
-        int expected = revision;
-        try
-        {
-            var state = await media.ReadAsync();
-            if (state != null && expected == revision && IsVisible)
-            {
-                var before = mediaState;
-                mediaState = state;
-                ApplyMedia(before);
-            }
-        }
-        catch (Exception ex)
-        {
-            Feedback("Lecture indisponible");
-            Store.Log("SMTC lecture: " + ex.Message);
-        }
-        finally { refreshingMedia = false; }
-    }
-    void ApplyMedia(MediaSnapshot? before = null)
-    {
-        var s = mediaState;
-        if (s == null)
-            return;
-        mediaTitle.Text = s.Title;
-        mediaTitle.ToolTip = s.Title;
-        artist.Text = s.Artist;
-        artist.ToolTip = s.Artist;
-        appName.Text = s.Available ? s.App.ToUpperInvariant() : "MUSIQUE";
-        cover.Source = s.Artwork;
-        cover.Visibility = s.Artwork == null ? Visibility.Hidden : Visibility.Visible;
-        play.IsEnabled = s.Available && s.CanToggle;
-        previous.IsEnabled = s.Available && s.CanPrevious;
-        next.IsEnabled = s.Available && s.CanNext;
-        if (before?.Playing != s.Playing)
-            play.Content = UI.Glyph(s.Playing ? "\uE769" : "\uE768", 20);
-        if (play.Content is TextBlock glyph)
-            glyph.Foreground = UI.Brush("#254D74");
-        if (!seeking)
-        {
-            progress.Maximum = Math.Max(1, s.Duration);
-            progress.Value = s.Position;
-        }
-        progress.IsEnabled = s.Available && s.CanSeek && s.Duration > 0;
-        elapsed.Text = Time(s.Position);
-        duration.Text = Time(s.Duration);
-    }
-    internal static string Time(double seconds)
-    {
-        var value = TimeSpan.FromSeconds(Math.Max(0, double.IsFinite(seconds) ? seconds : 0));
-        return value.TotalHours >= 1 ? value.ToString(@"h\:mm\:ss") : value.ToString(@"m\:ss");
-    }
-    void EndSeek()
-    {
-        if (!seeking)
-            return;
-        seeking = false;
-        owner.EndLayoutInteraction();
-        _ = MediaCommand("seek", progress.Value);
-    }
-    async Task MediaCommand(string action, double position = 0)
-    {
-        try
-        {
-            if (!await media.CommandAsync(action, position))
-                Feedback("Cette commande n’est pas disponible pour cette lecture.");
-            await RefreshMedia();
-        }
-        catch (Exception ex) { Feedback(ex.Message); }
-    }
-    void OpenSessions()
-    {
-        var sessions = media.Sessions();
-        var actions = new List<MenuAction> { new("Automatique · priorité à Spotify", "\uE8D6", () => { Store.State.Controls.MediaApp = "";
-        Store.Save();
-        _ = RefreshMedia(); }, string.IsNullOrEmpty(Store.State.Controls.MediaApp)) };
-        foreach (var s in sessions)
-            actions.Add(new(s.name, "\uE8D6", () =>
-            {
-                Store.State.Controls.MediaApp = s.id;
-                Store.Save();
-                _ = RefreshMedia();
-            }, Store.State.Controls.MediaApp == s.id));
-        GlassMenu.Open(owner, this, sessionPicker, "Source musicale", actions);
-    }
-    async Task RefreshConnections()
-    {
-        if (!IsVisible || !Enabled("connections") || refreshingConnections)
-            return;
-        refreshingConnections = true;
-        int expected = revision;
-        try
-        {
-            var result = await connections.ReadAsync();
-            if (IsVisible && expected == revision)
-            {
-                connectionState = result;
-                UpdateConnections();
-            }
-        }
-        catch (Exception ex)
-        {
-            Feedback("Connexions indisponibles");
-            Store.Log("Radios: " + ex.Message);
-        }
-        finally { refreshingConnections = false; }
-    }
-    void UpdateConnections()
-    {
-        if (connectionState is not { } s)
-            return;
-        subtitle.Text = s.Internet ? s.Network + " · Connecté à Internet" : "Windows · Hors connexion";
-        foreach (string id in new[] { "wifi", "bluetooth", "network" })
-            if (radios.TryGetValue(id, out var tile))
-            {
-                bool on = id == "wifi" ? s.Wifi.On : id == "bluetooth" ? s.Bluetooth.On : s.Internet;
-                bool present = id == "wifi" ? s.Wifi.Present : id == "bluetooth" ? s.Bluetooth.Present : true;
-                tile.button.Background = UI.Brush(on ? id == "network" ? "#D93BB283" : "#DE247BF2" : "#20FFFFFF");
-                tile.status.Text = !present
-                    ? "Absent"
-                    : id == "network" ? s.Ethernet ? "Ethernet" : s.Internet ? "Connecté" : "Hors ligne" : on ? "Activé" : "Désactivé";
-                tile.button.ToolTip = id == "wifi"
-                    ? s.Wifi.Present ? "Activer/désactiver le Wi-Fi · clic droit pour les réseaux" : "Wi-Fi absent · ouvrir les réglages"
-                    : id == "bluetooth"
-                        ? s.Bluetooth.Present ? "Activer/désactiver Bluetooth · clic droit pour les appareils" : "Bluetooth absent · ouvrir les réglages"
-                        : "Ouvrir les connexions Windows";
-            }
-    }
-    async void ConnectionAction(string id)
-    {
-        try
-        {
-            if (id == "wifi" || id == "bluetooth")
-            {
-                bool present = id == "wifi" ? connectionState?.Wifi.Present == true : connectionState?.Bluetooth.Present == true;
-                if (!present)
-                {
-                    OpenSetting(id == "wifi" ? "network-wifi" : "bluetooth");
-                    return;
-                }
-                if (radios.TryGetValue(id, out var tile))
-                    tile.button.IsEnabled = false;
-                try
-                {
-                    await owner.RunControlTask(async () =>
-                    {
-                        await connections.ToggleAsync(id == "wifi" ? RadioKind.WiFi : RadioKind.Bluetooth);
-                        await RefreshConnections();
-                    });
-                }
-                finally { if (radios.TryGetValue(id, out tile)) tile.button.IsEnabled = true; }
-            }
-            else
-                OpenSetting(id == "network" ? "network-status" : "");
-        }
-        catch (Exception ex) { Feedback(ex.Message); }
-    }
-    Native.Point ScreenPoint()
-    {
-        var dpi = VisualTreeHelper.GetDpi(this);
-        return new Native.Point { X = (int)((Left + Width / 2) * dpi.DpiScaleX), Y = (int)((Top + Height / 2) * dpi.DpiScaleY) };
-    }
-    async Task ReadBrightness()
-    {
-        int expected = revision;
-        brightness.IsEnabled = false;
-        brightness.ToolTip = "Lecture du réglage de l’écran…";
-        try
-        {
-            var state = await MonitorBrightness.ReadAsync(ScreenPoint());
-            if (!IsVisible || expected != revision)
-                return;
-            syncing = true;
-            try
-            {
-                brightness.IsEnabled = state.Available;
-                brightness.Value = state.Value;
-                brightness.ToolTip = state.Available
-                    ? state.Device + " · glisser pour régler"
-                    : state.Error + " Clique sur Luminosité pour ouvrir les réglages écran.";
-            }
-            finally { syncing = false; }
-        }
-        catch (Exception ex)
-        {
-            brightness.ToolTip = "Réglage non disponible · clique sur Luminosité pour les réglages écran";
-            Store.Log("Luminosité: " + ex.Message);
-        }
-    }
-    async Task WriteBrightness()
-    {
-        if (writingBrightness || !pendingBrightness.HasValue)
-            return;
-        writingBrightness = true;
-        double value = pendingBrightness.Value;
-        pendingBrightness = null;
-        var point = ScreenPoint();
-        try
-        {
-            await MonitorBrightness.SetAsync(point, value);
-        }
-        catch (Exception ex) { Feedback(ex.Message); }
-        finally
-        {
-            writingBrightness = false;
-            if (pendingBrightness.HasValue && !brightnessTimer.IsEnabled)
-                brightnessTimer.Start();
-        }
-    }
-    void Feedback(string message)
-    {
-        note.Text = message;
-        note.ToolTip = message;
-    }
-    void OpenSetting(string page) => owner.LaunchWindowsShortcut(new() { Name = "Réglages Windows", Target = "ms-settings:" + page });
 }

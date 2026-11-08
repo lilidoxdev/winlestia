@@ -1,4 +1,4 @@
-// C# 12 / WindowsSpectrum.cs / Windows 11. FFT of the selected process tree, never global output.
+// C# 12 / WindowsSpectrum.cs / Windows 11. FFT de l'arbre de processus choisi, jamais de la sortie globale.
 using System;
 using System.Threading;
 using System.Runtime.InteropServices;
@@ -9,8 +9,10 @@ internal sealed class WindowsSpectrum : IDisposable
 {
     [DllImport("ProcessAudio.dll", CallingConvention = CallingConvention.Cdecl)] static extern IntPtr AudioCreate(uint pid);
     [DllImport("ProcessAudio.dll", CallingConvention = CallingConvention.Cdecl)] static extern void AudioDestroy(IntPtr handle);
-    [DllImport("ProcessAudio.dll", CallingConvention = CallingConvention.Cdecl)] static extern int AudioRead(IntPtr handle, [Out] float[] data, int count, out uint serial);
-    readonly object gate = new(); readonly AutoResetEvent wake = new(false); readonly Thread thread; volatile int requested; volatile bool disposed; double[] values = new double[48];
+    [DllImport("ProcessAudio.dll", CallingConvention = CallingConvention.Cdecl)] static extern int AudioRead(IntPtr handle,
+        [Out] float[] data, int count, out uint serial);
+    readonly object gate = new(); readonly AutoResetEvent wake = new(false); readonly Thread thread; volatile int requested;
+        volatile bool disposed; double[] values = new double[48];
     internal WindowsSpectrum()
     {
         thread = new Thread(Loop) { IsBackground = true, Name = "Winlestia process FFT" };
@@ -69,7 +71,8 @@ internal sealed class WindowsSpectrum : IDisposable
                     FastFourierTransform.FFT(true, 11, fft);
                     for (int bar = 0; bar < 48; bar++)
                     {
-                        int lo = Math.Max(1, (int)(40 * Math.Pow(400, bar / 48d) * 2048 / 44100)), hi = Math.Min(1024, (int)(40 * Math.Pow(400, (bar + 1) / 48d) * 2048 / 44100) + 1);
+                        int lo = Math.Max(1, (int)(40 * Math.Pow(400, bar / 48d) * 2048 / 44100)), hi = Math.Min(1024,
+                            (int)(40 * Math.Pow(400, (bar + 1) / 48d) * 2048 / 44100) + 1);
                         double peak = 0;
                         for (int bin = lo; bin < hi; bin++)
                             peak = Math.Max(peak, Math.Sqrt(fft[bin].X * fft[bin].X + fft[bin].Y * fft[bin].Y));

@@ -1,4 +1,5 @@
-// C# 12 / FileSearch.cs / Windows Search index queries for the command palette (">file "). Late-bound ADODB, no NuGet. Never logs the typed text or a path.
+// C# 12 / FileSearch.cs / Requêtes sur l'index Windows Search pour la palette de commandes (« >file »). ADODB en liaison tardive, sans
+// NuGet. Ne journalise jamais le texte saisi ni un chemin.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,13 +14,13 @@ namespace PanneauxGlass;
 internal sealed record FileHit(string Name, string Path);
 internal sealed record FileSnapshot(long Generation, string Status, IReadOnlyList<FileHit> Items);
 
-// Pure part: input normalisation, LIKE escaping, SQL text. Covered by tests/FileSearch.
+// Partie pure : normalisation de l'entrée, échappement LIKE, texte SQL. Couverte par tests/FileSearch.
 internal static class FileQuery
 {
     internal const int MinChars = 2, MaxChars = 64, MaxRows = 20;
     internal const string ConnectionString = "Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
 
-    // Trims, drops control characters, collapses blanks. False when shorter than MinChars or longer than MaxChars.
+    // Rogne, retire les caractères de contrôle, réduit les blancs. Faux si plus court que MinChars ou plus long que MaxChars.
     internal static bool TryNormalize(string? text, out string term)
     {
         term = "";
@@ -47,8 +48,10 @@ internal static class FileQuery
         return term.Length >= MinChars;
     }
 
-    // The term goes into CONTAINS(col,'"term*"'). LIKE with a leading % scans the whole scope (4 s without a hit), CONTAINS answers from the index in tens of ms,
-    // at the price of matching word beginnings. Characters with a meaning for the query ( " * % _ [ ] ) become blanks; a single quote is doubled afterwards.
+    // Le terme va dans CONTAINS(col,'"terme*"'). LIKE avec un % initial parcourt toute la portée (4 s sans résultat), CONTAINS répond
+    // depuis l'index en quelques dizaines de ms,
+    // au prix de ne trouver que les débuts de mots. Les caractères porteurs de sens pour la requête ( " * % _ [ ] ) deviennent des blancs ;
+    // une apostrophe est doublée ensuite.
     internal static string NeutraliseContains(string term)
     {
         var sb = new StringBuilder(term.Length);
@@ -60,12 +63,14 @@ internal static class FileQuery
     internal static string EscapeLiteral(string text) => text.Replace("'", "''");
 
     static readonly HashSet<string> ExecutableExtensions = new(StringComparer.OrdinalIgnoreCase) {
-        ".exe", ".bat", ".cmd", ".com", ".ps1", ".psm1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".msi", ".msp", ".scr", ".lnk", ".url", ".hta", ".pif", ".reg", ".cpl", ".jar", ".appref-ms" };
+        ".exe", ".bat", ".cmd", ".com", ".ps1", ".psm1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".msi", ".msp", ".scr", ".lnk",
+            ".url", ".hta", ".pif", ".reg", ".cpl", ".jar", ".appref-ms" };
 
-    // True when opening the file could run code: such a result is only revealed in Explorer, never launched.
+    // Vrai quand l'ouverture du fichier pourrait exécuter du code : un tel résultat n'est que révélé dans l'Explorateur, jamais lancé.
     internal static bool IsExecutable(string path) => ExecutableExtensions.Contains(Path.GetExtension(path ?? ""));
 
-    // The scope is the user's profile folder only. False for an empty or malformed term, or an unusable profile path.
+    // La portée est uniquement le dossier du profil de l'utilisateur. Faux pour un terme vide ou mal formé, ou un chemin de profil
+    // inutilisable.
     internal static bool TryBuild(string? text, string? profile, out string sql)
     {
         sql = "";
@@ -73,7 +78,8 @@ internal static class FileQuery
             return false;
         if (string.IsNullOrWhiteSpace(profile) || profile.IndexOf((char)0) >= 0 || !Path.IsPathFullyQualified(profile))
             return false;
-        sql = "SELECT TOP " + MaxRows + " System.ItemPathDisplay, System.ItemNameDisplay FROM SystemIndex WHERE SCOPE='file:" + EscapeLiteral(profile.TrimEnd('\\', '/')) + "' AND CONTAINS(System.ItemNameDisplay,'\"" + EscapeLiteral(term) + "*\"')";
+        sql = "SELECT TOP " + MaxRows + " System.ItemPathDisplay, System.ItemNameDisplay FROM SystemIndex WHERE SCOPE='file:"
+            + EscapeLiteral(profile.TrimEnd('\\', '/')) + "' AND CONTAINS(System.ItemNameDisplay,'\"" + EscapeLiteral(term) + "*\"')";
         return true;
     }
 }
@@ -90,8 +96,9 @@ internal sealed class FileSearch : IDisposable
 
     static string Profile => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-    // Starts a query on a worker thread. A newer generation cancels the older one; an older generation is ignored.
-    // `done` is called from the worker only when this query is still the latest one and its result was stored.
+    // Lance une requête sur un thread de travail. Une génération plus récente annule la plus ancienne ; une génération plus ancienne est
+    // ignorée.
+    // `done` n'est appelé depuis le worker que si cette requête est toujours la plus récente et que son résultat a été stocké.
     internal void Start(string? term, long generation, Action done)
     {
         var cts = new CancellationTokenSource();
@@ -127,7 +134,8 @@ internal sealed class FileSearch : IDisposable
             }
             finally
             {
-                // Disposed only here, once the query is over; `current` never points to a disposed source, so Cancel() cannot hit it.
+                // Libérée ici seulement, une fois la requête terminée ; `current` ne pointe jamais vers une source libérée, donc Cancel()
+                // ne peut pas la toucher.
                 lock (gate)
                 {
                     if (ReferenceEquals(current, cts))
@@ -138,7 +146,7 @@ internal sealed class FileSearch : IDisposable
         });
     }
 
-    // One-off query (command line): nothing is kept.
+    // Requête ponctuelle (ligne de commande) : rien n'est conservé.
     internal static Task<FileSnapshot> RunOnceAsync(string? term, CancellationToken token) => QueryAsync(term, 0, token);
 
     static async Task<FileSnapshot> QueryAsync(string? term, long generation, CancellationToken token)
@@ -192,7 +200,7 @@ internal sealed class FileSearch : IDisposable
         }
     }
 
-    // What the palette displays. The frontend only gets an index back for opening, never a path to trust.
+    // Ce que la palette affiche. Le frontend ne reçoit qu'un index pour l'ouverture, jamais un chemin à croire.
     internal object? Payload()
     {
         lock (gate)
@@ -208,7 +216,7 @@ internal sealed class FileSearch : IDisposable
         }
     }
 
-    // A path is only released for a result of the last stored query.
+    // Un chemin n'est libéré que pour un résultat de la dernière requête stockée.
     internal bool TryResolve(long generation, int index, out string path)
     {
         lock (gate)

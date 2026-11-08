@@ -20,15 +20,7 @@ public class FolderIconsIntegrationTests
     }
     static void Wipe(string d)
     {
-        if (!Directory.Exists(d))
-            return;
-        foreach (var e in new DirectoryInfo(d).EnumerateFileSystemInfos("*", SearchOption.AllDirectories))
-            try
-            {
-                e.Attributes = FileAttributes.Normal;
-            }
-            catch { }
-        Directory.Delete(d, true);
+        TempDir.Delete(d);
     }
     static string Ini(string folder) => Path.Combine(folder, "desktop.ini");
     [Fact]
@@ -122,7 +114,7 @@ public class FolderIconsIntegrationTests
             Console.WriteLine(shell);
             Assert.True(shell.Split('\n').First(l => l.StartsWith("(a1)")).Contains("turned blue: 0 ms") || shell.Split('\n').First(l => l.StartsWith("(a1)")).Contains("ms"), "shellFreshProcessSeesNewColourAtSamePath");
         }
-        finally { try { Wipe(dir); } catch { } }
+        finally { Wipe(dir); }
     }
     static List<ExplorerAppearance.Backup> ReadManifest(string state) => System.Text.Json.JsonSerializer.Deserialize<List<ExplorerAppearance.Backup>>(File.ReadAllText(Path.Combine(state, "manifest.json")))!;
 }

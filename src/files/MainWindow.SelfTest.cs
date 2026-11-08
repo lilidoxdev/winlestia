@@ -1,9 +1,10 @@
 #if WINLESTIA_SELFTEST
-// Hidden measurement drivers, only reachable through WINLESTIA_FILES_SELFTEST (never set in normal use).
-//   tabs50 : 50 open/close cycles of a tab, 30 s settle, logs handles/threads/private bytes before and after.
-//   grid   : switches to the large-icons view, waits for the thumbnails, 5 end-to-end fast scroll passes, logs GDI/handles/threads/private/stall.
-//   ops    : see MainWindow.SelfTest.Ops.cs (file operations on a %TEMP% fixture).
-//   nav    : WINLESTIA_FILES_NAVPATHS="A;B" navigated alternately 5 times in this one process (warm navigations).
+// Pilotes de mesure cachés, accessibles uniquement via WINLESTIA_FILES_SELFTEST (jamais défini en usage normal).
+//   tabs50 : 50 cycles d'ouverture/fermeture d'un onglet, 30 s de stabilisation, journalise handles/threads/octets privés avant et après.
+// grid   : passe en vue grandes icônes, attend les miniatures, 5 passes de défilement rapide de bout en bout, journalise
+// GDI/handles/threads/privé/blocage.
+//   ops    : voir MainWindow.SelfTest.Ops.cs (opérations de fichiers sur un dossier de fixtures dans %TEMP%).
+//   nav    : WINLESTIA_FILES_NAVPATHS="A;B" parcourus alternativement 5 fois dans ce seul processus (navigations à chaud).
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -12,14 +13,16 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
-    // WINLESTIA_FILES_TABLOG=<file>: test harness only; rewrites "tabs=N" every 200 ms (the resident has no other observable tab count).
+    // WINLESTIA_FILES_TABLOG=<fichier> : harnais de test uniquement ; réécrit "tabs=N" toutes les 200 ms (le résident n'a aucun autre
+    // compteur d'onglets observable).
     void StartTabLog()
     {
         string? file = Environment.GetEnvironmentVariable("WINLESTIA_FILES_TABLOG");
         if (string.IsNullOrEmpty(file))
             return;
-        var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
-        timer.Tick += (_, _) => { try { System.IO.File.WriteAllText(file, "tabs=" + tabs.Count + " visible=" + IsVisible); } catch (Exception) { /* Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test. */ } };
+        var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(PauseBreveMs) };
+        timer.Tick += (_, _) => { try { System.IO.File.WriteAllText(file, "tabs=" + tabs.Count + " visible=" + IsVisible); }
+            catch (Exception) { /* Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test. */ } };
         timer.Start();
     }
 
@@ -79,7 +82,9 @@ public sealed partial class MainWindow
     static void Sample(string label)
     {
         using var p = Process.GetCurrentProcess();
-        Perf.Log($"selftest {label}: handles {p.HandleCount}, threads {p.Threads.Count}, private {p.PrivateMemorySize64 / 1048576.0:F1} MB, gdi {GetGuiResources(p.Handle, 0)}, user {GetGuiResources(p.Handle, 1)}, cpu {p.TotalProcessorTime.TotalMilliseconds:F0} ms");
+        Perf.Log($"selftest {label}: handles {p.HandleCount}, threads {p.Threads.Count}, private {p.PrivateMemorySize64 / 1048576.0:F1} " +
+            $"MB, gdi {GetGuiResources(p.Handle, 0)}, user {GetGuiResources(p.Handle, 1)}, cpu " +
+            $"{p.TotalProcessorTime.TotalMilliseconds:F0} ms");
     }
 
     static System.Windows.Controls.ScrollViewer? FindScroll(System.Windows.DependencyObject d)
@@ -94,14 +99,14 @@ public sealed partial class MainWindow
 
     async Task GridScroll()
     {
-        await Task.Delay(4000);
+        await Task.Delay(PauseChargementMs);
         Sample("details settled");
         long t0 = Stopwatch.GetTimestamp();
         SetView(true);
         for (int i = 0; i < 400 && Thumbs.Pending > 0 || i < 4; i++)
             await Task.Delay(25);
         Perf.Log($"selftest grid visible filled {Perf.Ms(t0):F0} ms after the switch (pending {Thumbs.Pending}, shown {Thumbs.Shown})");
-        await Task.Delay(1500);
+        await Task.Delay(PauseOperationMs);
         Sample("grid before scroll");
         var sv = FindScroll(list);
         if (sv == null)
@@ -119,19 +124,19 @@ public sealed partial class MainWindow
                 sv.ScrollToVerticalOffset(sv.VerticalOffset - 110);
                 await Task.Delay(8);
             }
-            await Task.Delay(600);
+            await Task.Delay(PauseDebounceMs);
             Perf.Log($"selftest pass {pass} max UI stall {Perf.Stall?.Max ?? 0:F1} ms");
             Sample("grid after pass " + pass);
         }
-        await Task.Delay(30000);
+        await Task.Delay(PauseTransfertMs);
         Sample("grid after 30 s");
-        await Task.Delay(10000);
+        await Task.Delay(PauseTresLongueMs);
         Sample("grid after 40 s");
     }
 
     async Task Tabs50()
     {
-        await Task.Delay(5000);
+        await Task.Delay(PauseLongueMs);
         Sample("baseline");
         string where = Active.Location;
         for (int i = 0; i < 50; i++)
@@ -142,16 +147,17 @@ public sealed partial class MainWindow
             await Task.Delay(10);
         }
         Perf.Log("selftest tabs50 cycles done");
-        await Task.Delay(30000);
+        await Task.Delay(PauseTransfertMs);
         Sample("after 50 cycles + 30 s");
     }
 
     async Task WarmNav()
     {
-        var paths = (Environment.GetEnvironmentVariable("WINLESTIA_FILES_NAVPATHS") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var paths = (Environment.GetEnvironmentVariable("WINLESTIA_FILES_NAVPATHS") ?? "").Split(';',
+            StringSplitOptions.RemoveEmptyEntries);
         if (paths.Length == 0)
             return;
-        await Task.Delay(2500);
+        await Task.Delay(PauseSondeMs);
         for (int round = 0; round < 5; round++)
             foreach (var path in paths)
             {
@@ -164,9 +170,9 @@ public sealed partial class MainWindow
                 }
                 Active.Changed += Watch;
                 Active.Go(path);
-                await Task.WhenAny(done.Task, Task.Delay(15000));
+                await Task.WhenAny(done.Task, Task.Delay(TimeoutMoyenMs));
                 Active.Changed -= Watch;
-                await Task.Delay(700);
+                await Task.Delay(PauseDessinMs);
             }
         Perf.Log("selftest nav done");
     }

@@ -1,6 +1,7 @@
-// Client side of the Winlestia Fichiers single-instance pipe, shared (linked) by the backend and Winlestia.Files.
-// No WPF type and no System.Text.Json here: it runs in Program.Main before anything heavy is loaded.
-// Protocol: server writes its PID (4 bytes) on connect; client replies with one JSON line {"args":[..],"cwd":"..","cmd":".."}; server acks with '1'.
+// Côté client du canal à instance unique de Winlestia Fichiers, partagé (lié) par le backend et Winlestia.Files.
+// Aucun type WPF ni System.Text.Json ici : le code s'exécute dans Program.Main avant que quoi que ce soit de lourd soit chargé.
+// Protocole : le serveur écrit son PID (4 octets) à la connexion ; le client répond par une ligne JSON {"args":[..],"cwd":"..","cmd":".."}
+// ; le serveur acquitte par '1'.
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,8 +14,9 @@ namespace Winlestia.Shared;
 
 internal static class FilesPipe
 {
-    // Per user: FNV-1a of the lower-cased user name (the pipe itself is CurrentUserOnly).
-    // WINLESTIA_FILES_PIPE: test-only override so a test instance never talks to (or replaces) the user's resident one.
+    // Par utilisateur : FNV-1a du nom d'utilisateur en minuscules (le canal lui-même est CurrentUserOnly).
+    // WINLESTIA_FILES_PIPE : surcharge réservée aux tests pour qu'une instance de test ne parle jamais à l'instance résidente de
+    // l'utilisateur (ni ne la remplace).
     internal static string Name
     {
         get
@@ -33,9 +35,11 @@ internal static class FilesPipe
 
     [DllImport("user32.dll")] static extern bool AllowSetForegroundWindow(int pid);
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool WaitNamedPipe(string name, int timeoutMs);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool WaitNamedPipe(string name,
+        int timeoutMs);
 
-    // File.Exists on a pipe path would connect to it (and burn a server instance); WaitNamedPipe only probes. ERROR_FILE_NOT_FOUND = no server.
+    // File.Exists sur un chemin de canal s'y connecterait (et consommerait une instance du serveur) ; WaitNamedPipe se contente de sonder.
+    // ERROR_FILE_NOT_FOUND = pas de serveur.
     static bool PipeExists(string name) => WaitNamedPipe(@"\\.\pipe\" + name, 1) || Marshal.GetLastWin32Error() != 2;
 
     internal static string Build(string[] args, string cwd, string? cmd)
@@ -72,7 +76,7 @@ internal static class FilesPipe
         sb.Append('"');
     }
 
-    // True only when a live server acknowledged the message. Never blocks longer than about timeoutMs.
+    // Vrai seulement quand un serveur vivant a acquitté le message. Ne bloque jamais plus d'environ timeoutMs.
     internal static bool TrySend(string json, int timeoutMs = 150)
     {
         try
@@ -81,7 +85,8 @@ internal static class FilesPipe
             if (!PipeExists(name))
                 return false;     // no server: Connect would otherwise spin for the whole timeout
             long start = Stopwatch.GetTimestamp();
-            using var client = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+            using var client = new NamedPipeClientStream(".", name, PipeDirection.InOut,
+                PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             client.Connect(timeoutMs);
             int left = timeoutMs - (int)((Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency);
             using var cts = new CancellationTokenSource(Math.Max(left, 20));

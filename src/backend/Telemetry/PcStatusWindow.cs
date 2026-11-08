@@ -1,4 +1,4 @@
-// language: C# 12, file: PcStatusWindow.cs, target: Windows 11 / .NET 8 WPF
+// C# 12, fichier PcStatusWindow.cs, cible Windows 11 / .NET 8 WPF
 using System;
 using System.Globalization;
 using System.Linq;
@@ -16,10 +16,14 @@ namespace PanneauxGlass;
 internal sealed class PcStatusWindow : GlassWindow
 {
     readonly Coordinator owner; readonly PcTelemetry telemetry = new(); readonly SemaphoreSlim lifecycle = new(1, 1);
-    readonly TextBlock live = UI.Text("Préparation des capteurs…", 11, UI.Dim), foot = UI.Text("Collecte suspendue hors de ce panneau", 10, UI.Dim);
+    readonly TextBlock live = UI.Text("Préparation des capteurs…", 11, UI.Dim), foot = UI.Text("Collecte suspendue hors de ce panneau", 10,
+        UI.Dim);
     readonly Meter cpu = new("Processeur", "\uE950", "#96E6F5"), gpu = new("Carte graphique", "\uE7F4", "#BBAAFF");
-    readonly TextBlock ramValue = UI.Text("—", 25, null, true), ramDetail = UI.Text("Mémoire disponible", 10, UI.Dim), ramHeat = UI.Text("Lecture des barrettes…", 10, UI.Dim);
-    readonly TextBlock diskValue = UI.Text("—", 13, null, true), diskRates = UI.Text("Lecture et écriture", 10, UI.Dim), networkValue = UI.Text("—", 21, null, true), networkUp = UI.Text("—", 13, UI.Brush("#D0BCFF")), networkName = UI.Text("Connexion réseau", 10, UI.Dim);
+    readonly TextBlock ramValue = UI.Text("—", 25, null, true), ramDetail = UI.Text("Mémoire disponible", 10, UI.Dim),
+        ramHeat = UI.Text("Lecture des barrettes…", 10, UI.Dim);
+    readonly TextBlock diskValue = UI.Text("—", 13, null, true), diskRates = UI.Text("Lecture et écriture", 10, UI.Dim),
+        networkValue = UI.Text("—", 21, null, true), networkUp = UI.Text("—", 13, UI.Brush("#D0BCFF")),
+        networkName = UI.Text("Connexion réseau", 10, UI.Dim);
     readonly TelemetryGraph ramGraph = new("#8CE4C3"), diskGraph = new("#F3CF91"), networkGraph = new("#96E6F5", false);
     readonly StackPanel driveRows = new(), storageHeat = new(); string storageKey = ""; int revision; bool closed; PcReading? latest;
     internal long Samples => telemetry.Samples; internal bool Sampling => telemetry.Running;
@@ -52,7 +56,8 @@ internal sealed class PcStatusWindow : GlassWindow
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
         var content = new StackPanel();
-        var scroll = new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        var scroll = new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var pair = new Grid { Margin = new Thickness(0, 0, 0, 12) };
@@ -164,7 +169,10 @@ internal sealed class PcStatusWindow : GlassWindow
             storageKey = "";
             foreach (var graph in new[] { cpu.Graph, gpu.Graph, ramGraph, diskGraph, networkGraph })
                 graph.Reset();
-            telemetry.Start(reading => Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (version == revision && IsVisible) Update(reading); })), error: message => Dispatcher.BeginInvoke((Action)(() => { if (version == revision && IsVisible) { live.Text = "Collecte indisponible · réouvre le panneau"; live.Foreground = UI.Brush("#F3CF91"); live.ToolTip = message; } })));
+            telemetry.Start(reading => Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (version == revision
+                && IsVisible) Update(reading); })), error: message => Dispatcher.BeginInvoke((Action)(() => { if (version == revision
+                && IsVisible) { live.Text = "Collecte indisponible · réouvre le panneau"; live.Foreground = UI.Brush("#F3CF91");
+                live.ToolTip = message; } })));
         }
         catch (Exception ex) { Store.Log("Cycle état PC: " + ex); }
         finally { lifecycle.Release(); }
@@ -176,13 +184,17 @@ internal sealed class PcStatusWindow : GlassWindow
         live.Foreground = UI.Brush("#A0E7CF");
         cpu.Update(value.Cpu, value.CpuTemperature, value.CpuName, LoadHint(value.Cpu));
         var device = value.Gpus.OrderByDescending(g => g.Load ?? -1).FirstOrDefault();
-        gpu.Update(device?.Load, device?.Temperature, device?.Name ?? "Aucune carte détectée", device?.MemoryUsedMb is double used && device.MemoryTotalMb is double total ? "Vidéo : " + (used / 1024).ToString("0.0") + " / " + (total / 1024).ToString("0") + " Go" : "Sonde selon le pilote");
+        gpu.Update(device?.Load, device?.Temperature, device?.Name ?? "Aucune carte détectée", device?.MemoryUsedMb is double used
+            && device.MemoryTotalMb is double total ? "Vidéo : " + (used / 1024).ToString("0.0") + " / " + (total / 1024).ToString("0")
+            + " Go" : "Sonde selon le pilote");
         gpu.Root.ToolTip = string.Join("\n", value.Gpus.Select(g => g.Name + " · " + Pct(g.Load) + " · " + Temp(g.Temperature)));
         double? memoryPercent = value.MemoryTotal > 0 ? 100.0 * (value.MemoryTotal - value.MemoryAvailable) / value.MemoryTotal : null;
         ramValue.Text = Pct(memoryPercent);
-        ramDetail.Text = value.MemoryTotal > 0 ? Bytes(value.MemoryTotal - value.MemoryAvailable) + " / " + Bytes(value.MemoryTotal) + " utilisés" : "Mesure indisponible";
+        ramDetail.Text = value.MemoryTotal > 0 ? Bytes(value.MemoryTotal - value.MemoryAvailable) + " / " + Bytes(value.MemoryTotal)
+            + " utilisés" : "Mesure indisponible";
         ramGraph.Push(memoryPercent);
-        ramHeat.Text = value.MemoryHeat.Length > 0 ? string.Join("     ", value.MemoryHeat.Select((h, i) => "Barrette " + (i + 1) + " · " + Temp(h.Temperature))) : "Température : aucune sonde de barrette accessible";
+        ramHeat.Text = value.MemoryHeat.Length > 0 ? string.Join("     ", value.MemoryHeat.Select((h, i) => "Barrette " + (i + 1) + " · "
+            + Temp(h.Temperature))) : "Température : aucune sonde de barrette accessible";
         ramHeat.ToolTip = string.Join("\n", value.MemoryHeat.Select(h => h.Name + " · " + Temp(h.Temperature)));
         diskValue.Text = Pct(value.DiskBusy) + " actifs";
         diskRates.Text = "Lecture " + Rate(value.DiskRead) + "     Écriture " + Rate(value.DiskWrite);
@@ -194,11 +206,13 @@ internal sealed class PcStatusWindow : GlassWindow
         networkGraph.Push(value.Download, value.Upload);
         networkGraph.ToolTip = "Cyan : réception · violet : envoi";
         foot.Text = "1 relevé/s · sondes 3 s · disques 30 s";
-        cpu.Heat.ToolTip = string.IsNullOrWhiteSpace(value.SensorNote) ? "Température réelle du processeur · relevée toutes les 3 secondes" : value.SensorNote;
+        cpu.Heat.ToolTip = string.IsNullOrWhiteSpace(value.SensorNote) ? "Température réelle du processeur · relevée toutes les 3 secondes"
+            : value.SensorNote;
     }
     void UpdateStorage(PcReading value)
     {
-        string key = string.Join("|", value.Drives.Select(d => d.Name + ":" + d.Free)) + string.Join("|", value.StorageHeat.Select(h => h.Name + ":" + h.Temperature));
+        string key = string.Join("|", value.Drives.Select(d => d.Name + ":" + d.Free)) + string.Join("|", value.StorageHeat.Select(h
+            => h.Name + ":" + h.Temperature));
         if (storageKey == key)
             return;
         storageKey = key;
@@ -222,7 +236,8 @@ internal sealed class PcStatusWindow : GlassWindow
             row.Children.Add(UI.Text(drive.Name.TrimEnd('\\'), 10, null, true));
             var track = new Grid { Height = 5, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 12, 0) };
             track.Children.Add(new Border { CornerRadius = new CornerRadius(3), Background = UI.T(M3Role.OnSurface, 0x19) });
-            var fill = new Border { CornerRadius = new CornerRadius(3), Background = UI.Brush(used > .9 ? "#F3B58D" : "#E8C58B"), HorizontalAlignment = HorizontalAlignment.Left };
+            var fill = new Border { CornerRadius = new CornerRadius(3), Background = UI.Brush(used > .9 ? "#F3B58D" : "#E8C58B"),
+                HorizontalAlignment = HorizontalAlignment.Left };
             track.Children.Add(fill);
             track.SizeChanged += (_, _) => fill.Width = track.ActualWidth * used;
             Grid.SetColumn(track, 1);
@@ -247,7 +262,13 @@ internal sealed class PcStatusWindow : GlassWindow
     void Explain()
     {
         var anchor = (FrameworkElement)ContentHost.Children[2];
-        GlassMenu.Open(owner, this, anchor, "Comprendre ton PC", new[] { new MenuAction("Charge : part du matériel occupée", "\uE9D9", () => { }), new MenuAction("Températures : capteurs physiques", "\uE7F4", () => { }), new MenuAction("Graphiques : 60 derniers relevés", "\uE9D2", () => { }), new MenuAction("Stockage : activité moyenne des disques", "\uEDA2", () => { }), new MenuAction("Aucune collecte lorsque tu le replies", "\uE769", () => { }), new MenuAction("Ouvrir le Gestionnaire des tâches", "\uE950", () => owner.LaunchWindowsShortcut(new() { Name = "Gestionnaire des tâches", Target = "taskmgr.exe" }), Separator: true) });
+        GlassMenu.Open(owner, this, anchor, "Comprendre ton PC", new[] { new MenuAction("Charge : part du matériel occupée", "\uE9D9", ()
+            => { }), new MenuAction("Températures : capteurs physiques", "\uE7F4", () => { }),
+            new MenuAction("Graphiques : 60 derniers relevés", "\uE9D2", () => { }),
+            new MenuAction("Stockage : activité moyenne des disques", "\uEDA2", () => { }),
+            new MenuAction("Aucune collecte lorsque tu le replies", "\uE769", () => { }),
+            new MenuAction("Ouvrir le Gestionnaire des tâches", "\uE950", () => owner.LaunchWindowsShortcut(new() {
+            Name = "Gestionnaire des tâches", Target = "taskmgr.exe" }), Separator: true) });
     }
     static FrameworkElement Heading(string glyph, string name, string color)
     {
@@ -259,15 +280,23 @@ internal sealed class PcStatusWindow : GlassWindow
         row.Children.Add(UI.Text(name, 12, null, true));
         return row;
     }
-    static Border Card(UIElement child) => new() { CornerRadius = new CornerRadius(24), Background = new LinearGradientBrush(UI.Color("#1DFFFFFF"), UI.Color("#0BFFFFFF"), 90), BorderBrush = UI.T(M3Role.OnSurface, 0x27), BorderThickness = new Thickness(1), Padding = new Thickness(15, 12, 15, 12), Margin = new Thickness(0, 0, 0, 12), Child = child };
-    internal static string Pct(double? value) => value.HasValue ? Math.Round(value.Value).ToString("0", CultureInfo.CurrentCulture) + " %" : "—";
-    internal static string Temp(double? value) => value.HasValue ? value.Value.ToString("0", CultureInfo.CurrentCulture) + " °C" : "Indisponible";
-    internal static string Bytes(double value) => value >= 1099511627776 ? (value / 1099511627776).ToString("0.00") + " To" : (value / 1073741824).ToString("0.0") + " Go";
-    internal static string Rate(double? value) => !value.HasValue ? "—" : value >= 1048576 ? (value.Value / 1048576).ToString("0.0") + " Mo/s" : value >= 1024 ? (value.Value / 1024).ToString("0.0") + " Ko/s" : Math.Round(value.Value).ToString("0") + " o/s";
-    static string LoadHint(double? load) => !load.HasValue ? "Mesure indisponible" : load < 35 ? "Peu sollicité" : load < 75 ? "En activité" : "Très sollicité";
+    static Border Card(UIElement child) => new() { CornerRadius = new CornerRadius(24),
+        Background = new LinearGradientBrush(UI.Color("#1DFFFFFF"), UI.Color("#0BFFFFFF"), 90), BorderBrush = UI.T(M3Role.OnSurface, 0x27),
+        BorderThickness = new Thickness(1), Padding = new Thickness(15, 12, 15, 12), Margin = new Thickness(0, 0, 0, 12), Child = child };
+    internal static string Pct(double? value) => value.HasValue ? Math.Round(value.Value).ToString("0", CultureInfo.CurrentCulture) + " %"
+        : "—";
+    internal static string Temp(double? value) => value.HasValue ? value.Value.ToString("0", CultureInfo.CurrentCulture) + " °C"
+        : "Indisponible";
+    internal static string Bytes(double value) => value >= 1099511627776 ? (value / 1099511627776).ToString("0.00") + " To"
+        : (value / 1073741824).ToString("0.0") + " Go";
+    internal static string Rate(double? value) => !value.HasValue ? "—" : value >= 1048576 ? (value.Value / 1048576).ToString("0.0")
+        + " Mo/s" : value >= 1024 ? (value.Value / 1024).ToString("0.0") + " Ko/s" : Math.Round(value.Value).ToString("0") + " o/s";
+    static string LoadHint(double? load) => !load.HasValue ? "Mesure indisponible" : load < 35 ? "Peu sollicité" : load < 75 ? "En activité"
+        : "Très sollicité";
     sealed class Meter
     {
-        internal readonly Border Root; internal readonly TelemetryGraph Graph; internal readonly TextBlock Heat; readonly TextBlock model, value, hint;
+        internal readonly Border Root; internal readonly TelemetryGraph Graph; internal readonly TextBlock Heat; readonly TextBlock model,
+            value, hint;
         internal Meter(string title, string glyph, string color)
         {
             Graph = new(color)

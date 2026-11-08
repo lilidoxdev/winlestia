@@ -131,7 +131,7 @@ public class ExplorerIntegrationTests
                 Call("Restore");
                 Assert.True(!File.Exists(Path.Combine(userOpen, "desktop.ini")) && !File.Exists(Path.Combine(userOpen, "child", "desktop.ini")), "openFolderRestores");
             }
-            finally { try { File.SetAttributes(userOpen, FileAttributes.Normal); Directory.Delete(userOpen, true); } catch { } }
+            finally { TempDir.Delete(userOpen); }
             Store.State.ExplorerTheme = false;
             string fresh = Path.Combine(root, "fresh");
             Directory.CreateDirectory(fresh);
@@ -220,6 +220,11 @@ public class ExplorerIntegrationTests
             }
             catch (TargetInvocationException) { Assert.True(true, "systemFoldersRejected"); }
         }
-        finally { try { ((IDisposable)service).Dispose(); } catch { } foreach (string dir in new[] { docRoot, root }) { try { if (Directory.Exists(dir)) { foreach (var e in Directory.EnumerateFileSystemEntries(dir, "*", SearchOption.AllDirectories)) try { File.SetAttributes(e, FileAttributes.Normal); } catch { } File.SetAttributes(dir, FileAttributes.Normal); Directory.Delete(dir, true); } } catch { } } }
+        finally
+        {
+            ((IDisposable)service).Dispose();
+            TempDir.Delete(docRoot);
+            TempDir.Delete(root);
+        }
     }
 }

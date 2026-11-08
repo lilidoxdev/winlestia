@@ -1,4 +1,4 @@
-// language: C# 12, file: DesktopIconsGuard.cs, target: Windows 11 / .NET 8, event-driven re-application of FWF_NOICONS
+// C# 12, fichier DesktopIconsGuard.cs, cible Windows 11 / .NET 8, réapplication de FWF_NOICONS pilotée par événements
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -16,7 +16,8 @@ internal sealed class DesktopIconsGuard : IDisposable
     {
         public IntPtr Hwnd; public uint Message; public UIntPtr W; public IntPtr L; public uint Time; public int X, Y;
     }
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid, uint thread, uint flags);
+    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
+        uint thread, uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] static extern int GetMessage(out Msg message, IntPtr hwnd, uint min, uint max);
     [DllImport("user32.dll")] static extern bool PostThreadMessage(uint thread, uint message, UIntPtr w, IntPtr l);
@@ -26,7 +27,8 @@ internal sealed class DesktopIconsGuard : IDisposable
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr hwnd, StringBuilder text, int count);
     [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
 
-    readonly Func<bool> managed; readonly Action reassert, relinquished; readonly object gate = new(); readonly DesktopReassertPolicy policy = new(); readonly Timer timer;
+    readonly Func<bool> managed; readonly Action reassert, relinquished; readonly object gate = new();
+        readonly DesktopReassertPolicy policy = new(); readonly Timer timer;
     Thread? thread; uint threadId; WinEventProc? proc; bool active, running, disposed, forced; int logged;
 
     internal bool Installed
@@ -73,7 +75,8 @@ internal sealed class DesktopIconsGuard : IDisposable
         var worker = new Thread(() =>
         {
             id = GetCurrentThreadId();
-            IntPtr a = SetWinEventHook(0x8000, 0x8000, IntPtr.Zero, callback, pid, 0, 0), b = SetWinEventHook(0x8002, 0x8002, IntPtr.Zero, callback, pid, 0, 0), c = SetWinEventHook(0x800F, 0x800F, IntPtr.Zero, callback, pid, 0, 0);
+            IntPtr a = SetWinEventHook(0x8000, 0x8000, IntPtr.Zero, callback, pid, 0, 0), b = SetWinEventHook(0x8002, 0x8002, IntPtr.Zero,
+                callback, pid, 0, 0), c = SetWinEventHook(0x800F, 0x800F, IntPtr.Zero, callback, pid, 0, 0);
             installed = a != IntPtr.Zero && b != IntPtr.Zero && c != IntPtr.Zero;
             ready.Set();
             try
@@ -83,7 +86,8 @@ internal sealed class DesktopIconsGuard : IDisposable
                     {
                     }
             }
-            finally { if (a != IntPtr.Zero) UnhookWinEvent(a); if (b != IntPtr.Zero) UnhookWinEvent(b); if (c != IntPtr.Zero) UnhookWinEvent(c); }
+            finally { if (a != IntPtr.Zero) UnhookWinEvent(a); if (b != IntPtr.Zero) UnhookWinEvent(b);
+                if (c != IntPtr.Zero) UnhookWinEvent(c); }
         })
         {
             IsBackground = true,
@@ -186,7 +190,8 @@ internal sealed class DesktopIconsGuard : IDisposable
             // HideIcons à 0 : quelqu'un a volontairement rétabli les icônes (SECOURS_BUREAU --show-only, menu, case Windows). On se retire.
             bool intent;
             lock (gate)
-                intent = forced; // après un redémarrage d'Explorer, HideIcons peut valoir 0 sans choix de l'utilisateur (le premier masquage a échoué)
+                // après un redémarrage d'Explorer, HideIcons peut valoir 0 sans choix de l'utilisateur (le premier masquage a échoué)
+                intent = forced;
             if (!intent && !DesktopReassertPolicy.StillWanted(Native.DesktopHidden() ? 1 : 0))
             {
                 gaveUp = true;

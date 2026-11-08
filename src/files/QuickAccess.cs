@@ -1,5 +1,7 @@
-// Quick access list model: the pinned paths (folders and files) with an optional label, in the user's order, persisted in settings.json.
-// Every operation edits the LIST only, never the target on disk. Each one saves and raises Changed (the sidebar rebuilds its section).
+// Modèle de la liste d'accès rapide : les chemins épinglés (dossiers et fichiers) avec une étiquette facultative, dans l'ordre de
+// l'utilisateur, persistés dans settings.json.
+// Chaque opération modifie la LISTE uniquement, jamais la cible sur disque. Chacune enregistre et déclenche Changed (la barre latérale
+// reconstruit sa section).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,7 +39,7 @@ internal static class QuickAccess
         Changed?.Invoke();
     }
 
-    // First launch (no "quickAccess" key): the folders the sidebar showed so far, same order.
+    // Premier lancement (pas de clé "quickAccess") : les dossiers que la barre latérale montrait jusque-là, dans le même ordre.
     internal static void InitIfNew(IEnumerable<string> paths)
     {
         if (Initialized)
@@ -81,7 +83,7 @@ internal static class QuickAccess
     }
     internal static bool Move(int i, int delta) => MoveTo(i, i + delta);
 
-    // Empty / blank = back to the default name.
+    // Vide / blanc = retour au nom par défaut.
     internal static void SetLabel(int i, string? label)
     {
         if (i < 0 || i >= Entries.Count)
@@ -91,7 +93,7 @@ internal static class QuickAccess
         Commit();
     }
 
-    // "Retrouver la cible": the path changes, label and position stay.
+    // "Retrouver la cible" : le chemin change, l'étiquette et la position restent.
     internal static void Replace(int i, string newPath)
     {
         if (i < 0 || i >= Entries.Count || string.IsNullOrWhiteSpace(newPath))
@@ -100,7 +102,8 @@ internal static class QuickAccess
         Commit();
     }
 
-    // Existence check for the UI: runs on the pool and gives up after the timeout (Directory.Exists can block for a long time on a disconnected network drive); a timeout counts as missing.
+    // Vérification d'existence pour l'interface : exécutée sur le pool et abandonnée après le délai (Directory.Exists peut bloquer
+    // longtemps sur un lecteur réseau déconnecté) ; un délai dépassé compte comme absent.
     internal static async Task<TargetKind> Probe(string path, int timeoutMs = 2500)
     {
         var work = Task.Run(() =>

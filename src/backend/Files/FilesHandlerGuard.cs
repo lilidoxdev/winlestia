@@ -1,6 +1,8 @@
-// Crash guard of the folder handler: pure decisions plus tiny file helpers (a directory is always passed in, so tests use a temp dir). Shared by Winlestia.Files, the backend and tests/FilesHandler.
-// Winlestia.Files records every startup crash (timestamps in startup-crashes.txt). Three within 60 s: it restores the folder handler itself and drops handler-tripped.flag;
-// the backend sees the flag (startup + FileSystemWatcher), turns the preference off and shows a toast.
+// Garde de plantage du gestionnaire de dossiers : décisions pures et petits utilitaires de fichiers (le dossier est toujours passé en
+// paramètre, donc les tests utilisent un dossier temporaire). Partagée par Winlestia.Files, le backend et tests/FilesHandler.
+// Winlestia.Files consigne chaque plantage au démarrage (horodatages dans startup-crashes.txt). Trois en 60 s : il restaure lui-même le
+// gestionnaire de dossiers et dépose handler-tripped.flag ;
+// le backend voit le drapeau (démarrage + FileSystemWatcher), désactive la préférence et affiche un toast.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,26 +20,31 @@ internal static class FilesHandlerGuard
     internal const int Limit = 3, WindowMs = 60000;
     internal const string StampsFile = "startup-crashes.txt", FlagFile = "handler-tripped.flag";
 
-    // Pure: crashes inside the window that ends at nowMs (the one just recorded included).
-    internal static bool ShouldTrip(IEnumerable<long> stampsMs, long nowMs) => stampsMs.Count(s => nowMs - s >= 0 && nowMs - s <= WindowMs) >= Limit;
+    // Pur : plantages dans la fenêtre qui se termine à nowMs (celui qui vient d'être consigné inclus).
+    internal static bool ShouldTrip(IEnumerable<long> stampsMs, long nowMs) => stampsMs.Count(s => nowMs - s >= 0
+        && nowMs - s <= WindowMs) >= Limit;
 
-    internal static List<long> Prune(IEnumerable<long> stampsMs, long nowMs) => stampsMs.Where(s => nowMs - s >= 0 && nowMs - s <= WindowMs).OrderBy(s => s).TakeLast(16).ToList();
+    internal static List<long> Prune(IEnumerable<long> stampsMs, long nowMs) => stampsMs.Where(s => nowMs - s >= 0
+        && nowMs - s <= WindowMs).OrderBy(s => s).TakeLast(16).ToList();
 
-    // Pure backend startup decision. tripped = the flag file was found.
+    // Décision pure au démarrage du backend. tripped = le fichier drapeau a été trouvé.
     internal static HandlerStartup DecideStartup(bool prefOn, bool exeExists, bool tripped) =>
         !prefOn ? HandlerStartup.Nothing
         : tripped ? HandlerStartup.TrippedDisable
         : !exeExists ? HandlerStartup.RestoreAndDisable
         : HandlerStartup.Ensure;
 
-    // Pure one-time "Winlestia Fichiers by default" migration decision (handler on, preload on, dock pin).
-    // Already done: nothing. Crash guard tripped: never force it on, but record the migration so it does not retry. Exe missing: try again next start.
+    // Décision pure de la migration unique « Winlestia Fichiers par défaut » (gestionnaire activé, préchargement activé, épingle du dock).
+    // Déjà faite : rien. Garde de plantage déclenchée : on ne force jamais l'activation, mais on enregistre la migration pour ne pas
+    // réessayer. Exe absent : on réessaie au prochain démarrage.
     internal static (bool Enable, bool MarkMigrated) DecideDefaults(bool migrated, bool exeExists, bool tripped) =>
         migrated ? (false, false) : tripped ? (false, true) : !exeExists ? (false, false) : (true, true);
 
-    // Pure: only a real crash counts. Per-path problems (access denied, missing / invalid path, I/O) fall back to explorer.exe and never feed the counter.
+    // Pur : seul un vrai plantage compte. Les problèmes propres à un chemin (accès refusé, chemin absent / invalide, E/S) retombent sur
+    // explorer.exe et n'alimentent jamais le compteur.
     internal static bool CountsAsCrash(Exception ex) =>
-        ex is not (UnauthorizedAccessException or IOException or ArgumentException or NotSupportedException or System.Security.SecurityException);
+        ex is not (UnauthorizedAccessException or IOException or ArgumentException or NotSupportedException or System.Security
+            .SecurityException);
 
     internal static long NowMs() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
@@ -46,12 +53,14 @@ internal static class FilesHandlerGuard
         try
         {
             string f = Path.Combine(dir, StampsFile);
-            return File.Exists(f) ? File.ReadAllLines(f).Select(l => long.TryParse(l.Trim(), out var v) ? v : -1).Where(v => v >= 0).ToList() : new List<long>();
+            return File.Exists(f) ? File.ReadAllLines(f).Select(l => long.TryParse(l.Trim(), out var v) ? v : -1).Where(v
+                => v >= 0).ToList() : new List<long>();
         }
         catch { return new List<long>(); }
     }
 
-    // Records one startup crash. Returns true when the limit is reached AND there was something to undo: the handler was then restored and the flag written.
+    // Consigne un plantage au démarrage. Renvoie true quand la limite est atteinte ET qu'il y avait quelque chose à annuler : le
+    // gestionnaire a alors été restauré et le drapeau écrit.
     internal static bool RecordStartupCrash(string dir, long nowMs, HandlerOptions? options = null)
     {
         try
@@ -83,7 +92,7 @@ internal static class FilesHandlerGuard
         catch { return false; }
     }
 
-    // True once if the flag exists (and removes it).
+    // Vrai une seule fois si le drapeau existe (et le supprime).
     internal static bool ConsumeFlag(string dir)
     {
         try

@@ -1,4 +1,4 @@
-// language: C# 12, file: Toast.cs, target: Windows 11 / .NET 8 WPF, transient glass confirmation above the taskbar
+// C# 12, fichier Toast.cs, cible Windows 11 / .NET 8 WPF, confirmation de verre éphémère au-dessus de la barre des tâches
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,9 +8,11 @@ using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 
 namespace PanneauxGlass;
-// One toast at a time, never activated, auto-dismissed. It only confirms an action already performed.
+// Un toast à la fois, jamais activé, fermé automatiquement. Il ne fait que confirmer une action déjà effectuée.
 internal static class Toast
 {
+    // Durée d'affichage : le temps de lire une courte phrase.
+    const int DisplayMs = 2400;
     static GlassWindow? window; static DispatcherTimer? timer;
     internal static void Show(string text, Window? anchor = null)
     {
@@ -34,12 +36,13 @@ internal static class Toast
             row.Children.Add(glyph);
             row.Children.Add(message);
             toast.ContentHost.Children.Add(row);
-            var screen = anchor != null && new WindowInteropHelper(anchor).Handle != IntPtr.Zero ? Forms.Screen.FromHandle(new WindowInteropHelper(anchor).Handle) : Forms.Screen.PrimaryScreen!;
+            var screen = anchor != null && new WindowInteropHelper(anchor).Handle != IntPtr.Zero
+                ? Forms.Screen.FromHandle(new WindowInteropHelper(anchor).Handle) : Forms.Screen.PrimaryScreen!;
             double scale = anchor != null ? VisualTreeHelper.GetDpi(anchor).DpiScaleX : 1;
             var area = screen.WorkingArea;
             toast.MoveInto((area.Left + area.Width / 2) / scale - width / 2, (area.Bottom - 28) / scale - height, width, height, 0, true);
             window = toast;
-            timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(2400) };
+            timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(DisplayMs) };
             timer.Tick += (_, _) => Dismiss();
             timer.Start();
         }

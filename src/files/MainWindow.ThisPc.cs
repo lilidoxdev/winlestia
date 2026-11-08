@@ -1,4 +1,4 @@
-// "Ce PC" page: one card per drive with a used / free bar (palette brushes; the Error role above 90 % used).
+// Page "Ce PC" : une carte par lecteur avec une barre utilisé / libre (pinceaux de la palette ; rôle Error au-delà de 90 % utilisé).
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +14,11 @@ public sealed partial class MainWindow
 {
     ScrollViewer? thisPcPage; WrapPanel? thisPcWrap;
     int thisPcGeneration;
-    // What the page shows (self-test): drive root, used fraction, bar in the Error role.
+    // Ce que la page affiche (auto-test) : racine du lecteur, fraction utilisée, barre dans le rôle Error.
     internal readonly List<(string Root, double Used, bool Alert)> ThisPcCards = new();
 
-    static string Gb(long bytes) => bytes >= 1L << 40 ? (bytes / (double)(1L << 40)).ToString("0.#") + " To" : (bytes / (double)(1L << 30)).ToString("0.#") + " Go";
+    static string Gb(long bytes) => bytes >= 1L << 40 ? (bytes / (double)(1L << 40)).ToString("0.#") + " To"
+        : (bytes / (double)(1L << 30)).ToString("0.#") + " Go";
 
     FrameworkElement ThisPcPageView()
     {
@@ -77,7 +78,8 @@ public sealed partial class MainWindow
             row.Children.Add(icon);
             row.Children.Add(texts);
             var root = d.Root;
-            var card = new Border { Width = 300, Padding = new Thickness(M3.Sp3), Margin = new Thickness(0, 0, M3.Sp2, M3.Sp2), CornerRadius = new CornerRadius(M3.Normal), Background = UI.Tint, Child = row, Cursor = Cursors.Hand, ToolTip = root };
+            var card = new Border { Width = 300, Padding = new Thickness(M3.Sp3), Margin = new Thickness(0, 0, M3.Sp2, M3.Sp2),
+                CornerRadius = new CornerRadius(M3.Normal), Background = UI.Tint, Child = row, Cursor = Cursors.Hand, ToolTip = root };
             card.MouseLeftButtonUp += (_, e) => { if (e.ClickCount <= 1) Active.Go(root); };
             card.MouseRightButtonUp += (_, e) => { ShowContextMenu(null, root); e.Handled = true; };
             thisPcWrap.Children.Add(card);

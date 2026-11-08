@@ -1,4 +1,5 @@
-// Pure rules for the application catalogue watch (no Store, no FileSystemWatcher, no window): linked into tests/AppCatalogueWatch.
+// Règles pures de la surveillance du catalogue d'applications (ni Store, ni FileSystemWatcher, ni fenêtre) : liées dans
+// tests/AppCatalogueWatch.
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -7,6 +8,8 @@ namespace PanneauxGlass;
 
 static class CatalogueWatchRules
 {
+    // Tolérance sur l'échéance : la gigue du minuteur ne doit pas faire manquer un essai.
+    const int IconRetryToleranceMs = 500;
     internal static readonly TimeSpan Debounce = TimeSpan.FromSeconds(3);
     internal static readonly TimeSpan PaletteStale = TimeSpan.FromMinutes(5);
     internal static readonly TimeSpan PaletteMinGap = TimeSpan.FromMinutes(1);
@@ -14,17 +17,18 @@ static class CatalogueWatchRules
     internal const string PseudoPrefix = "hwnd:";
     const RegexOptions Ci = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
 
-    // Shortcut files, or an entry without extension (a folder created, renamed or deleted under the Start menu).
+    // Fichiers de raccourci, ou entrée sans extension (dossier créé, renommé ou supprimé sous le menu Démarrer).
     internal static bool IsShortcutEvent(string? path)
     {
         if (string.IsNullOrWhiteSpace(path))
             return false;
         string ext = Path.GetExtension(path);
-        return ext.Equals(".lnk", StringComparison.OrdinalIgnoreCase) || ext.Equals(".url", StringComparison.OrdinalIgnoreCase) || ext.Length == 0;
+        return ext.Equals(".lnk", StringComparison.OrdinalIgnoreCase) || ext.Equals(".url", StringComparison.OrdinalIgnoreCase)
+            || ext.Length == 0;
     }
     internal static bool IsLnk(string? path) => !string.IsNullOrEmpty(path) && path.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase);
 
-    // Palette opening: the catalogue is old enough and the last attempt is not too recent.
+    // Ouverture de la palette : le catalogue est assez ancien et la dernière tentative n'est pas trop récente.
     internal static bool PaletteNeedsRefresh(DateTime? catalogueWriteUtc, DateTime? lastAttemptUtc, DateTime nowUtc)
     {
         if (lastAttemptUtc is DateTime attempt && nowUtc - attempt < PaletteMinGap)
@@ -32,12 +36,13 @@ static class CatalogueWatchRules
         return catalogueWriteUtc is not DateTime written || nowUtc - written >= PaletteStale;
     }
 
-    internal static bool IsPseudoPath(string? path) => !string.IsNullOrEmpty(path) && path.StartsWith(PseudoPrefix, StringComparison.Ordinal);
+    internal static bool IsPseudoPath(string? path) => !string.IsNullOrEmpty(path) && path.StartsWith(PseudoPrefix,
+        StringComparison.Ordinal);
     internal static string PseudoPath(long handle) => PseudoPrefix + handle;
-    // Windows of one program share its path; a window whose process cannot be read gets its own stable key.
+    // Les fenêtres d'un même programme partagent son chemin ; une fenêtre dont le processus est illisible reçoit sa propre clé stable.
     internal static string WindowGroupKey(string? path, long handle) => string.IsNullOrWhiteSpace(path) ? PseudoPath(handle) : path;
 
-    // Icon extraction that failed (shortcut or target not readable yet) is retried a bounded number of times.
+    // Une extraction d'icône qui a échoué (raccourci ou cible pas encore lisible) est retentée un nombre borné de fois.
     internal static TimeSpan? IconRetryDelay(int failures) => failures switch
     {
         1 => TimeSpan.FromSeconds(5),
@@ -47,9 +52,9 @@ static class CatalogueWatchRules
         _ => null
     };
     internal static bool IconRetryDue(int failures, DateTime failedAtUtc, DateTime nowUtc) =>
-        IconRetryDelay(failures) is TimeSpan delay && nowUtc - failedAtUtc >= delay - TimeSpan.FromMilliseconds(500);
+        IconRetryDelay(failures) is TimeSpan delay && nowUtc - failedAtUtc >= delay - TimeSpan.FromMilliseconds(IconRetryToleranceMs);
 
-    // Same naming and filtering as Inventory.ps1 (Clean-Name, exclusion list, identity of a .lnk).
+    // Mêmes noms et même filtrage qu'Inventory.ps1 (Clean-Name, liste d'exclusion, identité d'un .lnk).
     internal static string CleanName(string name)
     {
         string n = Regex.Replace(name ?? "", @"\.exe\s*-\s*Raccourci$", "", Ci);
@@ -62,30 +67,37 @@ static class CatalogueWatchRules
         n = Regex.Replace(n, "^HogwartsLegacy$", "Hogwarts Legacy", Ci);
         return n.Trim();
     }
-    static readonly Regex Excluded = new(@"uninstall|désinstall|documentation|\bhelp\b|\baide\b|release notes|changelog|readme|licen[cs]e|manuels?|pydoc|module docs|online documentation|Install Additional|update|mises? à jour|disponibilité de mises|Panneaux|^Secours -|Swish Panel|Navigation privée|Windows Kits Feedback|Donate|Support Center|EA Error Reporter", Ci);
+    static readonly Regex Excluded = new(
+        @"uninstall|désinstall|documentation|\bhelp\b|\baide\b|release notes|changelog|readme|licen[cs]e|" +
+        @"manuels?|pydoc|module docs|online documentation|Install Additional|update|mises? à jour|" +
+        @"disponibilité de mises|Panneaux|^Secours -|Swish Panel|Navigation privée|Windows Kits Feedback|Donate|" +
+        @"Support Center|EA Error Reporter", Ci);
     internal static bool IsExcludedName(string name) => Excluded.IsMatch(name);
-    static readonly Regex Squirrel = new(@"^(Discord|Wand|Wand \(WeMod\)|Vyra( \(2\))?|Firefox|WinRAR|Ubisoft Connect|Steam|Content Manager)$", Ci);
+    static readonly Regex Squirrel = new(
+        @"^(Discord|Wand|Wand \(WeMod\)|Vyra( \(2\))?|Firefox|WinRAR|Ubisoft Connect|Steam|Content Manager)$", Ci);
     internal static string ShortcutId(string name, string resolved, string arguments)
     {
         if (Squirrel.IsMatch(name))
             return "named:" + Regex.Replace(name, @" \(WeMod\)| \(2\)", "", Ci).ToLowerInvariant();
-        return string.IsNullOrEmpty(resolved) ? "name:" + name.ToLowerInvariant() : "app:" + (resolved + "|" + arguments).ToLowerInvariant();
+        return string.IsNullOrEmpty(resolved) ? "name:" + name.ToLowerInvariant() : "app:" + (resolved + "|"
+            + arguments).ToLowerInvariant();
     }
-    // IconLocation without its ",index" suffix, else the resolved target (as Inventory.ps1 does).
+    // IconLocation sans son suffixe « ,index », sinon la cible résolue (comme le fait Inventory.ps1).
     internal static string IconSource(string iconLocation, string resolved, Func<string, bool> exists)
     {
         string icon = Regex.Replace(iconLocation ?? "", @",\s*-?\d+$", "");
         return !string.IsNullOrEmpty(icon) && exists(icon) ? icon : resolved;
     }
-    // Library files whose first icon is a generic one: the shortcut itself gives the right image.
+    // Fichiers de bibliothèque dont la première icône est générique : le raccourci lui-même donne la bonne image.
     internal static bool PreferTargetForIcon(string? iconPath)
     {
         string ext = Path.GetExtension(iconPath ?? "");
-        return ext.Equals(".dll", StringComparison.OrdinalIgnoreCase) || ext.Equals(".cpl", StringComparison.OrdinalIgnoreCase) || ext.Equals(".mun", StringComparison.OrdinalIgnoreCase);
+        return ext.Equals(".dll", StringComparison.OrdinalIgnoreCase) || ext.Equals(".cpl", StringComparison.OrdinalIgnoreCase)
+            || ext.Equals(".mun", StringComparison.OrdinalIgnoreCase);
     }
 }
 
-// One relecture at a time; a request that arrives meanwhile is replayed once at the end (otherwise the application is lost).
+// Une relecture à la fois ; une demande arrivée entre-temps est rejouée une fois à la fin (sinon l'application serait perdue).
 sealed class RefreshGate
 {
     bool busy, again;
@@ -109,7 +121,7 @@ sealed class RefreshGate
     }
 }
 
-// Minimum gap between two inventories started by the watcher; Delay() says how long the last request must wait.
+// Écart minimal entre deux inventaires lancés par le watcher ; Delay() dit combien de temps la dernière demande doit attendre.
 sealed class RefreshThrottle
 {
     DateTime? lastRun;
@@ -123,7 +135,7 @@ sealed class RefreshThrottle
     internal void Ran(DateTime nowUtc) => lastRun = nowUtc;
 }
 
-// Trailing debounce: every event pushes the deadline; nothing is kept once the burst has been handled.
+// Anti-rebond de queue : chaque événement repousse l'échéance ; rien n'est conservé une fois la rafale traitée.
 sealed class BurstDebounce
 {
     DateTime? last;

@@ -12,3 +12,6 @@ WindowsControls WindowsControls.qml
 WifiPane WifiPane.qml
 WorkspaceBrowser WorkspaceBrowser.qml
 DictationKeyButton DictationKeyButton.qml
+WorkspaceSpring WorkspaceSpring.qml
+WorkspaceNavItem WorkspaceNavItem.qml
+WorkspaceFilterChip WorkspaceFilterChip.qml

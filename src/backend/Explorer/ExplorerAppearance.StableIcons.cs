@@ -1,5 +1,7 @@
-// C#12 / ExplorerAppearance.StableIcons.cs / Windows11: stable icon paths (<kind>-current.ico), debounced regeneration, background migration of legacy <hex>-<kind>-v2.ico inis.
-// A palette change rewrites ONE small set of .ico files (atomic temp + replace) instead of every folder's desktop.ini.
+// C# 12 / ExplorerAppearance.StableIcons.cs / Windows 11 : chemins d'icônes stables (<kind>-current.ico), régénération avec anti-rebond,
+// migration en arrière-plan des anciens ini <hex>-<kind>-v2.ico.
+// Un changement de palette réécrit UN petit jeu de fichiers .ico (temporaire atomique + remplacement) au lieu du desktop.ini de chaque
+// dossier.
 using System;
 using System.IO;
 using System.Linq;
@@ -62,7 +64,7 @@ internal sealed partial class ExplorerAppearance
             File.Move(temp, StatePath, true);
         }
     }
-    // Draws to a temp file then swaps it in: readers (Explorer) never see a half-written .ico.
+    // Dessine dans un fichier temporaire puis l'échange : les lecteurs (Explorateur) ne voient jamais un .ico à moitié écrit.
     static void DrawAtomic(string path, string hex, string kind)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -77,7 +79,7 @@ internal sealed partial class ExplorerAppearance
         }
         finally { Safe.Try(() => File.Delete(temp)); }
     }
-    // Stable icon path for a kind; drawn on demand (current accent) if it does not exist yet.
+    // Chemin d'icône stable pour un type ; dessiné à la demande (accent courant) s'il n'existe pas encore.
     internal string EnsureIcon(string kind)
     {
         lock (iconGate)
@@ -88,7 +90,8 @@ internal sealed partial class ExplorerAppearance
             return path;
         }
     }
-    // Regenerates every stable icon when the accent differs from the stored one (or a file is missing). Returns true when existing icon content was replaced (shell caches must be refreshed).
+    // Régénère toutes les icônes stables quand l'accent diffère de celui stocké (ou qu'un fichier manque). Renvoie true quand du contenu
+    // d'icône existant a été remplacé (les caches du shell doivent être rafraîchis).
     internal bool RegenerateIcons(string hex)
     {
         lock (iconGate)
@@ -110,7 +113,8 @@ internal sealed partial class ExplorerAppearance
             return replaced;
         }
     }
-    // Called by Sync (already off the UI thread): arms ONE 1 s debounced regeneration when needed and starts the one-shot migration.
+    // Appelé par Sync (déjà hors du thread UI) : arme UNE régénération avec anti-rebond de 1 s si nécessaire et lance la migration
+    // ponctuelle.
     void StartIconMaintenance()
     {
         if (disposed)
@@ -128,7 +132,8 @@ internal sealed partial class ExplorerAppearance
                 if (!migrationStarted && !state.Migrated)
                 {
                     migrationStarted = true;
-                    _ = Task.Run(async () => { try { await MigrateAsync(); } catch (Exception ex) { Store.Log("Migration icônes: " + ex.Message); } });
+                    _ = Task.Run(async () => { try { await MigrateAsync(); } catch (Exception ex) { Store.Log("Migration icônes: "
+                        + ex.Message); } });
                 }
             }
         }
@@ -146,9 +151,11 @@ internal sealed partial class ExplorerAppearance
                 _ = Task.Run(() => RefreshShellAsync(gen));
             }
         }
-        catch (Exception ex) { Store.Log("Icônes dossier régénération: " + ex.Message); if (!disposed && ++iconRetry <= 3) lock (iconGate) iconTimer?.Change(5000, Timeout.Infinite); }
+        catch (Exception ex) { Store.Log("Icônes dossier régénération: " + ex.Message); if (!disposed
+            && ++iconRetry <= 3) lock (iconGate) iconTimer?.Change(5000, Timeout.Infinite); }
     }
-    // Shell refresh after the icon files changed: one ASSOCCHANGED (flush nowait), then SHCNE_UPDATEITEM per manifest folder in bounded batches (64 per 250 ms; 32 per 500 ms with reduced effects). Never touches ie4uinit / explorer.exe.
+    // Rafraîchissement du shell après modification des fichiers d'icônes : un ASSOCCHANGED (flush nowait), puis SHCNE_UPDATEITEM par
+    // dossier du manifeste en lots bornés (64 par 250 ms ; 32 par 500 ms avec effets réduits). Ne touche jamais à ie4uinit / explorer.exe.
     internal async Task RefreshShellAsync(int gen, int batch = 64, int pauseMs = 250)
     {
         Shell(0x08000000, 0x2000, null);
@@ -173,8 +180,10 @@ internal sealed partial class ExplorerAppearance
         }
     }
     Regex OldIconPattern() => new(Regex.Escape(IconsDir) + @"[\\/][0-9a-f]{6}-(?<kind>[a-z]+)-v2\.ico", RegexOptions.IgnoreCase);
-    // One-shot migration of every manifest entry whose desktop.ini still points at a legacy <hex>-<kind>-v2.ico. Bounded batches, throttled, each batch re-reads the manifest under the gate (no lost update with visible-folder theming).
-    // A desktop.ini whose hash differs from AppliedHash was edited by the user/another tool: skipped, never overwritten. Afterwards legacy icons nobody references are deleted.
+    // Migration ponctuelle de chaque entrée du manifeste dont le desktop.ini pointe encore vers un ancien <hex>-<kind>-v2.ico. Lots bornés,
+    // étalés, chaque lot relit le manifeste sous le gate (aucune mise à jour perdue avec le thématage des dossiers visibles).
+    // Un desktop.ini dont le hash diffère d'AppliedHash a été modifié par l'utilisateur ou un autre outil : ignoré, jamais écrasé. Ensuite
+    // les anciennes icônes que personne ne référence sont supprimées.
     internal async Task<(int migrated, int edited, int failed, int removed)> MigrateAsync(int batch = 64, int pauseMs = 250)
     {
         List<string> folders;
@@ -245,7 +254,8 @@ internal sealed partial class ExplorerAppearance
         }
         return (migrated, edited, failed, removed);
     }
-    // Deletes legacy <hex>-<kind>-v2.ico files that no manifest desktop.ini references any more (referenced ones - e.g. user-edited inis - are kept).
+    // Supprime les anciens fichiers <hex>-<kind>-v2.ico qu'aucun desktop.ini du manifeste ne référence plus (les référencés, p. ex. ini
+    // modifiés par l'utilisateur, sont conservés).
     internal int CleanupLegacyIcons()
     {
         int removed = 0;
@@ -290,7 +300,8 @@ internal sealed partial class ExplorerAppearance
         catch (Exception ex) { Store.Log("Nettoyage icônes: " + ex.Message); }
         return removed;
     }
-    // Public entry for the Files app (navigation): safe from any thread. Per-folder 3 s debounce + global budget of 12 calls / 10 s; the heavy work stays bounded by ColourVisibleTree (256 themed / 1024 examined).
+    // Entrée publique pour l'application Fichiers (navigation) : utilisable depuis n'importe quel thread. Anti-rebond de 3 s par dossier +
+    // budget global de 12 appels / 10 s ; le gros du travail reste borné par ColourVisibleTree (256 thémés / 1024 examinés).
     readonly Dictionary<string, DateTime> visitedAt = new(StringComparer.OrdinalIgnoreCase); DateTime budgetStart; int budgetUsed;
     internal void ColourVisibleFolder(string parent)
     {

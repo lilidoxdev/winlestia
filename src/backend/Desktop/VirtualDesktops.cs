@@ -1,8 +1,12 @@
 // C# 12 / VirtualDesktops.cs / Windows 11. Virtual desktop indicator support WITHOUT any undocumented COM interface.
-// Read: HKCU registry only (VirtualDesktopIDs, CurrentVirtualDesktop - per-session key first, general key as fallback, optional Desktops\{GUID}\Name).
-// Changes: no registry notification (Windows 11 does not signal RegNotifyChangeKeyValue for these writes): out-of-context WinEvent hooks (foreground, cloak/uncloak)
-// on one dedicated message-loop thread re-read the registry 150 ms and 900 ms after the last event. At rest the thread blocks in GetMessage: no timer, no polling, no wakeup. Stop() posts WM_QUIT and joins it.
-// Switch: only when asked by a user gesture; Win+Ctrl+Left/Right through SendInput, repeated by the gap between current and target. Modifiers are always released.
+// Read: HKCU registry only (VirtualDesktopIDs, CurrentVirtualDesktop - per-session key first, general key as fallback, optional
+// Desktops\{GUID}\Name).
+// Changements : pas de notification du registre (Windows 11 ne signale pas RegNotifyChangeKeyValue pour ces écritures) : des hooks WinEvent
+// hors contexte (premier plan, cloak/uncloak)
+// sur un thread dédié à boucle de messages relisent le registre 150 ms et 900 ms après le dernier événement. Au repos le thread reste
+// bloqué dans GetMessage : ni minuteur, ni sondage, ni réveil. Stop() poste WM_QUIT et le joint.
+// Bascule : seulement sur geste de l'utilisateur ; Win+Ctrl+Gauche/Droite via SendInput, répété selon l'écart entre le bureau courant et la
+// cible. Les modificateurs sont toujours relâchés.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,11 +23,12 @@ internal static class VirtualDesktops
     const string Explorer = @"Software\Microsoft\Windows\CurrentVersion\Explorer";
     const string General = Explorer + @"\VirtualDesktops";
     static readonly object gate = new();
-    // Serializes user gestures (switch / new / close) so two quick actions never interleave. Separate from gate: Refresh must stay possible while Close waits.
+    // Sérialise les gestes de l'utilisateur (bascule / création / fermeture) pour que deux actions rapides ne s'entremêlent jamais.
+    // Distinct de gate : Refresh doit rester possible pendant que Close attend.
     static readonly object actionGate = new();
     static volatile Snapshot snapshot = new(0, 0, Array.Empty<string>());
     internal static Snapshot Current => snapshot;
-    // Raised on the watcher thread only when the snapshot differs; subscribers must not throw (swallowed).
+    // Levé sur le thread du watcher seulement quand l'instantané change ; les abonnés ne doivent pas lever d'exception (avalée).
     internal static event Action? Changed;
 
     static Thread? worker;
@@ -71,10 +76,11 @@ internal static class VirtualDesktops
     static string SessionRoot => Explorer + @"\SessionInfo\" + Process.GetCurrentProcess().SessionId;
     static string SessionKey => SessionRoot + @"\VirtualDesktops";
 
-    // Hook thread state (touched only by the watcher thread: WinEvent callbacks run inside its DispatchMessage).
+    // État du thread de hook (touché uniquement par le thread du watcher : les callbacks WinEvent s'exécutent dans son DispatchMessage).
     [ThreadStatic] static long lastEventTick;
     [ThreadStatic] static int step;   // 0 idle, 1 waiting for the 150 ms re-read, 2 waiting for the 900 ms re-read
-    [ThreadStatic] static uint timerId;   // a thread timer (no hwnd) gets its id FROM Windows: the requested id only selects an existing timer to replace
+    // a thread timer (no hwnd) gets its id FROM Windows: the requested id only selects an existing timer to replace
+    [ThreadStatic] static uint timerId;
 
     static void Arm(uint ms)
     {
@@ -102,8 +108,10 @@ internal static class VirtualDesktops
                 workerId = GetCurrentThreadId();
             }   // Stop already ran: leave
             proc = OnEvent;
-            hFg = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, proc, 0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
-            hCloak = SetWinEventHook(EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED, IntPtr.Zero, proc, 0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+            hFg = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, proc, 0, 0,
+                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+            hCloak = SetWinEventHook(EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED, IntPtr.Zero, proc, 0, 0,
+                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
             ready.Set();
             Refresh();
             while (GetMessageW(out m, IntPtr.Zero, 0, 0) > 0)
@@ -265,10 +273,11 @@ internal static class VirtualDesktops
         return Send(PlanKeys(s.Current, dest, s.Count));
     }
 
-    // New desktop: Win+Ctrl+D (Windows creates it and switches to it). Pure plan, same release order as PlanKeys.
-    internal static List<Key> PlanNew() => new() { new Key(VkLWin, false), new Key(VkControl, false), new Key(VkD, false), new Key(VkD, true), new Key(VkControl, true), new Key(VkLWin, true) };
+    // Nouveau bureau : Win+Ctrl+D (Windows le crée et y bascule). Plan pur, même ordre de relâchement que PlanKeys.
+    internal static List<Key> PlanNew() => new() { new Key(VkLWin, false), new Key(VkControl, false), new Key(VkD, false), new Key(VkD,
+        true), new Key(VkControl, true), new Key(VkLWin, true) };
 
-    // User gesture entry point (the "+" in the dock).
+    // Point d'entrée du geste de l'utilisateur (le « + » du dock).
     internal static bool CreateNew()
     {
         lock (actionGate)
@@ -280,10 +289,12 @@ internal static class VirtualDesktops
         }
     }
 
-    // Close the current desktop: Win+Ctrl+F4 (windows move to the neighbouring desktop). Same release order as PlanNew.
-    internal static List<Key> PlanClose() => new() { new Key(VkLWin, false), new Key(VkControl, false), new Key(VkF4, false), new Key(VkF4, true), new Key(VkControl, true), new Key(VkLWin, true) };
+    // Ferme le bureau courant : Win+Ctrl+F4 (les fenêtres passent au bureau voisin). Même ordre de relâchement que PlanNew.
+    internal static List<Key> PlanClose() => new() { new Key(VkLWin, false), new Key(VkControl, false), new Key(VkF4, false), new Key(VkF4,
+        true), new Key(VkControl, true), new Key(VkLWin, true) };
 
-    // Desktop to go back to after closing `closed` while the user was on `origin`; -1 = nothing to restore (the user was on the closed one).
+    // Bureau où revenir après la fermeture de `closed` pendant que l'utilisateur était sur `origin` ; -1 = rien à restaurer (l'utilisateur
+    // était sur le bureau fermé).
     internal static int ReturnIndex(int origin, int closed) => origin == closed ? -1 : origin > closed ? origin - 1 : origin;
 
     const int SwitchTimeoutMs = 1500, CloseTimeoutMs = 1500, SettleMs = 120, StepMs = 30;
@@ -297,7 +308,7 @@ internal static class VirtualDesktops
         catch { return null; }
     }
 
-    // Bounded wait on the registry (user gesture only, never at idle).
+    // Attente bornée sur le registre (geste de l'utilisateur uniquement, jamais au repos).
     static bool WaitFor(Func<Snapshot, bool> ok, int timeoutMs)
     {
         long end = Environment.TickCount64 + timeoutMs;
@@ -312,8 +323,9 @@ internal static class VirtualDesktops
         }
     }
 
-    // User gesture entry point (right-click on a dot, 0-based index). Safety: the key chord only goes out once the registry shows the
-    // target as current desktop with the expected count; otherwise nothing is closed and the user is sent back where they were.
+    // Point d'entrée du geste de l'utilisateur (clic droit sur un point, index base 0). Sécurité : la combinaison de touches n'est envoyée
+    // que lorsque le registre montre
+    // la cible comme bureau courant avec le nombre attendu ; sinon rien n'est fermé et l'utilisateur est ramené où il était.
     internal static bool Close(int index)
     {
         lock (actionGate)
@@ -384,7 +396,8 @@ internal static class VirtualDesktops
 
     static bool SendKey(ushort vk, bool up)
     {
-        var input = new INPUT { type = 1, U = new InputUnion { ki = new KEYBDINPUT { wVk = vk, dwFlags = (up ? 2u : 0u) | (IsExtended(vk) ? 1u : 0u) } } };
+        var input = new INPUT { type = 1, U = new InputUnion { ki = new KEYBDINPUT { wVk = vk, dwFlags = (up ? 2u : 0u) | (IsExtended(vk)
+            ? 1u : 0u) } } };
         return SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>()) == 1;
     }
 
@@ -424,7 +437,8 @@ internal static class VirtualDesktops
         public uint type; public InputUnion U;
     }
     [DllImport("user32.dll", SetLastError = true)] static extern uint SendInput(uint n, INPUT[] inputs, int size);
-    const uint EVENT_SYSTEM_FOREGROUND = 0x0003, EVENT_OBJECT_CLOAKED = 0x8017, EVENT_OBJECT_UNCLOAKED = 0x8018, WINEVENT_OUTOFCONTEXT = 0, WINEVENT_SKIPOWNPROCESS = 2, WM_QUIT = 0x12, WM_TIMER = 0x113;
+    const uint EVENT_SYSTEM_FOREGROUND = 0x0003, EVENT_OBJECT_CLOAKED = 0x8017, EVENT_OBJECT_UNCLOAKED = 0x8018, WINEVENT_OUTOFCONTEXT = 0,
+        WINEVENT_SKIPOWNPROCESS = 2, WM_QUIT = 0x12, WM_TIMER = 0x113;
     const int OBJID_WINDOW = 0;
     delegate void WinEventProc(IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time);
     [StructLayout(LayoutKind.Sequential)]
@@ -432,7 +446,8 @@ internal static class VirtualDesktops
     {
         public IntPtr hwnd; public uint message; public IntPtr wParam, lParam; public uint time; public int ptX, ptY, lPrivate;
     }
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid, uint thread, uint flags);
+    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid, uint thread,
+        uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] static extern int GetMessageW(out MSG m, IntPtr h, uint min, uint max);
     [DllImport("user32.dll")] static extern bool PeekMessageW(out MSG m, IntPtr h, uint min, uint max, uint remove);

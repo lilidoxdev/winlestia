@@ -1,7 +1,9 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=conflict : copy onto an existing file through the REAL paste path (native IFileOperation UI, FileOps.Quiet off), the Windows
-// "Replace or Skip Files" dialog is driven with UI Automation from a thread-pool thread (Uia below, also used by the xfer test).
-// Needs WINLESTIA_FILES_DATA_DIR under %TEMP% and a fixture folder under %TEMP%\WinlestiaFilesOps (harness).
+// WINLESTIA_FILES_SELFTEST=conflict : copie sur un fichier existant par le VRAI chemin de collage (UI native IFileOperation, FileOps.Quiet
+// désactivé), la boîte Windows
+// « Remplacer ou ignorer les fichiers » est pilotée avec UI Automation depuis un thread du pool (Uia ci-dessous, aussi utilisé par le test
+// xfer).
+// Exige WINLESTIA_FILES_DATA_DIR sous %TEMP% et un dossier de fixtures sous %TEMP%\WinlestiaFilesOps (harnais).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,8 +14,11 @@ using System.Windows.Automation;
 
 namespace WinlestiaFiles;
 
-// One scripted action on a native dialog: first element (by token priority, case-insensitive substring of its Name) found in any non-main window of this process.
-internal sealed record UiaStep(string Label, string[] Tokens, bool CheckAll = false, int WaitMs = 8000, bool Optional = false, bool Closes = false);     // Closes: the clicked element must disappear (retried, then a real mouse click, if the first Invoke was swallowed)
+// Une action scriptée sur une boîte native : premier élément (par priorité de jeton, sous-chaîne de son Name sans casse) trouvé dans une
+// fenêtre non principale de ce processus.
+// Closes: the clicked element must disappear (retried, then a real mouse click, if the first Invoke was swallowed)
+internal sealed record UiaStep(string Label, string[] Tokens, bool CheckAll = false, int WaitMs = 8000, bool Optional = false,
+    bool Closes = false);
 
 internal static class Uia
 {
@@ -23,7 +28,8 @@ internal static class Uia
 
     internal static List<AutomationElement> Windows(int mainHwnd)
     {
-        var cond = new OrCondition(new PropertyCondition(AutomationElement.ProcessIdProperty, Environment.ProcessId), new PropertyCondition(AutomationElement.ClassNameProperty, "OperationStatusWindow"));
+        var cond = new OrCondition(new PropertyCondition(AutomationElement.ProcessIdProperty, Environment.ProcessId),
+            new PropertyCondition(AutomationElement.ClassNameProperty, "OperationStatusWindow"));
         var list = new List<AutomationElement>();
         try
         {
@@ -58,7 +64,7 @@ internal static class Uia
                 _ = e.Current.BoundingRectangle;
             }
             catch { return true; }
-            Task.Delay(100).Wait();
+            Task.Delay(PauseTickMs).Wait();
         }
         try
         {
@@ -72,7 +78,8 @@ internal static class Uia
     {
         try
         {
-            return $"{e.Current.ControlType.ProgrammaticName.Replace("ControlType.", "")}|{e.Current.Name}|{e.Current.ClassName}|{e.Current.AutomationId}";
+            return $"{e.Current.ControlType.ProgrammaticName.Replace("ControlType.", "")}|{e.Current.Name}|" +
+                $"{e.Current.ClassName}|{e.Current.AutomationId}";
         }
         catch { return "?"; }
     }
@@ -118,7 +125,8 @@ internal static class Uia
             }
             if (e.TryGetCurrentPattern(InvokePattern.Pattern, out var ip) && ip is InvokePattern inv)
             {
-                Task.Run(() => { try { inv.Invoke(); } catch (Exception) { /* Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test. */ } });
+                Task.Run(() => { try { inv.Invoke(); } catch (Exception) {
+                    /* Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test. */ } });
                 return true;
             }
             if (e.TryGetCurrentPattern(SelectionItemPattern.Pattern, out var sp2) && sp2 is SelectionItemPattern s2)
@@ -143,7 +151,8 @@ internal static class Uia
         catch { return false; }
     }
 
-    // Runs the steps in order. Returns one log line per step ("OK label -> element" / "MISS label"); on a miss the dialog tree is dumped and the dialogs are closed (WM_CLOSE).
+    // Exécute les étapes dans l'ordre. Renvoie une ligne de journal par étape ("OK libellé -> élément" / "MISS libellé") ; en cas d'échec
+    // l'arbre de la boîte est vidé et les boîtes sont fermées (WM_CLOSE).
     internal static Task<List<string>> Run(int mainHwnd, params UiaStep[] steps) => Task.Run(() =>
     {
         var log = new List<string>();
@@ -173,24 +182,29 @@ internal static class Uia
                     catch { continue; }
                     if (step.CheckAll)
                     {
-                        var boxes = all.Where(e => { try { return e.Current.ControlType == ControlType.CheckBox && e.Current.AutomationId != "eltSkipCheckbox" && !e.Current.AutomationId.Contains("Global"); } catch { return false; } }).ToList();
+                        var boxes = all.Where(e => { try { return e.Current.ControlType == ControlType.CheckBox
+                            && e.Current.AutomationId != "eltSkipCheckbox" && !e.Current.AutomationId.Contains("Global"); } catch {
+                            return false; } }).ToList();
                         if (boxes.Count < 2)
-                        {          // the per-file tiles are filled in a moment after the page opens; the two "global" boxes are the fallback
+                        // the per-file tiles are filled in a moment after the page opens; the two "global" boxes are the fallback
+                        {
                             if (Environment.TickCount64 - stepStart < 6000)
                                 continue;
-                            boxes = all.Where(e => { try { return e.Current.ControlType == ControlType.CheckBox && e.Current.AutomationId.Contains("Global"); } catch { return false; } }).ToList();
+                            boxes = all.Where(e => { try { return e.Current.ControlType == ControlType.CheckBox
+                                && e.Current.AutomationId.Contains("Global"); } catch { return false; } }).ToList();
                             if (boxes.Count == 0)
                                 continue;
                         }
-                        Task.Delay(700).Wait();     // the page must be fully drawn before toggling
+                        Task.Delay(PauseDessinMs).Wait();     // the page must be fully drawn before toggling
                         log.AddRange(Dump(w).Select(l => "    " + l));
                         int n = boxes.Count(b => Act(b, true));
-                        Task.Delay(500).Wait();
+                        Task.Delay(PauseStabilisationMs).Wait();
                         foreach (var bx in boxes)
                         {
                             try
                             {
-                                if (bx.TryGetCurrentPattern(TogglePattern.Pattern, out var tq) && ((TogglePattern)tq).Current.ToggleState != ToggleState.On)
+                                if (bx.TryGetCurrentPattern(TogglePattern.Pattern, out var tq)
+                                    && ((TogglePattern)tq).Current.ToggleState != ToggleState.On)
                                     Act(bx, true);
                             }
                             catch (Exception)
@@ -198,7 +212,9 @@ internal static class Uia
                                 // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
                             }
                         }
-                        log.AddRange(boxes.Select(b => { try { return "    after: " + Describe(b) + " state=" + (b.TryGetCurrentPattern(TogglePattern.Pattern, out var tp) ? ((TogglePattern)tp).Current.ToggleState.ToString() : "?"); } catch { return "    after: ?"; } }));
+                        log.AddRange(boxes.Select(b => { try { return "    after: " + Describe(b) + " state="
+                            + (b.TryGetCurrentPattern(TogglePattern.Pattern, out var tp)
+                            ? ((TogglePattern)tp).Current.ToggleState.ToString() : "?"); } catch { return "    after: ?"; } }));
                         if (n == 0)
                             continue;
                         log.Add($"OK {step.Label} -> {n} case(s) cochée(s)");
@@ -207,7 +223,9 @@ internal static class Uia
                     }
                     foreach (var token in step.Tokens)
                     {
-                        var hit = all.FirstOrDefault(e => { try { return (token[0] == '=' ? string.Equals(e.Current.Name, token[1..], StringComparison.OrdinalIgnoreCase) : e.Current.Name.Contains(token, StringComparison.OrdinalIgnoreCase)) && e.Current.IsEnabled && !e.Current.IsOffscreen; } catch { return false; } });
+                        var hit = all.FirstOrDefault(e => { try { return (token[0] == '=' ? string.Equals(e.Current.Name, token[1..],
+                            StringComparison.OrdinalIgnoreCase) : e.Current.Name.Contains(token, StringComparison.OrdinalIgnoreCase))
+                            && e.Current.IsEnabled && !e.Current.IsOffscreen; } catch { return false; } });
                         if (hit != null && Act(hit, false))
                         {
                             string how = "invoke";
@@ -231,7 +249,7 @@ internal static class Uia
                         break;
                 }
                 if (!done)
-                    Task.Delay(150).Wait();
+                    Task.Delay(PauseRenduMs).Wait();
             }
             if (!done)
             {
@@ -256,7 +274,7 @@ internal static class Uia
                 }
                 break;
             }
-            Task.Delay(400).Wait();     // let the dialog switch page
+            Task.Delay(PauseTransitionMs).Wait();     // let the dialog switch page
         }
         return log;
     });
@@ -277,7 +295,8 @@ public sealed partial class MainWindow
     {
         string F0 = Fixture();
         string tmp = Path.GetFullPath(Path.GetTempPath());
-        if (!Path.GetFullPath(FilesSettings.Dir).StartsWith(tmp, StringComparison.OrdinalIgnoreCase) || Environment.GetEnvironmentVariable("WINLESTIA_FILES_DATA_DIR") is not { Length: > 0 })
+        if (!Path.GetFullPath(FilesSettings.Dir).StartsWith(tmp, StringComparison.OrdinalIgnoreCase)
+            || Environment.GetEnvironmentVariable("WINLESTIA_FILES_DATA_DIR") is not { Length: > 0 })
         {
             T("ABORT data dir is not a %TEMP% folder");
             Close();
@@ -323,7 +342,7 @@ public sealed partial class MainWindow
                 var drv = Uia.Run(MainHwnd, steps);
                 var paste = PasteAsync(dst);
                 var both = Task.WhenAll(paste, drv);
-                if (await Task.WhenAny(both, Task.Delay(60000)) != both)
+                if (await Task.WhenAny(both, Task.Delay(TimeoutConflitMs)) != both)
                 {
                     T("TIMEOUT paste");
                     return (null, new List<string> { "timeout" });
@@ -332,7 +351,8 @@ public sealed partial class MainWindow
                 await WaitLoaded();
                 return (await paste, log);
             }
-            string[] replace = { "Remplacer le fichier", "Replace the file", "Remplacer les fichiers", "Replace the files", "Remplacer", "Replace" };
+            string[] replace = { "Remplacer le fichier", "Replace the file", "Remplacer les fichiers", "Replace the files", "Remplacer",
+                "Replace" };
             string[] skip = { "Ignorer ce fichier", "Skip this file", "Ignorer les fichiers", "Skip these files", "Ignorer", "Skip" };
             string[] decide = { "Me laisser décider", "Let me decide", "Comparer les informations", "Compare info" };
 
@@ -346,9 +366,11 @@ public sealed partial class MainWindow
             Check("(1) replace: no extra file", Directory.GetFiles(dst).Length == 1);
             Check("(1) replace: item shown, list matches disk", DiskMatches());
             bool irrev = journal.NextUndo is { Irreversible: true };
-            Check("(1) replace: journal does not claim an undo of the overwrite", journal.UndoCount == undoBefore || irrev, $"next={journal.NextUndo?.Label ?? "none"} irreversible={irrev}");
+            Check("(1) replace: journal does not claim an undo of the overwrite", journal.UndoCount == undoBefore || irrev,
+                $"next={journal.NextUndo?.Label ?? "none"} irreversible={irrev}");
             string t1 = await UndoAsync();
-            Check("(1) replace: Ctrl+Z leaves NEW in place and says it cannot undo", Read(Path.Combine(dst, "a.txt")) == "NEW" && File.Exists(Path.Combine(dst, "a.txt")) && t1.StartsWith("Impossible"), t1);
+            Check("(1) replace: Ctrl+Z leaves NEW in place and says it cannot undo", Read(Path.Combine(dst, "a.txt")) == "NEW"
+                && File.Exists(Path.Combine(dst, "a.txt")) && t1.StartsWith("Impossible"), t1);
 
             // ---- pass 2: skip ----
             Reset(1);
@@ -360,22 +382,30 @@ public sealed partial class MainWindow
 
             // ---- pass 3: let me decide, keep both ----
             Reset(1);
-            var (r3, l3) = await Paste(1, new UiaStep("decide", decide), new UiaStep("keep both", Array.Empty<string>(), CheckAll: true, WaitMs: 15000), new UiaStep("continue", new[] { "Continuer", "Continue" }, Closes: true));
+            var (r3, l3) = await Paste(1, new UiaStep("decide", decide), new UiaStep("keep both", Array.Empty<string>(), CheckAll: true,
+                WaitMs: 15000), new UiaStep("continue", new[] { "Continuer", "Continue" }, Closes: true));
             LogUia("decide", l3);
             var names = Directory.GetFiles(dst).Select(Path.GetFileName).OrderBy(x => x).ToList();
-            T("  dst after keep-both: " + string.Join(", ", names) + " a.txt=" + Read(Path.Combine(dst, "a.txt")) + " err=" + r3?.Error + " aborted=" + r3?.Aborted);
+            T("  dst after keep-both: " + string.Join(", ", names) + " a.txt=" + Read(Path.Combine(dst, "a.txt")) + " err=" + r3?.Error
+                + " aborted=" + r3?.Aborted);
             Check("(3) keep both: dialogs driven", !l3.Any(x => x.StartsWith("MISS")));
-            Check("(3) keep both: two files, original OLD kept, copy NEW named 'a (2).txt'", names.Count == 2 && Read(Path.Combine(dst, "a.txt")) == "OLD" && names.Any(n => n != "a.txt" && n!.StartsWith("a (") && Read(Path.Combine(dst, n)) == "NEW"), string.Join(", ", names));
+            Check("(3) keep both: two files, original OLD kept, copy NEW named 'a (2).txt'", names.Count == 2 && Read(Path.Combine(dst,
+                "a.txt")) == "OLD" && names.Any(n => n != "a.txt" && n!.StartsWith("a (") && Read(Path.Combine(dst, n)) == "NEW"),
+                string.Join(", ", names));
             Check("(3) keep both: list matches disk", DiskMatches());
 
-            // ---- pass 4: 3 conflicts, "do this for the next N conflicts" ----
+            // ---- passe 4 : 3 conflits, « faire cela pour les N conflits suivants » ----
             Reset(3);
-            var (r4, l4) = await Paste(3, new UiaStep("apply to all", new[] { "pour les", "for the next", "tous les", "all current", "all remaining", "Do this for" }, Optional: true, WaitMs: 6000), new UiaStep("replace", replace, Closes: true));
+            var (r4, l4) = await Paste(3, new UiaStep("apply to all", new[] { "pour les", "for the next", "tous les", "all current",
+                "all remaining", "Do this for" }, Optional: true, WaitMs: 6000), new UiaStep("replace", replace, Closes: true));
             LogUia("all3", l4);
             var contents = new[] { 1, 2, 3 }.Select(i => Read(Path.Combine(dst, $"a{i}.txt"))).ToList();
-            T("  3-conflict result: " + string.Join(",", contents) + " | uia steps: " + string.Join(" ; ", l4.Where(x => !x.StartsWith("    ")).Select(x => x.Length > 90 ? x[..90] : x)));
-            Check("(4) 3 conflicts: single choice applied to all three", contents.All(c => c == "NEW") && Directory.GetFiles(dst).Length == 3, string.Join(",", contents));
-            Check("(4) 3 conflicts: journal not claiming undo", journal.NextUndo is not { Irreversible: false, Label: "Copier" or "Copier (3 éléments)" });
+            T("  3-conflict result: " + string.Join(",", contents) + " | uia steps: " + string.Join(" ; ", l4.Where(x
+                => !x.StartsWith("    ")).Select(x => x.Length > 90 ? x[..90] : x)));
+            Check("(4) 3 conflicts: single choice applied to all three", contents.All(c => c == "NEW")
+                && Directory.GetFiles(dst).Length == 3, string.Join(",", contents));
+            Check("(4) 3 conflicts: journal not claiming undo", journal.NextUndo is not { Irreversible: false,
+                Label: "Copier" or "Copier (3 éléments)" });
         }
         catch (Exception ex) { Check("conflict test exception", false, ex.ToString()); }
         finally

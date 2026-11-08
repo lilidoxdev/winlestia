@@ -1,4 +1,5 @@
-// C# 12 / BrightnessPolicy.cs / Pure rules for per-display brightness: DDC/CI range conversion, write rate limit, read failure budget. No I/O.
+// C# 12 / BrightnessPolicy.cs / Règles pures de luminosité par écran : conversion de plage DDC/CI, limitation du débit d'écriture, budget
+// d'échecs de lecture. Aucune E/S.
 using System;
 
 namespace PanneauxGlass;
@@ -9,7 +10,7 @@ internal static class BrightnessPolicy
     internal const int MaxFailures = 3;         // consecutive failed reads before a display is marked unavailable until the next opening
     internal const int RefreshSeconds = 30;     // re-read period while the panel is open (physical buttons raise no signal)
 
-    // Percentage 0-100 (clamped) to the monitor's own raw range [min, max].
+    // Pourcentage 0-100 (borné) vers la plage brute [min, max] propre au moniteur.
     internal static uint ToRaw(double percent, uint min, uint max)
     {
         if (max <= min)
@@ -18,7 +19,7 @@ internal static class BrightnessPolicy
         return min + (uint)Math.Round(p * (max - min) / 100d);
     }
 
-    // Raw value to percentage 0-100; a degenerate range (max <= min) gives 0.
+    // Valeur brute vers pourcentage 0-100 ; une plage dégénérée (max <= min) donne 0.
     internal static double ToPercent(uint raw, uint min, uint max)
     {
         if (max <= min)
@@ -26,18 +27,20 @@ internal static class BrightnessPolicy
         return Math.Clamp((raw - (double)min) * 100d / (max - min), 0, 100);
     }
 
-    // True when the raw value read back is the one the requested percentage was written as (coarse ranges: keep the requested value shown).
+    // Vrai quand la valeur brute relue est celle sous laquelle le pourcentage demandé a été écrit (plages grossières : on garde la valeur
+    // demandée affichée).
     internal static bool Matches(double requested, uint raw, uint min, uint max) => raw == ToRaw(requested, min, max);
 
-    // Milliseconds still to wait before the next write may start (0 = now).
-    internal static int RemainingDelay(long lastWriteMs, long nowMs) => (int)Math.Clamp(WriteIntervalMs - (nowMs - lastWriteMs), 0, WriteIntervalMs);
+    // Millisecondes à attendre avant que la prochaine écriture puisse démarrer (0 = maintenant).
+    internal static int RemainingDelay(long lastWriteMs, long nowMs) => (int)Math.Clamp(WriteIntervalMs - (nowMs - lastWriteMs), 0,
+        WriteIntervalMs);
 
     internal static bool Unavailable(int failures) => failures >= MaxFailures;
 
-    // A read never overlaps a write on the same display.
+    // Une lecture ne chevauche jamais une écriture sur le même écran.
     internal static bool CanRead(bool writing, bool writePending, bool unavailable) => !writing && !writePending && !unavailable;
 
-    // Display ids come from the GDI name "\\.\DISPLAYn"; 0 when the name has no trailing number.
+    // Les identifiants d'écran viennent du nom GDI « \\.\DISPLAYn » ; 0 quand le nom n'a pas de numéro final.
     internal static int IdFromDevice(string? device)
     {
         if (string.IsNullOrEmpty(device))

@@ -1,9 +1,14 @@
-// Which link the dock's network icon should show: "ethernet" | "wifi" | "none". Event-driven, no polling:
-// NetworkChange.NetworkAddressChanged / NetworkAvailabilityChanged only arm a one-shot 300 ms timer (re-arming = debounce); the classification then runs on a thread-pool thread.
-// Classification: the interface Windows would really use (GetBestInterface towards a public IPv4, which honours interface metrics) when it is a physical, Up, non-virtual link with a default gateway;
-// otherwise (IPv6-only, VPN is the best route, ...) any physical Up link with a gateway, Ethernet preferred over wireless (Windows' automatic metrics rank wired first).
-// Wired types -> "ethernet"; Wireless80211 and mobile broadband (Wwanpp/Wwanpp2) -> "wifi" (generic wireless glyph, no dedicated cellular icon); nothing usable -> "none".
-// The first value is computed in Start() off the caller's thread. Stop() unsubscribes and disposes the timer (no leaks). State is read by QtShellBridge.State() on each poll.
+// Quel lien l'icône réseau du dock doit afficher : "ethernet" | "wifi" | "none". Piloté par événements, sans sondage :
+// NetworkChange.NetworkAddressChanged / NetworkAvailabilityChanged ne font qu'armer un minuteur ponctuel de 300 ms (réarmer = anti-rebond)
+// ; la classification s'exécute ensuite sur un thread du pool.
+// Classification : l'interface que Windows utiliserait vraiment (GetBestInterface vers une IPv4 publique, qui respecte les métriques
+// d'interface) quand c'est un lien physique, actif, non virtuel, avec une passerelle par défaut ;
+// sinon (IPv6 seul, VPN meilleure route, ...) tout lien physique actif avec passerelle, Ethernet préféré au sans-fil (les métriques
+// automatiques de Windows classent le filaire d'abord).
+// Types filaires -> "ethernet" ; Wireless80211 et haut débit mobile (Wwanpp/Wwanpp2) -> "wifi" (pictogramme sans-fil générique, pas d'icône
+// cellulaire dédiée) ; rien d'utilisable -> "none".
+// La première valeur est calculée dans Start(), hors du thread de l'appelant. Stop() se désabonne et libère le minuteur (aucune fuite).
+// L'état est lu par QtShellBridge.State() à chaque interrogation.
 using System;
 using System.Linq;
 using System.Net;
@@ -21,7 +26,8 @@ internal static class NetworkKindWatcher
     static bool started;
     static volatile string current = "wifi";   // shown until the first classification finishes (the dock's historical icon)
     internal static string Current => current;
-    // Raised (thread-pool thread, outside any lock) only when the classified kind changes; subscribers must not throw (exceptions are swallowed).
+    // Levé (thread du pool, hors de tout verrou) seulement quand le type classé change ; les abonnés ne doivent pas lever d'exception
+    // (avalée).
     internal static event Action? Changed;
     static readonly object computeGate = new();
 
@@ -98,7 +104,7 @@ internal static class NetworkKindWatcher
         }
     }
 
-    // Stores a new kind; true when it differs. Also the test hook for the probe (no adapter access).
+    // Stocke un nouveau type ; vrai quand il diffère. Sert aussi de point d'entrée de test pour la sonde (sans accès aux adaptateurs).
     internal static bool SetKind(string k)
     {
         if (k == current)
@@ -121,7 +127,7 @@ internal static class NetworkKindWatcher
         }
     }
 
-    // Public for the probe test.
+    // Public pour le test de la sonde.
     internal static string Classify()
     {
         var candidates = NetworkInterface.GetAllNetworkInterfaces().Where(IsCandidate).ToList();
@@ -139,7 +145,8 @@ internal static class NetworkKindWatcher
         return "wifi";
     }
 
-    // Same exclusions as PcTelemetry (copied: virtual / VPN / Hyper-V / loopback / tunnel), plus: must be Up, have a real default gateway and be wired or wireless.
+    // Mêmes exclusions que PcTelemetry (copiées : virtuel / VPN / Hyper-V / bouclage / tunnel), plus : doit être actif, avoir une vraie
+    // passerelle par défaut et être filaire ou sans-fil.
     static bool IsCandidate(NetworkInterface n)
     {
         if (n.OperationalStatus != OperationalStatus.Up)
@@ -152,14 +159,19 @@ internal static class NetworkKindWatcher
             return false;
         try
         {
-            return n.GetIPProperties().GatewayAddresses.Any(g => g.Address != null && !g.Address.Equals(IPAddress.Any) && !g.Address.Equals(IPAddress.IPv6Any));
+            return n.GetIPProperties().GatewayAddresses.Any(g => g.Address != null && !g.Address.Equals(IPAddress.Any)
+                && !g.Address.Equals(IPAddress.IPv6Any));
         }
         catch { return false; }
     }
 
-    static bool IsVirtual(NetworkInterface n) => new[] { "virtual", "hyper-v", "vmware", "vethernet", "tap-", "vpn", "wireguard", "loopback", "tunnel" }.Any(x => (n.Name + " " + n.Description).Contains(x, StringComparison.OrdinalIgnoreCase));
-    static bool IsWired(NetworkInterface n) => n.NetworkInterfaceType is NetworkInterfaceType.Ethernet or NetworkInterfaceType.GigabitEthernet or NetworkInterfaceType.FastEthernetT or NetworkInterfaceType.FastEthernetFx or NetworkInterfaceType.Ethernet3Megabit;
-    static bool IsWireless(NetworkInterface n) => n.NetworkInterfaceType is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Wwanpp or NetworkInterfaceType.Wwanpp2;
+    static bool IsVirtual(NetworkInterface n) => new[] { "virtual", "hyper-v", "vmware", "vethernet", "tap-", "vpn", "wireguard",
+        "loopback", "tunnel" }.Any(x => (n.Name + " " + n.Description).Contains(x, StringComparison.OrdinalIgnoreCase));
+    static bool IsWired(NetworkInterface n)
+        => n.NetworkInterfaceType is NetworkInterfaceType.Ethernet or NetworkInterfaceType.GigabitEthernet or NetworkInterfaceType
+        .FastEthernetT or NetworkInterfaceType.FastEthernetFx or NetworkInterfaceType.Ethernet3Megabit;
+    static bool IsWireless(NetworkInterface n)
+        => n.NetworkInterfaceType is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Wwanpp or NetworkInterfaceType.Wwanpp2;
     static string Kind(NetworkInterface n) => IsWired(n) ? "ethernet" : "wifi";
     static int IndexOf(NetworkInterface n)
     {

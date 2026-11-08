@@ -1,4 +1,4 @@
-// Pure decisions for messaging views (no Store, no WebView2): linked into tests/SocialPolicy.
+// Décisions pures pour les vues de messagerie (ni Store, ni WebView2) : liées dans tests/SocialPolicy.
 using System;
 
 namespace PanneauxGlass;

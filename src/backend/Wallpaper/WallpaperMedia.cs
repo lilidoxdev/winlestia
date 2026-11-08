@@ -1,4 +1,5 @@
-// C# 12 / WallpaperMedia.cs / Windows. One-shot helpers for the Automatique theme: video frame sampling (Media Foundation via Windows.Media.Editing) and live-host capture (PrintWindow).
+// C# 12 / WallpaperMedia.cs / Windows. Utilitaires ponctuels pour le thème Automatique : échantillonnage d'images vidéo (Media Foundation
+// via Windows.Media.Editing) et capture de l'hôte animé (PrintWindow).
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -10,13 +11,15 @@ namespace PanneauxGlass;
 
 internal static class WallpaperMedia
 {
-    // CLI: Panneaux.Glass.exe --extract-frames <video> <outDir> [count=8] [maxSize=320]. Writes f0..f{n-1}.jpg, exit 0 when at least one frame was written.
+    // CLI : Panneaux.Glass.exe --extract-frames <video> <outDir> [count=8] [maxSize=320]. Écrit f0..f{n-1}.jpg, code de sortie 0 quand au
+    // moins une image a été écrite.
     internal static int ExtractFramesCli(string[] args)
     {
         try
         {
             string video = args[1], folder = args[2];
-            int count = args.Length > 3 && int.TryParse(args[3], out int c) ? Math.Clamp(c, 1, 16) : 8, size = args.Length > 4 && int.TryParse(args[4], out int z) ? Math.Clamp(z, 64, 1024) : 320;
+            int count = args.Length > 3 && int.TryParse(args[3], out int c) ? Math.Clamp(c, 1, 16) : 8, size = args.Length > 4
+                && int.TryParse(args[4], out int z) ? Math.Clamp(z, 64, 1024) : 320;
             return Task.Run(() => ExtractFrames(video, folder, count, size)).GetAwaiter().GetResult() > 0 ? 0 : 1;
         }
         catch (Exception ex) { Store.Log("Images du fond: " + ex.Message); return 2; }
@@ -25,7 +28,8 @@ internal static class WallpaperMedia
     {
         Directory.CreateDirectory(folder);
         var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(video);
-        // One independent clip + composition per frame so the thumbnails decode in parallel (a single composition serialises them).
+        // Un clip et une composition indépendants par image pour que les miniatures se décodent en parallèle (une composition unique les
+        // sérialiserait).
         var results = await Task.WhenAll(Enumerable.Range(0, count).Select(i => Task.Run(async () =>
         {
             try
@@ -37,7 +41,8 @@ internal static class WallpaperMedia
                 double scale = Math.Min(1.0, (double)size / Math.Max(1u, Math.Max(props.Width, props.Height)));
                 int width = Math.Max(2, (int)(props.Width * scale)), height = Math.Max(2, (int)(props.Height * scale));
                 var at = TimeSpan.FromTicks((long)(clip.OriginalDuration.Ticks * ((i + 0.5) / count)));
-                using var stream = await composition.GetThumbnailAsync(at, width, height, Windows.Media.Editing.VideoFramePrecision.NearestKeyFrame);
+                using var stream = await composition.GetThumbnailAsync(at, width, height,
+                    Windows.Media.Editing.VideoFramePrecision.NearestKeyFrame);
                 using var input = new MemoryStream();
                 await System.IO.WindowsRuntimeStreamExtensions.AsStreamForRead(stream).CopyToAsync(input);
                 input.Position = 0;
@@ -53,8 +58,11 @@ internal static class WallpaperMedia
         return results.Sum();
     }
 
-    // One-shot capture of the live-wallpaper host (child of Progman / WorkerW) with PrintWindow(PW_RENDERFULLCONTENT). Returns a temp PNG path, or null when the host is absent or the frame is black
-    // (GPU-composited hosts often print black): the frontend then falls back to the Windows wallpaper file. Windows.Graphics.Capture was not used: it needs a D3D11 device and a GraphicsCaptureItem interop for little gain here.
+    // Capture ponctuelle de l'hôte du fond animé (enfant de Progman / WorkerW) avec PrintWindow(PW_RENDERFULLCONTENT). Renvoie le chemin
+    // d'un PNG temporaire, ou null quand l'hôte est absent ou l'image noire
+    // (les hôtes composités par le GPU impriment souvent en noir) : le frontend retombe alors sur le fichier de fond d'écran Windows.
+    // Windows.Graphics.Capture n'a pas été utilisé : il exige un périphérique D3D11 et une interop GraphicsCaptureItem pour peu de gain
+    // ici.
     internal static string? CaptureHost(Native.Rect? monitor = null)
     {
         IntPtr host = WindowsWallpaper.FindHost(monitor);
@@ -63,7 +71,8 @@ internal static class WallpaperMedia
         int w = r.Right - r.Left, h = r.Bottom - r.Top;
         if (w < 16 || h < 16)
             return null;
-        // PrintWindow and every bitmap/HDC live inside one task that disposes them itself: on timeout we return null and never free what a hung PrintWindow may still be writing to.
+        // PrintWindow et chaque bitmap/HDC vivent dans une seule tâche qui les libère elle-même : en cas de dépassement de délai on renvoie
+        // null et on ne libère jamais ce qu'un PrintWindow figé peut encore écrire.
         var work = Task.Run(() =>
         {
             using var full = new Bitmap(w, h, PixelFormat.Format32bppRgb);

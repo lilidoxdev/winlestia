@@ -1,6 +1,8 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=lot2 : undo journal, shortcuts (HandleKey), properties / open with (model level), deep search, views, selection (keys + rectangle),
-// drives (device change), "Ce PC", context menu model, AUMID, crash.log. Needs WINLESTIA_FILES_DATA_DIR under %TEMP% and a fixture folder under %TEMP%\WinlestiaFilesOps.
+// WINLESTIA_FILES_SELFTEST=lot2 : journal d'annulation, raccourcis (HandleKey), propriétés / ouvrir avec (niveau modèle), recherche
+// profonde, vues, sélection (touches + rectangle),
+// lecteurs (changement de périphérique), « Ce PC », modèle du menu contextuel, AUMID, crash.log. Exige WINLESTIA_FILES_DATA_DIR sous %TEMP%
+// et un dossier de fixtures sous %TEMP%\WinlestiaFilesOps.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -59,7 +61,8 @@ public sealed partial class MainWindow
               ContextItems(CtxKind.Background, new List<FileItem>()).Any(i =>
                   i != null && i.Text.StartsWith("Annuler " + journal.NextUndo!.Label) && i.Text.EndsWith("Ctrl+Z")));
         Press(Key.Z, ModifierKeys.Control);
-        Check("(1) Ctrl+Z undoes the rename", await WaitFor(() => File.Exists(P("a.txt")) && !File.Exists(P("a2.txt")) && journal.RedoCount == 1));
+        Check("(1) Ctrl+Z undoes the rename", await WaitFor(() => File.Exists(P("a.txt")) && !File.Exists(P("a2.txt"))
+            && journal.RedoCount == 1));
         Press(Key.Y, ModifierKeys.Control);
         Check("(1) Ctrl+Y redoes it", await WaitFor(() => File.Exists(P("a2.txt")) && !File.Exists(P("a.txt")) && journal.RedoCount == 0));
         Press(Key.Z, ModifierKeys.Control);
@@ -88,7 +91,8 @@ public sealed partial class MainWindow
               await WaitFor(() => File.Exists(Path.Combine(dest, "b.txt")) && !File.Exists(P("b.txt"))),
               $"clip={cb} result={(pr == null ? "null" : pr.Error ?? (pr.Aborted ? "aborted" : "ok " + pr.Log.Count))}");
         await UndoAsync();
-        Check("(1) undo of the move brings the file back", await WaitFor(() => File.Exists(P("b.txt")) && !File.Exists(Path.Combine(dest, "b.txt"))));
+        Check("(1) undo of the move brings the file back", await WaitFor(() => File.Exists(P("b.txt")) && !File.Exists(Path.Combine(dest,
+            "b.txt"))));
         await RedoAsync();
         Check("(1) redo of the move", await WaitFor(() => File.Exists(Path.Combine(dest, "b.txt"))));
         await UndoAsync();
@@ -98,7 +102,8 @@ public sealed partial class MainWindow
         await PasteAsync(dest);
         Check("(1) copy executed", await WaitFor(() => File.Exists(Path.Combine(dest, "c.log"))));
         await UndoAsync();
-        Check("(1) undo of the copy removes only the copy", await WaitFor(() => !File.Exists(Path.Combine(dest, "c.log")) && File.Exists(P("c.log"))));
+        Check("(1) undo of the copy removes only the copy", await WaitFor(() => !File.Exists(Path.Combine(dest, "c.log"))
+            && File.Exists(P("c.log"))));
 
         string del = P("corbeille-" + Guid.NewGuid().ToString("N")[..6] + ".txt");
         File.WriteAllText(del, "Z");
@@ -159,10 +164,10 @@ public sealed partial class MainWindow
         
         });
 
-        // ---- 2. properties / open with ----
+        // ---- 2. propriétés / ouvrir avec ----
         Active.Reload();
         await WaitLoaded();
-        await Task.Delay(300);
+        await Task.Delay(PauseAnimationLongueMs);
         list.Select(new[] { Item("a.txt")! });
         Press(Key.Return, ModifierKeys.Alt);
         Check("(2) Alt+Enter = properties of the selected item", LastProperties == "single:" + P("a.txt"), LastProperties);
@@ -182,9 +187,10 @@ public sealed partial class MainWindow
         Press(Key.F, ModifierKeys.Control);
         Check("(3) Ctrl+F opens the search box", await WaitFor(() => filterBox.IsVisible));
         Active.SetFilter("txt");
-        await Task.Delay(150);
+        await Task.Delay(PauseRenduMs);
         Check("(3) instant filter keeps matching names of this folder",
-              Active.Items.Count > 0 && Active.Items.All(i => i.Name.Contains("txt", StringComparison.OrdinalIgnoreCase)) && !Active.DeepActive);
+              Active.Items.Count > 0 && Active.Items.All(i => i.Name.Contains("txt", StringComparison.OrdinalIgnoreCase))
+                  && !Active.DeepActive);
         Active.SetDeepOption(true);
         Check("(3) sub-folder search finds rapport-y.txt (2 levels down)",
               await WaitFor(() => Active.DeepActive && Active.Items.Any(i => i.Name == "rapport-y.txt")));
@@ -208,7 +214,8 @@ public sealed partial class MainWindow
         Check("(3) long path (>260) result found", await WaitFor(() => Active.Items.Any(i => i.Name == "tresloin.txt"), 8000));
         Active.Go(dest);
         await WaitLoaded();
-        Check("(3) folder change stops the search", !Active.Searching && !Active.DeepActive, $"searching={Active.Searching} deep={Active.DeepActive}");
+        Check("(3) folder change stops the search", !Active.Searching && !Active.DeepActive,
+            $"searching={Active.Searching} deep={Active.DeepActive}");
         Active.SetDeepOption(false);
         Active.Go(F);
         await WaitLoaded();
@@ -233,7 +240,8 @@ public sealed partial class MainWindow
               $"dir '{di.SizeText}' file '{fi.SizeText}'");
         double w0 = ColumnLayout.Instance.ModW.Value;
         ColumnLayout.Instance.Resize("mod", 30);
-        Check("(4) column resize changes the layout width", ColumnLayout.Instance.ModW.Value != w0, $"{w0} -> {ColumnLayout.Instance.ModW.Value}");
+        Check("(4) column resize changes the layout width", ColumnLayout.Instance.ModW.Value != w0,
+            $"{w0} -> {ColumnLayout.Instance.ModW.Value}");
         ColumnLayout.Instance.Resize("mod", -30);
         ApplySort(Active.Sort with
         {
@@ -248,7 +256,7 @@ public sealed partial class MainWindow
 
         // ---- 5. selection ----
         await WaitLoaded();
-        await Task.Delay(150);
+        await Task.Delay(PauseRenduMs);
         Press(Key.A, ModifierKeys.Control);
         Check("(5) Ctrl+A selects everything", list.SelectedItems.Count == Active.Items.Count && Active.Items.Count > 0);
         Press(Key.Escape);
@@ -259,7 +267,7 @@ public sealed partial class MainWindow
         Press(Key.Space, ModifierKeys.Control);
         Check("(5) Ctrl+Space toggles it back", list.SelectedItems.Count == 1);
         SetView(ViewMode.Details);
-        await Task.Delay(250);
+        await Task.Delay(PauseAnimationMs);
         list.UpdateLayout();
         list.UnselectAll();
         int n = Active.Items.Count;
@@ -282,14 +290,15 @@ public sealed partial class MainWindow
         foreach (var vm in new[] { ViewMode.Large, ViewMode.Medium, ViewMode.List })
         {
             SetView(vm);
-            await Task.Delay(300);
+            await Task.Delay(PauseAnimationLongueMs);
             list.UpdateLayout();
             list.UnselectAll();
             var c = Cell;
             RubberStart(new Point(2, 2), false);
             RubberMove(new Point(c.W * 1.5, c.H * 0.5));
             RubberEnd();
-            Check($"(5) rectangle in {vm} selects the first 2 cells", list.SelectedItems.Count == Math.Min(2, n) && n > 0, $"{list.SelectedItems.Count}");
+            Check($"(5) rectangle in {vm} selects the first 2 cells", list.SelectedItems.Count == Math.Min(2, n) && n > 0,
+                $"{list.SelectedItems.Count}");
         }
         SetView(ViewMode.Details);
         list.UnselectAll();
@@ -302,7 +311,8 @@ public sealed partial class MainWindow
         Check("(6) pinned folder present", sidebar.QuickView().Any(v => v.Path == pinDir && v.Kind != TargetKind.Missing));
         Directory.Delete(pinDir);
         var fake =
-            new List<(string Root, string Label, long Free, long Total)> { (@"Q:\", "Faux", 50L << 30, 100L << 30), (@"R:\", "Plein", 2L << 30, 100L << 30) };
+            new List<(string Root, string Label, long Free, long Total)> { (@"Q:\", "Faux", 50L << 30, 100L << 30), (@"R:\", "Plein",
+                2L << 30, 100L << 30) };
         Sidebar.DriveSource = () => fake;
         int rebuilt = sidebar.DrivesRebuilt;
         bool handled = false;
@@ -368,7 +378,8 @@ public sealed partial class MainWindow
         Check("(7) menu 'Propriétés' on 2 items = multi-file properties", LastProperties == "multi:2", LastProperties);
 
         // ---- 8. AUMID / crash.log ----
-        Check("(8) explicit AppUserModelID = Winlestia.Files", Program.CurrentAppId() == "Winlestia.Files", Program.CurrentAppId() ?? "null");
+        Check("(8) explicit AppUserModelID = Winlestia.Files", Program.CurrentAppId() == "Winlestia.Files", Program.CurrentAppId()
+            ?? "null");
         App.CrashLog(new InvalidOperationException("lot2 probe"));
         Check("(8) crash.log written through FilesSettings.Dir",
               File.Exists(Path.Combine(FilesSettings.Dir, "crash.log"))

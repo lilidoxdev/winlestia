@@ -92,12 +92,15 @@ def wrapped(engine, url):
 
             b.poll_file_drag = (
                 lambda: None
-            )  # polling now runs inside the pointer tick (no 'fileDragPoll' timer): neutralised so the real mouse cannot reset the simulated drag
+            # le sondage tourne désormais dans le tick du pointeur (plus de minuteur 'fileDragPoll') : neutralisé pour
+            # que la vraie souris ne remette pas à zéro le glisser simulé
+            )
             b._file_drag_active = True
             b._file_drag_near = True
             b.fileDragChanged.emit()
             QTest.qWait(50)
-            QTest.qWait(150)  # RecycleDrop is a lazy Loader: its window exists only once a file drag is near the top
+            # RecycleDrop est un Loader paresseux : sa fenêtre n'existe qu'une fois un glisser de fichier près du haut
+            QTest.qWait(150)
             binwindow = next(w for w in QApplication.allWindows() if w.title() == 'Winlestia · Actions fichiers')
             mime = QMimeData()
             mime.setUrls([QUrl.fromLocalFile('C:/Winlestia test/été.txt')])
@@ -157,7 +160,7 @@ def wrapped(engine, url):
                 report['fullscreenNoDock'] = spec[2] is None
                 b.top.grabWindow().save(str(root / 'build/personalization0652.png'))
 
-                # Native monitor coordinates intentionally differ from Qt's offscreen geometry.
+                # Les coordonnées natives des moniteurs diffèrent volontairement de la géométrie hors écran de Qt.
                 def info(handle, pointer):
                     value = ctypes.cast(pointer, ctypes.POINTER(f.MonitorInfo)).contents
                     value.name = b._screen.name()

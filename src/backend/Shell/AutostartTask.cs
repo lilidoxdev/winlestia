@@ -1,4 +1,4 @@
-// language: C# 12, file: AutostartTask.cs, target: Windows 11 / .NET 8, per-user logon task (no admin, no window)
+// C# 12, fichier AutostartTask.cs, cible Windows 11 / .NET 8, tâche de session par utilisateur (sans admin, sans fenêtre)
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -27,7 +27,8 @@ internal static class AutostartTask
     {
         try
         {
-            var info = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "schtasks.exe"), arguments) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+            var info = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "schtasks.exe"), arguments) { UseShellExecute = false,
+                CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
             using var process = Process.Start(info)!;
             var output = process.StandardOutput.ReadToEndAsync();
             var error = process.StandardError.ReadToEndAsync();
@@ -55,7 +56,8 @@ internal static class AutostartTask
         try
         {
             string exe = Environment.ProcessPath!;
-            File.WriteAllText(xml, AutostartPolicy.TaskXml(WindowsIdentity.GetCurrent().Name, exe, Path.GetDirectoryName(exe) ?? ""), Encoding.Unicode);
+            File.WriteAllText(xml, AutostartPolicy.TaskXml(WindowsIdentity.GetCurrent().Name, exe, Path.GetDirectoryName(exe) ?? ""),
+                Encoding.Unicode);
             int code = Run("/create /tn " + AutostartPolicy.TaskName + " /xml \"" + xml + "\" /f", out var text);
             if (code != 0)
             {

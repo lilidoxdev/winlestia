@@ -46,7 +46,7 @@ internal sealed class ShellTaskbar : IDisposable
             lease.Release = "Local\\PanneauxGuardRelease-" + suffix;
             ready = new(false, EventResetMode.ManualReset, lease.Ready);
             release = new(false, EventResetMode.ManualReset, lease.Release);
-            File.WriteAllText(TaskbarNative.LeasePath, JsonSerializer.Serialize(lease, Store.Json));
+            TaskbarLeasePolicy.Write(TaskbarNative.LeasePath, lease);
             string nativeGuard = Path.Combine(Store.Root, "RETABLIR_BARRE_WINDOWS.exe");
             bool native = File.Exists(nativeGuard);
             var start = new ProcessStartInfo(native ? nativeGuard : Environment.ProcessPath!) { UseShellExecute = false, CreateNoWindow = true };

@@ -1,6 +1,6 @@
 # Pont backend C# <-> frontend PySide6
 
-Contrat du canal entre `src/backend/Bridge/QtShellBridge.cs` (serveur) et `src/frontend/bridge_client.py` (client). Version du protocole : **1** (`QtShellBridge.ProtocolVersion`, `bridge_client.PROTOCOL_VERSION`). La forme lisible par machine est `docs/bridge-schema.json` ; les tests `BridgeContractTests` (xUnit) et `tests/test_bridge_contract.py` (pytest) vérifient par extraction statique que chaque message émis ou traité y figure.
+Contrat du canal entre `src/backend/Bridge/QtShellBridge*.cs` (serveur ; un handler `[BridgeAction("nom")]` par action, dans `QtShellBridge.Actions.*.cs`) et `src/frontend/bridge_client.py` (client). Version du protocole : **1** (`QtShellBridge.ProtocolVersion`, `bridge_client.PROTOCOL_VERSION`). La forme lisible par machine est `docs/bridge-schema.json` ; les tests `BridgeContractTests` (xUnit) et `tests/test_bridge_contract.py` (pytest) vérifient par extraction statique que chaque message émis ou traité y figure.
 
 ## Cadrage
 
@@ -77,7 +77,6 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 | `fileSearch` | gen:number, term:string | term |
 | `icon` | id:string | - |
 | `launch` | id:string | - |
-| `launchKnown` | args:array<string> | - | (ignorée par le serveur)
 | `masterMute` | muted:boolean | - |
 | `media` | action:string, value:number | - |
 | `mediaVolume` | value:number | - |
@@ -131,8 +130,6 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 | `windowList` | - | - |
 | `workspace` | id:string | - |
 | `zipFiles` | paths:array<string> | - |
-
-`launchKnown` est envoyée par `prepare_port.py` et `Quickshell.qml` (code hérité du port) mais n'a aucun `case` côté serveur : elle est sans effet.
 
 ### Clés de `preference`
 

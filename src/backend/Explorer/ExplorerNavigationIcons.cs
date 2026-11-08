@@ -1,4 +1,5 @@
-// C#12 / ExplorerNavigationIcons.cs / removes legacy per-user namespace icon overrides (HKCU is not honoured by the navigation pane); original values restored.
+// C# 12 / ExplorerNavigationIcons.cs / supprime les anciennes surcharges d'icônes d'espace de noms par utilisateur (HKCU n'est pas pris en
+// compte par le volet de navigation) ; valeurs d'origine restaurées.
 using System;
 using System.IO;
 using System.Linq;
@@ -26,7 +27,8 @@ internal static class ExplorerNavigationIcons
         public string Applied { get; set; } = "";
     }
     static string Manifest(string root) => Path.Combine(root, "navigation-icons.json");
-    static List<Entry> Read(string root) => File.Exists(Manifest(root)) ? JsonSerializer.Deserialize<List<Entry>>(File.ReadAllText(Manifest(root))) ?? new() : new();
+    static List<Entry> Read(string root) => File.Exists(Manifest(root))
+        ? JsonSerializer.Deserialize<List<Entry>>(File.ReadAllText(Manifest(root))) ?? new() : new();
     static void Save(string root, List<Entry> data)
     {
         Directory.CreateDirectory(root);

@@ -1,4 +1,4 @@
-// language: C# 12, file: GlassLevel.cs, target: Windows 11 / .NET 8 WPF, pointer/keyboard/accessible liquid capsule
+// C# 12, fichier GlassLevel.cs, cible Windows 11 / .NET 8 WPF, capsule liquide accessible au pointeur et au clavier
 using System;
 using System.Globalization;
 using System.Windows;
@@ -13,7 +13,8 @@ namespace PanneauxGlass;
 
 internal sealed class GlassLevel : RangeBase
 {
-    internal string Glyph { get; set; } = "\uE767"; internal event Action<bool>? DraggingChanged; bool dragging; internal bool Dragging => dragging;
+    internal string Glyph { get; set; } = "\uE767"; internal event Action<bool>? DraggingChanged; bool dragging; internal bool Dragging
+        => dragging;
     static readonly Brush track = Freeze(new LinearGradientBrush(Color.FromArgb(54, 255, 255, 255), Color.FromArgb(16, 255, 255, 255), 70));
     static readonly Brush fill = Freeze(new LinearGradientBrush(Color.FromRgb(250, 253, 255), Color.FromRgb(214, 239, 251), 90));
     static Brush Freeze(Brush brush)
@@ -58,13 +59,17 @@ internal sealed class GlassLevel : RangeBase
         dc.Pop();
         var edge = new Pen(UI.Brush(IsKeyboardFocused ? "#E0D8F5FF" : "#42FFFFFF"), IsKeyboardFocused ? 2 : 1);
         dc.DrawRoundedRectangle(null, edge, new Rect(.5, .5, width - 1, height - 1), radius, radius);
-        var icon = new FormattedText(Glyph, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe Fluent Icons"), 30, UI.Brush(IsEnabled && ratio > .23 ? "#277EB7" : "#F1F8FF"), VisualTreeHelper.GetDpi(this).PixelsPerDip);
+        var icon = new FormattedText(Glyph, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe Fluent Icons"), 30,
+            UI.Brush(IsEnabled && ratio > .23 ? "#277EB7" : "#F1F8FF"), VisualTreeHelper.GetDpi(this).PixelsPerDip);
         dc.DrawText(icon, new Point((width - icon.Width) / 2, height - 58));
         string value = IsEnabled ? Math.Round(Value).ToString(CultureInfo.InvariantCulture) : "—";
-        var number = new FormattedText(value, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface(UI.Font, FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal), 17, UI.Brush(IsEnabled && ratio > .88 ? "#275675" : "#F5FAFF"), VisualTreeHelper.GetDpi(this).PixelsPerDip);
+        var number = new FormattedText(value, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface(UI.Font,
+            FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal), 17, UI.Brush(IsEnabled && ratio > .88 ? "#275675" : "#F5FAFF"),
+            VisualTreeHelper.GetDpi(this).PixelsPerDip);
         dc.DrawText(number, new Point((width - number.Width) / 2, 20));
     }
-    void FromPointer(MouseEventArgs e) => Value = Minimum + Math.Clamp(1 - e.GetPosition(this).Y / Math.Max(1, ActualHeight), 0, 1) * (Maximum - Minimum);
+    void FromPointer(MouseEventArgs e) => Value = Minimum + Math.Clamp(1 - e.GetPosition(this).Y / Math.Max(1, ActualHeight), 0,
+        1) * (Maximum - Minimum);
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonDown(e);
@@ -137,8 +142,13 @@ internal sealed class GlassLevel : RangeBase
     sealed class LevelPeer : FrameworkElementAutomationPeer, IRangeValueProvider
     {
         GlassLevel Level => (GlassLevel)Owner; internal LevelPeer(GlassLevel owner) : base(owner) { }
-        protected override string GetClassNameCore() => "GlassLevel"; protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Slider; public override object? GetPattern(PatternInterface pattern) => pattern == PatternInterface.RangeValue ? this : base.GetPattern(pattern);
-        public bool IsReadOnly => !Level.IsEnabled; public double LargeChange => Level.LargeChange; public double SmallChange => Level.SmallChange; public double Maximum => Level.Maximum; public double Minimum => Level.Minimum; public double Value => Level.Value;
+        protected override string GetClassNameCore() => "GlassLevel";
+            protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Slider;
+            public override object? GetPattern(PatternInterface pattern) => pattern == PatternInterface.RangeValue ? this
+            : base.GetPattern(pattern);
+        public bool IsReadOnly => !Level.IsEnabled; public double LargeChange => Level.LargeChange; public double SmallChange
+            => Level.SmallChange; public double Maximum => Level.Maximum; public double Minimum => Level.Minimum; public double Value
+            => Level.Value;
         public void SetValue(double value)
         {
             if (!Level.IsEnabled)

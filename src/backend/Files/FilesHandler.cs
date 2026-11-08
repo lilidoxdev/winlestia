@@ -1,12 +1,15 @@
-// Register / restore Winlestia Fichiers as the folder handler (HKCU only), shared (linked) by Winlestia.Files (owner of the --register / --restore CLI),
-// the backend (toggle, startup guard) and tests/FilesHandler. Pure .NET: no WPF, no backend type.
-// Owner = Winlestia.Files.exe: it is the one artifact the installer ships and the uninstaller / the crash guard can call without the backend or any UI.
+// Enregistre / restaure Winlestia Fichiers comme gestionnaire de dossiers (HKCU uniquement), partagé (lié) par Winlestia.Files
+// (propriétaire de la CLI --register / --restore),
+// le backend (bascule, garde de démarrage) et tests/FilesHandler. .NET pur : pas de WPF, aucun type du backend.
+// Propriétaire = Winlestia.Files.exe : c'est le seul artefact que l'installeur livre et que le désinstalleur / la garde de plantage peuvent
+// appeler sans backend ni UI.
 //
-// Keys written (under <Base>\<ClassesPath>, normally HKCU\Software\Classes), only for Directory and Drive, NEVER Folder:
+// Clés écrites (sous <Base>\<ClassesPath>, normalement HKCU\Software\Classes), uniquement pour Directory et Drive, JAMAIS Folder :
 //   <T>\shell                      (Default) = winlestia
 //   <T>\shell\winlestia            (Default) = MUIVerb = "Ouvrir avec Winlestia Fichiers", Icon = "<exe>",0
 //   <T>\shell\winlestia\command    (Default) = "<exe>" "%1"
-// Everything is relative to Options, so tests run on a sandbox such as HKCU\Software\WinlestiaTest\Sandbox\Classes (no shell effect).
+// Tout est relatif à Options, donc les tests tournent sur un bac à sable comme HKCU\Software\WinlestiaTest\Sandbox\Classes (aucun effet sur
+// le shell).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,7 +28,7 @@ internal sealed class HandlerOptions
     internal string BackupPath = Path.Combine(FilesHandler.DataDir, "handler-backup.json");
     internal bool Notify = true;           // SHChangeNotify; never for a sandbox root
 
-    // The backup override is honoured only under %TEMP% (anything else is ignored).
+    // La surcharge de sauvegarde n'est honorée que sous %TEMP% (tout le reste est ignoré).
     internal static bool UnderTemp(string path)
     {
         try
@@ -35,8 +38,9 @@ internal sealed class HandlerOptions
         catch { return false; }
     }
 
-    // Real HKCU unless WINLESTIA_FILES_HANDLER_ROOT is set (test only). The override must live under Software\WinlestiaTest\ and gets its own backup file,
-    // so a test can never touch the real Classes keys nor the real backup.
+    // HKCU réel sauf si WINLESTIA_FILES_HANDLER_ROOT est défini (tests uniquement). La surcharge doit vivre sous Software\WinlestiaTest\ et
+    // a son propre fichier de sauvegarde,
+    // pour qu'un test ne puisse jamais toucher aux vraies clés Classes ni à la vraie sauvegarde.
     internal static HandlerOptions FromEnvironment()
     {
         var o = new HandlerOptions();
@@ -48,7 +52,8 @@ internal sealed class HandlerOptions
             throw new InvalidOperationException("WINLESTIA_FILES_HANDLER_ROOT must be under Software\\WinlestiaTest\\");
         o.ClassesPath = root + @"\Classes";
         o.Notify = false;
-        o.BackupPath = Environment.GetEnvironmentVariable("WINLESTIA_FILES_HANDLER_BACKUP") is { Length: > 0 } b && UnderTemp(b) ? Path.GetFullPath(b) : Path.Combine(FilesHandler.DataDir, "handler-backup.sandbox.json");
+        o.BackupPath = Environment.GetEnvironmentVariable("WINLESTIA_FILES_HANDLER_BACKUP") is { Length: > 0 } b && UnderTemp(b)
+            ? Path.GetFullPath(b) : Path.Combine(FilesHandler.DataDir, "handler-backup.sandbox.json");
         return o;
     }
 }
@@ -60,11 +65,13 @@ internal static class FilesHandler
     internal const string Verb = "winlestia", Label = "Ouvrir avec Winlestia Fichiers";
     static readonly string[] Targets = { "Directory", "Drive" };
 
-    internal static string DataDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia", "Files");
+    internal static string DataDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia",
+        "Files");
 
     sealed class Backup
     {
-        public int Version { get; set; } = 1; public string Exe { get; set; } = ""; public Dictionary<string, Entry> Entries { get; set; } = new();
+        public int Version { get; set; } = 1; public string Exe { get; set; } = ""; public Dictionary<string, Entry> Entries { get; set;
+            } = new();
     }
     sealed class Entry
     {
@@ -99,7 +106,8 @@ internal static class FilesHandler
     {
         try
         {
-            SHChangeNotify(0x08000000 /*SHCNE_ASSOCCHANGED*/, 0x0000 /*SHCNF_IDLIST*/ | 0x3000 /*SHCNF_FLUSHNOWAIT*/, IntPtr.Zero, IntPtr.Zero);
+            SHChangeNotify(0x08000000 /*SHCNE_ASSOCCHANGED*/, 0x0000 /*SHCNF_IDLIST*/ | 0x3000 /*SHCNF_FLUSHNOWAIT*/, IntPtr.Zero,
+                IntPtr.Zero);
         }
         catch (Exception)
         {
@@ -114,7 +122,7 @@ internal static class FilesHandler
 
     internal static bool BackupExists(HandlerOptions o) => File.Exists(o.BackupPath);
 
-    // True when both Directory and Drive point at exactly this exe.
+    // Vrai quand Directory et Drive pointent tous deux exactement vers cet exe.
     internal static bool IsRegistered(HandlerOptions o, string exe)
     {
         foreach (var t in Targets)
@@ -129,7 +137,8 @@ internal static class FilesHandler
         return true;
     }
 
-    // Anything of ours present (a backup file, or a (Default) pointing at our verb): what the crash guard uses to decide whether there is something to undo.
+    // Tout ce qui est à nous est présent (un fichier de sauvegarde, ou un (Default) qui pointe vers notre verbe) : ce que la garde de
+    // plantage utilise pour décider s'il y a quelque chose à annuler.
     internal static bool IsActive(HandlerOptions o)
     {
         if (BackupExists(o))
@@ -145,10 +154,11 @@ internal static class FilesHandler
 
     // ---- register ----------------------------------------------------------------------------------------------
 
-    // Test-only fault injection (target name, before its keys are written). Always null in production.
+    // Injection de panne réservée aux tests (nom de la cible, avant l'écriture de ses clés). Toujours null en production.
     internal static Action<string>? FaultHook;
 
-    // Cross-process lock around Register / Restore (backend toggle, CLI, installer, crash guard can overlap). Re-entrant on the same thread.
+    // Verrou inter-processus autour de Register / Restore (bascule du backend, CLI, installeur, garde de plantage peuvent se chevaucher).
+    // Réentrant sur le même thread.
     static HandlerResult Locked(Func<HandlerResult> body)
     {
         using var mutex = new Mutex(false, @"Local\WinlestiaFilesHandler");
@@ -225,7 +235,8 @@ internal static class FilesHandler
         }
     }
 
-    // Never records our own traces as "original": a Default that already says winlestia, or an existing verb key of ours, count as not pre-existing.
+    // N'enregistre jamais nos propres traces comme « original » : un Default qui dit déjà winlestia, ou un verbe à nous existant, compte
+    // comme non préexistant.
     static Entry Capture(HandlerOptions o, string t)
     {
         var e = new Entry();
@@ -253,7 +264,8 @@ internal static class FilesHandler
 
     internal static HandlerResult Restore(HandlerOptions o) => Locked(() => RestoreCore(o));
 
-    // Per target: (Default) first, then our verb key, so the shell never has a Default naming a missing verb. A Default that is neither ours nor absent was set by someone else since: kept.
+    // Par cible : (Default) d'abord, puis notre clé de verbe, pour que le shell n'ait jamais un Default nommant un verbe absent. Un Default
+    // qui n'est ni le nôtre ni absent a été posé par quelqu'un d'autre depuis : conservé.
     static HandlerResult RestoreCore(HandlerOptions o)
     {
         var errors = new List<string>();
@@ -271,7 +283,8 @@ internal static class FilesHandler
                     if (shell != null)
                     {
                         bool hasDefault = Array.IndexOf(shell.GetValueNames(), "") >= 0;
-                        string? cur = hasDefault ? shell.GetValue("", null, RegistryValueOptions.DoNotExpandEnvironmentNames)?.ToString() : null;
+                        string? cur = hasDefault ? shell.GetValue("", null, RegistryValueOptions.DoNotExpandEnvironmentNames)?.ToString()
+                            : null;
                         bool ours = hasDefault && string.Equals(cur, Verb, StringComparison.OrdinalIgnoreCase);
                         if (e is { DefaultExisted: true } && (!hasDefault || ours))
                         {
@@ -324,7 +337,8 @@ internal static class FilesHandler
     }
 
     static void SetDefault(RegistryKey shell, Entry e) =>
-        shell.SetValue("", e.Default ?? "", string.Equals(e.DefaultKind, "ExpandString", StringComparison.OrdinalIgnoreCase) ? RegistryValueKind.ExpandString : RegistryValueKind.String);
+        shell.SetValue("", e.Default ?? "", string.Equals(e.DefaultKind, "ExpandString", StringComparison.OrdinalIgnoreCase)
+            ? RegistryValueKind.ExpandString : RegistryValueKind.String);
 
     static void DeleteIfEmpty(HandlerOptions o, string path)
     {
@@ -336,7 +350,7 @@ internal static class FilesHandler
         o.Base.DeleteSubKey(path, false);
     }
 
-    // ---- backup file -------------------------------------------------------------------------------------------
+    // ---- fichier de sauvegarde -------------------------------------------------------------------------------------
 
     static Backup? LoadBackup(string path)
     {
@@ -355,7 +369,8 @@ internal static class FilesHandler
         File.Move(temp, path, true);           // atomic replace on the same volume
     }
 
-    // ---- CLI (Winlestia.Files.exe --register "<exe>" | --restore): exit code 0 = ok, 1 = failure. One line appended to handler.log. -----------------
+    // ---- CLI (Winlestia.Files.exe --register "<exe>" | --restore) : code de sortie 0 = ok, 1 = échec. Une ligne ajoutée à handler.log.
+    // -----------------
 
     internal static int RunCli(string[] args)
     {
@@ -383,7 +398,8 @@ internal static class FilesHandler
         {
             Directory.CreateDirectory(DataDir);
             string file = Path.Combine(DataDir, "handler.log");
-            var lines = new List<string>(File.Exists(file) ? File.ReadAllLines(file) : Array.Empty<string>()) { DateTimeOffset.Now.ToString("O") + " " + text };
+            var lines = new List<string>(File.Exists(file) ? File.ReadAllLines(file) : Array.Empty<string>()) {
+                DateTimeOffset.Now.ToString("O") + " " + text };
             if (lines.Count > 100)
                 lines.RemoveRange(0, lines.Count - 100);
             File.WriteAllLines(file, lines);

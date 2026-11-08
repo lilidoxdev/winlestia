@@ -38,6 +38,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 - Tests regroupés dans `tests/Winlestia.Tests` (xUnit) et pytest.
 - Blocs `catch` vides classés : helper `Safe` et journalisation.
 - Auto-tests du gestionnaire de fichiers exclus des builds Release.
+- Logique pure du bail de barre des tâches extraite (`TaskbarLeasePolicy`) et testée (bail, repli « toujours visible », décision du gardien).
+- Tests xUnit ajoutés (calculatrice, maths de couleur et palettes, options de lancement, mode silencieux, trame du tube de Fichiers, validation de cibles) ; helper `TempDir` à la place des nettoyages `catch { }`.
+- CI : couverture coverlet avec résumé et plancher, syntaxe PowerShell de l'installateur, `compileall` Python.
+- L'installateur refuse de se compiler sans `AppVersion` (plus de version par défaut codée en dur).
+- Plans et journaux d'avancement terminés retirés de `docs/` (le texte de la release reste dans `docs/release-notes-0.9.2.md`, qui résume ce qui précède sans le reprendre).
 - Code reformaté (`.editorconfig`, dotnet format, ruff, qmlformat), sans changement de comportement.
 - Backend découpé en dossiers ; `frontend.py` découpé.
 - Dépendances épinglées (fichiers de verrouillage, `global.json`).

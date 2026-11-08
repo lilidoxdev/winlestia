@@ -1,4 +1,4 @@
-# Python3.12 / screen_picker.py / Temporary click capture on a dedicated Windows message thread.
+# Python3.12 / screen_picker.py / Capture de clic temporaire sur un thread de messages Windows dédié.
 import ctypes, threading
 from ctypes import wintypes
 

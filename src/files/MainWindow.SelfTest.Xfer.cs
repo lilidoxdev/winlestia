@@ -1,7 +1,10 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=xfer : big copy (3000 small files + 300 MB file) with native progress window + UI responsiveness, locked file (move, recycle) with the native
-// error dialog dismissed through UI Automation, access-denied folder (navigation message + copy from it), cross-drive copy / move when a second fixed writable drive exists.
-// Needs WINLESTIA_FILES_DATA_DIR under %TEMP% and a fixture folder under %TEMP%\WinlestiaFilesOps (harness). Everything created is removed at the end (ACLs restored first).
+// WINLESTIA_FILES_SELFTEST=xfer : grosse copie (3000 petits fichiers + un fichier de 300 Mo) avec fenêtre de progression native +
+// réactivité de l'interface, fichier verrouillé (déplacement, corbeille) avec la boîte
+// d'erreur native fermée par UI Automation, dossier refusé (message de navigation + copie depuis celui-ci), copie / déplacement entre
+// disques quand un second disque fixe inscriptible existe.
+// Exige WINLESTIA_FILES_DATA_DIR sous %TEMP% et un dossier d'essai sous %TEMP%\WinlestiaFilesOps (banc). Tout ce qui est créé est supprimé
+// à la fin (ACL rétablies d'abord).
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,7 +30,8 @@ public sealed partial class MainWindow
 
     static int RunExe(string exe, params string[] args)
     {
-        var psi = new ProcessStartInfo(exe) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+        var psi = new ProcessStartInfo(exe) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true,
+            RedirectStandardError = true };
         foreach (var a in args)
             psi.ArgumentList.Add(a);
         using var p = Process.Start(psi)!;
@@ -62,7 +66,8 @@ public sealed partial class MainWindow
     {
         string F0 = Fixture();
         string tmp = Path.GetFullPath(Path.GetTempPath());
-        if (!Path.GetFullPath(FilesSettings.Dir).StartsWith(tmp, StringComparison.OrdinalIgnoreCase) || Environment.GetEnvironmentVariable("WINLESTIA_FILES_DATA_DIR") is not { Length: > 0 })
+        if (!Path.GetFullPath(FilesSettings.Dir).StartsWith(tmp, StringComparison.OrdinalIgnoreCase)
+            || Environment.GetEnvironmentVariable("WINLESTIA_FILES_DATA_DIR") is not { Length: > 0 })
         {
             T("ABORT data dir is not a %TEMP% folder");
             Close();
@@ -77,12 +82,13 @@ public sealed partial class MainWindow
         string sid = "*" + System.Security.Principal.WindowsIdentity.GetCurrent().User!.Value;
         string denyDir = Path.Combine(X, "denied");
         string? crossRoot = null;
-        string[] errTokens = { "=Ignorer", "=Skip", "=Annuler", "=Cancel", "=OK", "=Fermer", "=Close" };     // "=" : exact Name (not the progress window's "Annuler la vignette")
+        // "=" : exact Name (not the progress window's "Annuler la vignette")
+        string[] errTokens = { "=Ignorer", "=Skip", "=Annuler", "=Cancel", "=OK", "=Fermer", "=Close" };
         try
         {
             Directory.CreateDirectory(X);
 
-            // ---- (a) big copy ----
+            // ---- (a) grosse copie ----
             string srcA = Path.Combine(X, "bulk"), dstA = Path.Combine(X, "bulk-dst");
             Directory.CreateDirectory(srcA);
             Directory.CreateDirectory(dstA);
@@ -122,7 +128,7 @@ public sealed partial class MainWindow
                             }
                         }
                     }
-                    Task.Delay(200).Wait();
+                    Task.Delay(PauseBreveMs).Wait();
                 }
             });
             long worst = 0;
@@ -143,8 +149,10 @@ public sealed partial class MainWindow
             T($"  bulk copy took {secs:F1} s, {pings} pings, worst UI ping {worst} ms; native windows: {string.Join(" ; ", seen)}");
             var ra = await paste;
             Check("(a) copy finished without error", ra is { Error: null, Aborted: false }, ra?.Error ?? "null");
-            Check("(a) native progress window seen via UIA", seen.Count > 0 || secs < 1.5, seen.Count > 0 ? seen[0] : $"none in {secs:F1} s");
-            Check("(a) UI thread stays responsive (worst dispatcher ping < 200 ms)", pings > 5 && worst < 200, $"{worst} ms over {pings} pings");
+            Check("(a) native progress window seen via UIA", seen.Count > 0 || secs < 1.5, seen.Count > 0 ? seen[0]
+                : $"none in {secs:F1} s");
+            Check("(a) UI thread stays responsive (worst dispatcher ping < 200 ms)", pings > 5 && worst < 200,
+                $"{worst} ms over {pings} pings");
             string outDir = Path.Combine(dstA, "bulk");
             var copied = Directory.Exists(outDir) ? Directory.GetFiles(outDir) : Array.Empty<string>();
             Check("(a) result complete: 3001 files", copied.Length == 3001, copied.Length.ToString());
@@ -158,7 +166,8 @@ public sealed partial class MainWindow
                 fs.Read(h);
                 fs.Position = fs.Length - 4;
                 fs.Read(tl);
-                bigOk = fs.Length == 300L * 1024 * 1024 && h.SequenceEqual(new byte[] { 1, 2, 3, 4 }) && tl.SequenceEqual(new byte[] { 9, 8, 7, 6 });
+                bigOk = fs.Length == 300L * 1024 * 1024 && h.SequenceEqual(new byte[] { 1, 2, 3, 4 }) && tl.SequenceEqual(new byte[] { 9, 8,
+                    7, 6 });
             }
             Check("(a) 300 MB file intact (size, head, tail)", bigOk);
             Check("(a) list matches disk", DiskMatches());
@@ -169,7 +178,7 @@ public sealed partial class MainWindow
             
             });
 
-            // ---- (b) locked file ----
+            // ---- (b) fichier verrouillé ----
             string B = Path.Combine(X, "lock"), dstB = Path.Combine(X, "lock-dst");
             Directory.CreateDirectory(B);
             Directory.CreateDirectory(dstB);
@@ -181,10 +190,12 @@ public sealed partial class MainWindow
                 Active.Go(B);
                 await WaitLoaded();
                 int undo0 = journal.UndoCount;
-                var rb = await PasteFiles(new[] { locked }, true, dstB, 45000, new UiaStep("file-in-use dismiss", errTokens, WaitMs: 20000, Closes: true));
+                var rb = await PasteFiles(new[] { locked }, true, dstB, 45000, new UiaStep("file-in-use dismiss", errTokens, WaitMs: 20000,
+                    Closes: true));
                 await WaitLoaded();
                 Check("(b) move of locked file returned (no hang / crash)", rb != null, rb?.Error ?? "null");
-                Check("(b) move: native error dialog detected and closed", Uia.Windows(MainHwnd).Count == 0 && File.Exists(locked) && !File.Exists(Path.Combine(dstB, "locked.txt")), $"windows left {Uia.Windows(MainHwnd).Count}");
+                Check("(b) move: native error dialog detected and closed", Uia.Windows(MainHwnd).Count == 0 && File.Exists(locked)
+                    && !File.Exists(Path.Combine(dstB, "locked.txt")), $"windows left {Uia.Windows(MainHwnd).Count}");
                 Check("(b) move: list coherent, locked file still listed", DiskMatches() && Active.Items.Any(i => i.Name == "locked.txt"));
                 Check("(b) move: nothing recorded in the undo journal", journal.UndoCount == undo0, $"{journal.UndoCount} vs {undo0}");
 
@@ -194,7 +205,7 @@ public sealed partial class MainWindow
                 {
                     var drv = Uia.Run(MainHwnd, new UiaStep("recycle error dismiss", errTokens, WaitMs: 20000, Closes: true));
                     var del = DeleteAsync(new[] { item }, false);
-                    if (await Task.WhenAny(del, Task.Delay(45000)) == del)
+                    if (await Task.WhenAny(del, Task.Delay(TimeoutSuppressionMs)) == del)
                         rd = await del;
                     else
                         T("TIMEOUT delete");
@@ -202,8 +213,13 @@ public sealed partial class MainWindow
                 }
                 await WaitLoaded();
                 Check("(b) recycle of locked file returned (no hang / crash)", rd != null, rd?.Error ?? "null");
-                Check("(b) recycle: file still there, list coherent", File.Exists(locked) && DiskMatches() && Active.Items.Any(i => i.Name == "locked.txt"), $"exists={File.Exists(locked)} disk={DiskMatches()} listed={Active.Items.Any(i => i.Name == "locked.txt")} items={string.Join(",", Active.Items.Select(i => i.Name))} err={rd?.Error} removed={rd?.Removed.Count}");
-                Check("(b) recycle: no dialog left, nothing recorded in the journal", Uia.Windows(MainHwnd).Count == 0 && journal.UndoCount == undo0, $"windows={Uia.Windows(MainHwnd).Count} undo={journal.UndoCount} vs {undo0} next={journal.NextUndo?.Label}");
+                Check("(b) recycle: file still there, list coherent", File.Exists(locked) && DiskMatches() && Active.Items.Any(i
+                    => i.Name == "locked.txt"),
+                    $"exists={File.Exists(locked)} disk={DiskMatches()} listed={Active.Items.Any(i => i.Name == "locked.txt")} " +
+                    $"items={string.Join(",", Active.Items.Select(i => i.Name))} err={rd?.Error} removed={rd?.Removed.Count}");
+                Check("(b) recycle: no dialog left, nothing recorded in the journal", Uia.Windows(MainHwnd).Count == 0
+                    && journal.UndoCount == undo0,
+                    $"windows={Uia.Windows(MainHwnd).Count} undo={journal.UndoCount} vs {undo0} next={journal.NextUndo?.Label}");
             }
             T("  OddHr after (b): " + FileOps.OddHr);
             Check("(b) after release the file is readable and unchanged", File.ReadAllText(locked) == "LOCKED");
@@ -221,21 +237,24 @@ public sealed partial class MainWindow
             await WaitLoaded();
             Active.Go(denyDir);
             await WaitLoaded();
-            await Task.Delay(300);
+            await Task.Delay(PauseAnimationLongueMs);
             Check("(c) navigation into denied folder: state Denied", Active.State == LoadState.Denied, Active.State.ToString());
             Check("(c) navigation: clear message shown in the app", HasText(this, "Accès refusé"));
             Check("(c) navigation: no crash.log", !File.Exists(crash));
             Active.Go(dstC);
             await WaitLoaded();
-            var rcopy = await PasteFiles(new[] { xin }, false, dstC, 45000, new UiaStep("access-denied dismiss", errTokens, WaitMs: 7000, Closes: true));
+            var rcopy = await PasteFiles(new[] { xin }, false, dstC, 45000, new UiaStep("access-denied dismiss", errTokens, WaitMs: 7000,
+                Closes: true));
             await WaitLoaded();
             Check("(c) copy from denied folder returned, handled", rcopy != null, rcopy?.Error ?? "null");
-            Check("(c) copy from denied folder: nothing copied, no dialog left, no crash.log", !File.Exists(Path.Combine(dstC, "x.txt")) && Uia.Windows(MainHwnd).Count == 0 && !File.Exists(crash));
+            Check("(c) copy from denied folder: nothing copied, no dialog left, no crash.log", !File.Exists(Path.Combine(dstC, "x.txt"))
+                && Uia.Windows(MainHwnd).Count == 0 && !File.Exists(crash));
             int rr = RunExe("icacls.exe", denyDir, "/remove:d", sid, "/T", "/C");
             Check("(c) rights restored", rr == 0 && File.Exists(xin) && File.ReadAllText(xin) == "X", "exit " + rr);
 
             // ---- (d) cross drive ----
-            var other = DriveInfo.GetDrives().FirstOrDefault(d => d.DriveType == DriveType.Fixed && d.IsReady && !string.Equals(d.Name, Path.GetPathRoot(tmp), StringComparison.OrdinalIgnoreCase) && d.AvailableFreeSpace > 1L << 30);
+            var other = DriveInfo.GetDrives().FirstOrDefault(d => d.DriveType == DriveType.Fixed && d.IsReady && !string.Equals(d.Name,
+                Path.GetPathRoot(tmp), StringComparison.OrdinalIgnoreCase) && d.AvailableFreeSpace > 1L << 30);
             if (other == null)
                 T("NOT TESTED (d): no second fixed drive");
             else
@@ -259,9 +278,12 @@ public sealed partial class MainWindow
                     Active.Go(crossRoot);
                     await WaitLoaded();
                     var r1 = await PasteFiles(new[] { cp }, false, crossRoot, 60000);
-                    Check($"(d) copy to {other.Name}: ok", r1 is { Error: null } && File.Exists(Path.Combine(crossRoot, "c.bin")) && File.Exists(cp) && File.ReadAllBytes(Path.Combine(crossRoot, "c.bin")).SequenceEqual(data), r1?.Error ?? "null");
+                    Check($"(d) copy to {other.Name}: ok", r1 is { Error: null } && File.Exists(Path.Combine(crossRoot, "c.bin"))
+                        && File.Exists(cp) && File.ReadAllBytes(Path.Combine(crossRoot, "c.bin")).SequenceEqual(data), r1?.Error ?? "null");
                     var r2 = await PasteFiles(new[] { mv }, true, crossRoot, 60000);
-                    Check($"(d) move to {other.Name}: ok, source gone", r2 is { Error: null } && File.Exists(Path.Combine(crossRoot, "m.bin")) && !File.Exists(mv) && File.ReadAllBytes(Path.Combine(crossRoot, "m.bin")).SequenceEqual(data), r2?.Error ?? "null");
+                    Check($"(d) move to {other.Name}: ok, source gone", r2 is { Error: null } && File.Exists(Path.Combine(crossRoot,
+                        "m.bin")) && !File.Exists(mv) && File.ReadAllBytes(Path.Combine(crossRoot, "m.bin")).SequenceEqual(data), r2?.Error
+                        ?? "null");
                     await WaitLoaded();
                     Check("(d) list matches disk", DiskMatches());
                 }

@@ -1,4 +1,4 @@
-// language: C# 12, file: TelemetryGraph.cs, target: Windows 11 / .NET 8 WPF, bounded retained-mode charts
+// C# 12, fichier TelemetryGraph.cs, cible Windows 11 / .NET 8 WPF, graphiques bornés en mode retenu
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +10,11 @@ namespace PanneauxGlass;
 
 internal sealed class TelemetryGraph : FrameworkElement
 {
+    // Durée du glissement d'un point du graphe, modulée par le réglage de mouvement.
+    const int SlideMs = 240;
     internal const int Capacity = 60;
-    readonly List<(double? a, double? b)> history = new(); readonly DrawingVisual visual = new(); readonly TranslateTransform translation = new();
+    readonly List<(double? a, double? b)> history = new(); readonly DrawingVisual visual = new();
+        readonly TranslateTransform translation = new();
     readonly Color color; readonly Brush stroke, secondary; readonly bool percent;
     internal int Count => history.Count;
     internal TelemetryGraph(string hex, bool percent = true)
@@ -48,7 +51,8 @@ internal sealed class TelemetryGraph : FrameworkElement
         if (width < 2 || height < 2)
             return;
         Clip = new RectangleGeometry(new Rect(0, 0, width, height));
-        double step = width / (Capacity - 1), max = percent ? 100 : Math.Max(1024, history.SelectMany(v => new[] { v.a ?? 0, v.b ?? 0 }).DefaultIfEmpty().Max() * 1.15);
+        double step = width / (Capacity - 1), max = percent ? 100 : Math.Max(1024, history.SelectMany(v => new[] { v.a ?? 0, v.b ?? 0
+            }).DefaultIfEmpty().Max() * 1.15);
         using (var drawing = visual.RenderOpen())
         {
             var grid = new Pen(UI.Brush("#14FFFFFF"), .7);
@@ -62,7 +66,8 @@ internal sealed class TelemetryGraph : FrameworkElement
         translation.X = 0;
         if (animate && history.Count > 1 && Store.State.Motion > 0)
         {
-            var motion = new DoubleAnimation(step, 0, TimeSpan.FromMilliseconds(240 * Store.State.Motion)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }, FillBehavior = FillBehavior.Stop };
+            var motion = new DoubleAnimation(step, 0, TimeSpan.FromMilliseconds(SlideMs * Store.State.Motion)) {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }, FillBehavior = FillBehavior.Stop };
             Timeline.SetDesiredFrameRate(motion, 60);
             translation.BeginAnimation(TranslateTransform.XProperty, motion);
         }
@@ -82,7 +87,8 @@ internal sealed class TelemetryGraph : FrameworkElement
                     started = false;
                     continue;
                 }
-                var point = new Point(width - (history.Count - 1 - i) * step, Math.Clamp(height - 3 - value.Value / max * (height - 6), 3, height - 3));
+                var point = new Point(width - (history.Count - 1 - i) * step, Math.Clamp(height - 3 - value.Value / max * (height - 6), 3,
+                    height - 3));
                 if (!started)
                 {
                     context.BeginFigure(point, false, false);
@@ -94,7 +100,8 @@ internal sealed class TelemetryGraph : FrameworkElement
             }
         }
         line.Freeze();
-        var pen = new Pen(brush.CloneCurrentValue(), 1.8) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
+        var pen = new Pen(brush.CloneCurrentValue(), 1.8) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round,
+            LineJoin = PenLineJoin.Round };
         pen.Freeze();
         drawing.DrawGeometry(null, pen, line);
         if (last.HasValue)

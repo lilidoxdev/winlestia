@@ -1,4 +1,4 @@
-# Python 3.12 / test_surface_geometry.py / Silhouette regression checks independent of Windows composition.
+# Python 3.12 / test_surface_geometry.py / Vérifications de silhouette indépendantes de la composition Windows.
 import sys, unittest
 from pathlib import Path
 

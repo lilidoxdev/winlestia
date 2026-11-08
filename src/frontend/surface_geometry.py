@@ -1,4 +1,4 @@
-# Python 3.12 / surface_geometry.py / Qt 6. One filled silhouette owns every shell background.
+# Python 3.12 / surface_geometry.py / Qt 6. Une seule silhouette pleine porte tous les fonds du shell.
 from PySide6.QtCore import QObject, QTimer, QRectF, Qt
 from PySide6.QtGui import QPainterPath, QTransform, QRegion
 from functools import lru_cache
@@ -48,11 +48,14 @@ def dock_path(width, height, attached=True):
 
 
 def rail_path(width, height, attached=True, side='right'):
-    # Right-edge panel: the dock silhouette transposed ((X,Y)->(Y,X)) so its base lies on the right frame band, convex corners on the left (width x height = window size).
-    # Attached: overlap the band by 2 px so the union has no hairline seam where bump and frame meet.
-    # The transpose mirrors the contour: reverse it so its winding matches the frame ring (else WindingFill cancels the band under a sliding bump).
+    # Panneau du bord droit : la silhouette du dock transposée ((X,Y)->(Y,X)) pour que sa base repose sur la bande de
+    # cadre droite, coins convexes à gauche (largeur x hauteur = taille de la fenêtre).
+    # Attaché : recouvre la bande de 2 px pour que l'union n'ait aucune couture fine entre la bosse et le cadre.
+    # La transposition inverse le contour : on le renverse pour que son sens corresponde à l'anneau du cadre (sinon
+    # WindingFill annule la bande sous une bosse qui glisse).
     path = QTransform(0, 1, 1, 0, 0, 0).map(dock_path(height, width + (2 if attached else 0), attached)).toReversed()
-    # Left edge: horizontal mirror (x -> width-x, base overlaps the band by 2 px at x=-2); the mirror flips the winding again, so reverse once more.
+    # Bord gauche : miroir horizontal (x -> largeur-x, la base recouvre la bande de 2 px à x=-2) ; le miroir inverse à
+    # nouveau le sens, donc on renverse une fois de plus.
     return QTransform(-1, 0, 0, 1, width, 0).map(path).toReversed() if side == 'left' else path
 
 
@@ -177,7 +180,8 @@ class SurfaceScene(QObject):
         def rail_view(window, side='right'):
             if not window or not window.isVisible():
                 return None
-            # The window has a fixed size; the animated bump (bumpWidth/bumpHeight) is aligned to its screen edge and vertically centred in it.
+            # La fenêtre a une taille fixe ; la bosse animée (bumpWidth/bumpHeight) est alignée sur son bord d'écran
+            # et centrée verticalement dedans.
             bw = float(window.property('bumpWidth') or window.width())
             bh = float(window.property('bumpHeight') or window.height())
             offset = float(window.property('offset') or 0)
@@ -191,7 +195,8 @@ class SurfaceScene(QObject):
             )
 
         def dictation_view(window):
-            # Dictation pill: dock silhouette (same concave joins) whose base slides in/out of the bottom band; width follows the animated pillWidth.
+            # Pastille de dictée : silhouette du dock (mêmes jonctions concaves) dont la base glisse dans la bande du
+            # bas ; la largeur suit pillWidth animé.
             if not window or not window.isVisible():
                 return None
             width = float(window.property('pillWidth') or 0)
@@ -220,7 +225,8 @@ class SurfaceScene(QObject):
             if window and not spec:
                 self.input_masks.pop(int(window.winId()), None)
             if spec:
-                # Input mask uses the resting position (offset 0): it never depends on the slide animation phase, and is re-applied after every reveal.
+                # Le masque de saisie utilise la position de repos (offset 0) : il ne dépend jamais de la phase
+                # d'animation du glissement et est réappliqué après chaque révélation.
                 mask_x = window.width() - spec[2] if side == 'right' else 0
                 mask_key = (
                     window.width(),
@@ -247,7 +253,7 @@ class SurfaceScene(QObject):
             if window and not spec and is_dock:
                 self.input_masks.pop(
                     int(window.winId()), None
-                )  # hidden dock: forget its mask, it is re-applied on the next show
+                )  # dock masqué : on oublie son masque, il est réappliqué à la prochaine apparition
             if window and spec:
                 offset = spec[1] - window.y() if is_dock else 0
                 mask_key = (window.width(), window.height(), round(spec[2]), round(spec[3]), spec[4], round(offset))
@@ -305,7 +311,7 @@ class SurfaceScene(QObject):
                     local(dictation),
                 )
             )
-            # Qt's curve renderer needs a normalized silhouette for overlapping contours.
+            # Le rendu de courbes de Qt exige une silhouette normalisée pour les contours qui se chevauchent.
             simple = path.simplified()
             outline = svg_path(simple)
             paths[name] = simple

@@ -11,16 +11,20 @@ namespace PanneauxGlass;
 internal sealed record WallpaperMonitor(string name, int x, int y, int width, int height, string path, long modified, string background);
 internal sealed class WindowsWallpaper : IDisposable
 {
-    // Every source of change calls Notify(): one debounced Read() then Revision++. The frontend re-resolves once per revision.
+    // Toute source de changement appelle Notify() : un Read() avec anti-rebond puis Revision++. Le frontend se résout à nouveau une fois
+    // par révision.
     readonly System.Threading.Timer debounce; readonly object gate = new(); volatile bool disposed, forced; int revision;
-    readonly List<FileSystemWatcher> watchers = new(); readonly ManualResetEvent stop = new(false); readonly System.Collections.Concurrent.ConcurrentDictionary<IntPtr, byte> hostChildren = new();
+    readonly List<FileSystemWatcher> watchers = new(); readonly ManualResetEvent stop = new(false);
+        readonly System.Collections.Concurrent.ConcurrentDictionary<IntPtr, byte> hostChildren = new();
     Thread? registryThread, hookThread; uint hookThreadId; WinEventProc? hookProc;
     internal volatile WallpaperMonitor[] Monitors = Array.Empty<WallpaperMonitor>();
     internal int Revision => Volatile.Read(ref revision);
     internal WindowsWallpaper()
     {
-        // Revision moves only when the monitors really differ, or when a live host / wallpaper-app config change was seen: a stray UserPreferenceChanged (for example after explorerPalette) must not retrigger a capture.
-        debounce = new System.Threading.Timer(_ => { bool changed = Read(); if (forced) { forced = false; changed = true; } if (changed) Interlocked.Increment(ref revision); }, null, Timeout.Infinite, Timeout.Infinite);
+        // Revision n'avance que si les moniteurs diffèrent vraiment, ou si un changement d'hôte animé / de config de l'application de fond
+        // a été vu : un UserPreferenceChanged parasite (par exemple après explorerPalette) ne doit pas relancer une capture.
+        debounce = new System.Threading.Timer(_ => { bool changed = Read(); if (forced) { forced = false; changed = true;
+            } if (changed) Interlocked.Increment(ref revision); }, null, Timeout.Infinite, Timeout.Infinite);
         Notify(0);
         try
         {
@@ -56,7 +60,8 @@ internal sealed class WindowsWallpaper : IDisposable
                 // Minuterie déjà libérée : arrêt en cours.
             }
     }
-    // WM_SETTINGCHANGE / SPI_SETDESKWALLPAPER arrive through SystemEvents' hidden message window. Unlock, resume and display change are the only safety re-checks.
+    // WM_SETTINGCHANGE / SPI_SETDESKWALLPAPER arrivent par la fenêtre de messages cachée de SystemEvents. Le déverrouillage, la reprise et
+    // le changement d'affichage sont les seules revérifications de sécurité.
     void Preference(object? s, Microsoft.Win32.UserPreferenceChangedEventArgs e)
     {
         if (e.Category is Microsoft.Win32.UserPreferenceCategory.Desktop or Microsoft.Win32.UserPreferenceCategory.General)
@@ -65,7 +70,8 @@ internal sealed class WindowsWallpaper : IDisposable
     void Display(object? s, EventArgs e) => Notify(250);
     void Session(object? s, Microsoft.Win32.SessionSwitchEventArgs e)
     {
-        if (e.Reason is Microsoft.Win32.SessionSwitchReason.SessionUnlock or Microsoft.Win32.SessionSwitchReason.SessionLogon or Microsoft.Win32.SessionSwitchReason.ConsoleConnect)
+        if (e.Reason is Microsoft.Win32.SessionSwitchReason.SessionUnlock or Microsoft.Win32.SessionSwitchReason.SessionLogon or Microsoft
+            .Win32.SessionSwitchReason.ConsoleConnect)
             Notify(1000);
     }
     void Power(object? s, Microsoft.Win32.PowerModeChangedEventArgs e)
@@ -121,7 +127,8 @@ internal sealed class WindowsWallpaper : IDisposable
     {
         if (!Directory.Exists(folder))
             return;
-        var w = new FileSystemWatcher(folder, name) { NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size };
+        var w = new FileSystemWatcher(folder, name) { NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size
+            };
         FileSystemEventHandler on = (_, _) => Notify(500, true);
         w.Changed += on;
         w.Created += on;
@@ -131,7 +138,9 @@ internal sealed class WindowsWallpaper : IDisposable
     }
     void StartFileWatch()
     {
-        string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), data = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            data = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         string packages = Path.Combine(local, "Packages");
         Watch(Path.Combine(roaming, "motion-photo-editor"), "config.json");
         foreach (var d in Safe(() => Directory.GetDirectories(packages, "Desktophut.*")))
@@ -182,7 +191,8 @@ internal sealed class WindowsWallpaper : IDisposable
         return libs.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    // Live host start/stop without polling: window create/destroy/reparent events filtered to children of Progman / WorkerW (24H2: child of Progman; older builds: WorkerW sibling).
+    // Démarrage/arrêt de l'hôte animé sans sondage : événements de création/destruction/changement de parent de fenêtre filtrés sur les
+    // enfants de Progman / WorkerW (24H2 : enfant de Progman ; versions plus anciennes : frère de WorkerW).
     void StartHostHook()
     {
         using var ready = new ManualResetEventSlim(false);
@@ -190,7 +200,8 @@ internal sealed class WindowsWallpaper : IDisposable
         {
             hookThreadId = WallpaperNative.GetCurrentThreadId();
             hookProc = OnWinEvent;
-            IntPtr a = WallpaperNative.SetWinEventHook(0x8000, 0x8001, IntPtr.Zero, hookProc, 0, 0, 0x0002), b = WallpaperNative.SetWinEventHook(0x800F, 0x800F, IntPtr.Zero, hookProc, 0, 0, 0x0002);
+            IntPtr a = WallpaperNative.SetWinEventHook(0x8000, 0x8001, IntPtr.Zero, hookProc, 0, 0, 0x0002),
+                b = WallpaperNative.SetWinEventHook(0x800F, 0x800F, IntPtr.Zero, hookProc, 0, 0, 0x0002);
             ready.Set();
             try
             {
@@ -223,7 +234,8 @@ internal sealed class WindowsWallpaper : IDisposable
                 Notify(500, true);
             return;
         }
-        IntPtr parent = WallpaperNative.GetParent(hwnd);   // cheap first: nearly every window has a parent that is neither Progman nor WorkerW
+        // cheap first: nearly every window has a parent that is neither Progman nor WorkerW
+        IntPtr parent = WallpaperNative.GetParent(hwnd);
         if (parent == IntPtr.Zero)
         {
             if (ClassOf(hwnd) == "WorkerW")
@@ -239,8 +251,9 @@ internal sealed class WindowsWallpaper : IDisposable
         Notify(500, true);
     }
 
-    // Live-wallpaper host window: visible child of Progman / WorkerW that is not the icon view. With a target (monitor rect) pick the host matching it exactly, else the smallest host containing it
-    // (a spanning host: the caller crops), else the largest.
+    // Fenêtre hôte du fond animé : enfant visible de Progman / WorkerW qui n'est pas la vue des icônes. Avec une cible (rectangle de
+    // moniteur) on prend l'hôte qui lui correspond exactement, sinon le plus petit hôte qui la contient
+    // (hôte étendu : l'appelant rogne), sinon le plus grand.
     internal static IntPtr FindHost(Native.Rect? target = null)
     {
         var found = new List<(IntPtr h, Native.Rect r)>();
@@ -272,10 +285,12 @@ internal sealed class WindowsWallpaper : IDisposable
         long Area((IntPtr h, Native.Rect r) f) => (long)(f.r.Right - f.r.Left) * (f.r.Bottom - f.r.Top);
         if (target is { } t)
         {
-            var exact = found.Where(f => Math.Abs(f.r.Left - t.Left) <= 2 && Math.Abs(f.r.Top - t.Top) <= 2 && Math.Abs(f.r.Right - t.Right) <= 2 && Math.Abs(f.r.Bottom - t.Bottom) <= 2).ToList();
+            var exact = found.Where(f => Math.Abs(f.r.Left - t.Left) <= 2 && Math.Abs(f.r.Top - t.Top) <= 2
+                && Math.Abs(f.r.Right - t.Right) <= 2 && Math.Abs(f.r.Bottom - t.Bottom) <= 2).ToList();
             if (exact.Count > 0)
                 return exact[0].h;
-            var contain = found.Where(f => f.r.Left <= t.Left + 2 && f.r.Top <= t.Top + 2 && f.r.Right >= t.Right - 2 && f.r.Bottom >= t.Bottom - 2).OrderBy(Area).ToList();
+            var contain = found.Where(f => f.r.Left <= t.Left + 2 && f.r.Top <= t.Top + 2 && f.r.Right >= t.Right - 2
+                && f.r.Bottom >= t.Bottom - 2).OrderBy(Area).ToList();
             if (contain.Count > 0)
                 return contain[0].h;
         }
@@ -300,7 +315,8 @@ internal sealed class WindowsWallpaper : IDisposable
                 var result = new List<WallpaperMonitor>();
                 for (uint i = 0; i < count; i++)
                 {
-                    if (api.GetMonitorDevicePathAt(i, out string id) != 0 || api.GetMonitorRECT(id, out var rect) != 0 || rect.Right <= rect.Left || rect.Bottom <= rect.Top)
+                    if (api.GetMonitorDevicePathAt(i, out string id) != 0 || api.GetMonitorRECT(id, out var rect) != 0
+                        || rect.Right <= rect.Left || rect.Bottom <= rect.Top)
                         continue;
                     api.GetWallpaper(id, out string path);
                     long modified = 0;
@@ -313,8 +329,10 @@ internal sealed class WindowsWallpaper : IDisposable
                     {
                         Store.Log("WindowsWallpaper.Read : " + ex.GetType().Name + ": " + ex.Message);
                     }
-                    string name = System.Windows.Forms.Screen.AllScreens.FirstOrDefault(s => s.Bounds.Left == rect.Left && s.Bounds.Top == rect.Top)?.DeviceName ?? id;
-                    result.Add(new(name, rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top, path ?? "", modified, background));
+                    string name = System.Windows.Forms.Screen.AllScreens.FirstOrDefault(s => s.Bounds.Left == rect.Left
+                        && s.Bounds.Top == rect.Top)?.DeviceName ?? id;
+                    result.Add(new(name, rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top, path ?? "", modified,
+                        background));
                 }
                 var next = result.ToArray();
                 changed = !next.SequenceEqual(Monitors);
@@ -351,16 +369,20 @@ internal static class WallpaperNative
     {
         public IntPtr hwnd; public uint message; public IntPtr wParam, lParam; public uint time; public int x, y;
     }
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] internal static extern int RegOpenKeyExW(IntPtr key, string sub, int options, int sam, out IntPtr result);
-    [DllImport("advapi32.dll")] internal static extern int RegNotifyChangeKeyValue(IntPtr key, bool subtree, int filter, IntPtr evt, bool async);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] internal static extern int RegOpenKeyExW(IntPtr key, string sub, int options,
+        int sam, out IntPtr result);
+    [DllImport("advapi32.dll")] internal static extern int RegNotifyChangeKeyValue(IntPtr key, bool subtree, int filter, IntPtr evt,
+        bool async);
     [DllImport("advapi32.dll")] internal static extern int RegCloseKey(IntPtr key);
-    [DllImport("user32.dll")] internal static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid, uint tid, uint flags);
+    [DllImport("user32.dll")] internal static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
+        uint tid, uint flags);
     [DllImport("user32.dll")] internal static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] internal static extern int GetMessage(out Msg msg, IntPtr hwnd, uint min, uint max);
     [DllImport("user32.dll")] internal static extern bool PostThreadMessage(uint thread, uint msg, IntPtr w, IntPtr l);
     [DllImport("kernel32.dll")] internal static extern uint GetCurrentThreadId();
     [DllImport("user32.dll")] internal static extern IntPtr GetParent(IntPtr hwnd);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] internal static extern int GetClassName(IntPtr hwnd, System.Text.StringBuilder sb, int max);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] internal static extern int GetClassName(IntPtr hwnd, System.Text.StringBuilder sb,
+        int max);
     [DllImport("user32.dll")] internal static extern bool EnumChildWindows(IntPtr parent, EnumProc proc, IntPtr l);
     [DllImport("user32.dll")] internal static extern bool EnumWindows(EnumProc proc, IntPtr l);
     [DllImport("user32.dll")] internal static extern bool IsWindowVisible(IntPtr hwnd);
@@ -371,7 +393,8 @@ internal static class WallpaperNative
 internal interface IDesktopWallpaper
 {
     [PreserveSig] int SetWallpaper([MarshalAs(UnmanagedType.LPWStr)] string monitor, [MarshalAs(UnmanagedType.LPWStr)] string wallpaper);
-    [PreserveSig] int GetWallpaper([MarshalAs(UnmanagedType.LPWStr)] string monitor, [MarshalAs(UnmanagedType.LPWStr)] out string wallpaper);
+    [PreserveSig] int GetWallpaper([MarshalAs(UnmanagedType.LPWStr)] string monitor,
+        [MarshalAs(UnmanagedType.LPWStr)] out string wallpaper);
     [PreserveSig] int GetMonitorDevicePathAt(uint index, [MarshalAs(UnmanagedType.LPWStr)] out string monitor);
     [PreserveSig] int GetMonitorDevicePathCount(out uint count);
     [PreserveSig] int GetMonitorRECT([MarshalAs(UnmanagedType.LPWStr)] string monitor, out Native.Rect rect);

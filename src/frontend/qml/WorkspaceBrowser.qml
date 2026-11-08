@@ -528,10 +528,6 @@ Item {
         onActivated: browser.focusSearch()
     }
 
-    component Spring: Anim {
-        duration: Appearance.reducedEffects ? Appearance.anim.durations.small : Appearance.anim.durations.expressiveFastSpatial
-        easing.bezierCurve: Appearance.reducedEffects ? Appearance.anim.curves.standard : Appearance.anim.curves.expressiveFastSpatial
-    }
 
     // Right-click menu: plain in-panel overlay, fully imperative. Root cause of "works only once": Menu.qml sets
     // `expanded=false` itself when an item is picked, which destroyed a `expanded:context.opened` binding, so the menu
@@ -663,143 +659,6 @@ Item {
         }
     }
 
-    component NavItem: Item {
-        id: nav
-        property string icon
-        property string label
-        property int count: -1
-        property bool selected
-        signal triggered
-        implicitHeight: 48
-        MouseArea {
-            id: navMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: nav.triggered()
-        }
-        Rectangle {
-            anchors.fill: parent
-            radius: Appearance.rounding.full
-            color: Colours.palette.m3onSurface
-            opacity: navMouse.pressed ? .12 : navMouse.containsMouse && !nav.selected ? .07 : 0
-            Behavior on opacity {
-                enabled: !Appearance.reducedEffects
-                Anim {
-                    duration: Appearance.anim.durations.small
-                }
-            }
-        }
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: Appearance.padding.larger
-            anchors.rightMargin: Appearance.padding.normal
-            spacing: Appearance.spacing.smaller
-            MaterialIcon {
-                text: nav.icon
-                fill: nav.selected ? 1 : 0
-                font.pointSize: Appearance.font.size.large
-                color: nav.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                scale: nav.selected && !Appearance.reducedEffects ? 1.12 : 1
-                Behavior on scale {
-                    Spring {}
-                }
-            }
-            StyledText {
-                Layout.fillWidth: true
-                text: nav.label
-                elide: Text.ElideRight
-                font.pointSize: Appearance.font.size.normal
-                color: nav.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-            }
-            Rectangle {
-                visible: nav.count >= 0
-                implicitWidth: Math.max(24, badge.implicitWidth + 14)
-                implicitHeight: 22
-                radius: Appearance.rounding.full
-                color: nav.selected ? Qt.alpha(Colours.palette.m3onSecondaryContainer, .14) : Colours.palette.m3surfaceContainerHighest
-                StyledText {
-                    id: badge
-                    anchors.centerIn: parent
-                    text: nav.count
-                    font.pointSize: Appearance.font.size.small
-                    color: nav.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
-                }
-            }
-        }
-    }
-    component FilterChip: Item {
-        id: chip
-        property string label
-        property int count: -1
-        property bool selected
-        signal triggered
-        implicitHeight: 34
-        implicitWidth: chipRow.implicitWidth + Appearance.padding.large * 2
-        Behavior on implicitWidth {
-            enabled: !Appearance.reducedEffects
-            Anim {
-                duration: Appearance.anim.durations.small
-            }
-        }
-        Rectangle {
-            id: chipBg
-            anchors.fill: parent
-            // Morphs from a rounded rectangle into a pill when selected.
-            radius: chip.selected ? height / 2 : Appearance.rounding.small
-            Behavior on radius {
-                Spring {}
-            }
-            color: chip.selected ? Colours.palette.m3secondaryContainer : "transparent"
-            border.width: chip.selected ? 0 : 1
-            border.color: Colours.palette.m3outlineVariant
-        }
-        Rectangle {
-            anchors.fill: parent
-            radius: chipBg.radius
-            color: Colours.palette.m3onSurface
-            opacity: chipMouse.pressed ? .12 : chipMouse.containsMouse ? .07 : 0
-            Behavior on opacity {
-                enabled: !Appearance.reducedEffects
-                Anim {
-                    duration: Appearance.anim.durations.small
-                }
-            }
-        }
-        MouseArea {
-            id: chipMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: chip.triggered()
-        }
-        Row {
-            id: chipRow
-            anchors.centerIn: parent
-            spacing: Appearance.spacing.small
-            MaterialIcon {
-                visible: chip.selected
-                anchors.verticalCenter: parent.verticalCenter
-                text: "check"
-                font.pointSize: Appearance.font.size.normal
-                color: Colours.palette.m3onSecondaryContainer
-            }
-            StyledText {
-                anchors.verticalCenter: parent.verticalCenter
-                text: chip.label
-                font.pointSize: Appearance.font.size.small
-                color: chip.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-            }
-            StyledText {
-                visible: chip.count >= 0
-                anchors.verticalCenter: parent.verticalCenter
-                text: chip.count
-                font.pointSize: Appearance.font.size.small
-                opacity: .6
-                color: chip.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3outline
-            }
-        }
-    }
 
     Item {
         id: panel
@@ -870,7 +729,7 @@ Item {
                             visible: browser.navIndex >= 0
                             y: browser.navY(Math.max(0, browser.navIndex))
                             Behavior on y {
-                                Spring {}
+                                WorkspaceSpring {}
                             }
                         }
                         Rectangle {
@@ -881,7 +740,7 @@ Item {
                         }
                         Repeater {
                             model: browser.navItems
-                            NavItem {
+                            WorkspaceNavItem {
                                 required property var modelData
                                 required property int index
                                 width: parent.width
@@ -1020,7 +879,7 @@ Item {
                                 color: query.activeFocus ? Colours.palette.m3primary : Colours.palette.m3outline
                                 scale: query.activeFocus && browser.fx ? 1.15 : 1
                                 Behavior on scale {
-                                    Spring {}
+                                    WorkspaceSpring {}
                                 }
                             }
                             StyledTextField {
@@ -1105,7 +964,7 @@ Item {
                         spacing: Appearance.spacing.small
                         Repeater {
                             model: browser.categories
-                            FilterChip {
+                            WorkspaceFilterChip {
                                 required property string modelData
                                 label: modelData
                                 count: modelData === "Tout" ? -1 : (browser.categoryCounts[modelData] ?? -1)
@@ -1126,7 +985,7 @@ Item {
                         type: IconButton.Text
                         rotation: chipsBox.open ? 180 : 0
                         Behavior on rotation {
-                            Spring {}
+                            WorkspaceSpring {}
                         }
                         onClicked: chipsBox.open = !chipsBox.open
                     }
@@ -1222,7 +1081,7 @@ Item {
                                 rotation: head.info.closed ? -90 : 0
                                 color: Colours.palette.m3onSurfaceVariant
                                 Behavior on rotation {
-                                    Spring {}
+                                    WorkspaceSpring {}
                                 }
                             }
                             MaterialIcon {
@@ -1337,7 +1196,7 @@ Item {
                                         // Hover lift with overshoot, press squash.
                                         scale: tile.prs ? .96 : tile.hov && browser.fx ? 1.04 : 1
                                         Behavior on scale {
-                                            Spring {}
+                                            WorkspaceSpring {}
                                         }
                                         Rectangle {
                                             anchors.fill: parent
@@ -1471,7 +1330,7 @@ Item {
                             }
                         }
                         Behavior on scale {
-                            Spring {}
+                            WorkspaceSpring {}
                         }
                         icon: query.text ? "search_off" : "inbox"
                         title: query.text ? qsTr("Aucun accès ne correspond à cette recherche") : qsTr("Cet espace est prêt à accueillir tes accès")
@@ -1528,7 +1387,7 @@ Item {
             }
         }
         Behavior on scale {
-            Spring {}
+            WorkspaceSpring {}
         }
         StyledText {
             id: tipLabel

@@ -1,7 +1,7 @@
-// language: C# 12, file: Tokens.cs, target: Windows 11 / .NET 8 WPF, shared Material-3 tokens for the Atelier windows
-// One source of truth with the QML shell: the palette is rebuilt here from the same inputs
-// (themeMode / customPalette / wallpaper) with the same algorithm as src/frontend/custom_palette.py
-// and chromatic_palette.py, so a WPF tool window and the dashboard read the same roles.
+// C# 12, fichier Tokens.cs, cible Windows 11 / .NET 8 WPF, jetons Material-3 partagés pour les fenêtres de l'Atelier
+// Une seule source de vérité avec le shell QML : la palette est reconstruite ici à partir des mêmes entrées
+// (themeMode / customPalette / fond d'écran) avec le même algorithme que src/frontend/custom_palette.py
+// et chromatic_palette.py, pour qu'une fenêtre d'outil WPF et le tableau de bord lisent les mêmes rôles.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,7 +20,7 @@ internal sealed class M3Palette
         Primary, OnPrimary, PrimaryContainer, OnPrimaryContainer, Secondary, SecondaryContainer, OnSecondaryContainer,
         Outline, OutlineVariant, Error, OnError;
     static Color H(string hex) => (Color)ColorConverter.ConvertFromString(hex);
-    // Fallbacks of Colours.qml when Bridge.adaptivePalette is empty (dark / light shell mode).
+    // Valeurs de repli de Colours.qml quand Bridge.adaptivePalette est vide (mode de shell sombre / clair).
     internal static M3Palette DarkDefault() => new()
     {
         Dark = true,
@@ -109,7 +109,7 @@ internal sealed class M3Palette
             OnError = dark ? H("#690005") : H("#ffffff")
         };
     }
-    // Used for the legacy themes (and any token read on them): same roles, derived from surface/ink/accent.
+    // Utilisé pour les thèmes hérités (et tout jeton lu sur eux) : mêmes rôles, dérivés de surface/encre/accent.
     internal static M3Palette FromTheme(ThemeDefinition t)
     {
         var s = t.Surface;
@@ -311,20 +311,22 @@ internal sealed class M3Palette
 
 internal enum M3Role
 {
-    Surface, SurfaceLow, SurfaceContainer, SurfaceHigh, SurfaceHighest, OnSurface, OnSurfaceVariant, Primary, OnPrimary, PrimaryContainer, OnPrimaryContainer, SecondaryContainer, OnSecondaryContainer, Outline, OutlineVariant, Error, OnError
+    Surface, SurfaceLow, SurfaceContainer, SurfaceHigh, SurfaceHighest, OnSurface, OnSurfaceVariant, Primary, OnPrimary, PrimaryContainer,
+        OnPrimaryContainer, SecondaryContainer, OnSecondaryContainer, Outline, OutlineVariant, Error, OnError
 }
 
-// Design tokens shared with AppearanceConfig.qml (rounding, spacing, padding, type, motion).
+// Jetons de conception partagés avec AppearanceConfig.qml (arrondis, espacements, marges, typographie, mouvement).
 internal static class M3
 {
     internal const double Small = 12, Normal = 17, Large = 25;                   // rounding
     internal const double Sp1 = 7, Sp2 = 10, Sp3 = 12, Sp4 = 15, Sp5 = 20;             // spacing
     internal const double Pad1 = 5, Pad2 = 7, Pad3 = 10, Pad4 = 12, Pad5 = 15;         // padding
     internal static double Pt(double points) => points * 96.0 / 72.0;          // QML pt -> WPF device-independent px
-    internal static readonly double FontSmall = Pt(11), FontBody = Pt(12), FontLabel = Pt(13), FontTitle = Pt(15), FontHeadline = Pt(18), FontDisplay = Pt(28);
+    internal static readonly double FontSmall = Pt(11), FontBody = Pt(12), FontLabel = Pt(13), FontTitle = Pt(15), FontHeadline = Pt(18),
+        FontDisplay = Pt(28);
     internal const int AnimFast = 200, AnimSlow = 400;
     internal const double MenuItemHeight = 36;
-    // Maps the legacy radii (10..16 in the old XAML) onto the three QML rounding steps.
+    // Fait correspondre les anciens rayons (10..16 dans l'ancien XAML) aux trois paliers d'arrondi QML.
     internal static int Round(int basis) => basis <= 13 ? (int)Small : basis <= 19 ? (int)Normal : (int)Large;
     static FontFamily? material;
     internal static FontFamily? Symbols
@@ -338,11 +340,15 @@ internal static class M3
     static FontFamily? body;
     internal static FontFamily Body => body ??= ResolveBody();
     // Same switch as QtShellBridge.LightRendering (settings.reducedEffects): off = no animation at all.
-    internal static bool ReducedEffects => Store.State.ReducedEffects ?? GC.GetGCMemoryInfo().TotalAvailableMemoryBytes <= 8L * 1024 * 1024 * 1024;
+    internal static bool ReducedEffects => Store.State.ReducedEffects
+        ?? GC.GetGCMemoryInfo().TotalAvailableMemoryBytes <= 8L * 1024 * 1024 * 1024;
     static string? FontDirectory()
     {
         var root = Store.Root;
-        foreach (var candidate in new[] { Path.Combine(root, "assets", "fonts"), Path.Combine(root, "..", "Caelestia-Windows", "assets", "fonts"), Path.Combine(root, "..", "frontend", "assets", "fonts"), Path.Combine(root, "..", "..", "frontend", "assets", "fonts"), Path.Combine(root, "..", "..", "src", "frontend", "assets", "fonts"), Path.Combine(root, "..", "..", "..", "src", "frontend", "assets", "fonts") })
+        foreach (var candidate in new[] { Path.Combine(root, "assets", "fonts"), Path.Combine(root, "..", "Caelestia-Windows", "assets",
+            "fonts"), Path.Combine(root, "..", "frontend", "assets", "fonts"), Path.Combine(root, "..", "..", "frontend", "assets",
+            "fonts"), Path.Combine(root, "..", "..", "src", "frontend", "assets", "fonts"), Path.Combine(root, "..", "..", "..", "src",
+            "frontend", "assets", "fonts") })
         {
             try
             {
@@ -379,7 +385,7 @@ internal static class M3
         }
         return new FontFamily(fallback);
     }
-    // Wallpaper-driven (auto) palette, rebuilt off the UI thread only when the picture changes.
+    // Palette pilotée par le fond d'écran (auto), reconstruite hors du thread UI seulement quand l'image change.
     static (string path, long modified)? wallpaperKey; static M3Palette? auto; static int generation;
     internal static M3Palette? AutoPalette => auto;
     internal static void Wallpaper(WallpaperMonitor[] monitors, Action apply)

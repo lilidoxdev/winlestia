@@ -22,7 +22,7 @@ namespace PanneauxGlass;
 
 internal sealed record DictationSnapshot(string State, double Level, float[] Levels, string Lang, string Text, string Error);
 
-internal sealed class DictationService : IDisposable
+internal sealed partial class DictationService : IDisposable
 {
     const int Bands = 32, Fft = 1024, FftLog = 10, MaxSeconds = 60;
     const string ModelFile = "ggml-large-v3-turbo-q5_0.bin";
@@ -36,19 +36,22 @@ internal sealed class DictationService : IDisposable
         public uint Key, Scan, Flags, Time; public UIntPtr Extra;
     }
     delegate IntPtr Callback(int code, IntPtr message, IntPtr data);
-    [DllImport("user32.dll", SetLastError = true)] static extern IntPtr SetWindowsHookExW(int id, Callback callback, IntPtr module, uint thread);
+    [DllImport("user32.dll", SetLastError = true)] static extern IntPtr SetWindowsHookExW(int id, Callback callback, IntPtr module,
+        uint thread);
     [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(IntPtr hook);
     [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr message, IntPtr data);
 
     readonly Dispatcher dispatcher; readonly Action<string> send; readonly Callback callback;
-    IntPtr hook; volatile int key = 0xA5; volatile bool held, disposed, swallowedCtrl; volatile bool capturing; volatile bool enabledPref; volatile int pendingUp; volatile string lastLang = "fr";
+    IntPtr hook; volatile int key = 0xA5; volatile bool held, disposed, swallowedCtrl; volatile bool capturing; volatile bool enabledPref;
+        volatile int pendingUp; volatile string lastLang = "fr";
 
     // --- état partagé (lu par la commande « dictation ») -----------------------------------------
     readonly object gate = new();
     string state = "idle", lang = "", text = "", error = ""; double level; readonly float[] levels = new float[Bands];
 
     // --- capture --------------------------------------------------------------------------------
-    WasapiCapture? capture; List<float>? samples; int sourceRate = 48000; readonly float[] window = new float[Fft]; int windowFill; int recordingId; bool recording;
+    WasapiCapture? capture; List<float>? samples; int sourceRate = 48000; readonly float[] window = new float[Fft]; int windowFill;
+        int recordingId; bool recording;
     readonly Complex[] fftBuffer = new Complex[Fft];
 
     // --- Whisper --------------------------------------------------------------------------------
@@ -57,7 +60,8 @@ internal sealed class DictationService : IDisposable
     // Appelé sur le thread UI quand une touche a été capturée (enregistre la préférence) ; non appelé en cas d'annulation.
     internal Action<int>? KeyCaptured;
 
-    static string ModelDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia", "models");
+    static string ModelDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia",
+        "models");
 
     internal DictationService(Dispatcher dispatcher, Action<string> send)
     {
@@ -65,8 +69,10 @@ internal sealed class DictationService : IDisposable
         this.send = send;
         callback = Handle;
         unloadTimer = new Timer(_ => Unload(), null, Timeout.Infinite, Timeout.Infinite);
-        idleTimer = new Timer(_ => { lock (gate) { if (state is "done" or "error") state = "idle"; } }, null, Timeout.Infinite, Timeout.Infinite);
-        suspendTimer = new Timer(_ => { if (capturing && !disposed) dispatcher.BeginInvoke(DispatcherPriority.Normal, () => { if (capturing) { EndCapture(); send("dictation:keycancel"); } }); }, null, Timeout.Infinite, Timeout.Infinite);
+        idleTimer = new Timer(_ => { lock (gate) { if (state is "done" or "error") state = "idle"; } }, null, Timeout.Infinite,
+            Timeout.Infinite);
+        suspendTimer = new Timer(_ => { if (capturing && !disposed) dispatcher.BeginInvoke(DispatcherPriority.Normal, () => {
+            if (capturing) { EndCapture(); send("dictation:keycancel"); } }); }, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     internal DictationSnapshot Snapshot()
@@ -276,7 +282,9 @@ internal sealed class DictationService : IDisposable
                 level = 0;
                 Array.Clear(levels);
             }
-            _ = GetFactory().ContinueWith(t => { if (t.IsCompletedSuccessfully) lock (gate) { if (state == "loading" && recording) state = "listening"; } });   // chargement paresseux pendant l'enregistrement
+            // chargement paresseux pendant l'enregistrement
+            _ = GetFactory().ContinueWith(t => { if (t.IsCompletedSuccessfully) lock (gate) { if (state == "loading"
+                && recording) state = "listening"; } });
             var device = new WasapiCapture();
             int id = ++recordingId;
             sourceRate = device.WaveFormat.SampleRate;
@@ -326,7 +334,8 @@ internal sealed class DictationService : IDisposable
         int channels = Math.Max(1, format.Channels);
         int bytesPerSample = format.BitsPerSample / 8;
         int frames = e.BytesRecorded / (bytesPerSample * channels);
-        bool isFloat = format.Encoding == WaveFormatEncoding.IeeeFloat || (format is WaveFormatExtensible ext && ext.ToStandardWaveFormat().Encoding == WaveFormatEncoding.IeeeFloat);
+        bool isFloat = format.Encoding == WaveFormatEncoding.IeeeFloat || (format is WaveFormatExtensible ext
+            && ext.ToStandardWaveFormat().Encoding == WaveFormatEncoding.IeeeFloat);
         var mono = new float[frames];
         double energy = 0;
         for (int i = 0; i < frames; i++)
@@ -337,7 +346,8 @@ internal sealed class DictationService : IDisposable
                 int offset = (i * channels + c) * bytesPerSample;
                 sum += isFloat ? BitConverter.ToSingle(e.Buffer, offset)
                     : bytesPerSample == 2 ? BitConverter.ToInt16(e.Buffer, offset) / 32768f
-                    : bytesPerSample == 3 ? ((e.Buffer[offset] << 8 | e.Buffer[offset + 1] << 16 | e.Buffer[offset + 2] << 24) >> 8) / 8388608f
+                    : bytesPerSample == 3 ? ((e.Buffer[offset] << 8 | e.Buffer[offset + 1] << 16 | e.Buffer[offset
+                        + 2] << 24) >> 8) / 8388608f
                     : BitConverter.ToInt32(e.Buffer, offset) / 2147483648f;
             }
             float v = sum / channels;
@@ -395,7 +405,8 @@ internal sealed class DictationService : IDisposable
                 levels[b] = (float)Smooth(levels[b], bands[b]);
         }
     }
-    static double Smooth(double current, double target) => target > current ? current + (target - current) * .6 : current + (target - current) * .12;
+    static double Smooth(double current, double target) => target > current ? current + (target - current) * .6 : current
+        + (target - current) * .12;
 
     void OnStopped(WasapiCapture device, int id, Exception? failure)
     {
@@ -467,242 +478,6 @@ internal sealed class DictationService : IDisposable
             Task.Run(() => { Safe.Dispose(device); });
     }
 
-    // --- transcription (thread de fond) -----------------------------------------------------------
-    async Task Transcribe(float[] source, int rate)
-    {
-        try
-        {
-            float[] audio = Resample(source, rate);
-            var factory = await GetFactory().ConfigureAwait(false);
-            lock (gate)
-            {
-                if (state == "loading")
-                    state = "transcribing";
-            }
-            var (raw, detected) = await Run(factory, audio, "auto").ConfigureAwait(false);
-            // Langue : vide = non détectée (on garde le texte, langue = dernière langue valide).
-            // Une seule inférence en langue auto. Seulement si la langue détectée est hors fr/en/es : détection
-            // restreinte à fr/en/es (DetectLanguageWithProbability), sinon dernière langue valide ; puis relance.
-            string language = detected.ToLowerInvariant();
-            if (language.Length == 0)
-                language = lastLang;
-            else if (!Allowed.Contains(language))
-            {
-                language = DetectAllowed(factory, audio) ?? lastLang;
-                (raw, _) = await Run(factory, audio, language).ConfigureAwait(false);
-            }
-            lastLang = language;
-            string clean = Clean(raw);
-            if (clean.Length == 0)
-            {
-                lock (gate)
-                {
-                    state = "idle";
-                    lang = language;
-                }
-                return;
-            }
-            lock (gate)
-            {
-                state = "typing";
-                lang = language;
-                text = clean;
-            }
-            // Ne jamais injecter tant que la touche de dictée est enfoncée (Alt fausserait la saisie).
-            for (int i = 0; i < 500 && held; i++)
-                await Task.Delay(20).ConfigureAwait(false);
-            if (held)
-                throw new InvalidOperationException("Touche maintenue");
-            if (!TextInjector.Type(clean))
-                throw new InvalidOperationException("Saisie impossible dans cette application.");
-            lock (gate)
-            {
-                state = "done";
-            }
-            idleTimer.Change(1500, Timeout.Infinite);
-        }
-        catch (Exception ex)
-        {
-            Store.Log("Dictée: " + ex);
-            Fail(ex.Message);
-        }
-        finally
-        {
-            Volatile.Write(ref busy, 0);
-            ArmUnload();
-        }
-    }
-
-    static string? DetectAllowed(WhisperFactory factory, float[] audio)
-    {
-        try
-        {
-            using var processor = factory.CreateBuilder().WithLanguage("auto").Build();
-            string found = processor.DetectLanguageWithProbability(audio, Allowed).language.ToLowerInvariant();
-            return Allowed.Contains(found) ? found : null;
-        }
-        catch (Exception ex) { Store.Log("Dictée: détection de langue: " + ex.Message); return null; }
-    }
-
-    static async Task<(string text, string lang)> Run(WhisperFactory factory, float[] audio, string language)
-    {
-        var builder = factory.CreateBuilder().WithLanguage(language).WithThreads(Math.Max(4, Environment.ProcessorCount / 2));
-        await using var processor = builder.Build();
-        var parts = new StringBuilder();
-        string detected = "";
-        await foreach (var segment in processor.ProcessAsync(audio))
-        {
-            parts.Append(segment.Text);
-            if (detected.Length == 0 && !string.IsNullOrEmpty(segment.Language))
-                detected = segment.Language;
-        }
-        return (parts.ToString(), detected);
-    }
-
-    static float[] Resample(float[] source, int rate)
-    {
-        if (rate == 16000)
-            return source;
-        var provider = new WdlResamplingSampleProvider(new ArraySampleProvider(source, rate), 16000);
-        var output = new List<float>((int)(source.Length * 16000L / rate) + 1024);
-        var block = new float[8192];
-        int read;
-        while ((read = provider.Read(block, 0, block.Length)) > 0)
-            output.AddRange(new ArraySegment<float>(block, 0, read));
-        return output.ToArray();
-    }
-
-    sealed class ArraySampleProvider : ISampleProvider
-    {
-        readonly float[] data; int position;
-        public ArraySampleProvider(float[] data, int rate)
-        {
-            this.data = data;
-            WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(rate, 1);
-        }
-        public WaveFormat WaveFormat
-        {
-            get;
-        }
-        public int Read(float[] buffer, int offset, int count)
-        {
-            int n = Math.Min(count, data.Length - position);
-            if (n <= 0)
-                return 0;
-            Array.Copy(data, position, buffer, offset, n);
-            position += n;
-            return n;
-        }
-    }
-
-    static readonly Regex Brackets = new(@"\[[^\]]*\]|\*[^*]*\*|♪[^♪]*♪?", RegexOptions.Compiled);
-    static readonly Regex Noises = new(@"\((?:inaudible|musique|music|música|applaudissements|rires|silence|bruit[^)]*|noise|laughter|applause)\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    static readonly Regex Credits = new(@"(sous-titres?\s+(réalisés?|par|de)|subtitles?\s+by|subtítulos\s+(por|realizados)|traduit\s+par|amara\.org)[^\n]*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    static string Clean(string raw)
-    {
-        string value = Brackets.Replace(raw, "");
-        value = Noises.Replace(value, "");
-        value = Credits.Replace(value, "");
-        value = Regex.Replace(value, @"[\r\n]+", " ");
-        value = Regex.Replace(value, @"[ \t]{2,}", " ");
-        return value.Trim();
-    }
-
-    void Fail(string message)
-    {
-        lock (gate)
-        {
-            state = "error";
-            error = message;
-            level = 0;
-            Array.Clear(levels);
-        }
-        idleTimer.Change(1500, Timeout.Infinite);
-    }
-
-    // --- modèle ---------------------------------------------------------------------------------
-    Task<WhisperFactory> GetFactory()
-    {
-        lock (factoryGate)
-        {
-            if (factoryTask is { IsFaulted: false })
-                return factoryTask;
-            return factoryTask = Task.Run(async () =>
-            {
-                string path = Path.Combine(ModelDirectory, ModelFile);
-                if (!File.Exists(path))
-                    await Download(path).ConfigureAwait(false);
-                WhisperFactory factory;
-                try
-                {
-                    // GPU via Vulkan (pilote NVIDIA/AMD/Intel suffit, pas de toolkit CUDA), repli CPU.
-                    RuntimeOptions.RuntimeLibraryOrder = [RuntimeLibrary.Vulkan, RuntimeLibrary.Cpu];
-                    factory = WhisperFactory.FromPath(path);
-                }
-                catch (Exception ex)
-                {
-                    // Fichier corrompu : on le supprime pour forcer un retéléchargement au prochain appui.
-                    Safe.Try(() => File.Delete(path));
-                    throw new InvalidOperationException("Modèle de dictée illisible, il sera retéléchargé au prochain essai (" + ex.Message + ").");
-                }
-                // Préchauffage (compilation des shaders Vulkan à froid, ~20 s) sur ~1 s de silence, pendant que l'utilisateur parle.
-                // La vraie transcription attend ce même Task. Erreurs ignorées.
-                try
-                {
-                    await Run(factory, new float[16000], "auto").ConfigureAwait(false);
-                }
-                catch (Exception ex) { Store.Log("Dictée: préchauffage: " + ex.Message); }
-                return factory;
-            });
-        }
-    }
-
-    async Task Download(string path)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        string part = path + ".part";
-        lock (gate)
-        {
-            if (state is "listening" or "idle")
-                state = "loading";
-        }
-        downloading = true;
-        try
-        {
-            using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
-            using var response = await client.GetAsync(ModelUrl, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            await using (var input = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
-            await using (var output = new FileStream(part, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
-                await input.CopyToAsync(output).ConfigureAwait(false);
-            long received = new FileInfo(part).Length;
-            long? expected = response.Content.Headers.ContentLength;
-            if (received <= 400_000_000L || (expected.HasValue && received != expected.Value))
-                throw new IOException("Téléchargement du modèle incomplet (" + received / 1048576 + " Mo reçus). Réessaie.");
-            File.Move(part, path, true);
-        }
-        catch
-        {
-            Safe.Try(() => File.Delete(part));
-            throw;
-        }
-        finally { downloading = false; }
-    }
-
-    void Unload()
-    {
-        if (disposed || recording || Volatile.Read(ref busy) != 0 || downloading)
-            return;
-        Task<WhisperFactory>? task;
-        lock (factoryGate)
-        {
-            task = factoryTask;
-            factoryTask = null;
-        }
-        if (task is { IsCompletedSuccessfully: true })
-            Safe.Dispose(task.Result);
-    }
-
     public void Dispose()
     {
         if (disposed)
@@ -734,156 +509,5 @@ internal sealed class DictationService : IDisposable
         }
         if (task is { IsCompletedSuccessfully: true })
             Safe.Dispose(task.Result);
-    }
-}
-
-// Saisie dans l'application active : presse-papiers + Ctrl+V (texte exact, restauré), SendInput Unicode en repli.
-// Cause mesurée du 1er caractère perdu / texte altéré avec SendInput dans le Bloc-notes Win11 : lot unique trop gros
-// pour le RichEdit + modificateur (Alt de la touche de dictée) encore pris en compte au début du lot.
-internal static class TextInjector
-{
-    [StructLayout(LayoutKind.Sequential)]
-    struct MouseInput
-    {
-        public int Dx, Dy; public uint Data, Flags, Time; public UIntPtr Extra;
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    struct KeyInput
-    {
-        public ushort Vk, Scan; public uint Flags, Time; public UIntPtr Extra;
-    }
-    [StructLayout(LayoutKind.Explicit)]
-    struct Input
-    {
-        [FieldOffset(0)] public uint Type; [FieldOffset(8)] public MouseInput Mouse; [FieldOffset(8)] public KeyInput Key;
-    }
-    [DllImport("user32.dll", SetLastError = true)] static extern uint SendInput(uint count, Input[] inputs, int size);
-    [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vk);
-
-    const uint KeyUp = 2, Unicode = 4; const ushort VkReturn = 0x0D, VkControl = 0x11, VkV = 0x56;
-    static readonly int[] Modifiers = { 0x10, 0x11, 0x12, 0x5B, 0x5C, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5 };
-
-    static Input Key(ushort vk, ushort scan, uint flags) => new() { Type = 1, Key = new KeyInput { Vk = vk, Scan = scan, Flags = flags } };
-
-    // Attend (max 2 s) qu'aucun Shift/Ctrl/Alt(AltGr)/Win ne soit enfoncé, puis laisse ~40 ms au système.
-    static void WaitModifiersReleased()
-    {
-        for (int i = 0; i < 100; i++)
-        {
-            bool down = false;
-            foreach (int vk in Modifiers)
-                if ((GetAsyncKeyState(vk) & 0x8000) != 0)
-                {
-                    down = true;
-                    break;
-                }
-            if (!down)
-                break;
-            Thread.Sleep(20);
-        }
-        Thread.Sleep(40);
-    }
-
-    internal static bool Type(string text)
-    {
-        if (text.Length == 0)
-            return true;
-        WaitModifiersReleased();
-        if (Paste(text))
-            return true;
-        return TypeKeys(text);
-    }
-
-    // Repli : 1 caractère UTF-16 (down+up) par appel, léger rythme ; les surrogates partent en paire consécutive.
-    static bool TypeKeys(string text)
-    {
-        if (Marshal.SizeOf<Input>() != 40)
-            return false;
-        bool any = false;
-        for (int i = 0; i < text.Length; i++)
-        {
-            char c = text[i];
-            if (c == '\r')
-                continue;
-            Input[] batch;
-            if (c == '\n')
-                batch = new[] { Key(VkReturn, 0, 0), Key(VkReturn, 0, KeyUp) };
-            else if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
-            {
-                char d = text[++i];
-                batch = new[] { Key(0, c, Unicode), Key(0, d, Unicode), Key(0, c, Unicode | KeyUp), Key(0, d, Unicode | KeyUp) };
-            }
-            else
-                batch = new[] { Key(0, c, Unicode), Key(0, c, Unicode | KeyUp) };
-            if (SendInput((uint)batch.Length, batch, Marshal.SizeOf<Input>()) != batch.Length)
-                return any;
-            any = true;
-            Thread.Sleep(4);
-        }
-        return any;
-    }
-
-    static bool Paste(string text)
-    {
-        bool ok = false;
-        var thread = new Thread(() =>
-        {
-            System.Windows.Forms.IDataObject? previous = null;
-            System.Windows.Forms.DataObject? backup = null;
-            try
-            {
-                try
-                {
-                    previous = System.Windows.Forms.Clipboard.GetDataObject();
-                    if (previous != null)
-                    {
-                        backup = new System.Windows.Forms.DataObject();
-                        foreach (string format in previous.GetFormats(false))
-                        {
-                            var data = previous.GetData(format, false);
-                            if (data != null)
-                                backup.SetData(format, false, data);
-                        }
-                    }
-                }
-                catch { backup = null; }
-                if (!SetText(text))
-                    return;
-                var paste = new[] { Key(VkControl, 0, 0), Key(VkV, 0, 0), Key(VkV, 0, KeyUp), Key(VkControl, 0, KeyUp) };
-                ok = SendInput((uint)paste.Length, paste, Marshal.SizeOf<Input>()) == paste.Length;
-                Thread.Sleep(1000);
-                try
-                {
-                    if (backup != null)
-                        System.Windows.Forms.Clipboard.SetDataObject(backup, true, 5, 20);
-                    else
-                        System.Windows.Forms.Clipboard.Clear();
-                }
-                catch (Exception ex)
-                {
-                    Store.Log("DictationService.Paste : " + ex.GetType().Name + ": " + ex.Message);
-                }
-            }
-            catch (Exception ex) { Store.Log("Dictée: presse-papiers: " + ex.Message); }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.IsBackground = true;
-        thread.Start();
-        thread.Join(5000);
-        return ok;
-    }
-
-    static bool SetText(string text)
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            try
-            {
-                System.Windows.Forms.Clipboard.SetDataObject(text, true, 5, 20);
-                return true;
-            }
-            catch { Thread.Sleep(30); }
-        }
-        return false;
     }
 }

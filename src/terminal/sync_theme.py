@@ -1,4 +1,4 @@
-# Python 3.12 / sync_theme.py / Windows. Shared Winlestia wallpaper palette, no screen capture.
+# Python 3.12 / sync_theme.py / Windows. Palette de fond Winlestia partagée, sans capture d'écran.
 from pathlib import Path
 import sys, json, time, os, ctypes, winreg, colorsys, argparse, hashlib, subprocess
 
@@ -13,7 +13,8 @@ from wallpaper_sources import desktop_hut_active
 
 
 def generate_palette(path='', background='#182025'):
-    # numpy/PIL stay out of the resident daemon: the palette is computed in a short-lived child that frees them on exit.
+    # numpy/PIL restent hors du démon résident : la palette est calculée dans un fils de courte durée qui les libère
+    # en sortant.
     python = Path(sys.executable)
     python = python.with_name('python.exe') if python.with_name('python.exe').exists() else python
     done = subprocess.run(
@@ -112,7 +113,8 @@ FIXED = {
 
 
 def theme_mode(prefs):
-    # Same precedence as the shell: AutoTheme wins (Theme keeps its previous value), then custom, then Porcelaine (shell) / Nuit.
+    # Même priorité que le shell : AutoTheme l'emporte (Theme garde sa valeur précédente), puis custom, puis
+    # Porcelaine (shell) / Nuit.
     if prefs.get('AutoTheme', False):
         return 'auto'
     if prefs.get('Theme') == 'custom':
@@ -131,10 +133,12 @@ def resolve_palette(prefs, path='', bg='#182025'):
 
 def console_values(values, palette, mode='auto'):
     if mode != 'auto':
-        # Fixed and custom modes: the terminal uses the exact shell palette (surface, text, primary), translucent through acrylic.
+        # Modes fixe et personnalisé : le terminal utilise exactement la palette du shell (surface, texte, primaire),
+        # translucide via l'acrylique.
         values.update(glass=True, opacity=0.70, unfocusedOpacity=0.55)
         return values
-    # Console background is always translucent dark grey (about 8% toward the palette neutral); text and accent follow the shell palette, lightened to stay readable on it.
+    # Le fond de la console est toujours un gris foncé translucide (environ 8 % vers le neutre de la palette) ; texte
+    # et accent suivent la palette du shell, éclaircis pour rester lisibles dessus.
     p = palette['palette']
     neutral = p.get('m3surface', CONSOLE_GREY)
     background = blend(CONSOLE_GREY, neutral, 0.08) if lum(neutral) < 0.2 else CONSOLE_GREY
@@ -179,7 +183,7 @@ def write_changed(path, text):
 
 
 def apply(values):
-    # Publish the shared colour files even if Windows Terminal is absent or malformed.
+    # Publie les fichiers de couleurs partagés même si Windows Terminal est absent ou mal formé.
     write_changed(ROOT / 'palette.json', json.dumps(values, indent=2, ensure_ascii=False) + '\n')
     write_changed(
         ROOT / 'palette.colors',
@@ -242,7 +246,7 @@ def update_terminal(settings_path, values):
     theme['tabRow'].update(background=background + '00', unfocusedBackground=background + '00')
     theme['tab']['unfocusedBackground'] = background
     if not (STATE / 'state.json').exists():
-        return  # restored meanwhile: never write Windows Terminal settings
+        return  # restauré entre-temps : n'écrire jamais les réglages de Windows Terminal
     write_changed(settings_path, json.dumps(c, indent=4, ensure_ascii=False) + '\n')
     note_written(
         settings_path.parent.parent.name,
@@ -252,8 +256,10 @@ def update_terminal(settings_path, values):
 
 
 def wait_for_change():
-    # Event-driven replacement of the 4 s poll: block on registry (wallpaper keys) and folder (Winlestia prefs, wallpaper app configs) change notifications.
-    # 60 s timeout only so the theme-sync.stop file is still honoured; a change wakes us at once (0.5 s debounce).
+    # Remplace le sondage de 4 s par des événements : on bloque sur les notifications de changement du registre (clés
+    # de fond) et des dossiers (préférences Winlestia, configs des applications de fond).
+    # Délai de 60 s uniquement pour que le fichier theme-sync.stop soit toujours respecté ; un changement nous
+    # réveille aussitôt (0,5 s de temporisation).
     kernel = ctypes.windll.kernel32
     advapi = ctypes.windll.advapi32
     kernel.CreateEventW.restype = ctypes.c_void_p
@@ -309,7 +315,7 @@ def run(once=False):
     signature = None
     while True:
         if not (STATE / 'state.json').exists():
-            return  # Winlestia terminal integration absent or restored: never touch Windows Terminal.
+            return  # Intégration du terminal Winlestia absente ou restaurée : ne jamais toucher à Windows Terminal.
         try:
             prefs, path, label, bg = inputs()
             current = (

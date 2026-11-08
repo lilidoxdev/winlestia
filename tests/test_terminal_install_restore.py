@@ -45,7 +45,7 @@ def test_install_idempotent_and_restore():
                 return registry.get(key)
 
         module.registry = reg
-        module.ensure_clink = lambda: False  # Clink is downloaded at install time; this test stays offline.
+        module.ensure_clink = lambda: False  # Clink est téléchargé à l'installation ; ce test reste hors ligne.
         with (
             patch.dict(os.environ, {'LOCALAPPDATA': str(local)}),
             patch.object(module.winreg, 'OpenKey', side_effect=OSError),

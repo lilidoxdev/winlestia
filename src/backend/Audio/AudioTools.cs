@@ -1,4 +1,4 @@
-// language: C# 12, file: AudioTools.cs, target: Windows 11 / .NET 8 WPF, audio endpoints
+// C# 12, fichier AudioTools.cs, cible Windows 11 / .NET 8 WPF, points de terminaison audio
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,7 +118,8 @@ internal sealed class AudioWindow : GlassWindow
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
-        var scroll = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 16, 0, 10) };
+        var scroll = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 16, 0, 10) };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         status = UI.Text("", 11, UI.Dim);
@@ -148,18 +149,22 @@ internal sealed class AudioWindow : GlassWindow
             if (inputs.Count > 0)
             {
                 var muted = inputs.FirstOrDefault(d => d.Default)?.Muted == true;
-                var toggle = UI.Button(muted ? "Réactiver le micro" : "Couper le micro", () => { try { AudioSwitch.SetMicMute(!muted); Rebuild(); owner.ShowToast(!muted ? "Micro coupé" : "Micro réactivé"); } catch (Exception ex) { status.Text = ex.Message; } });
+                var toggle = UI.Button(muted ? "Réactiver le micro" : "Couper le micro", () => { try { AudioSwitch.SetMicMute(!muted);
+                    Rebuild(); owner.ShowToast(!muted ? "Micro coupé" : "Micro réactivé"); } catch (Exception ex) {
+                    status.Text = ex.Message; } });
                 toggle.HorizontalAlignment = HorizontalAlignment.Left;
                 toggle.Margin = new Thickness(0, 6, 0, 4);
                 body.Children.Add(toggle);
             }
-            var settings = UI.Button("Ouvrir les réglages Windows", () => owner.LaunchWindowsShortcut(new WindowsShortcut { Name = "Son", Target = "ms-settings:sound" }));
+            var settings = UI.Button("Ouvrir les réglages Windows", () => owner.LaunchWindowsShortcut(new WindowsShortcut { Name = "Son",
+                Target = "ms-settings:sound" }));
             settings.HorizontalAlignment = HorizontalAlignment.Left;
             settings.Margin = new Thickness(0, 14, 0, 0);
             body.Children.Add(settings);
             status.Text = "Le changement est immédiat pour toutes les applications.";
         }
-        catch (Exception ex) { status.Text = "Réglage audio indisponible : " + ex.Message; body.Children.Add(Note("Windows a refusé l’accès. Ouvre les réglages Windows pour changer de sortie.")); }
+        catch (Exception ex) { status.Text = "Réglage audio indisponible : " + ex.Message;
+            body.Children.Add(Note("Windows a refusé l’accès. Ouvre les réglages Windows pour changer de sortie.")); }
     }
     FrameworkElement Row(AudioDevice device, string glyph, Action pick)
     {

@@ -1,5 +1,8 @@
-// Opt-in (Preferences.FilesPreload, default false): one deferred, low-priority launch of a hidden resident Winlestia.Files.exe --background.
-// No loop: if the process dies it is restarted at most once per backend session. Exit code 75 = deliberate recycle (menu-thread leak): relaunched after DelayMs, unlimited but at most one per minute. On exit a "quit" is sent over the pipe, nothing is killed.
+// Sur option (Preferences.FilesPreload, false par défaut) : un lancement différé, à basse priorité, d'un Winlestia.Files.exe --background
+// résident et caché.
+// Pas de boucle : si le processus meurt, il est relancé au plus une fois par session du backend. Code de sortie 75 = recyclage volontaire
+// (fuite du thread de menu) : relancé après DelayMs, sans limite mais au plus une fois par minute. À la sortie, un « quit » passe par le
+// canal, rien n'est tué.
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -11,6 +14,10 @@ namespace PanneauxGlass;
 
 internal static class FilesPreload
 {
+    // Évite une boucle de relance serrée si le processus plante dès le démarrage.
+    const int CrashRelaunchDelayMs = 5000;
+    // Durée de construction de la fenêtre cachée du résident avant de repasser en priorité normale.
+    const int NormalPriorityDelayMs = 8000;
     const int DelayMs = 4000;
     static readonly FilesPreloadPolicy policy = new();
     static Timer? recycleTimer, paletteTimer;
@@ -65,8 +72,11 @@ internal static class FilesPreload
         }
         p.EnableRaisingEvents = true;
         p.Exited += (_, _) => OnExited(p);
-        // BelowNormal only while it builds its hidden window; the resident then idles at Normal so a later open is not starved.
-        Task.Run(async () => { await Task.Delay(8000).ConfigureAwait(false); try { if (!p.HasExited) p.PriorityClass = ProcessPriorityClass.Normal; } catch (InvalidOperationException) { /* Processus déjà terminé : plus de priorité à rétablir. */ } });
+        // BelowNormal seulement pendant qu'il construit sa fenêtre cachée ; le résident repasse ensuite en Normal pour qu'une ouverture
+        // ultérieure ne soit pas affamée.
+        Task.Run(async () => { await Task.Delay(NormalPriorityDelayMs).ConfigureAwait(false); try {
+            if (!p.HasExited) p.PriorityClass = ProcessPriorityClass.Normal; } catch (InvalidOperationException) {
+            /* Processus déjà terminé : plus de priorité à rétablir. */ } });
     }
 
     static void OnExited(Process p)
@@ -83,14 +93,16 @@ internal static class FilesPreload
         switch (policy.OnExit(code, Environment.TickCount64, quitting, Store.State.FilesPreload))
         {
             case PreloadAction.Crash:
-                Task.Run(async () => { await Task.Delay(5000).ConfigureAwait(false); try { Launch(); } catch (Exception err) { Store.Log("FilesPreload.OnExited : " + err.GetType().Name + ": " + err.Message); } });
+                Task.Run(async () => { await Task.Delay(CrashRelaunchDelayMs).ConfigureAwait(false); try { Launch(); }
+                    catch (Exception err) { Store.Log("FilesPreload.OnExited : " + err.GetType().Name + ": " + err.Message); } });
                 break;
             case PreloadAction.Recycle:
                 Store.Log("FilesPreload: resident recycled (exit 75), relaunch in " + DelayMs / 1000 + " s");
                 lock (policy)
                 {
                     recycleTimer?.Dispose();
-                    recycleTimer = new Timer(_ => { try { Launch(true); } catch (Exception ex) { Store.Log("FilesPreload: " + ex.Message); } }, null, DelayMs, Timeout.Infinite);
+                    recycleTimer = new Timer(_ => { try { Launch(true); } catch (Exception ex) { Store.Log("FilesPreload: " + ex.Message); }
+                        }, null, DelayMs, Timeout.Infinite);
                 }
                 break;
             case PreloadAction.StopTooFast:
@@ -99,8 +111,10 @@ internal static class FilesPreload
         }
     }
 
-    // Palette / wallpaper / light-dark changed (Theme.Use): tell a running Winlestia Fichiers (resident or windowed) to re-read the preferences. Never launches one.
-    // Debounced 600 ms (the preferences file is saved right after the theme switch); one pool-thread pipe probe, no polling.
+    // Palette / fond d'écran / clair-sombre modifiés (Theme.Use) : demande à un Winlestia Fichiers en cours (résident ou fenêtré) de relire
+    // les préférences. N'en lance jamais un.
+    // Anti-rebond de 600 ms (le fichier de préférences est sauvé juste après le changement de thème) ; une sonde du canal sur le pool de
+    // threads, sans sondage périodique.
     internal static void NotifyPalette()
     {
         if (quitting)
@@ -108,7 +122,9 @@ internal static class FilesPreload
         lock (policy)
         {
             paletteTimer?.Dispose();
-            paletteTimer = new Timer(_ => { try { FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "palette"), 150); } catch (Exception err) { Store.Log("FilesPreload.NotifyPalette : " + err.GetType().Name + ": " + err.Message); } }, null, 600, Timeout.Infinite);
+            paletteTimer = new Timer(_ => { try { FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "palette"), 150); }
+                catch (Exception err) { Store.Log("FilesPreload.NotifyPalette : " + err.GetType().Name + ": " + err.Message); } }, null,
+                600, Timeout.Infinite);
         }
     }
 

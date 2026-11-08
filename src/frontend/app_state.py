@@ -12,7 +12,7 @@ CONFIG = (
         or (Path(os.environ.get('LOCALAPPDATA') or str(Path.home() / 'AppData' / 'Local')) / 'Panneaux')
     )
     / 'Caelestia'
-)  # honours WINLESTIA_DATA_DIR like the backend
+)  # respecte WINLESTIA_DATA_DIR comme le backend
 CONFIG.mkdir(parents=True, exist_ok=True)
 
 SHUTTING_DOWN = False

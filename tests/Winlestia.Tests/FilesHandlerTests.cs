@@ -46,6 +46,14 @@ public class FilesHandlerTests
             k.SetValue("", def, kind);
     }
     static string Cmd(string exe) => "\"" + exe + "\" \"%1\"";
+    static void DeleteIfEmpty(string path)
+    {
+        bool empty;
+        using (var key = Registry.CurrentUser.OpenSubKey(path))
+            empty = key != null && key.SubKeyCount == 0 && key.ValueCount == 0;
+        if (empty)
+            Registry.CurrentUser.DeleteSubKey(path, false);
+    }
     [Fact]
     public void AllChecks()
     {
@@ -295,35 +303,12 @@ public class FilesHandlerTests
         }
         finally
         {
-            try
-            {
-                using var k = Registry.CurrentUser.OpenSubKey(SandboxRoot, true);
+            // Nettoyage de la sandbox HKCU : aucune erreur avalee (DeleteSubKey*(..., false) tolere l'absence).
+            using (var k = Registry.CurrentUser.OpenSubKey(SandboxRoot, true))
                 k?.DeleteSubKeyTree(run, false);
-            }
-            catch { }
-            try
-            {
-                using var parent = Registry.CurrentUser.OpenSubKey(SandboxRoot);
-                bool empty = parent != null && parent.SubKeyCount == 0 && parent.ValueCount == 0;
-                parent?.Dispose();
-                if (empty)
-                    Registry.CurrentUser.DeleteSubKey(SandboxRoot, false);
-            }
-            catch { }
-            try
-            {
-                using var p2 = Registry.CurrentUser.OpenSubKey(@"Software\WinlestiaTest");
-                bool empty = p2 != null && p2.SubKeyCount == 0 && p2.ValueCount == 0;
-                p2?.Dispose();
-                if (empty)
-                    Registry.CurrentUser.DeleteSubKey(@"Software\WinlestiaTest", false);
-            }
-            catch { }
-            try
-            {
-                Directory.Delete(tmp, true);
-            }
-            catch { }
+            DeleteIfEmpty(SandboxRoot);
+            DeleteIfEmpty(@"Software\WinlestiaTest");
+            TempDir.Delete(tmp);
         }
         using (var chk = Registry.CurrentUser.OpenSubKey(SandboxRoot + @"\" + run))
             Assert.True(chk == null, "sandbox_deleted");

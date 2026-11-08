@@ -1,5 +1,7 @@
-// C# 12 / WgcCapture.cs / Windows 10 1903+. One-shot Windows.Graphics.Capture of the live-wallpaper host window, for videos Media Foundation cannot decode (HEVC without the Store extension).
-// CLI: Panneaux.Glass.exe --capture-frames <outDir> [count=8] [maxSize=320] [intervalMs=400] [budgetMs=4300]. Everything (session, frame pool, D3D device) is closed before returning.
+// C# 12 / WgcCapture.cs / Windows 10 1903+. Capture ponctuelle Windows.Graphics.Capture de la fenêtre hôte du fond d'écran animé, pour les
+// vidéos que Media Foundation ne sait pas décoder (HEVC sans l'extension du Store).
+// CLI : Panneaux.Glass.exe --capture-frames <outDir> [count=8] [maxSize=320] [intervalMs=400] [budgetMs=4300]. Tout (session, pool de
+// frames, périphérique D3D) est fermé avant le retour.
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -20,11 +22,14 @@ internal static class WgcCapture
         IntPtr CreateForWindow(IntPtr window, ref Guid iid); IntPtr CreateForMonitor(IntPtr monitor, ref Guid iid);
     }
     [DllImport("combase.dll")] static extern int RoGetActivationFactory(IntPtr classId, ref Guid iid, out IntPtr factory);
-    [DllImport("combase.dll", CharSet = CharSet.Unicode)] static extern int WindowsCreateString(string source, int length, out IntPtr hstring);
+    [DllImport("combase.dll", CharSet = CharSet.Unicode)] static extern int WindowsCreateString(string source, int length,
+        out IntPtr hstring);
     [DllImport("combase.dll")] static extern int WindowsDeleteString(IntPtr hstring);
-    [DllImport("d3d11.dll")] static extern int D3D11CreateDevice(IntPtr adapter, int driverType, IntPtr software, uint flags, IntPtr levels, uint count, uint sdk, out IntPtr device, out int level, out IntPtr context);
+    [DllImport("d3d11.dll")] static extern int D3D11CreateDevice(IntPtr adapter, int driverType, IntPtr software, uint flags, IntPtr levels,
+        uint count, uint sdk, out IntPtr device, out int level, out IntPtr context);
     [DllImport("d3d11.dll")] static extern int CreateDirect3D11DeviceFromDXGIDevice(IntPtr dxgi, out IntPtr graphicsDevice);
-    static readonly Guid ItemIid = new("79C3F95B-31F7-4EC2-A464-632EF5D30760"), InteropIid = new("3628E81B-3CAC-4C60-B7F4-23CE0E0C3356"), DxgiDeviceIid = new("54EC77FA-1377-44E6-8C32-88FD5F44C84C");
+    static readonly Guid ItemIid = new("79C3F95B-31F7-4EC2-A464-632EF5D30760"), InteropIid = new("3628E81B-3CAC-4C60-B7F4-23CE0E0C3356"),
+        DxgiDeviceIid = new("54EC77FA-1377-44E6-8C32-88FD5F44C84C");
 
     internal static int Cli(string[] args)
     {   // optional args 6..9: monitor x y w h (host chosen and cropped to that monitor)
@@ -32,8 +37,11 @@ internal static class WgcCapture
         {
             string folder = args[1];
             int Num(int i, int d, int lo, int hi) => args.Length > i && int.TryParse(args[i], out int v) ? Math.Clamp(v, lo, hi) : d;
-            int count = Num(2, 8, 1, 16), size = Num(3, 320, 64, 1024), interval = Num(4, 400, 100, 2000), budget = Num(5, 4300, 1000, 5000);
-            Native.Rect? monitor = args.Length > 9 && int.TryParse(args[6], out int mx) && int.TryParse(args[7], out int my) && int.TryParse(args[8], out int mw) && int.TryParse(args[9], out int mh) && mw > 0 ? new Native.Rect { Left = mx, Top = my, Right = mx + mw, Bottom = my + mh } : null;
+            int count = Num(2, 8, 1, 16), size = Num(3, 320, 64, 1024), interval = Num(4, 400, 100, 2000), budget = Num(5, 4300, 1000,
+                5000);
+            Native.Rect? monitor = args.Length > 9 && int.TryParse(args[6], out int mx) && int.TryParse(args[7], out int my)
+                && int.TryParse(args[8], out int mw) && int.TryParse(args[9], out int mh) && mw > 0 ? new Native.Rect { Left = mx, Top = my,
+                Right = mx + mw, Bottom = my + mh } : null;
             return Task.Run(() => Run(folder, count, size, interval, budget, monitor)).GetAwaiter().GetResult() > 0 ? 0 : 1;
         }
         catch (Exception ex) { Store.Log("Capture WGC: " + ex.Message); return 2; }
@@ -56,7 +64,8 @@ internal static class WgcCapture
             return GraphicsCaptureItem.FromAbi(item);
         }
         catch { return null; }
-        finally { if (item != IntPtr.Zero) Marshal.Release(item); if (factory != IntPtr.Zero) Marshal.Release(factory); if (hs != IntPtr.Zero) WindowsDeleteString(hs); }
+        finally { if (item != IntPtr.Zero) Marshal.Release(item); if (factory != IntPtr.Zero) Marshal.Release(factory);
+            if (hs != IntPtr.Zero) WindowsDeleteString(hs); }
     }
 
     static async Task<int> Run(string folder, int count, int size, int interval, int budget, Native.Rect? monitor)
@@ -65,7 +74,7 @@ internal static class WgcCapture
             return 0;
         var clock = Stopwatch.StartNew();
         Directory.CreateDirectory(folder);
-        // Candidates: the live host (child of Progman/WorkerW), then its parents (a child HWND is not always capturable).
+        // Candidats : l'hôte animé (enfant de Progman/WorkerW), puis ses parents (un HWND enfant n'est pas toujours capturable).
         IntPtr host = WindowsWallpaper.FindHost(monitor);
         if (host == IntPtr.Zero)
             return 0;
@@ -156,7 +165,8 @@ internal static class WgcCapture
         int w = r.Right - r.Left, h = r.Bottom - r.Top;
         if (m.Right - m.Left >= w - 2 && m.Bottom - m.Top >= h - 2)
             return null;
-        int x = Math.Max(0, m.Left - r.Left), y = Math.Max(0, m.Top - r.Top), cw = Math.Min(w - x, m.Right - m.Left), ch = Math.Min(h - y, m.Bottom - m.Top);
+        int x = Math.Max(0, m.Left - r.Left), y = Math.Max(0, m.Top - r.Top), cw = Math.Min(w - x, m.Right - m.Left), ch = Math.Min(h - y,
+            m.Bottom - m.Top);
         return cw < 16 || ch < 16 ? null : new BitmapBounds { X = (uint)x, Y = (uint)y, Width = (uint)cw, Height = (uint)ch };
     }
     static async Task<bool> SaveFrame(IDirect3DSurface surface, string path, int size, BitmapBounds? crop)
@@ -191,7 +201,8 @@ internal static class WgcCapture
         await encoder.FlushAsync();
         stream.Seek(0);
         var data = new byte[stream.Size];
-        await stream.ReadAsync(System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.AsBuffer(data), (uint)data.Length, InputStreamOptions.None);
+        await stream.ReadAsync(System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.AsBuffer(data),
+            (uint)data.Length, InputStreamOptions.None);
         await File.WriteAllBytesAsync(path, data);
         return true;
     }

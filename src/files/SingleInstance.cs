@@ -1,5 +1,7 @@
-// Server side of the single-instance pipe (see backend/FilesPipe.cs for the protocol). One awaiting accept loop, no timer, no polling:
-// an idle server is one pending overlapped ConnectNamedPipe. A broken message never reaches the UI and never ends the process.
+// Côté serveur du tube d'instance unique (protocole dans backend/FilesPipe.cs). Une seule boucle d'acceptation en attente, sans minuteur ni
+// scrutation :
+// un serveur au repos est un seul ConnectNamedPipe en attente (overlapped). Un message corrompu n'atteint jamais l'interface et ne met
+// jamais fin au processus.
 using System;
 using System.IO;
 using System.IO.Pipes;
@@ -13,6 +15,9 @@ namespace WinlestiaFiles;
 
 internal sealed class SingleInstance : IDisposable
 {
+    // Reprise croissante (100 ms par échec) pour ne pas saturer le canal quand le résident est occupé.
+    const int RetryStepMs = 100;
+
     internal sealed record Request(string[] Args, string Cwd, string? Cmd);
 
     readonly Action<Request> onRequest;
@@ -24,7 +29,8 @@ internal sealed class SingleInstance : IDisposable
         this.onRequest = onRequest;
     }
 
-    // Many instances allowed, but at most MaxHandlers are served at once: a listener can then always be created ("all pipe instances are busy" cannot happen).
+    // Plusieurs instances permises, mais au plus MaxHandlers servies à la fois : un écouteur peut ainsi toujours être créé ("all pipe
+    // instances are busy" ne peut pas se produire).
     const int MaxInstances = 32, MaxHandlers = 16;
     readonly SemaphoreSlim slots = new(MaxHandlers, MaxHandlers);
 
@@ -32,7 +38,8 @@ internal sealed class SingleInstance : IDisposable
         new(FilesPipe.Name, PipeDirection.InOut, MaxInstances, PipeTransmissionMode.Byte,
             PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly | (first ? PipeOptions.FirstPipeInstance : PipeOptions.None));
 
-    // "All pipe instances are busy" is transient (a client or a dying instance still holds a slot): short backoff, 50 -> 800 ms.
+    // "All pipe instances are busy" est transitoire (un client ou une instance mourante tient encore un emplacement) : courte temporisation
+    // croissante, 50 -> 800 ms.
     static NamedPipeServerStream CreateRetry(CancellationToken ct)
     {
         for (int attempt = 0; ; attempt++)
@@ -45,7 +52,7 @@ internal sealed class SingleInstance : IDisposable
         }
     }
 
-    // Null when another instance already owns the pipe (or it cannot be created): the caller then simply runs standalone.
+    // Null quand une autre instance possède déjà le tube (ou qu'il ne peut pas être créé) : l'appelant tourne alors simplement en autonome.
     internal static SingleInstance? TryStart(Action<Request> onRequest)
     {
         try
@@ -67,7 +74,8 @@ internal sealed class SingleInstance : IDisposable
             bool handed = false;
             try
             {
-                await slots.WaitAsync(cts.Token).ConfigureAwait(false);   // saturated: the listener stays up, clients just wait their own short budget
+                // saturated: the listener stays up, clients just wait their own short budget
+                await slots.WaitAsync(cts.Token).ConfigureAwait(false);
                 try
                 {
                     await stream.WaitForConnectionAsync(cts.Token).ConfigureAwait(false);
@@ -95,7 +103,7 @@ internal sealed class SingleInstance : IDisposable
                     return;
                 try
                 {
-                    await Task.Delay(100 * failures, cts.Token).ConfigureAwait(false);
+                    await Task.Delay(RetryStepMs * failures, cts.Token).ConfigureAwait(false);
                     pending = CreateRetry(cts.Token);
                 }
                 catch (OperationCanceledException) { return; }

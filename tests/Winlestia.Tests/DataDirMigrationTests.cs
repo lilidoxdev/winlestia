@@ -58,6 +58,6 @@ public class DataDirMigrationTests
             Environment.SetEnvironmentVariable("WINLESTIA_DATA_DIR", null);
             Check(Store.DataDir == Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Panneaux"), "default = LocalAppData/Panneaux");
         }
-        finally { try { Directory.Delete(d, true); } catch { } }
+        finally { TempDir.Delete(d); }
     }
 }

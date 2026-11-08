@@ -220,16 +220,12 @@ internal static class TaskbarNative
     }
     internal static Lease? ReadLease(string path)
     {
-        try
-        {
-            return JsonSerializer.Deserialize<Lease>(File.ReadAllText(path), Store.Json);
-        }
-        catch { return null; }
+        return TaskbarLeasePolicy.Read(path);
     }
     internal static void RestoreSaved()
     {
         // Fichier de session absent ou illisible : même repli que RETABLIR_BARRE_WINDOWS.exe (toujours visible, 2 = ABS_ALWAYSONTOP).
-        Restore(ReadLease(LeasePath) ?? new Lease { State = 2 });
+        Restore(TaskbarLeasePolicy.ForRestore(ReadLease(LeasePath)));
     }
     sealed class ProcessWait : WaitHandle
     {
@@ -246,7 +242,7 @@ internal static class TaskbarNative
         try
         {
             using var parent = Process.GetProcessById(parentId);
-            if (parent.StartTime.ToUniversalTime().Ticks != lease.ParentStart)
+            if (TaskbarLeasePolicy.Decide(lease, parent.StartTime.ToUniversalTime().Ticks) == TaskbarLeasePolicy.GuardAction.RestoreNow)
             {
                 Restore(lease);
                 return 0;

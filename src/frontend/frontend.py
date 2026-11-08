@@ -1,4 +1,4 @@
-# Python 3.12 / Qt Quick 6.10, Windows 11. GPL-3.0-or-later; native host for the upstream Caelestia QML.
+# Python 3.12 / Qt Quick 6.10, Windows 11. GPL-3.0-or-later ; hôte natif du QML amont Caelestia.
 """Point d'entrée mince du frontend. La logique vit dans :
 app_state (chemins, journal Qt), win_native (ctypes Win32), bridge_client (canal nommé),
 windows_player, bridge (état/slots QML) et app_main (démarrage)."""

@@ -1,4 +1,4 @@
-// language: C# 12, file: Verification.cs, target: Windows 11 / .NET 8, integration checks without desktop mutations
+// C# 12, fichier Verification.cs, cible Windows 11 / .NET 8, contrôles d'intégration sans modification du bureau
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,7 +55,8 @@ internal static class Verification
                 if (bytes[i] > 0)
                     opaque++;
             }
-            Check(!result.Fallback && transparent > 0 && opaque > 0 && Path.GetExtension(result.Path) == ".png", "Logo officiel PNG avec alpha : " + result.Name);
+            Check(!result.Fallback && transparent > 0 && opaque > 0 && Path.GetExtension(result.Path) == ".png",
+                "Logo officiel PNG avec alpha : " + result.Name);
         }
         string fallback = Path.Combine(Store.Root, "web-icons", "verification-fallback.png");
         WebIcons.Default(fallback);
@@ -106,41 +107,54 @@ internal static class Verification
         Check(entries.Any(e => e.Name == "Google Chrome" && Store.BoardFor(e) == "apps"), "Chrome est dans Applications");
         Check(entries.Any(e => e.Name == "Canada" && Store.BoardFor(e) == "documents"), "Canada est dans Documents");
         Check(entries.Any(e => e.Name == "Cheats et scripts" && Store.BoardFor(e) == "projects"), "Les projets sont classés");
-        string[] games = { "Aniimo Legend", "Assetto Corsa EVO", "FragPunk", "Planet Coaster 2", "Roblox", "SnowRunner", "Solitaire & Casual Games" };
+        string[] games = { "Aniimo Legend", "Assetto Corsa EVO", "FragPunk", "Planet Coaster 2", "Roblox", "SnowRunner",
+            "Solitaire & Casual Games" };
         var installedGames = entries.Where(e => games.Contains(e.Name)).ToArray();
-        Check(installedGames.Length > 0 && installedGames.All(e => File.Exists(e.IconPath) && Path.GetExtension(e.IconPath).ToLowerInvariant() is ".png" or ".ico"), "Logos des jeux présents extraits des ressources installées");
-        Check(Store.State.Boards.Select(x => x.Id).OrderBy(x => x).SequenceEqual(new[] { "apps", "documents", "games", "projects" }), "Quatre panneaux identifiables et persistants");
+        Check(installedGames.Length > 0 && installedGames.All(e => File.Exists(e.IconPath)
+            && Path.GetExtension(e.IconPath).ToLowerInvariant() is ".png" or ".ico"),
+            "Logos des jeux présents extraits des ressources installées");
+        Check(Store.State.Boards.Select(x => x.Id).OrderBy(x => x).SequenceEqual(new[] { "apps", "documents", "games", "projects" }),
+            "Quatre panneaux identifiables et persistants");
         var state = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(Store.State, Store.Json), Store.Json)!;
-        Check(state.Tint == Store.State.Tint && state.IconSize == Store.State.IconSize && state.Boards.Count == 4 && state.Favorites.SequenceEqual(Store.State.Favorites), "Aller-retour complet de la personnalisation JSON");
+        Check(state.Tint == Store.State.Tint && state.IconSize == Store.State.IconSize && state.Boards.Count == 4
+            && state.Favorites.SequenceEqual(Store.State.Favorites), "Aller-retour complet de la personnalisation JSON");
         var invalid = new Preferences { Tint = double.NaN, IconSize = 500, Boards = new() { new() { Id = "absent" } } };
         invalid.Normalize();
         Check(invalid.Tint == .2 && invalid.IconSize == 80 && invalid.Boards.Count == 4, "Paramètres invalides bornés et récupérés");
         Check(Calculator.TryEvaluate("12*7", out double product) && Math.Abs(product - 84) < 1e-9, "Calcul direct saisi dans la recherche");
-        Check(Calculator.TryEvaluate("(18+6)/4", out double share) && Math.Abs(share - 6) < 1e-9 && Calculator.TryEvaluate("2 400 / 60", out double minutes) && Math.Abs(minutes - 40) < 1e-9, "Priorités, parenthèses et espaces du calcul");
-        Check(!Calculator.TryEvaluate("chrome", out _) && !Calculator.TryEvaluate("https://github.com", out _), "Une recherche ordinaire n’est jamais évaluée");
+        Check(Calculator.TryEvaluate("(18+6)/4", out double share) && Math.Abs(share - 6) < 1e-9 && Calculator.TryEvaluate("2 400 / 60",
+            out double minutes) && Math.Abs(minutes - 40) < 1e-9, "Priorités, parenthèses et espaces du calcul");
+        Check(!Calculator.TryEvaluate("chrome", out _) && !Calculator.TryEvaluate("https://github.com", out _),
+            "Une recherche ordinaire n’est jamais évaluée");
         var palette = CommandPalette.Match("chrome", 8);
         Check(palette.Any(e => e.Name == "Google Chrome"), "Palette : la recherche retrouve Chrome");
         Check(CommandPalette.Match("", 5).Count() == 5, "Palette : la liste vide reste bornée");
-        Check(ClockWindow.Greeting(new DateTime(2026, 10, 24, 22, 0, 0)).Contains("Bonsoir") && ClockWindow.Greeting(new DateTime(2026, 10, 24, 9, 0, 0)).Contains("Bonjour"), "Salutation de l’horloge selon l’heure");
+        Check(ClockWindow.Greeting(new DateTime(2026, 10, 24, 22, 0, 0)).Contains("Bonsoir") && ClockWindow.Greeting(new DateTime(2026, 10,
+            24, 9, 0, 0)).Contains("Bonjour"), "Salutation de l’horloge selon l’heure");
         string alarm = FocusAlarm.EnsureFile();
         var header = new byte[4];
         using (var reader = File.OpenRead(alarm))
             reader.Read(header, 0, 4);
-        Check(System.Text.Encoding.ASCII.GetString(header) == "RIFF" && new FileInfo(alarm).Length > 40000, "Sonnerie de fin : WAV PCM local généré");
+        Check(System.Text.Encoding.ASCII.GetString(header) == "RIFF" && new FileInfo(alarm).Length > 40000,
+            "Sonnerie de fin : WAV PCM local généré");
         var themed = new Preferences { Theme = "sakura" };
         themed.Normalize();
         Check(themed.Theme == "sakura", "Le thème choisi survit à la normalisation");
         var broken = new Preferences { Theme = "inexistant" };
         broken.Normalize();
         Check(broken.Theme == "nuit", "Un thème inconnu revient à Nuit boréale à l’ouverture");
-        Check(FocusTimer.DurationText(3600) == "1 h 00 min" && FocusTimer.DurationText(90) == "1 min 30 s" && FocusTimer.DurationText(25) == "25 s", "Durées libres lisibles en heures, minutes et secondes");
-        var noteState = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(new Preferences { Scratch = "ligne 1\nligne 2" }, Store.Json), Store.Json)!;
+        Check(FocusTimer.DurationText(3600) == "1 h 00 min" && FocusTimer.DurationText(90) == "1 min 30 s"
+            && FocusTimer.DurationText(25) == "25 s", "Durées libres lisibles en heures, minutes et secondes");
+        var noteState = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(new Preferences { Scratch = "ligne 1\nligne 2" },
+            Store.Json), Store.Json)!;
         Check(noteState.Scratch == "ligne 1\nligne 2", "La note rapide survit à l’enregistrement JSON");
-        string rescue = Path.Combine(Store.Root, "SECOURS_BUREAU.exe"), copy = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SECOURS_BUREAU.exe");
+        string rescue = Path.Combine(Store.Root, "SECOURS_BUREAU.exe"),
+            copy = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SECOURS_BUREAU.exe");
         Check(File.Exists(rescue) && File.Exists(copy), "Deux copies du secours sont disponibles");
         if (File.Exists(rescue) && File.Exists(copy))
         {
-            Check(SHA256.HashData(File.ReadAllBytes(rescue)).SequenceEqual(SHA256.HashData(File.ReadAllBytes(copy))), "Copie de secours identique dans Documents");
+            Check(SHA256.HashData(File.ReadAllBytes(rescue)).SequenceEqual(SHA256.HashData(File.ReadAllBytes(copy))),
+                "Copie de secours identique dans Documents");
             using var reader = new BinaryReader(File.OpenRead(rescue));
             reader.BaseStream.Position = 0x3c;
             int pe = reader.ReadInt32();

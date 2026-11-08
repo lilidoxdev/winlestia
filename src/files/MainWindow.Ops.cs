@@ -1,5 +1,6 @@
 // Step 4a: open, clipboard (CF_HDROP + Preferred DropEffect), rename (inline), delete, new folder, select all.
-// Every disk-touching part runs in FileOps on a dedicated STA thread; the list is patched in place from the SUCCEEDED results.
+// Toute partie qui touche au disque s'exécute dans FileOps sur un thread STA dédié ; la liste est corrigée sur place à partir des résultats
+// RÉUSSIS.
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -21,11 +22,14 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Le presse-papiers est parfois verrouillé par une autre application : nouvel essai bref.
+    const int ClipboardRetryMs = 100;
     [DllImport("user32.dll")] static extern bool AddClipboardFormatListener(IntPtr hwnd);
     [DllImport("user32.dll")] static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
     [DllImport("user32.dll")] static extern uint GetClipboardSequenceNumber();
     [DllImport("user32.dll")] static extern uint GetDoubleClickTime();
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)] static extern int SHOpenWithDialog(IntPtr parent, ref OpenAsInfo info);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)] static extern int SHOpenWithDialog(IntPtr parent,
+        ref OpenAsInfo info);
     const int WM_CLIPBOARDUPDATE = 0x031D;
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -36,7 +40,8 @@ public sealed partial class MainWindow
 
     readonly TextBox renameBox = new();
     readonly TextBlock renameError = UI.Text("", M3.FontSmall, UI.T(M3Role.Error));
-    readonly StackPanel renamePanel = new() { HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top, Visibility = Visibility.Collapsed };
+    readonly StackPanel renamePanel = new() { HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+        Visibility = Visibility.Collapsed };
     FileItem? renaming;
     int clickArm;
     (FileItem item, bool alone, bool onName)? pressed;
@@ -95,20 +100,24 @@ public sealed partial class MainWindow
         Grid.SetRowSpan(renamePanel, 2);
         Panel.SetZIndex(renamePanel, 10);
         listHost.Children.Add(renamePanel);
-        list.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, e) => { if (renaming != null && e.VerticalChange != 0 && !PlaceRename(renaming)) CancelRename(); }));
+        list.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, e) => { if (renaming != null
+            && e.VerticalChange != 0 && !PlaceRename(renaming)) CancelRename(); }));
 
         list.PreviewMouseLeftButtonDown += (_, e) =>
         {
             clickArm++;
             pressed = null;
-            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem { DataContext: FileItem item })
+            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem {
+                DataContext: FileItem item })
                 return;
             if (e.ClickCount == 1 && Keyboard.Modifiers == ModifierKeys.None)
-                pressed = (item, list.SelectedItems.Count == 1 && ReferenceEquals(list.SelectedItem, item), e.OriginalSource is TextBlock t && t.Text == item.Name);
+                pressed = (item, list.SelectedItems.Count == 1 && ReferenceEquals(list.SelectedItem, item), e.OriginalSource is TextBlock t
+                    && t.Text == item.Name);
         };
         list.PreviewMouseLeftButtonUp += (_, _) =>
         {
-            if (pressed is not { alone: true, onName: true } p || list.SelectedItems.Count != 1 || !ReferenceEquals(list.SelectedItem, p.item))
+            if (pressed is not { alone: true, onName: true } p || list.SelectedItems.Count != 1 || !ReferenceEquals(list.SelectedItem,
+                p.item))
                 return;
             Fire(() => SlowClick(p.item));
         };
@@ -116,7 +125,8 @@ public sealed partial class MainWindow
         {
             if (e.ChangedButton != MouseButton.Middle)
                 return;
-            if (e.OriginalSource is DependencyObject src && ItemsControl.ContainerFromElement(list, src) is ListBoxItem { DataContext: FileItem { IsDir: true } dir })
+            if (e.OriginalSource is DependencyObject src && ItemsControl.ContainerFromElement(list, src) is ListBoxItem {
+                DataContext: FileItem { IsDir: true } dir })
             {
                 AddTab(dir.FullPath);
                 e.Handled = true;
@@ -129,10 +139,11 @@ public sealed partial class MainWindow
             clipSource?.AddHook(ClipHook);
             AddClipboardFormatListener(Hwnd);
         };
-        Closed += (_, _) => { if (clipSource != null) { RemoveClipboardFormatListener(clipSource.Handle); clipSource.RemoveHook(ClipHook); clipSource = null; } };
+        Closed += (_, _) => { if (clipSource != null) { RemoveClipboardFormatListener(clipSource.Handle); clipSource.RemoveHook(ClipHook);
+            clipSource = null; } };
     }
 
-    // The toolbar: no focus stealing, so the shortcuts keep working right after a click.
+    // La barre d'outils : pas de vol de focus, pour que les raccourcis fonctionnent juste après un clic.
     FrameworkElement OpsBar()
     {
         var bar = new StackPanel { Orientation = Orientation.Horizontal };
@@ -170,7 +181,8 @@ public sealed partial class MainWindow
         }
         string path = item.FullPath;
         IntPtr owner = Hwnd;
-        // Default verb on a short-lived STA thread (a slow handler never blocks the UI). No association: the Windows "Open with" dialog.
+        // Verbe par défaut sur un thread STA éphémère (un gestionnaire lent ne bloque jamais l'UI). Sans association : la boîte « Ouvrir
+        // avec » de Windows.
         var thread = new Thread(() =>
         {
             try
@@ -207,7 +219,7 @@ public sealed partial class MainWindow
 
     // ---- result patching -------------------------------------------------------------------------------------
 
-    // Patches every tab that shows an affected folder, then selects the new items of the active one.
+    // Corrige chaque onglet qui montre un dossier concerné, puis sélectionne les nouveaux éléments de l'onglet actif.
     void ApplyResult(OpResult r, bool select)
     {
         if (r.Error != null)
@@ -215,7 +227,8 @@ public sealed partial class MainWindow
         foreach (var view in tabs.ToList())
         {
             string where = Norm(view.Tab.Location);
-            var removed = r.Removed.Where(p => view.Tab.DeepActive || string.Equals(ParentOf(p), where, StringComparison.OrdinalIgnoreCase)).ToList();
+            var removed = r.Removed.Where(p => view.Tab.DeepActive || string.Equals(ParentOf(p), where,
+                StringComparison.OrdinalIgnoreCase)).ToList();
             var added = r.Added.Where(i => string.Equals(ParentOf(i.FullPath), where, StringComparison.OrdinalIgnoreCase)).ToList();
             if (removed.Count > 0 || added.Count > 0)
                 view.Tab.ApplyChanges(removed, added);
@@ -241,7 +254,8 @@ public sealed partial class MainWindow
         return SetClipboardAsync(sel.Select(i => i.FullPath).ToList(), cut);
     }
 
-    // WPF already retries OpenClipboard; if another process (clipboard history, a viewer) still holds it, retry here without blocking the UI.
+    // WPF réessaie déjà OpenClipboard ; si un autre processus (historique du presse-papiers, visionneuse) le retient encore, on réessaie
+    // ici sans bloquer l'UI.
     internal async Task<bool> SetClipboardAsync(IReadOnlyList<string> paths, bool cut)
     {
         var files = new StringCollection();
@@ -256,7 +270,7 @@ public sealed partial class MainWindow
                 Clipboard.SetDataObject(data, true);
                 break;
             }
-            catch (Exception ex) when (attempt < 4) { Perf.Log("clipboard set retry: " + ex.Message); await Task.Delay(100); }
+            catch (Exception ex) when (attempt < 4) { Perf.Log("clipboard set retry: " + ex.Message); await Task.Delay(ClipboardRetryMs); }
             catch (Exception ex) { Perf.Log("clipboard set failed: " + ex.Message); return false; }
         }
         cutSequence = GetClipboardSequenceNumber();      // our own write; any later sequence means somebody else took the clipboard
@@ -281,7 +295,8 @@ public sealed partial class MainWindow
         return IntPtr.Zero;
     }
 
-    // Reads CF_HDROP and Preferred DropEffect (what Explorer writes) and runs Copy or Move into the current (or given) folder.
+    // Lit CF_HDROP et Preferred DropEffect (ce qu'écrit l'Explorateur) et exécute une copie ou un déplacement vers le dossier courant (ou
+    // donné).
     internal async Task<OpResult?> PasteAsync(string? destination = null)
     {
         string dest = destination ?? Active.Location;
@@ -293,7 +308,8 @@ public sealed partial class MainWindow
         try
         {
             var data = Clipboard.GetDataObject();
-            if (data == null || !data.GetDataPresent(DataFormats.FileDrop) || data.GetData(DataFormats.FileDrop) is not string[] drop || drop.Length == 0)
+            if (data == null || !data.GetDataPresent(DataFormats.FileDrop) || data.GetData(DataFormats.FileDrop) is not string[] drop
+                || drop.Length == 0)
                 return null;
             files = drop;
             if (data.GetDataPresent("Preferred DropEffect") && data.GetData("Preferred DropEffect") is Stream s)
@@ -334,7 +350,8 @@ public sealed partial class MainWindow
             return null;
         if (permanent && !ConfirmDialog.Ask(this, "Supprimer définitivement ?",
             items.Count == 1 ? $"« {items[0].Name} » sera supprimé définitivement, sans passer par la Corbeille."
-                             : $"{items.Count} éléments seront supprimés définitivement, sans passer par la Corbeille.", "Supprimer définitivement"))
+                             : $"{items.Count} éléments seront supprimés définitivement, sans passer par la Corbeille.",
+                                 "Supprimer définitivement"))
             return null;
         var result = await FileOps.Delete(Hwnd, items.Select(i => i.FullPath).ToList(), permanent, WatchSet());
         if (permanent)
@@ -348,7 +365,8 @@ public sealed partial class MainWindow
         return result;
     }
 
-    Task<OpResult?> DeleteSelectedAsync(bool permanent) => renaming != null ? Task.FromResult<OpResult?>(null) : DeleteAsync(Selection(), permanent);
+    Task<OpResult?> DeleteSelectedAsync(bool permanent) => renaming != null ? Task.FromResult<OpResult?>(null) : DeleteAsync(Selection(),
+        permanent);
 
     internal async Task<FileItem?> NewFolderAsync()
     {
@@ -359,7 +377,8 @@ public sealed partial class MainWindow
         var result = await FileOps.NewFolder(Hwnd, tab.Location, "Nouveau dossier", watch);
         journal.Record(result);
         ApplyResult(result, true);
-        var made = result.Added.FirstOrDefault(i => string.Equals(ParentOf(i.FullPath), Norm(tab.Location), StringComparison.OrdinalIgnoreCase));
+        var made = result.Added.FirstOrDefault(i => string.Equals(ParentOf(i.FullPath), Norm(tab.Location),
+            StringComparison.OrdinalIgnoreCase));
         if (made == null || tab != Active)
             return null;
         await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
@@ -396,7 +415,7 @@ public sealed partial class MainWindow
         return null;
     }
 
-    // Overlay positioned on the name label of the realized container (rows and tiles alike).
+    // Calque positionné sur l'étiquette de nom du conteneur réalisé (lignes et tuiles).
     bool PlaceRename(FileItem item)
     {
         if (list.ItemContainerGenerator.ContainerFromItem(item) is not ListBoxItem box || FindText(box, item.Name) is not { } label)
@@ -454,7 +473,8 @@ public sealed partial class MainWindow
             return "Un nom ne peut pas contenir : \\ / : * ? \" < > |";
         if (name.EndsWith('.'))
             return "Un nom ne peut pas se terminer par un point.";
-        if (renaming != null && !string.Equals(name, renaming.Name, StringComparison.OrdinalIgnoreCase) && Active.Find(Path.Combine(Active.Location, name)) != null)
+        if (renaming != null && !string.Equals(name, renaming.Name, StringComparison.OrdinalIgnoreCase)
+            && Active.Find(Path.Combine(Active.Location, name)) != null)
             return "Ce nom existe déjà dans ce dossier.";
         return null;
     }
@@ -512,7 +532,7 @@ public sealed partial class MainWindow
 
     internal readonly UndoJournal journal = new();
 
-    // Returns the toast text (also shown). Permanent delete cannot be undone and says so.
+    // Renvoie le texte du toast (aussi affiché). Une suppression définitive ne peut pas être annulée et le dit.
     internal async Task<string> UndoAsync()
     {
         if (renaming != null)
@@ -552,7 +572,7 @@ public sealed partial class MainWindow
         return text;
     }
 
-    // Same chrome as the address pill but with the small radius and a primary (or error) focus border.
+    // Même habillage que la pilule d'adresse mais avec le petit rayon et une bordure de focus primary (ou error).
     static ControlTemplate RenameTemplate()
     {
         var border = new FrameworkElementFactory(typeof(Border));
@@ -576,7 +596,7 @@ public sealed partial class MainWindow
     }
 }
 
-// ListBox with a public one-shot multi-select (a single selection notification, not one per item).
+// ListBox avec une multi-sélection ponctuelle publique (une seule notification de sélection, pas une par élément).
 internal sealed class BulkListBox : ListBox
 {
     internal void Select(System.Collections.IEnumerable items) => SetSelectedItems(items);

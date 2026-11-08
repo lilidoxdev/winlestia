@@ -1,4 +1,4 @@
-// C# 12 / FrameVerification.cs / Windows .NET 8. Real work-area leases, always restored in finally.
+// C# 12 / FrameVerification.cs / Windows .NET 8. Vrais baux de zone de travail, toujours restitués dans finally.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +13,10 @@ namespace PanneauxGlass;
 
 internal static class FrameVerification
 {
+    // Attente de test : les observateurs de fichiers et les temporisations antirebond ont eu le temps de tirer.
+    const int PauseStabilisationMs = 500;
+    // Attente de test : la mise en page asynchrone est terminée.
+    const int PauseMiseEnPageMs = 800;
     [StructLayout(LayoutKind.Sequential)]
     struct MonitorInfo
     {
@@ -49,7 +53,8 @@ internal static class FrameVerification
             });
             passed &= ok;
         }
-        app.Exit += (_, _) => File.WriteAllText(Path.Combine(Store.Root, "frame-verification.json"), JsonSerializer.Serialize(new { allPassed = passed, checks }, new JsonSerializerOptions { WriteIndented = true }));
+        app.Exit += (_, _) => File.WriteAllText(Path.Combine(Store.Root, "frame-verification.json"), JsonSerializer.Serialize(new {
+            allPassed = passed, checks }, new JsonSerializerOptions { WriteIndented = true }));
         Window? probe = null;
         app.Startup += (_, _) =>
         {
@@ -57,12 +62,14 @@ internal static class FrameVerification
             {
                 frame.Enable(false);
                 double scale = TaskbarNative.Scale(screens[0]);
-                probe = new Window { Title = "Vérification du cadre Panneaux", Width = 500, Height = 280, Left = (screens[0].Bounds.Left + 100) / scale, Top = (screens[0].Bounds.Top + 100) / scale, ShowInTaskbar = false, ShowActivated = false, WindowStartupLocation = WindowStartupLocation.Manual };
+                probe = new Window { Title = "Vérification du cadre Panneaux", Width = 500, Height = 280, Left = (screens[0].Bounds.Left
+                    + 100) / scale, Top = (screens[0].Bounds.Top + 100) / scale, ShowInTaskbar = false, ShowActivated = false,
+                    WindowStartupLocation = WindowStartupLocation.Manual };
                 probe.Show();
                 probe.WindowState = WindowState.Maximized;
             }
             catch (Exception ex) { Check(ex.Message, false); app.Shutdown(1); return; }
-            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(PauseMiseEnPageMs) };
             timer.Tick += (_, _) =>
             {
                 timer.Stop();
@@ -74,24 +81,27 @@ internal static class FrameVerification
                         int inset = (int)Math.Round(20 * TaskbarNative.Scale(screens[i]));
                         var a = after[i];
                         var b = before[i];
-                        Check("Native four-edge reservation " + screens[i].DeviceName, a.Left >= b.Left + inset && a.Top >= b.Top + inset && a.Right <= b.Right - inset && a.Bottom <= b.Bottom - inset);
+                        Check("Native four-edge reservation " + screens[i].DeviceName, a.Left >= b.Left + inset && a.Top >= b.Top + inset
+                            && a.Right <= b.Right - inset && a.Bottom <= b.Bottom - inset);
                     }
                     var handle = new WindowInteropHelper(probe!).Handle;
                     var origin = new Native.Point();
                     bool available = GetClientRect(handle, out var client) && ClientToScreen(handle, ref origin);
                     var area = Work(Forms.Screen.FromHandle(handle));
-                    Check("Maximized application stays inside native frame", available && origin.X >= area.Left && origin.Y >= area.Top && origin.X + client.Right <= area.Right && origin.Y + client.Bottom <= area.Bottom);
+                    Check("Maximized application stays inside native frame", available && origin.X >= area.Left && origin.Y >= area.Top
+                        && origin.X + client.Right <= area.Right && origin.Y + client.Bottom <= area.Bottom);
                 }
                 finally
                 {
                     probe?.Close();
                     frame.Disable();
-                    var settle = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+                    var settle = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(PauseStabilisationMs) };
                     settle.Tick += (_, _) =>
                     {
                         settle.Stop();
                         var restored = screens.Select(Work).ToArray();
-                        Check("Work areas restored", restored.Select((a, i) => a.Left == before[i].Left && a.Top == before[i].Top && a.Right == before[i].Right && a.Bottom == before[i].Bottom).All(x => x));
+                        Check("Work areas restored", restored.Select((a, i) => a.Left == before[i].Left && a.Top == before[i].Top
+                            && a.Right == before[i].Right && a.Bottom == before[i].Bottom).All(x => x));
                         File.WriteAllText(Path.Combine(Store.Root, "frame-verification.json"), JsonSerializer.Serialize(new
                         {
                             allPassed = passed,

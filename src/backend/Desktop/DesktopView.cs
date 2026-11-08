@@ -9,9 +9,13 @@ namespace PanneauxGlass;
 
 internal static class DesktopView
 {
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string? cls, string? name);
+    // Laisse l'Explorateur appliquer la bascule des icônes avant de relire leur état.
+    const int IconToggleSettleMs = 250;
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string? cls,
+        string? name);
     [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
-    [DllImport("user32.dll")] static extern IntPtr SendMessageTimeout(IntPtr hwnd, uint msg, IntPtr w, IntPtr l, uint flags, uint timeout, out IntPtr result);
+    [DllImport("user32.dll")] static extern IntPtr SendMessageTimeout(IntPtr hwnd, uint msg, IntPtr w, IntPtr l, uint flags, uint timeout,
+        out IntPtr result);
 
     static IntPtr DefView()
     {
@@ -49,7 +53,7 @@ internal static class DesktopView
             if (visible.Value != hidden)
                 return true;
             SendMessageTimeout(DefView(), 0x0111, (IntPtr)0x7402, IntPtr.Zero, 0x0002, 1000, out _);
-            Thread.Sleep(250);
+            Thread.Sleep(IconToggleSettleMs);
         }
         var final = IconsVisible();
         return final == null || final.Value != hidden;

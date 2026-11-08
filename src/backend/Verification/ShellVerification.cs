@@ -1,4 +1,4 @@
-// language: C# 12, file: ShellVerification.cs, target: Windows 11 / .NET 8, shell regression checks
+// C# 12, fichier ShellVerification.cs, cible Windows 11 / .NET 8, contrôles de régression du shell
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,13 +37,16 @@ internal static class ShellVerification
         var websites = state.Websites.Select(s => s.Id).ToArray();
         string old = state.Theme;
         ShellSettings.Migrate(false);
-        Check(state.ShellRevision == 1 && state.Theme == "shell" && state.PreviousTheme == old, "Migration vers le thème natif avec ancien thème conservé");
-        Check(favorites.SequenceEqual(state.Favorites) && recent.SequenceEqual(state.Recent) && websites.SequenceEqual(state.Websites.Select(s => s.Id)), "Migration : favoris, récents et sites conservés");
+        Check(state.ShellRevision == 1 && state.Theme == "shell" && state.PreviousTheme == old,
+            "Migration vers le thème natif avec ancien thème conservé");
+        Check(favorites.SequenceEqual(state.Favorites) && recent.SequenceEqual(state.Recent)
+            && websites.SequenceEqual(state.Websites.Select(s => s.Id)), "Migration : favoris, récents et sites conservés");
         state.ReplaceTaskbar = false;
         state.Theme = "shell-dark";
         ShellSettings.Migrate(false);
         Check(!state.ReplaceTaskbar && state.Theme == "shell-dark", "Migration idempotente : choix ultérieurs conservés");
-        Check(Theme.Find("shell")!.Light && Theme.Find("shell")!.Opaque && !Theme.Find("shell-dark")!.Light, "Thèmes natifs clair/sombre sans composition de verre invisible");
+        Check(Theme.Find("shell")!.Light && Theme.Find("shell")!.Opaque && !Theme.Find("shell-dark")!.Light,
+            "Thèmes natifs clair/sombre sans composition de verre invisible");
         Check(Marshal.SizeOf<TaskbarNative.BarData>() == 48, "Structure AppBar x64 conforme à l’ABI Windows");
         var lease = TaskbarNative.Snapshot();
         Check(lease.State is >= 0 and <= 3, "Lecture réelle, sans mutation, de l’état de la barre Windows");
@@ -69,7 +72,8 @@ internal static class ShellVerification
         Check(!UI.Brush("#A77967").IsFrozen, "Les graphiques ne figent pas les pinceaux partagés pendant un changement de thème");
         var bounds = new Rect(0, 0, 1920, 1080);
         var layout = ControlPairLayout.Calculate(bounds, false, false, false);
-        Check(layout.Home.Top >= 0 && layout.Home.Bottom <= bounds.Bottom && layout.Home.Width <= bounds.Width, "Disposition native sans bande d’horloge supplémentaire");
+        Check(layout.Home.Top >= 0 && layout.Home.Bottom <= bounds.Bottom && layout.Home.Width <= bounds.Width,
+            "Disposition native sans bande d’horloge supplémentaire");
         state.MotionLevel = 0;
         Check(!Motion.On, "Mouvements réduits : animations désactivées");
         Store.State = original;

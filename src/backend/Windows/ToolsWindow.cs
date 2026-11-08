@@ -1,4 +1,4 @@
-// language: C# 12, file: ToolsWindow.cs, target: Windows 11 / .NET 8 WPF, Atelier hub and help
+// C# 12, fichier ToolsWindow.cs, cible Windows 11 / .NET 8 WPF, hub de l'Atelier et aide
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +12,8 @@ namespace PanneauxGlass;
 internal sealed record ToolCard(string Category, string Glyph, string Title, string Hint, string Shortcut, Action Run);
 internal sealed class ToolsWindow : GlassWindow
 {
-    readonly Coordinator owner; readonly WrapPanel grid = new(); readonly List<(Button Button, string Name)> categories = new(); string filter = "Tout";
+    readonly Coordinator owner; readonly WrapPanel grid = new(); readonly List<(Button Button, string Name)> categories = new();
+        string filter = "Tout";
     internal ToolsWindow(Coordinator coordinator) : base("Panneaux Glass — atelier")
     {
         owner = coordinator;
@@ -60,7 +61,8 @@ internal sealed class ToolsWindow : GlassWindow
         }
         Grid.SetRow(chips, 1);
         ContentHost.Children.Add(chips);
-        var scroll = new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 6, 0) };
+        var scroll = new ScrollViewer { Content = grid, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 6, 0) };
         Grid.SetRow(scroll, 2);
         ContentHost.Children.Add(scroll);
         Loaded += (_, _) => { ApplyGlass(); Build(); };
@@ -71,10 +73,13 @@ internal sealed class ToolsWindow : GlassWindow
         new("Écran","\uE8A5","Texte d’une image","Encadre un texte, il est copié automatiquement","",()=>owner.OpenCapture(textOnly:true)),
         new("Écran","\uE790","Pipette de couleur","Agrandit sous le curseur et copie le code hexadécimal","",()=>owner.OpenColorPicker()),
         new("Écran","\uE7A3","Règle pixel","Mesure une distance à l’écran, en pixels et en centimètres","",()=>owner.OpenRuler()),
-        new("Système","\uE840","Toujours au premier plan","Une fenêtre reste devant toutes les autres",owner.PinShortcutLabel,()=>owner.ToggleAlwaysOnTop()),
+        new("Système","\uE840","Toujours au premier plan","Une fenêtre reste devant toutes les autres",owner.PinShortcutLabel,()=>owner
+            .ToggleAlwaysOnTop()),
         new("Système","\uE7F5","Son et micro","Change de casque ou coupe le micro en un clic","",()=>owner.OpenAudio()),
-        new("Système","\uE7ED","Notifications","Coupe ou rétablit les notifications Windows",SystemTools.NotificationsOn?"Activées":"Coupées",()=>owner.ToggleNotifications()),
-        new("Système","\uE72C","Redémarrer l’Explorateur","Quand la barre des tâches ou le Bureau se bloquent","",()=>owner.RestartExplorer()),
+        new("Système","\uE7ED","Notifications","Coupe ou rétablit les notifications Windows",SystemTools
+            .NotificationsOn?"Activées":"Coupées",()=>owner.ToggleNotifications()),
+        new("Système","\uE72C","Redémarrer l’Explorateur","Quand la barre des tâches ou le Bureau se bloquent","",()=>owner.RestartExplorer(
+            )),
         new("Fichiers","\uE8B7","Gros fichiers","Trouve ce qui remplit le disque, sans rien supprimer","",()=>owner.OpenLargeFiles()),
         new("Fichiers","\uE7C3","Profils d’espace","Rouvre tes applications et la disposition d’un moment","",()=>owner.OpenWorkspaces()),
         new("Confort","\uE70B","Papier pense-bête","Une feuille collée à l’écran : écris, place, garde","",()=>owner.OpenMemo()),
@@ -90,7 +95,9 @@ internal sealed class ToolsWindow : GlassWindow
         int index = 0;
         foreach (var card in cards)
         {
-            var border = new Border { Width = 306, MinHeight = 104, Margin = new Thickness(0, 0, 10, 10), Padding = new Thickness(13), CornerRadius = new CornerRadius(20), Background = UI.T(M3Role.OnSurface, 0x0E), BorderBrush = UI.T(M3Role.OnSurface, 0x20), BorderThickness = new Thickness(1), Cursor = Cursors.Hand };
+            var border = new Border { Width = 306, MinHeight = 104, Margin = new Thickness(0, 0, 10, 10), Padding = new Thickness(13),
+                CornerRadius = new CornerRadius(20), Background = UI.T(M3Role.OnSurface, 0x0E), BorderBrush = UI.T(M3Role.OnSurface, 0x20),
+                BorderThickness = new Thickness(1), Cursor = Cursors.Hand };
             var layout = new Grid();
             layout.ColumnDefinitions.Add(new()
             {
@@ -100,7 +107,8 @@ internal sealed class ToolsWindow : GlassWindow
             {
                 Width = new GridLength(1, GridUnitType.Star)
             });
-            var bulb = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(12), Background = UI.T(M3Role.OnSurface, 0x1C), VerticalAlignment = VerticalAlignment.Top };
+            var bulb = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(12), Background = UI.T(M3Role.OnSurface, 0x1C),
+                VerticalAlignment = VerticalAlignment.Top };
             var glyph = UI.Glyph(card.Glyph, 17);
             bulb.Child = glyph;
             layout.Children.Add(bulb);
@@ -122,8 +130,10 @@ internal sealed class ToolsWindow : GlassWindow
             border.Child = layout;
             border.MouseLeftButtonUp += (_, _) => { Close(); Dispatcher.BeginInvoke(card.Run); };
             System.Windows.Automation.AutomationProperties.SetName(border, card.Title);
-            border.MouseEnter += (_, _) => { border.Background = UI.T(M3Role.OnSurface, 0x1B); border.BorderBrush = UI.T(M3Role.OnSurface, 0x48); };
-            border.MouseLeave += (_, _) => { border.Background = UI.T(M3Role.OnSurface, 0x0E); border.BorderBrush = UI.T(M3Role.OnSurface, 0x20); };
+            border.MouseEnter += (_, _) => { border.Background = UI.T(M3Role.OnSurface, 0x1B); border.BorderBrush = UI.T(M3Role.OnSurface,
+                0x48); };
+            border.MouseLeave += (_, _) => { border.Background = UI.T(M3Role.OnSurface, 0x0E); border.BorderBrush = UI.T(M3Role.OnSurface,
+                0x20); };
             Motion.Stagger(border, index++);
             grid.Children.Add(border);
         }
@@ -171,7 +181,8 @@ internal sealed class HelpWindow : GlassWindow
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 18, 0, 12) };
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 18, 0, 12) };
         var body = new StackPanel();
         scroll.Content = body;
         Grid.SetRow(scroll, 1);
@@ -209,7 +220,9 @@ internal sealed class HelpWindow : GlassWindow
             grid.Children.Add(text);
             body.Children.Add(grid);
         }
-        Section("OUVRIR", "Approche le pointeur du bord droit de l’écran, ou utilise le raccourci global. Un deuxième appui replie tout, avec les fenêtres ouvertes depuis l’espace.");
+        Section("OUVRIR",
+            "Approche le pointeur du bord droit de l’écran, ou utilise le raccourci global. Un deuxième appui replie tout, avec les " +
+            "fenêtres ouvertes depuis l’espace.");
         Row(GlobalShortcut.Label(Store.State.Shortcut.Modifiers, Store.State.Shortcut.Key), "Ouvre ou replie ton espace");
         Row(owner.PaletteLabel, "Commande rapide : applications, sites, calculs, minuteur, actions");
         Row(owner.PinShortcutLabel, "Toujours au premier plan : épingle la fenêtre active");
@@ -218,8 +231,13 @@ internal sealed class HelpWindow : GlassWindow
         Row("Ctrl H", "Revient à l’accueil");
         Row("Échap", "Replie l’espace et ferme ce qui est ouvert avec lui");
         Row("Ctrl Alt Retour arrière", "Retrouve le Bureau organisé, même si l’interface ne répond plus");
-        Section("L’ATELIER", "Treize outils, tous dans la même fenêtre : capture annotée, papier pense-bête, texte d’une image, pipette, règle, presse-papiers, son, profils d’espace, gros fichiers. Un papier garde son texte, sa taille, sa place et sa transparence d’une session à l’autre. Raccourci dans la palette : tape « atelier ».");
-        Section("TES RÉGLAGES", "Dans Personnaliser : thème, mouvement Calme/Standard/Expressif, raccourcis, préservation du presse-papiers. Rien n’est imposé, tout se règle.");
+        Section("L’ATELIER",
+            "Treize outils, tous dans la même fenêtre : capture annotée, papier pense-bête, texte d’une image, pipette, règle, " +
+            "presse-papiers, son, profils d’espace, gros fichiers. Un papier garde son texte, sa taille, sa place et sa transparence " +
+            "d’une session à l’autre. Raccourci dans la palette : tape « atelier ».");
+        Section("TES RÉGLAGES",
+            "Dans Personnaliser : thème, mouvement Calme/Standard/Expressif, raccourcis, préservation du presse-papiers. Rien n’est " +
+            "imposé, tout se règle.");
         var footer = new DockPanel();
         var done = UI.Button("C’est parti", Close);
         done.MinWidth = 120;

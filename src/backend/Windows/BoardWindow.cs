@@ -1,4 +1,4 @@
-// language: C# 12, file: BoardWindow.cs, target: Windows 11 / .NET 8 WPF, four configurable icon carousels
+// C# 12, fichier BoardWindow.cs, cible Windows 11 / .NET 8 WPF, quatre carrousels d'icônes configurables
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,9 +14,12 @@ namespace PanneauxGlass;
 
 internal sealed class BoardWindow : GlassWindow
 {
-    readonly Coordinator owner; internal BoardState Model; readonly TextBlock heading, caption, pageText; readonly Button selector, previous, next, star;
-    readonly StackPanel filters = new() { Orientation = Orientation.Horizontal }; readonly Grid itemsHost = new(); readonly Border emblem = new();
-    List<Entry> filtered = new(); int page, capacity = 24, columns = 6, rows = 3; string quick = "", renderKey = "", quickKey = "~"; bool rendering; Point dragStart; DateTime blockClick;
+    readonly Coordinator owner; internal BoardState Model; readonly TextBlock heading, caption, pageText; readonly Button selector,
+        previous, next, star;
+    readonly StackPanel filters = new() { Orientation = Orientation.Horizontal }; readonly Grid itemsHost = new();
+        readonly Border emblem = new();
+    List<Entry> filtered = new(); int page, capacity = 24, columns = 6, rows = 3; string quick = "", renderKey = "", quickKey = "~";
+        bool rendering; Point dragStart; DateTime blockClick;
     internal BoardWindow(Coordinator coordinator, BoardState model) : base("Panneaux Glass — " + model.Title)
     {
         owner = coordinator;
@@ -66,7 +69,8 @@ internal sealed class BoardWindow : GlassWindow
         Grid.SetColumn(titleHit, 1);
         header.Children.Add(titleHit);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Top };
-        star = UI.IconButton("\uE734", "Favoris · " + model.Title, () => { Model.FavoritesOnly = !Model.FavoritesOnly; page = 0; Store.Save(); Refresh(); });
+        star = UI.IconButton("\uE734", "Favoris · " + model.Title, () => { Model.FavoritesOnly = !Model.FavoritesOnly; page = 0;
+            Store.Save(); Refresh(); });
         star.Margin = new Thickness(0, 0, 7, 0);
         actions.Children.Add(star);
         var add = UI.IconButton("\uE710", "Ajouter un accès à " + model.Title, () => owner.AddAccess(model.Id));
@@ -121,9 +125,11 @@ internal sealed class BoardWindow : GlassWindow
         new PanelInteraction(this, owner, titleHit);
         PreviewMouseWheel += (_, e) => { if (e.Delta != 0) { Turn(e.Delta < 0 ? 1 : -1); e.Handled = true; } };
         AllowDrop = true;
-        DragOver += (_, e) => { e.Effects = e.Data.GetDataPresent("PanneauxEntry") ? DragDropEffects.Move : e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Link : DragDropEffects.None; e.Handled = true; };
+        DragOver += (_, e) => { e.Effects = e.Data.GetDataPresent("PanneauxEntry") ? DragDropEffects.Move
+            : e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Link : DragDropEffects.None; e.Handled = true; };
         Drop += (_, e) => HandleDrop(e, null);
-        KeyDown += (_, e) => { if (e.Key == Key.Escape) owner.Collapse(); if (e.Key == Key.PageDown) Turn(1); if (e.Key == Key.PageUp) Turn(-1); };
+        KeyDown += (_, e) => { if (e.Key == Key.Escape) owner.Collapse(); if (e.Key == Key.PageDown) Turn(1);
+            if (e.Key == Key.PageUp) Turn(-1); };
         IsVisibleChanged += (_, _) => { if (!IsVisible) { owner.Icons.CancelScope(Model.Id); renderKey = ""; } };
     }
     bool MatchQuick(Entry entry)
@@ -161,7 +167,9 @@ internal sealed class BoardWindow : GlassWindow
             string filter = Model.Filter;
             if (!Model.FavoritesOnly && filter == "Sélection" && Model.Id == "apps")
             {
-                string[] preferred = { "google chrome", "firefox", "brave", "microsoft edge", "chatgpt", "opencode", "antigravity", "hermes", "freebuff", "cursor", "visual studio code", "blender 5.2", "solidworks 2025", "obs studio", "recordly", "discord", "telegram", "spotify", "docker desktop", "word", "excel", "proton mail", "7-zip file manager", "winrar" };
+                string[] preferred = { "google chrome", "firefox", "brave", "microsoft edge", "chatgpt", "opencode", "antigravity",
+                    "hermes", "freebuff", "cursor", "visual studio code", "blender 5.2", "solidworks 2025", "obs studio", "recordly",
+                    "discord", "telegram", "spotify", "docker desktop", "word", "excel", "proton mail", "7-zip file manager", "winrar" };
                 selection = selection.Where(e => preferred.Contains(Store.Fold(e.Name)) || Store.State.Favorites.Contains(e.Id));
             }
             else if (!Model.FavoritesOnly && filter != "Tous" && filter != "Sélection")
@@ -176,7 +184,8 @@ internal sealed class BoardWindow : GlassWindow
                 "projects" => all.Count + " espaces · reprends là où tu en étais",
                 _ => all.Count + " dossiers · le quotidien à portée de main"
             };
-            selector.Content = Model.FavoritesOnly ? "Favoris · " + Model.Title + "  ⌄" : (filter == "Tous" ? "Toutes les catégories" : filter) + "  ⌄";
+            selector.Content = Model.FavoritesOnly ? "Favoris · " + Model.Title + "  ⌄" : (filter == "Tous" ? "Toutes les catégories"
+                : filter) + "  ⌄";
             BuildQuick();
             RenderItems(animate, direction);
         }
@@ -210,7 +219,8 @@ internal sealed class BoardWindow : GlassWindow
         var actions = new List<MenuAction> { new("Toutes les catégories", "\uE8A9", () => SetFilter("Tous"), Model.Filter == "Tous") };
         if (Model.Id == "apps")
             actions.Add(new("Sélection du quotidien", "\uE734", () => SetFilter("Sélection"), Model.Filter == "Sélection"));
-        foreach (var cat in Store.Entries.Where(e => Store.BoardFor(e) == Model.Id && !Store.State.Hidden.Contains(e.Id)).Select(e => e.Category).Distinct().OrderBy(x => x))
+        foreach (var cat in Store.Entries.Where(e => Store.BoardFor(e) == Model.Id && !Store.State.Hidden.Contains(e.Id)).Select(e
+            => e.Category).Distinct().OrderBy(x => x))
         {
             string local = cat;
             actions.Add(new(cat, GlassMenu.CategoryGlyph(cat), () => SetFilter(local), Model.Filter == cat, actions.Count == 1));
@@ -237,7 +247,8 @@ internal sealed class BoardWindow : GlassWindow
     }
     void RenderItems(bool animate, int direction)
     {
-        double width = itemsHost.ActualWidth > 20 ? itemsHost.ActualWidth : Math.Max(400, Width - 56), height = itemsHost.ActualHeight > 20 ? itemsHost.ActualHeight : Math.Max(180, Height - 190);
+        double width = itemsHost.ActualWidth > 20 ? itemsHost.ActualWidth : Math.Max(400, Width - 56), height = itemsHost.ActualHeight > 20
+            ? itemsHost.ActualHeight : Math.Max(180, Height - 190);
         double icon = Store.State.IconSize;
         string mode = Theme.Current.Tiles;
         if (mode == "list")
@@ -273,7 +284,9 @@ internal sealed class BoardWindow : GlassWindow
         capacity = columns * rows;
         int pages = Math.Max(1, (int)Math.Ceiling(filtered.Count / (double)capacity));
         page = Math.Clamp(page, 0, pages - 1);
-        string nextKey = Theme.Current.Id + "/" + filtered.Count + "/" + mode + "/" + columns + "/" + rows + "/" + page + "/" + icon + "/" + Model.Accent + "/" + string.Join("|", filtered.Skip(page * capacity).Take(capacity).Select(e => e.Id + e.Name + e.IconPath + Store.State.Favorites.Contains(e.Id)));
+        string nextKey = Theme.Current.Id + "/" + filtered.Count + "/" + mode + "/" + columns + "/" + rows + "/" + page + "/" + icon + "/"
+            + Model.Accent + "/" + string.Join("|", filtered.Skip(page * capacity).Take(capacity).Select(e => e.Id + e.Name + e.IconPath
+            + Store.State.Favorites.Contains(e.Id)));
         if (renderKey == nextKey)
             return;
         renderKey = nextKey;
@@ -309,7 +322,9 @@ internal sealed class BoardWindow : GlassWindow
     Button CreateTile(Entry entry, double icon, int number = 0)
     {
         string mode = Theme.Current.Tiles;
-        var button = new Button { Background = Brushes.Transparent, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(1), Padding = new Thickness(6), Margin = new Thickness(4, 3, 4, 3), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = entry.Name + "\n" + entry.Category + "\n" + entry.Target };
+        var button = new Button { Background = Brushes.Transparent, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(1),
+            Padding = new Thickness(6), Margin = new Thickness(4, 3, 4, 3), HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = entry.Name + "\n" + entry.Category + "\n" + entry.Target };
         System.Windows.Automation.AutomationProperties.SetName(button, entry.Name);
         FrameworkElement content;
         if (mode == "list")
@@ -336,7 +351,7 @@ internal sealed class BoardWindow : GlassWindow
         }
         else if (mode == "bento")
         {
-            // Bento: an upright compartment, colour block behind the logo, name at the foot.
+            // Bento : un compartiment vertical, bloc de couleur derrière le logo, nom en bas.
             button.Background = number % 2 == 0 ? UI.Alpha(UI.White.Color, 13) : UI.Alpha(UI.Accent.Color, 23);
             button.BorderBrush = UI.Alpha(UI.White.Color, 26);
             button.BorderThickness = new Thickness(1);
@@ -354,7 +369,8 @@ internal sealed class BoardWindow : GlassWindow
             {
                 Height = GridLength.Auto
             });
-            var picture = new Image { Width = Math.Clamp(icon * .72, 34, 50), Height = Math.Clamp(icon * .72, 34, 50), Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
+            var picture = new Image { Width = Math.Clamp(icon * .72, 34, 50), Height = Math.Clamp(icon * .72, 34, 50),
+                Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
             RenderOptions.SetBitmapScalingMode(picture, BitmapScalingMode.HighQuality);
             owner.Icons.Load(entry, source => picture.Source = source, Model.Id);
             cell.Children.Add(picture);
@@ -374,7 +390,7 @@ internal sealed class BoardWindow : GlassWindow
         }
         else if (mode == "index")
         {
-            // Suisse: a printed index — number, logo, name, category, one hairline under each row.
+            // Suisse : un index imprimé — numéro, logo, nom, catégorie, un filet sous chaque ligne.
             button.Background = Brushes.Transparent;
             button.BorderBrush = UI.Alpha(UI.White.Color, 48);
             button.BorderThickness = new Thickness(0, 0, 0, 1);
@@ -402,7 +418,8 @@ internal sealed class BoardWindow : GlassWindow
             ordinal.FontFamily = UI.Mono;
             ordinal.VerticalAlignment = VerticalAlignment.Center;
             row.Children.Add(ordinal);
-            var picture = new Image { Width = 22, Height = 22, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center };
+            var picture = new Image { Width = 22, Height = 22, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center };
             RenderOptions.SetBitmapScalingMode(picture, BitmapScalingMode.HighQuality);
             owner.Icons.Load(entry, source => picture.Source = source, Model.Id);
             Grid.SetColumn(picture, 1);
@@ -421,7 +438,7 @@ internal sealed class BoardWindow : GlassWindow
         }
         else if (mode == "stack")
         {
-            // Zen: a wide, quiet row with room around the logo and a chevron at the end.
+            // Zen : une ligne large et calme avec de l'espace autour du logo et un chevron à la fin.
             button.Background = Brushes.Transparent;
             button.BorderBrush = UI.Alpha(UI.White.Color, 34);
             button.BorderThickness = new Thickness(0, 0, 0, 1);
@@ -434,7 +451,8 @@ internal sealed class BoardWindow : GlassWindow
             chevron.Opacity = .8;
             DockPanel.SetDock(chevron, Dock.Right);
             row.Children.Add(chevron);
-            var picture = new Image { Width = 34, Height = 34, Stretch = Stretch.Uniform, Margin = new Thickness(4, 0, 16, 0), VerticalAlignment = VerticalAlignment.Center };
+            var picture = new Image { Width = 34, Height = 34, Stretch = Stretch.Uniform, Margin = new Thickness(4, 0, 16, 0),
+                VerticalAlignment = VerticalAlignment.Center };
             RenderOptions.SetBitmapScalingMode(picture, BitmapScalingMode.HighQuality);
             owner.Icons.Load(entry, source => picture.Source = source, Model.Id);
             DockPanel.SetDock(picture, Dock.Left);
@@ -459,7 +477,8 @@ internal sealed class BoardWindow : GlassWindow
             button.HorizontalContentAlignment = HorizontalAlignment.Stretch;
             button.VerticalContentAlignment = VerticalAlignment.Top;
             var card = new StackPanel();
-            var picture = new Image { Width = Math.Clamp(icon * .62, 30, 44), Height = Math.Clamp(icon * .62, 30, 44), Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left };
+            var picture = new Image { Width = Math.Clamp(icon * .62, 30, 44), Height = Math.Clamp(icon * .62, 30, 44),
+                Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left };
             RenderOptions.SetBitmapScalingMode(picture, BitmapScalingMode.HighQuality);
             owner.Icons.Load(entry, source => picture.Source = source, Model.Id);
             card.Children.Add(picture);
@@ -506,7 +525,9 @@ internal sealed class BoardWindow : GlassWindow
         button.Click += (_, _) => { if (DateTime.UtcNow >= blockClick) owner.Launch(entry); };
         button.MouseRightButtonUp += (_, e) => { OpenEntryMenu(entry, button); e.Handled = true; };
         button.PreviewMouseLeftButtonDown += (_, e) => dragStart = e.GetPosition(button);
-        button.PreviewMouseMove += (_, e) => { if (e.LeftButton != MouseButtonState.Pressed) return; var point = e.GetPosition(button); if ((point - dragStart).Length < 9) return; blockClick = DateTime.UtcNow.AddMilliseconds(450); DragDrop.DoDragDrop(button, new DataObject("PanneauxEntry", entry.Id), DragDropEffects.Move); blockClick = DateTime.UtcNow.AddMilliseconds(450); };
+        button.PreviewMouseMove += (_, e) => { if (e.LeftButton != MouseButtonState.Pressed) return; var point = e.GetPosition(button);
+            if ((point - dragStart).Length < 9) return; blockClick = DateTime.UtcNow.AddMilliseconds(450); DragDrop.DoDragDrop(button,
+            new DataObject("PanneauxEntry", entry.Id), DragDropEffects.Move); blockClick = DateTime.UtcNow.AddMilliseconds(450); };
         button.AllowDrop = true;
         button.Drop += (_, e) => HandleDrop(e, entry.Id);
         return button;
@@ -514,7 +535,15 @@ internal sealed class BoardWindow : GlassWindow
     void OpenEntryMenu(Entry entry, Button anchor)
     {
         blockClick = DateTime.UtcNow.AddMilliseconds(350);
-        GlassMenu.Open(owner, this, anchor, entry.Name, new[] { new MenuAction("Ouvrir", "\uE8A7", () => owner.Launch(entry)), new MenuAction(Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris" : "Ajouter aux favoris", "\uE734", () => { if (!Store.State.Favorites.Remove(entry.Id)) Store.State.Favorites.Add(entry.Id); Store.Save(); owner.RefreshBoards(); }), new MenuAction(Store.State.TaskbarPins.Contains(entry.Id) ? "Détacher de la barre" : "Épingler à la barre", "\uE718", () => owner.ToggleTaskbarPin(entry)), new MenuAction("Personnaliser cet accès…", "\uE70F", () => owner.Edit(entry), Separator: true), new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)), new MenuAction("Copier le chemin", "\uE8C8", () => System.Windows.Clipboard.SetText(entry.Target)), new MenuAction("Masquer cet accès", "\uE890", () => { Store.State.Hidden.Add(entry.Id); Store.Save(); owner.RefreshBoards(); }, Separator: true) }, true);
+        GlassMenu.Open(owner, this, anchor, entry.Name, new[] { new MenuAction("Ouvrir", "\uE8A7", () => owner.Launch(entry)),
+            new MenuAction(Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris" : "Ajouter aux favoris", "\uE734", () => {
+            if (!Store.State.Favorites.Remove(entry.Id)) Store.State.Favorites.Add(entry.Id); Store.Save(); owner.RefreshBoards(); }),
+            new MenuAction(Store.State.TaskbarPins.Contains(entry.Id) ? "Détacher de la barre" : "Épingler à la barre", "\uE718", ()
+            => owner.ToggleTaskbarPin(entry)), new MenuAction("Personnaliser cet accès…", "\uE70F", () => owner.Edit(entry),
+            Separator: true), new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)),
+            new MenuAction("Copier le chemin", "\uE8C8", () => System.Windows.Clipboard.SetText(entry.Target)),
+            new MenuAction("Masquer cet accès", "\uE890", () => { Store.State.Hidden.Add(entry.Id); Store.Save(); owner.RefreshBoards(); },
+            Separator: true) }, true);
     }
     void HandleDrop(DragEventArgs e, string? targetId)
     {
@@ -523,7 +552,8 @@ internal sealed class BoardWindow : GlassWindow
         {
             string id = (string)e.Data.GetData("PanneauxEntry");
             Store.State.BoardOverrides[id] = Model.Id;
-            var destination = Store.Sorted(Store.Entries.Where(x => Store.BoardFor(x) == Model.Id && !Store.State.Hidden.Contains(x.Id))).Select(x => x.Id).ToList();
+            var destination = Store.Sorted(Store.Entries.Where(x => Store.BoardFor(x) == Model.Id
+                && !Store.State.Hidden.Contains(x.Id))).Select(x => x.Id).ToList();
             destination.Remove(id);
             int index = targetId == null ? -1 : destination.IndexOf(targetId);
             if (index < 0)

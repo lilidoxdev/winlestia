@@ -70,7 +70,8 @@ USER = {
 def test_restore_merges_user_edits_and_guards_autorun():
     with tempfile.TemporaryDirectory(prefix='winlestia-l3-') as tmp:
         base = Path(tmp)
-        # (a) user edits made after install survive restore; only what is still ours is reverted.
+        # (a) les modifications de l'utilisateur faites après l'installation survivent à la restauration ; seul ce qui
+        # est encore à nous est rétabli.
         a = base / 'a'
         a.mkdir()
         module, terminal, local, settings, registry = load(a, USER)
@@ -97,22 +98,26 @@ def test_restore_merges_user_edits_and_guards_autorun():
         assert d['font'] == {'face': 'Original'} and 'colorScheme' not in d and 'useAcrylic' not in d, d
         assert [s['name'] for s in data['schemes']] == ['UserScheme'] and 'themes' not in data and 'theme' not in data, data
         assert data['userKey'] == 'keep' and data['actions'] == [{'command': 'copy'}], "(a): data['userKey'] == 'keep' and data['actions'] == [{'command': 'copy'}]"
-        assert (module.STATE / (PKG + '.json')).read_bytes() == backup_before, "(a): (module.STATE / (PKG + '.json')).read_bytes() == backup_before"  # backup kept, never copied over
+        # sauvegarde conservée, jamais recopiée par-dessus
+        assert (module.STATE / (PKG + '.json')).read_bytes() == backup_before, "(a): (module.STATE / (PKG + '.json')).read_bytes() == backup_before"
         assert not (module.STATE / 'state.json').exists() and (module.STATE / 'state.restored.json').exists(), "(a): not (module.STATE / 'state.json').exists() and (module.STATE / 'state."
         assert not any(k[1] == 'WinlestiaTerminalTheme' for k in registry) and (module.CMD, 'AutoRun') not in registry, "(a): not any(k[1] == 'WinlestiaTerminalTheme' for k in registry) and (modul"
-        run(a, local, module.restore)  # second restore (uninstall after an unchecked upgrade) is a no-op
+        # seconde restauration (désinstallation après une mise à jour non cochée) : sans effet
+        run(a, local, module.restore)
         assert load_json(settings) == data, "(a): load_json(settings) == data"
         # re-install after restore captures fresh originals
         run(a, local, module.configure)
         assert load_json(module.STATE / 'state.json')['wt'][PKG]['original']['defaults']['font'] == {'face': 'Original'}, "(a): load_json(module.STATE / 'state.json')['wt'][PKG]['original']['default"
-        # sync_theme values recorded via note_written count as ours
+        # les valeurs de sync_theme enregistrées via note_written comptent comme les nôtres
         module.note_written(PKG, opacity=40)
         data = load_json(settings)
         data['profiles']['defaults']['opacity'] = 40
         settings.write_text(json.dumps(data))
         run(a, local, module.restore)
-        assert load_json(settings)['profiles']['defaults']['opacity'] == 90, "(a): load_json(settings)['profiles']['defaults']['opacity'] == 90"  # back to the value found at the second install
-        # a user value equal to what we wrote is indistinguishable and reverted; a user-changed theme is kept
+        # retour à la valeur trouvée à la seconde installation
+        assert load_json(settings)['profiles']['defaults']['opacity'] == 90, "(a): load_json(settings)['profiles']['defaults']['opacity'] == 90"
+        # une valeur utilisateur égale à ce que nous avons écrit est indiscernable et rétablie ; un thème changé par
+        # l'utilisateur est conservé
         a2 = base / 'a2'
         a2.mkdir()
         module, terminal, local, settings, registry = load(a2, {'theme': 'dark'})
@@ -156,7 +161,7 @@ def test_restore_merges_user_edits_and_guards_autorun():
         run(b3, local, module.restore)
         assert registry[(module.CMD, 'AutoRun')] == 'something else', "(b): registry[(module.CMD, 'AutoRun')] == 'something else'"
 
-        # upgrade must not capture later user additions as 'written'.
+        # une mise à jour ne doit pas capturer des ajouts ultérieurs de l'utilisateur comme 'written'.
         b4 = base / 'b4'
         b4.mkdir()
         module, terminal, local, settings, registry = load(b4, USER)
@@ -167,11 +172,11 @@ def test_restore_merges_user_edits_and_guards_autorun():
         assert registry[(module.CMD, 'AutoRun')] == 'echo hi & ' + module.injection() + ' & mycmd', registry
         run(b4, local, module.restore)
         assert registry[(module.CMD, 'AutoRun')] == 'echo hi & mycmd', registry
-        # note_written never creates state.json and tolerates its absence.
+        # note_written ne crée jamais state.json et tolère son absence.
         module.note_written(PKG, opacity=1)
         assert not (module.STATE / 'state.json').exists(), "(b): not (module.STATE / 'state.json').exists()"
 
-        # (c) v1 state.json (no manifest) still restores.
+        # (c) un state.json v1 (sans manifeste) se restaure encore.
         c = base / 'c'
         c.mkdir()
         module, terminal, local, settings, registry = load(c, USER)
@@ -195,7 +200,8 @@ def test_restore_merges_user_edits_and_guards_autorun():
             k[1] == 'WinlestiaTerminalTheme' for k in registry
         ), registry
 
-        # v1 state: sync-changed opacity is kept on restore; configure migrates it to v2 keeping v1 originals.
+        # état v1 : l'opacité changée par la synchro est conservée à la restauration ; configure migre vers v2 en
+        # gardant les originaux v1.
         c2 = base / 'c2'
         c2.mkdir()
         module, terminal, local, settings, registry = load(c2, USER)
@@ -212,10 +218,10 @@ def test_restore_merges_user_edits_and_guards_autorun():
         run(c3, local, module.configure)
         v = load_json(module.STATE / 'state.json')
         module.save(module.STATE / 'state.json', json.dumps({k: v[k] for k in ('profiles', 'autorun', 'sync')}))
-        module.note_written(PKG, opacity=40)  # v1: no KeyError, no change
+        module.note_written(PKG, opacity=40)  # v1 : pas de KeyError, aucun changement
         assert 'version' not in load_json(module.STATE / 'state.json'), "(c): 'version' not in load_json(module.STATE / 'state.json')"
 
-        # (d) no state.json: restore changes nothing.
+        # (d) pas de state.json : la restauration ne change rien.
         d_ = base / 'd'
         d_.mkdir()
         module, terminal, local, settings, registry = load(d_, USER)
@@ -228,7 +234,7 @@ def test_restore_merges_user_edits_and_guards_autorun():
             and not (terminal / 'theme-sync.stop').exists()
         ), "(d): settings.read_bytes() == before and registry == {(module.CMD, 'AutoRun"
 
-        # sync_theme must not touch Windows Terminal without an integration (no state.json).
+        # sync_theme ne doit pas toucher à Windows Terminal sans intégration (pas de state.json).
         sys.path.insert(0, str(r / 'src/terminal'))
         sys.path.insert(0, str(r / 'src/frontend'))
         import sync_theme

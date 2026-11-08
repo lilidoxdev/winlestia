@@ -65,7 +65,7 @@ public class SettingsMigrationAndShortcutsTests
             Migration(root, legacy);
             Shortcuts();
         }
-        finally { try { Directory.Delete(root, true); } catch { } }
+        finally { TempDir.Delete(root); }
     }
     static void Migration(string root, string legacy)
     {
@@ -328,10 +328,10 @@ public class SettingsMigrationAndShortcutsTests
     {
         // Source layout is not part of the contract: compare with all whitespace removed.
         string src = System.Text.RegularExpressions.Regex.Replace(
-            File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Bridge", "QtShellBridge.cs")),
+            File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Bridge", "QtShellBridge.Actions.Settings.cs")),
             @"\s+",
             "");
-        Check(src.Contains("case\"dockVisible\":Store.State.DockVisible=Flag(args,\"enabled\");if(!Store.State.DockVisible&&owner.TaskbarEnabled)owner.SetTaskbar(false);"),
+        Check(src.Contains("case\"dockVisible\":Store.State.DockVisible=Flag(c.Args,\"enabled\");if(!Store.State.DockVisible&&owner.TaskbarEnabled)owner.SetTaskbar(false);"),
               "(d) hiding the dock while it replaces the Windows bar restores the Windows bar");
     }
 }

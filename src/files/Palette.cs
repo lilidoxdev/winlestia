@@ -1,5 +1,5 @@
-// Resolves the shell palette off the UI thread with the backend's own decision tree (Themes.cs Unify):
-// auto (wallpaper) > custom > light shell > dark default. Reuses the linked M3Palette code, one-shot at startup.
+// Résout la palette du shell hors du thread UI avec l'arbre de décision propre au backend (Themes.cs Unify) :
+// auto (fond d'écran) > personnalisé > shell clair > sombre par défaut. Réutilise le code M3Palette lié, une seule fois au démarrage.
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -13,10 +13,11 @@ namespace WinlestiaFiles;
 
 internal static class PaletteLoader
 {
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool SystemParametersInfo(uint action, uint size, StringBuilder value, uint flags);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool SystemParametersInfo(uint action, uint size,
+        StringBuilder value, uint flags);
 
-    // Default palette is already on screen; this swaps it in place when the stored choice differs. No polling:
-    // a wallpaper or theme change while the window is open is picked up by a notification in step 6.
+    // La palette par défaut est déjà à l'écran ; ceci la remplace sur place quand le choix enregistré diffère. Pas de scrutation :
+    // un changement de fond d'écran ou de thème fenêtre ouverte est capté par une notification à l'étape 6.
     internal static void Start(Dispatcher ui, Action applied)
     {
         long started = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -31,14 +32,19 @@ internal static class PaletteLoader
             catch (Exception ex) { App.CrashLog(ex); return; }
             if (palette == null)
                 return;
-            ui.BeginInvoke(() => { long t = System.Diagnostics.Stopwatch.GetTimestamp(); Perf.Mark("palette apply begin"); Theme.Current.Set(palette); UI.RepaintAll(); applied(); Perf.Log($"palette UI-thread cost {Perf.Ms(t):F1} ms"); Perf.Log($"palette applied ({(Store.State.AutoTheme ? "wallpaper" : Store.State.Theme)}) after {Perf.Ms(started):F0} ms"); });
+            ui.BeginInvoke(() => { long t = System.Diagnostics.Stopwatch.GetTimestamp(); Perf.Mark("palette apply begin");
+                Theme.Current.Set(palette); UI.RepaintAll(); applied(); Perf.Log($"palette UI-thread cost {Perf.Ms(t):F1} ms");
+                Perf.Log($"palette applied ({(Store.State.AutoTheme ? "wallpaper" : Store.State.Theme)}) after {Perf.Ms(started):F0} ms");
+                });
         });
     }
 
     static int generation;
 
-    // Live update (backend "palette" pipe message): re-read preferences-glass.json + wallpaper off the UI thread, then swap the palette and repaint the token brushes in place.
-    // Unlike Start, "dark default" is applied too (a switch back from light must repaint). The latest request wins.
+    // Mise à jour en direct (message de tube "palette" du backend) : relit preferences-glass.json + le fond d'écran hors du thread UI, puis
+    // remplace la palette et repeint les pinceaux de jetons sur place.
+    // Contrairement à Start, le "sombre par défaut" est appliqué aussi (un retour depuis le clair doit repeindre). La dernière requête
+    // gagne.
     internal static void Refresh(Dispatcher ui, Action applied)
     {
         int mine = Interlocked.Increment(ref generation);
@@ -55,8 +61,10 @@ internal static class PaletteLoader
         });
     }
 
-    // Palette the frontend actually shows (%LOCALAPPDATA%\Panneaux\palette-shell.json, written by frontend.py in auto mode): it knows live-wallpaper overrides that SPI_GETDESKWALLPAPER cannot see.
-    internal static string ShellFile => Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_SHELL") is { Length: > 0 } over ? over : Path.Combine(Store.DataDir, "palette-shell.json");
+    // Palette réellement affichée par le frontend (%LOCALAPPDATA%\Panneaux\palette-shell.json, écrite par frontend.py en mode auto) : elle
+    // connaît les surcharges du fond d'écran animé que SPI_GETDESKWALLPAPER ne voit pas.
+    internal static string ShellFile => Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_SHELL") is { Length: > 0 } over ? over
+        : Path.Combine(Store.DataDir, "palette-shell.json");
 
     internal static M3Palette? FromShellFile()
     {
@@ -108,7 +116,8 @@ internal static class PaletteLoader
     }
 
     static FileSystemWatcher? watcher; static Timer? debounce;
-    // Event-driven live update when the frontend rewrites the shared palette (no polling); one watcher per process.
+    // Mise à jour en direct pilotée par événement quand le frontend réécrit la palette partagée (sans scrutation) ; un seul observateur par
+    // processus.
     static void Watch(Dispatcher ui, Action applied)
     {
         if (watcher != null)
@@ -118,8 +127,10 @@ internal static class PaletteLoader
             string file = ShellFile, dir = Path.GetDirectoryName(file)!;
             if (!Directory.Exists(dir))
                 return;
-            watcher = new FileSystemWatcher(dir, Path.GetFileName(file)) { NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime };
-            FileSystemEventHandler h = (_, _) => { debounce?.Dispose(); debounce = new Timer(_ => Refresh(ui, applied), null, 400, Timeout.Infinite); };
+            watcher = new FileSystemWatcher(dir, Path.GetFileName(file)) {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime };
+            FileSystemEventHandler h = (_, _) => { debounce?.Dispose(); debounce = new Timer(_ => Refresh(ui, applied), null, 400,
+                Timeout.Infinite); };
             watcher.Created += h;
             watcher.Changed += h;
             watcher.Renamed += (_, _) => h(null, null!);
@@ -140,7 +151,7 @@ internal static class PaletteLoader
         return null;
     }
 
-    // SPI_GETDESKWALLPAPER: current wallpaper file of the primary desktop (the backend uses the monitor at 0,0).
+    // SPI_GETDESKWALLPAPER : fichier du fond d'écran actuel du bureau principal (le backend utilise l'écran en 0,0).
     static string WallpaperPath()
     {
         var buffer = new StringBuilder(520);

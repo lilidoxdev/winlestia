@@ -1,4 +1,4 @@
-// language: C# 12, file: WindowsConnections.cs, target: Windows 11 / .NET 8 WinRT
+// C# 12, fichier WindowsConnections.cs, cible Windows 11 / .NET 8 WinRT
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,8 @@ using Windows.Networking.Connectivity;
 namespace PanneauxGlass;
 
 internal sealed record RadioSnapshot(bool Present, bool On, string Name);
-internal sealed record ConnectionSnapshot(RadioSnapshot Wifi, RadioSnapshot Bluetooth, bool Internet, string Network, bool Ethernet, string Error = "");
+internal sealed record ConnectionSnapshot(RadioSnapshot Wifi, RadioSnapshot Bluetooth, bool Internet, string Network, bool Ethernet,
+    string Error = "");
 internal sealed class RadioAccessDeniedException(string message) : InvalidOperationException(message);
 internal sealed class WindowsConnections
 {
@@ -36,7 +37,8 @@ internal sealed class WindowsConnections
             {
                 internet = profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
                 ethernet = profile.NetworkAdapter?.IanaInterfaceType == 6;
-                network = profile.IsWlanConnectionProfile ? profile.WlanConnectionProfileDetails.GetConnectedSsid() : ethernet ? "Ethernet" : profile.ProfileName;
+                network = profile.IsWlanConnectionProfile ? profile.WlanConnectionProfileDetails.GetConnectedSsid() : ethernet ? "Ethernet"
+                    : profile.ProfileName;
             }
         }
         catch (Exception ex) { error = ex.Message; }

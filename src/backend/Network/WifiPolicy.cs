@@ -1,4 +1,5 @@
-// Pure rules for the Wi-Fi list (no wlanapi, no window, no I/O): security classification, SSID grouping and sorting, WLAN profile XML, password validation, error mapping. Linked into tests/WifiPolicy.
+// Règles pures de la liste Wi-Fi (ni wlanapi, ni fenêtre, ni E/S) : classification de la sécurité, regroupement et tri des SSID, XML de
+// profil WLAN, validation du mot de passe, traduction des erreurs. Lié dans tests/WifiPolicy.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,10 +19,11 @@ static class WifiRules
     internal const int MaxSsidBytes = 32;
     internal const string ProfileNamespace = "http://www.microsoft.com/networking/WLAN/profile/v1";
     internal const string TransitionNamespace = "http://www.microsoft.com/networking/WLAN/profile/v4";
-    // Reason codes of wlanapi.h (WLAN_REASON_CODE_MSMSEC_CONNECT_BASE = 0x48000, NETWORK_NOT_AVAILABLE = 0x2800B).
-    internal const uint ReasonMsmsecMin = 0x40000, ReasonMsmsecMax = 0x4FFFF, ReasonKeyFormat = 0x48012, ReasonPskMismatch = 0x48014, ReasonNetworkNotAvailable = 0x2800B;
+    // Codes de raison de wlanapi.h (WLAN_REASON_CODE_MSMSEC_CONNECT_BASE = 0x48000, NETWORK_NOT_AVAILABLE = 0x2800B).
+    internal const uint ReasonMsmsecMin = 0x40000, ReasonMsmsecMax = 0x4FFFF, ReasonKeyFormat = 0x48012, ReasonPskMismatch = 0x48014,
+        ReasonNetworkNotAvailable = 0x2800B;
 
-    // DOT11_AUTH_ALGORITHM / DOT11_CIPHER_ALGORITHM values reported by WlanGetAvailableNetworkList.
+    // Valeurs DOT11_AUTH_ALGORITHM / DOT11_CIPHER_ALGORITHM renvoyées par WlanGetAvailableNetworkList.
     internal static WifiSecurity Classify(int auth, int cipher)
     {
         bool wep = cipher is 0x01 or 0x05 or 0x101;
@@ -50,14 +52,17 @@ static class WifiRules
             return WifiSecurity.Enterprise;
         if (a == WifiSecurity.Unsupported || b == WifiSecurity.Unsupported)
             return WifiSecurity.Unsupported;
-        bool aSae = a is WifiSecurity.Wpa3Sae or WifiSecurity.Wpa3Transition, bSae = b is WifiSecurity.Wpa3Sae or WifiSecurity.Wpa3Transition;
-        bool aPsk = a is WifiSecurity.Wpa2Personal or WifiSecurity.Wpa3Transition, bPsk = b is WifiSecurity.Wpa2Personal or WifiSecurity.Wpa3Transition;
+        bool aSae = a is WifiSecurity.Wpa3Sae or WifiSecurity.Wpa3Transition,
+            bSae = b is WifiSecurity.Wpa3Sae or WifiSecurity.Wpa3Transition;
+        bool aPsk = a is WifiSecurity.Wpa2Personal or WifiSecurity.Wpa3Transition,
+            bPsk = b is WifiSecurity.Wpa2Personal or WifiSecurity.Wpa3Transition;
         if ((aSae && bPsk) || (aPsk && bSae))
             return WifiSecurity.Wpa3Transition;
         return WifiSecurity.Unsupported;
     }
 
-    internal static bool NeedsPassword(WifiSecurity s) => s is WifiSecurity.Wpa2Personal or WifiSecurity.Wpa3Sae or WifiSecurity.Wpa3Transition or WifiSecurity.WpaPersonal;
+    internal static bool NeedsPassword(WifiSecurity s)
+        => s is WifiSecurity.Wpa2Personal or WifiSecurity.Wpa3Sae or WifiSecurity.Wpa3Transition or WifiSecurity.WpaPersonal;
     internal static bool CanConnect(WifiSecurity s) => s == WifiSecurity.Open || NeedsPassword(s);
 
     internal static string SecurityLabel(WifiSecurity s) => s switch
@@ -71,7 +76,8 @@ static class WifiRules
         _ => "unsupported"
     };
 
-    // One row per SSID (hidden networks with an empty name are not handled), best signal kept, flags merged; connected first, then saved, then signal, then name.
+    // Une ligne par SSID (les réseaux masqués à nom vide ne sont pas gérés), meilleur signal conservé, indicateurs fusionnés ; connecté
+    // d'abord, puis enregistré, puis signal, puis nom.
     internal static List<WifiEntry> Group(IEnumerable<WifiEntry> entries)
     {
         var map = new Dictionary<string, WifiEntry>(StringComparer.Ordinal);
@@ -103,7 +109,7 @@ static class WifiRules
 
     internal static int Bars(int signal) => signal >= 75 ? 4 : signal >= 50 ? 3 : signal >= 25 ? 2 : 1;
 
-    // Returns "" when acceptable, else a short key ("short","long","chars","ssid").
+    // Renvoie "" si acceptable, sinon une clé courte ("short","long","chars","ssid").
     internal static string ValidatePassword(WifiSecurity s, string? password)
     {
         if (!NeedsPassword(s))
@@ -126,9 +132,10 @@ static class WifiRules
 
     internal static string Hex(string ssid) => Convert.ToHexString(new UTF8Encoding(false).GetBytes(ssid));
 
-    internal static bool ValidSsid(string? ssid) => !string.IsNullOrEmpty(ssid) && new UTF8Encoding(false).GetByteCount(ssid) <= MaxSsidBytes;
+    internal static bool ValidSsid(string? ssid) => !string.IsNullOrEmpty(ssid)
+        && new UTF8Encoding(false).GetByteCount(ssid) <= MaxSsidBytes;
 
-    // Strict escaping; characters that XML 1.0 cannot carry are dropped.
+    // Échappement strict ; les caractères que XML 1.0 ne peut pas porter sont supprimés.
     internal static string XmlEscape(string value)
     {
         var sb = new StringBuilder(value.Length + 8);
@@ -156,8 +163,10 @@ static class WifiRules
         return sb.ToString();
     }
 
-    // WLANProfile for an infrastructure network. The profile name is the SSID text; the SSID itself goes in hex when it has spaces or non-ASCII characters.
-    // Throws ArgumentException (message never contains the password) for an invalid SSID, an unsupported type or an invalid password.
+    // WLANProfile pour un réseau d'infrastructure. Le nom du profil est le texte du SSID ; le SSID lui-même passe en hexadécimal quand il
+    // contient des espaces ou des caractères non ASCII.
+    // Lève ArgumentException (le message ne contient jamais le mot de passe) pour un SSID invalide, un type non pris en charge ou un mot de
+    // passe invalide.
     internal static string BuildProfile(string ssid, WifiSecurity security, string? password)
     {
         if (!ValidSsid(ssid))
@@ -195,20 +204,24 @@ static class WifiRules
                 break;
         }
         var sb = new StringBuilder(640);
-        sb.Append("<?xml version=\"1.0\"?><WLANProfile xmlns=\"").Append(ProfileNamespace).Append("\"><name>").Append(name).Append("</name>")
-          .Append("<SSIDConfig><SSID>").Append(ssidXml).Append("</SSID></SSIDConfig><connectionType>ESS</connectionType><connectionMode>").Append(security == WifiSecurity.Open ? "manual" : "auto").Append("</connectionMode>")
+        sb.Append("<?xml version=\"1.0\"?><WLANProfile xmlns=\"").Append(ProfileNamespace).Append("\"><name>").Append(name).Append(
+            "</name>")
+          .Append("<SSIDConfig><SSID>").Append(ssidXml).Append("</SSID></SSIDConfig><connectionType>ESS</connectionType><connectionMode>")
+              .Append(security == WifiSecurity.Open ? "manual" : "auto").Append("</connectionMode>")
           .Append("<MSM><security><authEncryption><authentication>").Append(auth).Append("</authentication><encryption>").Append(cipher)
           .Append("</encryption><useOneX>false</useOneX>").Append(extra).Append("</authEncryption>");
         if (NeedsPassword(security))
         {
-            string keyType = IsHexKey(password!) && security is WifiSecurity.Wpa2Personal or WifiSecurity.WpaPersonal ? "networkKey" : "passPhrase";
-            sb.Append("<sharedKey><keyType>").Append(keyType).Append("</keyType><protected>false</protected><keyMaterial>").Append(XmlEscape(password!)).Append("</keyMaterial></sharedKey>");
+            string keyType = IsHexKey(password!) && security is WifiSecurity.Wpa2Personal or WifiSecurity.WpaPersonal ? "networkKey"
+                : "passPhrase";
+            sb.Append("<sharedKey><keyType>").Append(keyType).Append("</keyType><protected>false</protected><keyMaterial>").Append(
+                XmlEscape(password!)).Append("</keyMaterial></sharedKey>");
         }
         sb.Append("</security></MSM></WLANProfile>");
         return sb.ToString();
     }
 
-    // Win32 error of a wlanapi call to a short key ("" for success).
+    // Erreur Win32 d'un appel wlanapi vers une clé courte ("" en cas de succès).
     internal static string MapApiError(int code) => code switch
     {
         0 => "",
@@ -221,7 +234,8 @@ static class WifiRules
         _ => "failed"
     };
 
-    // Outcome of a connection attempt: reason code of the notification (0 = connected), whether the 20 s bound elapsed. Only authentication reason codes mean a wrong password; anything else is a plain failure.
+    // Résultat d'une tentative de connexion : code de raison de la notification (0 = connecté), et si la borne de 20 s est écoulée. Seuls
+    // les codes d'authentification signifient un mauvais mot de passe ; tout le reste est un simple échec.
     internal static string MapReason(uint reason, bool timedOut)
     {
         if (reason == 0 && !timedOut)
@@ -235,7 +249,7 @@ static class WifiRules
         return "failed";
     }
 
-    // Reason shown for an empty or refused list. state: "ok" with entries, else the key the interface translates.
+    // Raison affichée pour une liste vide ou refusée. state : "ok" avec des entrées, sinon la clé que l'interface traduit.
     internal static string ListState(int openCode, int interfaces, int listCode, int count, bool locationDenied)
     {
         if (openCode == 1062)

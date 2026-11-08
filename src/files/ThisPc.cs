@@ -1,4 +1,4 @@
-// "Ce PC": a virtual location (no enumeration of items) whose page lists the drives with a free-space bar.
+// "Ce PC" : un emplacement virtuel (aucune énumération d'éléments) dont la page liste les lecteurs avec une barre d'espace libre.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +13,8 @@ internal static class ThisPc
 
     internal sealed record DriveCard(string Root, string Label, string Kind, long Free, long Total, bool Ready);
 
-    // Worker thread only (IsReady can block on a sleeping / network drive). Sidebar.DriveSource (tests) replaces the real list.
+    // Thread de travail uniquement (IsReady peut bloquer sur un lecteur en veille / réseau). Sidebar.DriveSource (tests) remplace la vraie
+    // liste.
     internal static List<DriveCard> Read()
     {
         var list = new List<DriveCard>();

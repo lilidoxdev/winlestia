@@ -1,4 +1,4 @@
-// language: C# 12, file: Native.cs, target: Windows 11 / .NET 8, native glass and shell icons
+// language: C# 12, file: Native.cs, target: Windows 11 / .NET 8, verre natif et icônes du shell
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -30,7 +30,8 @@ internal static class Native
         var hwnd = new WindowInteropHelper(window).Handle;
         if (hwnd != IntPtr.Zero)
         {
-            int hr = BackdropUpdate(hwnd, Math.Min(radius, Math.Min(window.ActualWidth, window.ActualHeight) / 2), window.IsVisible, window.Topmost);
+            int hr = BackdropUpdate(hwnd, Math.Min(radius, Math.Min(window.ActualWidth, window.ActualHeight) / 2), window.IsVisible,
+                window.Topmost);
             if (hr < 0)
                 Store.Log("Backdrop update: 0x" + hr.ToString("X"));
         }
@@ -69,7 +70,8 @@ internal static class Native
     [DllImport("user32.dll")] internal static extern bool GetCursorPos(out Point point);
     [DllImport("user32.dll")] internal static extern IntPtr GetForegroundWindow();
     internal delegate IntPtr LowLevelMouseProc(int code, IntPtr message, IntPtr data);
-    [DllImport("user32.dll", SetLastError = true)] internal static extern IntPtr SetWindowsHookExW(int id, LowLevelMouseProc procedure, IntPtr module, uint thread);
+    [DllImport("user32.dll", SetLastError = true)] internal static extern IntPtr SetWindowsHookExW(int id, LowLevelMouseProc procedure,
+        IntPtr module, uint thread);
     [DllImport("user32.dll")] internal static extern bool UnhookWindowsHookEx(IntPtr hook);
     [DllImport("user32.dll")] internal static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr message, IntPtr data);
     [DllImport("kernel32.dll")] internal static extern IntPtr GetModuleHandleW(string? name);
@@ -91,7 +93,7 @@ internal static class Native
         GetWindowTextW(hwnd, text, 256);
         return text.ToString();
     }
-    // Used by the global Always-on-Top key: a foreign window only gets its extended style flipped.
+    // Utilisé par la touche globale Toujours au premier plan : une fenêtre étrangère voit seulement son style étendu basculé.
     internal static bool ToggleTopmost(IntPtr hwnd, out bool topmost)
     {
         topmost = false;
@@ -104,7 +106,8 @@ internal static class Native
     [DllImport("user32.dll")] static extern bool SetWindowCompositionAttribute(IntPtr hwnd, ref CompositionData data);
     [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
     [DllImport("dwmapi.dll")] static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref Margins margins);
-    [DllImport("user32.dll", SetLastError = true)] internal static extern bool RegisterHotKey(IntPtr hwnd, int id, uint modifiers, uint key);
+    [DllImport("user32.dll", SetLastError = true)] internal static extern bool RegisterHotKey(IntPtr hwnd, int id, uint modifiers,
+        uint key);
     [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr window, IntPtr insertAfter, int x, int y, int cx, int cy, uint flags);
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr window);
     internal static void Raise(Window window)
@@ -131,7 +134,7 @@ internal static class Native
     [DllImport("user32.dll")] static extern uint GetDpiForWindow(IntPtr hwnd);
     [DllImport("user32.dll")] static extern IntPtr GetWindowLongPtrW(IntPtr hwnd, int index);
     [DllImport("user32.dll")] static extern IntPtr SetWindowLongPtrW(IntPtr hwnd, int index, IntPtr value);
-    // WS_EX_TRANSPARENT makes the sheet a picture, not a target: every click reaches the panels below.
+    // WS_EX_TRANSPARENT fait de la feuille une image et non une cible : chaque clic atteint les panneaux dessous.
     internal static long ExtendedStyle(IntPtr hwnd) => hwnd == IntPtr.Zero ? 0 : GetWindowLongPtrW(hwnd, -20).ToInt64();
     internal static void ClickThrough(IntPtr hwnd, bool through)
     {
@@ -193,12 +196,13 @@ internal static class Native
         var source = HwndSource.FromHwnd(hwnd);
         if (source?.CompositionTarget != null)
             source.CompositionTarget.BackgroundColor = Colors.Transparent;
-        var margins = window.AllowsTransparency || Theme.Current.Opaque ? new Margins() : new Margins { Left = -1, Right = -1, Top = -1, Bottom = -1 };
+        var margins = window.AllowsTransparency || Theme.Current.Opaque ? new Margins() : new Margins { Left = -1, Right = -1, Top = -1,
+            Bottom = -1 };
         DwmExtendFrameIntoClientArea(hwnd, ref margins);
         int dark = light ? 0 : 1;
         DwmSetWindowAttribute(hwnd, 20, ref dark, 4);
-        // A single acrylic surface, clipped by our region. DWM's separate rounded
-        // frame/backdrop otherwise leaves a second, less rounded rectangle behind it.
+        // Une seule surface acrylique, découpée par notre région. Sans cela, le cadre/fond arrondi séparé de DWM
+        // laisse derrière elle un second rectangle moins arrondi.
         int corner = 1;
         DwmSetWindowAttribute(hwnd, 33, ref corner, 4);
         int border = unchecked((int)0xFFFFFFFE);
@@ -206,7 +210,9 @@ internal static class Native
         int backdrop = 1;
         DwmSetWindowAttribute(hwnd, 38, ref backdrop, 4);
         // Accent acrylic keeps all four independent surfaces translucent while focus moves between them.
-        var policy = new Accent { State = window.AllowsTransparency || Theme.Current.Opaque ? 0 : 4, Flags = window.AllowsTransparency || Theme.Current.Opaque ? 0 : 2, Gradient = unchecked((int)(((uint)(tint * 255) << 24) | (light ? 0x00F8F3ECu : 0x003C2418u))) };
+        var policy = new Accent { State = window.AllowsTransparency || Theme.Current.Opaque ? 0 : 4, Flags = window.AllowsTransparency
+            || Theme.Current.Opaque ? 0 : 2, Gradient = unchecked((int)(((uint)(tint * 255) << 24) | (light ? 0x00F8F3ECu
+            : 0x003C2418u))) };
         IntPtr memory = Marshal.AllocHGlobal(Marshal.SizeOf<Accent>());
         try
         {
@@ -239,7 +245,8 @@ internal static class Native
         if (hwnd == IntPtr.Zero || w.ActualWidth < 1 || w.ActualHeight < 1)
             return;
         double scale = GetDpiForWindow(hwnd) / 96d;
-        IntPtr region = CreateRoundRectRgn(0, 0, (int)Math.Ceiling(w.ActualWidth * scale) + 1, (int)Math.Ceiling(w.ActualHeight * scale) + 1, (int)(radius * 2 * scale), (int)(radius * 2 * scale));
+        IntPtr region = CreateRoundRectRgn(0, 0, (int)Math.Ceiling(w.ActualWidth * scale) + 1, (int)Math.Ceiling(w.ActualHeight * scale)
+            + 1, (int)(radius * 2 * scale), (int)(radius * 2 * scale));
         if (SetWindowRgn(hwnd, region, true) == 0)
             DeleteObject(region);
         SyncBackdrop(w, radius);
@@ -270,7 +277,8 @@ internal static class Native
         key.DeleteValue("Panneaux", false);
     }
     static readonly object autostartGate = new(); static int autostartDesired = -1; // -1 : aucune demande en cours
-    // Pendant une demande, l'état visible est celui demandé ; sinon Run ou tâche (l'état de la tâche est attendu au plus 3 s au premier appel).
+    // Pendant une demande, l'état visible est celui demandé ; sinon Run ou tâche (l'état de la tâche est attendu au plus 3 s au premier
+    // appel).
     internal static bool Autostart
     {
         get
@@ -279,16 +287,27 @@ internal static class Native
             return want >= 0 ? want == 1 : RunPresent() || AutostartTask.Present;
         }
     }
-    // Au lancement, hors du thread d'interface : une valeur Run (installeur, ancienne version) devient la tâche de session. Ne réactive jamais un démarrage désactivé : sans valeur Run, rien n'est créé, et le verrou sérialise avec SetAutostart.
+    // Au lancement, hors du thread d'interface : une valeur Run (installeur, ancienne version) devient la tâche de session. Ne réactive
+    // jamais un démarrage désactivé : sans valeur Run, rien n'est créé, et le verrou sérialise avec SetAutostart.
     internal static void MigrateAutostart()
     {
-        System.Threading.Tasks.Task.Run(() => { lock (autostartGate) { try { AutostartTask.Refresh(); if (AutostartPolicy.Plan(RunPresent(), Environment.ProcessPath ?? "") == AutostartPolicy.Step.CreateTaskThenDropRun) { if (AutostartPolicy.DropRunAfter(AutostartTask.Create())) { DropRun(); Store.Log("Démarrage migré de la clé Run vers la tâche WinlestiaShell."); } else Store.Log("Démarrage: clé Run conservée (tâche indisponible)."); } } catch (Exception ex) { Store.Log("Migration du démarrage: " + ex.Message); } } });
+        System.Threading.Tasks.Task.Run(() => { lock (autostartGate) { try { AutostartTask.Refresh(); if (AutostartPolicy.Plan(RunPresent(
+            ), Environment.ProcessPath ?? "") == AutostartPolicy.Step.CreateTaskThenDropRun) { if (AutostartPolicy.DropRunAfter(
+            AutostartTask.Create())) { DropRun(); Store.Log(
+            "Démarrage migré de la clé Run vers la tâche WinlestiaShell."); } else Store.Log(
+            "Démarrage: clé Run conservée (tâche indisponible)."); } } catch (Exception ex) { Store.Log("Migration du démarrage: "
+            + ex.Message); } } });
     }
     // schtasks peut durer jusqu'à 15 s : exécuté en fond, l'état demandé reste visible via Autostart pendant ce temps.
     internal static void SetAutostart(bool value)
     {
         System.Threading.Volatile.Write(ref autostartDesired, value ? 1 : 0);
-        System.Threading.Tasks.Task.Run(() => { lock (autostartGate) { try { if (value) { if (AutostartTask.Create()) DropRun(); else { Store.Log("Démarrage: tâche indisponible, repli sur la clé Run."); using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"); key.SetValue("Panneaux", "\"" + Environment.ProcessPath + "\""); } } else { AutostartTask.Delete(); DropRun(); } } catch (Exception ex) { Store.Log("Démarrage: " + ex.Message); } finally { System.Threading.Volatile.Write(ref autostartDesired, -1); } } });
+        System.Threading.Tasks.Task.Run(() => { lock (autostartGate) { try { if (value) { if (AutostartTask.Create()) DropRun(
+            ); else { Store.Log(
+            "Démarrage: tâche indisponible, repli sur la clé Run."); using var key = Registry.CurrentUser.CreateSubKey(
+            @"Software\Microsoft\Windows\CurrentVersion\Run"); key.SetValue("Panneaux",
+            "\"" + Environment.ProcessPath + "\""); } } else { AutostartTask.Delete(); DropRun(); } } catch (Exception ex) { Store.Log(
+            "Démarrage: " + ex.Message); } finally { System.Threading.Volatile.Write(ref autostartDesired, -1); } } });
     }
     internal static bool DesktopHidden()
     {
@@ -300,7 +319,8 @@ internal static class Native
         string helper = Path.Combine(Store.Root, "SECOURS_BUREAU.exe");
         if (!File.Exists(helper))
             throw new FileNotFoundException("Le composant natif du Bureau est absent.");
-        using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(helper, hidden ? "--hide --silent" : "--show-only --silent") { UseShellExecute = false, CreateNoWindow = true });
+        using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(helper, hidden ? "--hide --silent"
+            : "--show-only --silent") { UseShellExecute = false, CreateNoWindow = true });
         if (process == null || !process.WaitForExit(3000) || process.ExitCode != 0)
             throw new InvalidOperationException("Le Bureau Windows n’a pas appliqué le réglage.");
         if (DesktopHidden() != hidden || !DesktopView.Enforce(hidden))
@@ -319,8 +339,10 @@ internal sealed class IconLoader : IDisposable
     {
         [PreserveSig] int GetImage(Size size, uint flags, out IntPtr bitmap);
     }
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)] static extern int SHCreateItemFromParsingName(string path, IntPtr bind, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out IImageFactory factory);
-    readonly BlockingCollection<(Entry entry, Action<ImageSource> callback)> jobs = new(); readonly ConcurrentDictionary<string, ImageSource> images = new();
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)] static extern int SHCreateItemFromParsingName(string path,
+        IntPtr bind, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out IImageFactory factory);
+    readonly BlockingCollection<(Entry entry, Action<ImageSource> callback)> jobs = new(); readonly ConcurrentDictionary<string,
+        ImageSource> images = new();
     sealed record Request(Action<ImageSource> Callback, string Scope);
     readonly object pendingLock = new(); readonly Dictionary<string, List<Request>> pending = new(); bool disposed;
     readonly Thread worker; internal int LoadedCount => images.Count; internal int Failures;
@@ -391,11 +413,15 @@ internal sealed class IconLoader : IDisposable
                 pending.Remove(key);
             }
             var result = image;
-            System.Windows.Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (!disposed) foreach (var listener in listeners) listener.Callback(result); }));
+            System.Windows.Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (
+                !disposed) foreach (var listener in listeners) listener.Callback(result); }));
         }
     }
-    // A letter tile or folder stands in for a failed extraction but is never kept as the icon: the next load after the retry delay (or a catalogue reload) extracts again.
-    readonly ConcurrentDictionary<string, (DateTime At, int Count, ImageSource Plate, Entry Entry, DateTime Stamp)> failed = new(); readonly ConcurrentDictionary<string, byte> logged = new(); readonly System.Runtime.CompilerServices.ConditionalWeakTable<ImageSource, object> placeholders = new();
+    // Une tuile lettre ou dossier remplace une extraction échouée mais n'est jamais retenue comme icône : le chargement
+    // suivant, après le délai de nouvel essai (ou un rechargement du catalogue), extrait de nouveau.
+    readonly ConcurrentDictionary<string, (DateTime At, int Count, ImageSource Plate, Entry Entry, DateTime Stamp)> failed = new(
+        ); readonly ConcurrentDictionary<string, byte> logged = new(
+        ); readonly System.Runtime.CompilerServices.ConditionalWeakTable<ImageSource, object> placeholders = new();
     ImageSource ExtractOrFallback(string key, Entry entry)
     {
         int count = 0;
@@ -428,7 +454,8 @@ internal sealed class IconLoader : IDisposable
     }
     internal bool IsPlaceholder(ImageSource image) => placeholders.TryGetValue(image, out _);
     internal int FailureCount(Entry entry) => failed.TryGetValue(entry.Id + "|" + entry.IconPath, out var f) ? f.Count : 0;
-    // Newest write time of the icon source and of the target (local files only); a source that appears or changes gives its icon a fresh series of attempts.
+    // Date d'écriture la plus récente de la source d'icône et de la cible (fichiers locaux seulement) ; une source qui
+    // apparaît ou change donne à son icône une nouvelle série d'essais.
     static DateTime SourceStamp(Entry entry)
     {
         DateTime stamp = DateTime.MinValue;
@@ -438,7 +465,8 @@ internal sealed class IconLoader : IDisposable
             {
                 if (string.IsNullOrWhiteSpace(path) || path.StartsWith(@"\\", StringComparison.Ordinal) || !Path.IsPathRooted(path))
                     continue;
-                DateTime at = File.Exists(path) ? File.GetLastWriteTimeUtc(path) : Directory.Exists(path) ? Directory.GetLastWriteTimeUtc(path) : DateTime.MinValue;
+                DateTime at = File.Exists(path) ? File.GetLastWriteTimeUtc(path) : Directory.Exists(path) ? Directory.GetLastWriteTimeUtc(
+                    path) : DateTime.MinValue;
                 if (at > stamp)
                     stamp = at;
             }
@@ -457,7 +485,8 @@ internal sealed class IconLoader : IDisposable
     }
     static ImageSource? Extract(Entry entry)
     {
-        var paths = CatalogueWatchRules.PreferTargetForIcon(entry.IconPath) ? new[] { entry.Target, entry.IconPath } : new[] { entry.IconPath, entry.Target };
+        var paths = CatalogueWatchRules.PreferTargetForIcon(entry.IconPath) ? new[] { entry.Target, entry.IconPath }
+            : new[] { entry.IconPath, entry.Target };
         foreach (string path in paths)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -485,7 +514,8 @@ internal sealed class IconLoader : IDisposable
                     {
                         try
                         {
-                            var source = Imaging.CreateBitmapSourceFromHBitmap(bitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                            var source = Imaging.CreateBitmapSourceFromHBitmap(bitmap, IntPtr.Zero, Int32Rect.Empty,
+                                BitmapSizeOptions.FromEmptyOptions());
                             source.Freeze();
                             return source;
                         }
@@ -498,7 +528,6 @@ internal sealed class IconLoader : IDisposable
         }
         return null;
     }
-    // Synchronous extraction for the checks: the same path the palette rows use.
     internal static ImageSource? Sample(Entry entry) => Extract(entry);
     static ImageSource FolderFallback()
     {
@@ -513,11 +542,12 @@ internal sealed class IconLoader : IDisposable
         image.Freeze();
         return image;
     }
-    // A missing application logo becomes a letter tile, never a yellow folder: a row always reads
-    // as one specific app, and the palette never shows an empty slot.
+    // Un logo d'application manquant devient une tuile lettre, jamais un dossier jaune : une ligne se lit toujours
+    // comme une appli précise, et la palette n'affiche jamais d'emplacement vide.
     internal static ImageSource InitialPlate(Entry entry)
     {
-        var colors = new[] { Color.FromRgb(0x3D, 0x7E, 0xA6), Color.FromRgb(0xC2, 0x5B, 0x35), Color.FromRgb(0x4C, 0x8F, 0x6D), Color.FromRgb(0x7A, 0x5C, 0xA8), Color.FromRgb(0xC0, 0x8A, 0x2E), Color.FromRgb(0xB0, 0x4A, 0x6A) };
+        var colors = new[] { Color.FromRgb(0x3D, 0x7E, 0xA6), Color.FromRgb(0xC2, 0x5B, 0x35), Color.FromRgb(0x4C, 0x8F, 0x6D),
+            Color.FromRgb(0x7A, 0x5C, 0xA8), Color.FromRgb(0xC0, 0x8A, 0x2E), Color.FromRgb(0xB0, 0x4A, 0x6A) };
         string name = string.IsNullOrWhiteSpace(entry.Name) ? "?" : entry.Name.Trim();
         Color fill = colors[Math.Abs(name.ToUpperInvariant()[0] * 31 + name.Length * 17) % colors.Length];
         var group = new DrawingGroup();
@@ -525,7 +555,8 @@ internal sealed class IconLoader : IDisposable
         {
             dc.DrawRoundedRectangle(new SolidColorBrush(fill), null, new Rect(3, 3, 90, 90), 24, 24);
             string letter = name[..1].ToUpperInvariant();
-            var text = new FormattedText(letter, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe UI Semibold"), 50, Brushes.White, 1.0);
+            var text = new FormattedText(letter, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                new Typeface("Segoe UI Semibold"), 50, Brushes.White, 1.0);
             dc.DrawText(text, new Point((96 - text.Width) / 2, (96 - text.Height) / 2));
         }
         group.Freeze();

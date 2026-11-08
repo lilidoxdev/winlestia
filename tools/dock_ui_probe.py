@@ -1,5 +1,5 @@
-# Python 3.12 / dock_ui_probe.py / Qt Quick validation with isolated IPC and synthetic application state (offscreen).
-# Driven by tests/test_dock_ui.py, which asserts every key of the JSON report; can also be run by hand.
+# Python 3.12 / dock_ui_probe.py / Validation Qt Quick avec IPC isolé et état d'application synthétique (hors écran).
+# Piloté par tests/test_dock_ui.py, qui vérifie chaque clé du rapport JSON ; peut aussi se lancer à la main.
 import sys, os, json
 from pathlib import Path
 

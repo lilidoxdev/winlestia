@@ -1,4 +1,4 @@
-// C# 12 / AudioMixerHost.cs / Windows .NET 8. All mixer COM calls live on one background STA.
+// C# 12 / AudioMixerHost.cs / Windows .NET 8. Tous les appels COM du mixeur vivent sur un unique STA d'arrière-plan.
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -7,7 +7,8 @@ namespace PanneauxGlass;
 
 internal sealed class AudioMixerHost : IDisposable
 {
-    readonly AutoResetEvent wake = new(false); readonly ConcurrentQueue<(Action<AudioMixer> action, TaskCompletionSource done)> commands = new(); readonly Thread thread;
+    readonly AutoResetEvent wake = new(false); readonly ConcurrentQueue<(Action<AudioMixer> action,
+        TaskCompletionSource done)> commands = new(); readonly Thread thread;
     volatile bool enabled, disposed;
     internal volatile MixerApplication[] Applications = Array.Empty<MixerApplication>();
     internal volatile MixerDevice[] Devices = Array.Empty<MixerDevice>();

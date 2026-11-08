@@ -1,6 +1,9 @@
-# Python 3.12 / wallpaper_sources.py / Windows. Read-only discovery of the wallpaper really on screen and of representative images of it.
-# Resolve order: running live host with a config reader (WallpaperEngine, Lively, DesktopHut, WallpaperX) -> generic live host (capture) -> Windows (Spotlight / Slideshow / picture).
-# Verified on the dev machine: DesktopHut, Windows. NOT verified here (documented layouts only): WallpaperEngine, Lively, WallpaperX content, Spotlight.
+# Python 3.12 / wallpaper_sources.py / Windows. Découverte en lecture seule du fond réellement affiché et d'images
+# représentatives de ce fond.
+# Ordre de résolution : hôte animé en cours avec lecteur de config (WallpaperEngine, Lively, DesktopHut, WallpaperX)
+# -> hôte animé générique (capture) -> Windows (Spotlight / Diaporama / image).
+# Vérifié sur la machine de dev : DesktopHut, Windows. NON vérifié ici (dispositions documentées seulement) :
+# WallpaperEngine, Lively, contenu WallpaperX, Spotlight.
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 import ctypes, glob, hashlib, json, os, re, shutil, subprocess, sys, time
@@ -23,11 +26,13 @@ class WallpaperSource:
     modified: int = 0
     needs_capture: bool = False
     thumbnail: str = ''
-    rect: tuple = None  # rect (x,y,w,h): monitor rect, set when several monitors and the source is not a spanning one
+    # rect (x,y,l,h) : rectangle du moniteur, renseigné quand il y a plusieurs moniteurs et que la source ne les
+    # couvre pas tous
+    rect: tuple = None
 
 
 def default_bases():
-    # Base folders, all overridable (tests point them at a fake tree).
+    # Dossiers de base, tous remplaçables (les tests les pointent vers un faux arbre).
     steam = ''
     try:
         import winreg
@@ -46,7 +51,7 @@ def default_bases():
 
 
 def process_names():
-    # One Toolhelp snapshot per call; callers call it once per change event.
+    # Un instantané Toolhelp par appel ; les appelants ne l'appellent qu'une fois par événement de changement.
     class ProcessEntry(ctypes.Structure):
         _fields_ = [
             ('size', ctypes.c_ulong),
@@ -83,7 +88,8 @@ def process_names():
 
 
 def live_host_present():
-    # True when a window child of Progman / WorkerW (other than the icon view) exists: a live-wallpaper host (24H2: child of Progman; older: WorkerW sibling).
+    # Vrai quand une fenêtre enfant de Progman / WorkerW (hors vue des icônes) existe : c'est un hôte de fond animé
+    # (24H2 : enfant de Progman ; avant : frère WorkerW).
     user = ctypes.windll.user32
     found = [False]
     proc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
@@ -368,7 +374,8 @@ def read_lively(bases, names, monitors):
 
 
 def read_wallpaperx(bases, names):
-    # Best effort: ProgramData\LiveWallpaperConfig\ServiceConfig.json (GlobalFilePath / Screens[].FilePath). Empty (nothing set) on the dev machine.
+    # Au mieux : ProgramData\LiveWallpaperConfig\ServiceConfig.json (GlobalFilePath / Screens[].FilePath). Vide (rien
+    # de défini) sur la machine de dev.
     if not ({'wallpaper.service.exe', 'wallpaper x launcher.exe'} & names):
         return {}
     data = _json(Path(bases['programdata']) / 'LiveWallpaperConfig' / 'ServiceConfig.json')
@@ -455,7 +462,7 @@ def windows_source(bases, monitor, kind, spi=None):
 
 
 def resolve(monitors, names=None, bases=None, live=None, kind=None, spi=None):
-    # Returns {monitor_name: WallpaperSource}. names/bases/live/kind/spi are injectable for tests.
+    # Renvoie {nom_moniteur: WallpaperSource}. names/bases/live/kind/spi sont injectables pour les tests.
     bases = bases or default_bases()
     names = process_names() if names is None else names
     monitors = monitors or [{'name': ''}]
@@ -498,7 +505,7 @@ def resolve(monitors, names=None, bases=None, live=None, kind=None, spi=None):
 
 
 def desktop_hut_active():
-    # Backward-compatible shape for src/terminal/sync_theme.py.
+    # Forme rétrocompatible pour src/terminal/sync_theme.py.
     found = read_desktophut(default_bases(), process_names())
     return [
         {
@@ -544,18 +551,22 @@ def prune_cache(root, limit=CACHE_LIMIT):
 
 
 def find_mpv():
-    # Decoder of last resort for codecs Media Foundation lacks (HEVC without the Store extension). Only an mpv already installed on the machine; nothing is downloaded.
+    # Décodeur de dernier recours pour les codecs que Media Foundation n'a pas (HEVC sans l'extension du Store).
+    # Uniquement un mpv déjà installé sur la machine ; rien n'est téléchargé.
     override = os.environ.get('WINLESTIA_MPV')
     if override and os.path.isfile(override):
         return override
     found = shutil.which('mpv')
     if found:
         return found
-    return None  # never borrow the mpv of a Store wallpaper app: its package folder refuses execution (access denied) and it is not ours to launch
+    # ne jamais emprunter le mpv d'une application de fond du Store : son dossier de paquet refuse l'exécution (accès
+    # refusé) et ce n'est pas à nous de le lancer
+    return None
 
 
 def _extract_mpv(video, out_dir, deadline, mpv):
-    # 8 short-lived mpv processes in parallel, each decoding one frame at k% of the file (image VO, no window, no audio).
+    # 8 processus mpv de courte durée en parallèle, chacun décodant une image à k % du fichier (sortie image, sans
+    # fenêtre ni audio).
     processes = []
     for i in range(FRAME_COUNT):
         tmp = out_dir / f't{i}'
@@ -589,7 +600,7 @@ def _extract_mpv(video, out_dir, deadline, mpv):
                         creationflags=0x08000000 | 0x00004000,
                     ),
                 )
-            )  # no window, below-normal priority
+            )  # sans fenêtre, priorité inférieure à la normale
         except OSError:
             # Lancement impossible : pas de miniature pour cette vidéo.
             pass
@@ -610,7 +621,8 @@ def _extract_mpv(video, out_dir, deadline, mpv):
 
 
 def extract_frames(video, out_dir, exe=None, timeout=EXTRACT_TIMEOUT, rect=None):
-    # Tier 1: Media Foundation through the backend exe (killable subprocess). Tier 2: an installed mpv. Hard total budget = timeout.
+    # Niveau 1 : Media Foundation via l'exécutable du backend (sous-processus tuable). Niveau 2 : un mpv installé.
+    # Budget total strict = timeout.
     started = time.monotonic()
     deadline = started + timeout
     out_dir = Path(out_dir)
@@ -634,7 +646,8 @@ def extract_frames(video, out_dir, exe=None, timeout=EXTRACT_TIMEOUT, rect=None)
             pass
     frames = sorted(str(p) for p in out_dir.glob('f*.jpg') if p.stat().st_size > 0)
     if len(frames) < 2 and exe and time.monotonic() < deadline - 1.5:
-        # Tier 2: Windows.Graphics.Capture of the live host (the video is playing on screen). Only reached on a wallpaper change, result cached by key.
+        # Niveau 2 : Windows.Graphics.Capture de l'hôte animé (la vidéo est lue à l'écran). Atteint seulement lors
+        # d'un changement de fond, résultat mis en cache par clé.
         for p in out_dir.glob('f*.jpg'):
             p.unlink(missing_ok=True)
         remaining = deadline - time.monotonic()
@@ -674,7 +687,8 @@ def extract_frames(video, out_dir, exe=None, timeout=EXTRACT_TIMEOUT, rect=None)
 
 
 def representative_images(source, bases=None, exe=None, timeout=EXTRACT_TIMEOUT):
-    # Static image -> that file. Video -> ~8 cached frames (reused). Falls back to thumbnail / images. Never raises.
+    # Image fixe -> ce fichier. Vidéo -> ~8 images en cache (réutilisées). Repli sur la vignette ou les images. Ne
+    # lève jamais.
     try:
         if source.video and os.path.isfile(source.video):
             root = cache_root(bases)

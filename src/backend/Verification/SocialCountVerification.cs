@@ -19,7 +19,8 @@ internal static class SocialCountVerification
         int rises = 0;
         foreach (var u in new[] { 0, 3, 0, 3 })
             rises += a.OnTitle(u, t0).Rise;
-        Check("[0,3,0,3] -> 3 (pas 6), hausse signalee une seule fois (count " + a.Count + ", hausses " + rises + ")", a.Count == 3 && rises == 3);
+        Check("[0,3,0,3] -> 3 (pas 6), hausse signalee une seule fois (count " + a.Count + ", hausses " + rises + ")", a.Count == 3
+            && rises == 3);
 
         var b = new UnreadCounter();
         foreach (var u in new[] { 1, 2, 1, 2 })
@@ -29,7 +30,8 @@ internal static class SocialCountVerification
         var g = new UnreadCounter();
         g.OnTitle(2, t0);
         Check("titre=2 : TitleSeen, notification ne compte pas (Count " + g.Count + ")", g.TitleSeen && g.Count == 2);
-        Check("credit : notif < 3 s apres hausse fusionnee (2 credits), pas de 3e", g.ConsumeCredit(t0.AddSeconds(1)) && g.ConsumeCredit(t0.AddSeconds(2)) && !g.ConsumeCredit(t0.AddSeconds(2)));
+        Check("credit : notif < 3 s apres hausse fusionnee (2 credits), pas de 3e", g.ConsumeCredit(t0.AddSeconds(1))
+            && g.ConsumeCredit(t0.AddSeconds(2)) && !g.ConsumeCredit(t0.AddSeconds(2)));
         Check("credit expire apres 3 s", !new UnreadCounter().ConsumeCredit(t0));
 
         var d = new UnreadCounter();
@@ -58,7 +60,8 @@ internal static class SocialCountVerification
         var nb = new UnreadCounter();
         nb.NoteNotification(t0);
         var rb = nb.OnTitle(1, t0.AddSeconds(2));
-        Check("notif puis hausse de titre < 3 s : fusion (AfterNotif, pas de 2e son/historique)", rb.Rise == 1 && rb.AfterNotif && !nb.ConsumeCredit(t0.AddSeconds(2)));
+        Check("notif puis hausse de titre < 3 s : fusion (AfterNotif, pas de 2e son/historique)", rb.Rise == 1 && rb.AfterNotif
+            && !nb.ConsumeCredit(t0.AddSeconds(2)));
         var nc = new UnreadCounter();
         nc.NoteNotification(t0);
         var rc = nc.OnTitle(1, t0.AddSeconds(5));

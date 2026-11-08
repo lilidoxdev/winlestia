@@ -1,18 +1,22 @@
-// language: C# 12, file: AppCatalogueWatcher.cs, target: Windows 11 / .NET 8. Start menu watch: a new shortcut reaches the catalogue without waiting for the full inventory.
+// C# 12, fichier AppCatalogueWatcher.cs, cible Windows 11 / .NET 8. Surveillance du menu Démarrer : un nouveau raccourci arrive dans le
+// catalogue sans attendre l'inventaire complet.
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Threading;
 
 namespace PanneauxGlass;
-// Two recursive FileSystemWatchers (user and common Start menu). The debounce timer only exists during a burst of events.
+// Deux FileSystemWatcher récursifs (menu Démarrer de l'utilisateur et commun). Le minuteur anti-rebond n'existe que pendant une rafale
+// d'événements.
 internal sealed class AppCatalogueWatcher : IDisposable
 {
-    readonly Dispatcher dispatcher; readonly Func<List<Entry>, int> add; readonly Func<List<string>, int> remove; readonly Action refresh; readonly Action? tick; System.Threading.Timer? poll; readonly RefreshThrottle throttle = new();
+    readonly Dispatcher dispatcher; readonly Func<List<Entry>, int> add; readonly Func<List<string>, int> remove; readonly Action refresh;
+        readonly Action? tick; System.Threading.Timer? poll; readonly RefreshThrottle throttle = new();
     readonly List<FileSystemWatcher> watchers = new(); readonly object gate = new(); readonly BurstDebounce burst = new();
     readonly Dictionary<string, int> paths = new(StringComparer.OrdinalIgnoreCase);
     System.Threading.Timer? timer, refreshTimer; bool disposed, wantRefresh;
-    internal AppCatalogueWatcher(Dispatcher dispatcher, Func<List<Entry>, int> add, Func<List<string>, int> remove, Action refresh, Action? tick = null)
+    internal AppCatalogueWatcher(Dispatcher dispatcher, Func<List<Entry>, int> add, Func<List<string>, int> remove, Action refresh,
+        Action? tick = null)
     {
         this.dispatcher = dispatcher;
         this.add = add;
@@ -22,9 +26,11 @@ internal sealed class AppCatalogueWatcher : IDisposable
     }
     internal void Start()
     {
-        // Low-frequency check (packaged apps leave no Start menu event, vanished targets leave none either): one light pass per minute, nothing between.
+        // Low-frequency check (packaged apps leave no Start menu event, vanished targets leave none either): one light pass per minute,
+        // nothing between.
         if (tick != null)
-            poll = new System.Threading.Timer(_ => { if (!disposed) dispatcher.BeginInvoke((Action)(() => { if (!disposed) tick(); })); }, null, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(60));
+            poll = new System.Threading.Timer(_ => { if (!disposed) dispatcher.BeginInvoke((Action)(() => { if (!disposed) tick(); })); },
+                null, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(60));
         foreach (var folder in new[] { Environment.SpecialFolder.StartMenu, Environment.SpecialFolder.CommonStartMenu })
         {
             try
@@ -35,7 +41,9 @@ internal sealed class AppCatalogueWatcher : IDisposable
                     Store.Log("Veille du menu Démarrer : dossier absent (" + folder + ").");
                     continue;
                 }
-                var watcher = new FileSystemWatcher(root) { IncludeSubdirectories = true, NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite, InternalBufferSize = 65536 };
+                var watcher = new FileSystemWatcher(root) { IncludeSubdirectories = true,
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite,
+                    InternalBufferSize = 65536 };
                 watcher.Created += (_, e) => Event(e.FullPath, true, false);
                 watcher.Changed += (_, e) => Event(e.FullPath, true, true);
                 watcher.Deleted += (_, e) => Event(e.FullPath, false, false);
@@ -47,7 +55,7 @@ internal sealed class AppCatalogueWatcher : IDisposable
             catch (Exception ex) { Store.Log("Veille du menu Démarrer : " + ex.Message); }
         }
     }
-    // Buffer overflow or lost folder: a full inventory covers whatever was missed, then the watcher is re-armed if it can be.
+    // Dépassement de tampon ou dossier perdu : un inventaire complet couvre ce qui a été manqué, puis le watcher est réarmé si possible.
     void Failed(FileSystemWatcher watcher, Exception? error)
     {
         Store.Log("Veille du menu Démarrer : " + (error?.Message ?? "erreur"));
@@ -68,7 +76,8 @@ internal sealed class AppCatalogueWatcher : IDisposable
         }
         catch (Exception ex) { Store.Log("Veille du menu Démarrer arrêtée : " + ex.Message); }
     }
-    // Only a shortcut really added or removed leads to an inventory: filtered names, folder content changes and plain file changes are ignored.
+    // Seul un raccourci réellement ajouté ou retiré déclenche un inventaire : les noms filtrés, les changements de contenu de dossier et
+    // les modifications de simples fichiers sont ignorés.
     void Event(string path, bool present, bool changed)
     {
         if (!CatalogueWatchRules.IsShortcutEvent(path))
@@ -86,8 +95,9 @@ internal sealed class AppCatalogueWatcher : IDisposable
         }
         if (!present)
         {
-            // Removal is immediate: the entry leaves the catalogue now, the inventory that follows rewrites catalog.json.
-            dispatcher.BeginInvoke((Action)(() => { if (disposed) return; if (remove(new List<string> { path }) > 0) lock (gate) { if (disposed) return; wantRefresh = true; burst.Touch(DateTime.UtcNow); Arm(CatalogueWatchRules.Debounce); } }));
+            // La suppression est immédiate : l'entrée quitte le catalogue tout de suite, l'inventaire qui suit réécrit catalog.json.
+            dispatcher.BeginInvoke((Action)(() => { if (disposed) return; if (remove(new List<string> { path }) > 0) lock (gate) {
+                if (disposed) return; wantRefresh = true; burst.Touch(DateTime.UtcNow); Arm(CatalogueWatchRules.Debounce); } }));
             return;
         }
         lock (gate)
@@ -129,7 +139,8 @@ internal sealed class AppCatalogueWatcher : IDisposable
         }
         dispatcher.BeginInvoke((Action)(() => Process(batch)));
     }
-    // UI thread: shortcut parsing uses the same COM object as TaskbarNative.LaunchPath, entries are added where the catalogue is read.
+    // Thread UI : l'analyse d'un raccourci utilise le même objet COM que TaskbarNative.LaunchPath, les entrées sont ajoutées là où le
+    // catalogue est lu.
     void Process(Dictionary<string, int> batch)
     {
         if (disposed)
@@ -171,7 +182,8 @@ internal sealed class AppCatalogueWatcher : IDisposable
         if (need)
             RequestRefresh();
     }
-    // At most one inventory per minute from the watcher; the last request is replayed by a one-shot timer that exists only while it waits.
+    // Au plus un inventaire par minute depuis le watcher ; la dernière demande est rejouée par un minuteur ponctuel qui n'existe que
+    // pendant l'attente.
     internal void RequestRefresh()
     {
         lock (gate)
@@ -182,14 +194,15 @@ internal sealed class AppCatalogueWatcher : IDisposable
             if (wait > TimeSpan.Zero)
             {
                 if (refreshTimer == null)
-                    refreshTimer = new System.Threading.Timer(_ => { lock (gate) { refreshTimer?.Dispose(); refreshTimer = null; } dispatcher.BeginInvoke((Action)RequestRefresh); }, null, wait, System.Threading.Timeout.InfiniteTimeSpan);
+                    refreshTimer = new System.Threading.Timer(_ => { lock (gate) { refreshTimer?.Dispose(); refreshTimer = null;
+                        } dispatcher.BeginInvoke((Action)RequestRefresh); }, null, wait, System.Threading.Timeout.InfiniteTimeSpan);
                 return;
             }
             throttle.Ran(DateTime.UtcNow);
         }
         refresh();
     }
-    // Mirrors the .lnk branch of Inventory.ps1. A shortcut may appear before its target: report it as pending.
+    // Reprend la branche .lnk d'Inventory.ps1. Un raccourci peut apparaître avant sa cible : on le signale comme en attente.
     static Entry? Build(string file, out bool targetPending)
     {
         targetPending = false;
@@ -204,13 +217,16 @@ internal sealed class AppCatalogueWatcher : IDisposable
                 return null;
             resolved = Environment.ExpandEnvironmentVariables(resolved);
             bool local = resolved.Length > 0 && !resolved.StartsWith(@"\\", StringComparison.Ordinal);
-            if (local && !resolved.StartsWith("shell:", StringComparison.OrdinalIgnoreCase) && !File.Exists(resolved) && !Directory.Exists(resolved))
+            if (local && !resolved.StartsWith("shell:", StringComparison.OrdinalIgnoreCase) && !File.Exists(resolved)
+                && !Directory.Exists(resolved))
             {
                 targetPending = true;
                 return null;
             }
-            string icon = CatalogueWatchRules.IconSource(iconLocation, resolved, p => p.Length > 0 && !p.StartsWith(@"\\", StringComparison.Ordinal) && (File.Exists(p) || Directory.Exists(p)));
-            return new Entry { Id = CatalogueWatchRules.ShortcutId(name, resolved, arguments), Name = name, Target = file, Section = "Applications", Category = "Autres logiciels", IconPath = icon };
+            string icon = CatalogueWatchRules.IconSource(iconLocation, resolved, p => p.Length > 0 && !p.StartsWith(@"\\",
+                StringComparison.Ordinal) && (File.Exists(p) || Directory.Exists(p)));
+            return new Entry { Id = CatalogueWatchRules.ShortcutId(name, resolved, arguments), Name = name, Target = file,
+                Section = "Applications", Category = "Autres logiciels", IconPath = icon };
         }
         catch (Exception ex) { Store.Log("Veille du menu Démarrer : " + ex.Message); return null; }
     }
@@ -229,14 +245,18 @@ internal sealed class AppCatalogueWatcher : IDisposable
             link = type.InvokeMember("CreateShortcut", System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] { file });
             if (link == null)
                 return false;
-            string Get(string property) => Convert.ToString(link.GetType().InvokeMember(property, System.Reflection.BindingFlags.GetProperty, null, link, null)) ?? "";
+            string Get(string property) => Convert.ToString(link.GetType().InvokeMember(property,
+                System.Reflection.BindingFlags.GetProperty, null, link, null)) ?? "";
             target = Get("TargetPath");
             arguments = Get("Arguments");
             icon = Get("IconLocation");
             return true;
         }
         catch { return false; }
-        finally { if (link != null && System.Runtime.InteropServices.Marshal.IsComObject(link)) System.Runtime.InteropServices.Marshal.ReleaseComObject(link); if (shell != null && System.Runtime.InteropServices.Marshal.IsComObject(shell)) System.Runtime.InteropServices.Marshal.ReleaseComObject(shell); }
+        finally { if (link != null
+            && System.Runtime.InteropServices.Marshal.IsComObject(link)) System.Runtime.InteropServices.Marshal.ReleaseComObject(link);
+            if (shell != null
+            && System.Runtime.InteropServices.Marshal.IsComObject(shell)) System.Runtime.InteropServices.Marshal.ReleaseComObject(shell); }
     }
     public void Dispose()
     {

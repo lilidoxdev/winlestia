@@ -97,7 +97,8 @@ def read_settings(path):
 
 
 def spawn_detached(args):
-    # Fully detached: no inherited stdio pipes, own process group, out of the installer's job, so Inno/Start-Process -Wait can finish.
+    # Entièrement détaché : pas de pipes stdio hérités, groupe de processus propre, hors du job de l'installeur, pour
+    # que Inno/Start-Process -Wait puisse se terminer.
     flags = 0x8 | 0x200
     kw = dict(stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, close_fds=True)
     try:
@@ -115,7 +116,11 @@ def stop_previous_sync(command):
     code = (
         "$target='"
         + literal
-        + "'; Get-CimInstance Win32_Process | Where-Object { $_.Name -in @('python.exe','pythonw.exe') -and $_.CommandLine -and $_.CommandLine.Contains($target) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; Wait-Process -Id $_.ProcessId -Timeout 10 -ErrorAction SilentlyContinue }"
+        + "'; Get-CimInstance Win32_Process"
+        + " | Where-Object { $_.Name -in @('python.exe','pythonw.exe') -and $_.CommandLine"
+        + " -and $_.CommandLine.Contains($target) }"
+        + " | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue;"
+        + " Wait-Process -Id $_.ProcessId -Timeout 10 -ErrorAction SilentlyContinue }"
     )
     powershell = Path(os.environ['SystemRoot']) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
     subprocess.run(
@@ -132,7 +137,7 @@ def stop_previous_sync(command):
     )
 
 
-# Clink (third party, GPLv3) is not shipped in the repository: it is fetched at install time and pinned by hash.
+# Clink (tiers, GPLv3) n'est pas livré dans le dépôt : il est téléchargé à l'installation et épinglé par empreinte.
 CLINK_VERSION = '1.9.35'
 CLINK_TAG = 'v' + CLINK_VERSION
 CLINK_REPO = 'https://github.com/chrisant996/clink'
@@ -140,7 +145,8 @@ CLINK_ZIP_NAME = 'clink.1.9.35.fa48d0.zip'
 CLINK_URL = CLINK_REPO + '/releases/download/' + CLINK_TAG + '/' + CLINK_ZIP_NAME
 CLINK_API = 'https://api.github.com/repos/chrisant996/clink/releases/tags/' + CLINK_TAG
 CLINK_ASSET_RE = re.compile(r'^clink\.1\.9\.35\.[0-9a-f]+\.zip$')
-CLINK_ZIP_SHA256 = "5ae6862a703d43ff9250716277fd0811b7b6c344771d17911723e7078d9509f8"  # SHA256 of the official release zip, checked before extraction
+# SHA256 du zip de la version officielle, vérifié avant extraction
+CLINK_ZIP_SHA256 = "5ae6862a703d43ff9250716277fd0811b7b6c344771d17911723e7078d9509f8"
 CLINK_TIMEOUT = 30
 CLINK_DIR = ROOT / 'clink'
 CLINK_SHA256 = {
@@ -199,7 +205,7 @@ def clink_fetch(url, accept=None):
 
 
 def clink_asset_url():
-    # Fallback when the pinned URL is gone: resolve the asset of the same tag through the GitHub API.
+    # Repli quand l'URL épinglée a disparu : on résout l'asset du même tag via l'API GitHub.
     release = json.loads(clink_fetch(CLINK_API, 'application/vnd.github+json').decode('utf-8'))
     for asset in release.get('assets', []):
         if CLINK_ASSET_RE.match(asset.get('name', '')):
@@ -212,7 +218,8 @@ def clink_asset_url():
 def clink_extract(archive, target):
     import zipfile
 
-    # Basename only, pinned files only: nothing else from the archive reaches the disk (no zip-slip).
+    # Nom de base seulement, fichiers épinglés seulement : rien d'autre de l'archive n'atteint le disque (pas de
+    # zip-slip).
     with zipfile.ZipFile(archive) as bundle:
         for entry in bundle.infolist():
             name = entry.filename.replace('\\', '/').rsplit('/', 1)[-1]
@@ -285,7 +292,7 @@ def ensure_clink():
         shutil.rmtree(staging, ignore_errors=True)
 
 
-ABSENT = {'$absent': True}  # marker: key did not exist before Winlestia
+ABSENT = {'$absent': True}  # marqueur : la clé n'existait pas avant Winlestia
 W_DEFAULTS = {
     'colorScheme': 'Winlestia Glass',
     'useAcrylic': True,
@@ -322,7 +329,7 @@ def write_atomic(path, text):
 
 
 def wt_entry(path, data, template):
-    # What the settings looked like before Winlestia touched them, and what we write.
+    # L'état des réglages avant que Winlestia n'y touche, et ce que nous écrivons.
     profiles = data.get('profiles') if isinstance(data.get('profiles'), dict) else {}
     defaults = profiles.get('defaults') if isinstance(profiles.get('defaults'), dict) else {}
     entry = {
@@ -347,11 +354,12 @@ def wt_entry(path, data, template):
 
 
 def note_written(package, **values):
-    # sync_theme.py reports the appearance values it keeps rewriting, so restore() still recognises them as ours.
+    # sync_theme.py signale les valeurs d'apparence qu'il réécrit sans cesse, pour que restore() les reconnaisse
+    # encore comme les nôtres.
     path = STATE / 'state.json'
     try:
         if not path.exists():
-            return  # never create state.json: its absence means restored or not integrated
+            return  # ne jamais créer state.json : son absence signifie restauré ou non intégré
         state = json.loads(path.read_text(encoding='utf-8-sig'))
         if state.get('version') != 2:
             return
@@ -406,8 +414,10 @@ def restore_settings(path, entry):
 
 
 def v1_wt():
-    # State written before the manifest existed: originals come from the single backup copy, ours are the known names/values.
-    # Callers that restore without migrating must trim 'written' to colorScheme/font (sync may have changed opacity/useAcrylic).
+    # État écrit avant l'existence du manifeste : les originaux viennent de l'unique copie de sauvegarde, les nôtres
+    # sont les noms/valeurs connus.
+    # Les appelants qui restaurent sans migrer doivent réduire 'written' à colorScheme/font (la synchro a pu changer
+    # opacity/useAcrylic).
     template = json.loads((ROOT / 'theme-template.json').read_text(encoding='utf-8-sig'))
     out = {}
     for backup in STATE.glob('Microsoft.WindowsTerminal*.json'):
@@ -435,7 +445,8 @@ def configure():
             '__WINLESTIA_TERMINAL__', str(ROOT).replace("'", "''") if p.suffix == '.ps1' else str(ROOT)
         )
         p.write_text(text, encoding='utf-8-sig' if p.suffix == '.ps1' else 'utf-8')
-    # Merge appearance into existing settings; never replace shortcuts, profiles or unrelated themes.
+    # Fusionne l'apparence dans les réglages existants ; ne remplace jamais raccourcis, profils ni thèmes sans
+    # rapport.
     template = json.loads((ROOT / 'theme-template.json').read_text(encoding='utf-8-sig'))
     settings_paths = list(
         (Path(os.environ['LOCALAPPDATA']) / 'Packages').glob('Microsoft.WindowsTerminal*/LocalState/settings.json')
@@ -443,7 +454,8 @@ def configure():
     snapshot = STATE / 'state.json'
     state = json.loads(snapshot.read_text(encoding='utf-8-sig')) if snapshot.exists() else None
     if state is not None and state.get('version') != 2:
-        # Migrate a v1 state to the v2 manifest, keeping the v1 originals (taken from the backups, before we touch settings again).
+        # Migre un état v1 vers le manifeste v2 en gardant les originaux v1 (pris dans les sauvegardes, avant de
+        # retoucher les réglages).
         state['wt'] = v1_wt()
         state['version'] = 2
         save(snapshot, json.dumps(state, indent=2))
@@ -513,7 +525,8 @@ def configure():
         state = json.loads(snapshot.read_text(encoding='utf-8-sig'))
         state.setdefault('wt', {}).update(wt)
         state.update(version=2, sync_written=run_command())
-        # Record the AutoRun we wrote only when we really changed it, and never replace it on upgrade (it would capture later user additions).
+        # On n'enregistre l'AutoRun écrit que si on l'a réellement modifié, et on ne le remplace jamais lors d'une
+        # mise à jour (il capturerait des ajouts ultérieurs de l'utilisateur).
         if new != current and not state.get('autorun_written'):
             state['autorun_written'] = new
         save(snapshot, json.dumps(state, indent=2))
@@ -525,7 +538,7 @@ def configure():
         creationflags=0x08000000,
     )
     spawn_detached([str(python), str(ROOT / 'sync_theme.py')])
-    # Windows Terminal's packaged registry view needs the same registration.
+    # La vue de registre du paquet Windows Terminal demande la même inscription.
     wt = shutil.which('wt.exe')
     if wt:
         spawn_detached(
@@ -553,7 +566,8 @@ def restore():
     if not path.exists():
         return
     (ROOT / 'theme-sync.stop').touch()
-    # Stop the running sync for real, then take the manifest out of the way so a late sync write cannot see or recreate state.json.
+    # On arrête vraiment la synchro en cours, puis on écarte le manifeste pour qu'une écriture tardive de la synchro
+    # ne voie ni ne recrée state.json.
     try:
         stop_previous_sync(registry(RUN, 'WinlestiaTerminalTheme') or run_command())
     except (OSError, subprocess.SubprocessError):
@@ -576,7 +590,8 @@ def restore():
                     flags=re.S,
                 ),
             )
-    # Only undo what is still ours: a value the user changed since the install is left alone.
+    # On n'annule que ce qui est encore à nous : une valeur que l'utilisateur a changée depuis l'installation est
+    # laissée telle quelle.
     current = registry(CMD, 'AutoRun') or ''
     original = data['autorun'] or ''
     inj = injection()

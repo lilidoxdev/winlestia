@@ -1,4 +1,4 @@
-// language: C# 12, file: InteractionVerification.cs, target: Windows 11 / .NET 8 WPF, native binding and interruption regression checks
+// C# 12, fichier InteractionVerification.cs, cible Windows 11 / .NET 8 WPF, contrôles de régression de liaison native et d'interruption
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +13,18 @@ namespace PanneauxGlass;
 
 internal static class InteractionVerification
 {
+    // Attente de test : une animation courte de l'interface.
+    const int PauseAnimationMs = 250;
+    // Attente de test : une animation longue ou un survol temporisé.
+    const int PauseAnimationLongueMs = 300;
+    // Attente de test : l'effet d'un clic simulé (animation + mise à jour de l'état).
+    const int PauseClicMs = 350;
+    // Attente de test : une transition de page ou de dialogue.
+    const int PauseTransitionMs = 400;
+    // Attente de test : les observateurs de fichiers et les temporisations antirebond ont eu le temps de tirer.
+    const int PauseStabilisationMs = 500;
+    // Attente de test : une petite opération de fichier asynchrone est terminée.
+    const int PauseOperationMs = 1500;
     internal static int Shortcuts()
     {
         int failed = 0;
@@ -34,8 +46,11 @@ internal static class InteractionVerification
         {
             var settings = JsonSerializer.Deserialize<Preferences>("{\"Favorites\":[\"keep\"],\"Shortcut\":null}", Store.Json)!;
             settings.Normalize();
-            Check(settings.Shortcut.Key == 0x70 && settings.Shortcut.Modifiers == 2 && settings.Favorites.Single() == "keep", "Migration : Ctrl F1 ajouté sans perte de personnalisation");
-            Check(GlobalShortcut.Valid(2, 0x70) && GlobalShortcut.Valid(7, 0x41) && !GlobalShortcut.Valid(0, 0x70) && !GlobalShortcut.Valid(2, 0x7B) && !GlobalShortcut.Valid(3, 0x08), "Combinaisons valides, touches seules et F12 réservée refusées");
+            Check(settings.Shortcut.Key == 0x70 && settings.Shortcut.Modifiers == 2 && settings.Favorites.Single() == "keep",
+                "Migration : Ctrl F1 ajouté sans perte de personnalisation");
+            Check(GlobalShortcut.Valid(2, 0x70) && GlobalShortcut.Valid(7, 0x41) && !GlobalShortcut.Valid(0, 0x70)
+                && !GlobalShortcut.Valid(2, 0x7B) && !GlobalShortcut.Valid(3, 0x08),
+                "Combinaisons valides, touches seules et F12 réservée refusées");
             using (var binding = new GlobalShortcut(a, new()
             {
                 Modifiers = 7,
@@ -63,36 +78,51 @@ internal static class InteractionVerification
             Check(disposed, "Les raccourcis sont libérés à l’arrêt");
             if (disposed)
                 Native.UnregisterHotKey(b, 93);
-            Check(new Preferences().PaletteShortcut.Modifiers == 2 && new Preferences().PaletteShortcut.Key == 0x71, "Commande rapide : Ctrl F2 par défaut, jamais Ctrl K");
-            Check(Preferences.DefaultQuickTabs().Where(t => t.Target.StartsWith("glass:")).All(t => QuickTabsWindow.Views.Any(v => v.Target == t.Target)), "Onglets rapides : chaque cible par défaut est résolue par l’éditeur");
-            Check(Preferences.DefaultQuickTabs().All(t => GlobalShortcut.Label(2, 0x71).Length > 0), "Raccourci et onglets cohabitent dans une préférence unique");
-            Check(Theme.Catalogue.Count >= 4 && Theme.Catalogue.Select(t => t.Id).Distinct().Count() == Theme.Catalogue.Count, "Au moins quatre thèmes globaux, identifiants uniques");
-            Check(Theme.Catalogue.All(t => t.Surface != t.HaloA && t.Accent != t.Text && t.RadiusScale is > 0 and <= 2), "Chaque thème fournit verre, halos, accent et échelle d’angle");
+            Check(new Preferences().PaletteShortcut.Modifiers == 2 && new Preferences().PaletteShortcut.Key == 0x71,
+                "Commande rapide : Ctrl F2 par défaut, jamais Ctrl K");
+            Check(Preferences.DefaultQuickTabs().Where(t => t.Target.StartsWith("glass:")).All(t => QuickTabsWindow.Views.Any(v
+                => v.Target == t.Target)), "Onglets rapides : chaque cible par défaut est résolue par l’éditeur");
+            Check(Preferences.DefaultQuickTabs().All(t => GlobalShortcut.Label(2, 0x71).Length > 0),
+                "Raccourci et onglets cohabitent dans une préférence unique");
+            Check(Theme.Catalogue.Count >= 4 && Theme.Catalogue.Select(t => t.Id).Distinct().Count() == Theme.Catalogue.Count,
+                "Au moins quatre thèmes globaux, identifiants uniques");
+            Check(Theme.Catalogue.All(t => t.Surface != t.HaloA && t.Accent != t.Text && t.RadiusScale is > 0 and <= 2),
+                "Chaque thème fournit verre, halos, accent et échelle d’angle");
             Check(Theme.Catalogue.Count(t => t.Kind != SurfaceKind.Glass) >= 4, "Au moins quatre thèmes changent la matière et les formes");
-            Check(Theme.Catalogue.Select(t => t.Tiles).Distinct().Count() >= 6 && Theme.Catalogue.Select(t => t.Heading).Distinct().Count() >= 4 && Theme.Catalogue.Select(t => t.Frame).Distinct().Count() >= 5, "Les thèmes varient aussi la disposition, la typographie et le cadre des contrôles");
-            Check(new[] { "bento", "neon", "retro", "suisse", "zen" }.All(id => Theme.Find(id) != null), "Cinq matières supplémentaires sont proposées");
-            Check(Theme.Find("bento")!.Tiles == "bento" && Theme.Find("bento")!.Frame == "flat", "Bento : cases pleines et contrôles plats");
+            Check(Theme.Catalogue.Select(t => t.Tiles).Distinct().Count() >= 6 && Theme.Catalogue.Select(t
+                => t.Heading).Distinct().Count() >= 4 && Theme.Catalogue.Select(t => t.Frame).Distinct().Count() >= 5,
+                "Les thèmes varient aussi la disposition, la typographie et le cadre des contrôles");
+            Check(new[] { "bento", "neon", "retro", "suisse", "zen" }.All(id => Theme.Find(id) != null),
+                "Cinq matières supplémentaires sont proposées");
+            Check(Theme.Find("bento")!.Tiles == "bento" && Theme.Find("bento")!.Frame == "flat",
+                "Bento : cases pleines et contrôles plats");
             Check(Theme.Find("neon")!.Frame == "neon" && Theme.Find("neon")!.ReflectionGain == 0, "Néon : cadres lumineux, aucun reflet");
-            Check(Theme.Find("retro")!.Heading == "pixel" && Theme.Find("retro")!.Frame == "bevel", "Rétro : typographie pixel et boutons biseautés");
-            Check(Theme.Find("suisse")!.Tiles == "index" && Theme.Find("suisse")!.Frame == "outline", "Suisse : index numéroté et cadres filaires");
+            Check(Theme.Find("retro")!.Heading == "pixel" && Theme.Find("retro")!.Frame == "bevel",
+                "Rétro : typographie pixel et boutons biseautés");
+            Check(Theme.Find("suisse")!.Tiles == "index" && Theme.Find("suisse")!.Frame == "outline",
+                "Suisse : index numéroté et cadres filaires");
             Check(Theme.Find("zen")!.Tiles == "stack" && Theme.Find("zen")!.Heading == "serif", "Zen : rangées larges et titres serif");
             Theme.Use("amethyste");
             Check(UI.White.Color == Theme.Current.Text && Theme.Current.Id == "amethyste", "Changer de thème recolore le texte partagé");
             Theme.Use("calque");
-            Check(Theme.Current.Light && UI.White.Color == Theme.Current.Text && Theme.Current.Tiles == "cards" && Theme.Current.Heading == "serif", "Papier calque : encre sombre, titres serif et fiches");
+            Check(Theme.Current.Light && UI.White.Color == Theme.Current.Text && Theme.Current.Tiles == "cards"
+                && Theme.Current.Heading == "serif", "Papier calque : encre sombre, titres serif et fiches");
             Theme.Use("encre");
-            Check(UI.Font == UI.Mono && Theme.Current.Tiles == "list" && Theme.Current.Kind == SurfaceKind.Ink, "Encre : chasse fixe et listes");
+            Check(UI.Font == UI.Mono && Theme.Current.Tiles == "list" && Theme.Current.Kind == SurfaceKind.Ink,
+                "Encre : chasse fixe et listes");
             Theme.Use("inconnu");
             Check(Theme.Current.Id == "nuit", "Un thème inconnu retombe sur Nuit boréale");
             foreach (var dimensions in new[] { new Size(3440, 1440), new Size(1920, 1080), new Size(1366, 768) })
             {
                 var work = new Rect(-50, 20, dimensions.Width, dimensions.Height);
                 var left = ControlPairLayout.Calculate(work, false, true);
-                Check(work.Contains(left.Pc) && work.Contains(left.Home) && left.Pc.Right < left.Home.Left, "Panneau PC à gauche sans chevauchement : " + dimensions);
+                Check(work.Contains(left.Pc) && work.Contains(left.Home) && left.Pc.Right < left.Home.Left,
+                    "Panneau PC à gauche sans chevauchement : " + dimensions);
                 if (dimensions.Width >= 1700)
                 {
                     var both = ControlPairLayout.Calculate(work, true, true);
-                    Check(work.Contains(both.Pc) && work.Contains(both.Controls) && both.Pc.Right < both.Home.Left && both.Home.Right < both.Controls.Left, "Trois surfaces dans l’écran : " + dimensions);
+                    Check(work.Contains(both.Pc) && work.Contains(both.Controls) && both.Pc.Right < both.Home.Left
+                        && both.Home.Right < both.Controls.Left, "Trois surfaces dans l’écran : " + dimensions);
                 }
             }
         }
@@ -134,7 +164,8 @@ internal static class InteractionVerification
                 Name = name,
                 ElapsedMs = clock.Elapsed.TotalMilliseconds,
                 CpuMs = (process.TotalProcessorTime - start).TotalMilliseconds,
-                TotalCpuPercent = (process.TotalProcessorTime - start).TotalMilliseconds / clock.Elapsed.TotalMilliseconds / Environment.ProcessorCount * 100,
+                TotalCpuPercent = (process.TotalProcessorTime - start).TotalMilliseconds / clock.Elapsed.TotalMilliseconds / Environment
+                    .ProcessorCount * 100,
                 WorkingSetMB = process.WorkingSet64 / 1048576d,
                 PrivateMB = process.PrivateMemorySize64 / 1048576d,
                 Samples = app.PcActivity.samples,
@@ -144,19 +175,20 @@ internal static class InteractionVerification
         try
         {
             app.ShowHome();
-            await Task.Delay(500);
+            await Task.Delay(PauseStabilisationMs);
             await Measure("Accueil stable", 8000);
             app.Collapse();
             await Task.Delay(20);
             app.Open();
-            await Task.Delay(350);
-            Check(app.UiActivity.open && !app.UiActivity.closing && app.UiActivity.visible >= 3, "Réouverture pendant le repli : dernière intention respectée");
+            await Task.Delay(PauseClicMs);
+            Check(app.UiActivity.open && !app.UiActivity.closing && app.UiActivity.visible >= 3,
+                "Réouverture pendant le repli : dernière intention respectée");
             for (int i = 0; i < 8; i++)
             {
                 app.ToggleControls();
                 await Task.Delay(28);
             }
-            await Task.Delay(400);
+            await Task.Delay(PauseTransitionMs);
             Check(app.UiActivity.open && !app.UiActivity.closing, "Huit bascules rapides ne laissent pas de fermeture différée");
             for (int i = 0; i < 4; i++)
             {
@@ -165,38 +197,40 @@ internal static class InteractionVerification
             }
             app.TogglePc();
             for (int wait = 0; wait < 40 && app.PcActivity.samples == 0; wait++)
-                await Task.Delay(500);
-            Check(app.PcActivity.samples > 0 && app.PcActivity.running, "Réouvertures rapides : un collecteur actif et redémarrage possible");
+                await Task.Delay(PauseStabilisationMs);
+            Check(app.PcActivity.samples > 0 && app.PcActivity.running,
+                "Réouvertures rapides : un collecteur actif et redémarrage possible");
             await Measure("Accueil + état PC", 12000);
             app.TogglePc();
-            await Task.Delay(1500);
+            await Task.Delay(PauseOperationMs);
             long samples = app.PcActivity.samples;
             await Measure("Accueil après repli PC", 6000);
             Check(!app.PcActivity.running && app.PcActivity.samples == samples, "Aucun relevé ni boucle de capteurs après masquage");
             app.ShowWorkspace();
-            await Task.Delay(350);
+            await Task.Delay(PauseClicMs);
             app.ShowHome();
-            await Task.Delay(350);
-            Check(app.UiActivity.open && app.UiActivity.visible == 4, "Retour depuis les quatre panneaux : accueil, horloge et deux flèches seulement");
+            await Task.Delay(PauseClicMs);
+            Check(app.UiActivity.open && app.UiActivity.visible == 4,
+                "Retour depuis les quatre panneaux : accueil, horloge et deux flèches seulement");
             app.CollapseImmediately();
-            await Task.Delay(250);
+            await Task.Delay(PauseAnimationMs);
             app.ShowPalette();
-            await Task.Delay(400);
+            await Task.Delay(PauseTransitionMs);
             Check(app.PaletteActivity && app.PaletteVisible, "Commande rapide disponible launcher replié");
             app.ClosePalette();
-            await Task.Delay(250);
+            await Task.Delay(PauseAnimationMs);
             Check(!app.PaletteActivity && !app.PaletteVisible, "Commande rapide refermée sans laisser de surface fantôme");
             app.ShowPalette();
-            await Task.Delay(300);
+            await Task.Delay(PauseAnimationLongueMs);
             app.CollapseImmediately();
-            await Task.Delay(250);
+            await Task.Delay(PauseAnimationMs);
             Check(!app.PaletteVisible, "Replier l’espace ferme aussi la palette ouverte");
             var editor = new QuickTabsWindow(app) { ShowInTaskbar = true };
             editor.Show();
-            await Task.Delay(350);
+            await Task.Delay(PauseClicMs);
             bool editorOpened = editor.IsVisible;
             app.CollapseImmediately();
-            await Task.Delay(350);
+            await Task.Delay(PauseClicMs);
             Check(editorOpened && !editor.IsVisible, "Replier l’espace ferme aussi l’éditeur d’onglets");
             await Measure("Interface repliée", 6000);
             Check(!app.UiActivity.open && !app.UiActivity.closing && app.UiActivity.visible == 0, "Repli complet de toutes les surfaces");

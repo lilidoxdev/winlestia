@@ -1,4 +1,5 @@
-// C# 12 / winlestia.exe / Command-line client: sends one allow-listed command to the running shell through a user-only named pipe.
+// C# 12 / winlestia.exe / Client en ligne de commande : envoie une commande autorisée au shell en cours via un tube nommé réservé à
+// l'utilisateur.
 using System;
 using System.IO;
 using System.IO.Pipes;
@@ -10,7 +11,7 @@ using PanneauxGlass;
 
 namespace WinlestiaCli;
 
-// Source-generated metadata: reflection-based JSON is unavailable once the exe is trimmed.
+// Métadonnées générées par source : le JSON par réflexion n'est plus disponible une fois l'exe élagué.
 [JsonSerializable(typeof(string[]))]
 internal partial class CliJson : JsonSerializerContext
 {
@@ -47,7 +48,9 @@ static class Program
         }
         try
         {
-            using var client = new NamedPipeClientStream(".", "WinlestiaCli", PipeDirection.InOut, PipeOptions.CurrentUserOnly | PipeOptions.Asynchronous);   // Asynchronous: otherwise the 8 s read limit cannot interrupt the read
+            // Asynchronous: otherwise the 8 s read limit cannot interrupt the read
+            using var client = new NamedPipeClientStream(".", "WinlestiaCli", PipeDirection.InOut,
+                PipeOptions.CurrentUserOnly | PipeOptions.Asynchronous);
             client.Connect(1500);
             var writer = new StreamWriter(client, new UTF8Encoding(false), 4096, true) { AutoFlush = true };
             writer.WriteLine(JsonSerializer.Serialize(args, CliJson.Default.StringArray));
@@ -59,7 +62,8 @@ static class Program
                 {
                     line = reader.ReadLineAsync(limit.Token).AsTask().GetAwaiter().GetResult();
                 }
-                catch (OperationCanceledException) { Console.Error.WriteLine("winlestia: the shell did not answer within 8 seconds."); return 3; }
+                catch (OperationCanceledException) { Console.Error.WriteLine("winlestia: the shell did not answer within 8 seconds.");
+                    return 3; }
             }
             if (line == null)
             {

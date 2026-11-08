@@ -1,12 +1,12 @@
-// language: C# 12, file: FocusAlarm.cs, target: Windows 11 / .NET 8 WPF, synthesized focus chime
+// C# 12, fichier FocusAlarm.cs, cible Windows 11 / .NET 8 WPF, carillon de concentration synthétisé
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
 
 namespace PanneauxGlass;
-// A rising three-note bell, written once as a 16-bit PCM wave and played by MediaPlayer.
-// No audio file to ship, no notification sound borrowed from Windows.
+// Une cloche de trois notes ascendantes, écrite une fois en onde PCM 16 bits et jouée par MediaPlayer.
+// Aucun fichier audio à livrer, aucun son de notification emprunté à Windows.
 internal static class FocusAlarm
 {
     [DllImport("user32.dll")] static extern bool MessageBeep(uint kind);

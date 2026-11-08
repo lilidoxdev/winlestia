@@ -1,14 +1,14 @@
-// language: C# 12, file: Themes.cs, target: Windows 11 / .NET 8 WPF, global appearance themes
+// C# 12, fichier Themes.cs, cible Windows 11 / .NET 8 WPF, thèmes d'apparence globaux
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media;
 
 namespace PanneauxGlass;
-// A theme owns more than colour: its material (glass, paper, ink, poster, soft, bento, neon,
-// retro, swiss, zen), the frame of its buttons, the typography of titles, the shape of a card
-// and the layout of the home grid. Geometry, hit areas and behaviour never change — only what
-// the surface looks like.
+// Un thème possède plus qu'une couleur : sa matière (verre, papier, encre, affiche, doux, bento, néon,
+// rétro, suisse, zen), le cadre de ses boutons, la typographie des titres, la forme d'une carte
+// et la disposition de la grille d'accueil. La géométrie, les zones de clic et le comportement ne changent jamais :
+// seul l'aspect de la surface change.
 internal enum SurfaceKind
 {
     Glass, Paper, Ink, Poster, Soft, Bento, Neon, Retro, Swiss, Zen
@@ -26,7 +26,7 @@ internal sealed class ThemeDefinition
     public string Frame = "glass";       // glass · flat · outline · bevel · neon
     public double BorderWeight = 1;
     public bool Light;
-    // Unified = colours come from the shell's Material-3 palette (see Tokens.cs), not from a hand-made theme.
+    // Unified = les couleurs viennent de la palette Material-3 du shell (voir Tokens.cs), pas d'un thème fait main.
     public bool Unified;
     M3Palette? palette;
     public M3Palette P
@@ -67,8 +67,8 @@ internal sealed class ThemeDefinition
         SurfaceKind.Zen => "Zen",
         _ => "Verre"
     };
-    // A light theme that paints its own opaque plates (bento, retro, swiss, zen) must not turn
-    // every translucent white of the chrome into an ink wash: those themes use solid surfaces.
+    // Un thème clair qui peint ses propres plaques opaques (bento, rétro, suisse, zen) ne doit pas transformer
+    // chaque blanc translucide du chrome en lavis d'encre : ces thèmes utilisent des surfaces pleines.
     public bool Plated => Opaque && Light;
     public Color Halo(byte alpha, int which) => which == 0
         ? Color.FromArgb((byte)Math.Clamp(alpha * HaloGain, 0, 255), HaloA.R, HaloA.G, HaloA.B)
@@ -78,8 +78,14 @@ internal sealed class ThemeDefinition
 internal static class Theme
 {
     static readonly ThemeDefinition[] All ={
-        new(){Id="shell",Name="Atelier clair",Description="Crème, argile et cartes douces. Le nouveau bureau Panneaux.",Surface=C(252,248,243),HaloA=C(236,220,211),HaloB=C(233,222,214),RimA=C(219,206,197),RimB=C(219,206,197),Reflection=C(255,252,249),Accent=C(146,92,76),Text=C(64,51,50),Dim=C(130,107,100),Kind=SurfaceKind.Soft,Heading="sans",Tiles="grid",Frame="flat",Light=true,ReflectionGain=0,HaloGain=0,Signature="none",RadiusScale=.85},
-        new(){Id="shell-dark",Name="Atelier sombre",Description="Encre chaude, argile et cartes douces.",Surface=C(40,37,45),HaloA=C(60,48,60),HaloB=C(60,48,60),RimA=C(76,65,75),RimB=C(76,65,75),Reflection=C(232,191,175),Accent=C(232,191,175),Text=C(244,232,225),Dim=C(189,169,160),Kind=SurfaceKind.Soft,Heading="sans",Tiles="grid",Frame="flat",ReflectionGain=0,HaloGain=0,Signature="none",RadiusScale=.85},
+        new(){Id="shell",Name="Atelier clair",Description="Crème, argile et cartes douces. Le nouveau bureau Panneaux.",Surface=C(
+            252,248,243),HaloA=C(236,220,211),HaloB=C(233,222,214),RimA=C(219,206,197),RimB=C(219,206,197),Reflection=C(
+            255,252,249),Accent=C(146,92,76),Text=C(64,51,50),Dim=C(130,107,100),Kind=SurfaceKind
+            .Soft,Heading="sans",Tiles="grid",Frame="flat",Light=true,ReflectionGain=0,HaloGain=0,Signature="none",RadiusScale=.85},
+        new(){Id="shell-dark",Name="Atelier sombre",Description="Encre chaude, argile et cartes douces.",Surface=C(40,37,45),HaloA=C(
+            60,48,60),HaloB=C(60,48,60),RimA=C(76,65,75),RimB=C(76,65,75),Reflection=C(232,191,175),Accent=C(232,191,175),Text=C(
+            244,232,225),Dim=C(189,169,160),Kind=SurfaceKind
+            .Soft,Heading="sans",Tiles="grid",Frame="flat",ReflectionGain=0,HaloGain=0,Signature="none",RadiusScale=.85},
         new(){
             Id="nuit",Name="Nuit boréale",Description="Le verre d’origine : bleu profond, halos cyan.",
             Surface=C(13,26,43),HaloA=C(82,177,226),HaloB=C(104,220,220),RimA=C(255,255,255),RimB=C(183,216,249),
@@ -114,7 +120,7 @@ internal static class Theme
             Reflection=C(255,228,238),Accent=C(247,180,208),Text=C(255,244,248),Dim=C(214,185,198),
             ReflectionGain=1.05,HaloGain=1.15,Signature="petals"
         },
-        // Calque : paper, not glass. Opaque cream, serif titles, grain, cards instead of an icon grid.
+        // Calque : du papier, pas du verre. Crème opaque, titres à empattements, grain, cartes au lieu d'une grille d'icônes.
         new(){
             Id="calque",Name="Papier calque",Description="Papier crème, encre brune et titres en serif. Les accès deviennent des fiches.",
             Surface=C(233,226,211),HaloA=C(201,162,39),HaloB=C(127,169,184),RimA=C(255,255,255),RimB=C(183,169,143),
@@ -122,7 +128,7 @@ internal static class Theme
             RadiusScale=.38,ReflectionGain=.18,HaloGain=.55,Signature="paper",Kind=SurfaceKind.Paper,
             Heading="serif",Tiles="cards",BorderWeight=1,Light=true
         },
-        // Encre : a terminal, not a window. Sharp, flat, monospaced, every access a row.
+        // Encre : un terminal, pas une fenêtre. Net, plat, à chasse fixe, chaque accès est une ligne.
         new(){
             Id="encre",Name="Encre",Description="Noir de terminal, phosphore vert, typographie à chasse fixe. Tout est en listes.",
             Surface=C(7,10,8),HaloA=C(34,197,94),HaloB=C(14,165,160),RimA=C(183,255,216),RimB=C(46,94,73),
@@ -130,7 +136,7 @@ internal static class Theme
             RadiusScale=.12,ReflectionGain=.12,HaloGain=.35,Signature="scan",Kind=SurfaceKind.Ink,
             Heading="mono",Tiles="list",BorderWeight=1
         },
-        // Affiche : a printed poster. Bold blocks, thick rules, big cards.
+        // Affiche : une affiche imprimée. Gros blocs, traits épais, grandes cartes.
         new(){
             Id="affiche",Name="Affiche",Description="Bleu nuit, corail et moutarde. Blocs imprimés, bords francs, grandes fiches.",
             Surface=C(21,26,46),HaloA=C(255,90,60),HaloB=C(255,200,87),RimA=C(255,255,255),RimB=C(255,90,60),
@@ -146,8 +152,8 @@ internal static class Theme
             RadiusScale=1.35,ReflectionGain=.3,HaloGain=.5,Signature="mist",Kind=SurfaceKind.Soft,
             Heading="sans",Tiles="grid",BorderWeight=1,Light=true
         },
-        // Bento : a tray of solid little boxes. No glass at all — thick gaps, filled cells,
-        // an index of coloured compartments instead of a grid of floating icons.
+        // Bento : un plateau de petites boîtes pleines. Aucun verre : de larges écarts, des cellules remplies,
+        // un index de compartiments colorés au lieu d'une grille d'icônes flottantes.
         new(){
             Id="bento",Name="Bento",Description="Plateau crème et cases pleines, couleurs franches. Chaque accès est une petite boîte.",
             Surface=C(242,237,228),HaloA=C(226,86,47),HaloB=C(76,143,109),RimA=C(255,255,255),RimB=C(120,110,98),
@@ -165,13 +171,14 @@ internal static class Theme
         },
         // Rétro : 1995 on purpose. Grey slab, bevelled buttons, square corners, list rows.
         new(){
-            Id="retro",Name="Rétro 95",Description="Gris de bureau, bords biseautés, coins carrés et listes à l’ancienne. Un hommage assumé.",
+            Id="retro",Name="Rétro 95",Description="Gris de bureau, bords biseautés, coins carrés et listes à l’ancienne. Un hommage " +
+                "assumé.",
             Surface=C(192,192,192),HaloA=C(0,0,128),HaloB=C(0,128,128),RimA=C(255,255,255),RimB=C(64,64,64),
             Reflection=C(255,255,255),Accent=C(0,0,128),Text=C(16,16,16),Dim=C(74,74,74),
             RadiusScale=.05,ReflectionGain=0,HaloGain=.2,Signature="retro",Kind=SurfaceKind.Retro,
             Heading="pixel",Tiles="list",Frame="bevel",BorderWeight=2,Light=true
         },
-        // Suisse : a printed index. White sheet, hairlines, red marker, numbered rows.
+        // Suisse : un index imprimé. Feuille blanche, filets, repère rouge, lignes numérotées.
         new(){
             Id="suisse",Name="Suisse",Description="Feuille blanche, filets fins, rouge signal et lignes numérotées. Rien de décoratif.",
             Surface=C(250,250,247),HaloA=C(225,37,27),HaloB=C(14,14,14),RimA=C(14,14,14),RimB=C(200,200,196),
@@ -179,7 +186,7 @@ internal static class Theme
             RadiusScale=.1,ReflectionGain=0,HaloGain=.05,Signature="swiss",Kind=SurfaceKind.Swiss,
             Heading="sans",Tiles="index",Frame="outline",BorderWeight=1,Light=true
         },
-        // Zen : raked sand, deep linen, organic curves, wide rows with room to breathe.
+        // Zen : sable ratissé, lin profond, courbes organiques, larges lignes qui laissent respirer.
         new(){
             Id="zen",Name="Zen",Description="Sable clair, encre verte et courbes amples. Des rangées larges, beaucoup d’air.",
             Surface=C(233,226,212),HaloA=C(143,160,122),HaloB=C(216,201,168),RimA=C(255,255,255),RimB=C(176,166,144),
@@ -194,10 +201,13 @@ internal static class Theme
         get; private set;
     }
     internal static IReadOnlyList<ThemeDefinition> Catalogue => All;
-    internal static ThemeDefinition? Find(string? id) => All.FirstOrDefault(t => string.Equals(t.Id, id, StringComparison.OrdinalIgnoreCase));
-    internal static Color Mix(Color a, Color b, double t) => Color.FromRgb((byte)Math.Round(a.R + (b.R - a.R) * t), (byte)Math.Round(a.G + (b.G - a.G) * t), (byte)Math.Round(a.B + (b.B - a.B) * t));
-    // Ids that stand for "the shell look": the default, the light/dark toggle of the shell and the custom palette.
-    // Every other id (amethyste, calque, retro...) is a legacy theme and only applies when the user picks it.
+    internal static ThemeDefinition? Find(string? id) => All.FirstOrDefault(t => string.Equals(t.Id, id,
+        StringComparison.OrdinalIgnoreCase));
+    internal static Color Mix(Color a, Color b, double t) => Color.FromRgb((byte)Math.Round(a.R + (b.R - a.R) * t), (byte)Math.Round(a.G
+        + (b.G - a.G) * t), (byte)Math.Round(a.B + (b.B - a.B) * t));
+    // Identifiants qui désignent « l'apparence du shell » : le thème par défaut, la bascule clair/sombre du shell et la palette
+    // personnalisée.
+    // Tout autre identifiant (amethyste, calque, retro...) est un thème hérité et ne s'applique que si l'utilisateur le choisit.
     static bool IsShellFamily(string id) => id is "shell" or "shell-dark" or "nuit" or "custom";
     // Same decision tree as QtShellBridge settings.themeMode: auto > custom > light (shell) > dark.
     static ThemeDefinition Unify(ThemeDefinition legacy, bool custom)
@@ -209,7 +219,7 @@ internal static class Theme
             palette = M3Palette.Custom(Store.State.CustomPalette);
         else
             palette = legacy.Id == "shell" ? M3Palette.LightDefault() : M3Palette.DarkDefault();
-        // Dark shells are translucent glass over the window backdrop; light and reduced-effects stay solid.
+        // Les shells sombres sont du verre translucide sur le fond de la fenêtre ; les modes clair et effets réduits restent pleins.
         var kind = !palette.Dark || M3.ReducedEffects ? SurfaceKind.Soft : SurfaceKind.Glass;
         return new ThemeDefinition
         {

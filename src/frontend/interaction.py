@@ -1,4 +1,4 @@
-# Python 3.12 / Windows 11. Pure edge and fullscreen policy, separate from rendering.
+# Python 3.12 / Windows 11. Politique pure de bord et de plein écran, séparée du rendu.
 def is_fullscreen(style, maximized, client, screen):
     return all(abs(a - b) <= 2 for a, b in zip(client, screen))
 
@@ -8,13 +8,12 @@ class EdgePolicy:
         self.away_since = 0
 
     def update(self, now, edge, inside, fullscreen, forced=False):
-        # Deliberately reaching the edge wins; a fullscreen app alone never reveals it.
+        # Viser volontairement le bord l'emporte ; une application plein écran seule ne le révèle jamais.
         if edge or forced:
             self.away_since = 0
             return True
-        # Once revealed, the pointer being inside the dock keeps it open. Without this
-        # order a fullscreen app closes the dock the moment the pointer leaves the
-        # seven-pixel edge, so no icon can ever be clicked.
+        # Une fois révélé, le pointeur dans le dock le garde ouvert. Sans cet ordre, une application plein écran
+        # refermerait le dock dès que le pointeur quitte le bord de sept pixels, et aucune icône ne serait cliquable.
         if inside:
             self.away_since = 0
             return True

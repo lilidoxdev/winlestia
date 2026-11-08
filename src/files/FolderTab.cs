@@ -1,5 +1,6 @@
-// One tab: its own history, items and cancellation. Enumeration runs on a pool thread, first 256 items shown at once, then timed appends,
-// marshalled with Dispatcher.InvokeAsync at Background priority; every posted action re-checks the token.
+// Un onglet : son propre historique, ses éléments et son annulation. L'énumération tourne sur un thread du pool, les 256 premiers éléments
+// s'affichent d'un coup, puis des ajouts temporisés,
+// marshalés par Dispatcher.InvokeAsync en priorité Background ; chaque action postée revérifie le jeton.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +16,8 @@ internal enum LoadState
 {
     Loading, Ready, Empty, Denied, NotFound, Failed
 }
-// What the window must carry across a rewrite of the visible rows: selection + scroll anchor (rows added/removed), selection + offset (re-sort), selection only (filter).
+// Ce que la fenêtre doit conserver lors d'une réécriture des lignes visibles : sélection + ancre de défilement (lignes ajoutées/retirées),
+// sélection + décalage (retri), sélection seule (filtre).
 internal enum Keep
 {
     Anchor, Offset, Selection
@@ -42,11 +44,13 @@ internal sealed class FolderTab
     internal string Error { get; private set; } = "";
     internal SortSpec Sort { get; private set; } = FilesSettings.InitialSort();
     internal event Action<FolderTab>? Changed;
-    // Raised around every in-place rewrite of the rows (begin = the kind, end = null) so the window can restore selection and scroll by path.
+    // Levé autour de chaque réécriture sur place des lignes (début = le type, fin = null) pour que la fenêtre restaure sélection et
+    // défilement par chemin.
     internal event Action<FolderTab, Keep?>? Mutating;
-    // User-visible notice (folder removed: moved to a parent).
+    // Avis visible par l'utilisateur (dossier supprimé : remonté au parent).
     internal event Action<FolderTab, string>? Notice;
-    // Inactive tabs are not watched: they are marked stale and re-synced (off thread, incremental) when shown again.
+    // Les onglets inactifs ne sont pas surveillés : ils sont marqués périmés et resynchronisés (hors thread, en incrémental) quand on les
+    // réaffiche.
     internal bool Stale;
     internal int Total => all.Count;
     internal void SyncIfStale()
@@ -59,8 +63,9 @@ internal sealed class FolderTab
     string filter = "";
     internal string Filter => filter;
     internal bool FilterEmpty => filter.Length > 0 && items.Count == 0 && !Searching && State is LoadState.Ready or LoadState.Empty;
-    // Set once the first rows (or the final result, or a failure) have been queued to the UI: lets the window apply them
-    // before its very first layout pass instead of building the list empty and laying it out a second time.
+    // Posé dès que les premières lignes (ou le résultat final, ou un échec) ont été mises en file vers l'UI : permet à la fenêtre de les
+    // appliquer
+    // avant sa toute première passe de mise en page, au lieu de construire la liste vide puis de la mettre en page une seconde fois.
     internal readonly ManualResetEventSlim FirstPosted = new(false);
 
     internal bool CanBack => index > 0;
@@ -110,7 +115,8 @@ internal sealed class FolderTab
             Load(Location);
     }
 
-    internal void SetSort(SortColumn column) => SetSort(Sort with { Column = column, Ascending = Sort.Column == column ? !Sort.Ascending : true });
+    internal void SetSort(SortColumn column) => SetSort(Sort with { Column = column, Ascending = Sort.Column == column ? !Sort.Ascending
+        : true });
     internal void SetSort(SortSpec spec)
     {
         if (Sort == spec)
@@ -132,12 +138,17 @@ internal sealed class FolderTab
         Task.Run(() =>
         {
             var sorted = FileSort.Sorted(source, spec);
-            ui.InvokeAsync(() => { if (mine != sortGeneration || !ReferenceEquals(source, all) || disposed) return; sorting = false; all = sorted; if (deepMode) deep = FileSort.Sorted(deep, Sort); Mutating?.Invoke(this, Keep.Offset); try { items.Reset(Visible()); } finally { Mutating?.Invoke(this, null); } Changed?.Invoke(this); }, DispatcherPriority.Background);
+            ui.InvokeAsync(() => { if (mine != sortGeneration || !ReferenceEquals(source, all) || disposed) return; sorting = false;
+                all = sorted; if (deepMode) deep = FileSort.Sorted(deep, Sort); Mutating?.Invoke(this, Keep.Offset); try {
+                items.Reset(Visible()); } finally { Mutating?.Invoke(this, null); } Changed?.Invoke(this); },
+                DispatcherPriority.Background);
         });
     }
 
-    // In-place update after a file operation (no enumeration): drops the removed paths, inserts the added items at their sorted position.
-    // Few changes are single Remove/Insert notifications (selection of the other rows untouched); a big batch is one linear merge + one Reset.
+    // Mise à jour sur place après une opération de fichier (sans énumération) : retire les chemins supprimés, insère les éléments ajoutés à
+    // leur position triée.
+    // Peu de changements = notifications Remove/Insert unitaires (la sélection des autres lignes reste intacte) ; un gros lot = une fusion
+    // linéaire + un Reset.
     internal void ApplyChanges(ICollection<string> removed, List<FileItem> added)
     {
         if (disposed || State is LoadState.Loading or LoadState.Denied or LoadState.NotFound or LoadState.Failed)
@@ -239,10 +250,11 @@ internal sealed class FolderTab
         Changed?.Invoke(this);
     }
 
-    // ---- filter (in memory, over the already loaded items; the FileItem objects are never rebuilt) -------------------
+    // ---- filtre (en mémoire, sur les éléments déjà chargés ; les objets FileItem ne sont jamais reconstruits) -------------------
 
     static readonly System.Globalization.CompareInfo Compare = System.Globalization.CultureInfo.CurrentCulture.CompareInfo;
-    const System.Globalization.CompareOptions Loose = System.Globalization.CompareOptions.IgnoreCase | System.Globalization.CompareOptions.IgnoreNonSpace | System.Globalization.CompareOptions.IgnoreWidth;
+    const System.Globalization.CompareOptions Loose = System.Globalization.CompareOptions.IgnoreCase | System.Globalization.CompareOptions
+        .IgnoreNonSpace | System.Globalization.CompareOptions.IgnoreWidth;
 
     List<FileItem> Visible() => deepMode ? deep : filter.Length == 0 ? all : all.FindAll(i => Compare.IndexOf(i.Name, filter, Loose) >= 0);
 
@@ -262,9 +274,9 @@ internal sealed class FolderTab
         Changed?.Invoke(this);
     }
 
-    // ---- search in sub-folders (off the UI thread, cancellable, results posted in batches) ---------------------------
+    // ---- recherche dans les sous-dossiers (hors thread UI, annulable, résultats postés par lots) ---------------------------
 
-    // The shallow list (`all`) is never touched by a deep search: clearing the filter or cancelling puts it back as it was.
+    // La liste superficielle (`all`) n'est jamais touchée par une recherche profonde : effacer le filtre ou annuler la remet comme avant.
     List<FileItem> deep = new();
     bool deepOption, deepMode;
     CancellationTokenSource? deepCts;
@@ -293,7 +305,7 @@ internal sealed class FolderTab
         Changed?.Invoke(this);
     }
 
-    // Esc: stops the walk, keeps what was found so far.
+    // Échap : arrête le parcours, garde ce qui a été trouvé jusque-là.
     internal bool CancelDeep()
     {
         if (!Searching)
@@ -331,7 +343,8 @@ internal sealed class FolderTab
     {
         try
         {
-            var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true, ReturnSpecialDirectories = false, AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System };
+            var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true,
+                ReturnSpecialDirectories = false, AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System };
             var types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var walk = new System.IO.Enumeration.FileSystemEnumerable<FileItem>(root, (ref System.IO.Enumeration.FileSystemEntry e) =>
             {
@@ -344,8 +357,10 @@ internal sealed class FolderTab
                 return item;
             }, options)
             {
-                ShouldIncludePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => Compare.IndexOf(e.FileName.ToString(), text, Loose) >= 0,
-                ShouldRecursePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => e.IsDirectory && (e.Attributes & FileAttributes.ReparsePoint) == 0,
+                ShouldIncludePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => Compare.IndexOf(e.FileName.ToString(), text,
+                    Loose) >= 0,
+                ShouldRecursePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => e.IsDirectory
+                    && (e.Attributes & FileAttributes.ReparsePoint) == 0,
             };
             var pending = new List<FileItem>();
             long last = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -402,8 +417,10 @@ internal sealed class FolderTab
     bool syncRunning, syncFull, dirty;
     readonly HashSet<string> syncPaths = new(StringComparer.OrdinalIgnoreCase);
 
-    // Changed paths of the shown folder (full = rescan the folder and diff). UI thread. Never touches the disk here: stat/enumeration run on a pool thread,
-    // the result is applied in place through ApplyChanges (which is also what the file operations use, so both sources converge on the same rows).
+    // Chemins modifiés du dossier affiché (full = réanalyser le dossier et comparer). Thread UI. Ne touche jamais au disque ici :
+    // lecture/énumération sur un thread du pool,
+    // le résultat est appliqué sur place via ApplyChanges (que les opérations de fichiers utilisent aussi, donc les deux sources convergent
+    // vers les mêmes lignes).
     internal void Sync(ICollection<string> paths, bool full)
     {
         if (disposed)
@@ -451,7 +468,9 @@ internal sealed class FolderTab
                     added = new List<FileItem>();
                     if (whole)
                     {
-                        var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = false, ReturnSpecialDirectories = false, AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System };
+                        var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = false,
+                            ReturnSpecialDirectories = false, AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System
+                            };
                         var fresh = new Dictionary<string, FileItem>(StringComparer.OrdinalIgnoreCase);
                         foreach (var e in new DirectoryInfo(loc).EnumerateFileSystemInfos("*", options))
                         {
@@ -477,7 +496,8 @@ internal sealed class FolderTab
                         for (int i = 0; i < batch.Count; i++)
                         {
                             var now = FileItem.Probe(batch[i], types);
-                            if (now != null && !hidden && (File.GetAttributes(batch[i]) & (FileAttributes.Hidden | FileAttributes.System)) != 0)
+                            if (now != null && !hidden
+                                && (File.GetAttributes(batch[i]) & (FileAttributes.Hidden | FileAttributes.System)) != 0)
                                 now = null;
                             var was = visibleCheck![i];
                             if (now == null)
@@ -587,9 +607,10 @@ internal sealed class FolderTab
             };
             var everything = new List<FileItem>();
             var types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            // The UI sees the first rows as early as possible (first full batch, or after FirstFlushMs on a slow disk), then at most one
-            // append per FlushMs while enumeration is still running. Everything else waits for the single sorted Reset in Complete():
-            // 10k items cost 2 collection notifications instead of ~40, and the sort never runs on the UI thread.
+            // L'UI voit les premières lignes le plus tôt possible (premier lot complet, ou après FirstFlushMs sur un disque lent), puis au
+            // plus un
+            // ajout par FlushMs tant que l'énumération continue. Tout le reste attend l'unique Reset trié de Complete() :
+            // 10k éléments coûtent 2 notifications de collection au lieu de ~40, et le tri ne tourne jamais sur le thread UI.
             int posted = 0;
             long lastFlush = System.Diagnostics.Stopwatch.GetTimestamp();
             foreach (var entry in new DirectoryInfo(path).EnumerateFileSystemInfos("*", options))
@@ -609,7 +630,8 @@ internal sealed class FolderTab
                     FirstPosted.Set();
                 }
             }
-            // IgnoreInaccessible also swallows a denied root: re-read once with default options to tell empty from denied.
+            // IgnoreInaccessible avale aussi une racine refusée : on relit une fois avec les options par défaut pour distinguer vide et
+            // refusé.
             if (everything.Count == 0)
             {
                 using var probe = new DirectoryInfo(path).EnumerateFileSystemInfos().GetEnumerator();
@@ -657,7 +679,9 @@ internal sealed class FolderTab
         {
             string where = Location;
             int count = sorted.Count;
-            AfterRender(() => Perf.Log($"nav {where}: complete rendered {Perf.Ms(start):F1} ms ({count} items), {Perf.SinceProcess():F0} ms since process start, max UI stall {Perf.Stall?.Max ?? 0:F1} ms"));
+            AfterRender(()
+                => Perf.Log($"nav {where}: complete rendered {Perf.Ms(start):F1} ms ({count} items), {Perf.SinceProcess():F0} ms since " +
+                $"process start, max UI stall {Perf.Stall?.Max ?? 0:F1} ms"));
         }
     }
 
@@ -665,12 +689,13 @@ internal sealed class FolderTab
     {
         items.Reset(null);
         all = new List<FileItem>();
-        State = ex is UnauthorizedAccessException ? LoadState.Denied : ex is DirectoryNotFoundException or FileNotFoundException ? LoadState.NotFound : LoadState.Failed;
+        State = ex is UnauthorizedAccessException ? LoadState.Denied : ex is DirectoryNotFoundException or FileNotFoundException
+            ? LoadState.NotFound : LoadState.Failed;
         Error = ex.Message;
         Changed?.Invoke(this);
     }
 
-    // Loaded priority runs after the Render-priority layout/render pass that the batch just invalidated.
+    // La priorité Loaded passe après la passe de mise en page/rendu en priorité Render que le lot vient d'invalider.
     void LogFirstRender(long start)
     {
         if (!Perf.Enabled || firstLogged || items.Count == 0)
@@ -678,10 +703,13 @@ internal sealed class FolderTab
         firstLogged = true;
         string where = Location;
         int count = items.Count;
-        AfterRender(() => Perf.Log($"nav {where}: first rows rendered {Perf.Ms(start):F1} ms ({count} items in first update), {Perf.SinceProcess():F0} ms since process start"));
+        AfterRender(()
+            => Perf.Log($"nav {where}: first rows rendered {Perf.Ms(start):F1} ms ({count} items in first update), " +
+            $"{Perf.SinceProcess():F0} ms since process start"));
     }
 
-    // Measurement only: rows applied before the window's first frame count as rendered at ContentRendered, later ones after the next render pass.
+    // Mesure uniquement : les lignes appliquées avant la première image de la fenêtre comptent comme rendues à ContentRendered, les
+    // suivantes après la passe de rendu suivante.
     void AfterRender(Action log)
     {
         if (Perf.FirstFrameDone)

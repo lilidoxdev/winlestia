@@ -1,7 +1,10 @@
-// Ctrl+Z / Ctrl+Y: an internal journal of what this window did through FileOps (the shell exposes no reliable public undo API).
-// Undoable: rename, move, copy (the copies go to the Recycle Bin), new folder, delete to the Recycle Bin (restored from the bin).
-// NOT undoable: permanent delete (a barrier entry says so), operations run from the native shell menu, outgoing drags, and files that a
-// copy replaced (undoing that copy recycles the replacement, the replaced original is not brought back).
+// Ctrl+Z / Ctrl+Y : un journal interne de ce que cette fenêtre a fait via FileOps (le shell n'expose aucune API publique d'annulation
+// fiable).
+// Annulable : renommer, déplacer, copier (les copies vont à la corbeille), nouveau dossier, suppression vers la corbeille (restaurée depuis
+// la corbeille).
+// NON annulable : suppression définitive (une entrée barrière le dit), opérations lancées depuis le menu natif du shell, glisser sortants,
+// et les fichiers qu'une
+// copie a remplacés (annuler cette copie met le remplaçant à la corbeille, l'original remplacé n'est pas restauré).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,6 +25,8 @@ internal sealed class UndoEntry
 
 internal sealed class UndoJournal
 {
+    // Sondage du système de fichiers (50 essais, soit 5 s au plus).
+    const int WaitPollMs = 100;
     const int Max = 50;
     readonly List<UndoEntry> undo = new(), redo = new();
     internal Func<IntPtr> Owner = () => IntPtr.Zero;
@@ -43,9 +48,10 @@ internal sealed class UndoJournal
         }
         catch { return DateTime.MinValue; }
     }
-    // Undo/redo of a move: refuses when something already sits at a target (no conflict dialog).
+    // Annulation/rétablissement d'un déplacement : refuse si quelque chose occupe déjà une cible (pas de boîte de conflit).
     static Task<OpResult>? Occupied(IEnumerable<(string From, string To)> pairs) =>
-        pairs.FirstOrDefault(p => Exists(p.To)) is { To: { } t } ? Refuse("Impossible d'annuler : un élément nommé « " + Path.GetFileName(t) + " » existe déjà à l'emplacement d'origine") : null;
+        pairs.FirstOrDefault(p => Exists(p.To)) is { To: { } t } ? Refuse("Impossible d'annuler : un élément nommé « " + Path.GetFileName(t)
+            + " » existe déjà à l'emplacement d'origine") : null;
 
     void Push(UndoEntry e)
     {
@@ -58,7 +64,7 @@ internal sealed class UndoJournal
 
     internal void RecordPermanentDelete() => Push(new UndoEntry { Label = "Suppression définitive", Irreversible = true });
 
-    // Builds the entry from what the operation really did. Nothing succeeded -> nothing recorded.
+    // Construit l'entrée à partir de ce que l'opération a réellement fait. Rien de réussi -> rien d'enregistré.
     internal void Record(OpResult r)
     {
         if (r.Log.Count == 0)
@@ -142,7 +148,8 @@ internal sealed class UndoJournal
                         Redo = async () =>
                         {
                             var res = await FileOps.Delete(Hwnd(), items.Select(i => i.Orig).ToList(), false, Watch());
-                            var again = res.Log.Where(x => x.Kind == DoneKind.Delete && x.Src != null).Select(x => (Orig: x.Src!, Bin: x.Dst)).ToList();
+                            var again = res.Log.Where(x => x.Kind == DoneKind.Delete && x.Src != null).Select(x => (Orig: x.Src!,
+                                Bin: x.Dst)).ToList();
                             if (again.Count > 0)
                             {
                                 items.Clear();
@@ -156,7 +163,7 @@ internal sealed class UndoJournal
         }
     }
 
-    // Returns null when there was nothing to do, else the entry that ran plus its result (Error set when it failed).
+    // Renvoie null quand il n'y avait rien à faire, sinon l'entrée exécutée et son résultat (Error renseigné en cas d'échec).
     internal async Task<(UndoEntry Entry, OpResult? Result)?> UndoAsync()
     {
         if (undo.Count == 0)
@@ -190,8 +197,9 @@ internal sealed class UndoJournal
 
     // ---- Recycle Bin restore ------------------------------------------------------------------------------------
 
-    // Shell.Application on the bin folder (CSIDL_BITBUCKET = 10): match by bin path, else by name + original folder, then the canonical
-    // "undelete" verb (locale independent). On a failure the verb captions are tried (Restaurer / Restore).
+    // Shell.Application sur le dossier de la corbeille (CSIDL_BITBUCKET = 10) : correspondance par chemin dans la corbeille, sinon par nom
+    // + dossier d'origine, puis le verbe
+    // canonique "undelete" (indépendant de la langue). En cas d'échec, les libellés de verbe sont essayés (Restaurer / Restore).
     internal static Task<OpResult> RestoreAsync(IReadOnlyList<(string Orig, string? Bin)> items, HashSet<string> watch)
     {
         var done = new TaskCompletionSource<OpResult>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -206,7 +214,8 @@ internal sealed class UndoJournal
                 {
                     dynamic folder = shell.NameSpace(10);
                     dynamic? found = null;
-                    string name = Path.GetFileName(orig), bare = Path.GetFileNameWithoutExtension(orig), from = Path.GetDirectoryName(orig)!.TrimEnd('\\');
+                    string name = Path.GetFileName(orig), bare = Path.GetFileNameWithoutExtension(orig),
+                        from = Path.GetDirectoryName(orig)!.TrimEnd('\\');
                     foreach (dynamic it in folder.Items())
                     {
                         string p = "", nm = "", where = "";
@@ -223,7 +232,8 @@ internal sealed class UndoJournal
                         // GetDetailsOf may prefix invisible direction marks
                         where = where.Trim('‎', '‏', '‪', '‬');
                         bool byBin = bin != null && string.Equals(p, bin, StringComparison.OrdinalIgnoreCase);
-                        bool byName = (string.Equals(nm, name, StringComparison.OrdinalIgnoreCase) || string.Equals(nm, bare, StringComparison.OrdinalIgnoreCase)) && string.Equals(where, from, StringComparison.OrdinalIgnoreCase);
+                        bool byName = (string.Equals(nm, name, StringComparison.OrdinalIgnoreCase) || string.Equals(nm, bare,
+                            StringComparison.OrdinalIgnoreCase)) && string.Equals(where, from, StringComparison.OrdinalIgnoreCase);
                         if (byBin || byName)
                         {
                             found = it;
@@ -251,7 +261,8 @@ internal sealed class UndoJournal
                             foreach (dynamic verb in found.Verbs())
                             {
                                 string caption = ((string)verb.Name).Replace("&", "");
-                                if (caption.StartsWith("Restaur", StringComparison.OrdinalIgnoreCase) || caption.StartsWith("Restore", StringComparison.OrdinalIgnoreCase))
+                                if (caption.StartsWith("Restaur", StringComparison.OrdinalIgnoreCase) || caption.StartsWith("Restore",
+                                    StringComparison.OrdinalIgnoreCase))
                                 {
                                     verb.DoIt();
                                     break;
@@ -292,7 +303,7 @@ internal sealed class UndoJournal
         {
             if (File.Exists(path) || Directory.Exists(path))
                 return true;
-            Thread.Sleep(100);
+            Thread.Sleep(WaitPollMs);
         }
         return false;
     }

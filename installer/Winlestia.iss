@@ -8,7 +8,7 @@
 
 #define AppName        "Winlestia"
 #ifndef AppVersion
-  #define AppVersion   "0.9.2"
+  #error AppVersion non defini : compiler via installer/build.ps1 (/DAppVersion lu dans Directory.Build.props).
 #endif
 #define AppPublisher   "dj"
 #define AppExe         "Panneaux.Glass.exe"

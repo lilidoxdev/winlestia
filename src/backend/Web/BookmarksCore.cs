@@ -36,8 +36,10 @@ internal static class BookmarksCore
 
     const int MaxNodes = 30000, MaxDepth = 24;
 
-    static readonly string Local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        Programs = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), ProgramsX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+    static readonly string Local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        Roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        Programs = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            ProgramsX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 
     internal static string WorkRoot => Path.Combine(Local, "Winlestia", "Bookmarks");
 
@@ -89,7 +91,8 @@ internal static class BookmarksCore
                             if (File.Exists(state))
                             {
                                 using var doc = JsonDocument.Parse(ReadShared(state));
-                                if (doc.RootElement.TryGetProperty("profile", out var p) && p.TryGetProperty("last_used", out var last) && last.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(last.GetString()))
+                                if (doc.RootElement.TryGetProperty("profile", out var p) && p.TryGetProperty("last_used", out var last)
+                                    && last.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(last.GetString()))
                                     profile = last.GetString()!;
                             }
                         }
@@ -117,13 +120,24 @@ internal static class BookmarksCore
             }
             list.Add(b);
         }
-        Add("edge", "Microsoft Edge", First(FromAppPaths("msedge.exe"), Path.Combine(ProgramsX86, @"Microsoft\Edge\Application\msedge.exe"), Path.Combine(Programs, @"Microsoft\Edge\Application\msedge.exe")), true, Path.Combine(Local, @"Microsoft\Edge\User Data"), "msedge");
-        Add("chrome", "Google Chrome", First(FromAppPaths("chrome.exe"), Path.Combine(Programs, @"Google\Chrome\Application\chrome.exe"), Path.Combine(ProgramsX86, @"Google\Chrome\Application\chrome.exe"), Path.Combine(Local, @"Google\Chrome\Application\chrome.exe")), true, Path.Combine(Local, @"Google\Chrome\User Data"), "chrome");
-        Add("brave", "Brave", First(FromAppPaths("brave.exe"), Path.Combine(Programs, @"BraveSoftware\Brave-Browser\Application\brave.exe"), Path.Combine(Local, @"BraveSoftware\Brave-Browser\Application\brave.exe")), true, Path.Combine(Local, @"BraveSoftware\Brave-Browser\User Data"), "brave");
-        Add("opera", "Opera", First(Path.Combine(Local, @"Programs\Opera\opera.exe"), Path.Combine(Programs, @"Opera\opera.exe"), Path.Combine(Local, @"Programs\Opera\launcher.exe")), true, Path.Combine(Roaming, @"Opera Software\Opera Stable"), "opera");
-        Add("operagx", "Opera GX", First(Path.Combine(Local, @"Programs\Opera GX\opera.exe"), Path.Combine(Programs, @"Opera GX\opera.exe"), Path.Combine(Local, @"Programs\Opera GX\launcher.exe")), true, Path.Combine(Roaming, @"Opera Software\Opera GX Stable"), "opera");
-        Add("vivaldi", "Vivaldi", First(FromAppPaths("vivaldi.exe"), Path.Combine(Local, @"Vivaldi\Application\vivaldi.exe"), Path.Combine(Programs, @"Vivaldi\Application\vivaldi.exe")), true, Path.Combine(Local, @"Vivaldi\User Data"), "vivaldi");
-        Add("firefox", "Mozilla Firefox", First(FromAppPaths("firefox.exe"), Path.Combine(Programs, @"Mozilla Firefox\firefox.exe"), Path.Combine(ProgramsX86, @"Mozilla Firefox\firefox.exe")), false, "", "firefox");
+        Add("edge", "Microsoft Edge", First(FromAppPaths("msedge.exe"), Path.Combine(ProgramsX86, @"Microsoft\Edge\Application\msedge.exe"),
+            Path.Combine(Programs, @"Microsoft\Edge\Application\msedge.exe")), true, Path.Combine(Local, @"Microsoft\Edge\User Data"),
+            "msedge");
+        Add("chrome", "Google Chrome", First(FromAppPaths("chrome.exe"), Path.Combine(Programs, @"Google\Chrome\Application\chrome.exe"),
+            Path.Combine(ProgramsX86, @"Google\Chrome\Application\chrome.exe"), Path.Combine(Local,
+            @"Google\Chrome\Application\chrome.exe")), true, Path.Combine(Local, @"Google\Chrome\User Data"), "chrome");
+        Add("brave", "Brave", First(FromAppPaths("brave.exe"), Path.Combine(Programs, @"BraveSoftware\Brave-Browser\Application\brave.exe"),
+            Path.Combine(Local, @"BraveSoftware\Brave-Browser\Application\brave.exe")), true, Path.Combine(Local,
+            @"BraveSoftware\Brave-Browser\User Data"), "brave");
+        Add("opera", "Opera", First(Path.Combine(Local, @"Programs\Opera\opera.exe"), Path.Combine(Programs, @"Opera\opera.exe"),
+            Path.Combine(Local, @"Programs\Opera\launcher.exe")), true, Path.Combine(Roaming, @"Opera Software\Opera Stable"), "opera");
+        Add("operagx", "Opera GX", First(Path.Combine(Local, @"Programs\Opera GX\opera.exe"), Path.Combine(Programs, @"Opera GX\opera.exe"),
+            Path.Combine(Local, @"Programs\Opera GX\launcher.exe")), true, Path.Combine(Roaming, @"Opera Software\Opera GX Stable"),
+            "opera");
+        Add("vivaldi", "Vivaldi", First(FromAppPaths("vivaldi.exe"), Path.Combine(Local, @"Vivaldi\Application\vivaldi.exe"),
+            Path.Combine(Programs, @"Vivaldi\Application\vivaldi.exe")), true, Path.Combine(Local, @"Vivaldi\User Data"), "vivaldi");
+        Add("firefox", "Mozilla Firefox", First(FromAppPaths("firefox.exe"), Path.Combine(Programs, @"Mozilla Firefox\firefox.exe"),
+            Path.Combine(ProgramsX86, @"Mozilla Firefox\firefox.exe")), false, "", "firefox");
         string def = DefaultBrowserId();
         foreach (var b in list)
             b.IsDefault = b.Id == def;
@@ -134,7 +148,8 @@ internal static class BookmarksCore
     {
         try
         {
-            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice");
+            using var key = Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice");
             string prog = (key?.GetValue("ProgId") as string) ?? "";
             if (prog.Contains("MSEdge", StringComparison.OrdinalIgnoreCase))
                 return "edge";
@@ -180,7 +195,8 @@ internal static class BookmarksCore
                 if (eq > 0 && sections.Count > 0)
                     sections[^1].values[line[..eq].Trim()] = line[(eq + 1)..].Trim();
             }
-            string Resolve(string path, bool relative) => relative ? Path.GetFullPath(Path.Combine(root, path.Replace('/', '\\'))) : path.Replace('/', '\\');
+            string Resolve(string path, bool relative) => relative ? Path.GetFullPath(Path.Combine(root, path.Replace('/', '\\')))
+                : path.Replace('/', '\\');
             foreach (var s in sections.Where(s => s.name.StartsWith("Install", StringComparison.OrdinalIgnoreCase)))
                 if (s.values.TryGetValue("Default", out var d) && d.Length > 0)
                 {
@@ -188,7 +204,8 @@ internal static class BookmarksCore
                     if (Directory.Exists(dir))
                         return dir;
                 }
-            foreach (var s in sections.Where(s => s.name.StartsWith("Profile", StringComparison.OrdinalIgnoreCase) && s.values.GetValueOrDefault("Default") == "1"))
+            foreach (var s in sections.Where(s => s.name.StartsWith("Profile", StringComparison.OrdinalIgnoreCase)
+                && s.values.GetValueOrDefault("Default") == "1"))
                 if (s.values.TryGetValue("Path", out var p))
                 {
                     string dir = Resolve(p, s.values.GetValueOrDefault("IsRelative", "1") != "0");
@@ -364,7 +381,8 @@ internal static class BookmarksCore
             using (var connection = Open(copy))
             {
                 using var command = connection.CreateCommand();
-                command.CommandText = "SELECT b.id,b.type,b.parent,COALESCE(b.title,''),b.guid,COALESCE(p.url,'') FROM moz_bookmarks b LEFT JOIN moz_places p ON p.id=b.fk ORDER BY b.parent,b.position";
+                command.CommandText = "SELECT b.id,b.type,b.parent,COALESCE(b.title,''),b.guid,COALESCE(p.url,'') FROM moz_bookmarks b " +
+                    "LEFT JOIN moz_places p ON p.id=b.fk ORDER BY b.parent,b.position";
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -386,7 +404,8 @@ internal static class BookmarksCore
                         continue;
                     if (r.type == 2)
                     {
-                        list.Add(new BNode { Id = b.Id + ":" + r.guid, Title = r.title, Folder = true, Children = Children(id, depth + 1) });
+                        list.Add(new BNode { Id = b.Id + ":" + r.guid, Title = r.title, Folder = true, Children = Children(id, depth + 1)
+                            });
                     }
                     else if (r.type == 1 && r.url.Length > 0 && !r.url.StartsWith("place:", StringComparison.OrdinalIgnoreCase))
                         list.Add(new BNode { Id = b.Id + ":" + r.guid, Title = r.title, Url = r.url });
@@ -518,9 +537,12 @@ internal static class BookmarksCore
     static byte[]? Query(SqliteConnection connection, bool chromium, string url, string host)
     {
         string select = chromium
-            ? "SELECT b.image_data FROM icon_mapping m JOIN favicon_bitmaps b ON b.icon_id=m.icon_id WHERE m.page_url{0} AND b.image_data IS NOT NULL ORDER BY ABS(b.width-32) LIMIT 1"
-            : "SELECT i.data FROM moz_pages_w_icons p JOIN moz_icons_to_pages ip ON ip.page_id=p.id JOIN moz_icons i ON i.id=ip.icon_id WHERE p.page_url{0} AND i.data IS NOT NULL AND i.width<1024 ORDER BY ABS(i.width-32) LIMIT 1";
-        foreach (var (clause, value) in new[] { ("=$u", url), (" LIKE $u", "https://" + host + "/%"), (" LIKE $u", "http://" + host + "/%") })
+            ? "SELECT b.image_data FROM icon_mapping m JOIN favicon_bitmaps b ON b.icon_id=m.icon_id WHERE m.page_url{0} AND " +
+                "b.image_data IS NOT NULL ORDER BY ABS(b.width-32) LIMIT 1"
+            : "SELECT i.data FROM moz_pages_w_icons p JOIN moz_icons_to_pages ip ON ip.page_id=p.id JOIN moz_icons i ON i.id=ip.icon_id " +
+                "WHERE p.page_url{0} AND i.data IS NOT NULL AND i.width<1024 ORDER BY ABS(i.width-32) LIMIT 1";
+        foreach (var (clause, value) in new[] { ("=$u", url), (" LIKE $u", "https://" + host + "/%"), (" LIKE $u", "http://" + host + "/%")
+            })
         {
             try
             {
@@ -540,12 +562,15 @@ internal static class BookmarksCore
         try
         {
             using var stream = new MemoryStream(data);
-            var decoder = System.Windows.Media.Imaging.BitmapDecoder.Create(stream, System.Windows.Media.Imaging.BitmapCreateOptions.PreservePixelFormat, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad);
+            var decoder = System.Windows.Media.Imaging.BitmapDecoder.Create(stream,
+                System.Windows.Media.Imaging.BitmapCreateOptions.PreservePixelFormat,
+                System.Windows.Media.Imaging.BitmapCacheOption.OnLoad);
             var frame = decoder.Frames.OrderBy(f => Math.Abs(f.PixelWidth - 32)).FirstOrDefault();
             if (frame == null || frame.PixelWidth < 8 || frame.PixelHeight < 8 || frame.PixelWidth > 2048)
                 return null;
             double scale = 32.0 / Math.Max(frame.PixelWidth, frame.PixelHeight);
-            System.Windows.Media.Imaging.BitmapSource source = scale == 1 ? frame : new System.Windows.Media.Imaging.TransformedBitmap(frame, new System.Windows.Media.ScaleTransform(scale, scale));
+            System.Windows.Media.Imaging.BitmapSource source = scale == 1 ? frame
+                : new System.Windows.Media.Imaging.TransformedBitmap(frame, new System.Windows.Media.ScaleTransform(scale, scale));
             source = new System.Windows.Media.Imaging.FormatConvertedBitmap(source, System.Windows.Media.PixelFormats.Bgra32, null, 0);
             source.Freeze();
             var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
@@ -560,7 +585,8 @@ internal static class BookmarksCore
     // ---- Suppression dans le navigateur (Chromium seulement) -------------------------------------------------
     // Renvoie null si réussi, sinon un code : unsupported, running, sync, notfound, error.
     static int backupCounter;
-    public static string? DeleteChromium(BrowserInfo b, string id, bool confirmSync, string backupsDir, string? bookmarksOverride = null, bool skipChecks = false)
+    public static string? DeleteChromium(BrowserInfo b, string id, bool confirmSync, string backupsDir, string? bookmarksOverride = null,
+        bool skipChecks = false)
     {
         if (!b.Chromium)
             return "unsupported";
@@ -605,11 +631,13 @@ internal static class BookmarksCore
             if (matches > 1 || !hasGuid)
                 return "ambiguous";
             Directory.CreateDirectory(backupsDir);
-            string backup = Path.Combine(backupsDir, b.Id + "-" + DateTime.Now.ToString("yyyyMMdd-HHmmssfff") + "-" + Interlocked.Increment(ref backupCounter) + ".json");
+            string backup = Path.Combine(backupsDir, b.Id + "-" + DateTime.Now.ToString("yyyyMMdd-HHmmssfff") + "-"
+                + Interlocked.Increment(ref backupCounter) + ".json");
             File.Copy(file, backup, false);
             try
             {
-                var old = new DirectoryInfo(backupsDir).GetFiles(b.Id + "-*.json").OrderByDescending(f => f.LastWriteTimeUtc).ThenByDescending(f => f.Name, StringComparer.Ordinal).Skip(20);
+                var old = new DirectoryInfo(backupsDir).GetFiles(b.Id + "-*.json").OrderByDescending(f
+                    => f.LastWriteTimeUtc).ThenByDescending(f => f.Name, StringComparer.Ordinal).Skip(20);
                 foreach (var f in old)
                 {
                     Safe.Try(() => f.Delete());
@@ -650,7 +678,8 @@ internal static class BookmarksCore
             if (root is JsonObject obj)
                 obj.Remove("checksum");
             string temp = file + ".winlestia.tmp";
-            File.WriteAllText(temp, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }), new UTF8Encoding(false));
+            File.WriteAllText(temp, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }), new UTF8Encoding(false));
             try
             {
                 File.Replace(temp, file, null);

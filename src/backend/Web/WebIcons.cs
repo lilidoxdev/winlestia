@@ -1,4 +1,4 @@
-// language: C# 12, file: WebIcons.cs, target: Windows 11 / .NET 8, bounded direct favicon discovery and transparent PNG cache
+// C# 12, fichier WebIcons.cs, cible Windows 11 / .NET 8, découverte directe et bornée des favicons et cache PNG transparent
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,14 +19,18 @@ namespace PanneauxGlass;
 internal sealed record WebIconResult(string Name, string Path, bool Fallback);
 internal static class WebIcons
 {
-    static readonly HttpClient client = new(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All }) { Timeout = TimeSpan.FromSeconds(5) };
+    // Garde-fou contre un HTML pathologique (retour arrière coûteux) : la page distante n'est pas fiable.
+    const int RegexTimeoutMs = 100;
+    static readonly HttpClient client = new(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All }) {
+        Timeout = TimeSpan.FromSeconds(5) };
     const int ImageLimit = 2 * 1024 * 1024;
     internal static Uri Parse(string input)
     {
         string value = input.Trim();
         if (!value.Contains("://"))
             value = "https://" + value;
-        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http") || string.IsNullOrWhiteSpace(uri.Host) || !string.IsNullOrEmpty(uri.UserInfo))
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http")
+            || string.IsNullOrWhiteSpace(uri.Host) || !string.IsNullOrEmpty(uri.UserInfo))
             throw new FormatException("Entre une adresse de site, par exemple gmail.com ou https://github.com.");
         return uri;
     }
@@ -59,7 +63,8 @@ internal static class WebIcons
             name = "GitHub";
             known = "https://github.githubassets.com/favicons/favicon.png";
         }
-        string bundled = Path.Combine(Store.Root, "assets", "web", name == "Gmail" ? "gmail.ico" : name == "GitHub" ? "github.png" : "missing");
+        string bundled = Path.Combine(Store.Root, "assets", "web", name == "Gmail" ? "gmail.ico" : name == "GitHub" ? "github.png"
+            : "missing");
         if (known != null && File.Exists(bundled))
         {
             Normalize(File.ReadAllBytes(bundled), path);
@@ -70,7 +75,8 @@ internal static class WebIcons
             try
             {
                 _ = Image(path);
-                bool fallback = File.Exists(path + ".fallback") && File.GetLastWriteTimeUtc(path + ".fallback") >= File.GetLastWriteTimeUtc(path);
+                bool fallback = File.Exists(path + ".fallback") && File.GetLastWriteTimeUtc(path
+                    + ".fallback") >= File.GetLastWriteTimeUtc(path);
                 if (!fallback || File.GetLastWriteTimeUtc(path) > DateTime.UtcNow.AddHours(-1))
                     return new(name, path, fallback);
             }
@@ -105,7 +111,8 @@ internal static class WebIcons
             string html = Encoding.UTF8.GetString(await Download(uri, 512 * 1024, budget.Token));
             if (known == null)
             {
-                var title = Regex.Match(html, @"<title[^>]*>(.*?)</title>", RegexOptions.IgnoreCase | RegexOptions.Singleline, TimeSpan.FromMilliseconds(100));
+                var title = Regex.Match(html, @"<title[^>]*>(.*?)</title>", RegexOptions.IgnoreCase | RegexOptions.Singleline,
+                    TimeSpan.FromMilliseconds(RegexTimeoutMs));
                 if (title.Success)
                 {
                     string decoded = WebUtility.HtmlDecode(Regex.Replace(title.Groups[1].Value, @"\s+", " ")).Trim();
@@ -113,13 +120,18 @@ internal static class WebIcons
                         name = decoded;
                 }
             }
-            var links = Regex.Matches(html, @"<link\b[^>]{0,4096}>", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
+            var links = Regex.Matches(html, @"<link\b[^>]{0,4096}>", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(RegexTimeoutMs));
             foreach (Match link in links)
             {
                 var attrs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                foreach (Match attr in Regex.Matches(link.Value, "([\\w-]+)\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s>]+))", RegexOptions.None, TimeSpan.FromMilliseconds(100)))
-                    attrs[attr.Groups[1].Value] = WebUtility.HtmlDecode(attr.Groups[2].Success ? attr.Groups[2].Value : attr.Groups[3].Success ? attr.Groups[3].Value : attr.Groups[4].Value);
-                if (attrs.TryGetValue("rel", out string? rel) && rel.Split(' ', StringSplitOptions.RemoveEmptyEntries).Any(x => x.Equals("icon", StringComparison.OrdinalIgnoreCase) || x.StartsWith("apple-touch-icon", StringComparison.OrdinalIgnoreCase)) && attrs.TryGetValue("href", out string? href) && Uri.TryCreate(uri, href, out var imageUri) && imageUri.Scheme is "https" or "http")
+                foreach (Match attr in Regex.Matches(link.Value, "([\\w-]+)\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s>]+))",
+                    RegexOptions.None, TimeSpan.FromMilliseconds(RegexTimeoutMs)))
+                    attrs[attr.Groups[1].Value] = WebUtility.HtmlDecode(attr.Groups[2].Success ? attr.Groups[2].Value
+                        : attr.Groups[3].Success ? attr.Groups[3].Value : attr.Groups[4].Value);
+                if (attrs.TryGetValue("rel", out string? rel) && rel.Split(' ', StringSplitOptions.RemoveEmptyEntries).Any(x
+                    => x.Equals("icon", StringComparison.OrdinalIgnoreCase) || x.StartsWith("apple-touch-icon",
+                    StringComparison.OrdinalIgnoreCase)) && attrs.TryGetValue("href", out string? href) && Uri.TryCreate(uri, href,
+                    out var imageUri) && imageUri.Scheme is "https" or "http")
                     candidates.Add(imageUri);
             }
         }
@@ -174,18 +186,21 @@ internal static class WebIcons
     {
         using var stream = new MemoryStream(data);
         var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-        var frame = decoder.Frames.Where(x => x.PixelWidth <= 2048 && x.PixelHeight <= 2048).OrderByDescending(x => x.PixelWidth).FirstOrDefault() ?? throw new InvalidDataException("Icône invalide.");
+        var frame = decoder.Frames.Where(x => x.PixelWidth <= 2048 && x.PixelHeight <= 2048).OrderByDescending(x
+            => x.PixelWidth).FirstOrDefault() ?? throw new InvalidDataException("Icône invalide.");
         BitmapSource source = frame;
         if (frame.PixelWidth > 256 || frame.PixelHeight > 256)
-            source = new TransformedBitmap(frame, new ScaleTransform(Math.Min(256d / frame.PixelWidth, 256d / frame.PixelHeight), Math.Min(256d / frame.PixelWidth, 256d / frame.PixelHeight)));
+            source = new TransformedBitmap(frame, new ScaleTransform(Math.Min(256d / frame.PixelWidth, 256d / frame.PixelHeight),
+                Math.Min(256d / frame.PixelWidth, 256d / frame.PixelHeight)));
         var rgba = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
         int w = rgba.PixelWidth, h = rgba.PixelHeight, stride = w * 4;
         byte[] pixels = new byte[stride * h];
         rgba.CopyPixels(pixels, stride, 0);
-        // Remove only a uniform, border-connected matte; enclosed white logo detail stays intact.
+        // Ne retire qu'un fond uni relié au bord ; les détails blancs enfermés du logo restent intacts.
         int[] corners = { 0, (w - 1) * 4, (h - 1) * stride, (h - 1) * stride + (w - 1) * 4 };
         byte b = pixels[0], g = pixels[1], r = pixels[2];
-        bool matte = corners.All(i => pixels[i + 3] > 245 && Math.Abs(pixels[i] - b) < 12 && Math.Abs(pixels[i + 1] - g) < 12 && Math.Abs(pixels[i + 2] - r) < 12);
+        bool matte = corners.All(i => pixels[i + 3] > 245 && Math.Abs(pixels[i] - b) < 12 && Math.Abs(pixels[i + 1] - g) < 12
+            && Math.Abs(pixels[i + 2] - r) < 12);
         if (matte)
         {
             var queue = new Queue<int>();
@@ -219,14 +234,15 @@ internal static class WebIcons
         {
             if (pixels[i + 3] < 32)
                 continue;
-            if (Math.Max(pixels[i], Math.Max(pixels[i + 1], pixels[i + 2])) - Math.Min(pixels[i], Math.Min(pixels[i + 1], pixels[i + 2])) > 24)
+            if (Math.Max(pixels[i], Math.Max(pixels[i + 1], pixels[i + 2])) - Math.Min(pixels[i], Math.Min(pixels[i + 1], pixels[i
+                + 2])) > 24)
                 monochrome = false;
             luminance += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
             count++;
         }
         if (count == 0)
             throw new InvalidDataException("Le logo est entièrement transparent.");
-        // Preserve the exact alpha silhouette, using the light logo variant on dark glass.
+        // Conserve la silhouette alpha exacte, avec la variante claire du logo sur verre sombre.
         if (monochrome && count > 0 && luminance / count < 110)
             for (int i = 0; i < pixels.Length; i += 4)
                 if (pixels[i + 3] > 0)
@@ -247,7 +263,8 @@ internal static class WebIcons
         using var graphics = Drawing.Graphics.FromImage(bitmap);
         graphics.SmoothingMode = Drawing.Drawing2D.SmoothingMode.AntiAlias;
         graphics.Clear(Drawing.Color.Transparent);
-        using var brush = new Drawing.Drawing2D.LinearGradientBrush(new Drawing.Rectangle(14, 14, 100, 100), Drawing.Color.FromArgb(192, 237, 255), Drawing.Color.FromArgb(111, 147, 238), 45);
+        using var brush = new Drawing.Drawing2D.LinearGradientBrush(new Drawing.Rectangle(14, 14, 100, 100), Drawing.Color.FromArgb(192,
+            237, 255), Drawing.Color.FromArgb(111, 147, 238), 45);
         using var pen = new Drawing.Pen(brush, 6);
         graphics.DrawEllipse(pen, 17, 17, 94, 94);
         graphics.DrawEllipse(pen, 42, 17, 44, 94);

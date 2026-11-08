@@ -1,4 +1,4 @@
-// C#12 / WindowTiler.cs / Windows11. Reversible per-monitor tiling; no global input hook.
+// C# 12 / WindowTiler.cs / Windows 11. Tuilage réversible par moniteur ; aucun hook global d'entrée.
 using System.Diagnostics;
 using System;
 using System.Linq;
@@ -10,6 +10,10 @@ namespace PanneauxGlass;
 
 internal sealed partial class WindowTiler : IDisposable
 {
+    // Bouton de souris encore enfoncé : on repousse le tuilage jusqu'au relâchement.
+    const int DragRetryMs = 150;
+    // Filet de sécurité : resynchronise les fenêtres si un événement système a été manqué.
+    const int ResyncMs = 2000;
     [StructLayout(LayoutKind.Sequential)]
     internal struct Placement
     {
@@ -31,15 +35,20 @@ internal sealed partial class WindowTiler : IDisposable
     [DllImport("user32.dll")] static extern bool GetClientRect(IntPtr h, out Native.Rect rect);
     [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr h, ref Native.Point point);
     [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr h, int attribute, out int value, int size);
-    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int ExtendedBounds(IntPtr h, int attribute, out Native.Rect value, int size);
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid, uint thread, uint flags);
+    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int ExtendedBounds(IntPtr h, int attribute,
+        out Native.Rect value, int size);
+    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
+        uint thread, uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] static extern IntPtr BeginDeferWindowPos(int count);
-    [DllImport("user32.dll")] static extern IntPtr DeferWindowPos(IntPtr hdwp, IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
+    [DllImport("user32.dll")] static extern IntPtr DeferWindowPos(IntPtr hdwp, IntPtr h, IntPtr after, int x, int y, int cx, int cy,
+        uint flags);
     [DllImport("user32.dll")] static extern bool EndDeferWindowPos(IntPtr hdwp);
     delegate void WinEventProc(IntPtr hook, uint ev, IntPtr h, int idObject, int idChild, uint thread, uint time);
     const int AnimationMs = 120;
-    readonly Dictionary<IntPtr, Managed> managed = new(); readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(2000) }; readonly Func<IEnumerable<IntPtr>> source; readonly bool fixtureSource; bool enabled, disposed;
+    readonly Dictionary<IntPtr, Managed> managed = new(); readonly DispatcherTimer timer = new() {
+        Interval = TimeSpan.FromMilliseconds(ResyncMs) }; readonly Func<IEnumerable<IntPtr>> source; readonly bool fixtureSource;
+        bool enabled, disposed;
     sealed class Motion
     {
         internal Native.Rect From, To, Shadow; internal IntPtr Monitor; internal long Started; internal Native.Rect? Applied;
@@ -50,7 +59,7 @@ internal sealed partial class WindowTiler : IDisposable
     readonly HashSet<IntPtr> failing = new();
     readonly WinEventProc hookProc, nameProc; readonly List<IntPtr> hooks = new();
     internal uint ExcludedProcess;
-    // Outer frame minus visible DWM bounds, measured once when a target is set (not per animation frame).
+    // Cadre externe moins les bornes DWM visibles, mesuré une fois quand une cible est fixée (pas à chaque image d'animation).
     static Native.Rect Shadow(IntPtr h)
     {
         var visible = Visible(h);
@@ -63,8 +72,11 @@ internal sealed partial class WindowTiler : IDisposable
             Bottom = outer.Bottom - visible.Bottom
         };
     }
-    static (int x, int y, int w, int h) Box((IntPtr h, Native.Rect wanted, Native.Rect shadow) m) => (m.wanted.Left + m.shadow.Left, m.wanted.Top + m.shadow.Top, m.wanted.Right + m.shadow.Right - m.wanted.Left - m.shadow.Left, m.wanted.Bottom + m.shadow.Bottom - m.wanted.Top - m.shadow.Top);
-    // One DeferWindowPos batch per frame; falls back to per-window SetWindowPos (0x4014) if the batch fails. 0x4000 keeps the batch non-blocking on hung windows like the old path.
+    static (int x, int y, int w, int h) Box((IntPtr h, Native.Rect wanted, Native.Rect shadow) m) => (m.wanted.Left + m.shadow.Left,
+        m.wanted.Top + m.shadow.Top, m.wanted.Right + m.shadow.Right - m.wanted.Left - m.shadow.Left, m.wanted.Bottom
+        + m.shadow.Bottom - m.wanted.Top - m.shadow.Top);
+    // Un lot DeferWindowPos par image ; retombe sur SetWindowPos fenêtre par fenêtre (0x4014) si le lot échoue. 0x4000 garde le lot non
+    // bloquant sur les fenêtres figées, comme l'ancien chemin.
     void Apply(List<(IntPtr h, Native.Rect wanted, Native.Rect shadow)> list)
     {
         if (list.Count == 0)
@@ -84,7 +96,8 @@ internal sealed partial class WindowTiler : IDisposable
             else
                 failing.Add(m.h);
         }
-        // Windows that failed before (elevated/UIPI) are moved alone so they cannot sink the whole batch; if they still fail they are skipped.
+        // Les fenêtres qui ont déjà échoué (élevées/UIPI) sont déplacées seules pour qu'elles ne fassent pas couler tout le lot ; si elles
+        // échouent encore, elles sont ignorées.
         var good = list.Where(m => !failing.Contains(m.h)).ToList();
         foreach (var m in list.Where(m => failing.Contains(m.h)))
             Place(m);
@@ -128,12 +141,14 @@ internal sealed partial class WindowTiler : IDisposable
             var h = pair.Key;
             var motion = pair.Value;
             GetWindowThreadProcessId(h, out uint pid);
-            if (dragging || !managed.TryGetValue(h, out var item) || pid != item.Pid || !Native.IsWindow(h) || TaskbarNative.IsIconic(h) || IsZoomed(h))
+            if (dragging || !managed.TryGetValue(h, out var item) || pid != item.Pid || !Native.IsWindow(h) || TaskbarNative.IsIconic(h)
+                || IsZoomed(h))
             {
                 finished.Add(h);
                 continue;
             }
-            double t = Math.Clamp(Stopwatch.GetElapsedTime(motion.Started).TotalMilliseconds / AnimationMs, 0, 1), ease = 1 - Math.Pow(1 - t, 3);
+            double t = Math.Clamp(Stopwatch.GetElapsedTime(motion.Started).TotalMilliseconds / AnimationMs, 0, 1),
+                ease = 1 - Math.Pow(1 - t, 3);
             if (motion.Monitor != IntPtr.Zero)
             {
                 var mon = MonitorFromWindow(h, 2);
@@ -144,8 +159,10 @@ internal sealed partial class WindowTiler : IDisposable
                 }
             }
             int Lerp(int a, int b) => (int)Math.Round(a + (b - a) * ease);
-            var frame = t >= 1 ? motion.To : new Native.Rect { Left = Lerp(motion.From.Left, motion.To.Left), Top = Lerp(motion.From.Top, motion.To.Top), Right = Lerp(motion.From.Right, motion.To.Right), Bottom = Lerp(motion.From.Bottom, motion.To.Bottom) };
-            if (!(motion.Applied is Native.Rect applied && applied.Left == frame.Left && applied.Top == frame.Top && applied.Right == frame.Right && applied.Bottom == frame.Bottom))
+            var frame = t >= 1 ? motion.To : new Native.Rect { Left = Lerp(motion.From.Left, motion.To.Left), Top = Lerp(motion.From.Top,
+                motion.To.Top), Right = Lerp(motion.From.Right, motion.To.Right), Bottom = Lerp(motion.From.Bottom, motion.To.Bottom) };
+            if (!(motion.Applied is Native.Rect applied && applied.Left == frame.Left && applied.Top == frame.Top
+                && applied.Right == frame.Right && applied.Bottom == frame.Bottom))
             {
                 motion.Applied = frame;
                 batch.Add((h, frame, motion.Shadow));
@@ -168,9 +185,12 @@ internal sealed partial class WindowTiler : IDisposable
         nameProc = OnNameChange;
         timer.Tick += (_, _) => Tick();
         animation.Tick += (_, _) => Animate();
-        coalesce.Tick += (_, _) => { coalesce.Stop(); if ((GetAsyncKeyState(1) & 0x8000) != 0) { coalesce.Interval = TimeSpan.FromMilliseconds(150); coalesce.Start(); return; } coalesce.Interval = TimeSpan.FromMilliseconds(25); Tick(); };
+        coalesce.Tick += (_, _) => { coalesce.Stop(); if ((GetAsyncKeyState(1) & 0x8000) != 0) {
+            coalesce.Interval = TimeSpan.FromMilliseconds(DragRetryMs); coalesce.Start(); return;
+            } coalesce.Interval = TimeSpan.FromMilliseconds(25); Tick(); };
     }
-    // WinEvent hooks (out of context, UI thread): only top-level window events trigger one coalesced Tick ~25 ms later.
+    // Hooks WinEvent (hors contexte, thread UI) : seuls les événements de fenêtres de premier niveau déclenchent un Tick regroupé environ
+    // 25 ms plus tard.
     void OnWinEvent(IntPtr hook, uint ev, IntPtr h, int idObject, int idChild, uint thread, uint time)
     {
         if (enabled && ev == 0x0B && h != IntPtr.Zero && idObject == 0 && idChild == 0)
@@ -187,14 +207,14 @@ internal sealed partial class WindowTiler : IDisposable
         if (ev is 3 or 0x16 or 0x17 or 0x8001 or 0x8002 or 0x8017 or 0x8018)
             coalesce.Start();
     }
-    // EVENT_OBJECT_NAMECHANGE has its own hook (never widen the range above); near-free early exits.
+    // EVENT_OBJECT_NAMECHANGE a son propre hook (ne jamais élargir la plage au-dessus) ; sorties anticipées quasi gratuites.
     void OnNameChange(IntPtr hook, uint ev, IntPtr h, int idObject, int idChild, uint thread, uint time)
     {
         if (!enabled || idObject != 0 || idChild != 0 || coalesce.IsEnabled || h == IntPtr.Zero || managed.ContainsKey(h) || !Eligible(h))
             return;
         coalesce.Start();
     }
-    // The fixture source lives in our own process, so SKIPOWNPROCESS is only used on the real desktop path.
+    // La source de fixtures vit dans notre propre processus, donc SKIPOWNPROCESS n'est utilisé que sur le chemin du vrai bureau.
     void Hook()
     {
         if (hooks.Count > 0)
@@ -256,18 +276,22 @@ internal sealed partial class WindowTiler : IDisposable
             return false;
         if (DwmGetWindowAttribute(h, 14, out int cloaked, 4) == 0 && cloaked != 0)
             return false;
-        return !string.IsNullOrWhiteSpace(Native.Title(h)) && TaskbarNative.ClassName(h) is not ("Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd");
+        return !string.IsNullOrWhiteSpace(Native.Title(h))
+            && TaskbarNative.ClassName(h) is not ("Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd");
     }
     static Native.Rect Visible(IntPtr h)
     {
         TaskbarNative.GetWindowRect(h, out var rect);
         return ExtendedBounds(h, 9, out var frame, Marshal.SizeOf<Native.Rect>()) == 0 ? frame : rect;
     }
-    static bool Same(Native.Rect a, Native.Rect b) => Math.Abs(a.Left - b.Left) <= 2 && Math.Abs(a.Top - b.Top) <= 2 && Math.Abs(a.Right - b.Right) <= 2 && Math.Abs(a.Bottom - b.Bottom) <= 2;
+    static bool Same(Native.Rect a, Native.Rect b) => Math.Abs(a.Left - b.Left) <= 2 && Math.Abs(a.Top - b.Top) <= 2
+        && Math.Abs(a.Right - b.Right) <= 2 && Math.Abs(a.Bottom - b.Bottom) <= 2;
     static bool Fullscreen(IntPtr h, Forms.Screen screen)
     {
         var point = new Native.Point();
-        return GetClientRect(h, out var client) && ClientToScreen(h, ref point) && Math.Abs(point.X - screen.Bounds.Left) <= 2 && Math.Abs(point.Y - screen.Bounds.Top) <= 2 && Math.Abs(point.X + client.Right - screen.Bounds.Right) <= 2 && Math.Abs(point.Y + client.Bottom - screen.Bounds.Bottom) <= 2;
+        return GetClientRect(h, out var client) && ClientToScreen(h, ref point) && Math.Abs(point.X - screen.Bounds.Left) <= 2
+            && Math.Abs(point.Y - screen.Bounds.Top) <= 2 && Math.Abs(point.X + client.Right - screen.Bounds.Right) <= 2 && Math.Abs(point.Y
+            + client.Bottom - screen.Bounds.Bottom) <= 2;
     }
     internal static Native.Rect[] Layout(Native.Rect area, int count, int gap) => TileLogic.Layout(area, count, gap);
     internal void Tick()
@@ -347,7 +371,8 @@ internal sealed partial class WindowTiler : IDisposable
                         continue;
                     if (item.Constrained is Native.Rect constrained && Same(constrained, wanted))
                         continue;
-                    if (item.Placed && Same(item.Last, wanted) && ((current.Right - current.Left) > (wanted.Right - wanted.Left) + 2 || (current.Bottom - current.Top) > (wanted.Bottom - wanted.Top) + 2))
+                    if (item.Placed && Same(item.Last, wanted) && ((current.Right - current.Left) > (wanted.Right - wanted.Left) + 2
+                        || (current.Bottom - current.Top) > (wanted.Bottom - wanted.Top) + 2))
                     {
                         item.Constrained = wanted;
                         item.Last = current;

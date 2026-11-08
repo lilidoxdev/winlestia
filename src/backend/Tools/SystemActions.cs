@@ -1,11 +1,12 @@
-// language: C# 12, file: SystemActions.cs, target: Windows 11 / .NET 8, reversible system commands with explicit confirmation
+// C# 12, fichier SystemActions.cs, cible Windows 11 / .NET 8, commandes système réversibles avec confirmation explicite
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 
 namespace PanneauxGlass;
-// Every destructive command asks once, in the same glass layer, then runs. Nothing touches the user's files.
+// Chaque commande destructrice demande une fois, dans la même couche de verre, puis s'exécute. Rien ne touche aux fichiers de
+// l'utilisateur.
 internal static class SystemActions
 {
     [DllImport("user32.dll")] static extern bool LockWorkStation();
@@ -23,7 +24,8 @@ internal static class SystemActions
         if (!SetSuspendState(false, false, false))
             owner.Message("La mise en veille n’a pas pu être déclenchée sur ce PC.");
     }
-    internal static void Screenshot(Coordinator owner) => owner.LaunchWindowsShortcut(new WindowsShortcut { Name = "Capture", Target = "ms-screenclip:" });
+    internal static void Screenshot(Coordinator owner) => owner.LaunchWindowsShortcut(new WindowsShortcut { Name = "Capture",
+        Target = "ms-screenclip:" });
     internal static void TaskManager(Coordinator owner)
     {
         owner.CollapseImmediately();
@@ -31,7 +33,8 @@ internal static class SystemActions
     }
     internal static void EmptyBin(Coordinator owner)
     {
-        if (!owner.Confirm("Vider la corbeille ?\n\nLes fichiers qu’elle contient seront supprimés définitivement, sans passer par le Bureau."))
+        if (!owner.Confirm(
+            "Vider la corbeille ?\n\nLes fichiers qu’elle contient seront supprimés définitivement, sans passer par le Bureau."))
             return;
         int code = SHEmptyRecycleBin(IntPtr.Zero, null, 0x1 | 0x2 | 0x4);
         owner.ShowToast(code == 0 ? "Corbeille vidée" : "La corbeille est déjà vide");
@@ -60,7 +63,8 @@ internal static class SystemActions
         try
         {
             var parts = command.Split(' ', 2);
-            Process.Start(new ProcessStartInfo(parts[0], parts.Length > 1 ? parts[1] : "") { UseShellExecute = false, CreateNoWindow = true });
+            Process.Start(new ProcessStartInfo(parts[0], parts.Length > 1 ? parts[1] : "") { UseShellExecute = false, CreateNoWindow = true
+                });
         }
         catch (Exception ex) { owner.Message("La commande « " + command + " » n’a pas pu être lancée.\n" + ex.Message); }
     }

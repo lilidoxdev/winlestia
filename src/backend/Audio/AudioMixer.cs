@@ -95,7 +95,8 @@ internal sealed class AudioMixer : IDisposable
                             {
                                 using var process = Process.GetProcessById(pid);
                                 path = process.MainModule?.FileName ?? "";
-                                name = string.IsNullOrEmpty(path) ? process.ProcessName : FileVersionInfo.GetVersionInfo(path).FileDescription ?? process.ProcessName;
+                                name = string.IsNullOrEmpty(path) ? process.ProcessName
+                                    : FileVersionInfo.GetVersionInfo(path).FileDescription ?? process.ProcessName;
                             }
                             catch { name = "Application " + pid; }
                         }
@@ -138,7 +139,8 @@ internal sealed class AudioMixer : IDisposable
                     try
                     {
                         var gain = device.AudioEndpointVolume;
-                        result.Add(new(device.ID, device.FriendlyName, current == device.ID, Math.Round(gain.MasterVolumeLevelScalar * 100), gain.Mute, flow));
+                        result.Add(new(device.ID, device.FriendlyName, current == device.ID, Math.Round(gain.MasterVolumeLevelScalar * 100),
+                            gain.Mute, flow));
                     }
                     catch (System.Runtime.InteropServices.COMException)
                     {
@@ -147,7 +149,9 @@ internal sealed class AudioMixer : IDisposable
         }
         return result.OrderByDescending(d => d.selected).ThenBy(d => d.name).ToArray();
     }
-    bool MatchesMedia(string path) => !string.IsNullOrEmpty(MediaApp) && System.IO.Path.GetFileNameWithoutExtension(path).Equals(MediaApp switch { "Microsoft Edge" => "msedge", "Google Chrome" => "chrome", _ => MediaApp }, StringComparison.OrdinalIgnoreCase);
+    bool MatchesMedia(string path) => !string.IsNullOrEmpty(MediaApp)
+        && System.IO.Path.GetFileNameWithoutExtension(path).Equals(MediaApp switch { "Microsoft Edge" => "msedge", "Google Chrome"
+        => "chrome", _ => MediaApp }, StringComparison.OrdinalIgnoreCase);
     internal void SetMediaVolume(double value)
     {
         Refresh();

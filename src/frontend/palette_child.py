@@ -1,5 +1,6 @@
-# Python 3.12 / palette_child.py / Windows. Disposable palette worker: numpy/PIL/material_color_utilities live and die in this child, never in the resident frontend.
-# Usage: python palette_child.py '<json request>' -> prints the palette dict as JSON on stdout.
+# Python 3.12 / palette_child.py / Windows. Worker de palette jetable : numpy/PIL/material_color_utilities naissent et
+# meurent dans ce fils, jamais dans le frontend résident.
+# Usage : python palette_child.py '<requête json>' -> affiche le dict de palette en JSON sur stdout.
 import sys, json
 from pathlib import Path
 

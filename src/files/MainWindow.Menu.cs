@@ -1,6 +1,8 @@
-// Context menu adapted to what is under the pointer (background / file / folder / several items / drive), shortcuts shown on the right.
-// "Afficher plus d'options" (and Shift+F10, Shift+right-click) opens the native shell menu (ShowShellMenu) with every shell extension.
-// Also: Properties (Alt+Enter) and "Ouvrir avec...".
+// Menu contextuel adapté à ce qui est sous le pointeur (fond / fichier / dossier / plusieurs éléments / lecteur), raccourcis affichés à
+// droite.
+// « Afficher plus d'options » (et Maj+F10, Maj+clic droit) ouvre le menu natif du shell (ShowShellMenu) avec toutes les extensions du
+// shell.
+// Aussi : Propriétés (Alt+Entrée) et « Ouvrir avec... ».
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,10 +21,11 @@ internal enum CtxKind
 
 public sealed partial class MainWindow
 {
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern bool SHObjectProperties(IntPtr hwnd, uint type, string obj, string? page);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern bool SHObjectProperties(IntPtr hwnd, uint type, string obj,
+        string? page);
     [DllImport("shell32.dll")] static extern int SHMultiFileProperties(IntPtr dataObject, uint flags);
 
-    // Test hooks: what Properties was asked for, and "do not open the native window".
+    // Points d'injection de test : ce pour quoi Propriétés a été demandé, et « ne pas ouvrir la fenêtre native ».
     internal static bool PropertiesQuiet;
     internal static string LastProperties = "";
     internal static string LastOpenWith = "";
@@ -43,14 +46,16 @@ public sealed partial class MainWindow
     internal static CtxKind KindOf(IReadOnlyList<FileItem> sel, bool background) =>
         background || sel.Count == 0 ? CtxKind.Background : sel.Count > 1 ? CtxKind.Multi : sel[0].IsDir ? CtxKind.Folder : CtxKind.File;
 
-    // The menu model (no UI): ids are the Cx* constants, "\tShortcut" text is right-aligned by the system.
+    // Le modèle du menu (sans UI) : les ids sont les constantes Cx*, le texte « \tRaccourci » est aligné à droite par le système.
     internal List<NativeMenu.Item?> ContextItems(CtxKind kind, IReadOnlyList<FileItem> sel, string? drive = null)
     {
         var items = new List<NativeMenu.Item?>();
         var s = Active.Sort;
-        string undo = journal.NextUndo is { } u ? (u.Irreversible ? "Annuler (impossible : " + u.Why + ")" : "Annuler " + u.Label) : "Annuler";
+        string undo = journal.NextUndo is { } u ? (u.Irreversible ? "Annuler (impossible : " + u.Why + ")" : "Annuler " + u.Label)
+            : "Annuler";
         string redo = journal.NextRedo is { } r ? "Rétablir " + r.Label : "Rétablir";
-        bool pinned = kind == CtxKind.Background ? QuickAccess.IsPinned(Active.Location) : sel.Count > 0 && sel.All(i => QuickAccess.IsPinned(i.FullPath));
+        bool pinned = kind == CtxKind.Background ? QuickAccess.IsPinned(Active.Location) : sel.Count > 0 && sel.All(i
+            => QuickAccess.IsPinned(i.FullPath));
         void Shell()
         {
             items.Add(null);
@@ -71,13 +76,17 @@ public sealed partial class MainWindow
                 items.Add(new(CxPaste, "Coller\tCtrl+V", false, !ClipboardHasFiles()));
                 items.Add(null);
                 items.Add(new(0, "Trier par", false, false, new NativeMenu.Item?[] {
-                    new(CxSortBase + 0, "Nom", s.Column == SortColumn.Name), new(CxSortBase + 1, "Date de modification", s.Column == SortColumn.Modified),
-                    new(CxSortBase + 2, "Type", s.Column == SortColumn.Type), new(CxSortBase + 3, "Taille", s.Column == SortColumn.Size), null,
+                    new(CxSortBase + 0, "Nom", s.Column == SortColumn.Name), new(CxSortBase + 1, "Date de modification",
+                        s.Column == SortColumn.Modified),
+                    new(CxSortBase + 2, "Type", s.Column == SortColumn.Type), new(CxSortBase + 3, "Taille", s.Column == SortColumn.Size),
+                        null,
                     new(CxSortBase + 4, "Croissant", s.Ascending), new(CxSortBase + 5, "Décroissant", !s.Ascending), null,
                     new(CxSortBase + 6, "Dossiers en premier", s.FoldersFirst), null, new(CxSortBase + 7, "Rétablir le tri par défaut") }));
                 items.Add(new(0, "Affichage", false, false, new NativeMenu.Item?[] {
-                    new(CxViewBase + 0, "Liste\tCtrl+Maj+5", view == ViewMode.List), new(CxViewBase + 1, "Détails\tCtrl+Maj+6", view == ViewMode.Details),
-                    new(CxViewBase + 2, "Icônes moyennes\tCtrl+Maj+3", view == ViewMode.Medium), new(CxViewBase + 3, "Grandes icônes\tCtrl+Maj+2", view == ViewMode.Large) }));
+                    new(CxViewBase + 0, "Liste\tCtrl+Maj+5", view == ViewMode.List), new(CxViewBase + 1, "Détails\tCtrl+Maj+6",
+                        view == ViewMode.Details),
+                    new(CxViewBase + 2, "Icônes moyennes\tCtrl+Maj+3", view == ViewMode.Medium), new(CxViewBase + 3,
+                        "Grandes icônes\tCtrl+Maj+2", view == ViewMode.Large) }));
                 items.Add(new(CxRefresh, "Actualiser\tF5"));
                 items.Add(null);
                 items.Add(new(CxUndo, undo + "\tCtrl+Z", false, journal.NextUndo == null));
@@ -116,7 +125,8 @@ public sealed partial class MainWindow
         if (renaming != null || activeView == null)
             return;
         var tab = Active;
-        if (drive == null && (tab.Location.Length == 0 || ThisPc.Is(tab.Location) || tab.State is LoadState.Denied or LoadState.NotFound or LoadState.Failed))
+        if (drive == null && (tab.Location.Length == 0 || ThisPc.Is(tab.Location)
+            || tab.State is LoadState.Denied or LoadState.NotFound or LoadState.Failed))
             return;
         bool shift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
         if (shift && drive == null)
@@ -125,7 +135,8 @@ public sealed partial class MainWindow
             return;
         }
         bool keyboard = source == null;
-        bool onItem = keyboard ? list.SelectedItems.Count > 0 : source != null && System.Windows.Controls.ItemsControl.ContainerFromElement(list, source) is System.Windows.Controls.ListBoxItem;
+        bool onItem = keyboard ? list.SelectedItems.Count > 0 : source != null
+            && System.Windows.Controls.ItemsControl.ContainerFromElement(list, source) is System.Windows.Controls.ListBoxItem;
         if (!keyboard && !onItem)
             list.UnselectAll();
         var sel = onItem ? Selection() : new List<FileItem>();
@@ -134,7 +145,7 @@ public sealed partial class MainWindow
             Fire(() => RunContext(id, sel, !onItem, drive));
     }
 
-    // Executes a menu id (also what the self-test calls).
+    // Exécute un id de menu (ce qu'appelle aussi l'auto-test).
     internal async Task RunContext(uint id, IReadOnlyList<FileItem> sel, bool background, string? drive = null)
     {
         if (id >= CxSortBase && id < CxSortBase + 8)
@@ -274,9 +285,9 @@ public sealed partial class MainWindow
         }
     }
 
-    // ---- properties / open with ----------------------------------------------------------------------------------------
+    // ---- propriétés / ouvrir avec ----------------------------------------------------------------------------------------
 
-    // Nothing selected = the current folder; one path = its property sheet; several = the shell's multi-file sheet.
+    // Rien de sélectionné = le dossier courant ; un chemin = sa feuille de propriétés ; plusieurs = la feuille multi-fichiers du shell.
     internal void ShowProperties(IReadOnlyList<string>? paths = null)
     {
         paths ??= Selection().Select(i => i.FullPath).ToList();

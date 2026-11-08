@@ -1,5 +1,6 @@
-// Minimal stand-ins for the backend types that the linked Tokens.cs / UiTokens.cs depend on
-// (Theme, Store, ThemeDefinition, WallpaperMonitor, UI helpers, Motion). Palette starts as M3Palette.DarkDefault(), swapped by PaletteLoader.
+// Substituts minimaux des types du backend dont dépendent Tokens.cs / UiTokens.cs liés
+// (Theme, Store, ThemeDefinition, WallpaperMonitor, aides UI, Motion). Palette démarre à M3Palette.DarkDefault(), remplacée par
+// PaletteLoader.
 using System;
 using System.IO;
 using System.Text.Json;
@@ -18,7 +19,7 @@ internal sealed class WallpaperMonitor
 {
     public int x, y; public string? path, background; public long modified;
 }
-// Same JSON keys as the backend Preferences (preferences-glass.json): only what the palette decision tree needs.
+// Mêmes clés JSON que les Preferences du backend (preferences-glass.json) : seulement ce dont l'arbre de décision de la palette a besoin.
 internal sealed class Preferences
 {
     public bool? ReducedEffects
@@ -63,15 +64,18 @@ internal sealed class CurrentTheme
 internal static class Theme
 {
     internal static readonly CurrentTheme Current = new();
-    internal static Color Mix(Color a, Color b, double t) => Color.FromRgb((byte)Math.Round(a.R + (b.R - a.R) * t), (byte)Math.Round(a.G + (b.G - a.G) * t), (byte)Math.Round(a.B + (b.B - a.B) * t));
+    internal static Color Mix(Color a, Color b, double t) => Color.FromRgb((byte)Math.Round(a.R + (b.R - a.R) * t), (byte)Math.Round(a.G
+        + (b.G - a.G) * t), (byte)Math.Round(a.B + (b.B - a.B) * t));
 }
 
-// Same install folder as the backend (Glass-v5): reducedEffects is read from its preferences file.
+// Même dossier d'installation que le backend (Glass-v5) : reducedEffects est lu dans son fichier de préférences.
 internal static class Store
 {
     internal static string Root = AppDomain.CurrentDomain.BaseDirectory;
-    // User data dir shared with the backend (same rule, same env var): %LOCALAPPDATA%\Panneaux. Not created here (the backend owns it).
-    internal static string DataDir = Environment.GetEnvironmentVariable("WINLESTIA_DATA_DIR") is { Length: > 0 } d ? d : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Panneaux");
+    // Dossier de données utilisateur partagé avec le backend (même règle, même variable d'environnement) : %LOCALAPPDATA%\Panneaux. Pas
+    // créé ici (le backend en est propriétaire).
+    internal static string DataDir = Environment.GetEnvironmentVariable("WINLESTIA_DATA_DIR") is { Length: > 0 } d ? d
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Panneaux");
     internal static Preferences State = Load();
     internal static void Reload() => State = Load();
     static Preferences Load()
@@ -79,9 +83,12 @@ internal static class Store
         var prefs = new Preferences();
         try
         {
-            string path = Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_FILE") is { Length: > 0 } over ? over : Path.Combine(DataDir, "preferences-glass.json");   // override: tests only
+            // override: tests only
+            string path = Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_FILE") is { Length: > 0 } over ? over
+                : Path.Combine(DataDir, "preferences-glass.json");
             if (File.Exists(path))
-                prefs = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(path), new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? prefs;
+                prefs = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(path), new JsonSerializerOptions {
+                    PropertyNameCaseInsensitive = true }) ?? prefs;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -93,10 +100,11 @@ internal static class Store
 
 internal static partial class UI
 {
-    // Repaints every live token brush in place after Theme.Current.Set (RepaintTokens lives in UiTokens.cs).
+    // Repeint sur place chaque pinceau de jeton vivant après Theme.Current.Set (RepaintTokens vit dans UiTokens.cs).
     internal static void RepaintAll() => RepaintTokens();
     internal static SolidColorBrush White => T(M3Role.OnSurface);
-    // Files-only palette tokens (live, repainted by RepaintAll): panels from surfaceContainer, recess from surfaceHigh, hover tinted with primary.
+    // Jetons de palette propres à Files (vivants, repeints par RepaintAll) : panneaux depuis surfaceContainer, creux depuis surfaceHigh,
+    // survol teinté de primary.
     internal static SolidColorBrush Panel => T(M3Role.SurfaceContainer, 0xF2);
     internal static SolidColorBrush Recess => T(M3Role.SurfaceHigh);
     internal static SolidColorBrush Tint => T(M3Role.Primary, 40);
@@ -127,7 +135,7 @@ internal static partial class UI
         b.Click += (_, _) => action();
         return b;
     }
-    // Flat rounded button with a hover layer; content is a string or an element.
+    // Bouton plat arrondi avec couche de survol ; le contenu est une chaîne ou un élément.
     internal static Button Flat(object content, double size, CornerRadius radius, Brush? rest = null)
     {
         var border = new FrameworkElementFactory(typeof(Border));

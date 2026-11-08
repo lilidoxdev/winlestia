@@ -1,4 +1,4 @@
-# Python 3.12 / capture_native.py / Qt 6. In-memory capture and matching annotation export.
+# Python 3.12 / capture_native.py / Qt 6. Capture en mémoire et export des annotations correspondantes.
 from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot, Property, QRect, QPointF, Qt
 from PySide6.QtGui import QImage, QPainter, QPen, QColor, QGuiApplication
 from PySide6.QtQuick import QQuickImageProvider

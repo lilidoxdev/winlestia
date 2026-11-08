@@ -1,4 +1,4 @@
-// language: C# 12, file: FocusTimer.cs, target: Windows 11 / .NET 8 WPF, small always-on-top focus countdown
+// C# 12, fichier FocusTimer.cs, cible Windows 11 / .NET 8 WPF, petit compte à rebours de concentration toujours au premier plan
 using System;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -7,7 +7,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace PanneauxGlass;
-// A countdown is a window, not a background task: closing it stops everything.
+// Un compte à rebours est une fenêtre, pas une tâche d'arrière-plan : la fermer arrête tout.
 internal sealed class FocusTimer : GlassWindow
 {
     static FocusTimer? active;
@@ -17,7 +17,8 @@ internal sealed class FocusTimer : GlassWindow
     internal static string DurationText(int seconds)
     {
         var span = TimeSpan.FromSeconds(Math.Max(0, seconds));
-        return span.TotalHours >= 1 ? ((int)span.TotalHours) + " h " + span.Minutes.ToString("00") + " min" : span.Minutes > 0 ? span.Minutes + " min " + span.Seconds.ToString("00") + " s" : span.Seconds + " s";
+        return span.TotalHours >= 1 ? ((int)span.TotalHours) + " h " + span.Minutes.ToString("00") + " min" : span.Minutes > 0
+            ? span.Minutes + " min " + span.Seconds.ToString("00") + " s" : span.Seconds + " s";
     }
     internal static void Start(Coordinator owner, int seconds)
     {
@@ -83,7 +84,8 @@ internal sealed class FocusTimer : GlassWindow
         if (left < 0)
             left = 0;
         var span = TimeSpan.FromSeconds(left);
-        remaining.Text = span.TotalHours >= 1 ? ((int)span.TotalHours) + ":" + span.Minutes.ToString("00") + ":" + span.Seconds.ToString("00") : span.Minutes.ToString("00") + ":" + span.Seconds.ToString("00");
+        remaining.Text = span.TotalHours >= 1 ? ((int)span.TotalHours) + ":" + span.Minutes.ToString("00") + ":"
+            + span.Seconds.ToString("00") : span.Minutes.ToString("00") + ":" + span.Seconds.ToString("00");
         Draw();
     }
     void Draw()

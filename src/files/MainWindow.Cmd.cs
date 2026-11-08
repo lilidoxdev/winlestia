@@ -1,5 +1,7 @@
-// Command bar above the list (Nouveau, Couper, Copier, Coller, Renommer, Copier le chemin, Supprimer, Trier, Affichage, Annuler) and the status bar below it
-// (counts, selection size, quick actions while something is selected). Every colour is a live palette token; a disabled command uses the outline role (never opacity).
+// Barre de commandes au-dessus de la liste (Nouveau, Couper, Copier, Coller, Renommer, Copier le chemin, Supprimer, Trier, Affichage,
+// Annuler) et barre d'état en dessous
+// (compteurs, taille de la sélection, actions rapides quand quelque chose est sélectionné). Chaque couleur est un jeton de palette vivant ;
+// une commande désactivée utilise le rôle outline (jamais l'opacité).
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -17,10 +19,12 @@ public sealed partial class MainWindow
     [DllImport("user32.dll")] static extern bool IsClipboardFormatAvailable(uint format);
     const int WM_CLIPBOARDUPDATE_CMD = 0x031D;
 
-    // One command: icon + optional label (+ chevron for menus). The Button is not focusable so the keyboard shortcuts keep working after a click.
+    // Une commande : icône + libellé facultatif (+ chevron pour les menus). Le Button n'est pas focalisable pour que les raccourcis clavier
+    // fonctionnent encore après un clic.
     sealed class Cmd
     {
-        internal readonly Button Button; internal readonly TextBlock Label; readonly TextBlock glyph; readonly Func<bool> enabled; readonly bool accent, small;
+        internal readonly Button Button; internal readonly TextBlock Label; readonly TextBlock glyph; readonly Func<bool> enabled;
+            readonly bool accent, small;
         internal bool Hot, Down;
         internal Cmd(string glyphCode, string? text, string tip, bool chevron, bool small, bool accent, Action click, Func<bool> enabled)
         {
@@ -122,7 +126,8 @@ public sealed partial class MainWindow
             row.Children.Add(c.Button);
             return c;
         }
-        void Sep() => row.Children.Add(new Border { Width = 1, Height = 20, Margin = new Thickness(M3.Pad2, 0, M3.Pad2, 0), Background = UI.Hairline, SnapsToDevicePixels = true });
+        void Sep() => row.Children.Add(new Border { Width = 1, Height = 20, Margin = new Thickness(M3.Pad2, 0, M3.Pad2, 0),
+            Background = UI.Hairline, SnapsToDevicePixels = true });
         Add("", "Nouveau", "Nouveau dossier (Ctrl+Maj+N)", () => Fire(NewFolderAsync), () => RealFolder, false, true);
         Sep();
         Add("", null, "Couper (Ctrl+X)", () => CopySelected(true), () => RealFolder && SelCount > 0);
@@ -132,10 +137,12 @@ public sealed partial class MainWindow
         Add("", null, "Copier le chemin (Ctrl+Maj+C)", () => CopyPaths(Selection()), () => SelCount > 0);
         Add("", null, "Supprimer (Suppr)", () => Fire(() => DeleteSelectedAsync(false)), () => RealFolder && SelCount > 0);
         Sep();
-        var sort = Add("", "Trier", "Trier (clic droit sur l'en-tête : colonnes) - inclut « Rétablir le tri par défaut »", ShowSortMenu, () => RealFolder, true);
+        var sort = Add("", "Trier", "Trier (clic droit sur l'en-tête : colonnes) - inclut « Rétablir le tri par défaut »", ShowSortMenu, ()
+            => RealFolder, true);
         sortButton = sort.Button;
         Add("", "Affichage", "Affichage : Liste, Détails, Icônes", ShowViewMenu, () => RealFolder, true);
-        cmdUndo = new Cmd("", null, "Annuler (Ctrl+Z)", false, false, false, () => Fire(() => UndoAsync()), () => journal.NextUndo != null);
+        cmdUndo = new Cmd("", null, "Annuler (Ctrl+Z)", false, false, false, () => Fire(() => UndoAsync()), ()
+            => journal.NextUndo != null);
         cmds.Add(cmdUndo);
 
         var grid = new Grid { Height = 44 };
@@ -146,12 +153,14 @@ public sealed partial class MainWindow
         Grid.SetColumn(cmdUndo.Button, 1);
         grid.Children.Add(row);
         grid.Children.Add(cmdUndo.Button);
-        grid.SizeChanged += (_, e) => { bool compact = e.NewSize.Width < 640; foreach (var c in cmds) c.SetCompact(compact); foreach (var c in quickCmds) c.SetCompact(e.NewSize.Width < 800); };
+        grid.SizeChanged += (_, e) => { bool compact = e.NewSize.Width < 640; foreach (var c in cmds) c.SetCompact(compact);
+            foreach (var c in quickCmds) c.SetCompact(e.NewSize.Width < 800); };
         journal.Changed += () => Dispatcher.BeginInvoke(UpdateCommands);
         Activated += (_, _) => UpdateCommands();
         SourceInitialized += (_, _) => HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(CmdHook);
         UpdateCommands();
-        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 0, 0, 1), SnapsToDevicePixels = true };
+        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 0, 0, 1), SnapsToDevicePixels = true
+            };
     }
 
     IntPtr CmdHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -169,8 +178,10 @@ public sealed partial class MainWindow
             return;
         foreach (var c in cmds)
             c.Refresh();
-        cmdUndo.Button.ToolTip = journal.NextUndo is { } u ? (u.Irreversible ? "Annuler (impossible : " + u.Why + ")" : "Annuler " + u.Label + " (Ctrl+Z)") : "Annuler (Ctrl+Z) : rien à annuler";
-        cmdPaste.Button.ToolTip = cmdPaste.Button.IsEnabled ? "Coller (Ctrl+V)" : "Coller (Ctrl+V) : le presse-papiers ne contient aucun fichier";
+        cmdUndo.Button.ToolTip = journal.NextUndo is { } u ? (u.Irreversible ? "Annuler (impossible : " + u.Why + ")" : "Annuler " + u.Label
+            + " (Ctrl+Z)") : "Annuler (Ctrl+Z) : rien à annuler";
+        cmdPaste.Button.ToolTip = cmdPaste.Button.IsEnabled ? "Coller (Ctrl+V)"
+            : "Coller (Ctrl+V) : le presse-papiers ne contient aucun fichier";
     }
 
     void ShowViewMenu()
@@ -182,7 +193,7 @@ public sealed partial class MainWindow
             SetView((ViewMode)(id - 1));
     }
 
-    // Status bar: counts on the left, quick actions for the current selection, the four view buttons on the right.
+    // Barre d'état : compteurs à gauche, actions rapides pour la sélection courante, les quatre boutons d'affichage à droite.
     FrameworkElement StatusBar()
     {
         var grid = new Grid { Height = 34 };
@@ -192,7 +203,8 @@ public sealed partial class MainWindow
         status.Margin = new Thickness(M3.Sp3, 0, M3.Sp3, 0);
         status.VerticalAlignment = VerticalAlignment.Center;
         status.TextTrimming = TextTrimming.CharacterEllipsis;
-        selActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
+        selActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center,
+            Visibility = Visibility.Collapsed };
         void Quick(string g, string text, string tip, Action a)
         {
             var c = new Cmd(g, text, tip, false, true, false, a, () => true);
@@ -208,11 +220,13 @@ public sealed partial class MainWindow
         grid.Children.Add(status);
         grid.Children.Add(selActions);
         grid.Children.Add(viewBar);
-        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 1, 0, 0), SnapsToDevicePixels = true };
+        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 1, 0, 0), SnapsToDevicePixels = true
+            };
     }
 
     static string FormatBytes(long size) => size < 1024 ? size + " o" : size < 1024 * 1024 ? Math.Ceiling(size / 1024.0) + " Ko"
-        : size < 1024L * 1024 * 1024 ? (size / 1048576.0).ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " Mo" : (size / 1073741824.0).ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " Go";
+        : size < 1024L * 1024 * 1024 ? (size / 1048576.0).ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " Mo"
+            : (size / 1073741824.0).ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " Go";
 
     // "N sélectionnés — taille totale" (files only: a folder size would need a recursive walk, which is never done here).
     string SelectionSummary(int m)
@@ -231,12 +245,13 @@ public sealed partial class MainWindow
         return " — " + FormatBytes(total) + (dirs > 0 ? " (hors dossiers)" : "");
     }
 
-    // The search field names the folder it searches.
+    // Le champ de recherche nomme le dossier qu'il parcourt.
     void UpdateSearchHint(string location)
     {
         if (searchHint == null)
             return;
-        string name = ThisPc.Is(location) ? ThisPc.Label : System.IO.Path.GetFileName(location.TrimEnd('\\', '/')) is { Length: > 0 } leaf ? leaf : location;
+        string name = ThisPc.Is(location) ? ThisPc.Label : System.IO.Path.GetFileName(location.TrimEnd('\\', '/')) is { Length: > 0 } leaf
+            ? leaf : location;
         searchHint.Text = "Rechercher dans " + name;
     }
 }

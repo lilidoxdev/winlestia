@@ -1,4 +1,5 @@
-// C# 12 / CliCommands.cs / Pure parsing and allow-list for the `winlestia` command line. No I/O besides the injected file check.
+// C# 12 / CliCommands.cs / Analyse pure et liste blanche de la ligne de commande `winlestia`. Aucune E/S hors vérification de fichier
+// injectée.
 using System;
 using System.IO;
 using System.Linq;
@@ -7,7 +8,8 @@ namespace PanneauxGlass;
 
 internal enum CliKind
 {
-    Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, WallpaperList, Palette, FindWindows, FindFiles, Brightness, BrightnessSet, Visualizer, Quiet, Wifi
+    Help, Status, Panel, DesktopNext, DesktopPrev, DesktopNew, DesktopGo, Wallpaper, WallpaperList, Palette, FindWindows, FindFiles,
+        Brightness, BrightnessSet, Visualizer, Quiet, Wifi
 }
 
 internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0, int Value = 0);
@@ -26,16 +28,20 @@ internal static class CliCommands
         "  desktop next|prev|new|<n>    switch virtual desktop (n starts at 1) or create one\n" +
         "  wallpaper <path>             set the wallpaper to an existing image file\n" +
         "  wallpaper <path> --display <id>  set it on one display only (ids from 'wallpaper list')\n" +
-        "  wallpaper list               print {\"displays\":[{\"id\":n,\"name\":s,\"path\":s}],\"animated\":[s]} (animated wallpaper software running)\n" +
+        "  wallpaper list               print {\"displays\":[{\"id\":n,\"name\":s,\"path\":s}],\"animated\":[s]}\n" +
+        "                               (animated wallpaper software running)\n" +
         "  palette                      open the quick command palette\n" +
         "  find windows                 print {\"count\":n} for the open windows (no titles)\n" +
         "  find files <term>            print {\"count\":n,\"indexAvailable\":b} for the Windows index (no paths)\n" +
         "  brightness                   print the displays as JSON [{\"id\":n,\"name\":s,\"value\":0-100,\"available\":b}]\n" +
         "  brightness <id> <0-100>      set the brightness of one display (DDC/CI)\n" +
-        "  visualizer                   print {\"running\":b,\"frames\":n,\"panelOpen\":b,\"wanted\":b} for the dashboard audio bars (frames since the last start)\n" +
+        "  visualizer                   print {\"running\":b,\"frames\":n,\"panelOpen\":b,\"wanted\":b} for the dashboard audio bars\n" +
+        "                               (frames since the last start)\n" +
         "  quiet                        print {\"quiet\":b,\"forced\":\"auto|on|off\",\"detected\":b} for the fullscreen quiet mode\n" +
-        "  quiet on|off|auto            force the quiet mode without a fullscreen window (not saved: back to auto when the shell restarts)\n" +
-        "  wifi                         print {\"available\":b,\"connected\":b,\"networks\":n,\"reason\":s} for the Wi-Fi (read-only, no network name)\n" +
+        "  quiet on|off|auto            force the quiet mode without a fullscreen window\n" +
+        "                               (not saved: back to auto when the shell restarts)\n" +
+        "  wifi                         print {\"available\":b,\"connected\":b,\"networks\":n,\"reason\":s} for the Wi-Fi\n" +
+        "                               (read-only, no network name)\n" +
         "  help                         show this text\n" +
         "Exit codes: 0 success, 1 refused by the shell, 2 unknown command or bad argument, 3 shell not running.";
 
@@ -156,7 +162,8 @@ internal static class CliCommands
                 command = new(CliKind.WallpaperList);
                 return true;
             case "wallpaper" when args.Length >= 2 && (args[1] ?? "").ToLowerInvariant() == "--display":
-                error = args.Length == 2 ? "--display needs an image path first, then a display id: wallpaper <path> --display <id>." : "--display must come after the image path: wallpaper <path> --display <id>.";
+                error = args.Length == 2 ? "--display needs an image path first, then a display id: wallpaper <path> --display <id>."
+                    : "--display must come after the image path: wallpaper <path> --display <id>.";
                 return false;
             case "wallpaper" when args.Length == 3 && (args[2] ?? "").ToLowerInvariant() == "--display":
                 error = "--display needs a display id (see 'winlestia wallpaper list').";
@@ -180,7 +187,8 @@ internal static class CliCommands
         return false;
     }
 
-    // Absolute local path, image extension, existing file. UNC and device paths are refused (no network authentication triggered by a script).
+    // Chemin local absolu, extension d'image, fichier existant. Les chemins UNC et périphériques sont refusés
+    // (un script ne doit pas déclencher d'authentification réseau).
     internal static bool ValidWallpaper(string? path, Func<string, bool> fileExists, out string error)
     {
         error = "";
@@ -189,7 +197,8 @@ internal static class CliCommands
             error = "Wallpaper path is empty or too long.";
             return false;
         }
-        if (path.StartsWith(@"\\") || path.StartsWith("//") || path.IndexOf('\0') >= 0 || path.IndexOf(':', 2) >= 0 || !Path.IsPathFullyQualified(path))
+        if (path.StartsWith(@"\\") || path.StartsWith("//") || path.IndexOf('\0') >= 0 || path.IndexOf(':', 2) >= 0
+            || !Path.IsPathFullyQualified(path))
         {
             error = "Wallpaper path must be a local absolute path.";
             return false;

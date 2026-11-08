@@ -1,6 +1,7 @@
-// language: C# 12, file: MonitorDisplays.cs, target: Windows 11 / .NET 8, DDC/CI brightness of every display (internal and external)
-// Reads: opening of the panel, then every BrightnessPolicy.RefreshSeconds while open; cached per display. Writes: one worker per display, 120 ms spacing, latest value wins.
-// Every dxva2 call goes through the shared `gate` of MonitorBrightness, so a read never overlaps a write.
+// C# 12, fichier MonitorDisplays.cs, cible Windows 11 / .NET 8, luminosité DDC/CI de chaque écran (interne et externe)
+// Lectures : à l'ouverture du panneau, puis toutes les BrightnessPolicy.RefreshSeconds tant qu'il est ouvert ; mises en cache par écran.
+// Écritures : un worker par écran, espacées de 120 ms, la dernière valeur l'emporte.
+// Tout appel dxva2 passe par le `gate` partagé de MonitorBrightness : une lecture ne chevauche jamais une écriture.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,8 @@ internal static partial class MonitorBrightness
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     struct MonitorInfoEx
     {
-        public uint Size; public int L1, T1, R1, B1, L2, T2, R2, B2; public uint Flags; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string Device;
+        public uint Size; public int L1, T1, R1, B1, L2, T2, R2, B2; public uint Flags; [MarshalAs(UnmanagedType.ByValTStr,
+            SizeConst = 32)] public string Device;
     }
     [StructLayout(LayoutKind.Sequential)]
     struct ConfigHeader
@@ -31,18 +33,22 @@ internal static partial class MonitorBrightness
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     struct TargetName
     {
-        public ConfigHeader Header; public uint Flags, Technology; public ushort Manufacturer, Product; public uint Connector; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string Name; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string Path;
+        public ConfigHeader Header; public uint Flags, Technology; public ushort Manufacturer, Product; public uint Connector;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string Name; [MarshalAs(UnmanagedType.ByValTStr,
+            SizeConst = 128)] public string Path;
     }
     [DllImport("user32.dll")] static extern bool EnumDisplayMonitors(IntPtr dc, IntPtr clip, EnumProc proc, IntPtr data);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfoEx info);
     [DllImport("user32.dll")] static extern int GetDisplayConfigBufferSizes(uint flags, out uint paths, out uint modes);
-    [DllImport("user32.dll")] static extern int QueryDisplayConfig(uint flags, ref uint paths, byte[] pathInfo, ref uint modes, byte[] modeInfo, IntPtr topology);
+    [DllImport("user32.dll")] static extern int QueryDisplayConfig(uint flags, ref uint paths, byte[] pathInfo, ref uint modes,
+        byte[] modeInfo, IntPtr topology);
     [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")] static extern int GetSourceName(ref SourceName info);
     [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")] static extern int GetTargetName(ref TargetName info);
 
     sealed class DisplayState
     {
-        public string Name = ""; public double Value; public bool HasValue, Present, Writing; public int Failures; public double? Pending, Asked; public long LastWrite = -1_000_000; public List<TaskCompletionSource<bool>> Waiters = new();
+        public string Name = ""; public double Value; public bool HasValue, Present, Writing; public int Failures; public double? Pending,
+            Asked; public long LastWrite = -1_000_000; public List<TaskCompletionSource<bool>> Waiters = new();
     }
     static readonly object sync = new();
     static readonly Dictionary<int, DisplayState> displays = new();
@@ -51,7 +57,9 @@ internal static partial class MonitorBrightness
     static List<(int id, IntPtr monitor)> Screens()
     {
         var found = new List<(int, IntPtr)>();
-        EnumProc proc = (monitor, _, _, _) => { var info = new MonitorInfoEx { Size = (uint)Marshal.SizeOf<MonitorInfoEx>(), Device = "" }; if (GetMonitorInfo(monitor, ref info)) { int id = BrightnessPolicy.IdFromDevice(info.Device); if (id > 0 && found.All(f => f.Item1 != id)) found.Add((id, monitor)); } return true; };
+        EnumProc proc = (monitor, _, _, _) => { var info = new MonitorInfoEx { Size = (uint)Marshal.SizeOf<MonitorInfoEx>(), Device = "" };
+            if (GetMonitorInfo(monitor, ref info)) { int id = BrightnessPolicy.IdFromDevice(info.Device); if (id > 0 && found.All(f
+            => f.Item1 != id)) found.Add((id, monitor)); } return true; };
         try
         {
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, proc, IntPtr.Zero);
@@ -78,8 +86,12 @@ internal static partial class MonitorBrightness
             for (int i = 0; i < np; i++)
             {
                 int o = i * 72;
-                var source = new SourceName { Header = new ConfigHeader { Type = 1, Size = (uint)Marshal.SizeOf<SourceName>(), LuidLow = BitConverter.ToUInt32(paths, o), LuidHigh = BitConverter.ToInt32(paths, o + 4), Id = BitConverter.ToUInt32(paths, o + 8) }, Device = "" };
-                var target = new TargetName { Header = new ConfigHeader { Type = 2, Size = (uint)Marshal.SizeOf<TargetName>(), LuidLow = BitConverter.ToUInt32(paths, o + 20), LuidHigh = BitConverter.ToInt32(paths, o + 24), Id = BitConverter.ToUInt32(paths, o + 28) }, Name = "", Path = "" };
+                var source = new SourceName { Header = new ConfigHeader { Type = 1, Size = (uint)Marshal.SizeOf<SourceName>(),
+                    LuidLow = BitConverter.ToUInt32(paths, o), LuidHigh = BitConverter.ToInt32(paths, o + 4),
+                    Id = BitConverter.ToUInt32(paths, o + 8) }, Device = "" };
+                var target = new TargetName { Header = new ConfigHeader { Type = 2, Size = (uint)Marshal.SizeOf<TargetName>(),
+                    LuidLow = BitConverter.ToUInt32(paths, o + 20), LuidHigh = BitConverter.ToInt32(paths, o + 24),
+                    Id = BitConverter.ToUInt32(paths, o + 28) }, Name = "", Path = "" };
                 if (GetSourceName(ref source) != 0 || GetTargetName(ref target) != 0)
                     continue;
                 int id = BrightnessPolicy.IdFromDevice(source.Device);
@@ -113,7 +125,7 @@ internal static partial class MonitorBrightness
         }
         finally { if (monitors.Length > 0) DestroyPhysicalMonitors((uint)monitors.Length, monitors); }
     }
-    // Display unplugged since the last enumeration: simply false, no exception.
+    // Écran débranché depuis le dernier recensement : simplement false, sans exception.
     static bool WriteNow(int id, double percent)
     {
         foreach (var (screen, monitor) in Screens())
@@ -133,11 +145,12 @@ internal static partial class MonitorBrightness
         return false;
     }
 
-    // Cached view of the displays seen by the last read (name empty when the model is unknown).
+    // Vue en cache des écrans vus par la dernière lecture (nom vide quand le modèle est inconnu).
     internal static IReadOnlyList<DisplayBrightness> Displays()
     {
         lock (sync)
-            return displays.Where(d => d.Value.Present).OrderBy(d => d.Key).Select(d => new DisplayBrightness(d.Key, d.Value.Name, d.Value.Value, d.Value.HasValue && !BrightnessPolicy.Unavailable(d.Value.Failures))).ToList();
+            return displays.Where(d => d.Value.Present).OrderBy(d => d.Key).Select(d => new DisplayBrightness(d.Key, d.Value.Name,
+                d.Value.Value, d.Value.HasValue && !BrightnessPolicy.Unavailable(d.Value.Failures))).ToList();
     }
     internal static long CacheAgeMs
     {
@@ -147,7 +160,7 @@ internal static partial class MonitorBrightness
                 return Environment.TickCount64 - stamp;
         }
     }
-    // Panel (re)opened: displays marked unavailable get a new chance.
+    // Panneau (ré)ouvert : les écrans marqués indisponibles ont une nouvelle chance.
     internal static void NewSession()
     {
         lock (sync)
@@ -229,8 +242,8 @@ internal static partial class MonitorBrightness
         return Displays();
     }
 
-    // Queues a write for one display; the returned task completes with the outcome of the write that carried this value
-    // (or of the newer one that replaced it). Never throws.
+    // Met en file une écriture pour un écran ; la tâche renvoyée se termine avec le résultat de l'écriture qui a porté cette valeur
+    // (ou de la plus récente qui l'a remplacée). Ne lève jamais d'exception.
     internal static Task<bool> SetDisplayAsync(int id, double percent)
     {
         var done = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

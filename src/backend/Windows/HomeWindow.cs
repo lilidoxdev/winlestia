@@ -1,4 +1,4 @@
-// language: C# 12, file: HomeWindow.cs, target: Windows 11 / .NET 8 WPF
+// C# 12, fichier HomeWindow.cs, cible Windows 11 / .NET 8 WPF
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,11 +11,12 @@ using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace PanneauxGlass;
-// The home surface: favourites, the last things opened, and the daily sites. No search field —
-// the global palette owns search now. The tile geometry follows the active theme (grid, cards, list).
+// La surface d'accueil : favoris, dernières choses ouvertes et sites du quotidien. Pas de champ de recherche —
+// la palette globale gère la recherche maintenant. La géométrie des tuiles suit le thème actif (grille, cartes, liste).
 internal sealed partial class HomeWindow : GlassWindow
 {
-    readonly Coordinator owner; readonly StackPanel body = new(); readonly StackPanel sites = new() { Orientation = Orientation.Horizontal }; readonly TextBlock date;
+    readonly Coordinator owner; readonly StackPanel body = new(); readonly StackPanel sites = new() { Orientation = Orientation.Horizontal
+        }; readonly TextBlock date;
     string key = ""; int page;
     readonly RadialGradientBrush sheen = new() { RadiusX = .5, RadiusY = 1.6 }; double lastX = -1, lastY = -1;
     internal HomeWindow(Coordinator coordinator) : base("Panneaux Glass — accueil")
@@ -64,7 +65,9 @@ internal sealed partial class HomeWindow : GlassWindow
         brand.Children.Add(titles);
         header.Children.Add(brand);
         ContentHost.Children.Add(header);
-        var scroll = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 9, 0), Margin = new Thickness(0, 22, 0, 0) };
+        var scroll = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 9, 0), Margin = new Thickness(0, 22,
+            0, 0) };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var footer = new DockPanel { Margin = new Thickness(0, 23, 0, 0) };
@@ -85,8 +88,12 @@ internal sealed partial class HomeWindow : GlassWindow
         sheen.GradientStops.Add(new GradientStop(Color.FromArgb(12, 190, 238, 255), .5));
         sheen.GradientStops.Add(new GradientStop(Colors.Transparent, 1));
         sheen.Center = sheen.GradientOrigin = new Point(.3, .2);
-        PreviewMouseMove += (_, e) => { var point = e.GetPosition(this); if (ActualWidth < 1 || ActualHeight < 1) return; double x = Math.Clamp(point.X / ActualWidth, 0, 1), y = Math.Clamp(point.Y / ActualHeight, 0, 1); if (Math.Abs(x - lastX) < .02 && Math.Abs(y - lastY) < .02) return; lastX = x; lastY = y; var origin = new Point(x, y); sheen.Center = origin; sheen.GradientOrigin = origin; };
-        MouseLeave += (_, _) => { lastX = lastY = -1; var origin = new Point(.3, .2); sheen.Center = origin; sheen.GradientOrigin = origin; };
+        PreviewMouseMove += (_, e) => { var point = e.GetPosition(this); if (ActualWidth < 1 || ActualHeight < 1) return;
+            double x = Math.Clamp(point.X / ActualWidth, 0, 1), y = Math.Clamp(point.Y / ActualHeight, 0, 1); if (Math.Abs(x - lastX) < .02
+            && Math.Abs(y - lastY) < .02) return; lastX = x; lastY = y; var origin = new Point(x, y); sheen.Center = origin;
+            sheen.GradientOrigin = origin; };
+        MouseLeave += (_, _) => { lastX = lastY = -1; var origin = new Point(.3, .2); sheen.Center = origin; sheen.GradientOrigin = origin;
+            };
         highlight.Visibility = Visibility.Collapsed;
         InitializeShell(header, scroll);
     }
@@ -100,7 +107,11 @@ internal sealed partial class HomeWindow : GlassWindow
         ShellRefresh();
         string mode = Theme.Current.Tiles;
         date.Text = Store.State.Favorites.Count + " favoris · " + Store.Entries.Count + " accès · " + Store.State.Websites.Count + " sites";
-        string signature = Theme.Current.Id + "/" + mode + "/" + Store.State.IconSize + "/" + page + "/" + Store.State.HomeScope + "/" + string.Join("|", Store.Entries.Select(e => e.Id + e.Name + e.IconPath + Store.BoardFor(e))) + string.Join("|", Store.State.Favorites) + string.Join("|", Store.State.Hidden) + string.Join("|", Store.State.Recent) + string.Join("|", Store.State.Websites.Select(s => s.Id + s.Name + s.IconPath)) + string.Join("|", Store.State.Boards.Select(b => b.Title + b.Accent));
+        string signature = Theme.Current.Id + "/" + mode + "/" + Store.State.IconSize + "/" + page + "/" + Store.State.HomeScope + "/"
+            + string.Join("|", Store.Entries.Select(e => e.Id + e.Name + e.IconPath + Store.BoardFor(e))) + string.Join("|",
+            Store.State.Favorites) + string.Join("|", Store.State.Hidden) + string.Join("|", Store.State.Recent) + string.Join("|",
+            Store.State.Websites.Select(s => s.Id + s.Name + s.IconPath)) + string.Join("|", Store.State.Boards.Select(b => b.Title
+            + b.Accent));
         if (key == signature)
             return;
         key = signature;
@@ -138,7 +149,8 @@ internal sealed partial class HomeWindow : GlassWindow
             scopes.Children.Add(chip);
         }
         body.Children.Add(scopes);
-        var favorites = new UniformGrid { MinHeight = mode switch { "cards" => 276, "list" => 238, "bento" => 266, "index" => 300, "stack" => 250, _ => 116 } };
+        var favorites = new UniformGrid { MinHeight = mode switch { "cards" => 276, "list" => 238, "bento" => 266, "index" => 300, "stack"
+            => 250, _ => 116 } };
         if (mode == "cards")
             favorites.Columns = 4;
         else if (mode == "list")
@@ -162,13 +174,15 @@ internal sealed partial class HomeWindow : GlassWindow
             var explain = UI.Text("Dans les panneaux, clic droit sur un accès → Ajouter aux favoris.", 13, UI.Dim);
             explain.Margin = new Thickness(0, 9, 0, 13);
             empty.Children.Add(explain);
-            empty.Children.Add(UI.Button("Explorer mes accès   ›", () => owner.ShowWorkspace(Store.State.HomeScope == "Tous" ? null : Store.State.HomeScope)));
+            empty.Children.Add(UI.Button("Explorer mes accès   ›", () => owner.ShowWorkspace(Store.State.HomeScope == "Tous" ? null
+                : Store.State.HomeScope)));
             body.Children.Remove(favorites);
             body.Children.Add(empty);
         }
         if (pages > 1)
         {
-            var navigation = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 4, 0, 0) };
+            var navigation = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 4, 0, 0) };
             var prev = UI.IconButton("\uE76B", "Favoris précédents", () => { page--; Refresh(); });
             prev.IsEnabled = page > 0;
             navigation.Children.Add(prev);
@@ -215,7 +229,8 @@ internal sealed partial class HomeWindow : GlassWindow
         sites.Children.Add(siteLabel);
         foreach (var site in Store.State.Websites.Take(6))
         {
-            var button = UI.Button("", () => { try { Process.Start(new ProcessStartInfo(site.Url) { UseShellExecute = true }); owner.CollapseImmediately(); } catch (Exception ex) { owner.Message(ex.Message); } });
+            var button = UI.Button("", () => { try { Process.Start(new ProcessStartInfo(site.Url) { UseShellExecute = true });
+                owner.CollapseImmediately(); } catch (Exception ex) { owner.Message(ex.Message); } });
             button.Width = 42;
             button.Height = 42;
             button.Padding = new Thickness(8);
@@ -228,14 +243,16 @@ internal sealed partial class HomeWindow : GlassWindow
             button.ToolTip = site.Name;
             System.Windows.Automation.AutomationProperties.SetName(button, "Site " + site.Name);
             var icon = new Image { Width = 26, Height = 26, Stretch = Stretch.Uniform };
-            owner.Icons.Load(new Entry { Id = "web:" + site.Id, IconPath = site.IconPath, Target = site.IconPath }, source => UI.SetIcon(icon, source));
+            owner.Icons.Load(new Entry { Id = "web:" + site.Id, IconPath = site.IconPath, Target = site.IconPath }, source
+                => UI.SetIcon(icon, source));
             button.Content = icon;
             button.MouseRightButtonUp += (_, e) => { owner.AddWebsite(site); e.Handled = true; };
             sites.Children.Add(button);
         }
         sites.Children.Add(UI.IconButton("\uE710", "Ajouter un site internet", () => owner.AddWebsite()));
     }
-    internal static string BoardGlyph(string id) => id switch { "apps" => "\uE71D", "games" => "\uE7FC", "projects" => "\uE943", _ => "\uE8B7" };
+    internal static string BoardGlyph(string id) => id switch { "apps" => "\uE71D", "games" => "\uE7FC", "projects" => "\uE943", _
+        => "\uE8B7" };
     string Category(Entry entry) => Store.State.Boards.First(b => b.Id == Store.BoardFor(entry)).Title;
     Button Tile(Entry entry, string mode)
     {
@@ -253,7 +270,8 @@ internal sealed partial class HomeWindow : GlassWindow
             button.VerticalContentAlignment = VerticalAlignment.Top;
             button.MinHeight = 124;
             var card = new StackPanel();
-            var icon = new Image { Width = Math.Clamp(Store.State.IconSize, 34, 48), Height = Math.Clamp(Store.State.IconSize, 34, 48), Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left };
+            var icon = new Image { Width = Math.Clamp(Store.State.IconSize, 34, 48), Height = Math.Clamp(Store.State.IconSize, 34, 48),
+                Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left };
             owner.Icons.Load(entry, source => UI.SetIcon(icon, source));
             RenderOptions.SetBitmapScalingMode(icon, BitmapScalingMode.HighQuality);
             card.Children.Add(icon);
@@ -309,7 +327,9 @@ internal sealed partial class HomeWindow : GlassWindow
             {
                 Height = GridLength.Auto
             });
-            var picture = new Image { Width = Math.Clamp(Store.State.IconSize * .72, 34, 50), Height = Math.Clamp(Store.State.IconSize * .72, 34, 50), Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
+            var picture = new Image { Width = Math.Clamp(Store.State.IconSize * .72, 34, 50),
+                Height = Math.Clamp(Store.State.IconSize * .72, 34, 50), Stretch = Stretch.Uniform,
+                HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
             owner.Icons.Load(entry, source => UI.SetIcon(picture, source));
             cell.Children.Add(picture);
             var foot = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom };
@@ -363,7 +383,8 @@ internal sealed partial class HomeWindow : GlassWindow
             chevron.Foreground = UI.Dim;
             DockPanel.SetDock(chevron, Dock.Right);
             row.Children.Add(chevron);
-            var picture = new Image { Width = 34, Height = 34, Stretch = Stretch.Uniform, Margin = new Thickness(4, 0, 16, 0), VerticalAlignment = VerticalAlignment.Center };
+            var picture = new Image { Width = 34, Height = 34, Stretch = Stretch.Uniform, Margin = new Thickness(4, 0, 16, 0),
+                VerticalAlignment = VerticalAlignment.Center };
             owner.Icons.Load(entry, source => UI.SetIcon(picture, source));
             DockPanel.SetDock(picture, Dock.Left);
             row.Children.Add(picture);
@@ -383,7 +404,8 @@ internal sealed partial class HomeWindow : GlassWindow
         button.Padding = new Thickness(6, 12, 6, 10);
         button.Margin = new Thickness(3);
         var stack = new StackPanel();
-        var image = new Image { Width = Math.Clamp(Store.State.IconSize, 40, 64), Height = Math.Clamp(Store.State.IconSize, 40, 64), Stretch = Stretch.Uniform };
+        var image = new Image { Width = Math.Clamp(Store.State.IconSize, 40, 64), Height = Math.Clamp(Store.State.IconSize, 40, 64),
+            Stretch = Stretch.Uniform };
         owner.Icons.Load(entry, source => UI.SetIcon(image, source));
         stack.Children.Add(image);
         var label = UI.Text(entry.Name, 12);
@@ -418,5 +440,10 @@ internal sealed partial class HomeWindow : GlassWindow
         b.MouseRightButtonUp += (_, e) => { EntryMenu(entry, b); e.Handled = true; };
         return b;
     }
-    void EntryMenu(Entry entry, Button anchor) => GlassMenu.Open(owner, this, anchor, entry.Name, new[] { new MenuAction("Ouvrir", "\uE8A7", () => owner.Launch(entry)), new MenuAction(Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris" : "Ajouter aux favoris", "\uE734", () => { if (!Store.State.Favorites.Remove(entry.Id)) Store.State.Favorites.Add(entry.Id); Store.Save(); owner.RefreshBoards(); }), new MenuAction(Store.State.TaskbarPins.Contains(entry.Id) ? "Détacher de la barre" : "Épingler à la barre", "\uE718", () => owner.ToggleTaskbarPin(entry)), new MenuAction("Personnaliser cet accès…", "\uE70F", () => owner.Edit(entry), Separator: true), new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)) }, true);
+    void EntryMenu(Entry entry, Button anchor) => GlassMenu.Open(owner, this, anchor, entry.Name, new[] { new MenuAction("Ouvrir", "\uE8A7",
+        () => owner.Launch(entry)), new MenuAction(Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris" : "Ajouter aux favoris",
+        "\uE734", () => { if (!Store.State.Favorites.Remove(entry.Id)) Store.State.Favorites.Add(entry.Id); Store.Save();
+        owner.RefreshBoards(); }), new MenuAction(Store.State.TaskbarPins.Contains(entry.Id) ? "Détacher de la barre"
+        : "Épingler à la barre", "\uE718", () => owner.ToggleTaskbarPin(entry)), new MenuAction("Personnaliser cet accès…", "\uE70F", ()
+        => owner.Edit(entry), Separator: true), new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)) }, true);
 }

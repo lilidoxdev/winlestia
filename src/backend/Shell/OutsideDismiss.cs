@@ -1,4 +1,4 @@
-// language: C# 12, file: OutsideDismiss.cs, target: Windows 11 / .NET 8, event-driven outside clicks without consuming the original input
+// C# 12, fichier OutsideDismiss.cs, cible Windows 11 / .NET 8, clics extérieurs pilotés par événements sans consommer l'entrée d'origine
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
@@ -19,12 +19,15 @@ internal sealed class OutsideDismiss : IDisposable
     [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr message, IntPtr data);
     [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(Native.Point point);
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint first, uint last, IntPtr module, ForegroundCallback callback, uint process, uint thread, uint flags);
+    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint first, uint last, IntPtr module, ForegroundCallback callback,
+        uint process, uint thread, uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("kernel32.dll")] static extern IntPtr GetModuleHandleW(string? name);
     [DllImport("kernel32.dll")] static extern uint GetCurrentProcessId();
     [DllImport("kernel32.dll")] static extern uint GetTickCount();
-    readonly Func<IntPtr, bool>? additionalOwnership; readonly MouseCallback mouseCallback; readonly ForegroundCallback foregroundCallback; readonly Action close; readonly Func<bool> enabled; readonly Dispatcher dispatcher; readonly uint processId = GetCurrentProcessId(); IntPtr mouseHook, foregroundHook, openingForeground; bool disposed, active; uint generation, armedAt; int pendingReasons;
+    readonly Func<IntPtr, bool>? additionalOwnership; readonly MouseCallback mouseCallback; readonly ForegroundCallback foregroundCallback;
+        readonly Action close; readonly Func<bool> enabled; readonly Dispatcher dispatcher; readonly uint processId = GetCurrentProcessId();
+        IntPtr mouseHook, foregroundHook, openingForeground; bool disposed, active; uint generation, armedAt; int pendingReasons;
     internal OutsideDismiss(Action dismiss, Func<bool> canDismiss, Func<IntPtr, bool>? owns = null)
     {
         additionalOwnership = owns;
@@ -32,8 +35,11 @@ internal sealed class OutsideDismiss : IDisposable
         enabled = canDismiss;
         dispatcher = Dispatcher.CurrentDispatcher;
         mouseCallback = Mouse;
-        clicks.Tick += (_, _) => { bool down = (GetAsyncKeyState(1) & 0x8000) != 0 || (GetAsyncKeyState(2) & 0x8000) != 0; if (down && !wasDown && enabled()) { Native.GetCursorPos(out var p); if (!Own(WindowFromPoint(p))) Queue(false); } wasDown = down; };
-        foregroundCallback = (_, _, hwnd, _, _, _, time) => { DesktopRecents.Observe(hwnd); if (!active || unchecked((int)(time - armedAt)) < 0) return; if (Own(hwnd)) { openingForeground = IntPtr.Zero; return; } if (hwnd != openingForeground) Queue(true); };
+        clicks.Tick += (_, _) => { bool down = (GetAsyncKeyState(1) & 0x8000) != 0 || (GetAsyncKeyState(2) & 0x8000) != 0; if (down
+            && !wasDown && enabled()) { Native.GetCursorPos(out var p); if (!Own(WindowFromPoint(p))) Queue(false); } wasDown = down; };
+        foregroundCallback = (_, _, hwnd, _, _, _, time) => { DesktopRecents.Observe(hwnd); if (!active
+            || unchecked((int)(time - armedAt)) < 0) return; if (Own(hwnd)) { openingForeground = IntPtr.Zero; return;
+            } if (hwnd != openingForeground) Queue(true); };
         foregroundHook = SetWinEventHook(3, 3, IntPtr.Zero, foregroundCallback, 0, 0, 0);
     }
     readonly DispatcherTimer clicks = new() { Interval = TimeSpan.FromMilliseconds(35) }; bool wasDown;
@@ -104,11 +110,12 @@ internal sealed class OutsideDismiss : IDisposable
             pendingReasons = 0;
             if (!enabled())
                 return;
-            // Hiding the active rail temporarily activates the previous app. Its
-            // queued event must not dismiss panels which now have the focus.
-            // A shortcut may open without Windows granting foreground focus; ignore
-            // the unchanged initial foreground until our app receives focus or a click.
-            if ((reasons & 1) != 0 || ((reasons & 2) != 0 && !Own(Native.GetForegroundWindow()) && Native.GetForegroundWindow() != openingForeground))
+            // Masquer le rail actif réactive temporairement l'application précédente. Son
+            // événement en file ne doit pas fermer des panneaux qui ont maintenant le focus.
+            // Un raccourci peut s'ouvrir sans que Windows accorde le focus au premier plan ; on ignore
+            // le premier plan initial inchangé jusqu'à ce que notre application reçoive le focus ou un clic.
+            if ((reasons & 1) != 0 || ((reasons & 2) != 0 && !Own(Native.GetForegroundWindow())
+                && Native.GetForegroundWindow() != openingForeground))
                 close();
         }));
     }

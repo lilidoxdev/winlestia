@@ -1,5 +1,7 @@
-// Selection rectangle: dragging from an empty area of the list selects what the rectangle touches, in every view (Ctrl adds to the selection).
-// Hit-testing is arithmetic on the item grid (rows of Cell.H, Cols() columns), so it works with virtualization and costs nothing at idle.
+// Rectangle de sélection : glisser depuis une zone vide de la liste sélectionne ce que touche le rectangle, dans toutes les vues (Ctrl
+// ajoute à la sélection).
+// Le test de collision est de l'arithmétique sur la grille d'éléments (lignes de Cell.H, Cols() colonnes), donc il fonctionne avec la
+// virtualisation et ne coûte rien au repos.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +41,9 @@ public sealed partial class MainWindow
                 return;
             if (ItemsControl.ContainerFromElement(list, src) is ListBoxItem)
                 return;
-            for (DependencyObject? d = src; d != null && !ReferenceEquals(d, list); d = d is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D ? System.Windows.Media.VisualTreeHelper.GetParent(d) : null)
+            for (DependencyObject? d = src; d != null && !ReferenceEquals(d, list);
+                d = d is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D
+                ? System.Windows.Media.VisualTreeHelper.GetParent(d) : null)
                 if (d is System.Windows.Controls.Primitives.ScrollBar)
                     return;
             var p = e.GetPosition(list);
@@ -48,7 +52,8 @@ public sealed partial class MainWindow
             list.CaptureMouse();
             e.Handled = true;
         };
-        list.PreviewMouseMove += (_, e) => { if (rubbing) { if (e.LeftButton != MouseButtonState.Pressed) { list.ReleaseMouseCapture(); RubberEnd(); } else RubberMove(e.GetPosition(list)); } };
+        list.PreviewMouseMove += (_, e) => { if (rubbing) { if (e.LeftButton != MouseButtonState.Pressed) { list.ReleaseMouseCapture();
+            RubberEnd(); } else RubberMove(e.GetPosition(list)); } };
         list.PreviewMouseLeftButtonUp += (_, _) => { if (rubbing) { list.ReleaseMouseCapture(); RubberEnd(); } };
         list.LostMouseCapture += (_, _) => { if (rubbing) RubberEnd(); };
     }
@@ -61,7 +66,7 @@ public sealed partial class MainWindow
         return gridMode ? sv.VerticalOffset : sv.VerticalOffset * Cell.H;
     }
 
-    // p: position in the list's own coordinates (viewport).
+    // p : position dans les coordonnées propres de la liste (zone visible).
     internal void RubberStart(Point p, bool add)
     {
         rubbing = true;
@@ -81,7 +86,8 @@ public sealed partial class MainWindow
         if (!rubberMoved && Math.Abs(to.X - rubberFrom.X) < 4 && Math.Abs(to.Y - rubberFrom.Y) < 4)
             return;
         rubberMoved = true;
-        double x1 = Math.Min(rubberFrom.X, to.X), x2 = Math.Max(rubberFrom.X, to.X), y1 = Math.Min(rubberFrom.Y, to.Y), y2 = Math.Max(rubberFrom.Y, to.Y);
+        double x1 = Math.Min(rubberFrom.X, to.X), x2 = Math.Max(rubberFrom.X, to.X), y1 = Math.Min(rubberFrom.Y, to.Y),
+            y2 = Math.Max(rubberFrom.Y, to.Y);
         if (rubberBox != null)
         {
             var host = listHost;
@@ -111,7 +117,7 @@ public sealed partial class MainWindow
         UpdateStatus();
     }
 
-    // Items touched by the rectangle (content coordinates).
+    // Éléments touchés par le rectangle (coordonnées du contenu).
     internal List<FileItem> RubberHit(double x1, double y1, double x2, double y2)
     {
         var items = Active.Items;

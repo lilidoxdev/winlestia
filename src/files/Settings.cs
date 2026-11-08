@@ -1,5 +1,8 @@
-// Persistent Files preferences: <data dir>\settings.json, data dir = %LOCALAPPDATA%\Winlestia\Files unless WINLESTIA_FILES_DATA_DIR redirects it (tests).
-// Writes are atomic (.tmp then replace). A file that does not parse is renamed to settings.<stamp>.bak and the defaults are used; a locked file gives read-only defaults (no Save). Save merges dirty keys into the disk copy under a named mutex.
+// Préférences persistantes de Files : <dossier de données>\settings.json, dossier de données = %LOCALAPPDATA%\Winlestia\Files sauf si
+// WINLESTIA_FILES_DATA_DIR le redirige (tests).
+// Écritures atomiques (.tmp puis remplacement). Un fichier illisible est renommé settings.<horodatage>.bak et les valeurs par défaut
+// s'appliquent ; un fichier verrouillé donne des valeurs par défaut en lecture seule (pas de Save). Save fusionne les clés modifiées dans
+// la copie disque sous un mutex nommé.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -59,12 +62,13 @@ internal static class FilesSettings
 {
     static readonly object gate = new();
     static SettingsData? data;
-    static readonly JsonSerializerOptions Options = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    static readonly JsonSerializerOptions Options = new() { WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     internal static string Dir => Environment.GetEnvironmentVariable("WINLESTIA_FILES_DATA_DIR") is { Length: > 0 } d ? d
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia", "Files");
     internal static string FilePath => Path.Combine(Dir, "settings.json");
-    // True when the last Read found an unreadable file and set it aside.
+    // Vrai quand la dernière lecture a trouvé un fichier illisible et l'a mis de côté.
     internal static bool RecoveredFromCorrupt;
 
     internal static SettingsData Data
@@ -81,10 +85,12 @@ internal static class FilesSettings
             data = null;
     }
 
-    // True when the file could not be read (locked...): defaults in memory, and Save() is disabled so a valid file is never overwritten.
+    // Vrai quand le fichier n'a pas pu être lu (verrouillé...) : valeurs par défaut en mémoire, et Save() est désactivé pour ne jamais
+    // écraser un fichier valide.
     static bool readOnly;
     internal static bool ReadOnly => readOnly;
-    // Serialized value of each key as last read/written by this instance; a key whose current value differs is "dirty" and wins on merge.
+    // Valeur sérialisée de chaque clé telle que lue/écrite en dernier par cette instance ; une clé dont la valeur actuelle diffère est
+    // "modifiée" et l'emporte à la fusion.
     static Dictionary<string, string> baseline = new();
     static readonly JsonSerializerOptions ReadOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -163,7 +169,9 @@ internal static class FilesSettings
                 Directory.CreateDirectory(Dir);
                 string file = FilePath, tmp = file + "." + Environment.ProcessId + ".tmp";
                 var mine = data ??= new SettingsData();
-                using var mutex = new Mutex(false, "Winlestia.Files.Settings." + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Path.GetFullPath(Dir).TrimEnd((char)92).ToLowerInvariant())))[..24]);
+                using var mutex = new Mutex(false, "Winlestia.Files.Settings."
+                    + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Path.GetFullPath(
+                    Dir).TrimEnd((char)92).ToLowerInvariant())))[..24]);
                 bool held = false;
                 try
                 {
@@ -208,7 +216,7 @@ internal static class FilesSettings
 
     static readonly string[] Keys = { "name", "modified", "type", "size" };
 
-    // No "sort" key = fresh profile: modified date, newest first, folders and files mixed.
+    // Pas de clé "sort" = profil neuf : date de modification, la plus récente d'abord, dossiers et fichiers mélangés.
     internal static SortSpec InitialSort()
     {
         var s = Data.Sort;

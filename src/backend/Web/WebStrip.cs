@@ -1,4 +1,4 @@
-// language: C# 12, file: WebStrip.cs, target: Windows 11 / .NET 8 WPF, independent compact web icons growing to the left
+// C# 12, fichier WebStrip.cs, cible Windows 11 / .NET 8 WPF, icônes web compactes et indépendantes qui s'étendent vers la gauche
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,7 +13,8 @@ namespace PanneauxGlass;
 
 internal sealed class WebStrip : IDisposable
 {
-    readonly Coordinator coordinator; readonly List<GlassWindow> windows = new(); string signature = "~"; double right, top, available; bool placed, visible;
+    readonly Coordinator coordinator; readonly List<GlassWindow> windows = new(); string signature = "~"; double right, top, available;
+        bool placed, visible;
     const double Tile = 56, Gap = 10;
     internal IEnumerable<GlassWindow> Windows => windows;
     internal WebStrip(Coordinator owner)
@@ -32,7 +33,8 @@ internal sealed class WebStrip : IDisposable
     }
     internal void Refresh()
     {
-        string next = string.Join("|", Store.State.Websites.Select(x => x.Id + x.Name + x.Url + x.IconPath + x.ShowGlass + File.GetLastWriteTimeUtc(x.IconPath).Ticks)) + "/" + Math.Floor(available / (Tile + Gap));
+        string next = string.Join("|", Store.State.Websites.Select(x => x.Id + x.Name + x.Url + x.IconPath + x.ShowGlass
+            + File.GetLastWriteTimeUtc(x.IconPath).Ticks)) + "/" + Math.Floor(available / (Tile + Gap));
         if (signature == next)
             return;
         signature = next;
@@ -58,14 +60,20 @@ internal sealed class WebStrip : IDisposable
             catch { image.Source = FallbackImage(); }
             button.Content = image;
             PrepareButton(window, button);
-            button.MouseRightButtonUp += (_, e) => { GlassMenu.Open(coordinator, window, button, site.Name, new[] { new MenuAction("Ouvrir dans le navigateur", "\uE774", () => Launch(site)), new MenuAction("Modifier ce site…", "\uE70F", () => coordinator.AddWebsite(site)), new MenuAction("Image et recadrage…", "\uE7A8", () => coordinator.AddWebsite(site, true)), new MenuAction("Déplacer vers la gauche", "\uE72B", () => Move(site, 1), Separator: true), new MenuAction("Déplacer vers la droite", "\uE72A", () => Move(site, -1)), new MenuAction("Retirer ce raccourci", "\uE738", () => { Store.State.Websites.Remove(site); Store.Save(); Refresh(); }, Separator: true) }, true); e.Handled = true; };
+            button.MouseRightButtonUp += (_, e) => { GlassMenu.Open(coordinator, window, button, site.Name, new[] {
+                new MenuAction("Ouvrir dans le navigateur", "\uE774", () => Launch(site)), new MenuAction("Modifier ce site…", "\uE70F", ()
+                => coordinator.AddWebsite(site)), new MenuAction("Image et recadrage…", "\uE7A8", () => coordinator.AddWebsite(site, true)),
+                new MenuAction("Déplacer vers la gauche", "\uE72B", () => Move(site, 1), Separator: true),
+                new MenuAction("Déplacer vers la droite", "\uE72A", () => Move(site, -1)), new MenuAction("Retirer ce raccourci", "\uE738",
+                () => { Store.State.Websites.Remove(site); Store.Save(); Refresh(); }, Separator: true) }, true); e.Handled = true; };
         }
         if (overflow)
         {
             var window = MakeWindow("autres sites", true);
             var button = UI.IconButton("\uE712", "Autres sites", () => { });
             PrepareButton(window, button);
-            button.Click += (_, _) => GlassMenu.Open(coordinator, window, button, "Autres sites", Store.State.Websites.Skip(capacity).Select(site => new MenuAction(site.Name, "\uE774", () => Launch(site))));
+            button.Click += (_, _) => GlassMenu.Open(coordinator, window, button, "Autres sites",
+                Store.State.Websites.Skip(capacity).Select(site => new MenuAction(site.Name, "\uE774", () => Launch(site))));
         }
         var plusWindow = MakeWindow("ajouter un site", true);
         PrepareButton(plusWindow, UI.IconButton("\uE710", "Ajouter un site web", () => coordinator.AddWebsite()));
@@ -74,7 +82,8 @@ internal sealed class WebStrip : IDisposable
     }
     GlassWindow MakeWindow(string title, bool material)
     {
-        var window = new GlassWindow("Panneaux Glass — " + title) { Radius = 18, MaterialVisible = material, ShowInTaskbar = coordinator.PreviewMode };
+        var window = new GlassWindow("Panneaux Glass — " + title) { Radius = 18, MaterialVisible = material,
+            ShowInTaskbar = coordinator.PreviewMode };
         window.KeyDown += (_, e) => { if (e.Key == Key.Escape) coordinator.Collapse(); };
         windows.Add(window);
         return window;

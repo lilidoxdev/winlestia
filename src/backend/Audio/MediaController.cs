@@ -1,4 +1,4 @@
-// language: C# 12, file: MediaController.cs, target: Windows 11 / .NET 8, Windows SMTC sessions
+// C# 12, fichier MediaController.cs, cible Windows 11 / .NET 8, sessions SMTC de Windows
 using System;
 using System.IO;
 using System.Linq;
@@ -10,13 +10,20 @@ using Windows.Storage.Streams;
 
 namespace PanneauxGlass;
 
-internal sealed record MediaSnapshot(bool Available, string App, string Title, string Artist, bool Playing, double Position, double Duration, bool CanToggle, bool CanNext, bool CanPrevious, bool CanSeek, BitmapSource? Artwork, string Album = "");
+internal sealed record MediaSnapshot(bool Available, string App, string Title, string Artist, bool Playing, double Position,
+    double Duration, bool CanToggle, bool CanNext, bool CanPrevious, bool CanSeek, BitmapSource? Artwork, string Album = "");
 internal sealed class MediaController : IDisposable
 {
-    readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher; GlobalSystemMediaTransportControlsSessionManager? manager; GlobalSystemMediaTransportControlsSession? session;
-    bool active, dirty = true, reading; int generation; string artKey = "", title = "", artist = "", album = ""; BitmapSource? artwork; internal event Action? Changed;
-    internal static string AppName(string id) => id.Contains("spotify", StringComparison.OrdinalIgnoreCase) ? "Spotify" : id.Contains("edge", StringComparison.OrdinalIgnoreCase) ? "Microsoft Edge" : id.Contains("chrome", StringComparison.OrdinalIgnoreCase) ? "Google Chrome" : id.Contains("firefox", StringComparison.OrdinalIgnoreCase) ? "Firefox" : id.Split('!')[0].Replace(".exe", "", StringComparison.OrdinalIgnoreCase);
-    internal static GlobalSystemMediaTransportControlsSession? Select(GlobalSystemMediaTransportControlsSessionManager manager, string preferred)
+    readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher; GlobalSystemMediaTransportControlsSessionManager? manager;
+        GlobalSystemMediaTransportControlsSession? session;
+    bool active, dirty = true, reading; int generation; string artKey = "", title = "", artist = "", album = ""; BitmapSource? artwork;
+        internal event Action? Changed;
+    internal static string AppName(string id) => id.Contains("spotify", StringComparison.OrdinalIgnoreCase) ? "Spotify"
+        : id.Contains("edge", StringComparison.OrdinalIgnoreCase) ? "Microsoft Edge" : id.Contains("chrome",
+        StringComparison.OrdinalIgnoreCase) ? "Google Chrome" : id.Contains("firefox", StringComparison.OrdinalIgnoreCase) ? "Firefox"
+        : id.Split('!')[0].Replace(".exe", "", StringComparison.OrdinalIgnoreCase);
+    internal static GlobalSystemMediaTransportControlsSession? Select(GlobalSystemMediaTransportControlsSessionManager manager,
+        string preferred)
     {
         var sessions = manager.GetSessions();
         if (!string.IsNullOrEmpty(preferred))
@@ -25,9 +32,13 @@ internal sealed class MediaController : IDisposable
             if (found != null)
                 return found;
         }
-        var music = sessions.Where(s => !s.SourceAppUserModelId.Contains("desktophut", StringComparison.OrdinalIgnoreCase) && !s.SourceAppUserModelId.Contains("wallpaper", StringComparison.OrdinalIgnoreCase)).ToArray();
+        var music = sessions.Where(s => !s.SourceAppUserModelId.Contains("desktophut", StringComparison.OrdinalIgnoreCase)
+            && !s.SourceAppUserModelId.Contains("wallpaper", StringComparison.OrdinalIgnoreCase)).ToArray();
         var current = manager.GetCurrentSession();
-        return music.FirstOrDefault(s => s.SourceAppUserModelId.Contains("spotify", StringComparison.OrdinalIgnoreCase) && s.GetPlaybackInfo().PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing) ?? music.FirstOrDefault(s => s.SourceAppUserModelId.Contains("spotify", StringComparison.OrdinalIgnoreCase)) ?? music.FirstOrDefault(s => s.SourceAppUserModelId == current?.SourceAppUserModelId) ?? music.FirstOrDefault();
+        return music.FirstOrDefault(s => s.SourceAppUserModelId.Contains("spotify", StringComparison.OrdinalIgnoreCase)
+            && s.GetPlaybackInfo().PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
+            ?? music.FirstOrDefault(s => s.SourceAppUserModelId.Contains("spotify", StringComparison.OrdinalIgnoreCase))
+            ?? music.FirstOrDefault(s => s.SourceAppUserModelId == current?.SourceAppUserModelId) ?? music.FirstOrDefault();
     }
     internal async Task StartAsync()
     {
@@ -90,7 +101,8 @@ internal sealed class MediaController : IDisposable
             SetSession(Select(manager, Store.State.Controls.MediaApp));
             var selected = session;
             if (selected == null)
-                return new(false, "", "Aucune lecture", "Lance Spotify ou une autre application audio", false, 0, 0, false, false, false, false, null);
+                return new(false, "", "Aucune lecture", "Lance Spotify ou une autre application audio", false, 0, 0, false, false, false,
+                    false, null);
             if (dirty)
             {
                 dirty = false;
@@ -135,16 +147,20 @@ internal sealed class MediaController : IDisposable
             var playback = selected.GetPlaybackInfo();
             var timeline = selected.GetTimelineProperties();
             bool playing = playback.PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
-            double duration = Math.Max(0, (timeline.EndTime - timeline.StartTime).TotalSeconds), position = (timeline.Position - timeline.StartTime).TotalSeconds;
+            double duration = Math.Max(0, (timeline.EndTime - timeline.StartTime).TotalSeconds),
+                position = (timeline.Position - timeline.StartTime).TotalSeconds;
             if (playing && timeline.LastUpdatedTime != default)
                 position += Math.Max(0, (DateTimeOffset.UtcNow - timeline.LastUpdatedTime).TotalSeconds) * (playback.PlaybackRate ?? 1);
             var controls = playback.Controls;
-            return new(true, AppName(selected.SourceAppUserModelId), string.IsNullOrWhiteSpace(title) ? "Lecture en cours" : title, artist, playing, Math.Clamp(position, 0, duration), duration, controls.IsPlayPauseToggleEnabled, controls.IsNextEnabled, controls.IsPreviousEnabled, controls.IsPlaybackPositionEnabled, artwork, album);
+            return new(true, AppName(selected.SourceAppUserModelId), string.IsNullOrWhiteSpace(title) ? "Lecture en cours" : title, artist,
+                playing, Math.Clamp(position, 0, duration), duration, controls.IsPlayPauseToggleEnabled, controls.IsNextEnabled,
+                controls.IsPreviousEnabled, controls.IsPlaybackPositionEnabled, artwork, album);
         }
         catch { SetSession(null); throw; }
         finally { reading = false; }
     }
-    internal (string id, string name)[] Sessions() => manager?.GetSessions().Select(s => (s.SourceAppUserModelId, AppName(s.SourceAppUserModelId))).ToArray() ?? Array.Empty<(string, string)>();
+    internal (string id, string name)[] Sessions() => manager?.GetSessions().Select(s => (s.SourceAppUserModelId,
+        AppName(s.SourceAppUserModelId))).ToArray() ?? Array.Empty<(string, string)>();
     internal async Task<bool> CommandAsync(string action, double position = 0)
     {
         var selected = session;
@@ -155,7 +171,8 @@ internal sealed class MediaController : IDisposable
             "toggle" => await selected.TryTogglePlayPauseAsync(),
             "next" => await selected.TrySkipNextAsync(),
             "previous" => await selected.TrySkipPreviousAsync(),
-            "seek" => await selected.TryChangePlaybackPositionAsync(selected.GetTimelineProperties().StartTime.Ticks + TimeSpan.FromSeconds(position).Ticks),
+            "seek" => await selected.TryChangePlaybackPositionAsync(selected.GetTimelineProperties().StartTime.Ticks
+                + TimeSpan.FromSeconds(position).Ticks),
             _ => false
         };
     }

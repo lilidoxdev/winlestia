@@ -1,4 +1,5 @@
-# Resolver unit tests on a fake tree in %TEMP%\WinlestiaWallpaperTest (no real wallpaper app is touched).
+# Tests unitaires du résolveur sur un faux arbre dans %TEMP%\WinlestiaWallpaperTest (aucune vraie application de fond
+# n'est touchée).
 import json, os, shutil, sys, tempfile, unittest
 from pathlib import Path
 
@@ -123,7 +124,7 @@ class Resolver(unittest.TestCase):
         self.assertTrue(r['D1'].needs_capture)
         self.assertEqual(r['D1'].provider, 'LiveGeneric')
         r = w.resolve(MON, names=set(), bases=self.b, live=False, kind=0, spi=lambda: '')
-        self.assertEqual(r['D1'].images, [])  # nothing anywhere: empty, no crash
+        self.assertEqual(r['D1'].images, [])  # rien nulle part : vide, pas de plantage
 
     def test_missing_files_hut(self):
         d = ROOT / 'localappdata/Packages/Desktophut.Test_abc/LocalCache/Roaming/motion-photo-editor'

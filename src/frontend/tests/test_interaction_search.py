@@ -1,4 +1,5 @@
-# Python 3.12 / Windows. Regression checks for dock activation, fullscreen and local launcher queries.
+# Python 3.12 / Windows. Vérifications de non-régression : activation du dock, plein écran et requêtes locales du
+# lanceur.
 import sys, unittest
 from pathlib import Path
 

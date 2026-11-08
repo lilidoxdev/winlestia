@@ -1,7 +1,9 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=lot1 : address bar (breadcrumb / edit mode), copy path, quick access (pin, order, label, broken targets, persistence), sort (default, folders first, persistence),
-// corrupt settings.json. Needs WINLESTIA_FILES_DATA_DIR = a fresh folder under %TEMP% (the harness sets it) and a fixture folder (first argument) under %TEMP%\WinlestiaFilesOps.
-// Results: PASS/FAIL lines in <data dir>\selftest.log.
+// WINLESTIA_FILES_SELFTEST=lot1 : address bar (breadcrumb / edit mode), copy path, quick access (pin, order, label, broken targets,
+// persistence), sort (default, folders first, persistence),
+// settings.json corrompu. Exige WINLESTIA_FILES_DATA_DIR = un dossier neuf sous %TEMP% (le harnais le fixe) et un dossier de fixtures
+// (premier argument) sous %TEMP%\WinlestiaFilesOps.
+// Résultats : lignes PASS/FAIL dans <data dir>\selftest.log.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -35,7 +37,7 @@ public sealed partial class MainWindow
             {
                 return Clipboard.GetText();
             }
-            catch { await Task.Delay(100); }
+            catch { await Task.Delay(PauseTickMs); }
         }
         return "<clipboard busy>";
     }
@@ -66,7 +68,7 @@ public sealed partial class MainWindow
         await sidebar.Ready;
         await sidebar.Recheck();
 
-        // ---- first launch: quick access initialised with the known folders, sort default ------------------------------------------------
+        // ---- premier lancement : accès rapide initialisé avec les dossiers connus, tri par défaut ---------------------------------------
         var firstView = sidebar.QuickView();
         string json0 = SettingsText();
         Check("first launch: settings.json written with quickAccess",
@@ -78,10 +80,11 @@ public sealed partial class MainWindow
                   && !Active.Sort.Ascending
                   && !Active.Sort.FoldersFirst
                   && Active.Sort.Column == SortColumn.Modified);
-        Check("first launch: sidebar order = settings order", firstView.Select(v => v.Path).SequenceEqual(QuickAccess.Entries.Select(q => q.Path)));
+        Check("first launch: sidebar order = settings order", firstView.Select(v => v.Path).SequenceEqual(QuickAccess.Entries.Select(q
+            => q.Path)));
         var defaultPaths = firstView.Select(v => v.Path).ToList();
 
-        // ---- (a) sort: recent file before an old folder, mixed ---------------------------------------------------------------------------
+        // ---- (a) tri : fichier récent avant un vieux dossier, mélangés ------------------------------------------------------------------
         string ancien = Path.Combine(F, "Ancien"),
             nouveau = Path.Combine(F, "Nouveau"),
             vieux = Path.Combine(F, "vieux.txt"),
@@ -124,11 +127,13 @@ public sealed partial class MainWindow
               FilesSettings.InitialSort().ToString());
         ResetSort();
         Check("(a) 'Rétablir le tri par défaut' puts the date order back and drops the key",
-              await WaitFor(() => Active.Sort == SortSpec.Default && Idx(recent) < Idx(ancien) && Idx(recent) >= 0) && !SettingsText().Contains("\"sort\""));
+              await WaitFor(() => Active.Sort == SortSpec.Default && Idx(recent) < Idx(ancien) && Idx(recent) >= 0)
+                  && !SettingsText().Contains("\"sort\""));
         FilesSettings.Reload();
         Check("(a) after the reset a fresh start is the default again", FilesSettings.InitialSort() == SortSpec.Default);
         Active.SetSort(SortColumn.Modified);   // header click: same column inverts
-        Check("(a) second click on the same column reverses the order", await WaitFor(() => !Active.Sort.Ascending == false && Idx(vieux) < Idx(recent)));
+        Check("(a) second click on the same column reverses the order", await WaitFor(() => !Active.Sort.Ascending == false
+            && Idx(vieux) < Idx(recent)));
         ResetSort();
         await WaitFor(() => Idx(recent) < Idx(ancien));
 
@@ -181,13 +186,14 @@ public sealed partial class MainWindow
                   && QuickAccess.IndexOf(pinFile) == defaultPaths.Count + 1);
         QuickAccess.Move(QuickAccess.IndexOf(pinFile), -1);
         QuickAccess.SetLabel(QuickAccess.IndexOf(pinDir), "Mon dossier 𝄞");
-        // "restart": settings re-read from disk, sidebar rebuilt from them
+        // « redémarrage » : réglages relus depuis le disque, barre latérale reconstruite à partir d'eux
         FilesSettings.Reload();
         sidebar.ReloadQuick();
         await sidebar.Recheck();
         var view = sidebar.QuickView();
         int vf = view.FindIndex(v => v.Path == pinFile), vd = view.FindIndex(v => v.Path == pinDir);
-        Check("(c) after restart: reordered (file before folder)", vf == defaultPaths.Count && vd == defaultPaths.Count + 1, $"file {vf} dir {vd}");
+        Check("(c) after restart: reordered (file before folder)", vf == defaultPaths.Count && vd == defaultPaths.Count + 1,
+            $"file {vf} dir {vd}");
         Check("(c) after restart: custom label kept, default label for the other",
               vd >= 0 && view[vd].Label == "Mon dossier 𝄞" && vf >= 0 && view[vf].Label == "notes é.txt",
               vd >= 0 ? view[vd].Label : "?");
@@ -217,7 +223,8 @@ public sealed partial class MainWindow
         var bd = view.First(v => v.Path == pinDir);
         var bf = view.First(v => v.Path == pinFile);
         Check("(c) deleted targets are 'introuvable' with the tooltip",
-              bd.Kind == TargetKind.Missing && bf.Kind == TargetKind.Missing && bd.Tip == "Introuvable : " + pinDir && bf.Tip == "Introuvable : " + pinFile,
+              bd.Kind == TargetKind.Missing && bf.Kind == TargetKind.Missing && bd.Tip == "Introuvable : " + pinDir
+                  && bf.Tip == "Introuvable : " + pinFile,
               bd.Tip);
         Check("(c) the broken entries are not drop targets", true);
         string found = Path.Combine(F, "Retrouvé");
@@ -229,9 +236,11 @@ public sealed partial class MainWindow
         Check("(c) 'Retrouver la cible': new path, same label and position, healthy again",
               view[pos].Path == found && view[pos].Label == "Mon dossier 𝄞" && view[pos].Kind == TargetKind.Folder,
               view[pos].Path);
-        Check("(c) 'Retirer le raccourci' removes the broken entry only", QuickAccess.RemoveAt(QuickAccess.IndexOf(pinFile)) && !QuickAccess.IsPinned(pinFile));
-        // unpinning never touches the target
-        Check("(c) unpin (toggle) leaves the target on disk", !TogglePin(new[] { found }) && Directory.Exists(found) && !QuickAccess.IsPinned(found));
+        Check("(c) 'Retirer le raccourci' removes the broken entry only", QuickAccess.RemoveAt(QuickAccess.IndexOf(pinFile))
+            && !QuickAccess.IsPinned(pinFile));
+        // désépingler ne touche jamais à la cible
+        Check("(c) unpin (toggle) leaves the target on disk", !TogglePin(new[] { found }) && Directory.Exists(found)
+            && !QuickAccess.IsPinned(found));
         string keepFile = Path.Combine(F, "garde.txt");
         File.WriteAllText(keepFile, "x");
         TogglePin(new[] { keepFile });
@@ -244,7 +253,7 @@ public sealed partial class MainWindow
         Directory.CreateDirectory(deep);
         Active.Go(deep);
         await WaitLoaded();
-        await Task.Delay(100);
+        await Task.Delay(PauseTickMs);
         var labels = CrumbLabels();
         string root = Path.GetPathRoot(deep)!;
         var expected = new List<string> { root.TrimEnd('\\') };
@@ -253,7 +262,7 @@ public sealed partial class MainWindow
               labels.SequenceEqual(expected) && labels[^1] == "sous dossier" && labels[^2] == "Café été 𝄞",
               string.Join(" > ", labels));
         BeginEdit();
-        await Task.Delay(100);
+        await Task.Delay(PauseTickMs);
         Check("(d) edit mode: text box shown with the full path selected",
               addressBox.Visibility == Visibility.Visible
                   && crumbScroll.Visibility == Visibility.Collapsed
@@ -266,13 +275,15 @@ public sealed partial class MainWindow
         else
             T("SKIP (d) keyboard focus: window not foreground in this session (" + (IsActive ? "active" : "inactive") + ")");
         var source = PresentationSource.FromVisual(addressBox);
-        addressBox.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, source, Environment.TickCount, Key.Escape) { RoutedEvent = Keyboard.KeyDownEvent });
-        Check("(d) Escape returns to the breadcrumb", addressBox.Visibility == Visibility.Collapsed && crumbScroll.Visibility == Visibility.Visible);
+        addressBox.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, source, Environment.TickCount, Key.Escape) {
+            RoutedEvent = Keyboard.KeyDownEvent });
+        Check("(d) Escape returns to the breadcrumb", addressBox.Visibility == Visibility.Collapsed
+            && crumbScroll.Visibility == Visibility.Visible);
         BeginEdit();
         if (focused)
         {
             Keyboard.ClearFocus();
-            await Task.Delay(100);
+            await Task.Delay(PauseTickMs);
             Check("(d) losing focus returns to the breadcrumb", addressBox.Visibility == Visibility.Collapsed);
         }
         else
@@ -281,19 +292,22 @@ public sealed partial class MainWindow
         BeginEdit();
         addressBox.Text = Path.Combine(F, "n'existe pas é");
         SubmitAddress(addressBox.Text);
-        await Task.Delay(500);
+        await Task.Delay(PauseStabilisationMs);
         Check("(d) unknown path: clear message and the box stays in edit mode",
               addressBox.Visibility == Visibility.Visible && toastText!.Text.StartsWith("Chemin introuvable"),
               toastText!.Text);
         EndEdit();
         string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var r = ResolveAddress("%USERPROFILE%");
-        Check("(d) %USERPROFILE% is expanded", r.Kind == AddressKind.Folder && string.Equals(r.Value, profile, StringComparison.OrdinalIgnoreCase), r.Value);
-        Check("(d) quoted path with spaces and accents resolves", ResolveAddress("\"" + deep + "\"") is (AddressKind.Folder, var v1) && v1 == deep);
+        Check("(d) %USERPROFILE% is expanded", r.Kind == AddressKind.Folder && string.Equals(r.Value, profile,
+            StringComparison.OrdinalIgnoreCase), r.Value);
+        Check("(d) quoted path with spaces and accents resolves", ResolveAddress("\"" + deep + "\"") is (AddressKind.Folder, var v1)
+            && v1 == deep);
         SubmitAddress("%USERPROFILE%");
         await WaitFor(() => string.Equals(Active.Location, profile, StringComparison.OrdinalIgnoreCase));
         await WaitLoaded();
-        Check("(d) Enter on an env-var path navigates", string.Equals(Active.Location, profile, StringComparison.OrdinalIgnoreCase), Active.Location);
+        Check("(d) Enter on an env-var path navigates", string.Equals(Active.Location, profile, StringComparison.OrdinalIgnoreCase),
+            Active.Location);
         // UNC
         string unc = @"\\localhost\C$";
         bool uncOk = await Task.Run(() => { try { return Directory.Exists(unc); } catch { return false; } });
@@ -351,9 +365,11 @@ public sealed partial class MainWindow
         }
         catch { noThrow = false; }
         Check("(e) empty file: no crash, pin still saves", noThrow && SettingsText().Contains("quickAccess"));
-        File.WriteAllText(FilesSettings.FilePath, "{ \"sort\": { \"key\": \"size\", \"descending\": false, \"foldersFirst\": true }, \"futur\": 1 }");
+        File.WriteAllText(FilesSettings.FilePath,
+            "{ \"sort\": { \"key\": \"size\", \"descending\": false, \"foldersFirst\": true }, \"futur\": 1 }");
         FilesSettings.Reload();
-        Check("(e) existing sort key is respected on a profile that has one", FilesSettings.InitialSort() == new SortSpec(SortColumn.Size, true, true));
+        Check("(e) existing sort key is respected on a profile that has one", FilesSettings.InitialSort() == new SortSpec(SortColumn.Size,
+            true, true));
         FilesSettings.Save();
         Check("(e) unknown keys survive a save", SettingsText().Contains("futur"));
 
@@ -372,12 +388,14 @@ public sealed partial class MainWindow
             && !FilesSettings.RecoveredFromCorrupt
             && File.Exists(FilesSettings.FilePath)
             && Directory.GetFiles(FilesSettings.Dir,
-                                  "settings.*.bak").Length == baks && SettingsText() == lockedText && File.GetLastWriteTimeUtc(FilesSettings.FilePath) == lockedTime);
+                                  "settings.*.bak").Length == baks && SettingsText() == lockedText
+                                      && File.GetLastWriteTimeUtc(FilesSettings.FilePath) == lockedTime);
         FilesSettings.Reload();
         _ = FilesSettings.Data;
         Check("(f) after unlock a reload is writable again", !FilesSettings.ReadOnly);
         FilesSettings.SaveSort(new SortSpec(SortColumn.Size, true, false));                 // instance A changes "sort"
-        File.WriteAllText(FilesSettings.FilePath, "{ \"view\": \"large\", \"sort\": { \"key\": \"name\" } }");   // instance B wrote "view" meanwhile
+        // instance B wrote "view" meanwhile
+        File.WriteAllText(FilesSettings.FilePath, "{ \"view\": \"large\", \"sort\": { \"key\": \"name\" } }");
         FilesSettings.Data.Sort = new SortData { Key = "type", Descending = false };
         FilesSettings.Save();                                                               // A saves: only its dirty key (sort) overwrites
         FilesSettings.Reload();

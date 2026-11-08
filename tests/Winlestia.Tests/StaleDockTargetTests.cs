@@ -39,6 +39,6 @@ public class StaleDockTargetTests
             Check(Store.HealStaleExe(free + @":\Discord\app-1.0.1\Discord.exe") == null, "Missing drive " + free + ": no heal");
             Check(Store.HealStaleExe(Path.Combine("Discord", "app-1.0.1", "Discord.exe")) == null, "Relative path: no heal");
         }
-        finally { try { Directory.Delete(d, true); } catch { } }
+        finally { TempDir.Delete(d); }
     }
 }

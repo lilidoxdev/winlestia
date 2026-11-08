@@ -1,13 +1,14 @@
-# Python 3.12 / chromatic_palette.py / Windows. Wallpaper -> seeds (pooled quantiser + HCT scoring) -> Material You palette (light or dark).
+# Python 3.12 / chromatic_palette.py / Windows. Fond d'écran -> graines (quantificateur groupé + score HCT) -> palette
+# Material You (claire ou sombre).
 from pathlib import Path
 import math
 
 HEX = '#{:02x}{:02x}{:02x}'
-MONO_CHROMA = 8.0  # HCT chroma under which a wallpaper is treated as colourless
+MONO_CHROMA = 8.0  # chroma HCT en dessous de laquelle un fond est traité comme sans couleur
 TO_LIGHT = 62.0
-TO_DARK = 50.0  # hysteresis on area-weighted L*
+TO_DARK = 50.0  # hystérésis sur L* pondéré par la surface
 _cache = {}
-_dark_state = {}  # _dark_state: bounded (<=16) light/dark hysteresis memory, keyed by monitor slot
+_dark_state = {}  # _dark_state : mémoire d'hystérésis clair/sombre bornée (<=16), indexée par emplacement de moniteur
 
 
 def _oklab(rgb):
@@ -124,7 +125,8 @@ def analyze_images(paths, key=None, background='#182025'):
                 'tone': float(h['tone']),
             }
         )
-    # Hue-smoothed "excited" proportion (+-15 deg) as in Material's Score, then chroma-aware rank.
+    # Proportion « excitée » lissée en teinte (+-15 deg) comme dans le Score de Material, puis classement tenant
+    # compte de la chroma.
     for it in items:
         it['excited'] = sum(
             o['proportion']
@@ -147,7 +149,9 @@ def analyze_images(paths, key=None, background='#182025'):
             seeds.append(it)
         if len(seeds) == 4:
             break
-    for s in seeds:  # a dark image's bulk is low-chroma: a seed inherits the vivid accents of its own hue family
+    # le gros d'une image sombre est peu chromatique : une graine hérite des accents vifs de sa propre famille de
+    # teinte
+    for s in seeds:
         family = [
             o['chroma']
             for o in items
@@ -282,7 +286,7 @@ def build_scheme(analysis, dark):
 
     def fix(
         fg, bg, ratio, pal, start, step
-    ):  # walk the foreground along its own tonal palette until the contrast target holds
+    ):  # on fait glisser le premier plan le long de sa propre palette tonale jusqu'à atteindre le contraste visé
         t = start
         while get_contrast_ratio(palette[fg], palette[bg]) < ratio and 0 < t < 100:
             t += step

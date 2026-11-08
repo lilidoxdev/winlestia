@@ -1,4 +1,4 @@
-// language: C# 12, file: GlassMenu.cs, target: Windows 11 / .NET 8 WPF, native acrylic menus with keyboard navigation
+// C# 12, fichier GlassMenu.cs, cible Windows 11 / .NET 8 WPF, menus acryliques natifs avec navigation au clavier
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,12 +22,14 @@ internal sealed class GlassMenu : GlassWindow
         dismissing = true;
         Close();
     }
-    internal static void Open(Coordinator coordinator, Window parent, FrameworkElement anchor, string title, IEnumerable<MenuAction> actions, bool atPointer = false)
+    internal static void Open(Coordinator coordinator, Window parent, FrameworkElement anchor, string title,
+        IEnumerable<MenuAction> actions, bool atPointer = false)
     {
         active?.Dismiss();
         var menu = new GlassMenu(coordinator, parent, title, actions.ToList());
         active = menu;
-        Point point = atPointer ? parent.PointToScreen(Mouse.GetPosition(parent)) : anchor.PointToScreen(new Point(0, anchor.ActualHeight + 7));
+        Point point = atPointer ? parent.PointToScreen(Mouse.GetPosition(parent)) : anchor.PointToScreen(new Point(0, anchor.ActualHeight
+            + 7));
         var screen = System.Windows.Forms.Screen.FromPoint(new System.Drawing.Point((int)point.X, (int)point.Y));
         double scale = VisualTreeHelper.GetDpi(parent).DpiScaleX;
         var area = screen.WorkingArea;
@@ -61,14 +63,16 @@ internal sealed class GlassMenu : GlassWindow
         caption.Margin = new Thickness(14, 9, 10, 13);
         ContentHost.Children.Add(caption);
         var list = new StackPanel();
-        var scroll = new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        var scroll = new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         var buttons = new List<Button>();
         foreach (var action in actions)
         {
             if (action.Separator)
-                list.Children.Add(new Border { Height = 1, Background = UI.T(M3Role.OnSurface, 0x22), Margin = new Thickness(13, 4, 13, 5) });
+                list.Children.Add(new Border { Height = 1, Background = UI.T(M3Role.OnSurface, 0x22), Margin = new Thickness(13, 4, 13, 5)
+                    });
             var button = UI.Button("", () => { Dismiss(); Dispatcher.BeginInvoke(action.Run); });
             button.Height = 41;
             button.Padding = new Thickness(12, 0, 12, 0);
@@ -110,12 +114,18 @@ internal sealed class GlassMenu : GlassWindow
         }
         Closing += (_, _) => dismissing = true;
         Deactivated += (_, _) => Dismiss();
-        Loaded += (_, _) => { Motion.Reveal(ContentHost); int selected = Math.Max(0, actions.FindIndex(x => x.Selected)); if (buttons.Count > 0) buttons[selected].Focus(); };
-        PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) { Dismiss(); e.Handled = true; } if (e.Key is Key.Down or Key.Up) { int i = buttons.FindIndex(x => x.IsKeyboardFocused); if (buttons.Count > 0) buttons[(i + (e.Key == Key.Down ? 1 : buttons.Count - 1) + buttons.Count) % buttons.Count].Focus(); e.Handled = true; } };
+        Loaded += (_, _) => { Motion.Reveal(ContentHost); int selected = Math.Max(0, actions.FindIndex(x => x.Selected));
+            if (buttons.Count > 0) buttons[selected].Focus(); };
+        PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) { Dismiss(); e.Handled = true; } if (e.Key is Key.Down or Key.Up) {
+            int i = buttons.FindIndex(x => x.IsKeyboardFocused); if (buttons.Count > 0) buttons[(i + (e.Key == Key.Down ? 1
+            : buttons.Count - 1) + buttons.Count) % buttons.Count].Focus(); e.Handled = true; } };
     }
     internal static string CategoryGlyph(string label)
     {
         string text = Store.Fold(label);
-        return text.Contains("jeu") ? "\uE7FC" : text.Contains("intelligence") || text.Contains("assistant") ? "\uE99A" : text.Contains("develop") || text.Contains("script") || text.Contains("reverse") ? "\uE943" : text.Contains("media") || text.Contains("video") ? "\uE714" : text.Contains("canada") ? "\uE707" : text.Contains("admin") ? "\uE8A5" : text.Contains("bot") ? "\uE713" : "\uE8B7";
+        return text.Contains("jeu") ? "\uE7FC" : text.Contains("intelligence") || text.Contains("assistant") ? "\uE99A"
+            : text.Contains("develop") || text.Contains("script") || text.Contains("reverse") ? "\uE943" : text.Contains("media")
+            || text.Contains("video") ? "\uE714" : text.Contains("canada") ? "\uE707" : text.Contains("admin") ? "\uE8A5"
+            : text.Contains("bot") ? "\uE713" : "\uE8B7";
     }
 }

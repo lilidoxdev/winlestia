@@ -18,19 +18,13 @@ public class BridgeContractTests
         return dir?.FullName ?? throw new InvalidOperationException("Racine du dépôt introuvable.");
     }
 
-    static JsonElement Schema() => JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "docs", "bridge-schema.json"))).RootElement.Clone();
+    static JsonElement Schema() => JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "docs",
+        "bridge-schema.json"))).RootElement.Clone();
 
-    static string Bridge() => File.ReadAllText(Path.Combine(Root(), "src", "backend", "Bridge", "QtShellBridge.cs"));
-
-    // Corps du `switch (command)` de Handle.
-    static string Switch()
-    {
-        string s = Bridge();
-        int a = s.IndexOf("switch (command)", StringComparison.Ordinal);
-        int b = Regex.Match(s.Substring(a), @"^ {8}catch \(Exception ex\)", RegexOptions.Multiline).Index + a;
-        Assert.True(a > 0 && b > a, "switchFound");
-        return s.Substring(a, b - a);
-    }
+    // Tous les fichiers partiels du pont (QtShellBridge.cs, QtShellBridge.Pipe.cs, …).
+    static string Bridge()
+        => string.Concat(Directory.EnumerateFiles(Path.Combine(Root(), "src", "backend", "Bridge"), "QtShellBridge*.cs").OrderBy(f
+            => f).Select(File.ReadAllText));
 
     static HashSet<string> Names(JsonElement e) => e.EnumerateObject().Select(p => p.Name).ToHashSet();
 
@@ -41,41 +35,37 @@ public class BridgeContractTests
     }
 
     [Fact]
-    public void EveryHandledCommandIsInSchema()
+    public void EveryHandlerIsInSchema()
     {
         var known = Names(Schema().GetProperty("commands"));
-        string body = Switch();
-        // `case "x":` au premier niveau du switch (16 espaces) ; les `case` imbriqués (preference) sont plus profonds.
-        var cases = Regex.Matches(body, "^ {16}case \"([^\"]+)\":", RegexOptions.Multiline).Select(m => m.Groups[1].Value);
-        var early = Regex.Matches(Bridge(), "command == \"([^\"]+)\"").Select(m => m.Groups[1].Value);
-        var missing = cases.Concat(early).Where(n => !known.Contains(n)).Distinct().ToList();
-        Assert.True(missing.Count == 0, "Commandes absentes de docs/bridge-schema.json : " + string.Join(", ", missing));
-        Assert.True(cases.Count() > 50, "extractionPlausible");
+        var handlers = QtShellBridge.ActionNames;
+        var missing = handlers.Where(n => !known.Contains(n)).ToList();
+        Assert.True(missing.Count == 0, "Handlers absents de docs/bridge-schema.json : " + string.Join(", ", missing));
+        Assert.True(handlers.Count > 50, "extractionPlausible");
     }
 
     [Fact]
-    public void EverySchemaCommandIsHandledUnlessIgnored()
+    public void EverySchemaCommandHasAHandler()
     {
-        string all = Switch() + Bridge();
-        foreach (var p in Schema().GetProperty("commands").EnumerateObject())
-        {
-            if (p.Value.TryGetProperty("ignoredByServer", out var ignored) && ignored.GetBoolean())
-                continue;
-            Assert.True(all.Contains("\"" + p.Name + "\"", StringComparison.Ordinal), "Commande du schéma non traitée : " + p.Name);
-        }
+        var handlers = QtShellBridge.ActionNames.ToHashSet();
+        var missing = Names(Schema().GetProperty("commands")).Where(n => !handlers.Contains(n)).ToList();
+        Assert.True(missing.Count == 0, "Commandes du schéma sans handler : " + string.Join(", ", missing));
     }
 
     [Fact]
     public void EveryPreferenceKeyIsInSchema()
     {
         var known = Names(Schema().GetProperty("preferenceKeys"));
-        string body = Switch();
-        int a = body.IndexOf("case \"preference\":", StringComparison.Ordinal);
-        int b = body.IndexOf("case \"shortcut-reset\":", a, StringComparison.Ordinal);
-        var keys = Regex.Matches(body.Substring(a, b - a), "^ {24}case \"([^\"]+)\":", RegexOptions.Multiline).Select(m => m.Groups[1].Value);
+        string text = File.ReadAllText(Path.Combine(Root(), "src", "backend", "Bridge", "QtShellBridge.Actions.Settings.cs"));
+        int a = text.IndexOf("[BridgeAction(\"preference\")]", StringComparison.Ordinal);
+        int b = text.IndexOf("[BridgeAction(", a + 1, StringComparison.Ordinal);
+        Assert.True(a > 0, "handlerFound");
+        string body = b > a ? text.Substring(a, b - a) : text.Substring(a);
+        // `case` du switch sur la clé : un seul niveau d'indentation sous le switch du handler (12 espaces).
+        var keys = Regex.Matches(body, "^ {12}case \"([^\"]+)\":", RegexOptions.Multiline).Select(m => m.Groups[1].Value).ToList();
         var missing = keys.Where(k => !known.Contains(k)).ToList();
         Assert.True(missing.Count == 0, "Clés de préférence absentes du schéma : " + string.Join(", ", missing));
-        Assert.True(keys.Count() > 20, "extractionPlausible");
+        Assert.True(keys.Count > 20, "extractionPlausible");
     }
 
     [Fact]
@@ -90,10 +80,12 @@ public class BridgeContractTests
             if (file.Contains(Path.DirectorySeparatorChar + "VsCodeTheme", StringComparison.Ordinal))
                 continue;
             string text = File.ReadAllText(file);
-            literals.AddRange(Regex.Matches(text, @"(?:QtShell\??\.Send|\bSend|\bsend|extra\?\.Invoke)\(""([^""]+)""").Select(m => m.Groups[1].Value));
+            literals.AddRange(Regex.Matches(text, @"(?:QtShell\??\.Send|\bSend|\bsend|extra\?\.Invoke)\(""([^""]+)""").Select(m
+                => m.Groups[1].Value));
         }
         Assert.True(literals.Count > 30, "extractionPlausible");
-        var missing = literals.Where(l => !events.Contains(l) && !prefixes.Any(p => l.StartsWith(p, StringComparison.Ordinal))).Distinct().ToList();
+        var missing = literals.Where(l => !events.Contains(l) && !prefixes.Any(p => l.StartsWith(p, StringComparison.Ordinal))).Distinct(
+            ).ToList();
         Assert.True(missing.Count == 0, "Évènements absents du schéma : " + string.Join(", ", missing));
     }
 
@@ -102,7 +94,8 @@ public class BridgeContractTests
     {
         var known = Names(Schema().GetProperty("replyKeys"));
         string s = Bridge();
-        foreach (var key in new[] { "state", "events", "notice", "wallpaperCapture", "bookmarksItems", "windows", "fileResults", "wallpaperPicker", "dictation", "audioBars", "spectrum" })
+        foreach (var key in new[] { "state", "events", "notice", "wallpaperCapture", "bookmarksItems", "windows", "fileResults",
+            "wallpaperPicker", "dictation", "audioBars", "spectrum" })
         {
             Assert.True(known.Contains(key), "Clé de réponse absente du schéma : " + key);
             Assert.True(Regex.IsMatch(s, @"\b" + key + " ?="), "Clé de réponse non émise : " + key);

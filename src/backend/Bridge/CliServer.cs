@@ -1,4 +1,4 @@
-// C# 12 / CliServer.cs / Local named pipe for the `winlestia` command line. Async wait for a connection only: no timer, no polling.
+// C# 12 / CliServer.cs / Pipe nommé local de la ligne de commande `winlestia`. Attente asynchrone de connexion : ni minuteur ni sondage.
 using System;
 using System.IO;
 using System.IO.Pipes;
@@ -15,6 +15,9 @@ internal sealed class CliServer : IDisposable
 {
     internal const string PipeName = "WinlestiaCli";
     const int MaxRequestChars = 4096;
+    static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(5);
+    const double BackoffBaseMs = 500, BackoffMaxMs = 30000;
+    const int BackoffMaxDoublings = 10;
     readonly CancellationTokenSource cancellation = new();
     readonly Func<CliCommand, Task<(int code, string text)>> run;
 
@@ -24,15 +27,18 @@ internal sealed class CliServer : IDisposable
         _ = Task.Run(Serve);
     }
 
-    // Only the current user: the DACL holds a single entry for the user's SID. (CurrentUserOnly cannot be combined with an explicit PipeSecurity; the client uses it to check the server's owner.)
+    // Utilisateur courant seulement : la DACL ne contient que son SID. CurrentUserOnly est incompatible avec un
+    // PipeSecurity explicite ; le client s'en sert pour vérifier le propriétaire du serveur.
     static NamedPipeServerStream Create(bool first)
     {
         var security = new PipeSecurity();
-        security.AddAccessRule(new PipeAccessRule(WindowsIdentity.GetCurrent().User!, PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow));
-        return NamedPipeServerStreamAcl.Create(PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | (first ? PipeOptions.FirstPipeInstance : PipeOptions.None), 0, 0, security);
+        security.AddAccessRule(new PipeAccessRule(WindowsIdentity.GetCurrent().User!,
+            PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow));
+        return NamedPipeServerStreamAcl.Create(PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | (
+            first ? PipeOptions.FirstPipeInstance : PipeOptions.None), 0, 0, security);
     }
 
-    // Reads one line of at most MaxRequestChars characters, in bounded blocks. Returns null when the line is missing or too long.
+    // Lit une ligne d'au plus MaxRequestChars caractères, par blocs bornés. Renvoie null si la ligne manque ou est trop longue.
     static async Task<string?> ReadBounded(StreamReader reader, CancellationToken token)
     {
         var sb = new StringBuilder();
@@ -68,7 +74,7 @@ internal sealed class CliServer : IDisposable
                 lastMessage = "";
                 await server.WaitForConnectionAsync(cancellation.Token);
                 using var limit = CancellationTokenSource.CreateLinkedTokenSource(cancellation.Token);
-                limit.CancelAfter(TimeSpan.FromSeconds(5));   // a stalled client must not hold the single instance
+                limit.CancelAfter(RequestTimeout);   // un client bloqué ne doit pas retenir l'unique instance
                 using var reader = new StreamReader(server, new UTF8Encoding(false), false, 256, true);
                 string? line = await ReadBounded(reader, limit.Token);
                 string reply;
@@ -77,19 +83,21 @@ internal sealed class CliServer : IDisposable
                 else
                     reply = await Handle(line);
                 using var writer = new StreamWriter(server, new UTF8Encoding(false), 4096, true) { AutoFlush = true };
-                await writer.WriteLineAsync(reply.AsMemory(), limit.Token);   // no WaitForPipeDrain: a client that never reads must not block the loop
+                // Pas de WaitForPipeDrain : un client qui ne lit jamais ne doit pas bloquer la boucle.
+                await writer.WriteLineAsync(reply.AsMemory(), limit.Token);
             }
             catch (OperationCanceledException) { if (cancellation.IsCancellationRequested) break; }
             catch (Exception ex)
             {
-                // Progressive back-off up to 30 s (e.g. pipe name already taken); logged only when the message changes.
+                // Attente croissante jusqu'à 30 s (ex. nom de pipe déjà pris) ; journalisé seulement quand le message change.
                 failures++;
                 if (ex.Message != lastMessage)
                 {
                     lastMessage = ex.Message;
                     Store.Log("CLI: " + ex.Message);
                 }
-                var wait = TimeSpan.FromMilliseconds(Math.Min(30000, 500.0 * Math.Pow(2, Math.Min(failures - 1, 10))));
+                var wait = TimeSpan.FromMilliseconds(Math.Min(BackoffMaxMs, BackoffBaseMs * Math.Pow(2, Math.Min(failures - 1,
+                    BackoffMaxDoublings))));
                 try
                 {
                     await Task.Delay(wait, cancellation.Token);
@@ -111,7 +119,7 @@ internal sealed class CliServer : IDisposable
             return Reply(2, error);
         try
         {
-            var (code, text) = await run(command!).WaitAsync(TimeSpan.FromSeconds(5), cancellation.Token);
+            var (code, text) = await run(command!).WaitAsync(RequestTimeout, cancellation.Token);
             return Reply(code, text);
         }
         catch (TimeoutException) { return Reply(1, "The shell did not answer in time."); }

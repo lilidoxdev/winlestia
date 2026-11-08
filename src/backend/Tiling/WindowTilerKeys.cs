@@ -1,4 +1,5 @@
-// C#12 / WindowTilerKeys.cs / Keyboard actions, drag-drop swap and process exclusions for WindowTiler. Hotkeys exist only while tiling is enabled.
+// C# 12 / WindowTilerKeys.cs / Actions clavier, échange par glisser-déposer et exclusions de processus pour WindowTiler. Les raccourcis
+// n'existent que lorsque le tuilage est activé.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,11 +23,14 @@ internal sealed partial class WindowTiler
     // Ids 41-44 focus, 45-48 swap (Left,Right,Up,Down), 49 float, 50-51 grow, 52-54 shrink, 55 exclude application.
     static readonly (int id, uint mods, uint vk, string label)[] Bindings ={
   (41,3,0x25,"Ctrl + Alt + ←"),(42,3,0x27,"Ctrl + Alt + →"),(43,3,0x26,"Ctrl + Alt + ↑"),(44,3,0x28,"Ctrl + Alt + ↓"),
-  (45,7,0x25,"Ctrl + Alt + Maj + ←"),(46,7,0x27,"Ctrl + Alt + Maj + →"),(47,7,0x26,"Ctrl + Alt + Maj + ↑"),(48,7,0x28,"Ctrl + Alt + Maj + ↓"),
+  (45,7,0x25,"Ctrl + Alt + Maj + ←"),(46,7,0x27,"Ctrl + Alt + Maj + →"),(47,7,0x26,"Ctrl + Alt + Maj + ↑"),(
+      48,7,0x28,"Ctrl + Alt + Maj + ↓"),
   (49,7,0x46,"Ctrl + Alt + Maj + F"),(50,7,0xBB,"Ctrl + Alt + Maj + +"),(51,7,0x6B,"Ctrl + Alt + Maj + pavé +"),
-  (52,7,0xBD,"Ctrl + Alt + Maj + -"),(53,7,0x6D,"Ctrl + Alt + Maj + pavé -"),(54,7,0x36,"Ctrl + Alt + Maj + 6"),(55,7,0x58,"Ctrl + Alt + Maj + X")};
+  (52,7,0xBD,"Ctrl + Alt + Maj + -"),(53,7,0x6D,"Ctrl + Alt + Maj + pavé -"),(54,7,0x36,"Ctrl + Alt + Maj + 6"),(
+      55,7,0x58,"Ctrl + Alt + Maj + X")};
     double Ratio(string screen, string path) => ratios.TryGetValue(screen, out var d) && d.TryGetValue(path, out var r) ? r : .5;
-    // A refused combination is logged and skipped; the others stay active. Nothing is registered unless tiling is on (and never for test fixtures).
+    // Une combinaison refusée est journalisée et ignorée ; les autres restent actives. Rien n'est enregistré si le tuilage est désactivé
+    // (et jamais pour les fixtures de test).
     void Keys(bool on)
     {
         if (!on)
@@ -49,7 +53,8 @@ internal sealed partial class WindowTiler
             return;
         try
         {
-            keySink = new HwndSource(new HwndSourceParameters("PanneauxTilerKeys") { ParentWindow = new IntPtr(-3), WindowStyle = 0, Width = 0, Height = 0 });
+            keySink = new HwndSource(new HwndSourceParameters("PanneauxTilerKeys") { ParentWindow = new IntPtr(-3), WindowStyle = 0,
+                Width = 0, Height = 0 });
             keySink.AddHook(KeyHook);
             foreach (var b in Bindings)
             {
@@ -129,18 +134,20 @@ internal sealed partial class WindowTiler
             SwapPair(a, list[n].Key);
             return;
         }
-        // No neighbour that way: an empty adjacent screen receives the window, filling its work area.
+        // Pas de voisin dans cette direction : un écran adjacent vide reçoit la fenêtre, qui remplit sa zone de travail.
         var screens = Forms.Screen.AllScreens;
         int cur = Array.FindIndex(screens, s => s.DeviceName == tiles[a].screen);
         if (cur < 0)
             return;
-        int t = TileLogic.Neighbor(screens.Select(s => new Native.Rect { Left = s.Bounds.Left, Top = s.Bounds.Top, Right = s.Bounds.Right, Bottom = s.Bounds.Bottom }).ToList(), cur, dir);
+        int t = TileLogic.Neighbor(screens.Select(s => new Native.Rect { Left = s.Bounds.Left, Top = s.Bounds.Top, Right = s.Bounds.Right,
+            Bottom = s.Bounds.Bottom }).ToList(), cur, dir);
         if (t < 0 || tiles.Any(p => p.Value.screen == screens[t].DeviceName))
             return;
         var w = screens[t].WorkingArea;
         int gap = Math.Max(4, (int)Math.Round(8 * TaskbarNative.Scale(screens[t])));
         motions.Remove(a);
-        Apply(new() { (a, new Native.Rect { Left = w.Left + gap, Top = w.Top + gap, Right = w.Right - gap, Bottom = w.Bottom - gap }, Shadow(a)) });
+        Apply(new() { (a, new Native.Rect { Left = w.Left + gap, Top = w.Top + gap, Right = w.Right - gap, Bottom = w.Bottom - gap },
+            Shadow(a)) });
         RequestTick();
     }
     void SwapPair(IntPtr a, IntPtr b)
@@ -169,7 +176,7 @@ internal sealed partial class WindowTiler
         d[split.Value.path] = TileLogic.Grow(Ratio(t.screen, split.Value.path), split.Value.inFirst, delta);
         RequestTick();
     }
-    // Floating: the window leaves the tiling (restored to its former place) until toggled back or tiling is turned off.
+    // Flottante : la fenêtre quitte le tuilage (restaurée à son ancien emplacement) jusqu'à la rebascule ou la désactivation du tuilage.
     void ToggleFloat()
     {
         var fg = GetForegroundWindow();
@@ -201,13 +208,15 @@ internal sealed partial class WindowTiler
         failing.Remove(h);
         tiles.Remove(h);
     }
-    // End of a manual move (EVENT_SYSTEM_MOVESIZEEND, already hooked): dropped on another tile = swap, elsewhere = back to place. Manual resizes are left to the existing behaviour.
+    // Fin d'un déplacement manuel (EVENT_SYSTEM_MOVESIZEEND, déjà accroché) : déposée sur une autre tuile = échange, ailleurs = retour en
+    // place. Les redimensionnements manuels restent au comportement existant.
     void Dropped(IntPtr h)
     {
         if (!enabled || disposed || !tiles.TryGetValue(h, out var t))
             return;
         var cur = Visible(h);
-        if (Math.Abs(cur.Right - cur.Left - (t.slot.Right - t.slot.Left)) > 6 || Math.Abs(cur.Bottom - cur.Top - (t.slot.Bottom - t.slot.Top)) > 6 || !GetCursorPos(out var pt))
+        if (Math.Abs(cur.Right - cur.Left - (t.slot.Right - t.slot.Left)) > 6
+            || Math.Abs(cur.Bottom - cur.Top - (t.slot.Bottom - t.slot.Top)) > 6 || !GetCursorPos(out var pt))
             return;
         var others = tiles.Where(p => p.Key != h).ToList();
         int k = TileLogic.TileAt(others.Select(p => p.Value.slot).ToList(), pt.X, pt.Y);
@@ -216,7 +225,7 @@ internal sealed partial class WindowTiler
         else
             RequestTick();
     }
-    // ---- User exclusions: process names, one per line, in the Panneaux data folder.
+    // ---- Exclusions utilisateur : noms de processus, un par ligne, dans le dossier de données de Panneaux.
     string ExclusionPath => Path.Combine(Store.DataDir, "tile-exclusions.txt");
     void LoadExclusions()
     {

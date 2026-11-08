@@ -1,4 +1,5 @@
-# Python 3.12 / wallpaper_theme.py / Windows. Material You from the wallpaper really on screen. Event-driven: the backend bumps wallpaperRevision, we re-resolve once (debounced).
+# Python 3.12 / wallpaper_theme.py / Windows. Material You à partir du fond réellement affiché. Piloté par événements
+# : le backend incrémente wallpaperRevision, on re-résout une fois (temporisé).
 import json, subprocess, sys
 from pathlib import Path
 from collections import OrderedDict
@@ -9,7 +10,7 @@ import wallpaper_sources
 
 
 def _in_process(request):
-    import chromatic_palette  # fallback: compute in-process as before
+    import chromatic_palette  # repli : calcul dans le processus comme avant
 
     if request.get('op') == 'images':
         return chromatic_palette.palette_from_images(
@@ -23,7 +24,8 @@ def _in_process(request):
 
 
 def _palette(request):
-    # numpy/PIL/material_color_utilities stay out of the resident frontend: the palette is computed in a short-lived child (palette_child.py) that frees them on exit.
+    # numpy/PIL/material_color_utilities restent hors du frontend résident : la palette est calculée dans un fils de
+    # courte durée (palette_child.py) qui les libère en sortant.
     if getattr(sys, 'frozen', False):
         return _in_process(request)
     python = Path(sys.executable)
@@ -78,7 +80,8 @@ class WallpaperTheme(QObject):
         self.debounce.timeout.connect(self.resolve)
 
     def update(self, monitors, revision=None, client=None):
-        # Called with every state message; costs one tuple comparison. A real change (revision or monitor paths) arms a single 300 ms debounce.
+        # Appelée à chaque message d'état ; coûte une comparaison de tuples. Un vrai changement (révision ou chemins
+        # de moniteur) arme un unique délai de 300 ms.
         if self.closed:
             return
         if client is not None:
@@ -91,7 +94,9 @@ class WallpaperTheme(QObject):
             return
         paths = tuple((m.get('name'), m.get('path')) for m in monitors)
         if self.paths is not None and paths != self.paths:
-            self.static_changed = True  # the Windows picture changed (switcher, Settings app): it now wins over a live-wallpaper config that did not change itself
+            # l'image Windows a changé (sélecteur, application Paramètres) : elle l'emporte maintenant sur une config
+            # de fond animé qui n'a pas changé d'elle-même
+            self.static_changed = True
         self.paths = paths
         self.signature = signature
         self.revision = revision
@@ -99,7 +104,8 @@ class WallpaperTheme(QObject):
         self.debounce.start()
 
     def captured(self, reply):
-        # Reply of the backend one-shot capture of the live host; remember it for the current revision and re-resolve.
+        # Réponse de la capture ponctuelle du backend sur l'hôte animé ; on la retient pour la révision courante et on
+        # re-résout.
         if self.closed or not isinstance(reply, dict):
             return
         self.captures[reply.get('token')] = reply.get('path', '') if reply.get('ok') else ''
@@ -172,7 +178,7 @@ class WallpaperTheme(QObject):
                         else:
                             source = wallpaper_sources.windows_source(
                                 wallpaper_sources.default_bases(), monitor, 0
-                            )  # until the capture lands (or when it is black)
+                            )  # jusqu'à l'arrivée de la capture (ou si elle est noire)
                     key = (source.key, source.modified, background)
                     if key not in self.cache:
                         images = wallpaper_sources.representative_images(source)
@@ -197,7 +203,8 @@ class WallpaperTheme(QObject):
         self.executor.submit(work)
 
     def analyze(self, images, background, source, slot=''):
-        # Single or several frames -> palette_from_images in the child; the light/dark hysteresis memory (per monitor slot, <=16) stays here and is passed along.
+        # Une ou plusieurs images -> palette_from_images dans le fils ; la mémoire d'hystérésis clair/sombre (par
+        # emplacement de moniteur, <=16) reste ici et lui est transmise.
         images = [i for i in images if i]
         if not images:
             return generate_palette('', background)

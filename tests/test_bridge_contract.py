@@ -42,7 +42,7 @@ def test_every_sent_command_is_in_schema():
 
 
 def test_every_read_reply_key_is_in_schema():
-    text = (FRONT / 'bridge.py').read_text(encoding='utf-8')
+    text = (FRONT / 'bridge_state.py').read_text(encoding='utf-8')
     start = text.index('def update_state')
     body = text[start:start + 6000] + text[text.index("message.get('events'") - 80:][:200]
     keys = set(re.findall(r"message\.get\('(\w+)'", body)) | set(re.findall(r"message\['(\w+)'\]", body))
@@ -53,7 +53,7 @@ def test_every_read_reply_key_is_in_schema():
 
 
 def test_every_handled_event_is_in_schema():
-    text = (FRONT / 'bridge.py').read_text(encoding='utf-8')
+    text = (FRONT / 'bridge_state.py').read_text(encoding='utf-8')
     start = text.index("or event.startswith('workspace:')")
     block = text[text.rindex('if event in (', 0, start):start]
     names = set(re.findall(r"'([\w:-]+)'", block))

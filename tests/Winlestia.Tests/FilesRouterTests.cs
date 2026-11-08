@@ -60,6 +60,6 @@ public class FilesRouterTests
             Assert.True(PathRouter.Clean("a\"\"") == "a\"", "onlyOneQuoteStripped");
             Assert.True(IsOwn(dir, dir), "normalFolderStillOwn");
         }
-        finally { try { Directory.Delete(root, true); } catch { } }
+        finally { TempDir.Delete(root); }
     }
 }

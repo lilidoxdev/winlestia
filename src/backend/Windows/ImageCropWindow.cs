@@ -1,4 +1,4 @@
-// language: C# 12, file: ImageCropWindow.cs, target: Windows 11 / .NET 8 WPF, non-destructive square PNG cropping with pan and zoom
+// C# 12, fichier ImageCropWindow.cs, cible Windows 11 / .NET 8 WPF, rognage PNG carré non destructif avec panoramique et zoom
 using System;
 using System.IO;
 using System.Windows;
@@ -64,13 +64,15 @@ internal sealed class CropViewport : FrameworkElement
     {
         for (int row = 0; row < 16; row++)
             for (int col = 0; col < 16; col++)
-                drawing.DrawRectangle(UI.Brush((row + col) % 2 == 0 ? "#BB31495B" : "#BB203747"), null, new Rect(col * 20, row * 20, 20, 20));
+                drawing.DrawRectangle(UI.Brush((row + col) % 2 == 0 ? "#BB31495B" : "#BB203747"), null, new Rect(col * 20, row * 20, 20,
+                    20));
         DrawImage(drawing, 1);
         drawing.DrawRectangle(null, new Pen(UI.Brush("#90E3F4FF"), 1), new Rect(.5, .5, 319, 319));
     }
     void DrawImage(DrawingContext drawing, double scale)
     {
-        drawing.DrawImage(image, new Rect(x * scale, y * scale, image.PixelWidth * basis * zoom * scale, image.PixelHeight * basis * zoom * scale));
+        drawing.DrawImage(image, new Rect(x * scale, y * scale, image.PixelWidth * basis * zoom * scale,
+            image.PixelHeight * basis * zoom * scale));
     }
     internal BitmapSource Export()
     {
@@ -182,7 +184,8 @@ internal sealed class ImageCropWindow : GlassWindow
             Width = new GridLength(65)
         });
         zoomRow.Children.Add(UI.Text("Zoom", 13, UI.Dim));
-        var slider = new Slider { Minimum = .1, Maximum = 6, Value = viewport.Zoom, SmallChange = .05, Margin = new Thickness(8, 0, 12, 0) };
+        var slider = new Slider { Minimum = .1, Maximum = 6, Value = viewport.Zoom, SmallChange = .05, Margin = new Thickness(8, 0, 12, 0)
+            };
         System.Windows.Automation.AutomationProperties.SetName(slider, "Zoom de l’image");
         Grid.SetColumn(slider, 1);
         zoomRow.Children.Add(slider);

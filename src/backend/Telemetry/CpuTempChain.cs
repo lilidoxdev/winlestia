@@ -1,4 +1,5 @@
-// language: C# 12, file: CpuTempChain.cs, target: Windows 11 / .NET 8, read-only CPU temperature fallbacks (never installs a driver)
+// C# 12, fichier CpuTempChain.cs, cible Windows 11 / .NET 8, repli en lecture seule pour la température du processeur (n'installe jamais de
+// pilote)
 using System;
 using System.Collections.Generic;
 using System.Management;
@@ -8,25 +9,29 @@ using System.Threading.Tasks;
 
 namespace PanneauxGlass;
 
-// Fallbacks used when LibreHardwareMonitor has no plausible CPU reading (no sensor driver, no admin rights).
-// Slow sources (WMI/PDH) run on a separate task at most every 10 s, so the 1 s sampling loop never blocks.
+// Replis utilisés quand LibreHardwareMonitor n'a aucune lecture plausible du processeur (pas de pilote de capteur, pas de droits admin).
+// Les sources lentes (WMI/PDH) tournent sur une tâche séparée au plus toutes les 10 s, pour que la boucle d'échantillonnage à 1 s ne bloque
+// jamais.
 internal sealed class CpuTempChain : IDisposable
 {
     sealed class Source(string name, Func<double?> read, bool hardware = false)
     {
-        internal readonly bool Hardware = hardware; internal bool EverWorked; internal readonly string Name = name; internal readonly Func<double?> Read = read; internal long RetryAt; internal bool Logged; internal int Fails;
+        internal readonly bool Hardware = hardware; internal bool EverWorked; internal readonly string Name = name;
+            internal readonly Func<double?> Read = read; internal long RetryAt; internal bool Logged; internal int Fails;
     }
     readonly Source[] sources; readonly Func<long> clock; readonly Action<string> log;
     sealed record Reading(double Value, string Source, long At);
-    Reading? cached; int busy, disposed, generation, probing = -1; long nextProbe, busySince; int working = -1; // cached: immutable, published via Volatile; probing: index of the source being read
+    // cached: immutable, published via Volatile; probing: index of the source being read
+    Reading? cached; int busy, disposed, generation, probing = -1; long nextProbe, busySince; int working = -1;
     internal CpuTempChain(Func<long>? clock = null, Action<string>? log = null)
     {
         this.clock = clock ?? (() => Environment.TickCount64);
         this.log = log ?? Store.Log;
-        sources = new[] { new Source("LHM-WMI", () => WmiSensor(@"root\LibreHardwareMonitor")), new Source("OHM-WMI", () => WmiSensor(@"root\OpenHardwareMonitor")), new Source("ACPI", ReadAcpi, true), new Source("PDH", ReadPdh, true) };
+        sources = new[] { new Source("LHM-WMI", () => WmiSensor(@"root\LibreHardwareMonitor")), new Source("OHM-WMI", ()
+            => WmiSensor(@"root\OpenHardwareMonitor")), new Source("ACPI", ReadAcpi, true), new Source("PDH", ReadPdh, true) };
     }
     internal static double? Plausible(double? v) => v is > 10 and <= 125 && double.IsFinite(v.Value) ? v : null;
-    // ACPI/PDH stubs report a constant 3000 dK (26.85 C) or 3010 dK (27.85 C) on machines without a real thermal zone.
+    // Les stubs ACPI/PDH renvoient une constante de 3000 dK (26,85 C) ou 3010 dK (27,85 C) sur les machines sans vraie zone thermique.
     internal static double? Real(double? v) => Plausible(v) is { } t && Math.Abs(t - 26.85) > 0.06 && Math.Abs(t - 27.85) > 0.06 ? t : null;
     internal (double? value, string? source) Resolve(double? lhm)
     {
@@ -35,7 +40,8 @@ internal sealed class CpuTempChain : IDisposable
             return (direct, "LHM");
         if (now >= nextProbe && Volatile.Read(ref disposed) == 0)
         {
-            // A probe stuck for >30 s (hung WMI call): mark its source failed (back-off) and let a new probe run; the stuck task's late result is ignored via the generation.
+            // Une sonde bloquée depuis plus de 30 s (appel WMI figé) : on marque sa source en échec (temporisation) et on laisse une
+            // nouvelle sonde tourner ; le résultat tardif de la tâche bloquée est ignoré grâce à la génération.
             if (Volatile.Read(ref busy) == 1 && now - Volatile.Read(ref busySince) > 30000)
             {
                 int gen = Interlocked.Increment(ref generation);
@@ -54,7 +60,8 @@ internal sealed class CpuTempChain : IDisposable
                 nextProbe = now + 10000;
                 Volatile.Write(ref busySince, now);
                 int gen = Volatile.Read(ref generation);
-                Task.Run(() => { try { Probe(gen); } catch (Exception ex) { log("Température CPU: " + ex.Message); } finally { if (gen == Volatile.Read(ref generation)) Volatile.Write(ref busy, 0); } });
+                Task.Run(() => { try { Probe(gen); } catch (Exception ex) { log("Température CPU: " + ex.Message); } finally {
+                    if (gen == Volatile.Read(ref generation)) Volatile.Write(ref busy, 0); } });
             }
         }
         var c = Volatile.Read(ref cached);
@@ -110,7 +117,8 @@ internal sealed class CpuTempChain : IDisposable
         }
         catch (Exception ex)
         {
-            s.RetryAt = s.Hardware && !s.EverWorked && ++s.Fails >= 3 ? long.MaxValue : now + 60000; // ACPI/PDH failing 3 times without ever producing a reading: unsupported for the process lifetime (logged once)
+            // ACPI/PDH failing 3 times without ever producing a reading: unsupported for the process lifetime (logged once)
+            s.RetryAt = s.Hardware && !s.EverWorked && ++s.Fails >= 3 ? long.MaxValue : now + 60000;
             if (!s.Logged)
             {
                 s.Logged = true;
@@ -128,7 +136,9 @@ internal sealed class CpuTempChain : IDisposable
     {
         var scope = new ManagementScope(ns, new ConnectionOptions { Timeout = TimeSpan.FromSeconds(2) });
         scope.Connect();
-        using var searcher = new ManagementObjectSearcher(scope, new ObjectQuery("SELECT Name,Value,Identifier FROM Sensor WHERE SensorType='Temperature'"), new EnumerationOptions { Timeout = TimeSpan.FromSeconds(2), ReturnImmediately = true });
+        using var searcher = new ManagementObjectSearcher(scope,
+            new ObjectQuery("SELECT Name,Value,Identifier FROM Sensor WHERE SensorType='Temperature'"), new EnumerationOptions {
+            Timeout = TimeSpan.FromSeconds(2), ReturnImmediately = true });
         double? best = null;
         int rank = 9;
         using var results = searcher.Get();
@@ -142,7 +152,9 @@ internal sealed class CpuTempChain : IDisposable
                 double? v = o["Value"] is { } raw ? Plausible(Convert.ToDouble(raw)) : null;
                 if (v == null)
                     continue;
-                int r = name.Contains("Tctl", StringComparison.OrdinalIgnoreCase) || name.Contains("Tdie", StringComparison.OrdinalIgnoreCase) ? 0 : name.Contains("Package", StringComparison.OrdinalIgnoreCase) ? 1 : name.Contains("Average", StringComparison.OrdinalIgnoreCase) ? 2 : 3;
+                int r = name.Contains("Tctl", StringComparison.OrdinalIgnoreCase) || name.Contains("Tdie",
+                    StringComparison.OrdinalIgnoreCase) ? 0 : name.Contains("Package", StringComparison.OrdinalIgnoreCase) ? 1
+                    : name.Contains("Average", StringComparison.OrdinalIgnoreCase) ? 2 : 3;
                 if (r < rank || r == rank && v > best)
                 {
                     rank = r;
@@ -156,7 +168,9 @@ internal sealed class CpuTempChain : IDisposable
     {
         var scope = new ManagementScope(@"root\wmi", new ConnectionOptions { Timeout = TimeSpan.FromSeconds(2) });
         scope.Connect();
-        using var searcher = new ManagementObjectSearcher(scope, new ObjectQuery("SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature"), new EnumerationOptions { Timeout = TimeSpan.FromSeconds(2), ReturnImmediately = true });
+        using var searcher = new ManagementObjectSearcher(scope,
+            new ObjectQuery("SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature"), new EnumerationOptions {
+            Timeout = TimeSpan.FromSeconds(2), ReturnImmediately = true });
         double? best = null;
         using var results = searcher.Get();
         foreach (ManagementBaseObject o in results)
@@ -172,7 +186,8 @@ internal sealed class CpuTempChain : IDisposable
     internal static double? ReadPdh()
     {
         double? best = null;
-        foreach (var (counter, divisor) in new[] { (@"\Thermal Zone Information(*)\High Precision Temperature", 10.0), (@"\Thermal Zone Information(*)\Temperature", 1.0) })
+        foreach (var (counter, divisor) in new[] { (@"\Thermal Zone Information(*)\High Precision Temperature", 10.0),
+            (@"\Thermal Zone Information(*)\Temperature", 1.0) })
         {
             foreach (var raw in PdhArray(counter))
                 if (Real(raw / divisor - 273.15) is { } t && (best == null || t > best))
@@ -226,8 +241,10 @@ internal sealed class CpuTempChain : IDisposable
         internal IntPtr Name; internal uint Status; internal uint Pad; internal double Value;
     }
     [DllImport("pdh.dll", CharSet = CharSet.Unicode)] static extern uint PdhOpenQueryW(string? source, UIntPtr data, out IntPtr query);
-    [DllImport("pdh.dll", CharSet = CharSet.Unicode)] static extern uint PdhAddEnglishCounterW(IntPtr query, string path, UIntPtr data, out IntPtr counter);
+    [DllImport("pdh.dll", CharSet = CharSet.Unicode)] static extern uint PdhAddEnglishCounterW(IntPtr query, string path, UIntPtr data,
+        out IntPtr counter);
     [DllImport("pdh.dll")] static extern uint PdhCollectQueryData(IntPtr query);
-    [DllImport("pdh.dll")] static extern uint PdhGetFormattedCounterArrayW(IntPtr counter, uint format, ref uint size, out uint count, IntPtr buffer);
+    [DllImport("pdh.dll")] static extern uint PdhGetFormattedCounterArrayW(IntPtr counter, uint format, ref uint size, out uint count,
+        IntPtr buffer);
     [DllImport("pdh.dll")] static extern uint PdhCloseQuery(IntPtr query);
 }

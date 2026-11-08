@@ -1,6 +1,7 @@
 // Side card: "Accès rapide" (known folders) and "Lecteurs" (drives). Both lists are read on a pool thread
-// (DriveInfo.IsReady can block on a sleeping or network drive). The active location is a secondaryContainer pill.
-// Quick access entries are the user's pinned list (QuickAccess / settings.json): reorder, rename, unpin, broken-target state. The "Lecteurs" list is unchanged.
+// (DriveInfo.IsReady peut bloquer sur un lecteur en veille ou réseau). L'emplacement actif est une pastille secondaryContainer.
+// Les entrées d'accès rapide sont la liste épinglée de l'utilisateur (QuickAccess / settings.json) : réordonner, renommer, désépingler,
+// état de cible cassée. La liste "Lecteurs" est inchangée.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,18 +21,24 @@ namespace WinlestiaFiles;
 
 internal sealed class Sidebar
 {
-    [DllImport("shell32.dll")] static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid id, uint flags, IntPtr token, out IntPtr path);
+    // Fusionne les rafales de messages d'arrivée de lecteur en une seule vérification.
+    const int RecheckDebounceMs = 500;
+    [DllImport("shell32.dll")] static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid id, uint flags, IntPtr token,
+        out IntPtr path);
     [DllImport("ole32.dll")] static extern void CoTaskMemFree(IntPtr pointer);
     static readonly Guid Downloads = new("374DE290-123F-4565-9164-39C4925E467B");
-    // Material Symbols / Segoe Fluent code points: folder, file, warning.
-    const string FolderMat = "\uE2C7", FolderFluent = "\uE8B7", FileMat = "\uE873", FileFluent = "\uE8A5", WarnMat = "\uE002", WarnFluent = "\uE7BA";
+    // Points de code Material Symbols / Segoe Fluent : dossier, fichier, avertissement.
+    const string FolderMat = "\uE2C7", FolderFluent = "\uE8B7", FileMat = "\uE873", FileFluent = "\uE8A5", WarnMat = "\uE002",
+        WarnFluent = "\uE7BA";
 
     sealed record Place(string Label, string Path, string Material, string Fluent);
     sealed record Drive(string Root, string Label, long Free, long Total);
     sealed class Entry
     {
-        internal string Path = ""; internal Border Pill = null!; internal TextBlock Icon = null!; internal TextBlock Text = null!; internal bool Hot, Active, Drop;
-        internal Grid Row = null!; internal StackPanel Texts = null!; internal bool Quick; internal TargetKind Kind; internal TextBlock? WarnIcon, FileIcon; internal TextBlock BaseIcon = null!;
+        internal string Path = ""; internal Border Pill = null!; internal TextBlock Icon = null!; internal TextBlock Text = null!;
+            internal bool Hot, Active, Drop;
+        internal Grid Row = null!; internal StackPanel Texts = null!; internal bool Quick; internal TargetKind Kind;
+            internal TextBlock? WarnIcon, FileIcon; internal TextBlock BaseIcon = null!;
     }
 
     readonly Action<string, bool> go;
@@ -41,7 +48,7 @@ internal sealed class Sidebar
     readonly StackPanel drivesHost = new();
     // Test hook: replaces DriveInfo.GetDrives() (Root, Label, Free, Total).
     internal static Func<List<(string Root, string Label, long Free, long Total)>>? DriveSource;
-    // Right click on a drive / Ce PC entry, and "the drive list was rebuilt" (the Ce PC page redraws).
+    // Clic droit sur un lecteur / l'entrée Ce PC, et "la liste des lecteurs a été reconstruite" (la page Ce PC se redessine).
     internal Action<string>? DriveMenu;
     internal event Action? DrivesChanged;
     internal int DrivesRebuilt;
@@ -70,12 +77,13 @@ internal sealed class Sidebar
             BorderBrush = UI.Hairline,
             BorderThickness = new Thickness(1),
             ClipToBounds = true,
-            Child = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = host }
+            Child = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = host }
         };
         Load();
     }
 
-    // Rebuilds the quick access section from settings.json (the self-test uses it as "restart").
+    // Reconstruit la section d'accès rapide depuis settings.json (l'auto-test s'en sert comme "redémarrage").
     internal void ReloadQuick()
     {
         QuickAccess.InitIfNew(known.Values.Select(p => p.Path));
@@ -103,7 +111,7 @@ internal sealed class Sidebar
     }
 
 
-    // Rebuilt from scratch: arrival / removal of a drive, label or free space change.
+    // Reconstruite de zéro : arrivée / retrait d'un lecteur, changement d'étiquette ou d'espace libre.
     void BuildDrives(List<Drive> drives)
     {
         active = null;
@@ -126,7 +134,8 @@ internal sealed class Sidebar
         DrivesChanged?.Invoke();
     }
 
-    // Drive arrival / removal (WM_DEVICECHANGE): the drive list and the "not found" state of the pinned entries are re-evaluated together.
+    // Arrivée / retrait d'un lecteur (WM_DEVICECHANGE) : la liste des lecteurs et l'état "introuvable" des entrées épinglées sont réévalués
+    // ensemble.
     internal async Task DevicesChanged()
     {
         try
@@ -138,7 +147,8 @@ internal sealed class Sidebar
         catch (Exception ex) { App.CrashLog(ex); }
     }
 
-    internal List<(string Path, string Label)> DriveView() => entries.Where(e => !e.Quick && !ThisPc.Is(e.Path)).Select(e => (e.Path, e.Text.Text)).ToList();
+    internal List<(string Path, string Label)> DriveView() => entries.Where(e => !e.Quick && !ThisPc.Is(e.Path)).Select(e => (e.Path,
+        e.Text.Text)).ToList();
 
     static List<Drive> GatherDrives()
     {
@@ -195,7 +205,8 @@ internal sealed class Sidebar
         catch { return ""; }
     }
 
-    static string Size(long bytes) => bytes >= 1L << 40 ? (bytes / (double)(1L << 40)).ToString("0.#") + " To" : (bytes / (double)(1L << 30)).ToString("0") + " Go";
+    static string Size(long bytes) => bytes >= 1L << 40 ? (bytes / (double)(1L << 40)).ToString("0.#") + " To"
+        : (bytes / (double)(1L << 30)).ToString("0") + " Go";
 
     static TextBlock Header(string text, bool gap)
     {
@@ -241,8 +252,10 @@ internal sealed class Sidebar
         _ = Recheck();
     }
 
-    // Existence of every pinned target, off the UI thread, each probe with a timeout (a disconnected network drive would block Directory.Exists). No polling: called when
-    // the list is shown, when a drive arrives or leaves (window device-change message) and when the window is activated again.
+    // Existence de chaque cible épinglée, hors du thread UI, chaque sonde avec un délai (un lecteur réseau déconnecté bloquerait
+    // Directory.Exists). Pas de scrutation : appelé quand
+    // la liste s'affiche, quand un lecteur arrive ou part (message de changement de périphérique de la fenêtre) et quand la fenêtre est
+    // réactivée.
     internal async Task Recheck()
     {
         int gen = ++generation;
@@ -270,10 +283,11 @@ internal sealed class Sidebar
             _ = Recheck();
     }
 
-    // Drive arrival / removal: bursts of messages collapse into one check (one-shot timer, only alive while an event is pending).
+    // Arrivée / retrait de lecteur : les rafales de messages se fondent en une vérification (minuteur à usage unique, vivant seulement
+    // pendant qu'un événement est en attente).
     internal void ScheduleRecheck()
     {
-        recheckTimer ??= new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        recheckTimer ??= new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(RecheckDebounceMs) };
         recheckTimer.Tick -= OnRecheckTick;
         recheckTimer.Tick += OnRecheckTick;
         recheckTimer.Stop();
@@ -294,7 +308,8 @@ internal sealed class Sidebar
         e.Icon = icon;
     }
 
-    // Broken target: dimmed label, warning icon from the palette error role, tooltip with the path. A file target gets the file icon.
+    // Cible cassée : étiquette grisée, icône d'avertissement du rôle d'erreur de la palette, info-bulle avec le chemin. Une cible fichier
+    // reçoit l'icône de fichier.
     void ApplyState(Entry e)
     {
         if (e.Kind == TargetKind.Missing)
@@ -307,7 +322,7 @@ internal sealed class Sidebar
         Paint(e);
     }
 
-    // What the list shows, for the self-test.
+    // Ce que la liste affiche, pour l'auto-test.
     internal List<(string Path, string Label, TargetKind Kind, string Tip)> QuickView() =>
         entries.Where(e => e.Quick).Select(e => (e.Path, e.Text.Text, e.Kind, e.Pill.ToolTip as string ?? "")).ToList();
 
@@ -337,7 +352,8 @@ internal sealed class Sidebar
 
     void ShowBrokenMenu(string path)
     {
-        uint id = NativeMenu.Show(Hwnd, new NativeMenu.Item?[] { new(CmdRemove, "Retirer le raccourci"), new(CmdRelocate, "Retrouver la cible…") });
+        uint id = NativeMenu.Show(Hwnd, new NativeMenu.Item?[] { new(CmdRemove, "Retirer le raccourci"), new(CmdRelocate,
+            "Retrouver la cible…") });
         Perform(path, id);
     }
 
@@ -374,7 +390,7 @@ internal sealed class Sidebar
         catch { return null; }
     }
 
-    // Every action edits the list (or navigates); none touches the target on disk.
+    // Chaque action modifie la liste (ou navigue) ; aucune ne touche la cible sur disque.
     void Perform(string path, uint id)
     {
         int i = QuickAccess.IndexOf(path);
@@ -402,7 +418,8 @@ internal sealed class Sidebar
         }
     }
 
-    // Folder or file dialog (by the look of the old name) whose pick replaces the path, keeping label and position. Already pinned elsewhere: the broken entry is dropped instead.
+    // Boîte de dialogue dossier ou fichier (selon l'allure de l'ancien nom) dont le choix remplace le chemin, en gardant étiquette et
+    // position. Déjà épinglé ailleurs : l'entrée cassée est supprimée à la place.
     void Relocate(string path)
     {
         int i = QuickAccess.IndexOf(path);
@@ -434,7 +451,7 @@ internal sealed class Sidebar
             QuickAccess.Replace(i, chosen);
     }
 
-    // Inline label editor: Enter or leaving the box keeps it, Escape cancels, empty = back to the default name.
+    // Éditeur d'étiquette en ligne : Entrée ou la perte du focus la conserve, Échap annule, vide = retour au nom par défaut.
     TextBox? labelBox;
     internal bool Editing => labelBox != null && labelBox.IsKeyboardFocusWithin;
 
@@ -478,13 +495,15 @@ internal sealed class Sidebar
             if (i >= 0 && label != QuickAccess.Entries[i].Label)
                 QuickAccess.SetLabel(i, label);
         }
-        box.KeyDown += (_, k) => { if (k.Key == System.Windows.Input.Key.Enter) { Finish(true); k.Handled = true; } else if (k.Key == System.Windows.Input.Key.Escape) { Finish(false); k.Handled = true; } };
+        box.KeyDown += (_, k) => { if (k.Key == System.Windows.Input.Key.Enter) { Finish(true); k.Handled = true; }
+            else if (k.Key == System.Windows.Input.Key.Escape) { Finish(false); k.Handled = true; } };
         box.LostKeyboardFocus += (_, _) => Finish(true);
         box.MouseDown += (_, m) => m.Handled = true;
         box.Loaded += (_, _) => { box.Focus(); box.SelectAll(); };
     }
 
-    // Pointer reordering by capture (no OLE: the window's own drop target stays untouched). A press that does not move is a click.
+    // Réordonnancement au pointeur par capture (pas d'OLE : la cible de dépôt de la fenêtre reste intacte). Un appui sans déplacement est
+    // un clic.
     Entry? dragFrom, dragTarget; Point dragStart; bool dragging;
 
     Entry? QuickAt(Point inHost)
@@ -621,16 +640,19 @@ internal sealed class Sidebar
     static void Paint(Entry e)
     {
         bool missing = e.Kind == TargetKind.Missing;
-        e.Pill.Background = e.Drop ? UI.T(M3Role.PrimaryContainer) : e.Active ? UI.T(M3Role.PrimaryContainer) : e.Hot ? UI.Tint : Brushes.Transparent;
+        e.Pill.Background = e.Drop ? UI.T(M3Role.PrimaryContainer) : e.Active ? UI.T(M3Role.PrimaryContainer) : e.Hot ? UI.Tint
+            : Brushes.Transparent;
         var fg = e.Drop ? UI.T(M3Role.OnPrimaryContainer) : e.Active ? UI.T(M3Role.OnPrimaryContainer) : UI.White;
-        e.Pill.BorderBrush = e.Active && !e.Drop ? UI.T(M3Role.Primary) : Brushes.Transparent;   // selected: visible even when the container barely differs from the panel
+        // selected: visible even when the container barely differs from the panel
+        e.Pill.BorderBrush = e.Active && !e.Drop ? UI.T(M3Role.Primary) : Brushes.Transparent;
         e.Text.Foreground = missing && !e.Active ? UI.Label : fg;
         e.Icon.Foreground = missing ? UI.T(M3Role.Error) : fg;
         e.Text.FontWeight = e.Active ? FontWeights.SemiBold : FontWeights.Normal;
         e.Text.FontStyle = missing ? FontStyles.Italic : FontStyles.Normal;
     }
 
-    // Drag & drop: the entry under an element of the tree, and the drop highlight. Files and broken targets are not drop targets.
+    // Glisser-déposer : l'entrée sous un élément de l'arbre, et la surbrillance de dépôt. Les fichiers et les cibles cassées ne sont pas
+    // des cibles de dépôt.
     internal string? PathAt(DependencyObject d)
     {
         foreach (var e in entries)
@@ -661,7 +683,7 @@ internal sealed class Sidebar
 
     static string Slash(string p) => p.EndsWith('\\') ? p : p + "\\";
 
-    // Longest matching prefix wins: inside Documents\x the Documents pill stays lit, otherwise the drive.
+    // Le plus long préfixe correspondant gagne : dans Documents\x la pastille Documents reste allumée, sinon le lecteur.
     internal void Highlight(string path)
     {
         current = path;
@@ -671,7 +693,8 @@ internal sealed class Sidebar
         foreach (var e in entries)
         {
             string prefix = Slash(e.Path);
-            if (target.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && (prefix.Length > length || (prefix.Length == length && e.Quick)))
+            if (target.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && (prefix.Length > length || (prefix.Length == length
+                && e.Quick)))
             {
                 best = e;
                 length = prefix.Length;

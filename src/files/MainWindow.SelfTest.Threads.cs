@@ -1,6 +1,8 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=ctxthreads : which phase of a shell context-menu build leaves OS threads behind, and who owns them (start address -> module+offset, thread description).
-// Variants a (SHBindToParent) b (+GetUIObjectOf) c (+QueryContextMenu) d (+populate submenus), each on the UI STA and on an MTA pool thread, same folder vs fresh folder. Fixture under %TEMP%\WinlestiaFilesOps only.
+// WINLESTIA_FILES_SELFTEST=ctxthreads : quelle phase de construction d'un menu contextuel du shell laisse des threads OS derrière elle, et
+// qui les possède (adresse de départ -> module+décalage, description du thread).
+// Variantes a (SHBindToParent) b (+GetUIObjectOf) c (+QueryContextMenu) d (+remplissage des sous-menus), chacune sur le STA de l'interface
+// et sur un thread MTA du pool, même dossier vs dossier neuf. Jeu d'essai sous %TEMP%\WinlestiaFilesOps uniquement.
 // WINLESTIA_FILES_CYCLES (default 20), WINLESTIA_FILES_SETTLE (seconds per variant, default 8).
 using System;
 using System.Collections.Generic;
@@ -85,7 +87,7 @@ public sealed partial class MainWindow
             return;
         }
         await WaitLoaded();
-        await Task.Delay(800);
+        await Task.Delay(PauseMiseEnPageMs);
         int cycles = int.TryParse(Environment.GetEnvironmentVariable("WINLESTIA_FILES_CYCLES"), out var cy) ? cy : 20;
         int settle = int.TryParse(Environment.GetEnvironmentVariable("WINLESTIA_FILES_SETTLE"), out var se) ? se : 8;
         string only = Environment.GetEnvironmentVariable("WINLESTIA_FILES_VARIANTS") ?? "";
@@ -155,7 +157,8 @@ public sealed partial class MainWindow
                     await Task.Delay(settle * 1000);
                     var settled = ThreadOwners();
                     T($"VARIANT {name}: threads {before.Count} -> {after.Count} (after cycles) -> {settled.Count} (+{settle} s)");
-                    foreach (var g in settled.Where(k => !before.ContainsKey(k.Key)).GroupBy(k => k.Value).OrderByDescending(g => g.Count()))
+                    foreach (var g in settled.Where(k => !before.ContainsKey(k.Key)).GroupBy(k => k.Value).OrderByDescending(g
+                        => g.Count()))
                         T($"   new x{g.Count()}: {g.Key}");
                 }
         var end = ThreadOwners();

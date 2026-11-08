@@ -1,4 +1,5 @@
-// C# 12 / WallpaperLogic.cs / Pure helpers for the wallpaper picker: animated-wallpaper process names and display labels. No I/O, no Windows API.
+// C# 12 / WallpaperLogic.cs / Utilitaires purs du sélecteur de fond d'écran : noms de processus des fonds animés et libellés d'écran.
+// Aucune E/S, aucune API Windows.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,8 @@ namespace PanneauxGlass;
 
 internal static class WallpaperLogic
 {
-    // Executable name (lower case, with .exe) -> product name. Process names only; no window or content is read. Add a line to cover another product.
+    // Nom d'exécutable (minuscules, avec .exe) -> nom du produit. Noms de processus uniquement ; aucune fenêtre ni contenu n'est lu.
+    // Ajouter une ligne pour couvrir un autre produit.
     internal static readonly (string exe, string label)[] AnimatedHosts = {
         ("desktophut studio.exe", "DesktopHut"),
         ("wallpaper32.exe", "Wallpaper Engine"), ("wallpaper64.exe", "Wallpaper Engine"),
@@ -15,10 +17,11 @@ internal static class WallpaperLogic
         ("wallpaper.service.exe", "Wallpaper X"), ("wallpaper x launcher.exe", "Wallpaper X"),
     };
 
-    // Process names may come with or without ".exe" and in any case (Process.ProcessName has no extension).
+    // Les noms de processus peuvent venir avec ou sans ".exe" et dans n'importe quelle casse (Process.ProcessName n'a pas d'extension).
     internal static string[] Animated(IEnumerable<string?> processNames)
     {
-        var seen = new HashSet<string>(processNames.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => Normalize(n!)), StringComparer.Ordinal);
+        var seen = new HashSet<string>(processNames.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => Normalize(n!)),
+            StringComparer.Ordinal);
         return AnimatedHosts.Where(h => seen.Contains(h.exe)).Select(h => h.label).Distinct().ToArray();
     }
 
@@ -28,6 +31,7 @@ internal static class WallpaperLogic
         return name.EndsWith(".exe", StringComparison.Ordinal) ? name : name + ".exe";
     }
 
-    // Neutral label for the CLI; the picker builds its own translated label from the same fields.
-    internal static string DisplayName(int id, int width, int height, bool primary) => "Display " + id + " (" + width + "x" + height + ")" + (primary ? " primary" : "");
+    // Libellé neutre pour la CLI ; le sélecteur construit son propre libellé traduit à partir des mêmes champs.
+    internal static string DisplayName(int id, int width, int height, bool primary) => "Display " + id + " (" + width + "x" + height + ")"
+        + (primary ? " primary" : "");
 }

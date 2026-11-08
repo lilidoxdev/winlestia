@@ -1,7 +1,10 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=recycle (resident --background instance, opened once through the pipe on a fixture under %TEMP%\WinlestiaFilesOps):
-// builds WINLESTIA_FILES_RECYCLE_BUILDS native menus (item + background), optionally (WINLESTIA_FILES_RECYCLE_OP=1) starts a copy of <fixture>\bigfile.bin
-// into <fixture>\dest, then hides the window like a user closing it. Marks go to selftest.log; the harness checks the exit code and the pipe.
+// WINLESTIA_FILES_SELFTEST=recycle (instance résidente --background, ouverte une fois par le tube sur un jeu d'essai sous
+// %TEMP%\WinlestiaFilesOps) :
+// construit WINLESTIA_FILES_RECYCLE_BUILDS menus natifs (élément + fond), lance éventuellement (WINLESTIA_FILES_RECYCLE_OP=1) une copie de
+// <jeu>\bigfile.bin
+// vers <jeu>\dest, puis masque la fenêtre comme un utilisateur qui la ferme. Les repères vont dans selftest.log ; le banc vérifie le code
+// de sortie et le tube.
 using System;
 using System.IO;
 using System.Threading.Tasks;

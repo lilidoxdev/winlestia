@@ -1,4 +1,4 @@
-// language: C# 12, file: ControlVerification.cs, target: Windows 11 / .NET 8, isolated configuration and live readback checks
+// C# 12, fichier ControlVerification.cs, cible Windows 11 / .NET 8, contrôles de configuration isolée et de relecture en direct
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,13 +33,16 @@ internal static class ControlVerification
             {
                 var work = new Rect(-100, 50, size.Width, size.Height);
                 var p = ControlPairLayout.Calculate(work, true);
-                Check(work.Contains(p.Home) && work.Contains(p.Controls) && p.Controls.Left > p.Home.Right && Math.Abs((p.Home.Left + p.Controls.Right) / 2 - (work.Left + work.Width / 2)) < .01, "Paire centrée sans chevauchement : " + size);
+                Check(work.Contains(p.Home) && work.Contains(p.Controls) && p.Controls.Left > p.Home.Right && Math.Abs((p.Home.Left
+                    + p.Controls.Right) / 2 - (work.Left + work.Width / 2)) < .01, "Paire centrée sans chevauchement : " + size);
             }
             var defaults = new ControlPreferences();
-            Check(defaults.Modules.Count == 5 && defaults.Shortcuts.Select(s => s.Id).Distinct().Count() == defaults.Shortcuts.Count, "Cinq modules et raccourcis identifiables");
+            Check(defaults.Modules.Count == 5 && defaults.Shortcuts.Select(s => s.Id).Distinct().Count() == defaults.Shortcuts.Count,
+                "Cinq modules et raccourcis identifiables");
             var preferences = JsonSerializer.Deserialize<Preferences>("{\"Favorites\":[\"steam\"]}", Store.Json)!;
             preferences.Normalize();
-            Check(preferences.Controls.Modules.Count == 5 && preferences.Favorites.Single() == "steam", "Migration 5.2 sans perte des favoris");
+            Check(preferences.Controls.Modules.Count == 5 && preferences.Favorites.Single() == "steam",
+                "Migration 5.2 sans perte des favoris");
             preferences.Controls.Modules.Reverse();
             preferences.Controls.HiddenModules.Add("connections");
             preferences.Controls.ShowBrightness = false;
@@ -51,15 +54,24 @@ internal static class ControlVerification
                 Glyph = "\uE7F4"
             });
             var copy = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(preferences, Store.Json), Store.Json)!;
-            Check(copy.Controls.Modules.SequenceEqual(preferences.Controls.Modules) && copy.Controls.HiddenModules.Contains("connections") && !copy.Controls.ShowBrightness && copy.Controls.Shortcuts.Last().Name == "Écran personnalisé", "Persistance des modules, ordre, icônes et raccourcis");
-            var invalid = new ControlPreferences { Modules = new() { "invalid", "media", "media" }, HiddenModules = new() { "invalid", "levels" } };
+            Check(copy.Controls.Modules.SequenceEqual(preferences.Controls.Modules) && copy.Controls.HiddenModules.Contains("connections")
+                && !copy.Controls.ShowBrightness && copy.Controls.Shortcuts.Last().Name == "Écran personnalisé",
+                "Persistance des modules, ordre, icônes et raccourcis");
+            var invalid = new ControlPreferences { Modules = new() { "invalid", "media", "media" }, HiddenModules = new() { "invalid",
+                "levels" } };
             invalid.Normalize();
-            Check(invalid.Modules.Count == 5 && invalid.Modules.Distinct().Count() == 5 && invalid.HiddenModules.SequenceEqual(new[] { "levels" }), "Configuration de modules invalide récupérée");
-            Check(WindowsShortcutEditor.ValidTarget("ms-settings:display") && WindowsShortcutEditor.ValidTarget(@"C:\Program Files\Application\app.exe") && !WindowsShortcutEditor.ValidTarget("javascript:alert(1)") && !WindowsShortcutEditor.ValidTarget("x\ncalc.exe"), "Adresses Windows et chemins avec espaces acceptés, cibles invalides refusées");
-            Check(ControlCenterWindow.Time(125) == "2:05" && ControlCenterWindow.Time(3601) == "1:00:01" && ControlCenterWindow.Time(double.NaN) == "0:00", "Durées de musique et absence de durée");
+            Check(invalid.Modules.Count == 5 && invalid.Modules.Distinct().Count() == 5 && invalid.HiddenModules.SequenceEqual(new[] {
+                "levels" }), "Configuration de modules invalide récupérée");
+            Check(WindowsShortcutEditor.ValidTarget("ms-settings:display")
+                && WindowsShortcutEditor.ValidTarget(@"C:\Program Files\Application\app.exe")
+                && !WindowsShortcutEditor.ValidTarget("javascript:alert(1)") && !WindowsShortcutEditor.ValidTarget("x\ncalc.exe"),
+                "Adresses Windows et chemins avec espaces acceptés, cibles invalides refusées");
+            Check(ControlCenterWindow.Time(125) == "2:05" && ControlCenterWindow.Time(3601) == "1:00:01"
+                && ControlCenterWindow.Time(double.NaN) == "0:00", "Durées de musique et absence de durée");
             using var audio = new SystemAudio();
             var initial = audio.Read();
-            Check(initial.Available && initial.Volume is >= 0 and <= 100 && !string.IsNullOrWhiteSpace(initial.Device), "Lecture du volume et du périphérique Windows");
+            Check(initial.Available && initial.Volume is >= 0 and <= 100 && !string.IsNullOrWhiteSpace(initial.Device),
+                "Lecture du volume et du périphérique Windows");
             if (writeTest && initial.Available)
             {
                 double test = initial.Volume > 1 ? initial.Volume - 1 : initial.Volume + 1;
@@ -71,7 +83,8 @@ internal static class ControlVerification
                 }
                 finally { audio.SetVolume(initial.Volume); audio.SetMute(initial.Muted); }
                 var restored = audio.Read();
-                Check(Math.Abs(restored.Volume - initial.Volume) < .1 && restored.Muted == initial.Muted, "Volume et mode muet restaurés après l’essai");
+                Check(Math.Abs(restored.Volume - initial.Volume) < .1 && restored.Muted == initial.Muted,
+                    "Volume et mode muet restaurés après l’essai");
             }
             var network = await new WindowsConnections().ReadAsync();
             Check(string.IsNullOrEmpty(network.Error), "Lecture des radios Wi-Fi/Bluetooth et de la connexion");
@@ -97,7 +110,8 @@ internal static class ControlVerification
             var song = await media.ReadAsync();
             Check(song != null, "Accès aux sessions musicales Windows");
             if (song?.Available == true)
-                Check(!string.IsNullOrWhiteSpace(song.Title) && song.Position >= 0 && song.Position <= song.Duration, "Titre réel et progression musicale bornée");
+                Check(!string.IsNullOrWhiteSpace(song.Title) && song.Position >= 0 && song.Position <= song.Duration,
+                    "Titre réel et progression musicale bornée");
             media.Stop();
             Check(await media.ReadAsync() == null, "Lecture musicale suspendue quand le panneau est masqué");
             live = new
@@ -131,7 +145,8 @@ internal static class ControlVerification
         }
         catch (Exception ex) { Check(false, ex.ToString()); }
         finally { Store.State = saved; }
-        File.WriteAllText(Path.Combine(Store.Root, writeTest ? "verification-controls-write.json" : "verification-controls.json"), JsonSerializer.Serialize(new
+        File.WriteAllText(Path.Combine(Store.Root, writeTest ? "verification-controls-write.json" : "verification-controls.json"),
+            JsonSerializer.Serialize(new
         {
             At = DateTimeOffset.Now,
             Passed = checks.Count - failed,

@@ -1,4 +1,4 @@
-# Python 3.12 / native_glass.py / Windows 11. One shared shell geometry and one material.
+# Python 3.12 / native_glass.py / Windows 11. Une géométrie de shell partagée et une seule matière.
 from pathlib import Path
 import ctypes
 from PySide6.QtCore import QObject, QTimer
@@ -82,7 +82,8 @@ class NativeGlass(QObject):
         live = set()
         native_bump = {3: -1, 4: -1}
         busy = False
-        # Without the native DLL the backdrop part is skipped, but content windows must still be kept above the frame window below.
+        # Sans la DLL native, la partie fond est ignorée, mais les fenêtres de contenu doivent rester au-dessus de la
+        # fenêtre de cadre ci-dessous.
         for window in QApplication.allWindows() if self.dll else ():
             if not window.title().startswith('Panneaux · Cadre '):
                 continue
@@ -159,7 +160,8 @@ class NativeGlass(QObject):
                 for slot in (3, 4):
                     if len(components) > slot and components[slot]:
                         native_bump[slot] = components[slot][2]
-        # The rail content follows the bump width last sent to the native backdrop (-1 = no native backdrop: QML follows its own animation).
+        # Le contenu du rail suit la largeur de bosse envoyée en dernier au fond natif (-1 = pas de fond natif : le
+        # QML suit sa propre animation).
         for slot, attr in ((3, 'social_win'), (4, 'bookmarks_win')):
             rail = getattr(self.bridge, attr, None)
             if rail and rail.property('nativeBump') != native_bump[slot]:
@@ -167,7 +169,7 @@ class NativeGlass(QObject):
         for handle in set(self.windows) - live:
             self.dll.BackdropDetach(handle)
             self.windows.pop(handle, None)
-        # Content-only windows stay above the shared background and never tint their text twice.
+        # Les fenêtres de contenu seules restent au-dessus du fond partagé et ne teintent jamais leur texte deux fois.
         for window in (
             self.bridge.top,
             self.bridge.dock,
@@ -178,7 +180,8 @@ class NativeGlass(QObject):
             if window and window.isVisible():
                 self.user.SetWindowPos(int(window.winId()), ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
                 busy = True
-        # Back-off: nothing native to keep on top/updated -> 500 ms safety tick (changed/surfaceChanged still sync at once); 250 ms otherwise.
+        # Repli : rien de natif à garder au premier plan ou à jour -> tick de sécurité à 500 ms
+        # (changed/surfaceChanged synchronisent toujours aussitôt) ; 250 ms sinon.
         interval = 250 if busy or any(r.get('key') for r in self.windows.values()) else 500
         if self.timer.interval() != interval:
             self.timer.setInterval(interval)

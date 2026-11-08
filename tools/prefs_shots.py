@@ -1,4 +1,5 @@
-# Python 3.12 / prefs_shots.py / offscreen screenshots of the Personnaliser panel (preview bridge, isolated pipe, hard 60 s timeout).
+# Python 3.12 / prefs_shots.py / captures hors écran du panneau Personnaliser (bridge d'aperçu, pipe isolé, délai
+# strict de 60 s).
 # usage: python prefs_shots.py OUTDIR PREFIX [WxH] [pages]   e.g. prefs_shots.py out prefs-red 1920x1080 0,1,2,3
 import sys, os, json
 from pathlib import Path

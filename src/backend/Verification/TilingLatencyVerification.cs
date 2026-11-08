@@ -1,4 +1,5 @@
-// C# 12 / TilingLatencyVerification.cs / Windows .NET 8. Show-to-placed latency of WindowTiler on private test windows only.
+// C# 12 / TilingLatencyVerification.cs / Windows .NET 8. Latence affichage-placement de WindowTiler sur des fenêtres de test privées
+// uniquement.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,7 +24,8 @@ internal static class TilingLatencyVerification
         }
     }   // WS_EX_TOOLWINDOW: invisible to the live app's tiler
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")] static extern IntPtr Style(IntPtr h, int index);
-    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int Bounds(IntPtr h, int attribute, out Native.Rect value, int size);
+    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int Bounds(IntPtr h, int attribute, out Native.Rect value,
+        int size);
     static void Pump(int ms)
     {
         var end = Stopwatch.GetTimestamp() + Stopwatch.Frequency * ms / 1000;
@@ -38,11 +40,14 @@ internal static class TilingLatencyVerification
         TaskbarNative.GetWindowRect(h, out var r);
         return Bounds(h, 9, out var f, Marshal.SizeOf<Native.Rect>()) == 0 ? f : r;
     }
-    static bool Near(Native.Rect a, Native.Rect b) => Math.Abs(a.Left - b.Left) <= 2 && Math.Abs(a.Top - b.Top) <= 2 && Math.Abs(a.Right - b.Right) <= 2 && Math.Abs(a.Bottom - b.Bottom) <= 2;
+    static bool Near(Native.Rect a, Native.Rect b) => Math.Abs(a.Left - b.Left) <= 2 && Math.Abs(a.Top - b.Top) <= 2
+        && Math.Abs(a.Right - b.Right) <= 2 && Math.Abs(a.Bottom - b.Bottom) <= 2;
     static Dictionary<long, Native.Rect> Snapshot(HashSet<IntPtr> own)
     {
         var map = new Dictionary<long, Native.Rect>();
-        TaskbarNative.EnumWindows((h, _) => { if (!own.Contains(h) && TaskbarNative.IsWindowVisible(h) && (Style(h, -16).ToInt64() & 0x40000) != 0 && (Style(h, -20).ToInt64() & 0x80) == 0 && Native.Title(h).Length > 0 && TaskbarNative.GetWindowRect(h, out var r)) map[h.ToInt64()] = r; return true; }, IntPtr.Zero);
+        TaskbarNative.EnumWindows((h, _) => { if (!own.Contains(h) && TaskbarNative.IsWindowVisible(h) && (Style(h,
+            -16).ToInt64() & 0x40000) != 0 && (Style(h, -20).ToInt64() & 0x80) == 0 && Native.Title(h).Length > 0
+            && TaskbarNative.GetWindowRect(h, out var r)) map[h.ToInt64()] = r; return true; }, IntPtr.Zero);
         return map;
     }
     internal static int Run()
@@ -66,7 +71,8 @@ internal static class TilingLatencyVerification
             {
                 for (int n = 1; n <= 4; n++)
                 {
-                    var form = new ToolForm { Text = "Tiling latency test " + run + "-" + n, StartPosition = Forms.FormStartPosition.Manual, Bounds = new(work.Left + 60 + n * 20, work.Top + 60 + n * 20, 420, 300) };
+                    var form = new ToolForm { Text = "Tiling latency test " + run + "-" + n, StartPosition = Forms.FormStartPosition.Manual,
+                        Bounds = new(work.Left + 60 + n * 20, work.Top + 60 + n * 20, 420, 300) };
                     var slot = WindowTiler.Layout(area, n, gap)[n - 1];
                     forms.Add(form);
                     long start = Stopwatch.GetTimestamp();
@@ -85,7 +91,9 @@ internal static class TilingLatencyVerification
                     if (ms >= 3000)
                     {
                         var v = Visible(h);
-                        Console.WriteLine($"  timeout run {run} windows {n} at {v.Left},{v.Top},{v.Right},{v.Bottom} want {slot.Left},{slot.Top},{slot.Right},{slot.Bottom}");
+                        Console.WriteLine(
+                            $"  timeout run {run} windows {n} at {v.Left},{v.Top},{v.Right},{v.Bottom} want " +
+                            $"{slot.Left},{slot.Top},{slot.Right},{slot.Bottom}");
                     }
                     if (samples.TryGetValue(n, out var list))
                         list.Add(ms);
@@ -101,7 +109,8 @@ internal static class TilingLatencyVerification
                 tiler.SetEnabled(true);
             }
             {   // window shown untitled, titled 100 ms later: must be placed within 150 ms of the title change
-                var form = new ToolForm { Text = "", StartPosition = Forms.FormStartPosition.Manual, Bounds = new(work.Left + 80, work.Top + 80, 420, 300) };
+                var form = new ToolForm { Text = "", StartPosition = Forms.FormStartPosition.Manual, Bounds = new(work.Left + 80, work.Top
+                    + 80, 420, 300) };
                 forms.Add(form);
                 form.Show();
                 var h = form.Handle;
@@ -135,10 +144,12 @@ internal static class TilingLatencyVerification
         }
         finally { foreach (var f in forms) f.Close(); tiler?.Dispose(); }
         var after = Snapshot(own);
-        var moved = before.Where(p => !after.TryGetValue(p.Key, out var r) || r.Left != p.Value.Left || r.Top != p.Value.Top || r.Right != p.Value.Right || r.Bottom != p.Value.Bottom).ToArray();
+        var moved = before.Where(p => !after.TryGetValue(p.Key, out var r) || r.Left != p.Value.Left || r.Top != p.Value.Top
+            || r.Right != p.Value.Right || r.Bottom != p.Value.Bottom).ToArray();
         bool untouched = moved.Length == 0;
         foreach (var m in moved)
-            Console.WriteLine($"  changed hwnd {m.Key:X} class={TaskbarNative.ClassName(new IntPtr(m.Key))} title={Native.Title(new IntPtr(m.Key))}");
+            Console.WriteLine(
+                $"  changed hwnd {m.Key:X} class={TaskbarNative.ClassName(new IntPtr(m.Key))} title={Native.Title(new IntPtr(m.Key))}");
         Console.WriteLine("user windows untouched: " + (untouched ? "PASS" : "FAIL"));
         ok &= untouched;
         Console.WriteLine(ok ? "ALL PASS" : "FAIL");

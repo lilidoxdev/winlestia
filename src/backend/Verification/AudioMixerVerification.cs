@@ -10,6 +10,10 @@ namespace PanneauxGlass;
 
 internal static class AudioMixerVerification
 {
+    // Attente de test : un tick du dispatcher : l'UI traite ses messages en attente.
+    const int PauseTickMs = 100;
+    // Attente de test : une transition de page ou de dialogue.
+    const int PauseTransitionMs = 400;
     sealed class Silence : IWaveProvider
     {
         public WaveFormat WaveFormat { get; } = new(48000, 16, 2);
@@ -39,7 +43,7 @@ internal static class AudioMixerVerification
             Check("Master output and mixer share compatible Core Audio ownership", system.Read().Available);
             using var spectrum = new WindowsSpectrum();
             spectrum.Start();
-            Thread.Sleep(100);
+            Thread.Sleep(PauseTickMs);
             spectrum.Stop();
             mixer.Refresh();
             Check("Enumerates native output endpoints", mixer.Devices.Any(d => d.flow == 0));
@@ -47,7 +51,7 @@ internal static class AudioMixerVerification
             using var playback = new WaveOutEvent();
             playback.Init(new Silence());
             playback.Play();
-            Thread.Sleep(400);
+            Thread.Sleep(PauseTransitionMs);
             mixer.Stop();
             mixer.Refresh();
             var own = mixer.Applications.FirstOrDefault(a => a.pid == Environment.ProcessId);
@@ -76,7 +80,8 @@ internal static class AudioMixerVerification
                     Check("Per-application unmute", !mixer.Applications.First(a => a.id == own.id).muted);
                     mixer.SetApplication(own.id, 140, null);
                     Check("Volume is clamped to 100%", mixer.Applications.First(a => a.id == own.id).volume == 100);
-                    Check("Other applications untouched", mixer.Applications.Where(a => before.ContainsKey(a.id)).All(a => before[a.id] == (a.volume, a.muted)));
+                    Check("Other applications untouched", mixer.Applications.Where(a => before.ContainsKey(a.id)).All(a
+                        => before[a.id] == (a.volume, a.muted)));
                 }
                 finally { mixer.SetApplication(own.id, own.volume, own.muted); }
             playback.Stop();
@@ -87,7 +92,8 @@ internal static class AudioMixerVerification
             }
             catch (InvalidOperationException) { rejected = true; }
             Check("Closed or invalid session rejected", rejected);
-            Check("Device values are finite and bounded", mixer.Devices.All(d => double.IsFinite(d.volume) && d.volume >= 0 && d.volume <= 100));
+            Check("Device values are finite and bounded", mixer.Devices.All(d => double.IsFinite(d.volume) && d.volume >= 0
+                && d.volume <= 100));
             mixer.Stop();
             Check("Hidden mixer releases sessions", !mixer.Running && mixer.Applications.Length == 0 && mixer.Devices.Length == 0);
             using var host = new AudioMixerHost();

@@ -1,4 +1,4 @@
-// Item model, one-shot-notification collection and the in-memory sort (never re-enumerates the disk).
+// Modèle d'élément, collection à notification unique et tri en mémoire (ne réénumère jamais le disque).
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,7 +14,8 @@ internal enum SortColumn
 {
     Name, Modified, Type, Size
 }
-// FoldersFirst false = folders and files mixed, each by its own value. Default: modified date, newest first.
+// FoldersFirst false = dossiers et fichiers mélangés, chacun selon sa propre valeur. Par défaut : date de modification, la plus récente
+// d'abord.
 internal sealed record SortSpec(SortColumn Column, bool Ascending, bool FoldersFirst = false)
 {
     internal static readonly SortSpec Default = new(SortColumn.Modified, false, false);
@@ -22,12 +23,13 @@ internal sealed record SortSpec(SortColumn Column, bool Ascending, bool FoldersF
 
 public sealed class FileItem : INotifyPropertyChanged
 {
-    // Paths currently cut to the clipboard (UI thread only): read when a container binds, raised per item by RaiseCut().
+    // Chemins actuellement coupés vers le presse-papiers (thread UI seulement) : lus quand un conteneur se lie, levés par élément via
+    // RaiseCut().
     internal static HashSet<string> CutPaths = new(StringComparer.OrdinalIgnoreCase);
     public event PropertyChangedEventHandler? PropertyChanged;
     public double CutOpacity => CutPaths.Count > 0 && CutPaths.Contains(FullPath) ? 0.5 : 1.0;
     internal void RaiseCut() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CutOpacity)));
-    // Drag-over highlight (a folder row / tile that would receive the drop).
+    // Surbrillance de survol du glisser (une ligne / tuile de dossier qui recevrait le dépôt).
     public bool DropHot
     {
         get; private set;
@@ -39,7 +41,7 @@ public sealed class FileItem : INotifyPropertyChanged
         DropHot = on;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DropHot)));
     }
-    // Set once by the window: Material Symbols code points when the font ships, Segoe Fluent otherwise.
+    // Posé une fois par la fenêtre : points de code Material Symbols quand la police est livrée, Segoe Fluent sinon.
     internal static bool UseMaterial;
     internal FileItem(string name, string fullPath, bool isDir, long size, DateTime modified, string type)
     {
@@ -74,14 +76,15 @@ public sealed class FileItem : INotifyPropertyChanged
     {
         get;
     }
-    // Deep search only: folder of the hit relative to the searched folder ("" = the folder itself).
+    // Recherche profonde seulement : dossier du résultat relatif au dossier recherché ("" = le dossier lui-même).
     public string Where { get; internal set; } = "";
     public string Icon => IsDir ? (UseMaterial ? "" : "") : (UseMaterial ? "" : "");
     public string ModifiedText => Modified.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
     public string SizeText => IsDir ? "" : Size < 1024 ? Size + " o" : Size < 1024 * 1024 ? Math.Ceiling(Size / 1024.0) + " Ko"
-        : Size < 1024L * 1024 * 1024 ? (Size / 1048576.0).ToString("0.#", CultureInfo.GetCultureInfo("fr-FR")) + " Mo" : (Size / 1073741824.0).ToString("0.##", CultureInfo.GetCultureInfo("fr-FR")) + " Go";
+        : Size < 1024L * 1024 * 1024 ? (Size / 1048576.0).ToString("0.#", CultureInfo.GetCultureInfo("fr-FR")) + " Mo"
+            : (Size / 1073741824.0).ToString("0.##", CultureInfo.GetCultureInfo("fr-FR")) + " Go";
 
-    // Stats one path (worker thread, one find-data read); null when it vanished.
+    // Lit les informations d'un chemin (thread de travail, une lecture find-data) ; null s'il a disparu.
     internal static FileItem? Probe(string path, Dictionary<string, string> types)
     {
         try
@@ -92,7 +95,7 @@ public sealed class FileItem : INotifyPropertyChanged
         catch { return null; }
     }
 
-    // Called on the enumeration thread: FileSystemInfo from an enumeration already carries the find data (no extra I/O).
+    // Appelé sur le thread d'énumération : un FileSystemInfo issu d'une énumération porte déjà les find-data (pas d'E/S supplémentaire).
     internal static FileItem From(ref System.IO.Enumeration.FileSystemEntry e, Dictionary<string, string> types)
     {
         string name = e.FileName.ToString(), full = e.ToFullPath();
@@ -116,7 +119,7 @@ public sealed class FileItem : INotifyPropertyChanged
     }
 }
 
-// Batch changes raise a single Reset (WPF's list collection view rejects multi-item Add notifications).
+// Les changements groupés lèvent un seul Reset (la vue de collection de liste de WPF rejette les notifications Add multi-éléments).
 internal sealed class RangeObservableCollection<T> : ObservableCollection<T>
 {
     internal void AddRange(IEnumerable<T> items)
@@ -125,7 +128,8 @@ internal sealed class RangeObservableCollection<T> : ObservableCollection<T>
         ((List<T>)Items).AddRange(items);
         Notify();
     }
-    internal static int Resets;                          // diagnostics: how many whole-list rewrites happened (the refresh selftest asserts none for small changes)
+    // diagnostics: how many whole-list rewrites happened (the refresh selftest asserts none for small changes)
+    internal static int Resets;
     internal void Reset(IEnumerable<T>? items)
     {
         CheckReentrancy();
@@ -148,7 +152,7 @@ internal static class FileSort
 {
     [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)] static extern int StrCmpLogicalW(string a, string b);
 
-    // Natural name order as the tie-break; folders grouped first only when the spec asks for it.
+    // Ordre naturel des noms en départage ; dossiers groupés d'abord seulement si le spec le demande.
     internal static Comparison<FileItem> Comparer(SortSpec spec)
     {
         int sign = spec.Ascending ? 1 : -1;

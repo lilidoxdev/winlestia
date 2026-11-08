@@ -1,4 +1,4 @@
-// language: C# 12, file: NvidiaTelemetry.cs, target: Windows 11 / NVIDIA driver NVML
+// C# 12, fichier NvidiaTelemetry.cs, cible Windows 11 / pilote NVIDIA NVML
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -42,8 +42,10 @@ internal sealed class NvidiaTelemetry : IDisposable
         var result = new List<GpuReading>();
         foreach (var device in devices)
         {
-            bool util = nvmlDeviceGetUtilizationRates(device.handle, out var load) == 0, temp = nvmlDeviceGetTemperature(device.handle, 0, out uint temperature) == 0, mem = nvmlDeviceGetMemoryInfo(device.handle, out var memory) == 0;
-            result.Add(new("nvidia-" + result.Count, device.name, util ? PcTelemetrySource.Percent(load.Gpu) : null, temp && temperature < 150 ? temperature : null, mem ? memory.Used / 1048576.0 : null, mem ? memory.Total / 1048576.0 : null));
+            bool util = nvmlDeviceGetUtilizationRates(device.handle, out var load) == 0, temp = nvmlDeviceGetTemperature(device.handle, 0,
+                out uint temperature) == 0, mem = nvmlDeviceGetMemoryInfo(device.handle, out var memory) == 0;
+            result.Add(new("nvidia-" + result.Count, device.name, util ? PcTelemetrySource.Percent(load.Gpu) : null, temp
+                && temperature < 150 ? temperature : null, mem ? memory.Used / 1048576.0 : null, mem ? memory.Total / 1048576.0 : null));
         }
         return result.ToArray();
     }
@@ -67,10 +69,21 @@ internal sealed class NvidiaTelemetry : IDisposable
     }
     [DllImport("nvml.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlInit_v2();
     [DllImport("nvml.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlShutdown();
-    [DllImport("nvml.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetCount_v2(out uint count);
-    [DllImport("nvml.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetHandleByIndex_v2(uint index, out IntPtr device);
-    [DllImport("nvml.dll", CharSet = CharSet.Ansi), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetName(IntPtr device, StringBuilder name, uint length);
-    [DllImport("nvml.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetUtilizationRates(IntPtr device, out Utilization utilization);
-    [DllImport("nvml.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetTemperature(IntPtr device, uint sensor, out uint temperature);
-    [DllImport("nvml.dll"), DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetMemoryInfo(IntPtr device, out Memory memory);
+    [DllImport("nvml.dll"),
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetCount_v2(out uint count);
+    [DllImport("nvml.dll"),
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetHandleByIndex_v2(uint index,
+        out IntPtr device);
+    [DllImport("nvml.dll", CharSet = CharSet.Ansi),
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetName(IntPtr device, StringBuilder name,
+        uint length);
+    [DllImport("nvml.dll"),
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetUtilizationRates(IntPtr device,
+        out Utilization utilization);
+    [DllImport("nvml.dll"),
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetTemperature(IntPtr device, uint sensor,
+        out uint temperature);
+    [DllImport("nvml.dll"),
+        DefaultDllImportSearchPaths(DllImportSearchPath.System32)] static extern int nvmlDeviceGetMemoryInfo(IntPtr device,
+        out Memory memory);
 }

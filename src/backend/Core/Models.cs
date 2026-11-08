@@ -90,8 +90,8 @@ public sealed class LauncherTool
     public string Kind { get; set; } = "";
     public string Name { get; set; } = "";
 }
-// A sheet taped to the screen: a captured image or a handwritten memo. Everything that makes it
-// feel placed — text, width, position, transparency, angle — is kept here and restored at startup.
+// Une feuille collée à l'écran : image capturée ou mémo manuscrit. Tout ce qui la fait paraître posée
+// (texte, largeur, position, transparence, angle) est conservé ici et restauré au démarrage.
 public sealed class PinNote
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
@@ -118,7 +118,8 @@ public sealed class Preferences
     {
         get; set;
     } =
-        new() { { "background", "#fff8f6" }, { "text", "#261916" }, { "primary", "#895143" }, { "secondary", "#775b52" }, { "tertiary", "#68613c" } };
+        new() { { "background", "#fff8f6" }, { "text", "#261916" }, { "primary", "#895143" }, { "secondary", "#775b52" }, { "tertiary",
+            "#68613c" } };
     public bool CustomGlass { get; set; } = false;
     public double CustomGlassOpacity { get; set; } = .12;
     public bool AccentBorders { get; set; } = true;
@@ -128,16 +129,19 @@ public sealed class Preferences
     {
         get; set;
     } =
-        true;   // default on (one-time migration FilesDefaultsMigrated for existing installs): HKCU Directory/Drive shell handler -> Winlestia Fichiers (see FilesHandler.cs)
+        // Actif par défaut (migration unique FilesDefaultsMigrated pour les installations existantes) :
+        // gestionnaire shell HKCU Directory/Drive -> Winlestia Fichiers (voir FilesHandler.cs).
+        true;
     public bool FilesDefaultsMigrated
     {
         get; set;
-    }   // set once the default-on / default-pinned migration ran; a later opt-out is never undone
+    }   // posé une fois la migration « actif / épinglé par défaut » exécutée ; un refus ultérieur n'est jamais annulé
     public bool FilesPinRemoved
     {
         get; set;
-    }   // set once the old "Winlestia Fichiers" dock pin was removed (the app has its own dock button now); see FilesPinMigration
-    public bool FilesPreload { get; set; } = true;   // default on: keep a hidden Winlestia Fichiers resident so folders open instantly
+    }   // posé une fois l'ancien épinglage « Winlestia Fichiers » du dock retiré (l'appli a son propre bouton) ; voir FilesPinMigration
+    // actif par défaut : garde un Winlestia Fichiers masqué résident pour que les dossiers s'ouvrent instantanément
+    public bool FilesPreload { get; set; } = true;
     public bool AutoTile { get; set; } = false;
     public bool DesktopLogo { get; set; } = false;
     public bool Osd { get; set; } = true;
@@ -155,15 +159,17 @@ public sealed class Preferences
     {
         get; set;
     }
-    public bool ReplaceTaskbar { get; set; } = true;   // after schema 2: "hide the Windows taskbar" only; the dock is DockVisible
+    // depuis le schéma 2 : « masquer la barre Windows » seulement ; le dock relève de DockVisible
+    public bool ReplaceTaskbar { get; set; } = true;
     public int SettingsSchema
     {
         get; set;
-    }   // 0 when absent from the file (triggers Store.MigrateSettings); files written by this version carry 2
+    }   // 0 si absent du fichier (déclenche Store.MigrateSettings) ; les fichiers écrits par cette version portent 2
     public bool DockVisible { get; set; } = true;
     public bool BookmarksRailVisible { get; set; } = true;
     public bool SocialRailVisible { get; set; } = true;
-    public ShortcutPreferences SettingsShortcut { get; set; } = new() { Modifiers = 9, Key = 0x53 };   // Win+Alt+S: opens the settings page
+    // Win+Alt+S : ouvre la page de réglages
+    public ShortcutPreferences SettingsShortcut { get; set; } = new() { Modifiers = 9, Key = 0x53 };
     public string RailSide { get; set; } = "left";
     public string PreviousTheme { get; set; } = "";
     public int FrameThickness { get; set; } = 16;
@@ -227,7 +233,8 @@ public sealed class Preferences
     public List<LauncherTool> LauncherTools { get; set; } = new();
     public List<WindowsShortcut> QuickTabs { get; set; } = DefaultQuickTabs();
     public static List<WindowsShortcut> DefaultQuickTabs() => new(){
-        new(){Id="tab-apps",Name="Applications",Target="glass:apps",Glyph="\uE71D"},new(){Id="tab-games",Name="Jeux",Target="glass:games",Glyph="\uE7FC"},
+        new(){Id="tab-apps",Name="Applications",Target="glass:apps",Glyph="\uE71D"},new(
+            ){Id="tab-games",Name="Jeux",Target="glass:games",Glyph="\uE7FC"},
         new(){Id="tab-projects",Name="Projets",Target="glass:projects",Glyph="\uE943"},new()
         {
             Id="tab-documents",
@@ -235,7 +242,8 @@ public sealed class Preferences
             Target="glass:documents",
             Glyph="\uE8B7"
         },
-        new(){Id="tab-note",Name="Note",Target="glass:note",Glyph="\uE70B"},new(){Id="tab-focus",Name="Minuteur",Target="glass:focus",Glyph="\uE917"},
+        new(){Id="tab-note",Name="Note",Target="glass:note",Glyph="\uE70B"},new(
+            ){Id="tab-focus",Name="Minuteur",Target="glass:focus",Glyph="\uE917"},
         new(){Id="tab-tools",Name="Atelier",Target="glass:tools",Glyph="\uE74C"},
         new(){Id="tab-capture",Name="Capture",Target="glass:capture",Glyph="\uE722"}
     };
@@ -292,7 +300,8 @@ public sealed class Preferences
         {
             workspace.Targets ??= new();
             workspace.Layout ??= new();
-            workspace.Targets = workspace.Targets.Where(t => !string.IsNullOrWhiteSpace(t)).Distinct(StringComparer.OrdinalIgnoreCase).Take(24).ToList();
+            workspace.Targets = workspace.Targets.Where(t => !string.IsNullOrWhiteSpace(t)).Distinct(
+                StringComparer.OrdinalIgnoreCase).Take(24).ToList();
         }
         ColorHistory ??= new();
         ColorHistory = ColorHistory.Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().Take(24).ToList();
@@ -340,9 +349,10 @@ public sealed class Preferences
             SettingsShortcut.Key = 0x53;
         }
         {
-            var others = new[] { Shortcut, PaletteShortcut, WallpaperShortcut, CaptureShortcut, PinShortcut }.Where(x => x != null).ToArray();
+            var others = new[] { Shortcut, PaletteShortcut, WallpaperShortcut, CaptureShortcut, PinShortcut }.Where(x
+                => x != null).ToArray();
             if (others.Any(x => x.Modifiers == SettingsShortcut.Modifiers && x.Key == SettingsShortcut.Key))
-            {   // Settings shortcut collides with another configured combo: take the first free default
+            {   // le raccourci des réglages entre en collision avec une autre combinaison : on prend le premier défaut libre
                 foreach (var (cm, ck) in new[] { (9u, 0x53u), (3u, 0x79u), (3u, 0x7Au) })
                 {
                     if (others.Any(x => x.Modifiers == cm && x.Key == ck))
@@ -394,7 +404,8 @@ public sealed class Preferences
         Names ??= new();
         Categories ??= new();
         Icons ??= new();
-        if (Boards == null || Boards.Count != 4 || !Boards.Select(x => x.Id).OrderBy(x => x).SequenceEqual(new[] { "apps", "documents", "games", "projects" }))
+        if (Boards == null || Boards.Count != 4 || !Boards.Select(x => x.Id).OrderBy(x => x).SequenceEqual(new[] { "apps", "documents",
+            "games", "projects" }))
             Boards = Defaults();
         foreach (var b in Boards)
         {
@@ -414,7 +425,8 @@ public sealed class Preferences
 public static class Store
 {
     public static string Root = AppDomain.CurrentDomain.BaseDirectory;
-    // User data (preferences, log, clipboard, pins) lives outside the install folder so it survives uninstall/reinstall. WINLESTIA_DATA_DIR overrides it (tests).
+    // Les données utilisateur (préférences, journal, presse-papiers, épingles) vivent hors du dossier d'installation
+    // pour survivre à une désinstallation/réinstallation. WINLESTIA_DATA_DIR le remplace (tests).
     static string? dirEnv, dirCached;
     static bool dirInit;
     public static string DataDir
@@ -424,7 +436,8 @@ public static class Store
             string? env = Environment.GetEnvironmentVariable("WINLESTIA_DATA_DIR");
             if (dirInit && dirEnv == env && dirCached != null)
                 return dirCached;
-            string d = env is { Length: > 0 } o ? o : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Panneaux");
+            string d = env is { Length: > 0 } o ? o : Path.Combine(Environment.GetFolderPath(
+                Environment.SpecialFolder.LocalApplicationData), "Panneaux");
             try
             {
                 Directory.CreateDirectory(d);
@@ -502,7 +515,8 @@ public static class Store
         }
         catch (Exception ex) { Log("Enregistrement: " + ex.Message); }
     }
-    // One-shot migration from the install folder (legacy location). Copy prefs (old binaries keep working), move big folders, never overwrite, never throw.
+    // Migration unique depuis le dossier d'installation (ancien emplacement) : copie des préférences (les anciens binaires
+    // continuent de marcher), déplacement des gros dossiers, jamais d'écrasement, jamais d'exception.
     public static void MigrateLegacyData(string legacyRoot, string dataDir)
     {
         try
@@ -519,7 +533,8 @@ public static class Store
             }
             try
             {
-                string bak = Path.Combine(legacyRoot, "preferences-glass.json.bak"), bakTo = Path.Combine(dataDir, "preferences-glass.json.bak");
+                string bak = Path.Combine(legacyRoot, "preferences-glass.json.bak"), bakTo = Path.Combine(dataDir,
+                    "preferences-glass.json.bak");
                 if (File.Exists(bak) && !File.Exists(bakTo))
                     File.Copy(bak, bakTo, false);
             }
@@ -555,7 +570,8 @@ public static class Store
                 }
             }
         }
-        catch (Exception ex) { try { Log("Migration: " + ex.Message); } catch (Exception) { /* Le journal ne peut pas se journaliser lui-même. */ } }
+        catch (Exception ex) { try { Log("Migration: " + ex.Message); } catch (
+            Exception) { /* Le journal ne peut pas se journaliser lui-même. */ } }
     }
     static void CopyTree(string from, string to)
     {
@@ -601,7 +617,8 @@ public static class Store
         }
         LoadCatalogue();
     }
-    // Schema 2 (settings redesign): the dock used to be shown exactly when ReplaceTaskbar was on; the two are now independent, so the old state is copied once. Every other key is left untouched.
+    // Schéma 2 (refonte des réglages) : le dock était affiché exactement quand ReplaceTaskbar était actif ; les deux sont
+    // désormais indépendants, l'ancien état est donc copié une fois. Toute autre clé reste intacte.
     public const int SettingsSchemaCurrent = 2;
     public static void MigrateSettings(Preferences p)
     {
@@ -633,8 +650,10 @@ public static class Store
         if (healed)
             Save();
     }
-    // Self-heal for "dock:" entries whose exe vanished (Squirrel apps move app-1.0.9265 -> app-1.0.9266). The id is kept (favourites/pins reference it); only Target/IconPath change.
-    // Returns true only when the entry was healed AND belongs to State.Custom (the persisted store): catalog.json entries are healed in memory only, so no prefs rewrite per start.
+    // Auto-réparation des entrées « dock: » dont l'exe a disparu (les applis Squirrel passent de app-1.0.9265 à app-1.0.9266).
+    // L'id est conservé (favoris et épingles le référencent) ; seuls Target/IconPath changent.
+    // Renvoie true seulement si l'entrée a été réparée ET appartient à State.Custom (le stockage persistant) : les entrées
+    // de catalog.json sont réparées en mémoire uniquement, pour ne pas réécrire les préférences à chaque démarrage.
     static bool HealDockTarget(Entry entry)
     {
         if (!entry.Id.StartsWith("dock:", StringComparison.Ordinal)
@@ -652,7 +671,7 @@ public static class Store
         entry.Target = fixedPath;
         return State.Custom.Any(c => ReferenceEquals(c, entry));
     }
-    // Never touch UNC paths or drives that are missing / not ready (a File.Exists on those can stall the UI thread).
+    // Ne jamais toucher aux chemins UNC ni aux lecteurs absents ou non prêts (un File.Exists dessus peut figer le thread UI).
     static bool SafeToProbe(string? path)
     {
         try
@@ -667,7 +686,8 @@ public static class Store
         }
         catch { return false; }
     }
-    // Squirrel only: root/app-X/name.exe -> newest sibling root/app-Y/name.exe. Numeric version order, "-suffix" stripped; on a tie the build without suffix wins.
+    // Squirrel seulement : racine/app-X/nom.exe -> frère le plus récent racine/app-Y/nom.exe. Ordre numérique des versions,
+    // suffixe « -xxx » ignoré ; à égalité, la build sans suffixe l'emporte.
     public static string? HealStaleExe(string path)
     {
         try
@@ -693,7 +713,8 @@ public static class Store
                 int dash = tail.IndexOf('-');
                 bool suffix = dash >= 0;
                 Version.TryParse(suffix ? tail[..dash] : tail, out var version);
-                int cmp = best == null ? 1 : version == null ? (bestVersion == null ? 0 : -1) : bestVersion == null ? 1 : version.CompareTo(bestVersion);
+                int cmp = best == null ? 1 : version == null ? (bestVersion == null ? 0 : -1) : bestVersion == null ? 1
+                    : version.CompareTo(bestVersion);
                 if (cmp > 0 || (cmp == 0 && bestSuffix && !suffix))
                 {
                     best = dir;
@@ -741,7 +762,7 @@ public static class Store
             _ => "documents"
         };
     }
-    // Ids whose file target vanished (uninstalled): hidden, not forgotten, so a reinstall brings favorites back.
+    // Ids dont la cible a disparu (désinstallée) : masqués mais pas oubliés, une réinstallation ramène donc les favoris.
     internal static HashSet<string> Missing = new();
     internal static IEnumerable<Entry> Visible(string scope = "Tous", string query = "")
     {

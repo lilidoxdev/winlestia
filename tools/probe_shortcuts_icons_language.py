@@ -76,7 +76,8 @@ def wrapped(engine, url):
                 return None
 
             b.top.setProperty('pageMode', 'settings')
-            QTest.qWait(150)  # PaneLoader is lazy: the settings pane only exists once pageMode is settings
+            # PaneLoader est paresseux : le volet des réglages n'existe qu'une fois pageMode sur settings
+            QTest.qWait(150)
 
             def prefs(item):
                 if item.metaObject().className().startswith('ShellPreferences'):
@@ -90,7 +91,7 @@ def wrapped(engine, url):
             pane = prefs(b.top.contentItem())
             if pane:
                 pane.setProperty('tab', 3)
-                QTest.qWait(150)  # language chips live on the daily tab, itself a lazy Loader
+                QTest.qWait(150)  # les pastilles de langue vivent dans l'onglet quotidien, lui-même un Loader paresseux
             report['graphicalLanguageChoices'] = all(
                 find(b.top.contentItem(), 'language-' + mode) is not None for mode in ('auto', 'fr', 'en', 'es')
             )

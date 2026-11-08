@@ -1,4 +1,5 @@
-// Virtualizing wrap panel for the large-icons view: fixed cells, row-based pixel scrolling, only the rows in view hold containers (recycled).
+// Panneau d'habillage virtualisant pour la vue grandes icônes : cellules fixes, défilement en pixels par rangées, seules les rangées
+// visibles tiennent des conteneurs (recyclés).
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,8 +10,12 @@ namespace WinlestiaFiles;
 
 public sealed class TilePanel : VirtualizingPanel, IScrollInfo
 {
-    public static readonly DependencyProperty CellWProperty = DependencyProperty.Register(nameof(CellW), typeof(double), typeof(TilePanel), new FrameworkPropertyMetadata(132.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
-    public static readonly DependencyProperty CellHProperty = DependencyProperty.Register(nameof(CellH), typeof(double), typeof(TilePanel), new FrameworkPropertyMetadata(156.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
+    public static readonly DependencyProperty CellWProperty = DependencyProperty.Register(nameof(CellW), typeof(double), typeof(TilePanel),
+        new FrameworkPropertyMetadata(132.0,
+        FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
+    public static readonly DependencyProperty CellHProperty = DependencyProperty.Register(nameof(CellH), typeof(double), typeof(TilePanel),
+        new FrameworkPropertyMetadata(156.0,
+        FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
     public double CellW
     {
         get => (double)GetValue(CellWProperty); set => SetValue(CellWProperty, value);
@@ -53,7 +58,8 @@ public sealed class TilePanel : VirtualizingPanel, IScrollInfo
     void Realize(int first, int last, ItemsControl? owner)
     {
         var gen = ItemContainerGenerator;
-        bool recycle = gen is IRecyclingItemContainerGenerator && owner != null && GetVirtualizationMode(owner) == VirtualizationMode.Recycling;
+        bool recycle = gen is IRecyclingItemContainerGenerator && owner != null
+            && GetVirtualizationMode(owner) == VirtualizationMode.Recycling;
         for (int i = InternalChildren.Count - 1; i >= 0; i--)
         {
             var pos = new GeneratorPosition(i, 0);

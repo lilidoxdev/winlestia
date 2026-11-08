@@ -1,4 +1,4 @@
-// C# 12 / SystemAudio.cs / Windows .NET 8. Same Core Audio factory as mixer and spectrum.
+// C# 12 / SystemAudio.cs / Windows .NET 8. Même fabrique Core Audio que le mixeur et le spectre.
 using System;
 using NAudio.CoreAudioApi;
 namespace PanneauxGlass;

@@ -1,0 +1,118 @@
+// SocialService : persistance des compteurs entre deux sessions Windows.
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Windows.Interop;
+using System.Windows.Threading;
+using Microsoft.Web.WebView2.Core;
+
+namespace PanneauxGlass;
+
+internal sealed partial class SocialService
+{
+    // Regroupe les écritures disque des compteurs.
+    const int SaveDebounceMs = 2000;
+    // ---- Persistance des compteurs (session Windows) ----------------------------------------------------------
+    string CountsFile => Path.Combine(folder, "counts.json");
+
+    sealed class CountsFile_
+    {
+        public long BootTicks
+        {
+            get; set;
+        }
+        public Dictionary<string, int> Counts { get; set; } = new(); public List<string>? TitleNets
+        {
+            get; set;
+        }
+        public List<HistoryItem> History { get; set; } = new(); public int NextSeq
+        {
+            get; set;
+        }
+    }
+
+    CountsFile_ MakeFile() => new() { NextSeq = nextSeq, BootTicks = bootUtc.Ticks, Counts = nets.ToDictionary(n => n.Id, n => n.Count),
+        TitleNets = nets.Where(n => n.U.TitleSeen).Select(n => n.Id).ToList(), History = history.Select(h => new HistoryItem { Seq = h.Seq,
+        Net = h.Net, Title = h.Title, Body = h.Body, Kind = h.Kind, At = h.At }).ToList() };
+
+    void LoadCounts()
+    {
+        try
+        {
+            if (!File.Exists(CountsFile))
+                return;
+            var data = JsonSerializer.Deserialize<CountsFile_>(File.ReadAllText(CountsFile));
+            if (data == null)
+                return;
+            // Même session Windows = même heure de démarrage, à quelques secondes d'écart près.
+            if (Math.Abs((new DateTime(data.BootTicks, DateTimeKind.Utc) - bootUtc).TotalSeconds) > 90)
+                return;
+            // Migration : ancien fichier (sans TitleNets) = compteurs cumulés non fiables, plafonnés à 99 ; l'absorption/le premier titre
+            // les remplace.
+            foreach (var n in nets)
+                if (data.Counts.TryGetValue(n.Id, out int c))
+                {
+                    n.Count = Math.Clamp(c, 0, 999999);
+                    if (data.TitleNets == null)
+                    {
+                        n.Count = Math.Min(n.Count, 99);
+                        n.U.Legacy = true;
+                    }
+                    else if (data.TitleNets.Contains(n.Id))
+                    {
+                        n.U.TitleSeen = true;
+                        n.Count = Math.Min(n.Count, 99);
+                    }
+                }
+            if (data.History != null)
+            {
+                history.AddRange(data.History.Where(h => h != null && nets.Any(x => x.Id == h.Net)).Select(h => new HistoryItem {
+                    Seq = h.Seq, Net = h.Net, Title = Clip(h.Title, 120), Body = Clip(h.Body, 140), Kind = h.Kind == "count" ? "count"
+                    : "notif", At = h.At }).OrderByDescending(h => h.Seq).Take(100));
+                nextSeq = Math.Max(Math.Max(1, data.NextSeq), history.Select(h => h.Seq).DefaultIfEmpty(0).Max() + 1);
+            }
+            Store.Log("Social historique chargé : " + history.Count + " entrée(s), prochain seq " + nextSeq + (data.History == null
+                ? " (fichier sans historique)" : ""));
+        }
+        catch (Exception ex) { Store.Log("Social compteurs: " + ex.Message); }
+    }
+
+    // Écriture différée (~2 s) hors thread UI.
+    void QueueSave()
+    {
+        if (saveQueued || disposed)
+            return;
+        saveQueued = true;
+        _ = Task.Run(async () => { try { await Task.Delay(SaveDebounceMs); if (disposed) return; dispatcher.Invoke(()
+            => saveQueued = false); WriteNow(); } catch (Exception err) { Store.Log("SocialService.QueueSave : " + err.GetType().Name + ": "
+            + err.Message); } });
+    }
+
+    void WriteNow()
+    {
+        CountsFile_? snapshot = null;
+        dispatcher.Invoke(() => { if (countsDirty) { snapshot = MakeFile(); countsDirty = false; } });
+        lock (saveLock)
+        {
+            if (disposed)
+                return; // Dispose écrit l'état final sous ce verrou : une écriture différée plus ancienne ne doit pas l'écraser
+            try
+            {
+                if (snapshot != null)
+                {
+                    Directory.CreateDirectory(folder);
+                    string temp = CountsFile + ".tmp";
+                    File.WriteAllText(temp, JsonSerializer.Serialize(snapshot));
+                    File.Move(temp, CountsFile, true);
+                }
+            }
+            catch (Exception ex) { Store.Log("Social écriture: " + ex.Message); }
+        }
+    }
+}

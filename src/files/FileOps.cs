@@ -1,6 +1,8 @@
-// File operations through IFileOperation: one dedicated STA thread per operation, the main window as owner (the shell draws its own
-// progress / conflict / access-denied dialogs), an advised progress sink that collects only the SUCCEEDED results so the list
-// can be updated in place. Every COM object is released (FinalReleaseComObject) on the thread that created it.
+// Opérations de fichiers via IFileOperation : un thread STA dédié par opération, la fenêtre principale comme propriétaire (le shell dessine
+// ses propres
+// dialogues de progression / conflit / accès refusé), un récepteur de progression qui ne collecte que les résultats RÉUSSIS pour que la
+// liste
+// puisse être mise à jour sur place. Chaque objet COM est libéré (FinalReleaseComObject) sur le thread qui l'a créé.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +17,8 @@ internal enum DoneKind
 {
     Rename, Move, Copy, Delete, New
 }
-// One succeeded step, whatever the watch set: Src (null for New), Dst (new path; for Delete the Recycle Bin path when the shell gave it).
+// Une étape réussie, quel que soit l'ensemble surveillé : Src (null pour New), Dst (nouveau chemin ; pour Delete le chemin de la Corbeille
+// quand le shell l'a fourni).
 internal sealed record Done(DoneKind Kind, string? Src, string? Dst);
 
 internal sealed class OpResult
@@ -24,7 +27,8 @@ internal sealed class OpResult
     internal readonly List<string> Removed = new();      // paths that left their folder (moved away, renamed from, deleted)
     internal readonly List<FileItem> Added = new();      // items that appeared (copied, moved in, renamed to, created), already stat'ed
     internal bool Aborted;
-    internal bool Replaced;                              // a destination existed before and was overwritten: the original cannot be restored by an undo
+    // a destination existed before and was overwritten: the original cannot be restored by an undo
+    internal bool Replaced;
     internal string? Error;
 }
 
@@ -34,28 +38,33 @@ internal static class FileOps
     internal static bool Quiet;
     internal static string OddHr = "";      // diagnostics: non-zero HRESULTs seen by the sink
 
-    // Operations in flight. When the last one ends, Idle is raised on the worker thread (the resident instance re-checks its recycling there).
+    // Opérations en cours. Quand la dernière se termine, Idle est levé sur le thread de travail (l'instance résidente y revérifie son
+    // recyclage).
     static int active;
     internal static int Active => Volatile.Read(ref active);
     internal static event Action? Idle;
 
-    const uint FOF_SILENT = 0x4, FOF_RENAMEONCOLLISION = 0x8, FOF_NOCONFIRMATION = 0x10, FOF_ALLOWUNDO = 0x40, FOF_NOCONFIRMMKDIR = 0x200, FOF_NOERRORUI = 0x400,
+    const uint FOF_SILENT = 0x4, FOF_RENAMEONCOLLISION = 0x8, FOF_NOCONFIRMATION = 0x10, FOF_ALLOWUNDO = 0x40, FOF_NOCONFIRMMKDIR = 0x200,
+        FOF_NOERRORUI = 0x400,
         FOFX_RECYCLEONDELETE = 0x00080000, FOFX_ADDUNDORECORD = 0x20000000;
     const uint FILE_ATTRIBUTE_DIRECTORY = 0x10;
     static readonly Guid ClsidFileOperation = new("3ad05575-8857-4850-9277-11b85bdb8e09");
     static Guid iidShellItem = new("43826d1e-e718-42ee-bc55-a1e261c37bfe");
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
-    static extern void SHCreateItemFromParsingName(string path, IntPtr bindContext, ref Guid riid, [MarshalAs(UnmanagedType.Interface)] out IShellItem item);
+    static extern void SHCreateItemFromParsingName(string path, IntPtr bindContext, ref Guid riid,
+        [MarshalAs(UnmanagedType.Interface)] out IShellItem item);
 
     internal static Task<OpResult> Copy(IntPtr owner, IReadOnlyList<string> sources, string destFolder, bool move, HashSet<string> watch)
     {
-        // Same folder: Explorer's "name - Copy" instead of a conflict prompt. A move onto itself is a no-op and is filtered out.
+        // Même dossier : « nom - Copie » de l'Explorateur au lieu d'une invite de conflit. Un déplacement sur lui-même est sans effet et
+        // filtré.
         bool sameFolder = false;
         var list = new List<string>();
         foreach (var s in sources)
         {
-            bool same = string.Equals(Path.GetDirectoryName(s)?.TrimEnd('\\'), destFolder.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
+            bool same = string.Equals(Path.GetDirectoryName(s)?.TrimEnd('\\'), destFolder.TrimEnd('\\'),
+                StringComparison.OrdinalIgnoreCase);
             if (same && move)
                 continue;
             sameFolder |= same;
@@ -78,7 +87,8 @@ internal static class FileOps
         });
     }
 
-    // Explicit (source -> destination path) moves / copies: the undo of a move, the redo of a copy. Destination keeps the given name.
+    // Déplacements / copies explicites (chemin source -> chemin destination) : l'annulation d'un déplacement, le rétablissement d'une
+    // copie. La destination garde le nom donné.
     internal static Task<OpResult> Transfer(IntPtr owner, IReadOnlyList<(string From, string To)> pairs, bool move, HashSet<string> watch)
     {
         if (pairs.Count == 0)
@@ -98,7 +108,7 @@ internal static class FileOps
         });
     }
 
-    // Recycle Bin unless permanent (the caller has already asked for confirmation in that case).
+    // Corbeille sauf suppression définitive (l'appelant a déjà demandé confirmation dans ce cas).
     internal static Task<OpResult> Delete(IntPtr owner, IReadOnlyList<string> paths, bool permanent, HashSet<string> watch)
     {
         uint flags = permanent ? FOF_NOCONFIRMATION : FOF_ALLOWUNDO | FOFX_ADDUNDORECORD | FOFX_RECYCLEONDELETE;
@@ -108,7 +118,7 @@ internal static class FileOps
     internal static Task<OpResult> Rename(IntPtr owner, string path, string newName, HashSet<string> watch) =>
         Run(owner, FOF_ALLOWUNDO | FOFX_ADDUNDORECORD, watch, (op, held) => op.RenameItem(Item(path, held), newName, null));
 
-    // Auto-unique name ("Nouveau dossier", "Nouveau dossier (2)", ...) picked on the worker thread.
+    // Nom automatiquement unique ("Nouveau dossier", "Nouveau dossier (2)", ...) choisi sur le thread de travail.
     internal static Task<OpResult> NewFolder(IntPtr owner, string parent, string baseName, HashSet<string> watch) =>
         Run(owner, FOF_ALLOWUNDO | FOFX_ADDUNDORECORD | FOF_NOCONFIRMMKDIR, watch, (op, held) =>
         {
@@ -125,10 +135,13 @@ internal static class FileOps
         return item;
     }
 
-    static Task<OpResult> Run(IntPtr owner, uint flags, HashSet<string> watch, Action<IFileOperation, List<object>> queue) => Run(owner, flags, watch, null, queue);
+    static Task<OpResult> Run(IntPtr owner, uint flags, HashSet<string> watch, Action<IFileOperation, List<object>> queue) => Run(owner,
+        flags, watch, null, queue);
 
-    // targets: where copies / moves are expected to land. Those that already exist when the operation starts are remembered; one of them showing up in the log means it was overwritten.
-    static Task<OpResult> Run(IntPtr owner, uint flags, HashSet<string> watch, IEnumerable<string>? targets, Action<IFileOperation, List<object>> queue)
+    // targets : où les copies / déplacements doivent atterrir. Ceux qui existent déjà au début de l'opération sont mémorisés ; l'un d'eux
+    // apparaissant dans le journal signifie qu'il a été écrasé.
+    static Task<OpResult> Run(IntPtr owner, uint flags, HashSet<string> watch, IEnumerable<string>? targets, Action<IFileOperation,
+        List<object>> queue)
     {
         var done = new TaskCompletionSource<OpResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         Interlocked.Increment(ref active);
@@ -171,7 +184,8 @@ internal static class FileOps
             }
             catch (Exception ex)
             {
-                result.Error = ex.Message;        // user cancel / access denied surface here too; whatever the sink already collected stays valid
+                // user cancel / access denied surface here too; whatever the sink already collected stays valid
+                result.Error = ex.Message;
             }
             finally
             {
@@ -190,13 +204,14 @@ internal static class FileOps
                     Safe.Try(() => Marshal.FinalReleaseComObject(op));
                 }
             }
-            // Outside the COM call: stat the new items (find data only) for the folders somebody is looking at.
+            // Hors de l'appel COM : lit les nouveaux éléments (find-data seulement) pour les dossiers que quelqu'un regarde.
             var types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             if (sink != null)
             {
                 result.Log.AddRange(sink.Log);
                 if (existing.Count > 0)
-                    result.Replaced = sink.Log.Any(d => d.Kind is DoneKind.Copy or DoneKind.Move && d.Dst != null && existing.Contains(d.Dst));
+                    result.Replaced = sink.Log.Any(d => d.Kind is DoneKind.Copy or DoneKind.Move && d.Dst != null
+                        && existing.Contains(d.Dst));
                 foreach (var r in sink.Results)
                 {
                     if (r.Hr < 0)
@@ -243,7 +258,7 @@ internal static class FileOps
         internal readonly List<Entry> Results = new();
         internal readonly List<Done> Log = new();
 
-        // Takes the path out of a shell item and releases the wrapper (the callback owns nothing else).
+        // Extrait le chemin d'un élément du shell et libère l'enveloppe (le callback ne possède rien d'autre).
         static string? PathOf(IShellItem? item)
         {
             if (item == null)
@@ -260,8 +275,9 @@ internal static class FileOps
             catch { return null; }
             finally { Safe.Try(() => Marshal.FinalReleaseComObject(item)); }
         }
-        // A positive HRESULT is not always a success: COPYENGINE_S_PENDING (0x27000B, observed after a cancelled "file in use" prompt: the item is untouched), S_USER_IGNORED (0x270005), S_ALREADY_DONE (0x27000A).
-        // S_DONT_PROCESS_CHILDREN (0x270008, folders) and the other S_ codes are real successes.
+        // Un HRESULT positif n'est pas toujours un succès : COPYENGINE_S_PENDING (0x27000B, observé après une invite « fichier en cours
+        // d'utilisation » annulée : l'élément est intact), S_USER_IGNORED (0x270005), S_ALREADY_DONE (0x27000A).
+        // S_DONT_PROCESS_CHILDREN (0x270008, dossiers) et les autres codes S_ sont de vrais succès.
         static bool Succeeded(int hr) => hr >= 0 && hr != 0x0027000B && hr != 0x00270005 && hr != 0x0027000A;
         static string? Combine(string? folder, string? name) => folder != null && name != null ? Path.Combine(folder, name) : null;
 
@@ -390,13 +406,16 @@ internal static class FileOps
         void ApplyPropertiesToItems([MarshalAs(UnmanagedType.Interface)] object items);
         void RenameItem(IShellItem item, [MarshalAs(UnmanagedType.LPWStr)] string newName, IFileOperationProgressSink? sink);
         void RenameItems([MarshalAs(UnmanagedType.Interface)] object items, [MarshalAs(UnmanagedType.LPWStr)] string newName);
-        void MoveItem(IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string? newName, IFileOperationProgressSink? sink);
+        void MoveItem(IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string? newName,
+            IFileOperationProgressSink? sink);
         void MoveItems([MarshalAs(UnmanagedType.Interface)] object items, IShellItem dest);
-        void CopyItem(IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string? newName, IFileOperationProgressSink? sink);
+        void CopyItem(IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string? newName,
+            IFileOperationProgressSink? sink);
         void CopyItems([MarshalAs(UnmanagedType.Interface)] object items, IShellItem dest);
         void DeleteItem(IShellItem item, IFileOperationProgressSink? sink);
         void DeleteItems([MarshalAs(UnmanagedType.Interface)] object items);
-        void NewItem(IShellItem dest, uint attrs, [MarshalAs(UnmanagedType.LPWStr)] string name, [MarshalAs(UnmanagedType.LPWStr)] string? template, IFileOperationProgressSink? sink);
+        void NewItem(IShellItem dest, uint attrs, [MarshalAs(UnmanagedType.LPWStr)] string name,
+            [MarshalAs(UnmanagedType.LPWStr)] string? template, IFileOperationProgressSink? sink);
         void PerformOperations();
         void GetAnyOperationsAborted([MarshalAs(UnmanagedType.Bool)] out bool aborted);
     }
@@ -409,13 +428,16 @@ internal static class FileOps
         void PreRenameItem(uint flags, IShellItem item, [MarshalAs(UnmanagedType.LPWStr)] string newName);
         void PostRenameItem(uint flags, IShellItem item, [MarshalAs(UnmanagedType.LPWStr)] string newName, int hr, IShellItem? created);
         void PreMoveItem(uint flags, IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string newName);
-        void PostMoveItem(uint flags, IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string newName, int hr, IShellItem? created);
+        void PostMoveItem(uint flags, IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string newName, int hr,
+            IShellItem? created);
         void PreCopyItem(uint flags, IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string newName);
-        void PostCopyItem(uint flags, IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string newName, int hr, IShellItem? created);
+        void PostCopyItem(uint flags, IShellItem item, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string newName, int hr,
+            IShellItem? created);
         void PreDeleteItem(uint flags, IShellItem item);
         void PostDeleteItem(uint flags, IShellItem item, int hr, IShellItem? created);
         void PreNewItem(uint flags, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string newName);
-        void PostNewItem(uint flags, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string newName, [MarshalAs(UnmanagedType.LPWStr)] string? template, uint attrs, int hr, IShellItem? created);
+        void PostNewItem(uint flags, IShellItem dest, [MarshalAs(UnmanagedType.LPWStr)] string newName,
+            [MarshalAs(UnmanagedType.LPWStr)] string? template, uint attrs, int hr, IShellItem? created);
         void UpdateProgress(uint total, uint sofar);
         void ResetTimer();
         void PauseTimer();

@@ -1,4 +1,4 @@
-// language: C# 12, file: NotesWindow.cs, target: Windows 11 / .NET 8 WPF, persistent scratchpad in the glass layer
+// C# 12, fichier NotesWindow.cs, cible Windows 11 / .NET 8 WPF, bloc-notes persistant dans la couche de verre
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -7,11 +7,13 @@ using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace PanneauxGlass;
-// One note, saved in preferences, never shown anywhere else. It survives a restart and a collapsed launcher.
+// Une note, enregistrée dans les préférences, jamais affichée ailleurs. Elle survit à un redémarrage et à un lanceur replié.
 internal sealed class NotesWindow : GlassWindow
 {
+    // Regroupe les frappes avant d'écrire sur disque.
+    const int SaveDebounceMs = 500;
     readonly Coordinator owner; readonly TextBox editor = new(); readonly TextBlock status;
-    readonly DispatcherTimer save = new() { Interval = TimeSpan.FromMilliseconds(500) };
+    readonly DispatcherTimer save = new() { Interval = TimeSpan.FromMilliseconds(SaveDebounceMs) };
     internal NotesWindow(Coordinator coordinator) : base("Panneaux Glass — note rapide")
     {
         owner = coordinator;
@@ -77,8 +79,10 @@ internal sealed class NotesWindow : GlassWindow
         ContentHost.Children.Add(footer);
         save.Tick += (_, _) => { save.Stop(); Persist(); };
         editor.TextChanged += (_, _) => { if (!IsLoaded) return; save.Stop(); save.Start(); status.Text = "Modifié …"; };
-        editor.PreviewKeyDown += (_, e) => { if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control) { SystemActions.Copy(owner, editor.Text, "Note"); e.Handled = true; } };
-        Loaded += (_, _) => { editor.Focus(); editor.CaretIndex = editor.Text.Length; status.Text = editor.Text.Length == 0 ? "Une idée, une commande, un lien : tout reste ici." : "Enregistré"; };
+        editor.PreviewKeyDown += (_, e) => { if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control) {
+            SystemActions.Copy(owner, editor.Text, "Note"); e.Handled = true; } };
+        Loaded += (_, _) => { editor.Focus(); editor.CaretIndex = editor.Text.Length; status.Text = editor.Text.Length == 0
+            ? "Une idée, une commande, un lien : tout reste ici." : "Enregistré"; };
         Closed += (_, _) => { save.Stop(); Persist(); };
     }
     void Persist()

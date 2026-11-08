@@ -1,4 +1,5 @@
-// C#12 / TileLogic.cs / Pure tiling logic (no Win32 access): split layout with ratios, directional neighbour, stable order, exclusions parsing.
+// C# 12 / TileLogic.cs / Logique de tuilage pure (sans accès Win32) : disposition par découpes avec ratios, voisin directionnel, ordre
+// stable, analyse des exclusions.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,8 @@ internal enum TileDir
 internal static class TileLogic
 {
     internal const double MinRatio = .2, MaxRatio = .8, RatioStep = .05;
-    // Binary split on the longer side. `ratio(path)` gives the first-part share for the split at `path` ("" = root, then "0"/"1" per descent); default .5.
+    // Découpe binaire sur le côté le plus long. `ratio(path)` donne la part de la première moitié pour la découpe à `path` ("" = racine,
+    // puis "0"/"1" à chaque descente) ; .5 par défaut.
     internal static Native.Rect[] Layout(Native.Rect area, int count, int gap, Func<string, double>? ratio = null)
     {
         var result = new List<Native.Rect>();
@@ -68,7 +70,8 @@ internal static class TileLogic
             Split(area, count, "");
         return result.ToArray();
     }
-    // Deepest split containing tile `index` among `count` tiles; inFirst tells which side of that split the tile is on. null when count<2.
+    // Découpe la plus profonde contenant la tuile `index` parmi `count` tuiles ; inFirst indique de quel côté de cette découpe se trouve la
+    // tuile. null si count<2.
     internal static (string path, bool inFirst)? DeepestSplit(int count, int index)
     {
         if (count < 2 || index < 0 || index >= count)
@@ -95,8 +98,10 @@ internal static class TileLogic
         }
         return found;
     }
-    internal static double Grow(double current, bool inFirst, double delta) => Math.Clamp(Math.Round(current + (inFirst ? delta : -delta), 3), MinRatio, MaxRatio);
-    // Nearest tile in a direction: must lie strictly beyond the current edge and overlap on the perpendicular axis; ties go to the closest centre. -1 if none.
+    internal static double Grow(double current, bool inFirst, double delta) => Math.Clamp(Math.Round(current + (inFirst ? delta : -delta),
+        3), MinRatio, MaxRatio);
+    // Tuile la plus proche dans une direction : elle doit se situer strictement au-delà du bord courant et se recouvrir sur l'axe
+    // perpendiculaire ; à égalité, le centre le plus proche gagne. -1 s'il n'y en a pas.
     internal static int Neighbor(IReadOnlyList<Native.Rect> rects, int index, TileDir dir)
     {
         if (index < 0 || index >= rects.Count)
@@ -153,7 +158,8 @@ internal static class TileLogic
                 return i;
         return -1;
     }
-    internal static List<string> ParseExclusions(string? text) => (text ?? "").Split('\n').Select(Normalize).Where(s => s.Length > 0).Distinct().OrderBy(s => s, StringComparer.Ordinal).ToList();
+    internal static List<string> ParseExclusions(string? text) => (text ?? "").Split('\n').Select(Normalize).Where(s
+        => s.Length > 0).Distinct().OrderBy(s => s, StringComparer.Ordinal).ToList();
     internal static string Normalize(string? name)
     {
         var s = (name ?? "").Trim().ToLowerInvariant();
@@ -162,7 +168,7 @@ internal static class TileLogic
         return s;
     }
 }
-// Stable tile order: new windows go last, focus never reorders, only an explicit swap does.
+// Ordre de tuiles stable : les nouvelles fenêtres vont en dernier, le focus ne réordonne jamais, seul un échange explicite le fait.
 internal sealed class TileOrder
 {
     readonly List<IntPtr> items = new();

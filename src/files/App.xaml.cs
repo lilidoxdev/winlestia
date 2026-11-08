@@ -8,16 +8,23 @@ namespace WinlestiaFiles;
 
 public partial class App : Application
 {
-    // Resident = hide instead of exit when the last tab closes. Set by --background (preloaded, starts hidden) or --resident.
+    // Espace les lancements d'Explorateur pour conserver l'ordre d'ouverture des fenêtres.
+    const int LaunchSpacingMs = 150;
+    // Résident = se cache au lieu de quitter quand le dernier onglet se ferme. Posé par --background (préchargé, démarre caché) ou
+    // --resident.
     internal static bool Resident, Quitting, Recycling;
-    // Recycling: a resident that has built more than RecycleMenus native context menus (each leaks a suspended shell thread, see ShellMenu.Builds)
-    // exits with RecycleExitCode once hidden and idle; the backend relaunches it. WINLESTIA_FILES_RECYCLE_MENUS overrides the threshold (tests).
+    // Recyclage : un résident qui a construit plus de RecycleMenus menus contextuels natifs (chacun fuit un thread de shell suspendu, voir
+    // ShellMenu.Builds)
+    // quitte avec RecycleExitCode une fois caché et inactif ; le backend le relance. WINLESTIA_FILES_RECYCLE_MENUS surcharge le seuil
+    // (tests).
     internal const int RecycleExitCode = 75;
-    internal static readonly int RecycleMenus = int.TryParse(Environment.GetEnvironmentVariable("WINLESTIA_FILES_RECYCLE_MENUS"), out var rm) && rm >= 0 ? rm : 200;
+    internal static readonly int RecycleMenus = int.TryParse(Environment.GetEnvironmentVariable("WINLESTIA_FILES_RECYCLE_MENUS"),
+        out var rm) && rm >= 0 ? rm : 200;
     internal static int ProcessExitCode;
     SingleInstance? server;
 
-    internal static bool IsFlag(string a) => a.Equals("--background", StringComparison.OrdinalIgnoreCase) || a.Equals("--resident", StringComparison.OrdinalIgnoreCase);
+    internal static bool IsFlag(string a) => a.Equals("--background", StringComparison.OrdinalIgnoreCase) || a.Equals("--resident",
+        StringComparison.OrdinalIgnoreCase);
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -54,8 +61,10 @@ public partial class App : Application
             Perf.Mark("ctor done, Show()");
             window.Show();
             Perf.Mark("Show() returned");
-            // After the first frame's work: the first instance with a window also hosts the server, later launches forward to it.
-            Dispatcher.BeginInvoke(() => { server = SingleInstance.TryStart(OnRequest); }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            // Après le travail de la première image : la première instance avec une fenêtre héberge aussi le serveur, les lancements
+            // suivants lui transmettent leur demande.
+            Dispatcher.BeginInvoke(() => { server = SingleInstance.TryStart(OnRequest); },
+                System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
         catch (Exception ex)
         {
@@ -77,8 +86,10 @@ public partial class App : Application
         server = null;
     }   // dying instance: no new client may connect before the replacement process starts
 
-    // UI thread, window hidden and idle. The pipe is closed FIRST (no new client can connect; one that is mid-handshake fails and falls back to a cold launch),
-    // then the shutdown is queued behind anything already posted. If a request still got a window in meanwhile, this instance simply becomes an ordinary one.
+    // Thread UI, fenêtre cachée et inactive. Le canal est fermé EN PREMIER (aucun nouveau client ne peut se connecter ; celui qui est en
+    // pleine négociation échoue et retombe sur un lancement à froid),
+    // puis l'arrêt est mis en file derrière tout ce qui est déjà posté. Si une demande a quand même obtenu une fenêtre entre-temps, cette
+    // instance devient simplement une instance ordinaire.
     internal void BeginRecycle()
     {
         if (Recycling)
@@ -100,8 +111,10 @@ public partial class App : Application
         }, System.Windows.Threading.DispatcherPriority.Background);
     }
 
-    // Runs on a pool thread (pipe handler). Requests do not touch the UI directly: they go through a bounded, coalescing queue served by ONE consumer that
-    // waits for each window change to finish, so a flood of clients (or a stuck UI) can never pile up unbounded dispatcher work or processes.
+    // S'exécute sur un thread du pool (gestionnaire du canal). Les demandes ne touchent pas directement l'UI : elles passent par une file
+    // bornée et fusionnante servie par UN SEUL consommateur qui
+    // attend la fin de chaque changement de fenêtre, pour qu'un déluge de clients (ou une UI bloquée) ne puisse jamais empiler un travail
+    // illimité de dispatcher ou de processus.
     const int MaxPending = 20;
     readonly object gate = new();
     readonly System.Collections.Generic.List<string> pending = new();
@@ -126,7 +139,9 @@ public partial class App : Application
                 return;
             Perf.Log("pipe request received");
             if (Recycling)
-            {   // accepted a moment before the pipe closed: hand it to a fresh process rather than lose it (at most ONE per recycle, never a spawn loop)
+            // accepted a moment before the pipe closed: hand it to a fresh process rather than lose it (at most ONE per recycle, never a
+            // spawn loop)
+            {
                 lock (gate)
                 {
                     if (handedOff)
@@ -136,7 +151,8 @@ public partial class App : Application
                     }
                     handedOff = true;
                 }
-                var psi = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false, WorkingDirectory = Path.IsPathRooted(r.Cwd) ? r.Cwd : Environment.CurrentDirectory };
+                var psi = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false,
+                    WorkingDirectory = Path.IsPathRooted(r.Cwd) ? r.Cwd : Environment.CurrentDirectory };
                 foreach (var a in r.Args)
                     psi.ArgumentList.Add(a);
                 System.Diagnostics.Process.Start(psi)?.Dispose();
@@ -144,7 +160,8 @@ public partial class App : Application
             }
             string arg = string.Join(" ", r.Args.Where(a => !IsFlag(a)));
             string v = arg.Trim().Trim('"').Trim();
-            if (v.Length > 0 && !Path.IsPathRooted(v) && Path.IsPathRooted(r.Cwd) && !v.StartsWith("shell:", StringComparison.OrdinalIgnoreCase) && !v.StartsWith("::{", StringComparison.Ordinal))
+            if (v.Length > 0 && !Path.IsPathRooted(v) && Path.IsPathRooted(r.Cwd) && !v.StartsWith("shell:",
+                StringComparison.OrdinalIgnoreCase) && !v.StartsWith("::{", StringComparison.Ordinal))
                 arg = Path.GetFullPath(v, r.Cwd);
             Enqueue(arg);
         }
@@ -199,7 +216,7 @@ public partial class App : Application
                 if (!route.IsOwn)
                 {
                     PathRouter.LaunchExplorer(route.Value);
-                    await Task.Delay(150).ConfigureAwait(false);
+                    await Task.Delay(LaunchSpacingMs).ConfigureAwait(false);
                     continue;
                 }
                 await Dispatcher.InvokeAsync(() =>
@@ -216,12 +233,14 @@ public partial class App : Application
         }
     }
 
-    // Startup crash counter (3 within 60 s: Files restores the folder handler itself and the backend turns the option off). Pure .NET, no WPF type.
+    // Compteur de plantages au démarrage (3 en 60 s : Files restaure lui-même le gestionnaire de dossiers et le backend désactive
+    // l'option). .NET pur, aucun type WPF.
     internal static void RecordStartupCrash()
     {
         try
         {
-            Winlestia.Shared.FilesHandlerGuard.RecordStartupCrash(Winlestia.Shared.FilesHandler.DataDir, Winlestia.Shared.FilesHandlerGuard.NowMs());
+            Winlestia.Shared.FilesHandlerGuard.RecordStartupCrash(Winlestia.Shared.FilesHandler.DataDir,
+                Winlestia.Shared.FilesHandlerGuard.NowMs());
         }
         catch (Exception err)
         {
@@ -229,7 +248,8 @@ public partial class App : Application
         }
     }
 
-    // First 15 s of the process, unhandled exception: count it (real crashes only) and hand the requested folder to explorer.exe before dying. Best effort.
+    // Pendant les 15 premières secondes du processus, exception non gérée : on la compte (vrais plantages seulement) et on confie le
+    // dossier demandé à explorer.exe avant de mourir. Au mieux.
     internal static string RequestedArg = "";
     internal static void EarlyDeath(Exception? ex)
     {
@@ -254,10 +274,10 @@ public partial class App : Application
         server = null;
     }
 
-    // One diagnostic line (same file and 200-line cap as CrashLog).
+    // Une ligne de diagnostic (même fichier et même plafond de 200 lignes que CrashLog).
     internal static void LogLine(string text) => CrashLog(new InvalidOperationException(text));
 
-    // Startup only, so synchronous is fine. Capped at 200 lines.
+    // Au démarrage seulement, donc le synchrone convient. Plafonné à 200 lignes.
     static readonly object logGate = new();
     internal static void CrashLog(Exception ex)
     {
@@ -269,7 +289,8 @@ public partial class App : Application
                 Directory.CreateDirectory(dir);
                 string file = Path.Combine(dir, "crash.log");
                 var lines = File.Exists(file) ? File.ReadAllLines(file).ToList() : new System.Collections.Generic.List<string>();
-                lines.AddRange((DateTimeOffset.Now.ToString("O") + " " + (ex is InvalidOperationException && ex.StackTrace == null ? ex.Message : ex.ToString())).Split('\n').Select(l => l.TrimEnd('\r')));
+                lines.AddRange((DateTimeOffset.Now.ToString("O") + " " + (ex is InvalidOperationException && ex.StackTrace == null
+                    ? ex.Message : ex.ToString())).Split('\n').Select(l => l.TrimEnd('\r')));
                 if (lines.Count > 200)
                     lines = lines.Skip(lines.Count - 200).ToList();
                 File.WriteAllLines(file, lines);
@@ -282,16 +303,20 @@ public partial class App : Application
     }
 }
 
-// Own entry point (the generated Main is App.Main). No parallel WPF warm-up thread: first-use WPF init on two threads deadlocks inside WPF
-// (thread A in ContentPresenter..cctor waits for WpfSharedBamlSchemaContext's lock, thread B holds that lock and waits for the same type initializer).
-// It saved ~80 ms on a cold start and cost an occasional permanent hang, so all WPF work stays on the one UI thread.
-// A resident instance is tried first, before any WPF type is touched: forward over the pipe and leave (<150 ms worst case).
+// Point d'entrée propre (le Main généré est App.Main). Pas de thread de préchauffage WPF parallèle : l'initialisation WPF au premier usage
+// sur deux threads se bloque dans WPF
+// (le thread A dans ContentPresenter..cctor attend le verrou de WpfSharedBamlSchemaContext, le thread B tient ce verrou et attend le même
+// initialiseur de type).
+// Il gagnait ~80 ms à froid et coûtait un blocage définitif occasionnel : tout le travail WPF reste donc sur l'unique thread UI.
+// Une instance résidente est essayée d'abord, avant de toucher à un type WPF : transmission par le canal puis sortie (<150 ms au pire).
 internal static class Program
 {
     static readonly long born = System.Diagnostics.Stopwatch.GetTimestamp();
     internal static TimeSpan Uptime => System.Diagnostics.Stopwatch.GetElapsedTime(born);
-    [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
-    [System.Runtime.InteropServices.DllImport("shell32.dll")] static extern int GetCurrentProcessExplicitAppUserModelID([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] out string appId);
+    [System.Runtime.InteropServices.DllImport("shell32.dll",
+        CharSet = System.Runtime.InteropServices.CharSet.Unicode)] static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
+    [System.Runtime.InteropServices.DllImport("shell32.dll")] static extern int GetCurrentProcessExplicitAppUserModelID([System.Runtime
+        .InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] out string appId);
     internal const string AppId = "Winlestia.Files";
     internal static string? CurrentAppId()
     {
@@ -313,7 +338,8 @@ internal static class Program
             // Identité de barre des tâches facultative.
         }
         // Command line only (installer, uninstaller, tests): no window, no pipe, no WPF. --register "<exe>" | --restore
-        if (args.Length > 0 && (args[0].Equals("--register", StringComparison.OrdinalIgnoreCase) || args[0].Equals("--restore", StringComparison.OrdinalIgnoreCase)))
+        if (args.Length > 0 && (args[0].Equals("--register", StringComparison.OrdinalIgnoreCase) || args[0].Equals("--restore",
+            StringComparison.OrdinalIgnoreCase)))
             return Winlestia.Shared.FilesHandler.RunCli(args);
         App.RequestedArg = string.Join(" ", args.Where(a => !App.IsFlag(a)));
         AppDomain.CurrentDomain.UnhandledException += (_, e) => App.EarlyDeath(e.ExceptionObject as Exception);

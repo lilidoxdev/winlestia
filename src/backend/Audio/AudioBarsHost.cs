@@ -1,6 +1,9 @@
-// C# 12 / AudioBarsHost.cs / WASAPI loopback of the default output device, only while the dashboard Media panel is visible.
-// The sound is never stored or sent: samples go through a 2048-float ring, the worker turns them into 28 levels, the ring dies with the thread.
-// Silence: loopback delivers no packet, the bars decay to zero, one idle frame is published, then the worker blocks (no timer, no wake-up).
+// C# 12 / AudioBarsHost.cs / Boucle WASAPI du périphérique de sortie par défaut, uniquement tant que le panneau Média du tableau de bord
+// est visible.
+// Le son n'est jamais stocké ni envoyé : les échantillons passent par un anneau de 2048 flottants, le worker en tire 28 niveaux, l'anneau
+// disparaît avec le thread.
+// Silence : la boucle ne livre aucun paquet, les barres retombent à zéro, une image au repos est publiée, puis le worker se bloque (ni
+// minuteur ni réveil).
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -45,8 +48,10 @@ internal sealed class AudioBarsHost : IDisposable
             return new(run != null && !run.Stop.WaitOne(0), frames, seq, idle, withBars ? (int[])published.Clone() : Array.Empty<int>());
     }
 
-    // Called from the UI thread, never blocks: a stop only raises the flag. A start while the previous worker is still leaving
-    // hands it to the new worker, which waits for it (at most StopWaitMs) before opening its own capture, so two captures never overlap.
+    // Appelé depuis le thread UI, ne bloque jamais : un arrêt se contente de lever le drapeau. Un démarrage alors que le worker précédent
+    // finit encore
+    // le confie au nouveau worker, qui l'attend (au plus StopWaitMs) avant d'ouvrir sa propre capture : deux captures ne se chevauchent
+    // jamais.
     internal void SetActive(bool on)
     {
         lock (gate)
@@ -124,7 +129,8 @@ internal sealed class AudioBarsHost : IDisposable
                 device = enumerator!.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console);
                 var c = new WasapiLoopbackCapture(device);
                 var wf = c.WaveFormat;
-                bool isFloat = wf.Encoding == WaveFormatEncoding.IeeeFloat || (wf.Encoding == WaveFormatEncoding.Extensible && wf.BitsPerSample == 32);
+                bool isFloat = wf.Encoding == WaveFormatEncoding.IeeeFloat || (wf.Encoding == WaveFormatEncoding.Extensible
+                    && wf.BitsPerSample == 32);
                 if (wf.Channels < 1 || wf.Channels > 16 || !(isFloat || wf.BitsPerSample == 16))
                 {
                     c.Dispose();

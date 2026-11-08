@@ -1,4 +1,5 @@
-// Pure decisions for the logon autostart (no Store, no process, no registry): linked into tests/AutostartPolicy.
+// Décisions pures du démarrage automatique à l'ouverture de session (ni Store, ni processus, ni registre) : liées dans
+// tests/AutostartPolicy.
 using System;
 using System.Security;
 
@@ -25,14 +26,24 @@ static class AutostartPolicy
     // --qt-shell seul : jamais --show, qui ouvrirait le tableau de bord à chaque session.
     internal static string TaskXml(string user, string exePath, string workingDirectory)
     {
-        string u = SecurityElement.Escape(user) ?? "", exe = SecurityElement.Escape("\"" + exePath + "\"") ?? "", dir = SecurityElement.Escape(workingDirectory) ?? "";
+        string u = SecurityElement.Escape(user) ?? "", exe = SecurityElement.Escape("\"" + exePath + "\"") ?? "",
+            dir = SecurityElement.Escape(workingDirectory) ?? "";
         return "<?xml version=\"1.0\" encoding=\"UTF-16\"?>\n"
         + "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n"
         + "  <RegistrationInfo><Description>WinlestiaShell</Description></RegistrationInfo>\n"
         + "  <Triggers><LogonTrigger><Enabled>true</Enabled><UserId>" + u + "</UserId></LogonTrigger></Triggers>\n"
-        + "  <Principals><Principal id=\"Author\"><UserId>" + u + "</UserId><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>\n"
-        + "  <Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries><StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><AllowHardTerminate>true</AllowHardTerminate><StartWhenAvailable>false</StartWhenAvailable><RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable><AllowStartOnDemand>true</AllowStartOnDemand><Enabled>true</Enabled><Hidden>false</Hidden><RunOnlyIfIdle>false</RunOnlyIfIdle><WakeToRun>false</WakeToRun><ExecutionTimeLimit>PT0S</ExecutionTimeLimit><Priority>4</Priority></Settings>\n"
-        + "  <Actions Context=\"Author\"><Exec><Command>" + exe + "</Command><Arguments>--qt-shell</Arguments><WorkingDirectory>" + dir + "</WorkingDirectory></Exec></Actions>\n"
+        + "  <Principals><Principal id=\"Author\"><UserId>" + u
+            + "</UserId><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>\n"
+        + "  <Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>"
+        + "<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>"
+        + "<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><AllowHardTerminate>true</AllowHardTerminate>"
+        + "<StartWhenAvailable>false</StartWhenAvailable>"
+        + "<RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>"
+        + "<AllowStartOnDemand>true</AllowStartOnDemand><Enabled>true</Enabled><Hidden>false</Hidden>"
+        + "<RunOnlyIfIdle>false</RunOnlyIfIdle><WakeToRun>false</WakeToRun>"
+        + "<ExecutionTimeLimit>PT0S</ExecutionTimeLimit><Priority>4</Priority></Settings>\n"
+        + "  <Actions Context=\"Author\"><Exec><Command>" + exe + "</Command><Arguments>--qt-shell</Arguments><WorkingDirectory>" + dir
+            + "</WorkingDirectory></Exec></Actions>\n"
         + "</Task>\n";
     }
 }

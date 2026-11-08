@@ -1,6 +1,9 @@
-// Shell icons and thumbnails. Requests exist only for realized containers (ShellImage binds on DataContext, cancels on rebind/unload).
-// A small pool of STA threads (BelowNormal) serves them newest-batch-first; results become frozen BitmapSources posted to the UI at Background priority.
-// Two byte-budgeted LRU caches (thumbnails, icons). No timer: idle workers block on a Monitor. Reset() (resident hide) clears caches and ends the threads.
+// Icônes et miniatures du shell. Les requêtes n'existent que pour les conteneurs réalisés (ShellImage se lie au DataContext, annule au
+// changement de liaison/déchargement).
+// Un petit pool de threads STA (BelowNormal) les sert, dernier lot d'abord ; les résultats deviennent des BitmapSource figés postés à
+// l'interface en priorité Background.
+// Deux caches LRU à budget d'octets (miniatures, icônes). Pas de minuteur : les workers inactifs bloquent sur un Monitor. Reset() (masquage
+// résident) vide les caches et termine les threads.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -33,14 +36,17 @@ internal static class Thumbs
     }
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
-    static extern int SHCreateItemFromParsingName(string path, IntPtr bindContext, ref Guid riid, [MarshalAs(UnmanagedType.Interface)] out IShellItemImageFactory factory);
+    static extern int SHCreateItemFromParsingName(string path, IntPtr bindContext, ref Guid riid,
+        [MarshalAs(UnmanagedType.Interface)] out IShellItemImageFactory factory);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     struct SHFILEINFO
     {
-        public IntPtr hIcon; public int iIcon; public uint attrs; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string name; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string type;
+        public IntPtr hIcon; public int iIcon; public uint attrs; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string name;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string type;
     }
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern IntPtr SHGetFileInfo(string path, uint attributes, ref SHFILEINFO info, uint size, uint flags);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern IntPtr SHGetFileInfo(string path, uint attributes,
+        ref SHFILEINFO info, uint size, uint flags);
     [DllImport("shell32.dll", PreserveSig = true)] static extern int SHGetImageList(int list, ref Guid riid, out IntPtr imageList);
     [DllImport("comctl32.dll")] static extern IntPtr ImageList_GetIcon(IntPtr list, int index, uint flags);
     [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr icon);
@@ -60,7 +66,7 @@ internal static class Thumbs
         internal long Batch, Seq; internal volatile bool Cancelled; internal Action<BitmapSource?> Done = null!;
     }
 
-    // Sizes: SHIL bucket for icons (16/32/48/256), requested pixel size for thumbnails.
+    // Tailles : seau SHIL pour les icônes (16/32/48/256), taille en pixels demandée pour les miniatures.
     internal static int IconBucket(double dips)
     {
         double px = dips * Dpi;
@@ -70,7 +76,7 @@ internal static class Thumbs
 
     static bool PerPath(string ext) => ext is ".exe" or ".ico" or ".lnk" or ".url" or ".scr" or ".msi" or ".appref-ms" or ".cur" or ".ani";
 
-    // Cache key of the image an item would show; the same key is what the worker stores under.
+    // Clé de cache de l'image qu'un élément afficherait ; c'est la même clé sous laquelle le worker stocke.
     internal static string KeyOf(FileItem item, string ext, bool thumb, int px) =>
         item.IsDir || PerPath(ext) ? "p:" + item.FullPath + "|" + px
         : thumb && !ThumbBlocked(ext) ? "t:" + item.FullPath + "|" + px
@@ -105,7 +111,7 @@ internal static class Thumbs
         return r;
     }
 
-    // Resident hide / tab drop: forget everything and let the threads end (they restart on the next request).
+    // Masquage résident / fermeture d'onglet : tout oublier et laisser les threads se terminer (ils repartent à la requête suivante).
     internal static void Reset()
     {
         lock (queue)
@@ -153,14 +159,15 @@ internal static class Thumbs
         }
     }
 
-    // Newest batch first (what the user just scrolled to), oldest first inside one batch (top to bottom).
+    // Dernier lot d'abord (ce que l'utilisateur vient de faire défiler), le plus ancien d'abord au sein d'un lot (de haut en bas).
     static Req? Next()
     {
         Req? best = null;
         for (int i = queue.Count - 1; i >= 0; i--)
         {
             if (i >= queue.Count)
-                continue;                  // defensive: never index past a queue that shrank (callers hold the lock, this is belt and braces)
+                // defensive: never index past a queue that shrank (callers hold the lock, this is belt and braces)
+                continue;
             var q = queue[i];
             if (q.Cancelled)
             {
@@ -240,7 +247,8 @@ internal static class Thumbs
         if (bmp == null)
             bmp = Generic(r.Dir, r.Ext, bucket);
         if (bmp != null)
-            (r.Key[0] == 't' ? thumbCache : iconCache).Put(r.Key, bmp, unique ? -1 : 0);   // generic images are counted once, under their icon index
+            // generic images are counted once, under their icon index
+            (r.Key[0] == 't' ? thumbCache : iconCache).Put(r.Key, bmp, unique ? -1 : 0);
         return bmp;
     }
 
@@ -255,12 +263,13 @@ internal static class Thumbs
         catch { return false; }
     }
 
-    // Stock image of an extension or of a plain folder: no disk access (USEFILEATTRIBUTES), one bitmap per system icon index.
+    // Image standard d'une extension ou d'un dossier simple : aucun accès disque (USEFILEATTRIBUTES), un bitmap par index d'icône système.
     static BitmapSource? Generic(bool dir, string ext, int bucket)
     {
         var info = new SHFILEINFO();
         string probe = dir ? "folder" : "file" + (ext.Length > 0 ? ext : ".");
-        if (SHGetFileInfo(probe, dir ? 0x10u : 0x80u, ref info, (uint)Marshal.SizeOf<SHFILEINFO>(), SHGFI_SYSICONINDEX | SHGFI_USEFILEATTRIBUTES) == IntPtr.Zero)
+        if (SHGetFileInfo(probe, dir ? 0x10u : 0x80u, ref info, (uint)Marshal.SizeOf<SHFILEINFO>(),
+            SHGFI_SYSICONINDEX | SHGFI_USEFILEATTRIBUTES) == IntPtr.Zero)
             return null;
         string key = "i:" + info.iIcon + "|" + bucket;
         var hit = iconCache.Get(key);
@@ -325,7 +334,8 @@ internal static class Thumbs
         }
     }
 
-    // An extension whose first 3 thumbnail attempts all failed (txt, log, ...) goes straight to its icon for the rest of the session.
+    // Une extension dont les 3 premières tentatives de miniature ont toutes échoué (txt, log, ...) passe directement à son icône pour le
+    // reste de la session.
     static readonly Dictionary<string, int> thumbFail = new(StringComparer.OrdinalIgnoreCase);
     static readonly HashSet<string> thumbOk = new(StringComparer.OrdinalIgnoreCase);
     static bool ThumbBlocked(string ext)
@@ -371,7 +381,7 @@ internal static class Thumbs
                 return node.Value.bmp;
             }
         }
-        // size < 0 (default): counted at the bitmap's real size; 0: an alias of an entry stored elsewhere.
+        // size < 0 (défaut) : compté à la taille réelle du bitmap ; 0 : alias d'une entrée stockée ailleurs.
         internal void Put(string key, BitmapSource bmp, long size = -1)
         {
             if (size < 0)
@@ -406,7 +416,7 @@ internal static class Thumbs
     }
 }
 
-// The image of one row/tile. Sits over the glyph placeholder (a sibling TextBlock named "Ic") and fills in when the shell answers.
+// L'image d'une ligne/tuile. Se place sur le glyphe de substitution (un TextBlock frère nommé "Ic") et se remplit quand le shell répond.
 public sealed class ShellImage : Image
 {
     public bool Thumb
@@ -421,7 +431,8 @@ public sealed class ShellImage : Image
         RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
         Stretch = Stretch.Uniform;
         IsHitTestVisible = false;
-        DataContextChanged += (_, e) => { if (IsInitialized) Bind(e.NewValue as FileItem); };   // before EndInit the XAML properties (Thumb, Cell) are not applied yet
+        // before EndInit the XAML properties (Thumb, Cell) are not applied yet
+        DataContextChanged += (_, e) => { if (IsInitialized) Bind(e.NewValue as FileItem); };
         Unloaded += (_, _) => Cancel();
         Loaded += (_, _) => { if (Source == null && pending == null && DataContext is FileItem item) Bind(item); };
     }

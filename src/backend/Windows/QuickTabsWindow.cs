@@ -1,4 +1,4 @@
-// language: C# 12, file: QuickTabsWindow.cs, target: Windows 11 / .NET 8 WPF, quick tabs and palette hotkey
+// C# 12, fichier QuickTabsWindow.cs, cible Windows 11 / .NET 8 WPF, onglets rapides et raccourci de la palette
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,8 +9,8 @@ using System.Windows.Media;
 using Microsoft.Win32;
 
 namespace PanneauxGlass;
-// One editor for both halves of the palette: the tabs above the field and the global key that
-// summons it. Every change is written straight to preferences, no separate save step.
+// Un éditeur pour les deux moitiés de la palette : les onglets au-dessus du champ et la touche globale qui
+// l'invoque. Chaque changement est écrit directement dans les préférences, sans étape d'enregistrement séparée.
 internal sealed class QuickTabsWindow : GlassWindow
 {
     readonly Coordinator owner; readonly StackPanel list = new(); readonly TextBlock status;
@@ -20,7 +20,8 @@ internal sealed class QuickTabsWindow : GlassWindow
         ("glass:note","Note rapide","\uE70B"),("glass:focus","Minuteur","\uE917"),("glass:settings","Personnalisation","\uE713"),
         ("glass:controls","Commandes Windows","\uE7F4"),("glass:pc","État du PC","\uE950"),("glass:palette","Commande rapide","\uE721"),
         ("glass:tools","Atelier","\uE74C"),("glass:capture","Capture annotée","\uE722"),("glass:text","Texte d’une image","\uE8A5"),
-        ("glass:memo","Papier pense-bête","\uE70B"),("glass:clipboard","Presse-papiers","\uE8C8"),("glass:audio","Son et micro","\uE7F5"),("glass:workspaces","Profils d’espace","\uE7C3"),
+        ("glass:memo","Papier pense-bête","\uE70B"),("glass:clipboard","Presse-papiers","\uE8C8"),("glass:audio","Son et micro","\uE7F5"),(
+            "glass:workspaces","Profils d’espace","\uE7C3"),
         ("glass:files","Gros fichiers","\uE8B7"),("glass:help","Aide","\uE897"),("glass:pin","Épingler au premier plan","\uE840")
     };
     static readonly (string Glyph, string Name)[] Icons ={
@@ -60,7 +61,9 @@ internal sealed class QuickTabsWindow : GlassWindow
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 18, 0, 10), Content = list, Padding = new Thickness(0, 0, 6, 0) };
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Margin = new Thickness(0, 18, 0, 10), Content = list,
+            Padding = new Thickness(0, 0, 6, 0) };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
         status = UI.Text("", 12, UI.Dim);
@@ -78,7 +81,8 @@ internal sealed class QuickTabsWindow : GlassWindow
         {
             var tab = tabs[index];
             int position = index;
-            var card = new Border { CornerRadius = new CornerRadius(18), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 8), Background = UI.T(M3Role.OnSurface, 0x0C), BorderBrush = UI.T(M3Role.OnSurface, 0x20), BorderThickness = new Thickness(1) };
+            var card = new Border { CornerRadius = new CornerRadius(18), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 8),
+                Background = UI.T(M3Role.OnSurface, 0x0C), BorderBrush = UI.T(M3Role.OnSurface, 0x20), BorderThickness = new Thickness(1) };
             var row = new Grid();
             row.ColumnDefinitions.Add(new()
             {
@@ -106,9 +110,11 @@ internal sealed class QuickTabsWindow : GlassWindow
             Button glyphTarget = icon;
             icon.Click += (_, _) => PickGlyph(glyphTarget, tab);
             row.Children.Add(icon);
-            var name = new TextBox { Text = tab.Name, FontSize = 13, Padding = new Thickness(10, 6, 10, 6), Margin = new Thickness(0, 0, 8, 0), VerticalContentAlignment = VerticalAlignment.Center };
+            var name = new TextBox { Text = tab.Name, FontSize = 13, Padding = new Thickness(10, 6, 10, 6), Margin = new Thickness(0, 0, 8,
+                0), VerticalContentAlignment = VerticalAlignment.Center };
             System.Windows.Automation.AutomationProperties.SetName(name, "Nom de l’onglet " + tab.Name);
-            name.TextChanged += (_, _) => { if (string.IsNullOrWhiteSpace(name.Text)) return; tab.Name = name.Text.Trim(); Store.Save(); owner.RefreshPaletteLabels(); };
+            name.TextChanged += (_, _) => { if (string.IsNullOrWhiteSpace(name.Text)) return; tab.Name = name.Text.Trim(); Store.Save();
+                owner.RefreshPaletteLabels(); };
             Grid.SetColumn(name, 1);
             row.Children.Add(name);
             Button target = UI.Button(Label(tab.Target), () => { });
@@ -134,7 +140,8 @@ internal sealed class QuickTabsWindow : GlassWindow
             down.Height = 32;
             down.Margin = new Thickness(0, 0, 4, 0);
             tools.Children.Add(down);
-            var remove = UI.IconButton("\uE74D", "Retirer " + tab.Name, () => { tabs.Remove(tab); Store.Save(); Rebuild(); owner.RefreshPaletteLabels(); });
+            var remove = UI.IconButton("\uE74D", "Retirer " + tab.Name, () => { tabs.Remove(tab); Store.Save(); Rebuild();
+                owner.RefreshPaletteLabels(); });
             remove.Width = 32;
             remove.Height = 32;
             tools.Children.Add(remove);
@@ -147,7 +154,8 @@ internal sealed class QuickTabsWindow : GlassWindow
         add.Margin = new Thickness(0, 6, 0, 22);
         list.Children.Add(add);
         list.Children.Add(UI.Text("OUVRIR LA COMMANDE RAPIDE", 10, UI.Label, true));
-        var note = UI.Text("Un raccourci global, actif même launcher fermé, depuis n’importe quelle application. Ctrl F2 par défaut.", 12, UI.Dim);
+        var note = UI.Text("Un raccourci global, actif même launcher fermé, depuis n’importe quelle application. Ctrl F2 par défaut.", 12,
+            UI.Dim);
         note.Margin = new Thickness(0, 8, 0, 12);
         note.TextWrapping = TextWrapping.Wrap;
         list.Children.Add(note);
@@ -173,18 +181,22 @@ internal sealed class QuickTabsWindow : GlassWindow
         }
         catch { return target; }
     }
-    void PickGlyph(Button anchor, WindowsShortcut tab) => GlassMenu.Open(owner, this, anchor, "Choisir une icône", Icons.Select(i => new MenuAction(i.Name, i.Glyph, () => { tab.Glyph = i.Glyph; Store.Save(); Rebuild(); owner.RefreshPaletteLabels(); }, tab.Glyph == i.Glyph)).ToArray());
+    void PickGlyph(Button anchor, WindowsShortcut tab) => GlassMenu.Open(owner, this, anchor, "Choisir une icône", Icons.Select(i
+        => new MenuAction(i.Name, i.Glyph, () => { tab.Glyph = i.Glyph; Store.Save(); Rebuild(); owner.RefreshPaletteLabels(); },
+        tab.Glyph == i.Glyph)).ToArray());
     void PickTarget(Button anchor, WindowsShortcut tab)
     {
         var actions = new List<MenuAction>();
         foreach (var view in Views)
-            actions.Add(new MenuAction(view.Name, view.Glyph, () => { tab.Target = view.Target; Store.Save(); Rebuild(); owner.RefreshPaletteLabels(); }, string.Equals(tab.Target, view.Target, StringComparison.OrdinalIgnoreCase)));
+            actions.Add(new MenuAction(view.Name, view.Glyph, () => { tab.Target = view.Target; Store.Save(); Rebuild();
+                owner.RefreshPaletteLabels(); }, string.Equals(tab.Target, view.Target, StringComparison.OrdinalIgnoreCase)));
         actions.Add(new MenuAction("Choisir une application…", "\uE8B7", () => PickApplication(tab), true));
         GlassMenu.Open(owner, this, anchor, "Cible de l’onglet", actions.ToArray());
     }
     void PickApplication(WindowsShortcut tab)
     {
-        var picker = new OpenFileDialog { Title = "Choisir l’application de cet onglet", Filter = "Applications et raccourcis|*.exe;*.lnk;*.bat;*.cmd;*.url|Tous les fichiers|*.*" };
+        var picker = new OpenFileDialog { Title = "Choisir l’application de cet onglet",
+            Filter = "Applications et raccourcis|*.exe;*.lnk;*.bat;*.cmd;*.url|Tous les fichiers|*.*" };
         if (picker.ShowDialog(this) != true)
             return;
         tab.Target = picker.FileName;
@@ -243,7 +255,9 @@ internal sealed class QuickTabsWindow : GlassWindow
         foreach (var check in new[] { ctrl, alt, shift })
             row.Children.Add(check);
         Button? keyButton = null;
-        keyButton = UI.Button(GlobalShortcut.KeyName(key) + "  ⌄", () => GlassMenu.Open(owner, this, keyButton!, "Touche de la commande rapide", GlobalShortcut.Keys.Select(k => new MenuAction(GlobalShortcut.KeyName(k), "\uE765", () => { key = k; keyButton!.Content = GlobalShortcut.KeyName(k) + "  ⌄"; }, key == k))));
+        keyButton = UI.Button(GlobalShortcut.KeyName(key) + "  ⌄", () => GlassMenu.Open(owner, this, keyButton!,
+            "Touche de la commande rapide", GlobalShortcut.Keys.Select(k => new MenuAction(GlobalShortcut.KeyName(k), "\uE765", () => {
+            key = k; keyButton!.Content = GlobalShortcut.KeyName(k) + "  ⌄"; }, key == k))));
         keyButton.MinWidth = 84;
         keyButton.Margin = new Thickness(0, 0, 14, 8);
         System.Windows.Automation.AutomationProperties.SetName(keyButton, "Choisir la touche de la commande rapide");
@@ -265,7 +279,8 @@ internal sealed class QuickTabsWindow : GlassWindow
         System.Windows.Automation.AutomationProperties.SetName(apply, "Appliquer le raccourci de la commande rapide");
         row.Children.Add(apply);
         list.Children.Add(row);
-        status.Text = string.IsNullOrEmpty(owner.PaletteStatus) ? (Store.State.QuickTabs.Count) + " onglet" + (Store.State.QuickTabs.Count == 1 ? "" : "s") + " · actif : " + owner.PaletteLabel : owner.PaletteStatus;
+        status.Text = string.IsNullOrEmpty(owner.PaletteStatus) ? (Store.State.QuickTabs.Count) + " onglet"
+            + (Store.State.QuickTabs.Count == 1 ? "" : "s") + " · actif : " + owner.PaletteLabel : owner.PaletteStatus;
         status.Foreground = UI.Dim;
     }
 }

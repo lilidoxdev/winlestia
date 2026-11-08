@@ -1,7 +1,10 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=dnd : native context menu + drag & drop on a fixture folder (first command-line argument, must live under %TEMP%\WinlestiaFilesOps).
-// Fixture: file001.txt..file012.txt, ctxtest.txt, folders Cible, Autre, Third. WINLESTIA_FILES_SHOTDIR = where the two screenshots are written.
-// Only harmless verbs are invoked natively ("properties", whose window is closed again); delete is never sent to the Recycle Bin.
+// WINLESTIA_FILES_SELFTEST=dnd : menu contextuel natif + glisser-déposer sur un dossier de fixtures (premier argument de ligne de commande,
+// doit vivre sous %TEMP%\WinlestiaFilesOps).
+// Fixtures : file001.txt..file012.txt, ctxtest.txt, dossiers Cible, Autre, Third. WINLESTIA_FILES_SHOTDIR = où les deux captures sont
+// écrites.
+// Seuls des verbes inoffensifs sont invoqués nativement ("properties", dont la fenêtre est refermée) ; la suppression n'est jamais envoyée
+// à la Corbeille.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -54,7 +57,8 @@ public sealed partial class MainWindow
 
     NPoint RowPt(FileItem item)
     {
-        item = Active.Find(item.FullPath) ?? item;           // auto refresh may have swapped the row object (a folder whose content changed)
+        // auto refresh may have swapped the row object (a folder whose content changed)
+        item = Active.Find(item.FullPath) ?? item;
         list.ScrollIntoView(item);
         list.UpdateLayout();
         var box = (FrameworkElement)list.ItemContainerGenerator.ContainerFromItem(item);
@@ -81,25 +85,34 @@ public sealed partial class MainWindow
         return null;
     }
 
-    // Screenshot of the screen area around the window, taken by a separate process (the UI thread may be inside a modal menu loop); optionally presses Esc afterwards.
+    // Capture de la zone d'écran autour de la fenêtre, prise par un processus séparé (le thread UI peut être dans une boucle de menu
+    // modale) ; appuie ensuite sur Échap si demandé.
     Process? StartShot(string png, int delayMs, bool esc)
     {
         GetWindowRect(Hwnd, out var r);
         string script = $@"
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.Windows.Forms,System.Drawing
-Add-Type -Namespace N -Name W -MemberDefinition '[DllImport(""user32.dll"")] public static extern bool SetProcessDPIAware(); [DllImport(""user32.dll"")] public static extern void keybd_event(byte k, byte s, uint f, UIntPtr e);'
+Add-Type -Namespace N -Name W -MemberDefinition '[DllImport(""user32.dll"")] public static extern bool SetProcessDPIAware();
+[DllImport(""user32.dll"")] public static extern void keybd_event(byte k, byte s, uint f, UIntPtr e);'
 [void][N.W]::SetProcessDPIAware()
 Start-Sleep -Milliseconds {delayMs}
 $want = New-Object Drawing.Rectangle {Math.Max(0, r.L - 10)},{Math.Max(0, r.T - 10)},{r.R - r.L + 420},{r.B - r.T + 120}
 $rect = [Drawing.Rectangle]::Intersect($want, [Windows.Forms.SystemInformation]::VirtualScreen)
 $bmp = New-Object Drawing.Bitmap $rect.Width,$rect.Height
-$g = [Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($rect.Location,[Drawing.Point]::Empty,$rect.Size); $bmp.Save('{png}'); $g.Dispose(); $bmp.Dispose()
+$g = [Drawing.Graphics]::FromImage($bmp);
+$g.CopyFromScreen($rect.Location,[Drawing.Point]::Empty,$rect.Size);
+$bmp.Save('{png}');
+$g.Dispose();
+$bmp.Dispose()
 if ({(esc
     ? "$true"
-    : "$false")}) {{ Start-Sleep -Milliseconds 500; [N.W]::keybd_event(0x1B,0,0,[UIntPtr]::Zero); [N.W]::keybd_event(0x1B,0,2,[UIntPtr]::Zero) }}";
+    : "$false")}) {{ Start-Sleep -Milliseconds 500;
+[N.W]::keybd_event(0x1B,0,0,[UIntPtr]::Zero);
+[N.W]::keybd_event(0x1B,0,2,[UIntPtr]::Zero) }}";
         var psi = new ProcessStartInfo("powershell.exe") { UseShellExecute = false, CreateNoWindow = true };
-        foreach (var a in new[] { "-STA", "-NoProfile", "-NonInteractive", "-EncodedCommand", Convert.ToBase64String(Encoding.Unicode.GetBytes(script)) })
+        foreach (var a in new[] { "-STA", "-NoProfile", "-NonInteractive", "-EncodedCommand",
+            Convert.ToBase64String(Encoding.Unicode.GetBytes(script)) })
             psi.ArgumentList.Add(a);
         return Process.Start(psi);
     }
@@ -117,7 +130,7 @@ if ({(esc
         T("START dnd on " + F);
         FileOps.Quiet = true;
         await WaitLoaded();
-        await Task.Delay(800);
+        await Task.Delay(PauseMiseEnPageMs);
         string P(string n) => Path.Combine(F, n);
         FileItem It(string n) => Active.Find(P(n))!;
         string shotDir = Environment.GetEnvironmentVariable("WINLESTIA_FILES_SHOTDIR") ?? Path.GetTempPath();
@@ -127,7 +140,7 @@ if ({(esc
         Check("main HWND drop target is OUR IDropTarget (WPF's replaced)", OwnsDropTarget());
         var target = (IDropTarget)dropTarget!;
 
-        // 1. shell data object -> CF_HDROP -> FileOps (copy, then move), list patched in place
+        // 1. objet de données du shell -> CF_HDROP -> FileOps (copie, puis déplacement), liste corrigée sur place
         using (var si = ShellItems.Of(new[] { P("file001.txt"), P("file002.txt") }))
         {
             var read = ReadFiles(si!.ManagedDataObject(Hwnd)!);
@@ -153,7 +166,7 @@ if ({(esc
                   && OrderOk()
                   && StatusOk());
 
-        // 2. through the real IDropTarget object (hit-test, effect, highlight, helper, drop)
+        // 2. via le vrai objet IDropTarget (test de collision, effet, surbrillance, helper, dépôt)
         var cible = It("Cible");
         var autre = It("Autre");
         using (var si = ShellItems.Of(new[] { P("file005.txt") }))
@@ -164,7 +177,8 @@ if ({(esc
             var ptFile = RowPt(It("file006.txt"));
             int e = 3;
             target.DragEnter(data, 0, ptAutre, ref e);
-            Check("DragEnter over a folder row: MOVE (same volume) + row highlight", e == 2 && autre.DropHot && !cible.DropHot, $"effect {e}");
+            Check("DragEnter over a folder row: MOVE (same volume) + row highlight", e == 2 && autre.DropHot && !cible.DropHot,
+                $"effect {e}");
             e = 3;
             target.DragOver(8, ptAutre, ref e);
             Check("Ctrl forces COPY", e == 1);
@@ -194,7 +208,8 @@ if ({(esc
             target.Drop(data, 8, ptAutre, ref e);
             await LastDrop;
             Check("Drop with Ctrl: returns COPY, file copied to Autre, source kept, highlight cleared",
-                  e == 1 && File.Exists(Path.Combine(F, "Autre", "file005.txt")) && File.Exists(P("file005.txt")) && !autre.DropHot && dndSpot == null);
+                  e == 1 && File.Exists(Path.Combine(F, "Autre", "file005.txt")) && File.Exists(P("file005.txt")) && !autre.DropHot
+                      && dndSpot == null);
         }
         using (var si = ShellItems.Of(new[] { P("file007.txt") }))
         {
@@ -216,7 +231,9 @@ if ({(esc
                   $"effect {e}");
         }
         cible = It("Cible")!;
-        autre = It("Autre")!;      // earlier moves/copies patched the list: the FileItem instances held since the start are no longer the ones displayed (SetDrop acts on the displayed one)
+        // earlier moves/copies patched the list: the FileItem instances held since the start are no longer the ones displayed (SetDrop acts
+        // on the displayed one)
+        autre = It("Autre")!;
         using (var si = ShellItems.Of(new[] { P("Cible") }))
         {
             var data = si!.ManagedDataObject(Hwnd)!;
@@ -232,14 +249,14 @@ if ({(esc
             target.DragEnter(data, 0, RowPt(cible), ref e);
             Check("folder dragged onto another folder: MOVE + highlight",
                   e == 2 && cible.DropHot,
-                  $"effect {e}, hot {cible.DropHot}, files [{string.Join(",",
-                                                                         dndFiles)}], spot {dndSpot?.Path}, cibleExists {Directory.Exists(P("Cible"))}, autreExists {Directory.Exists(P("Autre"))}, pt {RowPt(cible)}");
+                  $"effect {e}, hot {cible.DropHot}, files [{string.Join(",", dndFiles)}], spot {dndSpot?.Path}, " +
+                  $"cibleExists {Directory.Exists(P("Cible"))}, autreExists {Directory.Exists(P("Autre"))}, pt {RowPt(cible)}");
             target.DragLeave();
             Check("DragLeave clears highlight and state", !cible.DropHot && dndSpot == null && dndFiles.Length == 0);
         }
 
-        // 3. sidebar entry and tab (600 ms hover switch)
-        await Task.Delay(500);
+        // 3. entrée de barre latérale et onglet (bascule au survol de 600 ms)
+        await Task.Delay(PauseStabilisationMs);
         var pill = FindPill(sidebar.Root);
         using (var si = ShellItems.Of(new[] { P("file008.txt") }))
         {
@@ -257,13 +274,13 @@ if ({(esc
             else
                 Check("sidebar entry found", false);
             var second = AddTab(P("Third"));
-            await Task.Delay(500);
+            await Task.Delay(PauseStabilisationMs);
             Activate(tabs[0]);
-            await Task.Delay(300);
+            await Task.Delay(PauseAnimationLongueMs);
             int f = 3;
             target.DragEnter(data, 0, PtOf(second.Pill, 20, 16), ref f);
             Check("tab accepts the drop and is highlighted", f != 0 && second.Drop && activeView == tabs[0], $"effect {f}");
-            await Task.Delay(1000);
+            await Task.Delay(PauseSecondeMs);
             Check("hovering a tab 600 ms switches to it (one-shot timer, then gone)", activeView == second && tabTimer == null);
             target.DragLeave();
             Check("tab highlight cleared", !second.Drop && tabTimer == null);
@@ -297,26 +314,28 @@ if ({(esc
                 IntPtr win = IntPtr.Zero;
                 for (int i = 0; i < 60 && win == IntPtr.Zero; i++)
                 {
-                    await Task.Delay(100);
+                    await Task.Delay(PauseTickMs);
                     win = FindWindowTitled("ctxtest");
                 }
                 Check("native 'properties' invoked: Properties window appeared", invoked && win != IntPtr.Zero);
                 if (win != IntPtr.Zero)
                 {
-                    // The sheet can ignore a WM_CLOSE sent while it is still initialising: retry (WM_CLOSE, then SC_CLOSE) until it is gone.
+                    // La feuille peut ignorer un WM_CLOSE envoyé pendant son initialisation : on réessaie (WM_CLOSE, puis SC_CLOSE) jusqu'à
+                    // sa disparition.
                     for (int i = 0; i < 100 && FindWindowTitled("ctxtest") != IntPtr.Zero; i++)
                     {
                         if (i % 10 == 0)
                             PostMessageW(FindWindowTitled("ctxtest"), 0x0010 /* WM_CLOSE */, IntPtr.Zero, IntPtr.Zero);
                         else if (i % 5 == 0)
-                            PostMessageW(FindWindowTitled("ctxtest"), 0x0112 /* WM_SYSCOMMAND */, (IntPtr)0xF060 /* SC_CLOSE */, IntPtr.Zero);
-                        await Task.Delay(100);
+                            PostMessageW(FindWindowTitled("ctxtest"), 0x0112 /* WM_SYSCOMMAND */, (IntPtr)0xF060 /* SC_CLOSE */,
+                                IntPtr.Zero);
+                        await Task.Delay(PauseTickMs);
                     }
                     Check("Properties window closed again", FindWindowTitled("ctxtest") == IntPtr.Zero);
                 }
 
                 await ExecuteMenuCommand(s, IdOf("rename"), default, false);
-                await Task.Delay(400);
+                await Task.Delay(PauseTransitionMs);
                 Check("intercepted 'rename' starts our inline rename",
                       renaming != null && renaming.Name == "ctxtest.txt" && renamePanel.Visibility == Visibility.Visible);
                 CancelRename();
@@ -324,7 +343,8 @@ if ({(esc
                 Check("intercepted 'copy' uses our clipboard (CF_HDROP, no cut)",
                       Clipboard.ContainsFileDropList() && Clipboard.GetFileDropList().Count == 1 && FileItem.CutPaths.Count == 0);
                 await ExecuteMenuCommand(s, IdOf("cut"), default, false);
-                Check("intercepted 'cut' uses our clipboard (item dimmed)", It("ctxtest.txt").CutOpacity == 0.5 && Clipboard.ContainsFileDropList());
+                Check("intercepted 'cut' uses our clipboard (item dimmed)", It("ctxtest.txt").CutOpacity == 0.5
+                    && Clipboard.ContainsFileDropList());
                 await CopySelectedAsync(false);
                 Check("copy again clears the cut dimming", It("ctxtest.txt").CutOpacity == 1.0);
             }
@@ -336,7 +356,7 @@ if ({(esc
             T("  folder menu (shift) verbs: " + string.Join(",", all.Where(m => m.verb.Length > 0).Select(m => m.verb)));
             Check("folder menu: open + extended verbs with Shift", all.Any(m => m.verb == "open"));
             await ExecuteMenuCommand(s, all.First(m => m.verb == "open").id, default, false);
-            await Task.Delay(300);
+            await Task.Delay(PauseAnimationLongueMs);
             await WaitLoaded();
             Check("intercepted 'open' on a folder navigates in our tab", Norm(Active.Location) == Norm(P("Cible")), Active.Location);
             Active.Go(F);
@@ -357,12 +377,13 @@ if ({(esc
                               || m.verb.Equals("NewFolder", StringComparison.OrdinalIgnoreCase)
                               || m.verb.Equals("New", StringComparison.OrdinalIgnoreCase)
                               || m.verb.Equals("properties", StringComparison.OrdinalIgnoreCase)));
-                Check("background menu has a populated 'New' submenu", all.Any(m => m.depth >= 1), $"{all.Count(m => m.depth >= 1)} sub items");
+                Check("background menu has a populated 'New' submenu", all.Any(m => m.depth >= 1),
+                    $"{all.Count(m => m.depth >= 1)} sub items");
                 var nf = all.FirstOrDefault(m => m.verb.Equals("newfolder", StringComparison.OrdinalIgnoreCase));
                 if (nf.id != 0)
                 {
                     await ExecuteMenuCommand(s, nf.id, default, false);
-                    await Task.Delay(400);
+                    await Task.Delay(PauseTransitionMs);
                     Check("intercepted 'NewFolder' creates the folder through FileOps + inline rename",
                           Directory.Exists(P("Nouveau dossier")) && renaming != null && DiskMatches());
                     CancelRename();
@@ -375,14 +396,16 @@ if ({(esc
             }
         }
 
-        // 5. real-input drag (SendInput-like mouse_event): two selected files dragged onto the Third folder row through SHDoDragDrop + OLE + our IDropTarget
+        // 5. glisser en entrée réelle (mouse_event de type SendInput) : deux fichiers sélectionnés glissés sur la ligne du dossier Third
+        // via SHDoDragDrop + OLE + notre IDropTarget
         await DragByMouse(new[] { "file009.txt", "file010.txt" }, "Third", P);
-        await Task.Delay(500);
+        await Task.Delay(PauseStabilisationMs);
 
         // 6. leak cycles: 20 menu build/destroy + 20 drag enter/leave
         void Cycle()
         {
-            foreach (var s in new[] { ShellItems.Of(new[] { P("ctxtest.txt") }), ShellItems.OfFolder(F), ShellItems.Of(new[] { P("Cible") }) })
+            foreach (var s in new[] { ShellItems.Of(new[] { P("ctxtest.txt") }), ShellItems.OfFolder(F), ShellItems.Of(new[] { P("Cible") })
+                })
             {
                 if (s == null)
                     continue;
@@ -401,7 +424,7 @@ if ({(esc
         }
         for (int i = 0; i < 3; i++)
             Cycle();
-        await Task.Delay(3000);
+        await Task.Delay(PauseScanMs);
         var s0 = Snap();
         T($"MEASURE before cycles: handles {s0.handles}, threads {s0.threads}, gdi {s0.gdi}, user {s0.user}, private {s0.mb:F1} MB");
         for (int i = 0; i < 20; i++)
@@ -411,24 +434,30 @@ if ({(esc
         }
         await Task.Delay(SettleMs);
         var s1 = Snap();
-        T($"MEASURE after 20 cycles + 30 s: handles {s1.handles}, threads {s1.threads}, gdi {s1.gdi}, user {s1.user}, private {s1.mb:F1} MB");
-        Check("no handle/GDI/USER growth (threads reported: shell extensions keep ~1 thread per QueryContextMenu, see LEAK diag) after menu + drag cycles", s1.handles - s0.handles <= 10
+        T($"MEASURE after 20 cycles + 30 s: handles {s1.handles}, threads {s1.threads}, gdi {s1.gdi}, user {s1.user}, private {s1.mb:F1} " +
+            $"MB");
+        Check("no handle/GDI/USER growth (threads reported: shell extensions keep ~1 thread per QueryContextMenu, see LEAK diag) after " +
+            "menu + drag cycles", s1.handles - s0.handles <= 10
             && (int)s1.user - (int)s0.user <= 5,
-            $"handles {s1.handles - s0.handles:+#;-#;0}, threads {s1.threads - s0.threads:+#;-#;0}, gdi {(int)s1.gdi - (int)s0.gdi:+#;-#;0}, user {(int)s1.user - (int)s0.user:+#;-#;0}");
+            $"handles {s1.handles - s0.handles:+#;-#;0}, threads {s1.threads - s0.threads:+#;-#;0}, gdi " +
+                $"{(int)s1.gdi - (int)s0.gdi:+#;-#;0}, user {(int)s1.user - (int)s0.user:+#;-#;0}");
         for (int i = 0; i < 20; i++)
         {
             Cycle();
             await Task.Delay(30);
         }
-        await Task.Delay(5000);
+        await Task.Delay(PauseLongueMs);
         var s2 = Snap();
-        T($"MEASURE after 20 MORE cycles: handles {s2.handles}, threads {s2.threads}, gdi {s2.gdi}, user {s2.user} (delta vs first batch: gdi {(int)s2.gdi - (int)s1.gdi:+#;-#;0}, handles {s2.handles - s1.handles:+#;-#;0})");
-        // GDI: +8 objects per cycle (linear, 60 per 20 cycles), independent of the drag part (WINLESTIA_FILES_NODRAG=1 gives the same), absent from the isolated ctxleak variants (59 -> 59): not attributed yet,
-        // probably a shell extension loaded after the earlier steps. Reported, not failed (see files-lot3-tests.md).
+        T($"MEASURE after 20 MORE cycles: handles {s2.handles}, threads {s2.threads}, gdi {s2.gdi}, user {s2.user} (delta vs first " +
+            $"batch: gdi {(int)s2.gdi - (int)s1.gdi:+#;-#;0}, handles {s2.handles - s1.handles:+#;-#;0})");
+        // GDI : +8 objets par cycle (linéaire, 60 par 20 cycles), indépendant de la partie glisser (WINLESTIA_FILES_NODRAG=1 donne la même
+        // chose), absent des variantes ctxleak isolées (59 -> 59) : pas encore attribué,
+        // probablement une extension du shell chargée après les étapes précédentes. Signalé, pas en échec (voir files-lot3-tests.md).
         T("WARN gdi growth per 20 cycles: " + ((int)s1.gdi - (int)s0.gdi) + " then " + ((int)s2.gdi - (int)s1.gdi));
         Check("list still consistent", DiskMatches() && OrderOk());
 
-        // 7. screenshots: drop highlight (programmatic drag-over: the OLE drag image itself needs a real drag), then the real native menu through TrackPopupMenuEx
+        // 7. captures : surbrillance de dépôt (survol programmatique : l'image de glisser OLE exige un vrai glisser), puis le vrai menu
+        // natif via TrackPopupMenuEx
         Activate();
         list.Select(new[] { It("ctxtest.txt") });
         using (var si = ShellItems.Of(new[] { P("file011.txt") }))
@@ -436,7 +465,7 @@ if ({(esc
             var data = si!.ManagedDataObject(Hwnd)!;
             int e = 3;
             target.DragEnter(data, 0, RowPt(It("Autre")), ref e);
-            await Task.Delay(500);
+            await Task.Delay(PauseStabilisationMs);
             using var shot = StartShot(Path.Combine(shotDir, "files-step4-drop.png"), 300, false);
             if (shot != null)
                 await shot.WaitForExitAsync();
@@ -461,13 +490,13 @@ if ({(esc
             Check("native menu shown with TrackPopupMenuEx and dismissed (Esc)", cmd == 0, $"cmd {cmd}");
         }
 
-        await Task.Delay(8000);
+        await Task.Delay(TimeoutEvenementMs);
         var cw = Snap(false);
-        await Task.Delay(10000);
+        await Task.Delay(PauseTresLongueMs);
         var cx = Snap(false);
         T($"MEASURE idle CPU window 1 (8-18 s after last action): {cx.cpuMs - cw.cpuMs:F0} ms");
         var c0 = Snap(false);
-        await Task.Delay(10000);
+        await Task.Delay(PauseTresLongueMs);
         var c1 = Snap(false);
         T($"MEASURE idle CPU over 10 s: {c1.cpuMs - c0.cpuMs:F0} ms");
         Check("idle CPU ~0", c1.cpuMs - c0.cpuMs < 100, $"{c1.cpuMs - c0.cpuMs:F0} ms / 10 s");
@@ -475,7 +504,8 @@ if ({(esc
         Close();
     }
 
-    // Diagnostic: which kind of cycle (item menu, folder menu, background menu, drag enter/leave) grows the thread count, and does it come back.
+    // Diagnostic : quel type de cycle (menu d'élément, menu de dossier, menu de fond, entrée/sortie de glisser) fait croître le nombre de
+    // threads, et revient-il.
     async Task CtxLeak()
     {
         string F = Path.GetFullPath(Active.Location);
@@ -485,7 +515,7 @@ if ({(esc
             return;
         }
         await WaitLoaded();
-        await Task.Delay(800);
+        await Task.Delay(PauseMiseEnPageMs);
         string P(string n) => Path.Combine(F, n);
         var target = (IDropTarget)dropTarget!;
         var kinds = new Dictionary<string, Action>
@@ -538,7 +568,7 @@ if ({(esc
                 continue;
             for (int i = 0; i < 3; i++)
                 cycle();
-            await Task.Delay(2000);
+            await Task.Delay(PauseCopieMs);
             var a = Snap();
             for (int i = 0; i < nCycles; i++)
             {
@@ -546,9 +576,10 @@ if ({(esc
                 await Task.Delay(30);
             }
             var b = Snap();
-            await Task.Delay(25000);
+            await Task.Delay(TimeoutLongMs);
             var c = Snap();
-            T($"LEAK {name}: threads {a.threads} -> {b.threads} (after 20) -> {c.threads} (+25 s); handles {a.handles} -> {b.handles} -> {c.handles}; gdi {a.gdi}->{c.gdi}; user {a.user}->{c.user}; private MB {a.mb:F1}->{b.mb:F1}->{c.mb:F1}");
+            T($"LEAK {name}: threads {a.threads} -> {b.threads} (after 20) -> {c.threads} (+25 s); handles {a.handles} -> {b.handles} -> " +
+                $"{c.handles}; gdi {a.gdi}->{c.gdi}; user {a.user}->{c.user}; private MB {a.mb:F1}->{b.mb:F1}->{c.mb:F1}");
         }
         T("DONE leak diag");
         Close();
@@ -558,7 +589,7 @@ if ({(esc
     {
         Active.Go(Active.Location);
         await WaitLoaded();
-        await Task.Delay(300);
+        await Task.Delay(PauseAnimationLongueMs);
         SelectNames(names);
         list.Focus();
         var from = RowPt(Active.Find(P(names[0]))!);
@@ -567,21 +598,21 @@ if ({(esc
         var move = Task.Run(() =>
         {
             SetCursorPos(from.X, from.Y);
-            Thread.Sleep(250);
+            Thread.Sleep(PauseAnimationMs);
             mouse_event(0x2, 0, 0, 0, UIntPtr.Zero);
-            Thread.Sleep(250);
+            Thread.Sleep(PauseAnimationMs);
             for (int i = 1; i <= 24; i++)
             {
                 SetCursorPos(from.X + (to.X - from.X) * i / 24, from.Y + (to.Y - from.Y) * i / 24);
                 Thread.Sleep(35);
             }
-            Thread.Sleep(500);
+            Thread.Sleep(PauseStabilisationMs);
             mouse_event(0x4, 0, 0, 0, UIntPtr.Zero);
         });
         for (int i = 0; i < 150 && !(names.All(n => Directory.Exists(P(folder)) && File.Exists(Path.Combine(P(folder), n)))); i++)
-            await Task.Delay(100);
+            await Task.Delay(PauseTickMs);
         await move;
-        await Task.Delay(600);
+        await Task.Delay(PauseDebounceMs);
         try
         {
             await LastDrop;
@@ -590,12 +621,14 @@ if ({(esc
         {
             // Auto-test : l'échec de cette étape ne doit pas masquer le verdict du test.
         }
-        Check("real mouse drag of a 2-file multi-selection onto a folder row (SHDoDragDrop -> OLE -> our IDropTarget) moves both", names.All(n =>
+        Check("real mouse drag of a 2-file multi-selection onto a folder row (SHDoDragDrop -> OLE -> our IDropTarget) moves both",
+            names.All(n =>
             File.Exists(Path.Combine(P(folder), n)) && !File.Exists(P(n)))
             && names.All(n => Active.Find(P(n)) == null)
             && DiskMatches(),
             $"in folder: {names.Count(n =>
-                File.Exists(Path.Combine(P(folder), n)))}, left behind: {names.Count(n => File.Exists(P(n)))}, list still shows: {names.Count(n =>
+                File.Exists(Path.Combine(P(folder), n)))}, left behind: {names.Count(n => File.Exists(P(n)))},
+                    list still shows: {names.Count(n =>
                     Active.Find(P(n)) != null)}");
     }
 }

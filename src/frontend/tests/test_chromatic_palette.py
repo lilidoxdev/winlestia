@@ -96,7 +96,7 @@ class Palette(unittest.TestCase):
             t = self.theme(name)
             self.assertFalse(t['monochrome'], name)
             self.assertTrue(t['dark'], name)
-            self.assertGreaterEqual(Hct(t['palette']['m3primary']).dict()['chroma'], 30, name)  # not muddy grey
+            self.assertGreaterEqual(Hct(t['palette']['m3primary']).dict()['chroma'], 30, name)  # pas un gris terne
 
     def test_light_dark_decision(self):
         self.assertFalse(self.theme('pastel')['dark'])

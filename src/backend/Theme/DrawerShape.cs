@@ -1,4 +1,4 @@
-// language: C# 12, file: DrawerShape.cs, target: Windows 11 / .NET 8 WPF, edge-connected drawer geometry
+// C# 12, fichier DrawerShape.cs, cible Windows 11 / .NET 8 WPF, géométrie de tiroir raccordé au bord
 using System;
 using System.Windows;
 using System.Windows.Media;

@@ -1,4 +1,4 @@
-// C#12 / RecycleActions.cs / Windows11. Only explicit local file drops use the Windows recycle operation.
+// C# 12 / RecycleActions.cs / Windows 11. Seuls les dépôts explicites de fichiers locaux utilisent l'opération de corbeille de Windows.
 using System;
 using System.Linq;
 using System.Collections.Specialized;
@@ -17,7 +17,8 @@ internal static class RecycleActions
         if (result < 0)
             Marshal.ThrowExceptionForHR(result);
     }
-    internal static string[] Existing(string[] paths) => paths.Where(Path.IsPathFullyQualified).Select(Path.GetFullPath).Where(p => File.Exists(p) || Directory.Exists(p)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    internal static string[] Existing(string[] paths) => paths.Where(Path.IsPathFullyQualified).Select(Path.GetFullPath).Where(p
+        => File.Exists(p) || Directory.Exists(p)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     internal static void ClipboardFiles(string[] paths)
     {
         var values = new StringCollection();
@@ -30,7 +31,9 @@ internal static class RecycleActions
         var valid = Existing(paths);
         if (valid.Length == 0)
             return null;
-        var dialog = new Microsoft.Win32.SaveFileDialog { Title = "Créer une archive ZIP", Filter = "Archive ZIP|*.zip", DefaultExt = ".zip", FileName = "Winlestia-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".zip", InitialDirectory = Path.GetDirectoryName(valid[0]) };
+        var dialog = new Microsoft.Win32.SaveFileDialog { Title = "Créer une archive ZIP", Filter = "Archive ZIP|*.zip",
+            DefaultExt = ".zip", FileName = "Winlestia-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".zip",
+            InitialDirectory = Path.GetDirectoryName(valid[0]) };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
     internal static void Zip(string[] paths, string destination)
@@ -43,7 +46,8 @@ internal static class RecycleActions
                 var names = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 void Add(string path, string name)
                 {
-                    if (string.Equals(path, destination, StringComparison.OrdinalIgnoreCase) || string.Equals(path, temporary, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(path, destination, StringComparison.OrdinalIgnoreCase) || string.Equals(path, temporary,
+                        StringComparison.OrdinalIgnoreCase))
                         return;
                     if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
                         return;

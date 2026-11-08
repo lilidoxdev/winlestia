@@ -1,9 +1,13 @@
-// Step 4b: native shell context menu (right-click / Menu key / Shift+F10) and drag & drop.
+// Étape 4b : menu contextuel natif du shell (clic droit / touche Menu / Maj+F10) et glisser-déposer.
 //
-// Drop target choice: we do NOT use WPF's AllowDrop route. WPF's own IDropTarget never calls IDropTargetHelper, so an incoming Explorer drag would show no drag image,
-// and its DataObject wrapper hides the raw IDataObject. Instead the main HWND is registered with our own IDropTarget (RevokeDragDrop of WPF's first if it got there).
-// OLE then calls us on the UI thread; we feed IDropTargetHelper (drag image), hit-test the WPF tree for the hovered folder row / tab / sidebar entry,
-// and run the copy/move through FileOps. Outgoing drags use SHDoDragDrop with the shell's own data object (Explorer-style drag image).
+// Choix de la cible de dépôt : on N'utilise PAS la voie AllowDrop de WPF. L'IDropTarget propre à WPF n'appelle jamais IDropTargetHelper,
+// donc un glisser entrant de l'Explorateur n'afficherait aucune image,
+// et son enveloppe DataObject masque l'IDataObject brut. À la place, le HWND principal est enregistré avec notre propre IDropTarget
+// (RevokeDragDrop de celui de WPF s'il est arrivé le premier).
+// OLE nous appelle alors sur le thread UI ; nous alimentons IDropTargetHelper (image de glisser), testons la zone touchée dans l'arbre WPF
+// pour trouver la ligne de dossier / l'onglet / l'entrée de la barre latérale survolé,
+// et exécutons la copie/le déplacement via FileOps. Les glissers sortants utilisent SHDoDragDrop avec l'objet de données propre au shell
+// (image de glisser à la manière de l'Explorateur).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -42,7 +46,7 @@ internal interface IDropTargetHelper
     [PreserveSig] int Show([MarshalAs(UnmanagedType.Bool)] bool show);
 }
 
-// Thin COM shell around the window: the logic lives in MainWindow.Dnd.cs.
+// Fine enveloppe COM autour de la fenêtre : la logique vit dans MainWindow.Dnd.cs.
 [ComVisible(true)]
 internal sealed class OleDropTarget : IDropTarget
 {
@@ -91,12 +95,18 @@ internal sealed class OleDropTarget : IDropTarget
 
 public sealed partial class MainWindow
 {
+    // Le shell termine ces créations de fichiers en asynchrone.
+    const int ShellCreateMs = 1200;
+    // Survol d'un onglet pendant un glisser : délai avant de basculer dessus.
+    const int TabHoverMs = 600;
     [DllImport("ole32.dll")] static extern int OleInitialize(IntPtr reserved);
     [DllImport("ole32.dll")] static extern int RegisterDragDrop(IntPtr hwnd, IDropTarget target);
     [DllImport("ole32.dll")] static extern int RevokeDragDrop(IntPtr hwnd);
     [DllImport("ole32.dll")] static extern void ReleaseStgMedium(ref STGMEDIUM medium);
-    [DllImport("shell32.dll")] static extern int SHDoDragDrop(IntPtr hwnd, IntPtr dataObject, IntPtr dropSource, int okEffects, out int effect);
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern uint DragQueryFileW(IntPtr hdrop, uint index, StringBuilder? buffer, uint cch);
+    [DllImport("shell32.dll")] static extern int SHDoDragDrop(IntPtr hwnd, IntPtr dataObject, IntPtr dropSource, int okEffects,
+        out int effect);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern uint DragQueryFileW(IntPtr hdrop, uint index, StringBuilder? buffer,
+        uint cch);
     [DllImport("user32.dll")] static extern bool GetCursorPos(out NPoint p);
     [DllImport("user32.dll")] static extern short GetAsyncKeyState(int key);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr GetPropW(IntPtr hwnd, string name);
@@ -129,11 +139,13 @@ public sealed partial class MainWindow
             swallowedPress = null;
             if (e.ClickCount != 1 || Keyboard.Modifiers != ModifierKeys.None || renaming != null)
                 return;
-            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem { DataContext: FileItem item })
+            if (e.OriginalSource is not DependencyObject src || ItemsControl.ContainerFromElement(list, src) is not ListBoxItem {
+                DataContext: FileItem item })
                 return;
             dragItem = item;
             dragFrom = e.GetPosition(this);
-            // Pressing inside a multi-selection must keep it (WPF would collapse it on press): selection is settled on release if no drag started.
+            // Appuyer dans une multi-sélection doit la conserver (WPF la réduirait à l'appui) : la sélection est tranchée au relâchement si
+            // aucun glisser n'a démarré.
             if (list.SelectedItems.Count > 1 && list.SelectedItems.Contains(item))
             {
                 swallowedPress = item;
@@ -152,7 +164,8 @@ public sealed partial class MainWindow
                 return;
             }
             var d = e.GetPosition(this) - dragFrom;
-            if (Math.Abs(d.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(d.Y) < SystemParameters.MinimumVerticalDragDistance)
+            if (Math.Abs(d.X) < SystemParameters.MinimumHorizontalDragDistance
+                && Math.Abs(d.Y) < SystemParameters.MinimumVerticalDragDistance)
                 return;
             dragItem = null;
             swallowedPress = null;
@@ -211,11 +224,12 @@ public sealed partial class MainWindow
             Perf.Log("RegisterDragDrop failed: 0x" + hr.ToString("X8"));
     }
 
-    // ---- incoming drops (UI thread, called by OLE) -----------------------------------------------------------
+    // ---- dépôts entrants (thread UI, appelés par OLE) -----------------------------------------------------------
 
     internal static string[] ReadFiles(ComIDataObject data)
     {
-        var format = new FORMATETC { cfFormat = 15 /* CF_HDROP */, ptd = IntPtr.Zero, dwAspect = DVASPECT.DVASPECT_CONTENT, lindex = -1, tymed = TYMED.TYMED_HGLOBAL };
+        var format = new FORMATETC { cfFormat = 15 /* CF_HDROP */, ptd = IntPtr.Zero, dwAspect = DVASPECT.DVASPECT_CONTENT, lindex = -1,
+            tymed = TYMED.TYMED_HGLOBAL };
         try
         {
             if (data.QueryGetData(ref format) != 0)
@@ -310,7 +324,8 @@ public sealed partial class MainWindow
         if (effect == 0 || spot == null)
             return 0;
         LastDrop = RunDrop(files, spot.Path, effect == DROPEFFECT_MOVE);
-        // The move is performed here, by FileOps: report NONE so a source that deletes on MOVE (optimized-move convention) never removes anything itself.
+        // Le déplacement est effectué ici, par FileOps : on annonce NONE pour qu'une source qui supprime sur MOVE (convention du
+        // déplacement optimisé) ne retire jamais rien elle-même.
         return effect == DROPEFFECT_MOVE ? 0 : effect;
     }
 
@@ -335,7 +350,7 @@ public sealed partial class MainWindow
         catch (Exception ex) { App.CrashLog(ex); }
     }
 
-    // Copy / move into a folder; the list(s) showing an affected folder are patched in place.
+    // Copie / déplacement vers un dossier ; les listes qui montrent un dossier concerné sont corrigées sur place.
     internal async Task<OpResult> DropFilesAsync(IReadOnlyList<string> files, string dest, bool move)
     {
         var watch = WatchSet();
@@ -346,7 +361,8 @@ public sealed partial class MainWindow
         return result;
     }
 
-    // Same volume -> move, else copy; Ctrl copies, Shift moves (Alt/link is not offered). Nothing for no-op drops (onto a source, into itself, move within the same folder).
+    // Même volume -> déplacement, sinon copie ; Ctrl copie, Maj déplace (Alt/lien n'est pas proposé). Rien pour les dépôts sans effet (sur
+    // une source, dans soi-même, déplacement dans le même dossier).
     internal static int DecideEffect(string[] files, string dest, int key, int allowed)
     {
         if (files.Length == 0 || dest.Length == 0)
@@ -355,11 +371,13 @@ public sealed partial class MainWindow
         foreach (var f in files)
         {
             string src = Norm(f);
-            if (string.Equals(src, target, StringComparison.OrdinalIgnoreCase) || target.StartsWith(src + "\\", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(src, target, StringComparison.OrdinalIgnoreCase) || target.StartsWith(src + "\\",
+                StringComparison.OrdinalIgnoreCase))
                 return 0;
         }
         bool sameVolume = string.Equals(Path.GetPathRoot(files[0]), Path.GetPathRoot(dest), StringComparison.OrdinalIgnoreCase);
-        int want = (key & MK_CONTROL) != 0 ? DROPEFFECT_COPY : (key & MK_SHIFT) != 0 ? DROPEFFECT_MOVE : sameVolume ? DROPEFFECT_MOVE : DROPEFFECT_COPY;
+        int want = (key & MK_CONTROL) != 0 ? DROPEFFECT_COPY : (key & MK_SHIFT) != 0 ? DROPEFFECT_MOVE : sameVolume ? DROPEFFECT_MOVE
+            : DROPEFFECT_COPY;
         if (want == DROPEFFECT_MOVE && files.All(f => string.Equals(ParentOf(f), target, StringComparison.OrdinalIgnoreCase)))
             return 0;
         if ((allowed & want) == 0)
@@ -367,14 +385,16 @@ public sealed partial class MainWindow
         return want;
     }
 
-    // What is under the cursor: a folder row/tile, a tab, a sidebar entry, or (anywhere else on the list card) the current folder.
+    // Ce qui est sous le curseur : une ligne/tuile de dossier, un onglet, une entrée de la barre latérale ou (partout ailleurs sur la carte
+    // de liste) le dossier courant.
     DropSpot? SpotAt(NPoint pt)
     {
         if (activeView == null)
             return null;
         var hit = InputHitTest(PointFromScreen(new Point(pt.X, pt.Y))) as DependencyObject;
         bool inList = false;
-        for (var d = hit; d != null; d = d is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(d) : (d is ContentElement ce ? ContentOperations.GetParent(ce) : null))
+        for (var d = hit; d != null; d = d is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(d)
+            : (d is ContentElement ce ? ContentOperations.GetParent(ce) : null))
         {
             if (d is ListBoxItem { DataContext: FileItem item })
             {
@@ -421,14 +441,15 @@ public sealed partial class MainWindow
         }
         if (spot?.Side == true)
             sidebar.SetDrop(spot.Path);
-        // Hovering another tab for 600 ms switches to it: one-shot timer that only exists while hovering.
+        // Survoler un autre onglet pendant 600 ms bascule dessus : minuteur ponctuel qui n'existe que pendant le survol.
         tabTimer?.Stop();
         tabTimer = null;
         if (spot?.Tab != null && spot.Tab != activeView)
         {
             var target = spot.Tab;
-            var timer = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher) { Interval = TimeSpan.FromMilliseconds(600) };
-            timer.Tick += (_, _) => { timer.Stop(); if (ReferenceEquals(tabTimer, timer)) tabTimer = null; if (tabs.Contains(target)) Activate(target); };
+            var timer = new DispatcherTimer(DispatcherPriority.Normal, Dispatcher) { Interval = TimeSpan.FromMilliseconds(TabHoverMs) };
+            timer.Tick += (_, _) => { timer.Stop(); if (ReferenceEquals(tabTimer, timer)) tabTimer = null;
+                if (tabs.Contains(target)) Activate(target); };
             tabTimer = timer;
             timer.Start();
         }
@@ -462,7 +483,8 @@ public sealed partial class MainWindow
             Fire(() => AfterDrag(paths));        // DRAGDROP_S_DROP
     }
 
-    // The target (Explorer, another folder, ...) did the work: whatever left its folder is removed from the list. Step 5 (watcher) will make this automatic.
+    // La cible (Explorateur, autre dossier, ...) a fait le travail : tout ce qui a quitté son dossier est retiré de la liste. L'étape 5
+    // (watcher) rendra cela automatique.
     async Task AfterDrag(List<string> paths)
     {
         var gone = await Task.Run(() => paths.Where(p => !File.Exists(p) && !Directory.Exists(p)).ToList());
@@ -530,8 +552,10 @@ public sealed partial class MainWindow
         NPoint at;
         if (keyboard)
         {
-            var box = list.SelectedItem != null ? list.ItemContainerGenerator.ContainerFromItem(list.SelectedItem) as FrameworkElement : null;
-            var p = box != null ? box.PointToScreen(new Point(Math.Min(48, box.ActualWidth / 2), box.ActualHeight / 2)) : list.PointToScreen(new Point(48, 48));
+            var box = list.SelectedItem != null ? list.ItemContainerGenerator.ContainerFromItem(list.SelectedItem) as FrameworkElement
+                : null;
+            var p = box != null ? box.PointToScreen(new Point(Math.Min(48, box.ActualWidth / 2), box.ActualHeight / 2))
+                : list.PointToScreen(new Point(48, 48));
             at = new NPoint((int)p.X, (int)p.Y);
         }
         else
@@ -545,7 +569,8 @@ public sealed partial class MainWindow
             Fire(() => ExecuteMenuCommand(session, cmd, at, shift));   // everything that needs the menu runs before the first await
     }
 
-    // Verbs we handle ourselves for consistency with the rest of the window (inline rename, FileOps delete, cut-dimming clipboard, in-place new folder); the rest is invoked natively.
+    // Verbes que nous traitons nous-mêmes par cohérence avec le reste de la fenêtre (renommage en ligne, suppression FileOps,
+    // presse-papiers qui atténue les éléments coupés, nouveau dossier sur place) ; le reste est invoqué nativement.
     internal Task ExecuteMenuCommand(MenuSession s, uint id, NPoint at, bool shift)
     {
         var sel = s.Sel;
@@ -614,13 +639,15 @@ public sealed partial class MainWindow
             }
         }
         bool ok = s.Menu.Invoke(Hwnd, id, at.X, at.Y, shift);
-        if (ok && (s.Background || verb is "link" or "createshortcut" || verb.Contains("zip") || verb.Contains("extract") || verb.Contains("compress")))
+        if (ok && (s.Background || verb is "link" or "createshortcut" || verb.Contains("zip") || verb.Contains("extract")
+            || verb.Contains("compress")))
             return ReloadSoon();
         return Task.CompletedTask;
     }
 
     // "Copier le chemin d'accès": full paths, one per line, no quotes; nothing selected = the current folder.
-    internal static string PathsText(IReadOnlyList<FileItem> sel, string folder) => string.Join("\r\n", sel.Count == 0 ? new[] { folder } : sel.Select(i => i.FullPath));
+    internal static string PathsText(IReadOnlyList<FileItem> sel, string folder) => string.Join("\r\n", sel.Count == 0 ? new[] { folder }
+        : sel.Select(i => i.FullPath));
 
     internal void CopyPaths(IReadOnlyList<FileItem> sel)
     {
@@ -636,7 +663,7 @@ public sealed partial class MainWindow
         catch (Exception ex) { Perf.Log("copy path: " + ex.Message); }
     }
 
-    // All pinned -> unpin them, otherwise pin the missing ones. Only the quick access list changes.
+    // Tous épinglés -> les désépingler, sinon épingler les manquants. Seule la liste d'accès rapide change.
     internal bool TogglePin(IReadOnlyList<string> paths)
     {
         if (paths.Count == 0)
@@ -652,11 +679,12 @@ public sealed partial class MainWindow
         return !unpin;
     }
 
-    // Until the folder watcher of step 5: one refresh after a command that may create files (the shell finishes those asynchronously).
+    // En attendant le watcher de dossier de l'étape 5 : un rafraîchissement après une commande susceptible de créer des fichiers (le shell
+    // les termine en asynchrone).
     async Task ReloadSoon()
     {
         var tab = Active;
-        await Task.Delay(1200);
+        await Task.Delay(ShellCreateMs);
         if (ReferenceEquals(tab, Active))
             tab.Reload();
     }
