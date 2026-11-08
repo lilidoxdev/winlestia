@@ -21,6 +21,12 @@ def test_policy_override_restore_and_palette(monkeypatch):
         settings.write_text('{// fresh Terminal\n"profiles":{"list":[]},}')
         monkeypatch.setattr(sync_theme, 'ROOT', terminal)
         monkeypatch.setenv('LOCALAPPDATA', str(local))
+        # STATE est calculé à l'import sur le vrai LOCALAPPDATA : on l'isole, sinon le test lit et réécrit l'état réel.
+        state = base / 'terminal-backup'
+        state.mkdir()
+        (state / 'state.json').write_text('{}')
+        monkeypatch.setattr(sync_theme, 'STATE', state)
+        monkeypatch.setattr(sys.modules['install'], 'STATE', state)
         for color in ('#ff315b', '#317bff'):
             values = {
                 'accent': color,
