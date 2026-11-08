@@ -232,7 +232,5 @@ internal sealed partial class Coordinator
         }
         Store.Save();
     }
-    volatile bool desktopIconsManaged, desktopSuspended;
-    DesktopIconsGuard? desktopGuard;
     bool taskbarDeferred;
 }

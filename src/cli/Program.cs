@@ -32,7 +32,7 @@ static class Program
             return 0;
         }
         if (command.Kind == CliKind.Wallpaper)
-        {   // `wallpaper list` is WallpaperList and never reaches this path resolution
+        {   // `wallpaper list` est WallpaperList et n'atteint jamais cette résolution de chemin
             string full;
             try
             {
@@ -48,7 +48,7 @@ static class Program
         }
         try
         {
-            // Asynchronous: otherwise the 8 s read limit cannot interrupt the read
+            // Asynchrone : sinon la limite de lecture de 8 s ne peut pas interrompre la lecture
             using var client = new NamedPipeClientStream(".", "WinlestiaCli", PipeDirection.InOut,
                 PipeOptions.CurrentUserOnly | PipeOptions.Asynchronous);
             client.Connect(1500);

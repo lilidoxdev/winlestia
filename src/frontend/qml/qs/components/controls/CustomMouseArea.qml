@@ -12,7 +12,7 @@ MouseArea {
             scrollAccumulatedY = 0;
         scrollAccumulatedY += event.angleDelta.y;
 
-        // Trigger handler and reset if above threshold
+        // Déclenche le gestionnaire et réinitialise si au-dessus du seuil
         if (Math.abs(scrollAccumulatedY) >= 120) {
             onWheel(event);
             scrollAccumulatedY = 0;

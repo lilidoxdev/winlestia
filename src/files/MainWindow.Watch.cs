@@ -1,7 +1,7 @@
 // Étape 5 : rafraîchissement auto (notifications de changement du shell sur le dossier de l'onglet ACTIF uniquement), champ de filtre,
 // conservation de la sélection / du défilement.
-// Aucun minuteur ne tourne au repos : les seuls minuteurs sont à usage unique (100 ms de regroupement de rafale après un événement, 120 ms
-// d'antirebond du filtre après une frappe).
+// Aucun minuteur ne tourne au repos : les seuls minuteurs sont à usage unique (100 ms de regroupement de rafale après un événement,
+// 120 ms d'antirebond du filtre après une frappe).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -48,7 +48,7 @@ public sealed partial class MainWindow
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern bool SHGetPathFromIDListW(IntPtr pidl, StringBuilder path);
     [DllImport("ole32.dll")] static extern void CoTaskMemFree(IntPtr pointer);
 
-    // test isolation: the older ops/dnd selftests hold FileItem references that a refresh may replace
+    // isolation des tests : les anciens auto-tests ops/dnd gardent des références FileItem qu'un rafraîchissement peut remplacer
     static readonly bool NoWatch = Environment.GetEnvironmentVariable("WINLESTIA_FILES_NOWATCH") == "1";
     uint watchId; string watchPath = "";
     bool hookAdded;
@@ -259,7 +259,7 @@ public sealed partial class MainWindow
         }
         if (Math.Abs(sv.VerticalOffset - target) < 0.5)
             return;
-        // the panel must know the new extent before the offset is clamped
+        // le panneau doit connaître la nouvelle étendue avant que le décalage soit borné
         list.UpdateLayout();
         sv.ScrollToVerticalOffset(target);
     }
@@ -348,7 +348,7 @@ public sealed partial class MainWindow
             filterTimer.Tick -= ApplyFilter;
             filterTimer.Tick += ApplyFilter;
             filterTimer.Stop();
-            filterTimer.Start();                        // one-shot: ApplyFilter stops it
+            filterTimer.Start();                        // une seule fois : ApplyFilter l'arrête
         };
         filterBox.PreviewKeyDown += (_, e) =>
         {
@@ -394,15 +394,16 @@ public sealed partial class MainWindow
         row.Children.Add(deepToggle);
         row.Children.Add(filterClose);
         // Toujours visible, à droite de la zone d'adresse ; même fond surfaceContainer, bordure d'accent quand il a le focus.
-        filterHost = new Border { Height = 36, Width = 250, CornerRadius = new CornerRadius(18), Background = UI.T(M3Role.SurfaceContainer),
+        filterHost = new Border { Height = 36, Width = 250, CornerRadius = new CornerRadius(18),
+            Background = UI.T(M3Role.SurfaceContainer),
             BorderBrush = UI.Hairline, BorderThickness = new Thickness(1), Child = row, SnapsToDevicePixels = true };
         UpdateFilterChrome();
         return filterHost;
     }
 
     Button filterClose = null!;
-    // Texte indicatif tant qu'il est vide ; les boutons d'effacement et de sous-dossiers n'apparaissent qu'une fois qu'il y a quelque chose
-    // à effacer.
+    // Texte indicatif tant qu'il est vide ; les boutons d'effacement et de sous-dossiers n'apparaissent qu'une fois qu'il y a quelque
+    // chose à effacer.
     void UpdateFilterChrome()
     {
         if (filterBox == null || searchHint == null)
@@ -456,14 +457,15 @@ public sealed partial class MainWindow
             list.Focus();
     }
 
-    // Appelé depuis Refresh : le champ reflète le filtre de l'onglet actif (effacé par la navigation, conservé par onglet au changement).
+    // Appelé depuis Refresh : le champ reflète le filtre de l'onglet actif (effacé par la navigation, conservé par onglet au
+    // changement).
     void SyncFilterUi(FolderTab tab)
     {
         if (filterBox == null)
             return;
         PaintDeep(tab);
         if (filterTimer is { IsEnabled: true })
-            return;                     // the user is typing: the debounce will apply it
+            return;                     // l'utilisateur tape : l'anti-rebond l'appliquera
         if (filterBox.Text.Trim() == tab.Filter)
             return;
         settingFilter = true;

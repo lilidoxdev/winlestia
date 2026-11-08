@@ -1,4 +1,4 @@
-// C# 12 / AudioMixerVerification.cs / Windows .NET 8. Writes only our silent test session.
+// C# 12 / AudioMixerVerification.cs / Windows .NET 8. N'écrit que dans notre session de test silencieuse.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +10,9 @@ namespace PanneauxGlass;
 
 internal static class AudioMixerVerification
 {
+    // Sondage de l'état de l'hôte audio (100 tours max) pendant la vérification.
+    const int HostPollMs = 50;
+
     // Attente de test : un tick du dispatcher : l'UI traite ses messages en attente.
     const int PauseTickMs = 100;
     // Attente de test : une transition de page ou de dialogue.
@@ -102,11 +105,11 @@ internal static class AudioMixerVerification
             double activation = watch.Elapsed.TotalMilliseconds;
             Check("Opening audio does not wait for native enumeration", activation < 20);
             for (int i = 0; i < 100 && !host.Ready; i++)
-                Thread.Sleep(50);
+                Thread.Sleep(HostPollMs);
             Check("Background audio worker returns live devices", host.Ready && host.Devices.Length > 0);
             host.SetActive(false);
             for (int i = 0; i < 60 && host.NativeRunning; i++)
-                Thread.Sleep(50);
+                Thread.Sleep(HostPollMs);
             Check("Background audio worker stops when closed", !host.NativeRunning);
         }
         catch (Exception ex) { Check(ex.ToString(), false); }

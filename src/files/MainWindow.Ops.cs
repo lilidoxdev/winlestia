@@ -1,6 +1,6 @@
 // Step 4a: open, clipboard (CF_HDROP + Preferred DropEffect), rename (inline), delete, new folder, select all.
-// Toute partie qui touche au disque s'exécute dans FileOps sur un thread STA dédié ; la liste est corrigée sur place à partir des résultats
-// RÉUSSIS.
+// Toute partie qui touche au disque s'exécute dans FileOps sur un thread STA dédié ; la liste est corrigée sur place à partir des
+// résultats RÉUSSIS.
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -181,8 +181,8 @@ public sealed partial class MainWindow
         }
         string path = item.FullPath;
         IntPtr owner = Hwnd;
-        // Verbe par défaut sur un thread STA éphémère (un gestionnaire lent ne bloque jamais l'UI). Sans association : la boîte « Ouvrir
-        // avec » de Windows.
+        // Verbe par défaut sur un thread STA éphémère (un gestionnaire lent ne bloque jamais l'UI). Sans association : la boîte «
+        // Ouvrir avec » de Windows.
         var thread = new Thread(() =>
         {
             try
@@ -254,8 +254,8 @@ public sealed partial class MainWindow
         return SetClipboardAsync(sel.Select(i => i.FullPath).ToList(), cut);
     }
 
-    // WPF réessaie déjà OpenClipboard ; si un autre processus (historique du presse-papiers, visionneuse) le retient encore, on réessaie
-    // ici sans bloquer l'UI.
+    // WPF réessaie déjà OpenClipboard ; si un autre processus (historique du presse-papiers, visionneuse) le retient encore, on
+    // réessaie ici sans bloquer l'UI.
     internal async Task<bool> SetClipboardAsync(IReadOnlyList<string> paths, bool cut)
     {
         var files = new StringCollection();
@@ -273,7 +273,8 @@ public sealed partial class MainWindow
             catch (Exception ex) when (attempt < 4) { Perf.Log("clipboard set retry: " + ex.Message); await Task.Delay(ClipboardRetryMs); }
             catch (Exception ex) { Perf.Log("clipboard set failed: " + ex.Message); return false; }
         }
-        cutSequence = GetClipboardSequenceNumber();      // our own write; any later sequence means somebody else took the clipboard
+        // notre propre écriture ; toute séquence ultérieure signifie que quelqu'un d'autre a pris le presse-papiers
+        cutSequence = GetClipboardSequenceNumber();
         SetCut(cut ? new HashSet<string>(paths, StringComparer.OrdinalIgnoreCase) : new HashSet<string>(StringComparer.OrdinalIgnoreCase));
         return true;
     }
@@ -295,8 +296,8 @@ public sealed partial class MainWindow
         return IntPtr.Zero;
     }
 
-    // Lit CF_HDROP et Preferred DropEffect (ce qu'écrit l'Explorateur) et exécute une copie ou un déplacement vers le dossier courant (ou
-    // donné).
+    // Lit CF_HDROP et Preferred DropEffect (ce qu'écrit l'Explorateur) et exécute une copie ou un déplacement vers le dossier courant
+    // (ou donné).
     internal async Task<OpResult?> PasteAsync(string? destination = null)
     {
         string dest = destination ?? Active.Location;
@@ -397,7 +398,8 @@ public sealed partial class MainWindow
     async Task SlowClick(FileItem item)
     {
         int arm = ++clickArm;
-        await Task.Delay((int)GetDoubleClickTime() + 120);      // one-shot; any click / key / double-click bumps clickArm and cancels it
+        // une seule fois ; tout clic / touche / double clic incrémente clickArm et l'annule
+        await Task.Delay((int)GetDoubleClickTime() + 120);
         if (arm == clickArm && list.SelectedItems.Count == 1 && ReferenceEquals(list.SelectedItem, item))
             BeginRename(item);
     }

@@ -1,8 +1,8 @@
 #if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=palette : mise à jour de palette en direct. Pointe Store.DataDir vers <fixture>\prefs (jamais les vraies
 // préférences), écrit un choix clair puis un choix sombre,
-// envoie le message "palette" sur le canal propre à cette instance (WINLESTIA_FILES_PIPE fourni par le harnais) et vérifie qu'un pinceau de
-// jeton vivant change de couleur dans les deux sens.
+// envoie le message "palette" sur le canal propre à cette instance (WINLESTIA_FILES_PIPE fourni par le harnais) et vérifie qu'un pinceau
+// de jeton vivant change de couleur dans les deux sens.
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -59,7 +59,7 @@ public sealed partial class MainWindow
         async Task<bool> Send()
         {
             for (int i = 0; i < 40; i++)
-            {      // the server starts at ApplicationIdle
+            {      // le serveur démarre à ApplicationIdle
                 if (await Task.Run(() => FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "palette"), 300)))
                     return true;
                 await Task.Delay(PauseAnimationMs);

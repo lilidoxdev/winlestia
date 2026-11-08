@@ -16,7 +16,8 @@ namespace PanneauxGlass;
 internal sealed class PcStatusWindow : GlassWindow
 {
     readonly Coordinator owner; readonly PcTelemetry telemetry = new(); readonly SemaphoreSlim lifecycle = new(1, 1);
-    readonly TextBlock live = UI.Text("Préparation des capteurs…", 11, UI.Dim), foot = UI.Text("Collecte suspendue hors de ce panneau", 10,
+    readonly TextBlock live = UI.Text("Préparation des capteurs…", 11, UI.Dim), foot = UI.Text("Collecte suspendue hors de ce panneau",
+        10,
         UI.Dim);
     readonly Meter cpu = new("Processeur", "\uE950", "#96E6F5"), gpu = new("Carte graphique", "\uE7F4", "#BBAAFF");
     readonly TextBlock ramValue = UI.Text("—", 25, null, true), ramDetail = UI.Text("Mémoire disponible", 10, UI.Dim),
@@ -206,7 +207,8 @@ internal sealed class PcStatusWindow : GlassWindow
         networkGraph.Push(value.Download, value.Upload);
         networkGraph.ToolTip = "Cyan : réception · violet : envoi";
         foot.Text = "1 relevé/s · sondes 3 s · disques 30 s";
-        cpu.Heat.ToolTip = string.IsNullOrWhiteSpace(value.SensorNote) ? "Température réelle du processeur · relevée toutes les 3 secondes"
+        cpu.Heat.ToolTip = string.IsNullOrWhiteSpace(value.SensorNote)
+            ? "Température réelle du processeur · relevée toutes les 3 secondes"
             : value.SensorNote;
     }
     void UpdateStorage(PcReading value)
@@ -291,7 +293,8 @@ internal sealed class PcStatusWindow : GlassWindow
         : (value / 1073741824).ToString("0.0") + " Go";
     internal static string Rate(double? value) => !value.HasValue ? "—" : value >= 1048576 ? (value.Value / 1048576).ToString("0.0")
         + " Mo/s" : value >= 1024 ? (value.Value / 1024).ToString("0.0") + " Ko/s" : Math.Round(value.Value).ToString("0") + " o/s";
-    static string LoadHint(double? load) => !load.HasValue ? "Mesure indisponible" : load < 35 ? "Peu sollicité" : load < 75 ? "En activité"
+    static string LoadHint(double? load) => !load.HasValue ? "Mesure indisponible" : load < 35 ? "Peu sollicité" : load < 75
+        ? "En activité"
         : "Très sollicité";
     sealed class Meter
     {

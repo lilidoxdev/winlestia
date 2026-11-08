@@ -1,4 +1,4 @@
-// Caelestia Border.qml mask, with a native click-through Windows host.
+// Masque Border.qml de Caelestia, avec un hôte Windows natif laissant passer les clics.
 pragma ComponentBehavior: Bound
 
 import QtQuick
@@ -20,8 +20,8 @@ Item {
 
     anchors.fill: parent
 
-    // The ring is drawn as one even-odd shape: no layer, no mask texture, so the
-    // fill alpha reaches the screen unchanged and matches the dashboard exactly.
+    // L'anneau est dessiné comme une seule forme even-odd : pas de couche ni de texture de masque, donc
+    // l'alpha de remplissage arrive inchangé à l'écran et correspond exactement au tableau de bord.
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer

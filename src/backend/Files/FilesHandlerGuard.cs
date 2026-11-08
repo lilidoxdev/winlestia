@@ -34,14 +34,14 @@ internal static class FilesHandlerGuard
         : !exeExists ? HandlerStartup.RestoreAndDisable
         : HandlerStartup.Ensure;
 
-    // Décision pure de la migration unique « Winlestia Fichiers par défaut » (gestionnaire activé, préchargement activé, épingle du dock).
-    // Déjà faite : rien. Garde de plantage déclenchée : on ne force jamais l'activation, mais on enregistre la migration pour ne pas
-    // réessayer. Exe absent : on réessaie au prochain démarrage.
+    // Décision pure de la migration unique « Winlestia Fichiers par défaut » (gestionnaire activé, préchargement activé, épingle
+    // du dock). Déjà faite : rien. Garde de plantage déclenchée : on ne force jamais l'activation, mais on enregistre la migration
+    // pour ne pas réessayer. Exe absent : on réessaie au prochain démarrage.
     internal static (bool Enable, bool MarkMigrated) DecideDefaults(bool migrated, bool exeExists, bool tripped) =>
         migrated ? (false, false) : tripped ? (false, true) : !exeExists ? (false, false) : (true, true);
 
-    // Pur : seul un vrai plantage compte. Les problèmes propres à un chemin (accès refusé, chemin absent / invalide, E/S) retombent sur
-    // explorer.exe et n'alimentent jamais le compteur.
+    // Pur : seul un vrai plantage compte. Les problèmes propres à un chemin (accès refusé, chemin absent / invalide, E/S) retombent
+    // sur explorer.exe et n'alimentent jamais le compteur.
     internal static bool CountsAsCrash(Exception ex) =>
         ex is not (UnauthorizedAccessException or IOException or ArgumentException or NotSupportedException or System.Security
             .SecurityException);
@@ -83,7 +83,7 @@ internal static class FilesHandlerGuard
             }
             var o = options ?? HandlerOptions.FromEnvironment();
             if (!FilesHandler.IsActive(o))
-                return false;          // handler not enabled: nothing to undo, no flag, no misleading toast
+                return false;          // gestionnaire non activé : rien à annuler, pas d'indicateur, pas de notification trompeuse
             var r = FilesHandler.Restore(o);
             FilesHandler.Log("crash guard: 3 startup crashes in 60 s, restore " + (r.Ok ? "ok" : "FAILED: " + r.Message));
             File.WriteAllText(Path.Combine(dir, FlagFile), nowMs.ToString());

@@ -97,7 +97,8 @@ internal partial class GlassWindow
         Width = width;
         Height = height;
         Top = y;
-        Left = x;// A window already closing (app shutdown, space collapsing) must not be shown again.
+        // Une fenêtre déjà en cours de fermeture (arrêt de l'application, espace qui se replie) ne doit pas être réaffichée.
+        Left = x;
         if (opening)
         {
             try

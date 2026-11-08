@@ -16,23 +16,24 @@ Item {
     required property PersistentProperties state
     required property FileDialog facePicker
     readonly property real nonAnimWidth: view.implicitWidth + viewWrapper.anchors.margins * 2
-    readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2
+    readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins
+        * 2
 
     // Fixed drawer content size: max over panes, only ever grows (when a pane is first measured).
     property real paneMaxWidth: 966
     property real paneMaxHeight: 450
 
-    // True while the tab slide runs; Wrapper uses it to enable its offscreen layer only then.
+    // Vrai pendant le glissement d'onglet ; Wrapper s'en sert pour n'activer sa couche hors écran qu'alors.
     readonly property bool animating: slide.running
 
     implicitWidth: nonAnimWidth
     implicitHeight: nonAnimHeight
 
-    // Preload panes one at a time (async) once the dashboard is shown; paused while hidden.
+    // Précharge les panneaux un par un (async) une fois le tableau de bord affiché ; en pause quand il est masqué.
     function preloadStep(): void {
         if (!root.visible)
             return;
-        // The pane the user is on (or switched to) always goes first.
+        // Le panneau où se trouve l'utilisateur (ou vers lequel il bascule) passe toujours en premier.
         const cur = row.children[root.state.currentTab];
         if (cur && !cur.active)
             cur.active = true;
@@ -64,7 +65,7 @@ Item {
         state: root.state
     }
 
-    // Settings are always reachable from the dashboard (Ctrl+Alt+Space), even with the dock hidden.
+    // Les réglages restent toujours accessibles depuis le tableau de bord (Ctrl+Alt+Espace), même dock masqué.
     IconButton {
         id: settingsButton
 
@@ -78,8 +79,8 @@ Item {
         onClicked: Bridge.action("settings", {})
     }
 
-    // Plain clipping, no layer: an OpacityMask layer recomposites its content and
-    // turns the glass opaque behind it, which broke the single shared alpha.
+    // Rognage simple, sans couche : une couche OpacityMask recompose son contenu et
+    // rend le verre opaque derrière, ce qui cassait l'alpha unique partagé.
     Item {
         id: viewWrapper
 
@@ -96,7 +97,7 @@ Item {
 
             readonly property int currentIndex: root.state.currentTab
             readonly property Pane currentItem: row.children[currentIndex]
-            // Outgoing pane stays shown until the slide ends; lastIndex tracks the old value.
+            // Le panneau sortant reste affiché jusqu'à la fin du glissement ; lastIndex retient l'ancienne valeur.
             property int previousIndex: -1
             property int lastIndex: currentIndex
 
@@ -190,7 +191,7 @@ Item {
         id: pane
 
         required property int paneIndex
-        // Measured once loaded, so the unloaded placeholder (and the first slide) has the right size.
+        // Mesuré une fois chargé, pour que l'emplacement non chargé (et le premier glissement) ait la bonne taille.
         property real cachedWidth: [823, 966, 835, 900][paneIndex] ?? 800
         property real cachedHeight: [429, 340, 270, 450][paneIndex] ?? 340
         readonly property bool current: paneIndex === view.currentIndex
@@ -198,14 +199,14 @@ Item {
 
         Layout.alignment: Qt.AlignTop
 
-        // Every pane sits in a fixed (max) cell; equal margins center it on both axes.
+        // Chaque panneau occupe une cellule fixe (max) ; des marges égales le centrent sur les deux axes.
         Layout.preferredWidth: cachedWidth
         Layout.preferredHeight: cachedHeight
         Layout.leftMargin: Math.max(0, (root.paneMaxWidth - cachedWidth) / 2)
         Layout.rightMargin: Layout.leftMargin
         Layout.topMargin: (root.paneMaxHeight - cachedHeight) / 2
         Layout.bottomMargin: Layout.topMargin
-        // Start of the pane's cell (x includes the centering margin).
+        // Début de la cellule du panneau (x inclut la marge de centrage).
         readonly property real cellX: x - Layout.leftMargin
 
         onCachedWidthChanged: if (cachedWidth > root.paneMaxWidth)
@@ -215,7 +216,7 @@ Item {
         asynchronous: paneIndex > 0
         active: false
 
-        // Layout skips invisible items, so hide the loaded item rather than the Loader.
+        // Layout ignore les éléments invisibles : on masque donc l'élément chargé plutôt que le Loader.
         Binding {
             target: pane.item
             property: "visible"

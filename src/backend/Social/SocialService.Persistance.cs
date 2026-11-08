@@ -53,8 +53,8 @@ internal sealed partial class SocialService
             // Même session Windows = même heure de démarrage, à quelques secondes d'écart près.
             if (Math.Abs((new DateTime(data.BootTicks, DateTimeKind.Utc) - bootUtc).TotalSeconds) > 90)
                 return;
-            // Migration : ancien fichier (sans TitleNets) = compteurs cumulés non fiables, plafonnés à 99 ; l'absorption/le premier titre
-            // les remplace.
+            // Migration : ancien fichier (sans TitleNets) = compteurs cumulés non fiables, plafonnés à 99 ; l'absorption/le premier
+            // titre les remplace.
             foreach (var n in nets)
                 if (data.Counts.TryGetValue(n.Id, out int c))
                 {
@@ -90,7 +90,8 @@ internal sealed partial class SocialService
             return;
         saveQueued = true;
         _ = Task.Run(async () => { try { await Task.Delay(SaveDebounceMs); if (disposed) return; dispatcher.Invoke(()
-            => saveQueued = false); WriteNow(); } catch (Exception err) { Store.Log("SocialService.QueueSave : " + err.GetType().Name + ": "
+            => saveQueued = false); WriteNow(); } catch (Exception err) { Store.Log("SocialService.QueueSave : " + err.GetType().Name
+                + ": "
             + err.Message); } });
     }
 

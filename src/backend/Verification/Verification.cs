@@ -121,7 +121,8 @@ internal static class Verification
         var invalid = new Preferences { Tint = double.NaN, IconSize = 500, Boards = new() { new() { Id = "absent" } } };
         invalid.Normalize();
         Check(invalid.Tint == .2 && invalid.IconSize == 80 && invalid.Boards.Count == 4, "Paramètres invalides bornés et récupérés");
-        Check(Calculator.TryEvaluate("12*7", out double product) && Math.Abs(product - 84) < 1e-9, "Calcul direct saisi dans la recherche");
+        Check(Calculator.TryEvaluate("12*7", out double product) && Math.Abs(product - 84) < 1e-9,
+            "Calcul direct saisi dans la recherche");
         Check(Calculator.TryEvaluate("(18+6)/4", out double share) && Math.Abs(share - 6) < 1e-9 && Calculator.TryEvaluate("2 400 / 60",
             out double minutes) && Math.Abs(minutes - 40) < 1e-9, "Priorités, parenthèses et espaces du calcul");
         Check(!Calculator.TryEvaluate("chrome", out _) && !Calculator.TryEvaluate("https://github.com", out _),

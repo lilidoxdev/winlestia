@@ -1,5 +1,5 @@
-// Petit menu contextuel Win32 pour nos propres commandes (tri, accès rapide) : même thème sombre/clair système que le menu du shell, modal,
-// renvoie l'id choisi (0 = fermé sans choix).
+// Petit menu contextuel Win32 pour nos propres commandes (tri, accès rapide) : même thème sombre/clair système que le menu du shell,
+// modal, renvoie l'id choisi (0 = fermé sans choix).
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;

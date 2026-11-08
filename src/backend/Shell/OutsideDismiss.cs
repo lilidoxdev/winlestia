@@ -1,4 +1,5 @@
-// C# 12, fichier OutsideDismiss.cs, cible Windows 11 / .NET 8, clics extérieurs pilotés par événements sans consommer l'entrée d'origine
+// C# 12, fichier OutsideDismiss.cs, cible Windows 11 / .NET 8, clics extérieurs pilotés par événements sans consommer l'entrée
+// d'origine
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
@@ -26,7 +27,8 @@ internal sealed class OutsideDismiss : IDisposable
     [DllImport("kernel32.dll")] static extern uint GetCurrentProcessId();
     [DllImport("kernel32.dll")] static extern uint GetTickCount();
     readonly Func<IntPtr, bool>? additionalOwnership; readonly MouseCallback mouseCallback; readonly ForegroundCallback foregroundCallback;
-        readonly Action close; readonly Func<bool> enabled; readonly Dispatcher dispatcher; readonly uint processId = GetCurrentProcessId();
+        readonly Action close; readonly Func<bool> enabled; readonly Dispatcher dispatcher;
+            readonly uint processId = GetCurrentProcessId();
         IntPtr mouseHook, foregroundHook, openingForeground; bool disposed, active; uint generation, armedAt; int pendingReasons;
     internal OutsideDismiss(Action dismiss, Func<bool> canDismiss, Func<IntPtr, bool>? owns = null)
     {

@@ -16,7 +16,7 @@ StyledListView {
     required property StyledTextField search
     required property PersistentProperties visibilities
 
-    // The first word is the "file" command itself; the rest is the name searched in the Windows index.
+    // Le premier mot est la commande « file » elle-même ; le reste est le nom cherché dans l'index Windows.
     readonly property string term: search.text.split(" ").slice(1).join(" ")
 
     model: Bridge.fileResults

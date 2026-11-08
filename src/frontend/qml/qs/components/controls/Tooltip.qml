@@ -27,10 +27,10 @@ Popup {
     // Popup properties - doesn't affect layout
     parent: {
         let p = target;
-        // Walk up to find the root Item (usually has anchors.fill: parent)
+        // Remonte pour trouver l'Item racine (a généralement anchors.fill: parent)
         while (p && p.parent) {
             const parentItem = p.parent;
-            // Check if this looks like a root pane Item
+            // Vérifie si cela ressemble à un Item de panneau racine
             if (parentItem && parentItem.anchors && parentItem.anchors.fill !== undefined) {
                 return parentItem;
             }
@@ -47,7 +47,7 @@ Popup {
     margins: 0
     background: Item {}
 
-    // Update position when target moves or tooltip becomes visible
+    // Met à jour la position quand la cible bouge ou que l'infobulle devient visible
     onTooltipVisibleChanged: {
         if (tooltipVisible) {
             Qt.callLater(updatePosition);
@@ -77,12 +77,12 @@ Popup {
         if (!target || !parent)
             return;
 
-        // Wait for tooltipRect to have its size calculated
+        // Attend que tooltipRect ait sa taille calculée
         Qt.callLater(() => {
             if (!target || !parent || !tooltipRect)
                 return;
 
-            // Get target position in parent's coordinate system
+            // Position de la cible dans le repère du parent
             const targetPos = target.mapToItem(parent, 0, 0);
             const targetCenterX = targetPos.x + target.width / 2;
 
@@ -90,7 +90,7 @@ Popup {
             const tooltipWidth = tooltipRect.width > 0 ? tooltipRect.width : tooltipRect.implicitWidth;
             const tooltipHeight = tooltipRect.height > 0 ? tooltipRect.height : tooltipRect.implicitHeight;
 
-            // Center tooltip horizontally on target
+            // Centre l'infobulle horizontalement sur la cible
             let newX = targetCenterX - tooltipWidth / 2;
 
             // Position tooltip above target
@@ -158,7 +158,7 @@ Popup {
         radius: Appearance.rounding.small
         antialiasing: true
 
-        // Add elevation for depth
+        // Ajoute de l'élévation pour la profondeur
         Elevation {
             anchors.fill: parent
             radius: parent.radius

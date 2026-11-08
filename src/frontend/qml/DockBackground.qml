@@ -1,4 +1,4 @@
-// Same silhouette as the native backdrop; the material matches the frame and dashboard.
+// Même silhouette que le fond natif ; la matière correspond au cadre et au tableau de bord.
 import QtQuick
 import QtQuick.Shapes
 import qs.services

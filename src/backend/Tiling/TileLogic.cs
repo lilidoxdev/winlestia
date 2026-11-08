@@ -14,8 +14,8 @@ internal enum TileDir
 internal static class TileLogic
 {
     internal const double MinRatio = .2, MaxRatio = .8, RatioStep = .05;
-    // Découpe binaire sur le côté le plus long. `ratio(path)` donne la part de la première moitié pour la découpe à `path` ("" = racine,
-    // puis "0"/"1" à chaque descente) ; .5 par défaut.
+    // Découpe binaire sur le côté le plus long. `ratio(path)` donne la part de la première moitié pour la découpe à `path` ("" =
+    // racine, puis "0"/"1" à chaque descente) ; .5 par défaut.
     internal static Native.Rect[] Layout(Native.Rect area, int count, int gap, Func<string, double>? ratio = null)
     {
         var result = new List<Native.Rect>();
@@ -70,8 +70,8 @@ internal static class TileLogic
             Split(area, count, "");
         return result.ToArray();
     }
-    // Découpe la plus profonde contenant la tuile `index` parmi `count` tuiles ; inFirst indique de quel côté de cette découpe se trouve la
-    // tuile. null si count<2.
+    // Découpe la plus profonde contenant la tuile `index` parmi `count` tuiles ; inFirst indique de quel côté de cette découpe se
+    // trouve la tuile. null si count<2.
     internal static (string path, bool inFirst)? DeepestSplit(int count, int index)
     {
         if (count < 2 || index < 0 || index >= count)

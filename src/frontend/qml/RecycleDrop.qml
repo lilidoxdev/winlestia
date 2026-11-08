@@ -1,4 +1,4 @@
-// QtQuick / RecycleDrop.qml / Caelestia file action shelf, accepts only external file URLs.
+// QtQuick / RecycleDrop.qml / étagère d'actions sur fichiers Caelestia, n'accepte que des URL de fichiers externes.
 import QtQuick
 import QtQuick.Window
 import qs.config
@@ -156,7 +156,8 @@ Window {
                             StyledText {
                                 text: qsTr(tile.modelData.hint)
                                 font.pointSize: Appearance.font.size.small
-                                color: shelf.hovered === tile.index ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                color: shelf.hovered === tile.index ? Colours.palette.m3onPrimaryContainer
+                                    : Colours.palette.m3onSurfaceVariant
                             }
                         }
                     }

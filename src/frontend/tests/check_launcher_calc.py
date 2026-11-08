@@ -1,4 +1,5 @@
-# Python 3.12 / Windows. Checks launcher calculator parsing/locale display and the bundled emoji search: python -I tests/check_launcher_calc.py
+# Python 3.12 / Windows. Vérifie l'analyse de la calculatrice du lanceur, l'affichage selon la locale
+# et la recherche d'emojis embarquée : python -I tests/check_launcher_calc.py
 import sys
 from pathlib import Path
 

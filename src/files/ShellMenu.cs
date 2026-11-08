@@ -1,8 +1,8 @@
 // Étape 4b : le menu contextuel natif du shell (IContextMenu/2/3 via IShellFolder.GetUIObjectOf) et l'objet de données du shell utilisé
 // pour les glisser sortants.
-// Tout s'exécute sur le thread UI (STA) car les extensions du shell l'exigent ; chaque objet COM, PIDL et HMENU est libéré dans Dispose.
-// Les menus natifs ne peuvent pas prendre notre style M3 arrondi : le mieux possible est le thème sombre/clair système des menus (ordinaux
-// uxtheme 135/136).
+// Tout s'exécute sur le thread UI (STA) car les extensions du shell l'exigent ; chaque objet COM, PIDL et HMENU est libéré dans
+// Dispose. Les menus natifs ne peuvent pas prendre notre style M3 arrondi : le mieux possible est le thème sombre/clair système des
+// menus (ordinaux uxtheme 135/136).
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -89,7 +89,8 @@ internal sealed class ShellItems : IDisposable
     readonly List<IntPtr> children = new();
     IShellFolder? folder;
     bool background, disposed;
-    // the COM objects below live in this STA; calling them from another thread or after Dispose is a native crash, not an exception
+    // les objets COM ci-dessous vivent dans ce STA ; les appeler depuis un autre thread ou après Dispose est un plantage natif, pas une
+    // exception
     readonly int owner = Environment.CurrentManagedThreadId;
     string? parentDir;
 
@@ -274,7 +275,8 @@ internal sealed class ShellMenu : IDisposable
         this.items = items;
     }
 
-    // Chaque QueryContextMenu (menu d'élément ou de fond) fait fuir un thread WorkFoldersShell.dll suspendu dans ce processus ; l'instance
+    // Chaque QueryContextMenu (menu d'élément ou de fond) fait fuir un thread WorkFoldersShell.dll suspendu dans ce processus ;
+    // l'instance
     // résidente se recycle sur ce compteur.
     static int builds;
     internal static int Builds => Volatile.Read(ref builds);
@@ -382,7 +384,8 @@ internal sealed class ShellMenu : IDisposable
         finally { Marshal.FreeHGlobal(buffer); }
     }
 
-    // (id, verbe, texte, profondeur) pour chaque commande ; les sous-menus sont remplis d'abord (ce que fait WM_INITMENUPOPUP) sur demande.
+    // (id, verbe, texte, profondeur) pour chaque commande ; les sous-menus sont remplis d'abord (ce que fait WM_INITMENUPOPUP) sur
+    // demande.
     internal List<(uint id, string verb, string text, int depth)> Enumerate(bool populate)
     {
         var all = new List<(uint, string, string, int)>();

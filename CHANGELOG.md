@@ -2,6 +2,14 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les notes de chaque version sont aussi publiées sur la page GitHub Releases. Les entrées 0.9.0 et antérieures sont conservées dans la langue où elles ont été écrites.
 
+## [Non publié]
+
+### Modifications
+
+- Intégration continue : contrôle de longueur de ligne (140), `dotnet format whitespace`, test de fumee de l'installateur, plancher de couverture documenté (règle du cliquet).
+- Dépendances Python verrouillées par hachage (`src/frontend/requirements.lock.txt`), installées avec `--require-hashes` par `installer/build.ps1`.
+- Historique du portage Caelestia condensé dans `docs/history/caelestia-windows.md`.
+
 ## [0.9.2] - 2026-11-06
 
 ### Ajouts

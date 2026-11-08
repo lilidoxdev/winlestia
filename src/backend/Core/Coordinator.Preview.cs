@@ -42,45 +42,7 @@ internal sealed partial class Coordinator
             };
         probe.Show();
     }
-    internal void ExportPreview(string file = "preview-layout.png")
-    {
-        try
-        {
-            var views = System.Windows.Application.Current.Windows.Cast<Window>().OfType<GlassWindow>().Where(w => w.IsVisible).ToList();
-            File.WriteAllText(Path.Combine(Store.Root, "window-metrics.json"), JsonSerializer.Serialize(views.Select(Native.Describe),
-                Store.Json));
-            if (views.Count == 0)
-                return;
-            double left = views.Min(w => w.Left) - 20,
-                top = views.Min(w => w.Top) - 20,
-                right = views.Max(w => w.Left + w.Width) + 20,
-                bottom = views.Max(w => w.Top + w.Height) + 20;
-            var visual = new DrawingVisual();
-            using (var dc = visual.RenderOpen())
-            {
-                dc.DrawRectangle(Brushes.Black, null, new Rect(0, 0, right - left, bottom - top));
-                foreach (var view in views)
-                    dc.DrawRectangle(new VisualBrush(view.Surface), null, new Rect(view.Left - left, view.Top - top, view.ActualWidth,
-                        view.ActualHeight));
-            }
-            var bitmap =
-                new System.Windows.Media.Imaging.RenderTargetBitmap((int)Math.Ceiling(right - left),
-                                                                    (int)Math.Ceiling(bottom - top),
-                                                                    96,
-                                                                    96,
-                                                                    PixelFormats.Pbgra32);
-            bitmap.Render(visual);
-            using (visual.RenderOpen())
-            {
-            }
-            var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
-            encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
-            using var stream = File.Create(Path.Combine(Store.Root, file));
-            encoder.Save(stream);
-            Store.Log("Export aperçu · icônes=" + Icons.LoadedCount + " · génériques=" + Icons.Failures);
-        }
-        catch (Exception ex) { Store.Log("Export: " + ex); }
-    }
+    internal void ExportPreview(string file = "preview-layout.png") => previewExport.Export(file);
     internal bool PaletteActivity => paletteOpen;
     internal bool PaletteVisible => palette?.IsVisible == true;
     internal void PreviewPalette()

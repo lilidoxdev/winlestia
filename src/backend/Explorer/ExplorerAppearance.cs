@@ -58,7 +58,8 @@ internal sealed partial class ExplorerAppearance : IDisposable
         public IntPtr Logo;
         public uint LogoLength;
     }
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern int SHGetSetFolderCustomSettings(ref Settings settings, string path,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern int SHGetSetFolderCustomSettings(ref Settings settings,
+        string path,
         uint flags);
     [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)] static extern bool PathMakeSystemFolderW(string path);
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern void SHChangeNotify(uint kind, uint flags, string? first,
@@ -139,7 +140,8 @@ internal sealed partial class ExplorerAppearance : IDisposable
             }
         }
     }
-    // Anti-rebond des notifications par dossier : au plus une notification du shell par dossier et par 10 s. Renvoie si elle a été envoyée.
+    // Anti-rebond des notifications par dossier : au plus une notification du shell par dossier et par 10 s. Renvoie si elle a été
+    // envoyée.
     readonly Dictionary<string, DateTime> notifiedAt = new(StringComparer.OrdinalIgnoreCase);
     internal int NotifyCount;
     internal bool Notify(string folder, DateTime? now = null)
@@ -158,8 +160,8 @@ internal sealed partial class ExplorerAppearance : IDisposable
         return true;
     }
     // Vrai quand le desktop.ini du dossier est exactement celui que nous avons écrit en dernier (hash) et pointe déjà vers cette icône
-    // (stable) : rien à écrire. Un ini qui pointe encore vers un de nos anciens fichiers <hex>-<kind>-v2.ico est « à nous » mais renvoie
-    // false, donc migré (réécrit) à la prochaine visite ou par MigrateAsync.
+    // (stable) : rien à écrire. Un ini qui pointe encore vers un de nos anciens fichiers <hex>-<kind>-v2.ico est « à nous » mais
+    // renvoie false, donc migré (réécrit) à la prochaine visite ou par MigrateAsync.
     internal bool AlreadyThemed(string folder, string icon, List<Backup> data)
     {
         try
@@ -236,8 +238,8 @@ internal sealed partial class ExplorerAppearance : IDisposable
             }
         });
     }
-    // Utilisable depuis un thread d'arrière-plan (l'application Fichiers l'appellera à la navigation) : anti-rebond de 3 s par dossier et
-    // budget global gérés dans ColourVisibleFolder (ExplorerAppearance.StableIcons.cs).
+    // Utilisable depuis un thread d'arrière-plan (l'application Fichiers l'appellera à la navigation) : anti-rebond de 3 s par dossier
+    // et budget global gérés dans ColourVisibleFolder (ExplorerAppearance.StableIcons.cs).
     static bool Protected(string folder)
     {
         string windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
@@ -285,15 +287,16 @@ internal sealed partial class ExplorerAppearance : IDisposable
         foreach (var r in new (uint, uint)[] { (3, 3), (0x16, 0x17), (0x8000, 0x8003), (0x800C, 0x800C) })
             hooks.Add(SetWinEventHook(r.Item1, r.Item2, IntPtr.Zero, hookProc, 0, 0, 0));
     }
-    // Ralentissement au repos : les événements de fenêtre (premier plan/réduction/création/destruction/affichage/masquage/changement de
-    // nom) réarment un tick anti-rebond de 150 ms ; sinon tick de sécurité toutes les 5 s (1 s tant qu'un scan est dû).
+    // Ralentissement au repos : les événements de fenêtre (premier plan/réduction/création/destruction/affichage/masquage/changement
+    // de nom) réarment un tick anti-rebond de 150 ms ; sinon tick de sécurité toutes les 5 s (1 s tant qu'un scan est dû).
     static readonly TimeSpan IdleInterval = TimeSpan.FromSeconds(5);
     bool eventPending;
     readonly List<IntPtr> hooks = new();
     [DllImport("user32.dll")] static extern IntPtr GetAncestor(IntPtr h, uint flags);
     readonly WinEventProc? hookProc;
     delegate void WinEventProc(IntPtr hook, uint evt, IntPtr hwnd, int id, int child, uint thread, uint time);
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid, uint thread,
+    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid,
+        uint thread,
         uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
     string Manifest => Path.Combine(root, "manifest.json");
@@ -423,8 +426,8 @@ internal sealed partial class ExplorerAppearance : IDisposable
             throw new IOException("desktop.ini modifié ailleurs : conservé.");
         return (folder, saved);
     }
-    // Date « Modifié » du dossier : conservée d'une écriture à l'autre (original stocké, sinon heuristique ponctuelle pour les entrées
-    // thémées avant l'existence d'OriginalWriteUtc).
+    // Date « Modifié » du dossier : conservée d'une écriture à l'autre (original stocké, sinon heuristique ponctuelle pour les
+    // entrées thémées avant l'existence d'OriginalWriteUtc).
     DateTime? Stamp(Backup saved)
     {
         try
@@ -453,7 +456,8 @@ internal sealed partial class ExplorerAppearance : IDisposable
             Store.Log("ExplorerAppearance.SetStamp : " + ex.GetType().Name + ": " + ex.Message);
         }
     }
-    // Fixe la date de modification du dossier sur celle de l'enfant le plus récent (desktop.ini et nos propres icônes exclus) ; inchangée
+    // Fixe la date de modification du dossier sur celle de l'enfant le plus récent (desktop.ini et nos propres icônes exclus) ;
+    // inchangée
     // s'il n'y en a pas.
     internal void RepairDatesFromChildren(string folder)
     {
@@ -476,8 +480,8 @@ internal sealed partial class ExplorerAppearance : IDisposable
             Store.Log("ExplorerAppearance.RepairDatesFromChildren : " + ex.GetType().Name + ": " + ex.Message);
         }
     }
-    // Ponctuel (premier Sync après le démarrage) : répare les dossiers thémés jamais réécrits (inchangés, non visités). 256 entrées au
-    // plus, un seul Save.
+    // Ponctuel (premier Sync après le démarrage) : répare les dossiers thémés jamais réécrits (inchangés, non visités). 256
+    // entrées au plus, un seul Save.
     bool repairPassDone;
     internal void RepairManifestDates()
     {

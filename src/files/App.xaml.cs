@@ -8,15 +8,17 @@ namespace WinlestiaFiles;
 
 public partial class App : Application
 {
+    // Cède le tour au thread UI entre deux routes en file pour que l'ouverture reste fluide.
+    const int RouteYieldMs = 5;
+
     // Espace les lancements d'Explorateur pour conserver l'ordre d'ouverture des fenêtres.
     const int LaunchSpacingMs = 150;
     // Résident = se cache au lieu de quitter quand le dernier onglet se ferme. Posé par --background (préchargé, démarre caché) ou
     // --resident.
     internal static bool Resident, Quitting, Recycling;
-    // Recyclage : un résident qui a construit plus de RecycleMenus menus contextuels natifs (chacun fuit un thread de shell suspendu, voir
-    // ShellMenu.Builds)
-    // quitte avec RecycleExitCode une fois caché et inactif ; le backend le relance. WINLESTIA_FILES_RECYCLE_MENUS surcharge le seuil
-    // (tests).
+    // Recyclage : un résident qui a construit plus de RecycleMenus menus contextuels natifs (chacun fuit un thread de shell suspendu,
+    // voir ShellMenu.Builds) quitte avec RecycleExitCode une fois caché et inactif ; le backend le relance. WINLESTIA_FILES_RECYCLE_MENUS
+    // surcharge le seuil (tests).
     internal const int RecycleExitCode = 75;
     internal static readonly int RecycleMenus = int.TryParse(Environment.GetEnvironmentVariable("WINLESTIA_FILES_RECYCLE_MENUS"),
         out var rm) && rm >= 0 ? rm : 200;
@@ -84,12 +86,12 @@ public partial class App : Application
     {
         server?.Dispose();
         server = null;
-    }   // dying instance: no new client may connect before the replacement process starts
+    }   // instance mourante : aucun nouveau client ne doit se connecter avant le démarrage du processus de remplacement
 
-    // Thread UI, fenêtre cachée et inactive. Le canal est fermé EN PREMIER (aucun nouveau client ne peut se connecter ; celui qui est en
-    // pleine négociation échoue et retombe sur un lancement à froid),
-    // puis l'arrêt est mis en file derrière tout ce qui est déjà posté. Si une demande a quand même obtenu une fenêtre entre-temps, cette
-    // instance devient simplement une instance ordinaire.
+    // Thread UI, fenêtre cachée et inactive. Le canal est fermé EN PREMIER (aucun nouveau client ne peut se connecter ; celui qui est
+    // en pleine négociation échoue et retombe sur un lancement à froid),
+    // puis l'arrêt est mis en file derrière tout ce qui est déjà posté. Si une demande a quand même obtenu une fenêtre entre-temps,
+    // cette instance devient simplement une instance ordinaire.
     internal void BeginRecycle()
     {
         if (Recycling)
@@ -113,8 +115,8 @@ public partial class App : Application
 
     // S'exécute sur un thread du pool (gestionnaire du canal). Les demandes ne touchent pas directement l'UI : elles passent par une file
     // bornée et fusionnante servie par UN SEUL consommateur qui
-    // attend la fin de chaque changement de fenêtre, pour qu'un déluge de clients (ou une UI bloquée) ne puisse jamais empiler un travail
-    // illimité de dispatcher ou de processus.
+    // attend la fin de chaque changement de fenêtre, pour qu'un déluge de clients (ou une UI bloquée) ne puisse jamais empiler un
+    // travail illimité de dispatcher ou de processus.
     const int MaxPending = 20;
     readonly object gate = new();
     readonly System.Collections.Generic.List<string> pending = new();
@@ -139,8 +141,8 @@ public partial class App : Application
                 return;
             Perf.Log("pipe request received");
             if (Recycling)
-            // accepted a moment before the pipe closed: hand it to a fresh process rather than lose it (at most ONE per recycle, never a
-            // spawn loop)
+            // accepté un instant avant la fermeture du tube : le confier à un nouveau processus plutôt que le perdre (au plus UN par
+            // recyclage, jamais de boucle de lancements)
             {
                 lock (gate)
                 {
@@ -227,7 +229,7 @@ public partial class App : Application
                     }
                     catch (Exception ex) { CrashLog(ex); }
                 }, System.Windows.Threading.DispatcherPriority.Normal);
-                await Task.Delay(5).ConfigureAwait(false);
+                await Task.Delay(RouteYieldMs).ConfigureAwait(false);
             }
             catch (Exception ex) { CrashLog(ex); }
         }
@@ -303,12 +305,12 @@ public partial class App : Application
     }
 }
 
-// Point d'entrée propre (le Main généré est App.Main). Pas de thread de préchauffage WPF parallèle : l'initialisation WPF au premier usage
-// sur deux threads se bloque dans WPF
+// Point d'entrée propre (le Main généré est App.Main). Pas de thread de préchauffage WPF parallèle : l'initialisation WPF au premier
+// usage sur deux threads se bloque dans WPF
 // (le thread A dans ContentPresenter..cctor attend le verrou de WpfSharedBamlSchemaContext, le thread B tient ce verrou et attend le même
-// initialiseur de type).
-// Il gagnait ~80 ms à froid et coûtait un blocage définitif occasionnel : tout le travail WPF reste donc sur l'unique thread UI.
-// Une instance résidente est essayée d'abord, avant de toucher à un type WPF : transmission par le canal puis sortie (<150 ms au pire).
+// initialiseur de type). Il gagnait ~80 ms à froid et coûtait un blocage définitif occasionnel : tout le travail WPF reste donc sur
+// l'unique thread UI. Une instance résidente est essayée d'abord, avant de toucher à un type WPF : transmission par le canal puis
+// sortie (<150 ms au pire).
 internal static class Program
 {
     static readonly long born = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -337,7 +339,7 @@ internal static class Program
         {
             // Identité de barre des tâches facultative.
         }
-        // Command line only (installer, uninstaller, tests): no window, no pipe, no WPF. --register "<exe>" | --restore
+        // Ligne de commande seule (installeur, désinstalleur, tests) : ni fenêtre, ni tube, ni WPF. --register "<exe>" | --restore
         if (args.Length > 0 && (args[0].Equals("--register", StringComparison.OrdinalIgnoreCase) || args[0].Equals("--restore",
             StringComparison.OrdinalIgnoreCase)))
             return Winlestia.Shared.FilesHandler.RunCli(args);

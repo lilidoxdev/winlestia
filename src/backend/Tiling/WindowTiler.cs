@@ -96,7 +96,8 @@ internal sealed partial class WindowTiler : IDisposable
             else
                 failing.Add(m.h);
         }
-        // Les fenêtres qui ont déjà échoué (élevées/UIPI) sont déplacées seules pour qu'elles ne fassent pas couler tout le lot ; si elles
+        // Les fenêtres qui ont déjà échoué (élevées/UIPI) sont déplacées seules pour qu'elles ne fassent pas couler tout le lot ;
+        // si elles
         // échouent encore, elles sont ignorées.
         var good = list.Where(m => !failing.Contains(m.h)).ToList();
         foreach (var m in list.Where(m => failing.Contains(m.h)))
@@ -189,8 +190,8 @@ internal sealed partial class WindowTiler : IDisposable
             coalesce.Interval = TimeSpan.FromMilliseconds(DragRetryMs); coalesce.Start(); return;
             } coalesce.Interval = TimeSpan.FromMilliseconds(25); Tick(); };
     }
-    // Hooks WinEvent (hors contexte, thread UI) : seuls les événements de fenêtres de premier niveau déclenchent un Tick regroupé environ
-    // 25 ms plus tard.
+    // Hooks WinEvent (hors contexte, thread UI) : seuls les événements de fenêtres de premier niveau déclenchent un Tick regroupé
+    // environ 25 ms plus tard.
     void OnWinEvent(IntPtr hook, uint ev, IntPtr h, int idObject, int idChild, uint thread, uint time)
     {
         if (enabled && ev == 0x0B && h != IntPtr.Zero && idObject == 0 && idChild == 0)
@@ -290,7 +291,8 @@ internal sealed partial class WindowTiler : IDisposable
     {
         var point = new Native.Point();
         return GetClientRect(h, out var client) && ClientToScreen(h, ref point) && Math.Abs(point.X - screen.Bounds.Left) <= 2
-            && Math.Abs(point.Y - screen.Bounds.Top) <= 2 && Math.Abs(point.X + client.Right - screen.Bounds.Right) <= 2 && Math.Abs(point.Y
+            && Math.Abs(point.Y - screen.Bounds.Top) <= 2 && Math.Abs(point.X + client.Right - screen.Bounds.Right) <= 2
+                && Math.Abs(point.Y
             + client.Bottom - screen.Bounds.Bottom) <= 2;
     }
     internal static Native.Rect[] Layout(Native.Rect area, int count, int gap) => TileLogic.Layout(area, count, gap);

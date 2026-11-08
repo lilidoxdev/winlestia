@@ -27,8 +27,8 @@ internal static partial class UI
         }
         return brush;
     }
-    // Un pinceau gelé dans notre dos (WPF gèle les Freezables qu'il scelle dans des modèles) ne peut pas être repeint : on le retire du
-    // cache pour que T() en donne un vivant, sans jamais lever d'exception.
+    // Un pinceau gelé dans notre dos (WPF gèle les Freezables qu'il scelle dans des modèles) ne peut pas être repeint : on le retire
+    // du cache pour que T() en donne un vivant, sans jamais lever d'exception.
     static void RepaintTokens()
     {
         List<(M3Role, byte)>? frozen = null;

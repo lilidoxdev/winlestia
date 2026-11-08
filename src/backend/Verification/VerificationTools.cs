@@ -31,7 +31,8 @@ internal static class VerificationTools
             Check(shot.PixelWidth == 64 && png.Length > 200 && png[0] == 0x89 && png[1] == 0x50,
                 "Capture d’écran : pixels saisis et PNG valide");
         }
-        catch (Exception ex) { Store.Log("Vérification capture: " + ex); Check(false, "Capture d’écran : pixels saisis et PNG valide"); }
+        catch (Exception ex) { Store.Log("Vérification capture: " + ex); Check(false,
+            "Capture d’écran : pixels saisis et PNG valide"); }
         try
         {
             Check(Windows.Media.Ocr.OcrEngine.TryCreateFromUserProfileLanguages() != null, "Moteur de lecture de texte disponible");
@@ -64,7 +65,8 @@ internal static class VerificationTools
         var profile = new WorkspaceProfile { Name = "Test", Targets = new() { "C:\\Windows\\notepad.exe" } };
         var round = JsonSerializer.Deserialize<WorkspaceProfile>(JsonSerializer.Serialize(profile, Store.Json), Store.Json)!;
         Check(round.Targets.Count == 1 && round.Layout != null, "Profils d’espace persistants");
-        var clip = JsonSerializer.Deserialize<ClipboardItem>(JsonSerializer.Serialize(new ClipboardItem { Kind = "text", Text = "bonjour" },
+        var clip = JsonSerializer.Deserialize<ClipboardItem>(JsonSerializer.Serialize(new ClipboardItem { Kind = "text", Text = "bonjour"
+            },
             Store.Json), Store.Json)!;
         Check(clip.Text == "bonjour" && clip.Id.Length > 0, "Éléments du presse-papiers persistants");
         var pinned = new Preferences { Pins = new() { new() { Kind = "memo", Text = "devis vendredi", Width = 10, Opacity = .1, Angle = 40,

@@ -127,7 +127,7 @@ public sealed class TilePanel : VirtualizingPanel, IScrollInfo
             SetVerticalOffset(bottom - viewport.Height);
     }
 
-    // ---- IScrollInfo (vertical pixels only) --------------------------------------------------------------------
+    // ---- IScrollInfo (pixels verticaux seulement) --------------------------------------------------------------------
     public bool CanVerticallyScroll { get; set; } = true;
     public bool CanHorizontallyScroll
     {

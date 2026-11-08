@@ -38,7 +38,8 @@ internal sealed partial class ControlCenterWindow : GlassWindow
         muteLabel = UI.Text("Son activé", 12);
     readonly Image cover = new() { Width = 48, Height = 48, Stretch = Stretch.UniformToFill };
     readonly Button play, previous, next, mute, sessionPicker;
-    readonly Slider progress = new() { Minimum = 0, Maximum = 1, Height = 21, IsMoveToPointEnabled = true, SmallChange = 5, LargeChange = 15
+    readonly Slider progress = new() { Minimum = 0, Maximum = 1, Height = 21, IsMoveToPointEnabled = true, SmallChange = 5,
+        LargeChange = 15
         };
     readonly Dictionary<string, (Button button, TextBlock status)> radios = new();
     AudioSnapshot audioState = new(false, 0, false, "Sortie Windows");

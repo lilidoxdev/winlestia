@@ -173,60 +173,6 @@ internal sealed partial class Coordinator
     }
     internal (long samples, bool running) PcActivity => (pc.Samples, pc.Sampling);
     internal (bool open, bool closing, int visible) UiActivity => (open, closing, Windows.Count(w => w.IsVisible && w != controller));
-    internal void RunControlDialog(Window? parent, Action action)
-    {
-        bool previous = settingsOpen;
-        settingsOpen = true;
-        DialogLayers(true);
-        try
-        {
-            action();
-        }
-        finally
-        {
-            settingsOpen = previous;
-            DialogLayers(previous);
-            awaySince = DateTime.MinValue;
-        }
-    }
-    internal async Task RunControlTask(Func<Task> action)
-    {
-        bool previous = settingsOpen;
-        settingsOpen = true;
-        DialogLayers(true);
-        try
-        {
-            await action();
-        }
-        finally
-        {
-            settingsOpen = previous;
-            DialogLayers(previous);
-            awaySince = DateTime.MinValue;
-        }
-    }
-    internal void EditControls(Window parent, bool add = false) => RunControlDialog(parent, () =>
-    {
-        var dialog =
-        new ControlEditorWindow(this, add) { Owner = parent, ShowInTaskbar = preview };
-        dialog.ShowDialog();
-    });
-    const int ScreenClipDelayMs = 120;
-    internal async void LaunchWindowsShortcut(WindowsShortcut shortcut)
-    {
-        CollapseImmediately();
-        try
-        {
-            if (shortcut.Target.StartsWith("ms-screenclip:", StringComparison.OrdinalIgnoreCase))
-                await System.Threading.Tasks.Task.Delay(ScreenClipDelayMs);
-            Process.Start(new ProcessStartInfo(shortcut.Target) { Arguments = shortcut.Arguments, UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            Open();
-            Message("Le raccourci « " + shortcut.Name + " » n’a pas pu s’ouvrir.\n" + ex.Message);
-        }
-    }
     internal void BeginLayoutInteraction()
     {
         interacting = true;

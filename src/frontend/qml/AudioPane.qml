@@ -29,7 +29,8 @@ Item {
                     font.pointSize: Appearance.font.size.title
                 }
                 StyledText {
-                    text: root.microphone ? qsTr("Choisis ton entrée et règle sa sensibilité") : qsTr("Choisis où écouter tes applications")
+                    text: root.microphone ? qsTr("Choisis ton entrée et règle sa sensibilité")
+                        : qsTr("Choisis où écouter tes applications")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3outline
                 }
@@ -124,7 +125,8 @@ Item {
                         Layout.fillWidth: true
                         spacing: 12
                         IconButton {
-                            icon: row.modelData.muted ? (root.microphone ? "mic_off" : "volume_off") : (root.microphone ? "mic" : "volume_up")
+                            icon: row.modelData.muted ? (root.microphone ? "mic_off" : "volume_off") : (root.microphone ? "mic"
+                                : "volume_up")
                             type: IconButton.Text
                             onClicked: Bridge.action("deviceMute", {
                                 id: row.modelData.id,
@@ -165,13 +167,15 @@ Item {
                 width: parent.width - 20
                 visible: list.count === 0
                 icon: root.microphone ? "mic_off" : "speaker_notes_off"
-                title: !Bridge.audioReady ? qsTr("Recherche des périphériques…") : root.microphone ? qsTr("Aucun microphone connecté") : qsTr("Aucune sortie audio détectée")
+                title: !Bridge.audioReady ? qsTr("Recherche des périphériques…") : root.microphone ? qsTr("Aucun microphone connecté")
+                    : qsTr("Aucune sortie audio détectée")
             }
         }
         RowLayout {
             Layout.fillWidth: true
             StyledText {
-                text: root.microphone ? qsTr("Aucun enregistrement · réglage du niveau d’entrée uniquement") : qsTr("Le changement s’applique aux nouvelles lectures Windows")
+                text: root.microphone ? qsTr("Aucun enregistrement · réglage du niveau d’entrée uniquement")
+                    : qsTr("Le changement s’applique aux nouvelles lectures Windows")
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
                 font.pointSize: Appearance.font.size.small

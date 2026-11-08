@@ -1,15 +1,15 @@
 // Enregistre / restaure Winlestia Fichiers comme gestionnaire de dossiers (HKCU uniquement), partagé (lié) par Winlestia.Files
 // (propriétaire de la CLI --register / --restore),
 // le backend (bascule, garde de démarrage) et tests/FilesHandler. .NET pur : pas de WPF, aucun type du backend.
-// Propriétaire = Winlestia.Files.exe : c'est le seul artefact que l'installeur livre et que le désinstalleur / la garde de plantage peuvent
-// appeler sans backend ni UI.
+// Propriétaire = Winlestia.Files.exe : c'est le seul artefact que l'installeur livre et que le désinstalleur / la garde de plantage
+// peuvent appeler sans backend ni UI.
 //
 // Clés écrites (sous <Base>\<ClassesPath>, normalement HKCU\Software\Classes), uniquement pour Directory et Drive, JAMAIS Folder :
 //   <T>\shell                      (Default) = winlestia
 //   <T>\shell\winlestia            (Default) = MUIVerb = "Ouvrir avec Winlestia Fichiers", Icon = "<exe>",0
 //   <T>\shell\winlestia\command    (Default) = "<exe>" "%1"
-// Tout est relatif à Options, donc les tests tournent sur un bac à sable comme HKCU\Software\WinlestiaTest\Sandbox\Classes (aucun effet sur
-// le shell).
+// Tout est relatif à Options, donc les tests tournent sur un bac à sable comme HKCU\Software\WinlestiaTest\Sandbox\Classes (aucun effet
+// sur le shell).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +26,7 @@ internal sealed class HandlerOptions
     internal RegistryKey Base = Registry.CurrentUser;
     internal string ClassesPath = @"Software\Classes";
     internal string BackupPath = Path.Combine(FilesHandler.DataDir, "handler-backup.json");
-    internal bool Notify = true;           // SHChangeNotify; never for a sandbox root
+    internal bool Notify = true;           // SHChangeNotify ; jamais pour une racine de bac à sable
 
     // La surcharge de sauvegarde n'est honorée que sous %TEMP% (tout le reste est ignoré).
     internal static bool UnderTemp(string path)
@@ -38,8 +38,8 @@ internal sealed class HandlerOptions
         catch { return false; }
     }
 
-    // HKCU réel sauf si WINLESTIA_FILES_HANDLER_ROOT est défini (tests uniquement). La surcharge doit vivre sous Software\WinlestiaTest\ et
-    // a son propre fichier de sauvegarde,
+    // HKCU réel sauf si WINLESTIA_FILES_HANDLER_ROOT est défini (tests uniquement). La surcharge doit vivre sous Software\WinlestiaTest\
+    // et a son propre fichier de sauvegarde,
     // pour qu'un test ne puisse jamais toucher aux vraies clés Classes ni à la vraie sauvegarde.
     internal static HandlerOptions FromEnvironment()
     {
@@ -196,12 +196,13 @@ internal static class FilesHandler
             var backup = LoadBackup(o.BackupPath);
             bool fresh = backup == null;
             if (backup == null)
-            {                       // idempotent: an existing backup holds the TRUE originals and is never overwritten
+            {                       // idempotent : une sauvegarde existante contient les VRAIS originaux et n'est jamais écrasée
                 backup = new Backup { Exe = exe };
                 foreach (var t in Targets)
                     backup.Entries[t] = Capture(o, t);
                 touched = true;
-                WriteBackup(o.BackupPath, backup);       // backup first, keys second: a crash in between leaves nothing to undo
+                // sauvegarde d'abord, clés ensuite : un plantage entre les deux ne laisse rien à annuler
+                WriteBackup(o.BackupPath, backup);
             }
             foreach (var t in Targets)
             {
@@ -217,7 +218,7 @@ internal static class FilesHandler
                     v.SetValue("Icon", "\"" + exe + "\",0");
                 }
                 using (var shell = o.Base.CreateSubKey(P(o, t + @"\shell")))
-                    shell.SetValue("", Verb);   // last: the default never points at a missing verb
+                    shell.SetValue("", Verb);   // en dernier : le défaut ne pointe jamais vers un verbe absent
             }
             if (o.Notify)
                 NotifyAssoc();
@@ -235,8 +236,8 @@ internal static class FilesHandler
         }
     }
 
-    // N'enregistre jamais nos propres traces comme « original » : un Default qui dit déjà winlestia, ou un verbe à nous existant, compte
-    // comme non préexistant.
+    // N'enregistre jamais nos propres traces comme « original » : un Default qui dit déjà winlestia, ou un verbe à nous existant,
+    // compte comme non préexistant.
     static Entry Capture(HandlerOptions o, string t)
     {
         var e = new Entry();
@@ -264,8 +265,8 @@ internal static class FilesHandler
 
     internal static HandlerResult Restore(HandlerOptions o) => Locked(() => RestoreCore(o));
 
-    // Par cible : (Default) d'abord, puis notre clé de verbe, pour que le shell n'ait jamais un Default nommant un verbe absent. Un Default
-    // qui n'est ni le nôtre ni absent a été posé par quelqu'un d'autre depuis : conservé.
+    // Par cible : (Default) d'abord, puis notre clé de verbe, pour que le shell n'ait jamais un Default nommant un verbe absent. Un
+    // Default qui n'est ni le nôtre ni absent a été posé par quelqu'un d'autre depuis : conservé.
     static HandlerResult RestoreCore(HandlerOptions o)
     {
         var errors = new List<string>();
@@ -304,14 +305,14 @@ internal static class FilesHandler
                         }
                     }
                     else if (e is { DefaultExisted: true })
-                    {        // the shell key vanished meanwhile: put the original value back
+                    {        // la clé du shell a disparu entre-temps : remettre la valeur d'origine
                         using var recreated = o.Base.CreateSubKey(shellPath);
                         SetDefault(recreated, e);
                         changed = true;
                     }
                 }
                 if (e != null)
-                {                                      // remove only the empty keys we created ourselves
+                {                                      // ne supprimer que les clés vides que nous avons créées nous-mêmes
                     if (!e.ShellExisted)
                         DeleteIfEmpty(o, shellPath);
                     if (!e.ParentExisted)
@@ -321,7 +322,7 @@ internal static class FilesHandler
             catch (Exception ex) { errors.Add(t + ": " + ex.Message); }
         }
         if (errors.Count > 0)
-            return new(false, string.Join("; ", errors));   // keep the backup: a retry still knows the originals
+            return new(false, string.Join("; ", errors));   // garder la sauvegarde : une nouvelle tentative connaît encore les originaux
         try
         {
             if (File.Exists(o.BackupPath))
@@ -358,7 +359,8 @@ internal static class FilesHandler
         {
             return File.Exists(path) ? JsonSerializer.Deserialize<Backup>(File.ReadAllText(path, Encoding.UTF8)) : null;
         }
-        catch { return null; }                 // unreadable backup: treated as missing (Restore then only removes our own keys)
+        // sauvegarde illisible : traitée comme absente (Restore ne supprime alors que nos propres clés)
+        catch { return null; }
     }
 
     static void WriteBackup(string path, Backup b)
@@ -366,10 +368,11 @@ internal static class FilesHandler
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         string temp = path + ".tmp";
         File.WriteAllText(temp, JsonSerializer.Serialize(b, new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
-        File.Move(temp, path, true);           // atomic replace on the same volume
+        File.Move(temp, path, true);           // remplacement atomique sur le même volume
     }
 
-    // ---- CLI (Winlestia.Files.exe --register "<exe>" | --restore) : code de sortie 0 = ok, 1 = échec. Une ligne ajoutée à handler.log.
+    // ---- CLI (Winlestia.Files.exe --register "<exe>" | --restore) : code de sortie 0 = ok, 1 = échec. Une ligne ajoutée à
+    // handler.log.
     // -----------------
 
     internal static int RunCli(string[] args)

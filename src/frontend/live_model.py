@@ -1,4 +1,4 @@
-# Python 3.12 / live_model.py / Qt 6. Stable delegates while native audio values change.
+# Délégués stables pendant que les valeurs audio natives changent.
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, QByteArray
 
 

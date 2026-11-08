@@ -160,22 +160,16 @@ internal sealed partial class QtShellBridge
                 UpdateSampling();
             }
             var call = new BridgeCall(args, id);
-            try
-            {
-                await DispatchAction(command, call);
-            }
-            finally
-            {
-                // Les sorties déjà posées par un handler survivent à une exception, comme avant le découpage.
-                notice = call.Notice;
-                wallpaperCapture = call.WallpaperCapture;
-                bookmarksItems = call.BookmarksItems;
-                windowItems = call.WindowItems;
-                wallpaperPicker = call.WallpaperPicker;
-                fileItems = call.FileItems;
-            }
-            if (call.RawReply != null)
-                return call.RawReply;
+            // Les sorties déjà posées par un handler survivent à une exception, comme avant le découpage.
+            string? raw = await actionTable.Run(this, command, call, Store.Log);
+            notice = call.Notice;
+            wallpaperCapture = call.WallpaperCapture;
+            bookmarksItems = call.BookmarksItems;
+            windowItems = call.WindowItems;
+            wallpaperPicker = call.WallpaperPicker;
+            fileItems = call.FileItems;
+            if (raw != null)
+                return raw;
         }
         catch (Exception ex)
         {

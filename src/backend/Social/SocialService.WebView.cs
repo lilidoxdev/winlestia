@@ -192,8 +192,8 @@ internal sealed partial class SocialService
         }
     }
 
-    // Plus aucune vue et pas d'arrière-plan : lâche l'environnement pour que les processus msedgewebview2 se terminent ; GetEnvironment le
-    // recrée.
+    // Plus aucune vue et pas d'arrière-plan : lâche l'environnement pour que les processus msedgewebview2 se terminent ; GetEnvironment
+    // le recrée.
     void ReleaseEnvironmentIfIdle()
     {
         if (disposed || Store.State.SocialBackground || environment == null || nets.Any(x => x.Ctl != null || x.Creating

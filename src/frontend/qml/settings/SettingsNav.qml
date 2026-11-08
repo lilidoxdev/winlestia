@@ -64,7 +64,8 @@ Item {
         const scored = [];
         for (const e of allEntries()) {
             const head = fold(e.label);
-            const hay = head + " " + fold(e.desc) + " " + fold(e.section) + " " + fold(SettingsIndex.pages[e.page].title) + " " + fold(e.kw);
+            const hay = head + " " + fold(e.desc) + " " + fold(e.section) + " " + fold(SettingsIndex.pages[e.page].title) + " "
+                + fold(e.kw);
             if (!words.every(w => hay.includes(w)))
                 continue;
             scored.push({
@@ -236,7 +237,8 @@ Item {
                     event.accepted = true;
                     const it = navRepeater.itemAt(nav.focusIndex);
                     if (it)
-                        navFlick.contentY = Math.max(0, Math.min(Math.max(0, navFlick.contentHeight - navFlick.height), Math.min(Math.max(navFlick.contentY, it.y + it.height - navFlick.height), it.y)));
+                        navFlick.contentY = Math.max(0, Math.min(Math.max(0, navFlick.contentHeight - navFlick.height),
+                            Math.min(Math.max(navFlick.contentY, it.y + it.height - navFlick.height), it.y)));
                 }
 
                 Column {

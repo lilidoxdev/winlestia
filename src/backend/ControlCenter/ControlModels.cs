@@ -27,7 +27,8 @@ public sealed class ControlPreferences
     };
     public static IEnumerable<WindowsShortcut> Library() => Defaults().Concat(new[]{
         new WindowsShortcut{Name="Concentration",Target="ms-settings:quiethours",Glyph="\uE708"},new WindowsShortcut{Name="Écran",
-            Target="ms-settings:display",Glyph="\uE7F4"},new WindowsShortcut{Name="Wi-Fi",Target="ms-settings:network-wifi",Glyph="\uE701"},
+            Target="ms-settings:display",Glyph="\uE7F4"},new WindowsShortcut{Name="Wi-Fi",Target="ms-settings:network-wifi",
+                Glyph="\uE701"},
             new WindowsShortcut{Name="Bluetooth",Target="ms-settings:bluetooth",Glyph="\uE702"},
         new WindowsShortcut{Name="Réseau",Target="ms-settings:network-status",Glyph="\uE839"},new WindowsShortcut{Name="Notifications",
             Target="ms-settings:notifications",Glyph="\uE7F4"},

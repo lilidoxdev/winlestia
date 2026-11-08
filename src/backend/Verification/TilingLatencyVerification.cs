@@ -11,6 +11,9 @@ namespace PanneauxGlass;
 
 internal static class TilingLatencyVerification
 {
+    // Cède le processeur entre deux pompages de messages sans fausser la latence mesurée.
+    const int PumpPauseMs = 1;
+
     sealed class ToolForm : Forms.Form
     {
         protected override Forms.CreateParams CreateParams
@@ -22,9 +25,10 @@ internal static class TilingLatencyVerification
                 return p;
             }
         }
-    }   // WS_EX_TOOLWINDOW: invisible to the live app's tiler
+    }   // WS_EX_TOOLWINDOW : invisible pour le tiler de l'application en cours
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")] static extern IntPtr Style(IntPtr h, int index);
-    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int Bounds(IntPtr h, int attribute, out Native.Rect value,
+    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int Bounds(IntPtr h, int attribute,
+        out Native.Rect value,
         int size);
     static void Pump(int ms)
     {
@@ -32,7 +36,7 @@ internal static class TilingLatencyVerification
         while (Stopwatch.GetTimestamp() < end)
         {
             Forms.Application.DoEvents();
-            Thread.Sleep(1);
+            Thread.Sleep(PumpPauseMs);
         }
     }
     static Native.Rect Visible(IntPtr h)
@@ -71,7 +75,8 @@ internal static class TilingLatencyVerification
             {
                 for (int n = 1; n <= 4; n++)
                 {
-                    var form = new ToolForm { Text = "Tiling latency test " + run + "-" + n, StartPosition = Forms.FormStartPosition.Manual,
+                    var form = new ToolForm { Text = "Tiling latency test " + run + "-" + n,
+                        StartPosition = Forms.FormStartPosition.Manual,
                         Bounds = new(work.Left + 60 + n * 20, work.Top + 60 + n * 20, 420, 300) };
                     var slot = WindowTiler.Layout(area, n, gap)[n - 1];
                     forms.Add(form);
@@ -86,7 +91,7 @@ internal static class TilingLatencyVerification
                         Forms.Application.DoEvents();
                         if (Near(Visible(h), slot))
                             break;
-                        Thread.Sleep(1);
+                        Thread.Sleep(PumpPauseMs);
                     }
                     if (ms >= 3000)
                     {
@@ -108,7 +113,8 @@ internal static class TilingLatencyVerification
                 Pump(100);
                 tiler.SetEnabled(true);
             }
-            {   // window shown untitled, titled 100 ms later: must be placed within 150 ms of the title change
+            // fenêtre affichée sans titre, titrée 100 ms plus tard : doit être placée dans les 150 ms suivant le changement de titre
+            {
                 var form = new ToolForm { Text = "", StartPosition = Forms.FormStartPosition.Manual, Bounds = new(work.Left + 80, work.Top
                     + 80, 420, 300) };
                 forms.Add(form);
@@ -126,7 +132,7 @@ internal static class TilingLatencyVerification
                     Forms.Application.DoEvents();
                     if (Near(Visible(h), slot))
                         break;
-                    Thread.Sleep(1);
+                    Thread.Sleep(PumpPauseMs);
                 }
                 bool pass = ms < 150;
                 ok &= pass;

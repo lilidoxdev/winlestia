@@ -182,7 +182,7 @@ internal partial class GlassWindow
             Stretch = Stretch.None
         };
     }
-    // Néon: two tubes bleeding colour into a dark room, one from each corner.
+    // Néon : deux tubes qui déteignent sur une pièce sombre, un depuis chaque coin.
     static Brush Neon(ThemeDefinition theme)
     {
         var group = new DrawingGroup();
@@ -250,5 +250,6 @@ internal partial class GlassWindow
             Stretch = Stretch.Fill
         };
     }
-    static Color colorWith(Color color, double gain) => Color.FromArgb((byte)Math.Clamp(color.A * gain, 0, 255), color.R, color.G, color.B);
+    static Color colorWith(Color color, double gain) => Color.FromArgb((byte)Math.Clamp(color.A * gain, 0, 255), color.R, color.G,
+        color.B);
 }

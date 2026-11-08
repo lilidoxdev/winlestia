@@ -71,7 +71,8 @@ internal static partial class MonitorBrightness
         GC.KeepAlive(proc);
         return found;
     }
-    // Model name per display id, from QueryDisplayConfig (active paths). Empty map on any failure: the caller falls back to « Écran N ».
+    // Nom de modèle par id d'écran, d'après QueryDisplayConfig (chemins actifs). Table vide en cas d'échec : l'appelant se rabat sur
+    // « Écran N ».
     static Dictionary<int, string> FriendlyNames()
     {
         var map = new Dictionary<int, string>();
@@ -194,7 +195,7 @@ internal static partial class MonitorBrightness
             }
             if (!go)
                 continue;
-            await gate.WaitAsync();   // held for one display at a time only
+            await gate.WaitAsync();   // tenu pour un seul écran à la fois
             try
             {
                 lock (sync)
@@ -223,7 +224,7 @@ internal static partial class MonitorBrightness
                         d.HasValue = true;
                         d.Failures = 0;
                         if (!d.Writing && !d.Pending.HasValue)
-                        {   // a write started during the read: its value wins over the stale hardware value
+                        {   // une écriture lancée pendant la lecture : sa valeur l'emporte sur la valeur matérielle périmée
                             if (d.Asked is double asked && BrightnessPolicy.Matches(asked, raw, min, max))
                                 d.Value = Math.Round(asked);
                             else

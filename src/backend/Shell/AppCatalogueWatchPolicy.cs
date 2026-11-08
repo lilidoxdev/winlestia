@@ -39,7 +39,8 @@ static class CatalogueWatchRules
     internal static bool IsPseudoPath(string? path) => !string.IsNullOrEmpty(path) && path.StartsWith(PseudoPrefix,
         StringComparison.Ordinal);
     internal static string PseudoPath(long handle) => PseudoPrefix + handle;
-    // Les fenêtres d'un même programme partagent son chemin ; une fenêtre dont le processus est illisible reçoit sa propre clé stable.
+    // Les fenêtres d'un même programme partagent son chemin ; une fenêtre dont le processus est illisible reçoit sa propre clé
+    // stable.
     internal static string WindowGroupKey(string? path, long handle) => string.IsNullOrWhiteSpace(path) ? PseudoPath(handle) : path;
 
     // Une extraction d'icône qui a échoué (raccourci ou cible pas encore lisible) est retentée un nombre borné de fois.

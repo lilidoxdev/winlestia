@@ -1,4 +1,5 @@
-// Wi-Fi networks of the quick controls: list, selection, password entry, connect, forget. Passwords stay in the field below and only travel to the "wifiConnect" action.
+// Réseaux Wi-Fi des contrôles rapides : liste, sélection, saisie du mot de passe, connexion, oubli.
+// Les mots de passe restent dans le champ ci-dessous et ne transitent que vers l'action « wifiConnect ».
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
@@ -67,7 +68,8 @@ Item {
         for(let i=networks.count-1;i>=0;i--)if(!keep[networks.get(i).ssid])networks.remove(i)
         for(let i=0;i<src.length;i++){
             const n=src[i]
-            const row={ssid:n.ssid,signal:n.signal,bars:n.bars,security:n.security,secure:n.secure,connected:n.connected,saved:n.saved,supported:n.supported}
+            const row={ssid:n.ssid,signal:n.signal,bars:n.bars,security:n.security,secure:n.secure,connected:n.connected,saved:n.saved,
+                    supported:n.supported}
             let at=-1
             for(let k=0;k<networks.count;k++)if(networks.get(k).ssid===n.ssid){at=k;break}
             if(at<0){if(selected===""&&i<=networks.count)networks.insert(i,row);else networks.append(row);continue}
@@ -86,21 +88,26 @@ Item {
             MaterialIcon{text:qsTr("wifi");font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
             ColumnLayout {Layout.fillWidth:true;spacing:3
                 StyledText{text:qsTr("Réseaux Wi-Fi");font.pointSize:Appearance.font.size.title}
-                StyledText{text:qsTr("Choisissez un réseau pour vous connecter");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+                StyledText{text:qsTr("Choisissez un réseau pour vous connecter");font.pointSize:Appearance.font.size.small;
+                    color:Colours.palette.m3outline}
             }
             IconButton{objectName:"wifiBack";icon:"chevron_left";type:IconButton.Text;onClicked:root.dismiss()}
         }
         StyledRect {
             visible:root.notice!==""
-            Layout.fillWidth:true;implicitHeight:noticeLabel.implicitHeight+Appearance.padding.large*2;radius:Appearance.rounding.large;color:Colours.palette.m3surfaceContainer
-            StyledText{id:noticeLabel;objectName:"wifiNotice";anchors.fill:parent;anchors.margins:Appearance.padding.large;text:root.notice;wrapMode:Text.Wrap;color:Colours.palette.m3error;font.pointSize:Appearance.font.size.small}
+            Layout.fillWidth:true;implicitHeight:noticeLabel.implicitHeight+Appearance.padding.large*2;radius:Appearance.rounding.large;
+            color:Colours.palette.m3surfaceContainer
+            StyledText{id:noticeLabel;objectName:"wifiNotice";anchors.fill:parent;anchors.margins:Appearance.padding.large;
+                text:root.notice;wrapMode:Text.Wrap;color:Colours.palette.m3error;font.pointSize:Appearance.font.size.small}
         }
         StyledRect {
             visible:root.wifi.limited===true&&root.listState==="ok"
-            Layout.fillWidth:true;implicitHeight:portalRow.implicitHeight+Appearance.padding.large*2;radius:Appearance.rounding.large;color:Colours.palette.m3secondaryContainer
+            Layout.fillWidth:true;implicitHeight:portalRow.implicitHeight+Appearance.padding.large*2;radius:Appearance.rounding.large;
+            color:Colours.palette.m3secondaryContainer
             RowLayout {
                 id:portalRow;anchors.fill:parent;anchors.margins:Appearance.padding.large;spacing:Appearance.spacing.normal
-                StyledText{Layout.fillWidth:true;text:qsTr("Ce réseau demande une page de connexion.");wrapMode:Text.Wrap;font.pointSize:Appearance.font.size.small}
+                StyledText{Layout.fillWidth:true;text:qsTr("Ce réseau demande une page de connexion.");wrapMode:Text.Wrap;
+                    font.pointSize:Appearance.font.size.small}
                 TextButton{objectName:"wifiPortal";text:qsTr("Ouvrir la page");onClicked:Bridge.action("wifiPortal",{})}
             }
         }
@@ -108,14 +115,20 @@ Item {
             visible:networks.count===0
             Layout.fillWidth:true;Layout.fillHeight:true;spacing:Appearance.spacing.large
             Item{Layout.fillHeight:true}
-            MaterialIcon{Layout.alignment:Qt.AlignHCenter;text:qsTr("wifi_off");font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3outline}
-            StyledText{objectName:"wifiState";Layout.fillWidth:true;horizontalAlignment:Text.AlignHCenter;wrapMode:Text.Wrap;text:root.stateText();color:Colours.palette.m3outline}
-            TextButton{visible:!root.radioOn;Layout.alignment:Qt.AlignHCenter;text:qsTr("Activer le Wi-Fi");onClicked:Bridge.action("radio",{kind:"wifi"})}
-            TextButton{objectName:"wifiLocation";visible:root.radioOn&&(root.listState==="location"||root.listState==="empty");Layout.alignment:Qt.AlignHCenter;type:TextButton.Tonal;text:qsTr("Ouvrir les réglages de localisation");onClicked:Bridge.action("wifiSettings",{page:"location"})}
+            MaterialIcon{Layout.alignment:Qt.AlignHCenter;text:qsTr("wifi_off");font.pointSize:Appearance.font.size.extraLarge;
+                color:Colours.palette.m3outline}
+            StyledText{objectName:"wifiState";Layout.fillWidth:true;horizontalAlignment:Text.AlignHCenter;wrapMode:Text.Wrap;
+                text:root.stateText();color:Colours.palette.m3outline}
+            TextButton{visible:!root.radioOn;Layout.alignment:Qt.AlignHCenter;text:qsTr("Activer le Wi-Fi");
+                onClicked:Bridge.action("radio",{kind:"wifi"})}
+            TextButton{objectName:"wifiLocation";visible:root.radioOn&&(root.listState==="location"||root.listState==="empty");
+                Layout.alignment:Qt.AlignHCenter;type:TextButton.Tonal;text:qsTr("Ouvrir les réglages de localisation");
+            onClicked:Bridge.action("wifiSettings",{page:"location"})}
             Item{Layout.fillHeight:true}
         }
         StyledListView {
-            id:list;objectName:"wifiNetworks";visible:networks.count>0;Layout.fillWidth:true;Layout.fillHeight:true;spacing:Appearance.spacing.smaller;clip:true;reuseItems:false
+            id:list;objectName:"wifiNetworks";visible:networks.count>0;Layout.fillWidth:true;Layout.fillHeight:true;
+            spacing:Appearance.spacing.smaller;clip:true;reuseItems:false
             model:networks
             delegate:StyledRect {
                 id:row
@@ -129,27 +142,34 @@ Item {
                 readonly property bool open:root.selected===ssid
                 readonly property bool enterprise:security==="enterprise"
                 // After a failed attempt on a remembered network the password field comes back so a new password can replace the stale one.
-                readonly property bool retry:root.wifi.result!==undefined&&root.wifi.result.kind==="connect"&&root.wifi.result.key!==""&&root.wifi.result.ssid===ssid
-                width:list.width;radius:Appearance.rounding.large;color:open?Colours.palette.m3secondaryContainer:Colours.palette.m3surfaceContainer
+                readonly property bool retry:root.wifi.result!==undefined&&root.wifi.result.kind==="connect"&&root.wifi.result.key!==""
+                    &&root.wifi.result.ssid===ssid
+                width:list.width;radius:Appearance.rounding.large;
+                color:open?Colours.palette.m3secondaryContainer:Colours.palette.m3surfaceContainer
                 implicitHeight:head.implicitHeight+(open?details.implicitHeight+Appearance.spacing.normal:0)+Appearance.padding.large*2
                 clip:true
                 Behavior on implicitHeight{enabled:!Appearance.reducedEffects;Anim{duration:Appearance.anim.durations.small}}
                 ColumnLayout {
-                    anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:Appearance.padding.large;spacing:Appearance.spacing.normal
+                    anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;anchors.margins:Appearance.padding.large;
+                    spacing:Appearance.spacing.normal
                     RowLayout {
                         id:head;Layout.fillWidth:true;spacing:Appearance.spacing.normal
                         Row {
                             Layout.preferredWidth:implicitWidth;Layout.preferredHeight:14;spacing:Appearance.spacing.small/2
                             Repeater {
                                 model:4
-                                Rectangle {required property int index;width:3;height:4+index*3;y:14-height;radius:1;color:index<row.bars?Colours.palette.m3primary:Colours.palette.m3outlineVariant}
+                                Rectangle {required property int index;width:3;height:4+index*3;y:14-height;radius:1;
+                                    color:index<row.bars?Colours.palette.m3primary:Colours.palette.m3outlineVariant}
                             }
                         }
                         ColumnLayout {Layout.fillWidth:true;spacing:2
-                            StyledText{text:row.ssid;Layout.fillWidth:true;elide:Text.ElideRight;font.pointSize:Appearance.font.size.normal;color:row.connected?Colours.palette.m3primary:Colours.palette.m3onSurface}
+                            StyledText{text:row.ssid;Layout.fillWidth:true;elide:Text.ElideRight;
+                                font.pointSize:Appearance.font.size.normal;
+                            color:row.connected?Colours.palette.m3primary:Colours.palette.m3onSurface}
                             StyledText{
                                 visible:text!==""
-                                text:row.connected?qsTr("Connecté"):row.saved?qsTr("Mémorisé"):row.enterprise?qsTr("Réseau d’entreprise"):!row.supported?qsTr("Non pris en charge"):""
+                                text:row.connected?qsTr("Connecté"):row.saved?qsTr("Mémorisé"):row.enterprise
+                                    ?qsTr("Réseau d’entreprise"):!row.supported?qsTr("Non pris en charge"):""
                                 font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline
                             }
                         }
@@ -164,16 +184,20 @@ Item {
                             id:panel
                             property bool sent:false
                             spacing:Appearance.spacing.normal
-                            Connections{target:root;function onResultSeqChanged(){panel.sent=false}function onBusyChanged(){if(!root.busy)panel.sent=false}}
+                            Connections{target:root;function onResultSeqChanged(){panel.sent=false}function onBusyChanged(){
+                                    if(!root.busy)panel.sent=false}}
                             Timer{interval:25000;running:panel.sent;onTriggered:panel.sent=false}
                             RowLayout {
                                 visible:!row.enterprise&&row.supported&&row.secure&&(!row.saved||row.retry)
                                 Layout.fillWidth:true;spacing:Appearance.spacing.smaller
                                 StyledRect {
-                                    Layout.fillWidth:true;implicitHeight:40;radius:Appearance.rounding.full;color:Colours.palette.m3surfaceContainerHigh
+                                    Layout.fillWidth:true;implicitHeight:40;radius:Appearance.rounding.full;
+                                    color:Colours.palette.m3surfaceContainerHigh
                                     StyledTextField {
-                                        id:secret;objectName:"wifiPassword";anchors.fill:parent;anchors.leftMargin:Appearance.padding.large;anchors.rightMargin:Appearance.padding.large
-                                        placeholderText:qsTr("Mot de passe");echoMode:eye.pressed?TextInput.Normal:TextInput.Password;maximumLength:64
+                                        id:secret;objectName:"wifiPassword";anchors.fill:parent;
+                                        anchors.leftMargin:Appearance.padding.large;anchors.rightMargin:Appearance.padding.large
+                                        placeholderText:qsTr("Mot de passe");echoMode:eye.pressed?TextInput.Normal:TextInput.Password;
+                                        maximumLength:64
                                         inputMethodHints:Qt.ImhSensitiveData|Qt.ImhNoPredictiveText|Qt.ImhNoAutoUppercase
                                         enabled:!root.busy;Component.onCompleted:Qt.callLater(forceActiveFocus)
                                         onVisibleChanged:if(visible)Qt.callLater(forceActiveFocus)
@@ -183,30 +207,38 @@ Item {
                                 }
                                 StyledRect {
                                     id:eye;objectName:"wifiEye";readonly property bool pressed:eyeArea.pressed
-                                    implicitWidth:40;implicitHeight:40;radius:Appearance.rounding.full;color:eyeArea.pressed?Colours.palette.m3secondaryContainer:Colours.palette.m3surfaceContainerHigh
+                                    implicitWidth:40;implicitHeight:40;radius:Appearance.rounding.full;
+                                    color:eyeArea.pressed?Colours.palette.m3secondaryContainer:Colours.palette.m3surfaceContainerHigh
                                     MaterialIcon{anchors.centerIn:parent;text:qsTr("visibility");color:Colours.palette.m3onSurface}
                                     MouseArea{id:eyeArea;anchors.fill:parent;onCanceled:{}}
                                 }
                             }
                             StyledText{
                                 visible:row.enterprise||!row.supported
-                                Layout.fillWidth:true;wrapMode:Text.Wrap;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline
-                                text:row.enterprise?qsTr("Ce réseau demande une authentification d’entreprise (802.1X). Connectez-vous depuis Windows."):qsTr("Ce type de réseau n’est pas pris en charge ici.")
+                                Layout.fillWidth:true;wrapMode:Text.Wrap;font.pointSize:Appearance.font.size.small;
+                                color:Colours.palette.m3outline
+                                text:row.enterprise
+                                    ?qsTr("Ce réseau demande une authentification d’entreprise (802.1X). Connectez-vous depuis Windows.")
+                                    :qsTr("Ce type de réseau n’est pas pris en charge ici.")
                             }
                             RowLayout {
                                 Layout.fillWidth:true;spacing:Appearance.spacing.smaller
                                 Item{Layout.fillWidth:true}
-                                StyledText{visible:root.busy;text:qsTr("Connexion…");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+                                StyledText{visible:root.busy;text:qsTr("Connexion…");font.pointSize:Appearance.font.size.small;
+                                    color:Colours.palette.m3outline}
                                 TextButton{
-                                    objectName:"wifiSettings";visible:row.enterprise||!row.supported;type:TextButton.Tonal;text:qsTr("Ouvrir dans Windows")
+                                    objectName:"wifiSettings";visible:row.enterprise||!row.supported;type:TextButton.Tonal;
+                                    text:qsTr("Ouvrir dans Windows")
                                     onClicked:Bridge.action("wifiSettings",{page:"network"})
                                 }
                                 TextButton{
-                                    objectName:"wifiForget";visible:row.saved;enabled:!root.busy&&!panel.sent;type:TextButton.Text;text:qsTr("Oublier")
+                                    objectName:"wifiForget";visible:row.saved;enabled:!root.busy&&!panel.sent;type:TextButton.Text;
+                                    text:qsTr("Oublier")
                                     onClicked:{panel.sent=true;Bridge.action("wifiForget",{ssid:row.ssid})}
                                 }
                                 TextButton{
-                                    id:connect;objectName:"wifiConnect";visible:row.supported&&!row.enterprise&&!row.connected;enabled:!root.busy&&!panel.sent;text:qsTr("Se connecter")
+                                    id:connect;objectName:"wifiConnect";visible:row.supported&&!row.enterprise&&!row.connected;
+                                    enabled:!root.busy&&!panel.sent;text:qsTr("Se connecter")
                                     onClicked:{
                                         const typed=secret&&secret.visible?secret.text:""
                                         if(secret&&secret.visible){
@@ -225,7 +257,8 @@ Item {
                     }
                 }
                 StateLayer {
-                    anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;height:head.implicitHeight+Appearance.padding.large*2;radius:row.radius
+                    anchors.left:parent.left;anchors.right:parent.right;anchors.top:parent.top;
+                    height:head.implicitHeight+Appearance.padding.large*2;radius:row.radius
                     onClicked:root.selected=row.open?"":row.ssid
                 }
             }

@@ -17,6 +17,9 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Pas de sondage de la condition attendue par l'auto-test.
+    const int ConditionPollMs = 20;
+
     static async Task<bool> WaitFor(Func<bool> cond, int limitMs = 5000)
     {
         long t = Stopwatch.GetTimestamp();
@@ -24,7 +27,7 @@ public sealed partial class MainWindow
         {
             if (cond())
                 return true;
-            await Task.Delay(20);
+            await Task.Delay(ConditionPollMs);
         }
         return cond();
     }
@@ -68,7 +71,8 @@ public sealed partial class MainWindow
         await sidebar.Ready;
         await sidebar.Recheck();
 
-        // ---- premier lancement : accès rapide initialisé avec les dossiers connus, tri par défaut ---------------------------------------
+        // ---- premier lancement : accès rapide initialisé avec les dossiers connus, tri par défaut
+        // ---------------------------------------
         var firstView = sidebar.QuickView();
         string json0 = SettingsText();
         Check("first launch: settings.json written with quickAccess",
@@ -84,7 +88,8 @@ public sealed partial class MainWindow
             => q.Path)));
         var defaultPaths = firstView.Select(v => v.Path).ToList();
 
-        // ---- (a) tri : fichier récent avant un vieux dossier, mélangés ------------------------------------------------------------------
+        // ---- (a) tri : fichier récent avant un vieux dossier, mélangés
+        // ------------------------------------------------------------------
         string ancien = Path.Combine(F, "Ancien"),
             nouveau = Path.Combine(F, "Nouveau"),
             vieux = Path.Combine(F, "vieux.txt"),
@@ -179,7 +184,8 @@ public sealed partial class MainWindow
         Directory.CreateDirectory(pinDir);
         File.WriteAllText(pinFile, "contenu");
         Check("(c) pin a folder and a file",
-              TogglePin(new[] { pinDir }) && TogglePin(new[] { pinFile }) && QuickAccess.IsPinned(pinDir) && QuickAccess.IsPinned(pinFile));
+              TogglePin(new[] { pinDir }) && TogglePin(new[] { pinFile }) && QuickAccess.IsPinned(pinDir)
+                  && QuickAccess.IsPinned(pinFile));
         Check("(c) pinned entries are appended in order",
               QuickAccess.Entries.Count == defaultPaths.Count + 2
                   && QuickAccess.IndexOf(pinDir) == defaultPaths.Count
@@ -397,7 +403,8 @@ public sealed partial class MainWindow
         // instance B wrote "view" meanwhile
         File.WriteAllText(FilesSettings.FilePath, "{ \"view\": \"large\", \"sort\": { \"key\": \"name\" } }");
         FilesSettings.Data.Sort = new SortData { Key = "type", Descending = false };
-        FilesSettings.Save();                                                               // A saves: only its dirty key (sort) overwrites
+        // A enregistre : seule sa clé modifiée (tri) écrase
+        FilesSettings.Save();
         FilesSettings.Reload();
         Check("(f) two instances: both changes present after merge",
               FilesSettings.Data.View == "large" && FilesSettings.Data.Sort?.Key == "type",

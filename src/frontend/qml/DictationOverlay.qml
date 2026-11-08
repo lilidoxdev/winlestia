@@ -1,4 +1,4 @@
-// Push-to-talk dictation pill. Click-through, never takes focus, fully hidden (no animation, no rendering) when idle.
+// Pastille de dictée push-to-talk. Laisse passer les clics, ne prend jamais le focus, totalement masquée (ni animation ni rendu) au repos.
 import QtQuick
 import QtQuick.Window
 import qs.components
@@ -11,19 +11,24 @@ Window {
     title: "Panneaux · Dictée"
     transientParent: null
     color: "transparent"
-    flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus | Qt.WindowTransparentForInput
-    // The background is not drawn here: ScreenFrame draws it (same surfaceColor, same dock_path silhouette fused with the frame band, see surface_geometry.py).
-    // This window only holds the content, sliding out of the bottom band exactly like Dock.qml.
+    flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus
+        | Qt.WindowTransparentForInput
+    // Le fond n'est pas dessiné ici : ScreenFrame le dessine (même surfaceColor, même silhouette dock_path
+    // fusionnée avec la bande du cadre, voir surface_geometry.py).
+    // Cette fenêtre ne porte que le contenu, qui sort de la bande basse exactement comme Dock.qml.
     property var dock: null
-    readonly property rect area: Qt.rect(Bridge.dictationArea.x ?? 0, Bridge.dictationArea.y ?? 0, Bridge.dictationArea.width ?? 0, Bridge.dictationArea.height ?? 0)
+    readonly property rect area: Qt.rect(Bridge.dictationArea.x ?? 0, Bridge.dictationArea.y ?? 0, Bridge.dictationArea.width ?? 0,
+        Bridge.dictationArea.height ?? 0)
     readonly property bool reduced: Appearance.reducedEffects
     readonly property string st: Bridge.dictationState
     readonly property real r: 26
     property bool shown: false
     property bool live: false
-    // The dictation shares the bottom-centre slot with the dock: the dock retracts first (and is restored once the pill is gone), the pill emerges only when the slot is free.
+    // La dictée partage l'emplacement bas-centre avec le dock : le dock se rétracte d'abord
+    // (et revient une fois la pastille partie), la pastille n'émerge que lorsque l'emplacement est libre.
     property bool dockWas: false
-    readonly property bool dockClear: !dock || !dock.visible || (!dock.shown && (dock.reduced ? dock.fade < 0.05 : dock.offset >= dock.height - 2))
+    readonly property bool dockClear: !dock || !dock.visible || (!dock.shown && (dock.reduced ? dock.fade < 0.05
+        : dock.offset >= dock.height - 2))
     readonly property bool open: shown && dockClear
     property real fade: open ? 1 : 0
     Behavior on fade {
@@ -41,7 +46,8 @@ Window {
         }
     }
     readonly property real contentOpacity: reduced ? fade : Math.max(0, Math.min(1, 1 - offset / (height * 0.6)))
-    // Content width animated toward the state-dependent size; pillWidth (body + both concave shoulders) is read by the Python surface scene.
+    // Largeur du contenu animée vers la taille propre à l'état ; pillWidth (corps + deux épaules concaves)
+    // est lue par la scène de surface côté Python.
     property real animW: targetWidth
     Behavior on animW {
         NumberAnimation {
@@ -103,7 +109,7 @@ Window {
         running: root.st === "done" || root.st === "error"
         onTriggered: root.shown = false
     }
-    // Smoothed bar heights, driven per frame only while the window is visible.
+    // Hauteurs de barres lissées, pilotées à chaque image seulement quand la fenêtre est visible.
     property real t: 0
     property real lvl: 0
     property var smooth: new Array(32).fill(0)
@@ -117,7 +123,9 @@ Window {
             for (var i = 0; i < 32; i++) {
                 var x = (i - 15.5) / 15.5, env = 0.55 + 0.45 * Math.exp(-x * x * 2.2), target;
                 if (s === "listening")
-                    target = Math.min(1, (levels[i] || 0) * env * 1.15) + (root.reduced ? 0.04 : 0.05 + 0.05 * Math.sin(tt * 2.2 + i * 0.45) * (1 - Bridge.dictationLevel));
+                    target = Math.min(1,
+                        (levels[i] || 0) * env * 1.15) + (root.reduced ? 0.04
+                        : 0.05 + 0.05 * Math.sin(tt * 2.2 + i * 0.45) * (1 - Bridge.dictationLevel));
                 else if (s === "loading")
                     target = root.reduced ? 0.06 : 0.1 + 0.07 * Math.sin(tt * 3 - i * 0.3);
                 else if (s === "transcribing")
@@ -146,7 +154,7 @@ Window {
             return contentX + Math.min(errLabel.implicitWidth, 300) + 28;
         return contentX + 192 + 24;
     }
-    // Fixed clip box = silhouette bounds; only the content slides (same as Dock.qml).
+    // Boîte de rognage fixe = bornes de la silhouette ; seul le contenu glisse (comme Dock.qml).
     Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
@@ -227,7 +235,8 @@ Window {
                         radius: width / 2
                         x: index * slot + (slot - width) / 2
                         anchors.verticalCenter: parent.verticalCenter
-                        color: root.reduced ? Colours.palette.m3primary : Qt.tint(Colours.palette.m3primary, Qt.alpha(Colours.palette.m3tertiary, index / 31))
+                        color: root.reduced ? Colours.palette.m3primary : Qt.tint(Colours.palette.m3primary,
+                            Qt.alpha(Colours.palette.m3tertiary, index / 31))
                     }
                 }
             }
@@ -264,7 +273,7 @@ Window {
                     }
                 }
             }
-            // Loading label with shimmer
+            // Libellé de chargement avec scintillement
             Item {
                 id: loadBox
                 x: root.contentX

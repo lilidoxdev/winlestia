@@ -1,10 +1,9 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=dnd : menu contextuel natif + glisser-déposer sur un dossier de fixtures (premier argument de ligne de commande,
-// doit vivre sous %TEMP%\WinlestiaFilesOps).
+// WINLESTIA_FILES_SELFTEST=dnd : menu contextuel natif + glisser-déposer sur un dossier de fixtures (premier argument de ligne de
+// commande, doit vivre sous %TEMP%\WinlestiaFilesOps).
 // Fixtures : file001.txt..file012.txt, ctxtest.txt, dossiers Cible, Autre, Third. WINLESTIA_FILES_SHOTDIR = où les deux captures sont
-// écrites.
-// Seuls des verbes inoffensifs sont invoqués nativement ("properties", dont la fenêtre est refermée) ; la suppression n'est jamais envoyée
-// à la Corbeille.
+// écrites. Seuls des verbes inoffensifs sont invoqués nativement ("properties", dont la fenêtre est refermée) ; la suppression n'est
+// jamais envoyée à la Corbeille.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,6 +23,11 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Laisse le glisser-déposer simulé se stabiliser entre deux cycles (la fuite GDI se mesure par cycle).
+    const int DndCycleGapMs = 30;
+    // Pas de déplacement du curseur : assez lent pour que le glisser-déposer réel suive chaque position.
+    const int DndCursorStepMs = 35;
+
     delegate bool EnumProc(IntPtr hwnd, IntPtr lParam);
     [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc proc, IntPtr lParam);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowTextW(IntPtr hwnd, StringBuilder text, int max);
@@ -57,7 +61,7 @@ public sealed partial class MainWindow
 
     NPoint RowPt(FileItem item)
     {
-        // auto refresh may have swapped the row object (a folder whose content changed)
+        // le rafraîchissement automatique a pu remplacer l'objet de ligne (dossier dont le contenu a changé)
         item = Active.Find(item.FullPath) ?? item;
         list.ScrollIntoView(item);
         list.UpdateLayout();
@@ -231,8 +235,8 @@ if ({(esc
                   $"effect {e}");
         }
         cible = It("Cible")!;
-        // earlier moves/copies patched the list: the FileItem instances held since the start are no longer the ones displayed (SetDrop acts
-        // on the displayed one)
+        // les déplacements/copies précédents ont corrigé la liste : les instances FileItem tenues depuis le début ne sont plus celles
+        // affichées (SetDrop agit sur l'instance affichée)
         autre = It("Autre")!;
         using (var si = ShellItems.Of(new[] { P("Cible") }))
         {
@@ -320,8 +324,8 @@ if ({(esc
                 Check("native 'properties' invoked: Properties window appeared", invoked && win != IntPtr.Zero);
                 if (win != IntPtr.Zero)
                 {
-                    // La feuille peut ignorer un WM_CLOSE envoyé pendant son initialisation : on réessaie (WM_CLOSE, puis SC_CLOSE) jusqu'à
-                    // sa disparition.
+                    // La feuille peut ignorer un WM_CLOSE envoyé pendant son initialisation : on réessaie (WM_CLOSE, puis SC_CLOSE)
+                    // jusqu'à sa disparition.
                     for (int i = 0; i < 100 && FindWindowTitled("ctxtest") != IntPtr.Zero; i++)
                     {
                         if (i % 10 == 0)
@@ -349,7 +353,9 @@ if ({(esc
                 Check("copy again clears the cut dimming", It("ctxtest.txt").CutOpacity == 1.0);
             }
         }
-        list.Select(new[] { It("Cible") });   // re-find: reloads (tab close, Go) replace the row objects, a stale item would select nothing
+        // retrouver : les rechargements (fermeture d'onglet, Go) remplacent les objets de ligne, un élément périmé ne sélectionnerait
+        // rien
+        list.Select(new[] { It("Cible") });
         using (var s = BuildMenu(Selection(), false, true))
         {
             var all = s!.Menu.Enumerate(false);
@@ -396,15 +402,16 @@ if ({(esc
             }
         }
 
-        // 5. glisser en entrée réelle (mouse_event de type SendInput) : deux fichiers sélectionnés glissés sur la ligne du dossier Third
-        // via SHDoDragDrop + OLE + notre IDropTarget
+        // 5. glisser en entrée réelle (mouse_event de type SendInput) : deux fichiers sélectionnés glissés sur la ligne du dossier
+        // Third via SHDoDragDrop + OLE + notre IDropTarget
         await DragByMouse(new[] { "file009.txt", "file010.txt" }, "Third", P);
         await Task.Delay(PauseStabilisationMs);
 
         // 6. leak cycles: 20 menu build/destroy + 20 drag enter/leave
         void Cycle()
         {
-            foreach (var s in new[] { ShellItems.Of(new[] { P("ctxtest.txt") }), ShellItems.OfFolder(F), ShellItems.Of(new[] { P("Cible") })
+            foreach (var s in new[] { ShellItems.Of(new[] { P("ctxtest.txt") }), ShellItems.OfFolder(F), ShellItems.Of(new[] { P("Cible")
+                })
                 })
             {
                 if (s == null)
@@ -430,7 +437,7 @@ if ({(esc
         for (int i = 0; i < 20; i++)
         {
             Cycle();
-            await Task.Delay(30);
+            await Task.Delay(DndCycleGapMs);
         }
         await Task.Delay(SettleMs);
         var s1 = Snap();
@@ -444,15 +451,16 @@ if ({(esc
         for (int i = 0; i < 20; i++)
         {
             Cycle();
-            await Task.Delay(30);
+            await Task.Delay(DndCycleGapMs);
         }
         await Task.Delay(PauseLongueMs);
         var s2 = Snap();
         T($"MEASURE after 20 MORE cycles: handles {s2.handles}, threads {s2.threads}, gdi {s2.gdi}, user {s2.user} (delta vs first " +
             $"batch: gdi {(int)s2.gdi - (int)s1.gdi:+#;-#;0}, handles {s2.handles - s1.handles:+#;-#;0})");
-        // GDI : +8 objets par cycle (linéaire, 60 par 20 cycles), indépendant de la partie glisser (WINLESTIA_FILES_NODRAG=1 donne la même
-        // chose), absent des variantes ctxleak isolées (59 -> 59) : pas encore attribué,
-        // probablement une extension du shell chargée après les étapes précédentes. Signalé, pas en échec (voir files-lot3-tests.md).
+        // GDI : +8 objets par cycle (linéaire, 60 par 20 cycles), indépendant de la partie glisser (WINLESTIA_FILES_NODRAG=1 donne la
+        // même chose), absent des variantes ctxleak isolées (59 -> 59) : pas encore attribué,
+        // probablement une extension du shell chargée après les étapes précédentes. Signalé, pas en échec (voir
+        // files-lot3-tests.md).
         T("WARN gdi growth per 20 cycles: " + ((int)s1.gdi - (int)s0.gdi) + " then " + ((int)s2.gdi - (int)s1.gdi));
         Check("list still consistent", DiskMatches() && OrderOk());
 
@@ -504,8 +512,8 @@ if ({(esc
         Close();
     }
 
-    // Diagnostic : quel type de cycle (menu d'élément, menu de dossier, menu de fond, entrée/sortie de glisser) fait croître le nombre de
-    // threads, et revient-il.
+    // Diagnostic : quel type de cycle (menu d'élément, menu de dossier, menu de fond, entrée/sortie de glisser) fait croître le nombre
+    // de threads, et revient-il.
     async Task CtxLeak()
     {
         string F = Path.GetFullPath(Active.Location);
@@ -573,7 +581,7 @@ if ({(esc
             for (int i = 0; i < nCycles; i++)
             {
                 cycle();
-                await Task.Delay(30);
+                await Task.Delay(DndCycleGapMs);
             }
             var b = Snap();
             await Task.Delay(TimeoutLongMs);
@@ -604,7 +612,7 @@ if ({(esc
             for (int i = 1; i <= 24; i++)
             {
                 SetCursorPos(from.X + (to.X - from.X) * i / 24, from.Y + (to.Y - from.Y) * i / 24);
-                Thread.Sleep(35);
+                Thread.Sleep(DndCursorStepMs);
             }
             Thread.Sleep(PauseStabilisationMs);
             mouse_event(0x4, 0, 0, 0, UIntPtr.Zero);

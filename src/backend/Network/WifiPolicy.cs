@@ -1,5 +1,5 @@
-// Règles pures de la liste Wi-Fi (ni wlanapi, ni fenêtre, ni E/S) : classification de la sécurité, regroupement et tri des SSID, XML de
-// profil WLAN, validation du mot de passe, traduction des erreurs. Lié dans tests/WifiPolicy.
+// Règles pures de la liste Wi-Fi (ni wlanapi, ni fenêtre, ni E/S) : classification de la sécurité, regroupement et tri des SSID, XML
+// de profil WLAN, validation du mot de passe, traduction des erreurs. Lié dans tests/WifiPolicy.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,7 +76,8 @@ static class WifiRules
         _ => "unsupported"
     };
 
-    // Une ligne par SSID (les réseaux masqués à nom vide ne sont pas gérés), meilleur signal conservé, indicateurs fusionnés ; connecté
+    // Une ligne par SSID (les réseaux masqués à nom vide ne sont pas gérés), meilleur signal conservé, indicateurs fusionnés ;
+    // connecté
     // d'abord, puis enregistré, puis signal, puis nom.
     internal static List<WifiEntry> Group(IEnumerable<WifiEntry> entries)
     {
@@ -163,10 +164,10 @@ static class WifiRules
         return sb.ToString();
     }
 
-    // WLANProfile pour un réseau d'infrastructure. Le nom du profil est le texte du SSID ; le SSID lui-même passe en hexadécimal quand il
-    // contient des espaces ou des caractères non ASCII.
-    // Lève ArgumentException (le message ne contient jamais le mot de passe) pour un SSID invalide, un type non pris en charge ou un mot de
-    // passe invalide.
+    // WLANProfile pour un réseau d'infrastructure. Le nom du profil est le texte du SSID ; le SSID lui-même passe en hexadécimal quand
+    // il contient des espaces ou des caractères non ASCII.
+    // Lève ArgumentException (le message ne contient jamais le mot de passe) pour un SSID invalide, un type non pris en charge ou un mot
+    // de passe invalide.
     internal static string BuildProfile(string ssid, WifiSecurity security, string? password)
     {
         if (!ValidSsid(ssid))
@@ -234,7 +235,8 @@ static class WifiRules
         _ => "failed"
     };
 
-    // Résultat d'une tentative de connexion : code de raison de la notification (0 = connecté), et si la borne de 20 s est écoulée. Seuls
+    // Résultat d'une tentative de connexion : code de raison de la notification (0 = connecté), et si la borne de 20 s est écoulée.
+    // Seuls
     // les codes d'authentification signifient un mauvais mot de passe ; tout le reste est un simple échec.
     internal static string MapReason(uint reason, bool timedOut)
     {

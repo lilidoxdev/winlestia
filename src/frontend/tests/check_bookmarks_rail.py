@@ -1,4 +1,5 @@
-# Offscreen check of BookmarksRail.qml (left edge, mirror of SocialRail) + the "Favoris" settings tab with a real Bridge fed a fake `bookmarks` state.
+# Vérification hors écran de BookmarksRail.qml (bord gauche, miroir de SocialRail)
+# et de l'onglet « Favoris » des réglages, avec un vrai Bridge alimenté par un faux état `bookmarks`.
 import os, sys, json, queue, tempfile
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
@@ -390,7 +391,8 @@ def gear():
 
 def prefs():
     checks['gearOpensSettings'] = nav == ['settings:bookmarks'] and rail.property('shown') is False
-    qml = 'import QtQuick\nimport QtQuick.Window\nWindow{width:900;height:700;visible:true;ShellPreferences{objectName:"prefs";anchors.fill:parent;tab:5}}'
+    qml = ('import QtQuick\nimport QtQuick.Window\n'
+           'Window{width:900;height:700;visible:true;ShellPreferences{objectName:"prefs";anchors.fill:parent;tab:5}}')
     global prefs_engine
     prefs_engine = QQmlApplicationEngine()
     prefs_engine.addImportPath(str(ROOT / 'qml'))

@@ -1,4 +1,5 @@
-// Caelestia OSD port (modules/osd): vertical volume / brightness / microphone slider on the right edge. Click-through, never takes focus, hidden (no timer, no rendering) when idle.
+// Port de l'OSD Caelestia (modules/osd) : curseur vertical volume / luminosité / micro sur le bord droit.
+// Laisse passer les clics, ne prend jamais le focus, masqué (ni timer ni rendu) au repos.
 import QtQuick
 import QtQuick.Window
 import qs.components
@@ -12,7 +13,8 @@ Window {
     title: "Panneaux · OSD"
     transientParent: null
     color: "transparent"
-    flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus | Qt.WindowTransparentForInput
+    flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus
+        | Qt.WindowTransparentForInput
     readonly property bool reduced: Appearance.reducedEffects
     property bool shown: false
     property real volume: 0

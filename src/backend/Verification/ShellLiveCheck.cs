@@ -13,6 +13,9 @@ namespace PanneauxGlass;
 
 internal static class ShellLiveCheck
 {
+    // Laisse la page affichée avant d'enchaîner la suivante, comme un utilisateur qui navigue.
+    const int PageSwitchGapMs = 70;
+
     // Attente de test : les observateurs de fichiers et les temporisations antirebond ont eu le temps de tirer.
     const int PauseStabilisationMs = 500;
     // Attente de test : dépasser les temporisations antirebond de l'application.
@@ -88,7 +91,7 @@ internal static class ShellLiveCheck
             for (int i = 0; i < 12; i++)
             {
                 owner.ShowShellPage(i % 2 == 0 ? "dashboard" : "music");
-                await Task.Delay(70);
+                await Task.Delay(PageSwitchGapMs);
             }
             owner.ShowShellPage("dashboard");
             await Task.Delay(PauseStabilisationMs);

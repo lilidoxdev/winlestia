@@ -6,7 +6,7 @@ import qs.services
 import qs.config
 import "."
 
-// Visibility of the dock and edge panels, taskbar, automatic tiling.
+// Visibilité du dock et des panneaux de bord, barre des tâches, tuilage automatique.
 ColumnLayout {
     id: page
 

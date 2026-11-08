@@ -187,7 +187,8 @@ internal sealed class DesktopIconsGuard : IDisposable
         bool gaveUp = false;
         try
         {
-            // HideIcons à 0 : quelqu'un a volontairement rétabli les icônes (SECOURS_BUREAU --show-only, menu, case Windows). On se retire.
+            // HideIcons à 0 : quelqu'un a volontairement rétabli les icônes (SECOURS_BUREAU --show-only, menu, case Windows). On se
+            // retire.
             bool intent;
             lock (gate)
                 // après un redémarrage d'Explorer, HideIcons peut valoir 0 sans choix de l'utilisateur (le premier masquage a échoué)

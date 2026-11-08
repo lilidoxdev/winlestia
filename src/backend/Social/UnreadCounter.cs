@@ -14,7 +14,8 @@ using Microsoft.Web.WebView2.Core;
 
 namespace PanneauxGlass;
 
-// Machine d'état pure du compteur (sans WebView2 ni horloge système : le temps est passé en paramètre) ; testée par --verify-social-count.
+// Machine d'état pure du compteur (sans WebView2 ni horloge système : le temps est passé en paramètre) ; testée par
+// --verify-social-count.
 internal sealed class UnreadCounter
 {
     internal readonly record struct TitleResult(bool Changed, int Rise, int ZeroToken, bool AfterNotif = false);

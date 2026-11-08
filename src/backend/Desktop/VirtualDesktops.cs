@@ -1,12 +1,10 @@
-// C# 12 / VirtualDesktops.cs / Windows 11. Virtual desktop indicator support WITHOUT any undocumented COM interface.
-// Read: HKCU registry only (VirtualDesktopIDs, CurrentVirtualDesktop - per-session key first, general key as fallback, optional
-// Desktops\{GUID}\Name).
-// Changements : pas de notification du registre (Windows 11 ne signale pas RegNotifyChangeKeyValue pour ces écritures) : des hooks WinEvent
-// hors contexte (premier plan, cloak/uncloak)
-// sur un thread dédié à boucle de messages relisent le registre 150 ms et 900 ms après le dernier événement. Au repos le thread reste
-// bloqué dans GetMessage : ni minuteur, ni sondage, ni réveil. Stop() poste WM_QUIT et le joint.
-// Bascule : seulement sur geste de l'utilisateur ; Win+Ctrl+Gauche/Droite via SendInput, répété selon l'écart entre le bureau courant et la
-// cible. Les modificateurs sont toujours relâchés.
+// C# 12 / VirtualDesktops.cs / Windows 11. Prise en charge de l'indicateur de bureaux virtuels SANS aucune interface COM non documentée.
+// Lecture : registre HKCU uniquement (VirtualDesktopIDs, CurrentVirtualDesktop - clé par session d'abord, clé générale en repli,
+// Desktops\{GUID}\Name facultatif). Changements : pas de notification du registre (Windows 11 ne signale pas RegNotifyChangeKeyValue pour
+// ces écritures) : des hooks WinEvent hors contexte (premier plan, cloak/uncloak) sur un thread dédié à boucle de messages relisent le
+// registre 150 ms et 900 ms après le dernier événement. Au repos le thread reste bloqué dans GetMessage : ni minuteur, ni sondage, ni
+// réveil. Stop() poste WM_QUIT et le joint. Bascule : seulement sur geste de l'utilisateur ; Win+Ctrl+Gauche/Droite via SendInput,
+// répété selon l'écart entre le bureau courant et la cible. Les modificateurs sont toujours relâchés.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -33,7 +31,7 @@ internal static class VirtualDesktops
 
     static Thread? worker;
     static uint workerId;
-    static WinEventProc? proc;   // static: the GC must never collect the hook delegate
+    static WinEventProc? proc;   // statique : le GC ne doit jamais collecter le délégué du hook
 
     internal static void Start()
     {
@@ -76,10 +74,11 @@ internal static class VirtualDesktops
     static string SessionRoot => Explorer + @"\SessionInfo\" + Process.GetCurrentProcess().SessionId;
     static string SessionKey => SessionRoot + @"\VirtualDesktops";
 
-    // État du thread de hook (touché uniquement par le thread du watcher : les callbacks WinEvent s'exécutent dans son DispatchMessage).
+    // État du thread de hook (touché uniquement par le thread du watcher : les callbacks WinEvent s'exécutent dans son
+    // DispatchMessage).
     [ThreadStatic] static long lastEventTick;
-    [ThreadStatic] static int step;   // 0 idle, 1 waiting for the 150 ms re-read, 2 waiting for the 900 ms re-read
-    // a thread timer (no hwnd) gets its id FROM Windows: the requested id only selects an existing timer to replace
+    [ThreadStatic] static int step;   // 0 repos, 1 attente de la relecture à 150 ms, 2 attente de la relecture à 900 ms
+    // un minuteur de thread (sans hwnd) reçoit son id de Windows : l'id demandé ne sert qu'à choisir un minuteur existant à remplacer
     [ThreadStatic] static uint timerId;
 
     static void Arm(uint ms)
@@ -97,7 +96,7 @@ internal static class VirtualDesktops
 
     static void Run(ManualResetEventSlim ready)
     {
-        PeekMessageW(out MSG m, IntPtr.Zero, 0, 0, 0);   // creates this thread's message queue before Stop can post to it
+        PeekMessageW(out MSG m, IntPtr.Zero, 0, 0, 0);   // crée la file de messages de ce thread avant que Stop puisse y poster
         IntPtr hFg = IntPtr.Zero, hCloak = IntPtr.Zero;
         try
         {
@@ -146,7 +145,7 @@ internal static class VirtualDesktops
             return;
         lastEventTick = Environment.TickCount64;
         step = 1;
-        Arm(150);   // passing the live id replaces the pending timer
+        Arm(150);   // passer l'id vivant remplace le minuteur en attente
     }
 
     static void OnTimer()
@@ -173,7 +172,9 @@ internal static class VirtualDesktops
     static void Refresh()
     {
         lock (gate)
-        {   // watcher thread and SwitchTo's caller both land here: a slow read must not overwrite a newer one
+        // le thread de surveillance et l'appelant de SwitchTo arrivent ici tous deux : une lecture lente ne doit pas écraser une plus
+        // récente
+        {
             Snapshot next;
             try
             {
@@ -233,7 +234,8 @@ internal static class VirtualDesktops
     const ushort VkLWin = 0x5B, VkControl = 0x11, VkLeft = 0x25, VkRight = 0x27, VkD = 0x44, VkF4 = 0x73;
     internal readonly record struct Key(ushort Vk, bool Up);
 
-    // Pure plan, unit-tested without sending anything: modifiers down, one arrow press per step, modifiers up (always last).
+    // Plan pur, testé sans rien envoyer : modificateurs enfoncés, un appui de flèche par pas, modificateurs relâchés (toujours en
+    // dernier).
     internal static List<Key> PlanKeys(int current, int target, int count)
     {
         var keys = new List<Key>();
@@ -265,7 +267,7 @@ internal static class VirtualDesktops
 
     static bool SwitchCore(int target, int relative)
     {
-        Refresh();   // a gesture may come before the pending debounce: never act on a stale snapshot
+        Refresh();   // un geste peut précéder l'anti-rebond en attente : ne jamais agir sur un instantané périmé
         var s = snapshot;
         if (s.Count < 2)
             return false;
@@ -293,8 +295,8 @@ internal static class VirtualDesktops
     internal static List<Key> PlanClose() => new() { new Key(VkLWin, false), new Key(VkControl, false), new Key(VkF4, false), new Key(VkF4,
         true), new Key(VkControl, true), new Key(VkLWin, true) };
 
-    // Bureau où revenir après la fermeture de `closed` pendant que l'utilisateur était sur `origin` ; -1 = rien à restaurer (l'utilisateur
-    // était sur le bureau fermé).
+    // Bureau où revenir après la fermeture de `closed` pendant que l'utilisateur était sur `origin` ; -1 = rien à restaurer
+    // (l'utilisateur était sur le bureau fermé).
     internal static int ReturnIndex(int origin, int closed) => origin == closed ? -1 : origin > closed ? origin - 1 : origin;
 
     const int SwitchTimeoutMs = 1500, CloseTimeoutMs = 1500, SettleMs = 120, StepMs = 30;
@@ -323,8 +325,8 @@ internal static class VirtualDesktops
         }
     }
 
-    // Point d'entrée du geste de l'utilisateur (clic droit sur un point, index base 0). Sécurité : la combinaison de touches n'est envoyée
-    // que lorsque le registre montre
+    // Point d'entrée du geste de l'utilisateur (clic droit sur un point, index base 0). Sécurité : la combinaison de touches n'est
+    // envoyée que lorsque le registre montre
     // la cible comme bureau courant avec le nombre attendu ; sinon rien n'est fermé et l'utilisateur est ramené où il était.
     internal static bool Close(int index)
     {
@@ -346,7 +348,7 @@ internal static class VirtualDesktops
                 }
                 Thread.Sleep(SettleMs);
             }
-            var now = TryRead();   // last look right before the destructive chord
+            var now = TryRead();   // dernier contrôle juste avant l'accord destructif
             if (now == null || now.Count != count || now.Current != index)
             {
                 if (index != origin)
@@ -446,7 +448,8 @@ internal static class VirtualDesktops
     {
         public IntPtr hwnd; public uint message; public IntPtr wParam, lParam; public uint time; public int ptX, ptY, lPrivate;
     }
-    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid, uint thread,
+    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid,
+        uint thread,
         uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] static extern int GetMessageW(out MSG m, IntPtr h, uint min, uint max);

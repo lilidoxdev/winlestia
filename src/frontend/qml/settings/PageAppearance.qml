@@ -10,7 +10,7 @@ import "."
 ColumnLayout {
     id: page
 
-    // Set by the host: { openCustomEditor() }
+    // Défini par l'hôte : { openCustomEditor() }
     property var host
     readonly property string mode: Bridge.themeMode
     readonly property real motion: Bridge.settings.motionScale ?? 1
@@ -81,7 +81,7 @@ ColumnLayout {
                             border.color: Colours.palette.m3primary
                             activeFocusOnTab: true
 
-                            // The action recolours the model above, which destroys this delegate: read everything before calling it.
+                            // L'action recolore le modèle ci-dessus, ce qui détruit ce délégué : tout lire avant de l'appeler.
                             // Choosing "custom" only switches mode; the editor opens from the "Modifier ma palette" row below.
                             function choose(): void {
                                 const m = modelData.mode, dark = modelData.dark ?? false;
@@ -198,7 +198,11 @@ ColumnLayout {
                 StyledText {
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
-                    text: Bridge.themeMode === "light" ? qsTr("Porcelaine : thème clair et chaleureux, fixe, indépendant du fond d’écran.") : Bridge.themeMode === "dark" ? qsTr("Nuit : thème sombre et reposant, fixe, indépendant du fond d’écran.") : Bridge.themeMode === "custom" ? qsTr("Personnalisé : tes propres couleurs, avec option de verre transparent.") : qsTr("Automatique : les couleurs suivent ton fond d’écran, la transparence du verre est réglable.")
+                    text: Bridge.themeMode === "light"
+                        ? qsTr("Porcelaine : thème clair et chaleureux, fixe, indépendant du fond d’écran.")
+                        : Bridge.themeMode === "dark" ? qsTr("Nuit : thème sombre et reposant, fixe, indépendant du fond d’écran.")
+                        : Bridge.themeMode === "custom" ? qsTr("Personnalisé : tes propres couleurs, avec option de verre transparent.")
+                        : qsTr("Automatique : les couleurs suivent ton fond d’écran, la transparence du verre est réglable.")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3outline
                 }
@@ -234,9 +238,11 @@ ColumnLayout {
             value: (1 - Bridge.glassOpacity) * 100
             valueText: Math.round(slider.value) + " %"
             dim: !page.glassOk
-            hint: page.glassOk ? SettingsIndex.desc("transparency") : page.mode === "custom" ? qsTr("Active « Verre transparent » dans Modifier ma palette") : qsTr("Réglable avec les thèmes Automatique et Personnalisé")
+            hint: page.glassOk ? SettingsIndex.desc("transparency") : page.mode === "custom"
+                ? qsTr("Active « Verre transparent » dans Modifier ma palette")
+                : qsTr("Réglable avec les thèmes Automatique et Personnalisé")
             slider.objectName: "glassTransparency"
-            // One slider for both themes: it writes whichever key the current theme reads.
+            // Un seul curseur pour les deux thèmes : il écrit la clé que lit le thème courant.
             onMoved: v => Bridge.action("preference", {
                     key: page.mode === "custom" ? "customGlassOpacity" : "glassOpacity",
                     value: 1 - v / 100

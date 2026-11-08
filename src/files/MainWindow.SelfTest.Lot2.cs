@@ -1,8 +1,8 @@
 #if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=lot2 : journal d'annulation, raccourcis (HandleKey), propriétés / ouvrir avec (niveau modèle), recherche
 // profonde, vues, sélection (touches + rectangle),
-// lecteurs (changement de périphérique), « Ce PC », modèle du menu contextuel, AUMID, crash.log. Exige WINLESTIA_FILES_DATA_DIR sous %TEMP%
-// et un dossier de fixtures sous %TEMP%\WinlestiaFilesOps.
+// lecteurs (changement de périphérique), « Ce PC », modèle du menu contextuel, AUMID, crash.log. Exige WINLESTIA_FILES_DATA_DIR sous
+// %TEMP% et un dossier de fixtures sous %TEMP%\WinlestiaFilesOps.
 using System;
 using System.Collections.Generic;
 using System.IO;

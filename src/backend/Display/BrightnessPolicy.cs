@@ -1,14 +1,17 @@
-// C# 12 / BrightnessPolicy.cs / Règles pures de luminosité par écran : conversion de plage DDC/CI, limitation du débit d'écriture, budget
-// d'échecs de lecture. Aucune E/S.
+// C# 12 / BrightnessPolicy.cs / Règles pures de luminosité par écran : conversion de plage DDC/CI, limitation du débit d'écriture,
+// budget d'échecs de lecture. Aucune E/S.
 using System;
 
 namespace PanneauxGlass;
 
 internal static class BrightnessPolicy
 {
-    internal const int WriteIntervalMs = 120;   // minimum spacing between two DDC/CI writes on one display; the latest requested value wins
-    internal const int MaxFailures = 3;         // consecutive failed reads before a display is marked unavailable until the next opening
-    internal const int RefreshSeconds = 30;     // re-read period while the panel is open (physical buttons raise no signal)
+    // écart minimal entre deux écritures DDC/CI sur un même écran ; la dernière valeur demandée l'emporte
+    internal const int WriteIntervalMs = 120;
+    // lectures échouées consécutives avant qu'un écran soit marqué indisponible jusqu'à la prochaine ouverture
+    internal const int MaxFailures = 3;
+    // période de relecture tant que le panneau est ouvert (les boutons physiques n'émettent aucun signal)
+    internal const int RefreshSeconds = 30;
 
     // Pourcentage 0-100 (borné) vers la plage brute [min, max] propre au moniteur.
     internal static uint ToRaw(double percent, uint min, uint max)
@@ -27,8 +30,8 @@ internal static class BrightnessPolicy
         return Math.Clamp((raw - (double)min) * 100d / (max - min), 0, 100);
     }
 
-    // Vrai quand la valeur brute relue est celle sous laquelle le pourcentage demandé a été écrit (plages grossières : on garde la valeur
-    // demandée affichée).
+    // Vrai quand la valeur brute relue est celle sous laquelle le pourcentage demandé a été écrit (plages grossières : on garde la
+    // valeur demandée affichée).
     internal static bool Matches(double requested, uint raw, uint min, uint max) => raw == ToRaw(requested, min, max);
 
     // Millisecondes à attendre avant que la prochaine écriture puisse démarrer (0 = maintenant).

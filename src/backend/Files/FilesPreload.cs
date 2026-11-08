@@ -1,8 +1,8 @@
-// Sur option (Preferences.FilesPreload, false par défaut) : un lancement différé, à basse priorité, d'un Winlestia.Files.exe --background
-// résident et caché.
+// Sur option (Preferences.FilesPreload, false par défaut) : un lancement différé, à basse priorité, d'un Winlestia.Files.exe
+// --background résident et caché.
 // Pas de boucle : si le processus meurt, il est relancé au plus une fois par session du backend. Code de sortie 75 = recyclage volontaire
-// (fuite du thread de menu) : relancé après DelayMs, sans limite mais au plus une fois par minute. À la sortie, un « quit » passe par le
-// canal, rien n'est tué.
+// (fuite du thread de menu) : relancé après DelayMs, sans limite mais au plus une fois par minute. À la sortie, un « quit » passe par
+// le canal, rien n'est tué.
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -51,7 +51,7 @@ internal static class FilesPreload
         catch (Exception err) when (err is System.ComponentModel.Win32Exception or InvalidOperationException)
         {
             Store.Log("FilesPreload.Launch : " + err.GetType().Name + ": " + err.Message);
-        }   // never two residents at once, whatever path got us here
+        }   // jamais deux résidents à la fois, quel que soit le chemin qui nous a menés ici
         string exe = Path.Combine(AppContext.BaseDirectory, "Winlestia.Files.exe");
         if (!File.Exists(exe))
             return;
@@ -101,7 +101,8 @@ internal static class FilesPreload
                 lock (policy)
                 {
                     recycleTimer?.Dispose();
-                    recycleTimer = new Timer(_ => { try { Launch(true); } catch (Exception ex) { Store.Log("FilesPreload: " + ex.Message); }
+                    recycleTimer = new Timer(_ => { try { Launch(true); } catch (Exception ex) { Store.Log("FilesPreload: "
+                        + ex.Message); }
                         }, null, DelayMs, Timeout.Infinite);
                 }
                 break;
@@ -111,10 +112,10 @@ internal static class FilesPreload
         }
     }
 
-    // Palette / fond d'écran / clair-sombre modifiés (Theme.Use) : demande à un Winlestia Fichiers en cours (résident ou fenêtré) de relire
-    // les préférences. N'en lance jamais un.
-    // Anti-rebond de 600 ms (le fichier de préférences est sauvé juste après le changement de thème) ; une sonde du canal sur le pool de
-    // threads, sans sondage périodique.
+    // Palette / fond d'écran / clair-sombre modifiés (Theme.Use) : demande à un Winlestia Fichiers en cours (résident ou fenêtré) de
+    // relire les préférences. N'en lance jamais un.
+    // Anti-rebond de 600 ms (le fichier de préférences est sauvé juste après le changement de thème) ; une sonde du canal sur le pool
+    // de threads, sans sondage périodique.
     internal static void NotifyPalette()
     {
         if (quitting)

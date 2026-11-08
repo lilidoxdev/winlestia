@@ -29,11 +29,11 @@ internal sealed partial class QtShellBridge
         uint param,
         string value,
         uint flags);
-    // Ligne de commande `winlestia` : seules les commandes acceptées par CliCommands.TryParse arrivent ici. Exécuté sur le dispatcher UI.
-    // Fond d'écran : la vérification du fichier (parfois un lecteur réseau) et SystemParametersInfo (peut attendre une fenêtre figée)
-    // restent hors du thread UI.
-    // Fenêtres ouvertes pour la palette et `find windows` : les fenêtres du shell (titres « Panneaux · … ») sont exclues. Appelé hors
-    // thread UI.
+    // Ligne de commande `winlestia` : seules les commandes acceptées par CliCommands.TryParse arrivent ici. Exécuté sur le dispatcher
+    // UI. Fond d'écran : la vérification du fichier (parfois un lecteur réseau) et SystemParametersInfo (peut attendre une fenêtre
+    // figée) restent hors du thread UI.
+    // Fenêtres ouvertes pour la palette et `find windows` : les fenêtres du shell (titres « Panneaux · … ») sont exclues. Appelé
+    // hors thread UI.
     static IEnumerable<object> PaletteWindows()
         => TaskbarNative.Applications()
             .Where(w => !w.Title.StartsWith("Panneaux ·", StringComparison.Ordinal))
@@ -65,7 +65,7 @@ internal sealed partial class QtShellBridge
                                              wallpaper.Notify(100, true);
                                          return r;
                                      }) : RunCliUi(c);
-    // Counts only: neither a path nor a name leaves this method. FileSearch bounds the query to 2 s, below the server’s 5 s.
+    // Comptages seuls : ni chemin ni nom ne sort de cette méthode. FileSearch borne la requête à 2 s, sous les 5 s du serveur.
     static async Task<(int code, string text)> RunFindFiles(string term)
     {
         var r = await FileSearch.RunOnceAsync(term, CancellationToken.None);

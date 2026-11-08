@@ -1,4 +1,5 @@
-// C# 12 / AudioBars.cs / DSP pur pour le visualiseur du tableau de bord : échantillons en entrée, niveaux de barres 0-1 en sortie. Aucune
+// C# 12 / AudioBars.cs / DSP pur pour le visualiseur du tableau de bord : échantillons en entrée, niveaux de barres 0-1 en sortie.
+// Aucune
 // E/S, aucune API audio, seuls les niveaux sont conservés.
 using System;
 
@@ -36,7 +37,8 @@ internal sealed class AudioBars
         }
     }
 
-    // Prend les FftSize derniers échantillons mono (complétés par des zéros s'il y en a moins) et met à jour les niveaux lissés : montée
+    // Prend les FftSize derniers échantillons mono (complétés par des zéros s'il y en a moins) et met à jour les niveaux lissés :
+    // montée
     // rapide, descente lente.
     internal void Update(ReadOnlySpan<float> mono, int sampleRate)
     {

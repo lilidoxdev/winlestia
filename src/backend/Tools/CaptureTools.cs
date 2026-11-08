@@ -444,7 +444,8 @@ internal static class OcrService
                 return;
             }
             SystemActions.Copy(owner, text, "Texte");
-            var window = new TextResultWindow(owner, "Texte lu par Windows", text) { Owner = owner.Anchor, ShowInTaskbar = owner.PreviewMode
+            var window = new TextResultWindow(owner, "Texte lu par Windows", text) { Owner = owner.Anchor,
+                ShowInTaskbar = owner.PreviewMode
                 };
             window.ShowDialog();
         }

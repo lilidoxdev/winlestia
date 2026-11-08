@@ -1,7 +1,7 @@
 // Barre de commandes au-dessus de la liste (Nouveau, Couper, Copier, Coller, Renommer, Copier le chemin, Supprimer, Trier, Affichage,
 // Annuler) et barre d'état en dessous
-// (compteurs, taille de la sélection, actions rapides quand quelque chose est sélectionné). Chaque couleur est un jeton de palette vivant ;
-// une commande désactivée utilise le rôle outline (jamais l'opacité).
+// (compteurs, taille de la sélection, actions rapides quand quelque chose est sélectionné). Chaque couleur est un jeton de palette
+// vivant ; une commande désactivée utilise le rôle outline (jamais l'opacité).
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -19,8 +19,8 @@ public sealed partial class MainWindow
     [DllImport("user32.dll")] static extern bool IsClipboardFormatAvailable(uint format);
     const int WM_CLIPBOARDUPDATE_CMD = 0x031D;
 
-    // Une commande : icône + libellé facultatif (+ chevron pour les menus). Le Button n'est pas focalisable pour que les raccourcis clavier
-    // fonctionnent encore après un clic.
+    // Une commande : icône + libellé facultatif (+ chevron pour les menus). Le Button n'est pas focalisable pour que les raccourcis
+    // clavier fonctionnent encore après un clic.
     sealed class Cmd
     {
         internal readonly Button Button; internal readonly TextBlock Label; readonly TextBlock glyph; readonly Func<bool> enabled;
@@ -137,7 +137,8 @@ public sealed partial class MainWindow
         Add("", null, "Copier le chemin (Ctrl+Maj+C)", () => CopyPaths(Selection()), () => SelCount > 0);
         Add("", null, "Supprimer (Suppr)", () => Fire(() => DeleteSelectedAsync(false)), () => RealFolder && SelCount > 0);
         Sep();
-        var sort = Add("", "Trier", "Trier (clic droit sur l'en-tête : colonnes) - inclut « Rétablir le tri par défaut »", ShowSortMenu, ()
+        var sort = Add("", "Trier", "Trier (clic droit sur l'en-tête : colonnes) - inclut « Rétablir le tri par défaut »",
+            ShowSortMenu, ()
             => RealFolder, true);
         sortButton = sort.Button;
         Add("", "Affichage", "Affichage : Liste, Détails, Icônes", ShowViewMenu, () => RealFolder, true);
@@ -159,7 +160,8 @@ public sealed partial class MainWindow
         Activated += (_, _) => UpdateCommands();
         SourceInitialized += (_, _) => HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(CmdHook);
         UpdateCommands();
-        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 0, 0, 1), SnapsToDevicePixels = true
+        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 0, 0, 1),
+            SnapsToDevicePixels = true
             };
     }
 
@@ -178,7 +180,8 @@ public sealed partial class MainWindow
             return;
         foreach (var c in cmds)
             c.Refresh();
-        cmdUndo.Button.ToolTip = journal.NextUndo is { } u ? (u.Irreversible ? "Annuler (impossible : " + u.Why + ")" : "Annuler " + u.Label
+        cmdUndo.Button.ToolTip = journal.NextUndo is { } u ? (u.Irreversible ? "Annuler (impossible : " + u.Why + ")" : "Annuler "
+            + u.Label
             + " (Ctrl+Z)") : "Annuler (Ctrl+Z) : rien à annuler";
         cmdPaste.Button.ToolTip = cmdPaste.Button.IsEnabled ? "Coller (Ctrl+V)"
             : "Coller (Ctrl+V) : le presse-papiers ne contient aucun fichier";
@@ -220,7 +223,8 @@ public sealed partial class MainWindow
         grid.Children.Add(status);
         grid.Children.Add(selActions);
         grid.Children.Add(viewBar);
-        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 1, 0, 0), SnapsToDevicePixels = true
+        return new Border { Child = grid, BorderBrush = UI.Hairline, BorderThickness = new Thickness(0, 1, 0, 0),
+            SnapsToDevicePixels = true
             };
     }
 
@@ -228,7 +232,8 @@ public sealed partial class MainWindow
         : size < 1024L * 1024 * 1024 ? (size / 1048576.0).ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " Mo"
             : (size / 1073741824.0).ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + " Go";
 
-    // "N sélectionnés — taille totale" (files only: a folder size would need a recursive walk, which is never done here).
+    // « N sélectionnés · taille totale » (fichiers seulement : la taille d'un dossier exigerait un parcours récursif, jamais fait
+    // ici).
     string SelectionSummary(int m)
     {
         long total = 0;

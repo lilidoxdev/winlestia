@@ -25,7 +25,8 @@ internal static class PathRouter
         if (dangling)
             t = t[..^1];
         bool drive = t.Length == 2 && t[1] == ':' && char.IsAsciiLetter(t[0]);
-        bool unc = dangling && t.StartsWith(@"\\", StringComparison.Ordinal) && !t.EndsWith('\\') && t.Substring(2).Split('\\').Length == 2;
+        bool unc = dangling && t.StartsWith(@"\\", StringComparison.Ordinal) && !t.EndsWith('\\') && t.Substring(2).Split('\\')
+            .Length == 2;
         if (drive && (dangling || t.Length == s.Trim().Length))
             return t + "\\";
         if (unc)

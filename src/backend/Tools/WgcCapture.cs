@@ -1,5 +1,5 @@
-// C# 12 / WgcCapture.cs / Windows 10 1903+. Capture ponctuelle Windows.Graphics.Capture de la fenêtre hôte du fond d'écran animé, pour les
-// vidéos que Media Foundation ne sait pas décoder (HEVC sans l'extension du Store).
+// C# 12 / WgcCapture.cs / Windows 10 1903+. Capture ponctuelle Windows.Graphics.Capture de la fenêtre hôte du fond d'écran animé, pour
+// les vidéos que Media Foundation ne sait pas décoder (HEVC sans l'extension du Store).
 // CLI : Panneaux.Glass.exe --capture-frames <outDir> [count=8] [maxSize=320] [intervalMs=400] [budgetMs=4300]. Tout (session, pool de
 // frames, périphérique D3D) est fermé avant le retour.
 using System;
@@ -16,6 +16,9 @@ namespace PanneauxGlass;
 
 internal static class WgcCapture
 {
+    // Pas d'attente d'une image de capture : évite l'attente active tout en restant sous le budget par fenêtre.
+    const int FramePollMs = 60;
+
     [ComImport, Guid("3628E81B-3CAC-4C60-B7F4-23CE0E0C3356"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     interface IGraphicsCaptureItemInterop
     {
@@ -25,14 +28,15 @@ internal static class WgcCapture
     [DllImport("combase.dll", CharSet = CharSet.Unicode)] static extern int WindowsCreateString(string source, int length,
         out IntPtr hstring);
     [DllImport("combase.dll")] static extern int WindowsDeleteString(IntPtr hstring);
-    [DllImport("d3d11.dll")] static extern int D3D11CreateDevice(IntPtr adapter, int driverType, IntPtr software, uint flags, IntPtr levels,
+    [DllImport("d3d11.dll")] static extern int D3D11CreateDevice(IntPtr adapter, int driverType, IntPtr software, uint flags,
+        IntPtr levels,
         uint count, uint sdk, out IntPtr device, out int level, out IntPtr context);
     [DllImport("d3d11.dll")] static extern int CreateDirect3D11DeviceFromDXGIDevice(IntPtr dxgi, out IntPtr graphicsDevice);
     static readonly Guid ItemIid = new("79C3F95B-31F7-4EC2-A464-632EF5D30760"), InteropIid = new("3628E81B-3CAC-4C60-B7F4-23CE0E0C3356"),
         DxgiDeviceIid = new("54EC77FA-1377-44E6-8C32-88FD5F44C84C");
 
     internal static int Cli(string[] args)
-    {   // optional args 6..9: monitor x y w h (host chosen and cropped to that monitor)
+    {   // arguments facultatifs 6..9 : x y l h du moniteur (hôte choisi et rogné sur ce moniteur)
         try
         {
             string folder = args[1];
@@ -40,7 +44,8 @@ internal static class WgcCapture
             int count = Num(2, 8, 1, 16), size = Num(3, 320, 64, 1024), interval = Num(4, 400, 100, 2000), budget = Num(5, 4300, 1000,
                 5000);
             Native.Rect? monitor = args.Length > 9 && int.TryParse(args[6], out int mx) && int.TryParse(args[7], out int my)
-                && int.TryParse(args[8], out int mw) && int.TryParse(args[9], out int mh) && mw > 0 ? new Native.Rect { Left = mx, Top = my,
+                && int.TryParse(args[8], out int mw) && int.TryParse(args[9], out int mh) && mw > 0 ? new Native.Rect { Left = mx,
+                    Top = my,
                 Right = mx + mw, Bottom = my + mh } : null;
             return Task.Run(() => Run(folder, count, size, interval, budget, monitor)).GetAwaiter().GetResult() > 0 ? 0 : 1;
         }
@@ -116,14 +121,18 @@ internal static class WgcCapture
                 catch (Exception)
                 {
                     // Propriété absente selon la version de Windows : comportement par défaut.
-                }  // Windows 11 only, may need the borderless capability: failure just means the system border stays during the ~3 s grab
+                // Windows 11 seulement, peut exiger la capacité sans bordure : un échec signifie seulement que la bordure du système
+                // reste pendant la capture d'environ 3 s
+                }
                 session.StartCapture();
                 long lastSaved = -interval;
                 int tries = 0;
                 var own = Stopwatch.StartNew();
                 while (written < count && clock.ElapsedMilliseconds < budget && (written > 0 || own.ElapsedMilliseconds < 1200))
-                {   // each candidate window gets about 1.2 s while it yields nothing, so the parent fallback stays reachable
-                    await Task.Delay(60);
+                // chaque fenêtre candidate dispose d'environ 1,2 s tant qu'elle ne produit rien, pour que le repli sur le parent reste
+                // atteignable
+                {
+                    await Task.Delay(FramePollMs);
                     using var frame = pool.TryGetNextFrame();
                     if (frame == null)
                         continue;
@@ -136,7 +145,7 @@ internal static class WgcCapture
                         tries = 0;
                     }
                     else if (++tries >= 4 && written == 0)
-                        break;   // black from the start: try the next window
+                        break;   // noir dès le départ : essayer la fenêtre suivante
                 }
                 session.Dispose();
                 session = null;

@@ -47,7 +47,7 @@ internal sealed partial class Coordinator
             if (QtShell != null && !open)
                 return;
             taskbar?.PointerTick();
-            if (open && (!detailed || interacting || Pinned || settingsOpen || PopupOpen || !Store.State.AutoHide))
+            if (open && TickRules.AutoHideSuspended(detailed, interacting, Pinned, settingsOpen, PopupOpen, Store.State.AutoHide))
                 return;
             if (!Native.GetCursorPos(out var mouse))
                 return;
@@ -63,12 +63,8 @@ internal sealed partial class Coordinator
             var work = screen.WorkingArea;
             if (!open && !closing)
             {
-                bool atEdge =
-                    (Store.State.RailSide == "right"
-                        ? mouse.X >= screen.Bounds.Right - 4 && mouse.X <= screen.Bounds.Right
-                        : mouse.X <= screen.Bounds.Left + 4 && mouse.X >= screen.Bounds.Left)
-                        && mouse.Y > work.Top + 24
-                        && mouse.Y < work.Bottom - 24;
+                bool atEdge = TickRules.AtEdge(Store.State.RailSide, mouse.X, mouse.Y, screen.Bounds.Left, screen.Bounds.Right, work.Top,
+                    work.Bottom);
                 if ((atEdge || rail.IsVisible) && Store.State.PauseFullscreen && Native.Fullscreen(screen, Windows))
                 {
                     rail.Hide();
@@ -80,16 +76,15 @@ internal sealed partial class Coordinator
                     railAway = DateTime.MinValue;
                     if (edgeSince == DateTime.MinValue)
                         edgeSince = DateTime.UtcNow;
-                    if ((DateTime.UtcNow - edgeSince).TotalMilliseconds >= 150 && (!rail.IsVisible || railScreen != screen.DeviceName))
+                    if (TickRules.EdgeDwellReached(edgeSince, DateTime.UtcNow) && (!rail.IsVisible || railScreen != screen.DeviceName))
                     {
                         double scale = VisualTreeHelper.GetDpi(rail).DpiScaleX;
-                        double height = work.Height / scale * Store.State.RailHeight;
-                        rail.MoveInto((Store.State.RailSide == "right"
-                            ? screen.Bounds.Right / scale - Store.State.RailWidth - 12
-                            : screen.Bounds.Left / scale + 12),
-                                      work.Top / scale + (work.Height / scale - height) / 2,
+                        var place = TickRules.RailPlacement(Store.State.RailSide, screen.Bounds.Left, screen.Bounds.Right, work.Top,
+                            work.Height, scale, Store.State.RailWidth, Store.State.RailHeight);
+                        rail.MoveInto(place.X,
+                                      place.Y,
                                       Store.State.RailWidth,
-                                      height,
+                                      place.Height,
                                       0,
                                       false);
                         railScreen = screen.DeviceName;
@@ -102,7 +97,7 @@ internal sealed partial class Coordinator
                     {
                         if (railAway == DateTime.MinValue)
                             railAway = DateTime.UtcNow;
-                        if ((DateTime.UtcNow - railAway).TotalMilliseconds > 650)
+                        if (TickRules.RailAwayExceeded(railAway, DateTime.UtcNow))
                             rail.Hide();
                     }
                     else
@@ -119,7 +114,7 @@ internal sealed partial class Coordinator
                 {
                     if (awaySince == DateTime.MinValue)
                         awaySince = DateTime.UtcNow;
-                    if ((DateTime.UtcNow - awaySince).TotalMilliseconds > 1800)
+                    if (TickRules.BoardAwayExceeded(awaySince, DateTime.UtcNow))
                         Collapse();
                 }
             }
@@ -131,9 +126,6 @@ internal sealed partial class Coordinator
         if (!window.IsVisible)
             return false;
         var dpi = VisualTreeHelper.GetDpi(window).DpiScaleX;
-        return point.X >= window.Left * dpi
-            && point.Y >= window.Top * dpi
-            && point.X < (window.Left + window.Width) * dpi
-            && point.Y < (window.Top + window.Height) * dpi;
+        return TickRules.Inside(window.Left, window.Top, window.Width, window.Height, dpi, point.X, point.Y);
     }
 }

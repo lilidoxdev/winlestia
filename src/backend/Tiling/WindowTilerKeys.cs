@@ -17,7 +17,8 @@ internal sealed partial class WindowTiler
     [DllImport("user32.dll")] static extern bool GetCursorPos(out Native.Point p);
     readonly TileOrder order = new(); readonly HashSet<IntPtr> floating = new();
     Dictionary<IntPtr, (string screen, int index, int count, Native.Rect slot)> tiles = new();
-    readonly Dictionary<string, Dictionary<string, double>> ratios = new();   // per screen, per split path; session memory only
+    // par écran, par chemin de découpe ; mémoire de session seulement
+    readonly Dictionary<string, Dictionary<string, double>> ratios = new();
     readonly Dictionary<uint, string> processNames = new();
     HashSet<string>? excluded; HwndSource? keySink; readonly List<int> keyIds = new();
     // Ids 41-44 focus, 45-48 swap (Left,Right,Up,Down), 49 float, 50-51 grow, 52-54 shrink, 55 exclude application.
@@ -29,8 +30,8 @@ internal sealed partial class WindowTiler
   (52,7,0xBD,"Ctrl + Alt + Maj + -"),(53,7,0x6D,"Ctrl + Alt + Maj + pavé -"),(54,7,0x36,"Ctrl + Alt + Maj + 6"),(
       55,7,0x58,"Ctrl + Alt + Maj + X")};
     double Ratio(string screen, string path) => ratios.TryGetValue(screen, out var d) && d.TryGetValue(path, out var r) ? r : .5;
-    // Une combinaison refusée est journalisée et ignorée ; les autres restent actives. Rien n'est enregistré si le tuilage est désactivé
-    // (et jamais pour les fixtures de test).
+    // Une combinaison refusée est journalisée et ignorée ; les autres restent actives. Rien n'est enregistré si le tuilage est
+    // désactivé (et jamais pour les fixtures de test).
     void Keys(bool on)
     {
         if (!on)
@@ -176,7 +177,8 @@ internal sealed partial class WindowTiler
         d[split.Value.path] = TileLogic.Grow(Ratio(t.screen, split.Value.path), split.Value.inFirst, delta);
         RequestTick();
     }
-    // Flottante : la fenêtre quitte le tuilage (restaurée à son ancien emplacement) jusqu'à la rebascule ou la désactivation du tuilage.
+    // Flottante : la fenêtre quitte le tuilage (restaurée à son ancien emplacement) jusqu'à la rebascule ou la désactivation du
+    // tuilage.
     void ToggleFloat()
     {
         var fg = GetForegroundWindow();
@@ -208,8 +210,8 @@ internal sealed partial class WindowTiler
         failing.Remove(h);
         tiles.Remove(h);
     }
-    // Fin d'un déplacement manuel (EVENT_SYSTEM_MOVESIZEEND, déjà accroché) : déposée sur une autre tuile = échange, ailleurs = retour en
-    // place. Les redimensionnements manuels restent au comportement existant.
+    // Fin d'un déplacement manuel (EVENT_SYSTEM_MOVESIZEEND, déjà accroché) : déposée sur une autre tuile = échange, ailleurs =
+    // retour en place. Les redimensionnements manuels restent au comportement existant.
     void Dropped(IntPtr h)
     {
         if (!enabled || disposed || !tiles.TryGetValue(h, out var t))

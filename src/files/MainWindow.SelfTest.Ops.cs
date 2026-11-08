@@ -1,6 +1,6 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=ops : opérations de fichiers scriptées sur un dossier de fixtures (premier argument de ligne de commande, doit
-// vivre sous %TEMP%\WinlestiaFilesOps).
+// WINLESTIA_FILES_SELFTEST=ops : opérations de fichiers scriptées sur un dossier de fixtures (premier argument de ligne de commande,
+// doit vivre sous %TEMP%\WinlestiaFilesOps).
 // Disposition attendue des fixtures : file001.txt..file060.txt, big\ (500 fichiers), ext\ (x1.txt x2.txt m1.txt). Résultats : lignes
 // PASS/FAIL dans %LOCALAPPDATA%\Winlestia\Files\selftest.log.
 using System;
@@ -15,6 +15,9 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Pas de sondage de la fin de chargement (400 tours max, soit 10 s).
+    const int LoadPollMs = 25;
+
     static readonly string TestLog = Path.Combine(FilesSettings.Dir, "selftest.log");
     int testFails;
 
@@ -70,7 +73,7 @@ public sealed partial class MainWindow
     async Task WaitLoaded()
     {
         for (int i = 0; i < 400 && Active.State == LoadState.Loading; i++)
-            await Task.Delay(25);
+            await Task.Delay(LoadPollMs);
         await Task.Delay(PauseTickMs);
     }
     bool OrderOk()
@@ -90,7 +93,8 @@ public sealed partial class MainWindow
     static IEnumerable<string> Files(int from, int to) => Enumerable.Range(from, to - from + 1).Select(i => $"file{i:000}.txt");
     bool StatusOk() => status.Text.StartsWith($"{Active.Items.Count} élément");
     static string Recycled()
-        => "(New-Object -ComObject Shell.Application).NameSpace(10).Items() | ?{ $_.ExtendedProperty('System.Recycle.DeletedFrom') -like " +
+        => "(New-Object -ComObject Shell.Application).NameSpace(10).Items() | ?{ $_.ExtendedProperty('System.Recycle.DeletedFrom') " +
+            "-like " +
             "'*WinlestiaFilesOps*' } | measure | % Count";
 
     // WINLESTIA_FILES_OPS_NOBIN=1 : les suppressions de fixtures sont définitives et silencieuses, donc l'exécution n'ajoute rien à la
@@ -197,7 +201,8 @@ public sealed partial class MainWindow
         Check("cut/paste 10 files into Sub", r != null
             && Directory.GetFiles(Path.Combine(F, "Sub")).Length == 10
             && Files(31, 40).All(n => !File.Exists(Path.Combine(F, n)))
-            && Active.Items.Count == before - 10 && DiskMatches() && OrderOk() && StatusOk(), $"{Active.Items.Count} items, {status.Text}");
+            && Active.Items.Count == before - 10 && DiskMatches() && OrderOk() && StatusOk(),
+                $"{Active.Items.Count} items, {status.Text}");
         Check("clipboard cleared after cut-paste", !Clipboard.ContainsFileDropList() && FileItem.CutPaths.Count == 0);
 
         // 4. suppression vers la Corbeille (5 par chemin unique, puis 10 = chemin groupé)

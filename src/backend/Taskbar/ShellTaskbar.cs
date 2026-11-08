@@ -17,15 +17,23 @@ namespace PanneauxGlass;
 
 internal sealed class ShellTaskbar : IDisposable
 {
-    readonly Coordinator owner; readonly List<ShellDockWindow> bars = new(); readonly DispatcherTimer refresh = new() { Interval = TimeSpan.FromMilliseconds(240) };
-    readonly TaskbarNative.WinEvent callback; readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher; readonly List<IntPtr> hooks = new();
-    Process? guard; WindowsDockKey? windowsKey; EventWaitHandle? ready, release; TaskbarNative.Lease? lease; bool enabled, disposed; string key = "";
+    // Regroupe les événements de fenêtres rapprochés en un seul rafraîchissement de la barre.
+    const int RefreshDebounceMs = 240;
+
+    readonly Coordinator owner; readonly List<ShellDockWindow> bars = new(); readonly DispatcherTimer refresh = new() {
+        Interval = TimeSpan.FromMilliseconds(RefreshDebounceMs) };
+    readonly TaskbarNative.WinEvent callback; readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
+        readonly List<IntPtr> hooks = new();
+    Process? guard; WindowsDockKey? windowsKey; EventWaitHandle? ready, release; TaskbarNative.Lease? lease; bool enabled, disposed;
+        string key = "";
     internal IEnumerable<Window> Windows => bars;
     internal bool Enabled => enabled;
     internal ShellTaskbar(Coordinator coordinator)
     {
         owner = coordinator;
-        callback = (_, kind, h, obj, child, _, _) => { if (!enabled || obj != 0 || child != 0 || kind != 3 && Native.Owns(h)) return; dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (!disposed) { refresh.Stop(); refresh.Start(); } })); };
+        callback = (_, kind, h, obj, child, _, _) => { if (!enabled || obj != 0 || child != 0 || kind != 3 && Native.Owns(h)) return;
+            dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (!disposed) { refresh.Stop(); refresh.Start(); } }));
+            };
         refresh.Tick += (_, _) => { refresh.Stop(); Update(); };
     }
     internal void ShowPreview()
@@ -49,7 +57,8 @@ internal sealed class ShellTaskbar : IDisposable
             TaskbarLeasePolicy.Write(TaskbarNative.LeasePath, lease);
             string nativeGuard = Path.Combine(Store.Root, "RETABLIR_BARRE_WINDOWS.exe");
             bool native = File.Exists(nativeGuard);
-            var start = new ProcessStartInfo(native ? nativeGuard : Environment.ProcessPath!) { UseShellExecute = false, CreateNoWindow = true };
+            var start = new ProcessStartInfo(native ? nativeGuard : Environment.ProcessPath!) { UseShellExecute = false,
+                CreateNoWindow = true };
             start.ArgumentList.Add(native ? "--watch-parent" : "--taskbar-guard");
             start.ArgumentList.Add(Environment.ProcessId.ToString());
             if (native)
@@ -114,7 +123,8 @@ internal sealed class ShellTaskbar : IDisposable
             return;
         }
         var apps = TaskbarNative.Applications();
-        string signature = Native.GetForegroundWindow().ToInt64() + "/" + string.Join("|", apps.Select(a => a.Handle.ToInt64() + a.Title)) + "/" + Theme.Version + "/" + string.Join("|", Store.State.TaskbarPins);
+        string signature = Native.GetForegroundWindow().ToInt64() + "/" + string.Join("|", apps.Select(a => a.Handle.ToInt64() + a.Title))
+            + "/" + Theme.Version + "/" + string.Join("|", Store.State.TaskbarPins);
         foreach (var bar in bars)
         {
             if (owner.QtShell != null)
@@ -206,11 +216,15 @@ internal sealed class ShellDockWindow : Window
 {
     internal const double HostHeight = 70;
     readonly Coordinator owner; readonly ShellTaskbar manager; readonly Forms.Screen screen;
-    readonly StackPanel apps = new() { Orientation = Orientation.Horizontal }; readonly TextBlock time = UI.Text("", 12), date = UI.Text("", 10, UI.Dim);
-    readonly Border pill = new() { Height = 58, CornerRadius = new CornerRadius(29), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(12, 0, 12, 4) };
+    readonly StackPanel apps = new() { Orientation = Orientation.Horizontal }; readonly TextBlock time = UI.Text("", 12),
+        date = UI.Text("",
+        10, UI.Dim);
+    readonly Border pill = new() { Height = 58, CornerRadius = new CornerRadius(29), HorizontalAlignment = HorizontalAlignment.Center,
+        VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(12, 0, 12, 4) };
     readonly System.Windows.Media.TranslateTransform slide = new();
     readonly DispatcherTimer clock = new() { Interval = TimeSpan.FromSeconds(15) };
-    IntPtr handle; HwndSource? source; uint message; bool registered, placing, covered, closed, hiding; int themeVersion = -1, motionVersion; Native.Rect last;
+    IntPtr handle; HwndSource? source; uint message; bool registered, placing, covered, closed, hiding; int themeVersion = -1,
+        motionVersion; Native.Rect last;
     DateTime away = DateTime.MinValue, forcedUntil = DateTime.MinValue;
     readonly uint explorerRestart = TaskbarNative.RegisterWindowMessage("TaskbarCreated");
     internal ShellDockWindow(Coordinator coordinator, ShellTaskbar taskbar, Forms.Screen target)
@@ -233,8 +247,10 @@ internal sealed class ShellDockWindow : Window
         surface.Children.Add(pill);
         Content = surface;
         Build();
-        SourceInitialized += (_, _) => { handle = new WindowInteropHelper(this).Handle; source = HwndSource.FromHwnd(handle); source.AddHook(Hook); };
-        Closed += (_, _) => { closed = true; clock.Stop(); if (registered) { var data = TaskbarNative.Data(handle); TaskbarNative.SHAppBarMessage(1, ref data); registered = false; } source?.RemoveHook(Hook); };
+        SourceInitialized += (_, _) => { handle = new WindowInteropHelper(this).Handle; source = HwndSource.FromHwnd(handle);
+            source.AddHook(Hook); };
+        Closed += (_, _) => { closed = true; clock.Stop(); if (registered) { var data = TaskbarNative.Data(handle);
+            TaskbarNative.SHAppBarMessage(1, ref data); registered = false; } source?.RemoveHook(Hook); };
         clock.Tick += (_, _) => Clock();
         clock.Start();
         Clock();
@@ -268,8 +284,12 @@ internal sealed class ShellDockWindow : Window
         row.Children.Add(left);
         left.Children.Add(Icon("windows", "Mes applications et mes récents", () => owner.ShowShellPage("access")));
         left.Children.Add(Icon("search", "Rechercher · " + owner.PaletteLabel, owner.TogglePalette));
-        var scroller = new ScrollViewer { Content = apps, HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalContentAlignment = VerticalAlignment.Center, HorizontalContentAlignment = HorizontalAlignment.Center, Margin = new Thickness(14, 0, 14, 0), Style = new Style(typeof(ScrollViewer)) };
-        scroller.PreviewMouseWheel += (_, e) => { scroller.ScrollToHorizontalOffset(scroller.HorizontalOffset - e.Delta); e.Handled = true; };
+        var scroller = new ScrollViewer { Content = apps, HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalContentAlignment = VerticalAlignment.Center,
+            HorizontalContentAlignment = HorizontalAlignment.Center, Margin = new Thickness(14, 0, 14, 0),
+            Style = new Style(typeof(ScrollViewer)) };
+        scroller.PreviewMouseWheel += (_, e) => { scroller.ScrollToHorizontalOffset(scroller.HorizontalOffset - e.Delta); e.Handled = true;
+            };
         Grid.SetColumn(scroller, 1);
         row.Children.Add(scroller);
         var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
@@ -325,15 +345,19 @@ internal sealed class ShellDockWindow : Window
         foreach (var entry in manager.Pins().Take(24))
         {
             string target = TaskbarNative.LaunchPath(entry.Target);
-            var matching = windows.FirstOrDefault(w => !represented.Contains(w.Handle) && !string.IsNullOrEmpty(w.Path) && string.Equals(w.Path, target, StringComparison.OrdinalIgnoreCase));
+            var matching = windows.FirstOrDefault(w => !represented.Contains(w.Handle) && !string.IsNullOrEmpty(w.Path)
+                && string.Equals(w.Path, target, StringComparison.OrdinalIgnoreCase));
             if (matching != null)
                 represented.Add(matching.Handle);
             AddApp(entry, matching, true);
         }
         if (apps.Children.Count > 0 && windows.Any(w => !represented.Contains(w.Handle)))
-            apps.Children.Add(new Border { Width = 1, Height = 23, Background = UI.Alpha(Theme.Current.Dim, 50), Margin = new Thickness(9, 0, 9, 0) });
+            apps.Children.Add(new Border { Width = 1, Height = 23, Background = UI.Alpha(Theme.Current.Dim, 50), Margin = new Thickness(9,
+                0, 9, 0) });
         foreach (var window in windows.Where(w => !represented.Contains(w.Handle)))
-            AddApp(new Entry { Id = string.IsNullOrWhiteSpace(window.RealPath) ? "window:" + window.Handle.ToInt64() : "running:" + window.RealPath.ToLowerInvariant(), Name = window.Title, Target = window.RealPath, IconPath = window.RealPath }, window, false);
+            AddApp(new Entry { Id = string.IsNullOrWhiteSpace(window.RealPath) ? "window:" + window.Handle.ToInt64() : "running:"
+                + window.RealPath.ToLowerInvariant(), Name = window.Title, Target = window.RealPath, IconPath = window.RealPath }, window,
+                false);
         SizePill();
     }
     void SizePill()
@@ -343,7 +367,8 @@ internal sealed class ShellDockWindow : Window
     }
     void AddApp(Entry entry, TaskbarNative.AppWindow? window, bool pinned)
     {
-        var button = Button(entry.Name, () => { owner.CollapseImmediately(); if (window != null) TaskbarNative.Activate(window); else owner.Launch(entry); });
+        var button = Button(entry.Name, () => { owner.CollapseImmediately(); if (window != null) TaskbarNative.Activate(window);
+            else owner.Launch(entry); });
         var stack = new Grid();
         var image = new Image { Width = 28, Height = 28, Stretch = Stretch.Uniform };
         stack.Children.Add(image);
@@ -351,7 +376,9 @@ internal sealed class ShellDockWindow : Window
         if (window != null)
         {
             bool active = Native.GetForegroundWindow() == window.Handle;
-            stack.Children.Add(new Border { Height = 3, Width = active ? 16 : 4, CornerRadius = new CornerRadius(2), Background = UI.Accent, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, -3) });
+            stack.Children.Add(new Border { Height = 3, Width = active ? 16 : 4, CornerRadius = new CornerRadius(2),
+                Background = UI.Accent,
+                VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, -3) });
             button.Background = active ? UI.Alpha(Theme.Current.Accent, 24) : Brushes.Transparent;
         }
         button.Content = stack;
@@ -367,7 +394,8 @@ internal sealed class ShellDockWindow : Window
         Width = b.Width / scale;
         Height = HostHeight;
         if (handle != IntPtr.Zero)
-            TaskbarNative.SetWindowPos(handle, new IntPtr(-1), b.Left, b.Bottom - (int)Math.Round(HostHeight * scale), b.Width, (int)Math.Round(HostHeight * scale), 0x0010);
+            TaskbarNative.SetWindowPos(handle, new IntPtr(-1), b.Left, b.Bottom - (int)Math.Round(HostHeight * scale), b.Width,
+                (int)Math.Round(HostHeight * scale), 0x0010);
     }
     internal void Register()
     {
@@ -394,7 +422,8 @@ internal sealed class ShellDockWindow : Window
             data.Rect = new Native.Rect { Left = b.Left, Top = b.Bottom - 2, Right = b.Right, Bottom = b.Bottom };
             TaskbarNative.SHAppBarMessage(2, ref data);
             data.Rect.Top = data.Rect.Bottom - 2;
-            if (data.Rect.Left != last.Left || data.Rect.Top != last.Top || data.Rect.Bottom != last.Bottom || data.Rect.Right != last.Right)
+            if (data.Rect.Left != last.Left || data.Rect.Top != last.Top || data.Rect.Bottom != last.Bottom
+                || data.Rect.Right != last.Right)
             {
                 TaskbarNative.SHAppBarMessage(3, ref data);
                 last = data.Rect;
@@ -407,7 +436,8 @@ internal sealed class ShellDockWindow : Window
     {
         var foreground = Native.GetForegroundWindow();
         covered = false;
-        if (!Native.Owns(foreground) && TaskbarNative.ClassName(foreground) is not ("Progman" or "WorkerW" or "Shell_TrayWnd") && TaskbarNative.GetWindowRect(foreground, out var rect))
+        if (!Native.Owns(foreground) && TaskbarNative.ClassName(foreground) is not ("Progman" or "WorkerW" or "Shell_TrayWnd")
+            && TaskbarNative.GetWindowRect(foreground, out var rect))
         {
             var b = screen.Bounds;
             covered = rect.Left <= b.Left && rect.Top <= b.Top && rect.Right >= b.Right && rect.Bottom >= b.Bottom;
@@ -435,7 +465,8 @@ internal sealed class ShellDockWindow : Window
         {
             var point = pill.PointToScreen(new Point(0, 0));
             double scale = TaskbarNative.Scale(screen);
-            inside = mouse.X >= point.X - 8 && mouse.X <= point.X + pill.ActualWidth * scale + 8 && mouse.Y >= point.Y - 10 && mouse.Y < b.Bottom;
+            inside = mouse.X >= point.X - 8 && mouse.X <= point.X + pill.ActualWidth * scale + 8 && mouse.Y >= point.Y - 10
+                && mouse.Y < b.Bottom;
         }
         if (inside)
         {
@@ -470,10 +501,12 @@ internal sealed class ShellDockWindow : Window
         PlacePhysical();
         if (Motion.On)
         {
-            var animation = new System.Windows.Media.Animation.DoubleAnimation(start, 0, Motion.Duration(MotionKind.FastSpatial)) { EasingFunction = Motion.Ease, FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop };
+            var animation = new System.Windows.Media.Animation.DoubleAnimation(start, 0, Motion.Duration(MotionKind.FastSpatial)) {
+                EasingFunction = Motion.Ease, FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop };
             animation.Completed += (_, _) => { if (version == motionVersion) slide.BeginAnimation(TranslateTransform.YProperty, null); };
             slide.BeginAnimation(TranslateTransform.YProperty, animation);
-            pill.BeginAnimation(UIElement.OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(.3, 1, Motion.Duration(MotionKind.FastEffects)) { FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop });
+            pill.BeginAnimation(UIElement.OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(.3, 1,
+                Motion.Duration(MotionKind.FastEffects)) { FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop });
         }
     }
     internal void Conceal(bool immediate = false)
@@ -491,8 +524,11 @@ internal sealed class ShellDockWindow : Window
             slide.Y = 0;
             return;
         }
-        var animation = new System.Windows.Media.Animation.DoubleAnimation(from, HostHeight, Motion.Duration(MotionKind.FastEffects)) { EasingFunction = Motion.Curve(MotionKind.FastEffects), FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop };
-        animation.Completed += (_, _) => { if (version == motionVersion) { Hide(); slide.BeginAnimation(TranslateTransform.YProperty, null); slide.Y = 0; } };
+        var animation = new System.Windows.Media.Animation.DoubleAnimation(from, HostHeight, Motion.Duration(MotionKind.FastEffects)) {
+            EasingFunction = Motion.Curve(MotionKind.FastEffects), FillBehavior = System.Windows.Media.Animation.FillBehavior.Stop };
+        animation.Completed += (_, _) => { if (version == motionVersion) { Hide(); slide.BeginAnimation(TranslateTransform.YProperty,
+            null);
+            slide.Y = 0; } };
         slide.BeginAnimation(TranslateTransform.YProperty, animation);
     }
     IntPtr Hook(IntPtr w, int msg, IntPtr wp, IntPtr lp, ref bool handled)
@@ -508,7 +544,8 @@ internal sealed class ShellDockWindow : Window
         {
             registered = false;
             last = default;
-            Dispatcher.BeginInvoke((Action)(() => { TaskbarNative.HideExplorer(); if (owner.QtShell == null) Register(); manager.Refresh(); }));
+            Dispatcher.BeginInvoke((Action)(() => { TaskbarNative.HideExplorer(); if (owner.QtShell == null) Register(); manager.Refresh();
+                }));
         }
         return IntPtr.Zero;
     }

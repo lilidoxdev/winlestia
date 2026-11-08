@@ -1,5 +1,5 @@
-// Un onglet : son propre historique, ses éléments et son annulation. L'énumération tourne sur un thread du pool, les 256 premiers éléments
-// s'affichent d'un coup, puis des ajouts temporisés,
+// Un onglet : son propre historique, ses éléments et son annulation. L'énumération tourne sur un thread du pool, les 256 premiers
+// éléments s'affichent d'un coup, puis des ajouts temporisés,
 // marshalés par Dispatcher.InvokeAsync en priorité Background ; chaque action postée revérifie le jeton.
 using System;
 using System.Collections.Generic;
@@ -16,14 +16,14 @@ internal enum LoadState
 {
     Loading, Ready, Empty, Denied, NotFound, Failed
 }
-// Ce que la fenêtre doit conserver lors d'une réécriture des lignes visibles : sélection + ancre de défilement (lignes ajoutées/retirées),
-// sélection + décalage (retri), sélection seule (filtre).
+// Ce que la fenêtre doit conserver lors d'une réécriture des lignes visibles : sélection + ancre de défilement (lignes
+// ajoutées/retirées), sélection + décalage (retri), sélection seule (filtre).
 internal enum Keep
 {
     Anchor, Offset, Selection
 }
 
-internal sealed class FolderTab
+internal sealed partial class FolderTab
 {
     internal static bool ShowHidden;
     const int Batch = 256, FirstFlushMs = 80, FlushMs = 150;
@@ -49,8 +49,8 @@ internal sealed class FolderTab
     internal event Action<FolderTab, Keep?>? Mutating;
     // Avis visible par l'utilisateur (dossier supprimé : remonté au parent).
     internal event Action<FolderTab, string>? Notice;
-    // Les onglets inactifs ne sont pas surveillés : ils sont marqués périmés et resynchronisés (hors thread, en incrémental) quand on les
-    // réaffiche.
+    // Les onglets inactifs ne sont pas surveillés : ils sont marqués périmés et resynchronisés (hors thread, en incrémental) quand
+    // on les réaffiche.
     internal bool Stale;
     internal int Total => all.Count;
     internal void SyncIfStale()
@@ -63,9 +63,9 @@ internal sealed class FolderTab
     string filter = "";
     internal string Filter => filter;
     internal bool FilterEmpty => filter.Length > 0 && items.Count == 0 && !Searching && State is LoadState.Ready or LoadState.Empty;
-    // Posé dès que les premières lignes (ou le résultat final, ou un échec) ont été mises en file vers l'UI : permet à la fenêtre de les
-    // appliquer
-    // avant sa toute première passe de mise en page, au lieu de construire la liste vide puis de la mettre en page une seconde fois.
+    // Posé dès que les premières lignes (ou le résultat final, ou un échec) ont été mises en file vers l'UI : permet à la fenêtre
+    // de les appliquer avant sa toute première passe de mise en page, au lieu de construire la liste vide puis de la mettre en page une
+    // seconde fois.
     internal readonly ManualResetEventSlim FirstPosted = new(false);
 
     internal bool CanBack => index > 0;
@@ -145,10 +145,10 @@ internal sealed class FolderTab
         });
     }
 
-    // Mise à jour sur place après une opération de fichier (sans énumération) : retire les chemins supprimés, insère les éléments ajoutés à
-    // leur position triée.
-    // Peu de changements = notifications Remove/Insert unitaires (la sélection des autres lignes reste intacte) ; un gros lot = une fusion
-    // linéaire + un Reset.
+    // Mise à jour sur place après une opération de fichier (sans énumération) : retire les chemins supprimés, insère les éléments
+    // ajoutés à leur position triée.
+    // Peu de changements = notifications Remove/Insert unitaires (la sélection des autres lignes reste intacte) ; un gros lot = une
+    // fusion linéaire + un Reset.
     internal void ApplyChanges(ICollection<string> removed, List<FileItem> added)
     {
         if (disposed || State is LoadState.Loading or LoadState.Denied or LoadState.NotFound or LoadState.Failed)
@@ -239,311 +239,16 @@ internal sealed class FolderTab
             if (!touched)
                 return;
             if (reset || !mirror)
-                items.Reset(Visible());          // bulk change or filtered view: one rewrite of the shown rows
+                items.Reset(Visible());          // changement en masse ou vue filtrée : une seule réécriture des lignes affichées
         }
         finally { Mutating?.Invoke(this, null); }
         if (!touched)
             return;
         State = all.Count == 0 ? LoadState.Empty : LoadState.Ready;
         if (sorting)
-            StartSort();                              // an in-flight sort worked on a stale snapshot
+            StartSort();                              // un tri en cours travaillait sur un instantané périmé
         Changed?.Invoke(this);
     }
-
-    // ---- filtre (en mémoire, sur les éléments déjà chargés ; les objets FileItem ne sont jamais reconstruits) -------------------
-
-    static readonly System.Globalization.CompareInfo Compare = System.Globalization.CultureInfo.CurrentCulture.CompareInfo;
-    const System.Globalization.CompareOptions Loose = System.Globalization.CompareOptions.IgnoreCase | System.Globalization.CompareOptions
-        .IgnoreNonSpace | System.Globalization.CompareOptions.IgnoreWidth;
-
-    List<FileItem> Visible() => deepMode ? deep : filter.Length == 0 ? all : all.FindAll(i => Compare.IndexOf(i.Name, filter, Loose) >= 0);
-
-    internal void SetFilter(string text)
-    {
-        text = text.Trim();
-        if (disposed || text == filter || State is LoadState.Loading or LoadState.Denied or LoadState.NotFound or LoadState.Failed)
-            return;
-        filter = text;
-        RestartDeep();
-        Mutating?.Invoke(this, Keep.Selection);
-        try
-        {
-            items.Reset(Visible());
-        }
-        finally { Mutating?.Invoke(this, null); }
-        Changed?.Invoke(this);
-    }
-
-    // ---- recherche dans les sous-dossiers (hors thread UI, annulable, résultats postés par lots) ---------------------------
-
-    // La liste superficielle (`all`) n'est jamais touchée par une recherche profonde : effacer le filtre ou annuler la remet comme avant.
-    List<FileItem> deep = new();
-    bool deepOption, deepMode;
-    CancellationTokenSource? deepCts;
-    internal bool DeepOption => deepOption;
-    internal bool DeepActive => deepMode;
-    internal bool Searching
-    {
-        get; private set;
-    }
-    internal int DeepCount => deep.Count;
-
-    internal void SetDeepOption(bool on)
-    {
-        if (deepOption == on || disposed)
-            return;
-        deepOption = on;
-        if (filter.Length == 0)
-            return;
-        RestartDeep();
-        Mutating?.Invoke(this, Keep.Selection);
-        try
-        {
-            items.Reset(Visible());
-        }
-        finally { Mutating?.Invoke(this, null); }
-        Changed?.Invoke(this);
-    }
-
-    // Échap : arrête le parcours, garde ce qui a été trouvé jusque-là.
-    internal bool CancelDeep()
-    {
-        if (!Searching)
-            return false;
-        deepCts?.Cancel();
-        Searching = false;
-        Changed?.Invoke(this);
-        return true;
-    }
-
-    void StopDeep()
-    {
-        deepCts?.Cancel();
-        deepCts?.Dispose();
-        deepCts = null;
-        Searching = false;
-    }
-
-    void RestartDeep()
-    {
-        StopDeep();
-        deep = new List<FileItem>();
-        deepMode = deepOption && filter.Length > 0 && State is LoadState.Ready or LoadState.Empty && !ThisPc.Is(Location);
-        if (!deepMode)
-            return;
-        var mine = deepCts = new CancellationTokenSource();
-        var token = mine.Token;
-        string root = Location, text = filter;
-        bool hidden = ShowHidden;
-        Searching = true;
-        Task.Run(() => DeepRun(token, root, text, hidden));
-    }
-
-    void DeepRun(CancellationToken token, string root, string text, bool hidden)
-    {
-        try
-        {
-            var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true,
-                ReturnSpecialDirectories = false, AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System };
-            var types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var walk = new System.IO.Enumeration.FileSystemEnumerable<FileItem>(root, (ref System.IO.Enumeration.FileSystemEntry e) =>
-            {
-                string dir = e.Directory.ToString();
-                string rel = Path.GetRelativePath(root, dir);
-                if (rel == ".")
-                    rel = "";
-                var item = FileItem.From(ref e, types);
-                item.Where = rel;
-                return item;
-            }, options)
-            {
-                ShouldIncludePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => Compare.IndexOf(e.FileName.ToString(), text,
-                    Loose) >= 0,
-                ShouldRecursePredicate = (ref System.IO.Enumeration.FileSystemEntry e) => e.IsDirectory
-                    && (e.Attributes & FileAttributes.ReparsePoint) == 0,
-            };
-            var pending = new List<FileItem>();
-            long last = System.Diagnostics.Stopwatch.GetTimestamp();
-            foreach (var item in walk)
-            {
-                if (token.IsCancellationRequested)
-                    return;
-                pending.Add(item);
-                if (pending.Count >= 200 || Perf.Ms(last) >= 120)
-                {
-                    var slice = pending;
-                    pending = new List<FileItem>();
-                    last = System.Diagnostics.Stopwatch.GetTimestamp();
-                    Post(token, () => DeepBatch(slice));
-                }
-            }
-            var rest = pending;
-            Post(token, () => DeepDone(rest));
-        }
-        catch (OperationCanceledException)
-        {
-            // Énumération annulée par la navigation : résultat partiel jeté.
-        }
-        catch (Exception ex) { Perf.Log("deep search: " + ex.Message); Post(token, () => DeepDone(new List<FileItem>())); }
-    }
-
-    void DeepBatch(List<FileItem> slice)
-    {
-        if (!deepMode)
-            return;
-        deep.AddRange(slice);
-        items.AddRange(slice);
-        Changed?.Invoke(this);
-    }
-
-    void DeepDone(List<FileItem> rest)
-    {
-        if (!deepMode)
-            return;
-        deep.AddRange(rest);
-        Searching = false;
-        deep = FileSort.Sorted(deep, Sort);
-        Mutating?.Invoke(this, Keep.Selection);
-        try
-        {
-            items.Reset(deep);
-        }
-        finally { Mutating?.Invoke(this, null); }
-        Changed?.Invoke(this);
-    }
-
-    // ---- auto refresh (folder change notifications) -----------------------------------------------------------------
-
-    bool syncRunning, syncFull, dirty;
-    readonly HashSet<string> syncPaths = new(StringComparer.OrdinalIgnoreCase);
-
-    // Chemins modifiés du dossier affiché (full = réanalyser le dossier et comparer). Thread UI. Ne touche jamais au disque ici :
-    // lecture/énumération sur un thread du pool,
-    // le résultat est appliqué sur place via ApplyChanges (que les opérations de fichiers utilisent aussi, donc les deux sources convergent
-    // vers les mêmes lignes).
-    internal void Sync(ICollection<string> paths, bool full)
-    {
-        if (disposed)
-            return;
-        if (State == LoadState.Loading)
-        {
-            dirty = true;
-            return;
-        }       // applied by one rescan right after the load
-        if (State is LoadState.Denied or LoadState.NotFound or LoadState.Failed && !full)
-            return;
-        foreach (var p in paths)
-            syncPaths.Add(p);
-        syncFull |= full;
-        if (syncRunning)
-            return;
-        syncRunning = true;
-        var batch = syncPaths.ToList();
-        bool whole = syncFull || batch.Count > 500;
-        syncPaths.Clear();
-        syncFull = false;
-        string loc = Location;
-        bool hidden = ShowHidden;
-        var known = whole ? all.ToArray() : Array.Empty<FileItem>();
-        var visibleCheck = whole ? null : batch.Select(p => Find(p)).ToArray();
-        Task.Run(() =>
-        {
-            List<string>? gone = null;
-            List<FileItem>? added = null;
-            string? parent = null;
-            bool lost = false;
-            try
-            {
-                lost = !Directory.Exists(loc);
-                if (lost)
-                {
-                    parent = Path.GetDirectoryName(loc);
-                    while (parent != null && !Directory.Exists(parent))
-                        parent = Path.GetDirectoryName(parent);
-                }
-                else
-                {
-                    var types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                    gone = new List<string>();
-                    added = new List<FileItem>();
-                    if (whole)
-                    {
-                        var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = false,
-                            ReturnSpecialDirectories = false, AttributesToSkip = hidden ? 0 : FileAttributes.Hidden | FileAttributes.System
-                            };
-                        var fresh = new Dictionary<string, FileItem>(StringComparer.OrdinalIgnoreCase);
-                        foreach (var e in new DirectoryInfo(loc).EnumerateFileSystemInfos("*", options))
-                        {
-                            var f = FileItem.From(e, types);
-                            fresh[f.FullPath] = f;
-                        }
-                        var old = new Dictionary<string, FileItem>(StringComparer.OrdinalIgnoreCase);
-                        foreach (var k in known)
-                            old[k.FullPath] = k;
-                        foreach (var k in known)
-                            if (!fresh.ContainsKey(k.FullPath))
-                                gone.Add(k.FullPath);
-                        foreach (var f in fresh.Values)
-                            if (!old.TryGetValue(f.FullPath, out var k) || Differs(k, f))
-                            {
-                                if (k != null)
-                                    gone.Add(f.FullPath);
-                                added.Add(f);
-                            }
-                    }
-                    else
-                    {
-                        for (int i = 0; i < batch.Count; i++)
-                        {
-                            var now = FileItem.Probe(batch[i], types);
-                            if (now != null && !hidden
-                                && (File.GetAttributes(batch[i]) & (FileAttributes.Hidden | FileAttributes.System)) != 0)
-                                now = null;
-                            var was = visibleCheck![i];
-                            if (now == null)
-                            {
-                                if (was != null)
-                                    gone.Add(batch[i]);
-                            }
-                            else if (was == null)
-                                added.Add(now);
-                            else if (Differs(was, now))
-                            {
-                                gone.Add(batch[i]);
-                                added.Add(now);
-                            }
-                        }
-                    }
-                }
-            }
-            catch { gone = null; added = null; lost = false; }
-            ui.InvokeAsync(() =>
-            {
-                syncRunning = false;
-                if (disposed || !string.Equals(loc, Location, StringComparison.OrdinalIgnoreCase))
-                    return;
-                if (lost)
-                {
-                    if (parent != null)
-                    {
-                        Notice?.Invoke(this, "Dossier supprimé ou renommé : retour au dossier parent");
-                        Go(parent);
-                    }
-                    else
-                        Fail(new DirectoryNotFoundException());
-                    return;
-                }
-                if (State == LoadState.Loading)
-                    dirty = true;
-                else if (gone != null && added != null && (gone.Count > 0 || added.Count > 0))
-                    ApplyChanges(gone, added);
-                if (syncPaths.Count > 0 || syncFull)
-                    Sync(Array.Empty<string>(), false);
-            }, DispatcherPriority.Background);
-        });
-    }
-
-    static bool Differs(FileItem a, FileItem b) => a.Size != b.Size || a.Modified != b.Modified || a.IsDir != b.IsDir;
 
     internal FileItem? Find(string path) => all.Find(i => string.Equals(i.FullPath, path, StringComparison.OrdinalIgnoreCase));
     internal void RaiseCut(HashSet<string> before, HashSet<string> after)
@@ -587,7 +292,7 @@ internal sealed class FolderTab
             FirstPosted.Set();
             Changed?.Invoke(this);
             return;
-        }   // virtual page: drives are listed by the window
+        }   // page virtuelle : les lecteurs sont listés par la fenêtre
         Task.Run(() => Run(token, path, hidden, start));
     }
 
@@ -607,9 +312,8 @@ internal sealed class FolderTab
             };
             var everything = new List<FileItem>();
             var types = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            // L'UI voit les premières lignes le plus tôt possible (premier lot complet, ou après FirstFlushMs sur un disque lent), puis au
-            // plus un
-            // ajout par FlushMs tant que l'énumération continue. Tout le reste attend l'unique Reset trié de Complete() :
+            // L'UI voit les premières lignes le plus tôt possible (premier lot complet, ou après FirstFlushMs sur un disque lent), puis
+            // au plus un ajout par FlushMs tant que l'énumération continue. Tout le reste attend l'unique Reset trié de Complete() :
             // 10k éléments coûtent 2 notifications de collection au lieu de ~40, et le tri ne tourne jamais sur le thread UI.
             int posted = 0;
             long lastFlush = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -672,7 +376,7 @@ internal sealed class FolderTab
         {
             dirty = false;
             Sync(Array.Empty<string>(), true);
-        }   // something changed while this load was running
+        }   // quelque chose a changé pendant ce chargement
         LogFirstRender(start);
         Changed?.Invoke(this);
         if (Perf.Enabled)

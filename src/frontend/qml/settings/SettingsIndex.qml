@@ -1,12 +1,12 @@
 pragma Singleton
 import QtQuick
 
-// Static description of the settings UI: pages (navigation) and one searchable entry per row.
-// Row components read their title/description from here (byId), so search and pages can never drift apart.
+// Description statique de l'interface des réglages : pages (navigation) et une entrée cherchable par ligne.
+// Les composants de ligne lisent titre/description ici (byId), donc recherche et pages ne peuvent jamais diverger.
 QtObject {
     id: root
 
-    // group: entries of the same group sit together in the navigation; a gap/divider separates groups.
+    // group : les entrées d'un même groupe restent ensemble dans la navigation ; un espace/séparateur distingue les groupes.
     readonly property var pages: [
         {
             id: "appearance",
@@ -74,7 +74,7 @@ QtObject {
     }
 
     // page = index in `pages`; section = muted label of the section holding the row; anchor = row to show when this one is hidden.
-    // kw: extra search words (French and English), never displayed.
+    // kw : mots de recherche supplémentaires (français et anglais), jamais affichés.
     readonly property var entries: [
         {
             id: "theme",
@@ -384,7 +384,8 @@ QtObject {
             page: 6,
             section: qsTr("Winlestia Fichiers"),
             label: qsTr("Précharger Winlestia Fichiers"),
-            desc: qsTr("Garde une instance cachée (~70 Mo de mémoire) pour ouvrir les dossiers plus vite ; l’arrêt prend effet au prochain démarrage"),
+            desc: qsTr("Garde une instance cachée (~70 Mo de mémoire) pour ouvrir les dossiers plus vite ; " +
+                       "l’arrêt prend effet au prochain démarrage"),
             kw: "rapide memoire preload"
         },
         {

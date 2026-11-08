@@ -14,6 +14,10 @@
 # Aucun .pdb ni lanceur pip n'est livre. Verifier ensuite que build\payload ne contient ni le nom
 # d'utilisateur ni C:\Users\ (UTF-8 et UTF-16LE).
 
+# -CI : fabrication de verification sur runner CI. Les composants natifs ignores par git (MSVC requis) sont
+# remplaces par des fichiers vides : le setup produit sert uniquement de test de fumee, jamais de livraison.
+param([switch]$CI)
+
 $ErrorActionPreference = 'Stop'
 $root    = Split-Path $PSScriptRoot -Parent
 $payload = Join-Path $root 'build\payload'
@@ -77,6 +81,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Compilation de winlestia.exe échouée.' }
 # Composants natifs précompilés (ignorés par git) : sans eux le setup serait livré sans outil de restauration.
 $nativeDir = Join-Path $root 'src\backend\native'
 foreach ($required in 'RETABLIR_BARRE_WINDOWS.exe','SECOURS_BUREAU.exe','GlassBackdrop.dll') {
+    if ($CI -and -not (Test-Path (Join-Path $nativeDir $required))) {
+        Write-Warning "CI : $required absent, remplace par un fichier vide (setup de fumee)."
+        New-Item -ItemType File -Force -Path (Join-Path $nativeDir $required) | Out-Null
+    }
     if (-not (Test-Path (Join-Path $nativeDir $required))) { throw "Composant natif manquant : $required dans $nativeDir. Copie-le depuis une installation de Winlestia (Glass-v5) ou recompile-le (voir native\README.md)." }
 }
 
@@ -97,6 +105,10 @@ Get-ChildItem (Join-Path $payload 'Glass-v5') -Filter '*.log' -ErrorAction Silen
 Write-Host '→ Frontend QML' -ForegroundColor Cyan
 # Verre natif Qt (ignoré par git) : sans lui native_glass.py retombe sans flou natif. Copié avec le frontend.
 $qtGlass = Join-Path $root 'build\QtGlassBackdrop.dll'
+if ($CI -and -not (Test-Path $qtGlass)) {
+    Write-Warning 'CI : QtGlassBackdrop.dll absent, remplace par un fichier vide (setup de fumee).'
+    New-Item -ItemType File -Force -Path $qtGlass | Out-Null
+}
 if (-not (Test-Path $qtGlass)) {
     cmd /c (Join-Path $root 'src\native\qtglass\build-qt-glass.cmd')
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $qtGlass)) { throw "QtGlassBackdrop.dll manquant dans build : compilation (src\native\qtglass\build-qt-glass.cmd) echouee." }
@@ -126,8 +138,8 @@ Expand-Archive -Path $zip -DestinationPath $pyDir -Force
 
 Write-Host '→ Dépendances Python' -ForegroundColor Cyan
 python -m pip install --target (Join-Path $pyDir 'Lib\site-packages') `
-    --no-warn-script-location --disable-pip-version-check --only-binary=:all: `
-    -r (Join-Path $root 'src\frontend\requirements.txt')
+    --no-warn-script-location --disable-pip-version-check --only-binary=:all: --no-deps --require-hashes `
+    -r (Join-Path $root 'src\frontend\requirements.lock.txt')
 if ($LASTEXITCODE -ne 0) { throw 'Installation des dépendances Python échouée.' }
 
 # Allègement : modules Qt que le frontend n’importe jamais
@@ -183,6 +195,7 @@ foreach ($dir in 'clink','clink-profile') {
 Write-Host '→ Compilation du setup' -ForegroundColor Cyan
 $iscc = @(
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+    "${env:ProgramFiles}\Inno Setup 6\ISCC.exe",
     "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
 ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $iscc) { throw 'Inno Setup 6 introuvable : winget install JRSoftware.InnoSetup' }

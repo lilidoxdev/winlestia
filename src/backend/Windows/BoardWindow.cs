@@ -542,7 +542,8 @@ internal sealed class BoardWindow : GlassWindow
             => owner.ToggleTaskbarPin(entry)), new MenuAction("Personnaliser cet accès…", "\uE70F", () => owner.Edit(entry),
             Separator: true), new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)),
             new MenuAction("Copier le chemin", "\uE8C8", () => System.Windows.Clipboard.SetText(entry.Target)),
-            new MenuAction("Masquer cet accès", "\uE890", () => { Store.State.Hidden.Add(entry.Id); Store.Save(); owner.RefreshBoards(); },
+            new MenuAction("Masquer cet accès", "\uE890", () => { Store.State.Hidden.Add(entry.Id); Store.Save(); owner.RefreshBoards();
+                },
             Separator: true) }, true);
     }
     void HandleDrop(DragEventArgs e, string? targetId)

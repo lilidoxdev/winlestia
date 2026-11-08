@@ -7,7 +7,8 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SettingsRefonte")]
 namespace PanneauxGlass;
-// Texte de combinaison partagé avec la page QML : "Win+Alt+W", "Ctrl+F1", "Ctrl+Alt+Maj+F". Ordre de sortie Win, Ctrl, Alt, Maj ; l'analyse
+// Texte de combinaison partagé avec la page QML : "Win+Alt+W", "Ctrl+F1", "Ctrl+Alt+Maj+F". Ordre de sortie Win, Ctrl, Alt, Maj ;
+// l'analyse
 // accepte n'importe quel ordre, "Shift"/"Maj", "Space"/"Espace".
 // Les bits de modificateur sont ceux de RegisterHotKey : Alt 1, Ctrl 2, Maj 4, Win 8.
 internal static class ShortcutCombo
@@ -16,7 +17,8 @@ internal static class ShortcutCombo
         (modifiers & 2) != 0 ? "Ctrl" : "", (modifiers & 1) != 0 ? "Alt" : "", (modifiers & 4) != 0 ? "Maj" : "", KeyText(key) }.Where(t
         => t.Length > 0));
     internal static string KeyText(uint key) => key switch { >= 0x70 and <= 0x87 => "F" + (key - 0x6F), 0x20 => "Espace", 0x08
-        => "Backspace", 0x09 => "Tab", 0x0D => "Entrée", 0x25 => "←", 0x26 => "↑", 0x27 => "→", 0x28 => "↓", 0x2C => "Impr. écran", 0xBB
+        => "Backspace", 0x09 => "Tab", 0x0D => "Entrée", 0x25 => "←", 0x26 => "↑", 0x27 => "→", 0x28 => "↓", 0x2C =>
+            "Impr. écran", 0xBB
         => "Plus", 0xBD => "Moins", _ => key is >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A ? ((char)key).ToString() : "0x"
         + key.ToString("X2") };
     static uint KeyFrom(string token)
@@ -124,17 +126,23 @@ internal static class ShortcutCatalog
         new("wallpaper","Apparence","Changer de fond d’écran","global",true,"",9,0x57,"",Array.Empty<(uint,uint)>()),
         new("capture","Outils","Capturer l’écran","global",true,"",2,0x72,"",Array.Empty<(uint,uint)>()),
         new("pin","Outils","Épingler au premier plan","global",true,"",2,0x77,"",Array.Empty<(uint,uint)>()),
-        new("dictation","Outils","Dictée (touche maintenue)","global",false,"Se règle dans Médias et audio › Dictée (touche maintenue).",0,
+        new("dictation","Outils","Dictée (touche maintenue)","global",false,
+            "Se règle dans Médias et audio › Dictée (touche maintenue).",0,
             0,"",Array.Empty<(uint,uint)>()),
-        new("rescue","Secours","Restaurer le bureau","global",false,"Réservé à la restauration du bureau : il doit fonctionner même si " +
+        new("rescue","Secours","Restaurer le bureau","global",false,
+            "Réservé à la restauration du bureau : il doit fonctionner même si " +
             "Winlestia ne répond plus.",3,0x08,"Ctrl+Alt+Backspace",Keys(3,0x08)),
-        new("tileFocus","Disposition automatique","Passer le focus à la fenêtre voisine","tiling",false,TileReason,3,0,"Ctrl+Alt+Flèches",
+        new("tileFocus","Disposition automatique","Passer le focus à la fenêtre voisine","tiling",false,TileReason,3,0,
+            "Ctrl+Alt+Flèches",
             Keys(3,0x25,0x26,0x27,0x28)),
-        new("tileSwap","Disposition automatique","Échanger avec la fenêtre voisine","tiling",false,TileReason,7,0,"Ctrl+Alt+Maj+Flèches",
+        new("tileSwap","Disposition automatique","Échanger avec la fenêtre voisine","tiling",false,TileReason,7,0,
+            "Ctrl+Alt+Maj+Flèches",
             Keys(7,0x25,0x26,0x27,0x28)),
-        new("tileFloat","Disposition automatique","Basculer la fenêtre en flottant","tiling",false,TileReason,7,0x46,"Ctrl+Alt+Maj+F",Keys(
+        new("tileFloat","Disposition automatique","Basculer la fenêtre en flottant","tiling",false,TileReason,7,0x46,"Ctrl+Alt+Maj+F",
+            Keys(
             7,0x46)),
-        new("tileGrow","Disposition automatique","Agrandir la zone de la fenêtre","tiling",false,TileReason,7,0xBB,"Ctrl+Alt+Maj+Plus",Keys(
+        new("tileGrow","Disposition automatique","Agrandir la zone de la fenêtre","tiling",false,TileReason,7,0xBB,"Ctrl+Alt+Maj+Plus",
+            Keys(
             7,0xBB,0x6B)),
         new("tileShrink","Disposition automatique","Réduire la zone de la fenêtre","tiling",false,TileReason,7,0xBD,"Ctrl+Alt+Maj+Moins",
             Keys(7,0xBD,0x6D,0x36)),
@@ -148,8 +156,8 @@ internal static class ShortcutCatalog
         >= 0x70 and <= 0x87 => "F" + (vk - 0x6F), >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A => ((char)vk).ToString(), _ => "Touche " + vk
         };
 }
-// Applique un changement de raccourci venant de la page de réglages : valide, rejette les combinaisons réservées à Windows, détecte tous
-// les conflits (configurables, fixes et tuilage), relie avec retour arrière, persiste.
+// Applique un changement de raccourci venant de la page de réglages : valide, rejette les combinaisons réservées à Windows, détecte
+// tous les conflits (configurables, fixes et tuilage), relie avec retour arrière, persiste.
 internal sealed class ShortcutManager
 {
     readonly GlobalShortcut hotkeys; readonly Func<Preferences> prefs; readonly Action save; readonly Action<string>? changed;
@@ -249,7 +257,8 @@ internal sealed class ShortcutManager
             return Done(id, new(true, reset ? "Déjà au réglage d’origine." : "Raccourci inchangé.", ""));
         var clash = FindConflict(id, m, k);
         if (clash != null)
-            return Done(id, new(false, "Déjà utilisé par « " + clash.Label + " ». Choisissez une autre combinaison ou modifiez d’abord « "
+            return Done(id, new(false, "Déjà utilisé par « " + clash.Label
+                + " ». Choisissez une autre combinaison ou modifiez d’abord « "
                 + clash.Label + " ».", clash.Id));
         if (!hotkeys.TryRebind(id, m, k, out string error))
             return Done(id, new(false, GlobalShortcut.LastCode == 1409 ? "Une autre application utilise déjà cette combinaison." : error,

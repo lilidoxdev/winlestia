@@ -3,7 +3,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// Scrim + surfaceContainerHigh card. Anchors itself over its parent; Escape or a click on the scrim closes it.
+// Voile + carte surfaceContainerHigh. S'ancre sur son parent ; Échap ou un clic sur le voile la ferme.
 Item {
     id: root
 
@@ -32,7 +32,7 @@ Item {
     onOpenChanged: if (open)
         forceActiveFocus()
 
-    // Window-level shortcut so it wins over (and is exclusive with) the host window's own Escape shortcut, which is gated on !open.
+    // Raccourci au niveau fenêtre pour primer sur (et être exclusif avec) le raccourci Échap de la fenêtre hôte, conditionné par !open.
     Shortcut {
         sequence: "Escape"
         context: Qt.WindowShortcut
@@ -73,7 +73,7 @@ Item {
             }
         }
 
-        // Swallow clicks so they never reach the scrim.
+        // Avale les clics pour qu'ils n'atteignent jamais le voile.
         MouseArea {
             anchors.fill: parent
         }

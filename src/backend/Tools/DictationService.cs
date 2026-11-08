@@ -1,4 +1,5 @@
-// C# 12 / .NET 8 / Windows 11. Dictée « appuyer pour parler » : hook clavier, micro à la demande, Whisper.net, saisie dans l'appli active.
+// C# 12 / .NET 8 / Windows 11. Dictée « appuyer pour parler » : hook clavier, micro à la demande, Whisper.net, saisie dans l'appli
+// active.
 
 using System;
 using System.Collections.Generic;

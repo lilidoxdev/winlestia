@@ -15,7 +15,8 @@ internal sealed class GlassLevel : RangeBase
 {
     internal string Glyph { get; set; } = "\uE767"; internal event Action<bool>? DraggingChanged; bool dragging; internal bool Dragging
         => dragging;
-    static readonly Brush track = Freeze(new LinearGradientBrush(Color.FromArgb(54, 255, 255, 255), Color.FromArgb(16, 255, 255, 255), 70));
+    static readonly Brush track = Freeze(new LinearGradientBrush(Color.FromArgb(54, 255, 255, 255), Color.FromArgb(16, 255, 255, 255),
+        70));
     static readonly Brush fill = Freeze(new LinearGradientBrush(Color.FromRgb(250, 253, 255), Color.FromRgb(214, 239, 251), 90));
     static Brush Freeze(Brush brush)
     {
@@ -59,7 +60,8 @@ internal sealed class GlassLevel : RangeBase
         dc.Pop();
         var edge = new Pen(UI.Brush(IsKeyboardFocused ? "#E0D8F5FF" : "#42FFFFFF"), IsKeyboardFocused ? 2 : 1);
         dc.DrawRoundedRectangle(null, edge, new Rect(.5, .5, width - 1, height - 1), radius, radius);
-        var icon = new FormattedText(Glyph, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe Fluent Icons"), 30,
+        var icon = new FormattedText(Glyph, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe Fluent Icons"),
+            30,
             UI.Brush(IsEnabled && ratio > .23 ? "#277EB7" : "#F1F8FF"), VisualTreeHelper.GetDpi(this).PixelsPerDip);
         dc.DrawText(icon, new Point((width - icon.Width) / 2, height - 58));
         string value = IsEnabled ? Math.Round(Value).ToString(CultureInfo.InvariantCulture) : "—";

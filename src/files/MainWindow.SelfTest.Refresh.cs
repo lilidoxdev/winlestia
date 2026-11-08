@@ -18,6 +18,11 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Pas de sondage de la convergence de la liste après un changement disque.
+    const int RefreshPollMs = 10;
+    // Pas de sondage de l'arrivée de la navigation à l'emplacement attendu (3 s max).
+    const int NavigatePollMs = 20;
+
     string Fixture()
     {
         string f = Path.GetFullPath(Active.Location);
@@ -35,7 +40,7 @@ public sealed partial class MainWindow
         {
             if (DiskMatches() && OrderOk() && (extra?.Invoke() ?? true))
                 return Perf.Ms(t);
-            await Task.Delay(10);
+            await Task.Delay(RefreshPollMs);
         }
         return -1;
     }
@@ -144,7 +149,7 @@ public sealed partial class MainWindow
         await Task.Run(() => Directory.Delete(gone, true));
         long t = Stopwatch.GetTimestamp();
         while (Perf.Ms(t) < 3000 && !string.Equals(Active.Location.TrimEnd('\\'), F.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
-            await Task.Delay(20);
+            await Task.Delay(NavigatePollMs);
         Check("deleted current folder -> navigates to parent", string.Equals(Active.Location.TrimEnd('\\'), F.TrimEnd('\\'),
             StringComparison.OrdinalIgnoreCase), $"{Perf.Ms(t):F0} ms, at {Active.Location}");
         Check("toast shown", toast.Visibility == Visibility.Visible, toastText.Text);

@@ -1,5 +1,5 @@
-// Retrait unique de l'épingle « Winlestia Fichiers » du dock que FilesDefaultHandler.Migrate ajoutait autrefois (l'application a maintenant
-// son propre bouton thémé dans la zone système du dock).
+// Retrait unique de l'épingle « Winlestia Fichiers » du dock que FilesDefaultHandler.Migrate ajoutait autrefois (l'application a
+// maintenant son propre bouton thémé dans la zone système du dock).
 // Pur volontairement (listes en entrée, identifiants en sortie) pour qu'un test puisse l'exécuter sur des Preferences en mémoire.
 // Idempotent grâce à Preferences.FilesPinRemoved ; les autres épingles ne sont jamais touchées.
 using System;
@@ -24,8 +24,8 @@ internal static class FilesPinMigration
             StringComparison.OrdinalIgnoreCase));
         if (removed > 0)
         {
-            // Uniquement l'entrée créée par l'ancienne migration (même id, même nom, même cible), et seulement tant qu'aucune épingle
-            // restante n'y fait référence.
+            // Uniquement l'entrée créée par l'ancienne migration (même id, même nom, même cible), et seulement tant qu'aucune
+            // épingle restante n'y fait référence.
             foreach (var e in custom.Where(e => e.Id == id && e.Name == EntryName && string.Equals(e.Target, exe,
                 StringComparison.OrdinalIgnoreCase)).ToList())
             {

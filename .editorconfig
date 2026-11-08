@@ -5,12 +5,12 @@ charset = utf-8
 end_of_line = lf
 indent_style = space
 indent_size = 4
-max_line_length = 120
+max_line_length = 140
 
 [*.cs]
 indent_style = space
 indent_size = 4
-max_line_length = 120
+max_line_length = 140
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
 csharp_new_line_before_catch = true

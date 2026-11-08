@@ -6,7 +6,7 @@ import qs.services
 import qs.config
 import "."
 
-// Bookmarks, social networks and clipboard history.
+// Favoris, réseaux sociaux et historique du presse-papiers.
 ColumnLayout {
     id: page
 
@@ -141,7 +141,8 @@ ColumnLayout {
                                 objectName: "socialStatus-" + net.modelData.id
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
-                                text: net.modelData.busy ? qsTr("Chargement…") : net.connected ? qsTr("Connecté") : qsTr("Non connecté")
+                                text: net.modelData.busy ? qsTr("Chargement…") : net.connected ? qsTr("Connecté")
+                                    : qsTr("Non connecté")
                                 font.pointSize: Appearance.font.size.small
                                 color: net.connected ? Colours.palette.m3primary : Colours.palette.m3outline
                             }

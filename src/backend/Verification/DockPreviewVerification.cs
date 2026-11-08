@@ -1,7 +1,6 @@
 // C# 12 / .NET 8. --verify-dock-preview [OUT_DIR] : ouvre la bulle d'aperçu du dock pour trois fenêtres inoffensives appartenant à ce
-// processus,
-// la capture (BitBlt d'écran, brève), clique la tuile 2 avec un vrai événement souris et vérifie l'activation, le rafraîchissement
-// différentiel et le nettoyage.
+// processus, la capture (BitBlt d'écran, brève), clique la tuile 2 avec un vrai événement souris et vérifie l'activation, le
+// rafraîchissement différentiel et le nettoyage.
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -14,6 +13,9 @@ namespace PanneauxGlass;
 
 internal static class DockPreviewVerification
 {
+    // Laisse respirer le processeur entre deux pompages de messages pendant la vérification.
+    const int PumpPauseMs = 10;
+
     [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] static extern void mouse_event(uint flags, int dx, int dy, uint data, UIntPtr extra);
     [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(Point p);
@@ -23,7 +25,7 @@ internal static class DockPreviewVerification
         while (DateTime.UtcNow < end)
         {
             System.Windows.Forms.Application.DoEvents();
-            Thread.Sleep(10);
+            Thread.Sleep(PumpPauseMs);
         }
     }
     static bool Capture(Rectangle r, string path, out int distinct)

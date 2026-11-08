@@ -70,18 +70,22 @@ internal sealed class ToolsWindow : GlassWindow
     }
     IEnumerable<ToolCard> Cards() => new List<ToolCard>{
         new("Écran","\uE722","Capturer et annoter","Encadre une zone, dessine dessus, copie ou épingle","",()=>owner.OpenCapture()),
-        new("Écran","\uE8A5","Texte d’une image","Encadre un texte, il est copié automatiquement","",()=>owner.OpenCapture(textOnly:true)),
-        new("Écran","\uE790","Pipette de couleur","Agrandit sous le curseur et copie le code hexadécimal","",()=>owner.OpenColorPicker()),
+        new("Écran","\uE8A5","Texte d’une image","Encadre un texte, il est copié automatiquement",
+            "",()=>owner.OpenCapture(textOnly:true)),
+        new("Écran","\uE790","Pipette de couleur","Agrandit sous le curseur et copie le code hexadécimal",
+            "",()=>owner.OpenColorPicker()),
         new("Écran","\uE7A3","Règle pixel","Mesure une distance à l’écran, en pixels et en centimètres","",()=>owner.OpenRuler()),
         new("Système","\uE840","Toujours au premier plan","Une fenêtre reste devant toutes les autres",owner.PinShortcutLabel,()=>owner
             .ToggleAlwaysOnTop()),
         new("Système","\uE7F5","Son et micro","Change de casque ou coupe le micro en un clic","",()=>owner.OpenAudio()),
         new("Système","\uE7ED","Notifications","Coupe ou rétablit les notifications Windows",SystemTools
             .NotificationsOn?"Activées":"Coupées",()=>owner.ToggleNotifications()),
-        new("Système","\uE72C","Redémarrer l’Explorateur","Quand la barre des tâches ou le Bureau se bloquent","",()=>owner.RestartExplorer(
+        new("Système","\uE72C","Redémarrer l’Explorateur","Quand la barre des tâches ou le Bureau se bloquent",
+            "",()=>owner.RestartExplorer(
             )),
         new("Fichiers","\uE8B7","Gros fichiers","Trouve ce qui remplit le disque, sans rien supprimer","",()=>owner.OpenLargeFiles()),
-        new("Fichiers","\uE7C3","Profils d’espace","Rouvre tes applications et la disposition d’un moment","",()=>owner.OpenWorkspaces()),
+        new("Fichiers","\uE7C3","Profils d’espace","Rouvre tes applications et la disposition d’un moment",
+            "",()=>owner.OpenWorkspaces()),
         new("Confort","\uE70B","Papier pense-bête","Une feuille collée à l’écran : écris, place, garde","",()=>owner.OpenMemo()),
         new("Confort","\uE8C8","Presse-papiers","Tout ce que tu as copié, prêt à revenir","",()=>owner.OpenClipboard()),
         new("Confort","\uE897","Aide et raccourcis","Les gestes de Panneaux, en une page","F1",()=>owner.OpenHelp())
@@ -107,7 +111,8 @@ internal sealed class ToolsWindow : GlassWindow
             {
                 Width = new GridLength(1, GridUnitType.Star)
             });
-            var bulb = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(12), Background = UI.T(M3Role.OnSurface, 0x1C),
+            var bulb = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(12), Background = UI.T(M3Role.OnSurface,
+                0x1C),
                 VerticalAlignment = VerticalAlignment.Top };
             var glyph = UI.Glyph(card.Glyph, 17);
             bulb.Child = glyph;

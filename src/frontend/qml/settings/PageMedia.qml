@@ -7,7 +7,7 @@ import qs.config
 import ".."
 import "."
 
-// On-screen indicators and voice dictation.
+// Indicateurs à l'écran et dictée vocale.
 ColumnLayout {
     id: page
 

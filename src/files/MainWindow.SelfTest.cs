@@ -1,6 +1,6 @@
 #if WINLESTIA_SELFTEST
 // Pilotes de mesure cachés, accessibles uniquement via WINLESTIA_FILES_SELFTEST (jamais défini en usage normal).
-//   tabs50 : 50 cycles d'ouverture/fermeture d'un onglet, 30 s de stabilisation, journalise handles/threads/octets privés avant et après.
+// tabs50 : 50 cycles d'ouverture/fermeture d'un onglet, 30 s de stabilisation, journalise handles/threads/octets privés avant et après.
 // grid   : passe en vue grandes icônes, attend les miniatures, 5 passes de défilement rapide de bout en bout, journalise
 // GDI/handles/threads/privé/blocage.
 //   ops    : voir MainWindow.SelfTest.Ops.cs (opérations de fichiers sur un dossier de fixtures dans %TEMP%).
@@ -13,6 +13,15 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Pas de sondage de la fin des miniatures en attente (400 tours max).
+    const int ThumbPollMs = 25;
+    // Pas entre deux défilements : environ une image, pour solliciter la virtualisation.
+    const int ScrollStepMs = 8;
+    // Laisse l'onglet fraîchement ouvert démarrer son énumération avant de le fermer.
+    const int TabOpenSettleMs = 40;
+    // Laisse la fermeture de l'onglet se propager avant le tour suivant.
+    const int TabCloseSettleMs = 10;
+
     // WINLESTIA_FILES_TABLOG=<fichier> : harnais de test uniquement ; réécrit "tabs=N" toutes les 200 ms (le résident n'a aucun autre
     // compteur d'onglets observable).
     void StartTabLog()
@@ -104,7 +113,7 @@ public sealed partial class MainWindow
         long t0 = Stopwatch.GetTimestamp();
         SetView(true);
         for (int i = 0; i < 400 && Thumbs.Pending > 0 || i < 4; i++)
-            await Task.Delay(25);
+            await Task.Delay(ThumbPollMs);
         Perf.Log($"selftest grid visible filled {Perf.Ms(t0):F0} ms after the switch (pending {Thumbs.Pending}, shown {Thumbs.Shown})");
         await Task.Delay(PauseOperationMs);
         Sample("grid before scroll");
@@ -117,12 +126,12 @@ public sealed partial class MainWindow
             while (sv.VerticalOffset < sv.ScrollableHeight - 1)
             {
                 sv.ScrollToVerticalOffset(sv.VerticalOffset + 110);
-                await Task.Delay(8);
+                await Task.Delay(ScrollStepMs);
             }
             while (sv.VerticalOffset > 1)
             {
                 sv.ScrollToVerticalOffset(sv.VerticalOffset - 110);
-                await Task.Delay(8);
+                await Task.Delay(ScrollStepMs);
             }
             await Task.Delay(PauseDebounceMs);
             Perf.Log($"selftest pass {pass} max UI stall {Perf.Stall?.Max ?? 0:F1} ms");
@@ -142,9 +151,9 @@ public sealed partial class MainWindow
         for (int i = 0; i < 50; i++)
         {
             var view = AddTab(where);
-            await Task.Delay(40);
+            await Task.Delay(TabOpenSettleMs);
             CloseTab(view);
-            await Task.Delay(10);
+            await Task.Delay(TabCloseSettleMs);
         }
         Perf.Log("selftest tabs50 cycles done");
         await Task.Delay(PauseTransfertMs);

@@ -2,8 +2,8 @@
 // changement de liaison/déchargement).
 // Un petit pool de threads STA (BelowNormal) les sert, dernier lot d'abord ; les résultats deviennent des BitmapSource figés postés à
 // l'interface en priorité Background.
-// Deux caches LRU à budget d'octets (miniatures, icônes). Pas de minuteur : les workers inactifs bloquent sur un Monitor. Reset() (masquage
-// résident) vide les caches et termine les threads.
+// Deux caches LRU à budget d'octets (miniatures, icônes). Pas de minuteur : les workers inactifs bloquent sur un Monitor. Reset()
+// (masquage résident) vide les caches et termine les threads.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -56,7 +56,7 @@ internal static class Thumbs
     const uint SHGFI_SYSICONINDEX = 0x4000, SHGFI_USEFILEATTRIBUTES = 0x10;
 
     // ---- public surface ----------------------------------------------------------------------------------------
-    internal static double Dpi = 1.0;                        // set by the window (DPI aware sizes)
+    internal static double Dpi = 1.0;                        // posé par la fenêtre (tailles tenant compte du DPI)
     internal static int Pending;                              // live requests, for measurement
     internal static int Shown;
 
@@ -166,7 +166,8 @@ internal static class Thumbs
         for (int i = queue.Count - 1; i >= 0; i--)
         {
             if (i >= queue.Count)
-                // defensive: never index past a queue that shrank (callers hold the lock, this is belt and braces)
+                // défensif : ne jamais indexer au-delà d'une file qui a rétréci (les appelants tiennent le verrou, ceinture et
+                // bretelles)
                 continue;
             var q = queue[i];
             if (q.Cancelled)
@@ -247,7 +248,7 @@ internal static class Thumbs
         if (bmp == null)
             bmp = Generic(r.Dir, r.Ext, bucket);
         if (bmp != null)
-            // generic images are counted once, under their icon index
+            // les images génériques sont comptées une seule fois, sous leur index d'icône
             (r.Key[0] == 't' ? thumbCache : iconCache).Put(r.Key, bmp, unique ? -1 : 0);
         return bmp;
     }
@@ -263,7 +264,8 @@ internal static class Thumbs
         catch { return false; }
     }
 
-    // Image standard d'une extension ou d'un dossier simple : aucun accès disque (USEFILEATTRIBUTES), un bitmap par index d'icône système.
+    // Image standard d'une extension ou d'un dossier simple : aucun accès disque (USEFILEATTRIBUTES), un bitmap par index d'icône
+    // système.
     static BitmapSource? Generic(bool dir, string ext, int bucket)
     {
         var info = new SHFILEINFO();
@@ -334,8 +336,8 @@ internal static class Thumbs
         }
     }
 
-    // Une extension dont les 3 premières tentatives de miniature ont toutes échoué (txt, log, ...) passe directement à son icône pour le
-    // reste de la session.
+    // Une extension dont les 3 premières tentatives de miniature ont toutes échoué (txt, log, ...) passe directement à son icône pour
+    // le reste de la session.
     static readonly Dictionary<string, int> thumbFail = new(StringComparer.OrdinalIgnoreCase);
     static readonly HashSet<string> thumbOk = new(StringComparer.OrdinalIgnoreCase);
     static bool ThumbBlocked(string ext)
@@ -416,7 +418,8 @@ internal static class Thumbs
     }
 }
 
-// L'image d'une ligne/tuile. Se place sur le glyphe de substitution (un TextBlock frère nommé "Ic") et se remplit quand le shell répond.
+// L'image d'une ligne/tuile. Se place sur le glyphe de substitution (un TextBlock frère nommé "Ic") et se remplit quand le shell
+// répond.
 public sealed class ShellImage : Image
 {
     public bool Thumb
@@ -431,7 +434,7 @@ public sealed class ShellImage : Image
         RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.HighQuality);
         Stretch = Stretch.Uniform;
         IsHitTestVisible = false;
-        // before EndInit the XAML properties (Thumb, Cell) are not applied yet
+        // avant EndInit, les propriétés XAML (Thumb, Cell) ne sont pas encore appliquées
         DataContextChanged += (_, e) => { if (IsInitialized) Bind(e.NewValue as FileItem); };
         Unloaded += (_, _) => Cancel();
         Loaded += (_, _) => { if (Source == null && pending == null && DataContext is FileItem item) Bind(item); };

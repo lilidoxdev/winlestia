@@ -250,7 +250,8 @@ internal sealed class ColorPickerWindow : Window
 }
 internal sealed class RulerOverlay : Window
 {
-    readonly Canvas canvas = new(); readonly TextBlock label = UI.Text("", 12, UI.White); readonly System.Windows.Shapes.Line line = new() {
+    readonly Canvas canvas = new(); readonly TextBlock label = UI.Text("", 12, UI.White);
+        readonly System.Windows.Shapes.Line line = new() {
         Stroke = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 226, 120)), StrokeThickness = 2 };
     readonly TextBlock hint = UI.Text("Clique un premier point · Échap pour fermer", 12, UI.White);
     bool started, finished; System.Windows.Point origin, corner; double scaleX = 1, scaleY = 1;

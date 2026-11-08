@@ -14,8 +14,8 @@ internal enum SortColumn
 {
     Name, Modified, Type, Size
 }
-// FoldersFirst false = dossiers et fichiers mélangés, chacun selon sa propre valeur. Par défaut : date de modification, la plus récente
-// d'abord.
+// FoldersFirst false = dossiers et fichiers mélangés, chacun selon sa propre valeur. Par défaut : date de modification, la plus
+// récente d'abord.
 internal sealed record SortSpec(SortColumn Column, bool Ascending, bool FoldersFirst = false)
 {
     internal static readonly SortSpec Default = new(SortColumn.Modified, false, false);
@@ -95,7 +95,8 @@ public sealed class FileItem : INotifyPropertyChanged
         catch { return null; }
     }
 
-    // Appelé sur le thread d'énumération : un FileSystemInfo issu d'une énumération porte déjà les find-data (pas d'E/S supplémentaire).
+    // Appelé sur le thread d'énumération : un FileSystemInfo issu d'une énumération porte déjà les find-data (pas d'E/S
+    // supplémentaire).
     internal static FileItem From(ref System.IO.Enumeration.FileSystemEntry e, Dictionary<string, string> types)
     {
         string name = e.FileName.ToString(), full = e.ToFullPath();
@@ -128,7 +129,8 @@ internal sealed class RangeObservableCollection<T> : ObservableCollection<T>
         ((List<T>)Items).AddRange(items);
         Notify();
     }
-    // diagnostics: how many whole-list rewrites happened (the refresh selftest asserts none for small changes)
+    // diagnostic : nombre de réécritures complètes de la liste (l'auto-test de rafraîchissement n'en attend aucune pour de petits
+    // changements)
     internal static int Resets;
     internal void Reset(IEnumerable<T>? items)
     {

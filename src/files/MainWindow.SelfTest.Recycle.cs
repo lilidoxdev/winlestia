@@ -1,9 +1,9 @@
 #if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=recycle (instance résidente --background, ouverte une fois par le tube sur un jeu d'essai sous
 // %TEMP%\WinlestiaFilesOps) :
-// construit WINLESTIA_FILES_RECYCLE_BUILDS menus natifs (élément + fond), lance éventuellement (WINLESTIA_FILES_RECYCLE_OP=1) une copie de
-// <jeu>\bigfile.bin
-// vers <jeu>\dest, puis masque la fenêtre comme un utilisateur qui la ferme. Les repères vont dans selftest.log ; le banc vérifie le code
+// construit WINLESTIA_FILES_RECYCLE_BUILDS menus natifs (élément + fond), lance éventuellement (WINLESTIA_FILES_RECYCLE_OP=1) une copie
+// de <jeu>\bigfile.bin vers <jeu>\dest, puis masque la fenêtre comme un utilisateur qui la ferme. Les repères vont dans selftest.log ;
+// le banc vérifie le code
 // de sortie et le tube.
 using System;
 using System.IO;

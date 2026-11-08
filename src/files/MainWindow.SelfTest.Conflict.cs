@@ -1,9 +1,8 @@
 #if WINLESTIA_SELFTEST
 // WINLESTIA_FILES_SELFTEST=conflict : copie sur un fichier existant par le VRAI chemin de collage (UI native IFileOperation, FileOps.Quiet
 // désactivé), la boîte Windows
-// « Remplacer ou ignorer les fichiers » est pilotée avec UI Automation depuis un thread du pool (Uia ci-dessous, aussi utilisé par le test
-// xfer).
-// Exige WINLESTIA_FILES_DATA_DIR sous %TEMP% et un dossier de fixtures sous %TEMP%\WinlestiaFilesOps (harnais).
+// « Remplacer ou ignorer les fichiers » est pilotée avec UI Automation depuis un thread du pool (Uia ci-dessous, aussi utilisé par le
+// test xfer). Exige WINLESTIA_FILES_DATA_DIR sous %TEMP% et un dossier de fixtures sous %TEMP%\WinlestiaFilesOps (harnais).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,9 +13,9 @@ using System.Windows.Automation;
 
 namespace WinlestiaFiles;
 
-// Une action scriptée sur une boîte native : premier élément (par priorité de jeton, sous-chaîne de son Name sans casse) trouvé dans une
-// fenêtre non principale de ce processus.
-// Closes: the clicked element must disappear (retried, then a real mouse click, if the first Invoke was swallowed)
+// Une action scriptée sur une boîte native : premier élément (par priorité de jeton, sous-chaîne de son Name sans casse) trouvé
+// dans une fenêtre non principale de ce processus. Closes : l'élément cliqué doit disparaître (réessayé, puis un vrai clic souris,
+// si le premier Invoke a été avalé)
 internal sealed record UiaStep(string Label, string[] Tokens, bool CheckAll = false, int WaitMs = 8000, bool Optional = false,
     bool Closes = false);
 
@@ -151,8 +150,8 @@ internal static class Uia
         catch { return false; }
     }
 
-    // Exécute les étapes dans l'ordre. Renvoie une ligne de journal par étape ("OK libellé -> élément" / "MISS libellé") ; en cas d'échec
-    // l'arbre de la boîte est vidé et les boîtes sont fermées (WM_CLOSE).
+    // Exécute les étapes dans l'ordre. Renvoie une ligne de journal par étape ("OK libellé -> élément" / "MISS libellé") ; en cas
+    // d'échec l'arbre de la boîte est vidé et les boîtes sont fermées (WM_CLOSE).
     internal static Task<List<string>> Run(int mainHwnd, params UiaStep[] steps) => Task.Run(() =>
     {
         var log = new List<string>();
@@ -186,7 +185,8 @@ internal static class Uia
                             && e.Current.AutomationId != "eltSkipCheckbox" && !e.Current.AutomationId.Contains("Global"); } catch {
                             return false; } }).ToList();
                         if (boxes.Count < 2)
-                        // the per-file tiles are filled in a moment after the page opens; the two "global" boxes are the fallback
+                        // les vignettes par fichier se remplissent un instant après l'ouverture de la page ; les deux cases « globales
+                        // » servent de repli
                         {
                             if (Environment.TickCount64 - stepStart < 6000)
                                 continue;
@@ -195,7 +195,7 @@ internal static class Uia
                             if (boxes.Count == 0)
                                 continue;
                         }
-                        Task.Delay(PauseDessinMs).Wait();     // the page must be fully drawn before toggling
+                        Task.Delay(PauseDessinMs).Wait();     // la page doit être entièrement dessinée avant la bascule
                         log.AddRange(Dump(w).Select(l => "    " + l));
                         int n = boxes.Count(b => Act(b, true));
                         Task.Delay(PauseStabilisationMs).Wait();
@@ -283,7 +283,7 @@ internal static class Uia
 public sealed partial class MainWindow
 {
     int mainHwndCache;
-    int MainHwnd => mainHwndCache != 0 ? mainHwndCache : (mainHwndCache = (int)Hwnd);   // read on the UI thread first (Hwnd needs it)
+    int MainHwnd => mainHwndCache != 0 ? mainHwndCache : (mainHwndCache = (int)Hwnd);   // lire d'abord sur le thread UI (Hwnd en a besoin)
 
     void LogUia(string what, List<string> log)
     {

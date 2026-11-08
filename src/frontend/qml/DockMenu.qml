@@ -47,7 +47,8 @@ Window {
         position()
     onWidthChanged: if (visible)
         position()
-    // Closes when another window takes focus (event-driven); the pointer poll below only covers clicks that never change focus (e.g. the dock itself).
+    // Se ferme quand une autre fenêtre prend le focus (événementiel) ; le sondage du pointeur
+    // ci-dessous ne couvre que les clics sans changement de focus (ex. le dock lui-même).
     property bool wasActive: false
     onActiveChanged: {
         if (active)
@@ -62,7 +63,8 @@ Window {
         powerChoice = "";
     }
     function powerLabel(id) {
-        return id === "logout" ? qsTr("Se déconnecter") : id === "sleep" ? qsTr("Mettre en veille") : id === "hibernate" ? qsTr("Hibernation") : id === "restart" ? qsTr("Redémarrer") : id === "shutdown" ? qsTr("Éteindre") : "";
+        return id === "logout" ? qsTr("Se déconnecter") : id === "sleep" ? qsTr("Mettre en veille") : id === "hibernate"
+            ? qsTr("Hibernation") : id === "restart" ? qsTr("Redémarrer") : id === "shutdown" ? qsTr("Éteindre") : "";
     }
     function closeDesktop() {
         const index = (entry.index ?? 0) + 1;
@@ -266,7 +268,9 @@ Window {
                 StyledText {
                     width: parent.width - 12
                     x: 6
-                    text: menu.kind === "desktop" ? (menu.entry.name || qsTr("Bureau %1").arg((menu.entry.index ?? 0) + 1)) : menu.kind === "system" ? "Windows · Winlestia" : menu.kind === "power" ? qsTr("Alimentation") : menu.kind === "running" ? qsTr("Applications") : menu.entry.name ?? qsTr("Application")
+                    text: menu.kind === "desktop" ? (menu.entry.name || qsTr("Bureau %1").arg((menu.entry.index ?? 0) + 1))
+                        : menu.kind === "system" ? "Windows · Winlestia" : menu.kind === "power" ? qsTr("Alimentation")
+                        : menu.kind === "running" ? qsTr("Applications") : menu.entry.name ?? qsTr("Application")
                     font.pointSize: Appearance.font.size.normal
                     elide: Text.ElideRight
                     topPadding: 5
@@ -286,7 +290,8 @@ Window {
                     visible: menu.kind === "app"
                     width: parent.width - 12
                     x: 6
-                    text: (menu.entry.background ? qsTr("En arrière-plan") : qsTr("%1 fenêtre(s)").arg(menu.entry.count ?? 0)) + "\n" + (menu.entry.path ?? "")
+                    text: (menu.entry.background ? qsTr("En arrière-plan") : qsTr("%1 fenêtre(s)").arg(menu.entry.count
+                        ?? 0)) + "\n" + (menu.entry.path ?? "")
                     font.pointSize: Appearance.font.size.small
                     wrapMode: Text.WrapAnywhere
                     color: Colours.palette.m3onSurfaceVariant

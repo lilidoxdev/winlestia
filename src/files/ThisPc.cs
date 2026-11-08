@@ -13,8 +13,8 @@ internal static class ThisPc
 
     internal sealed record DriveCard(string Root, string Label, string Kind, long Free, long Total, bool Ready);
 
-    // Thread de travail uniquement (IsReady peut bloquer sur un lecteur en veille / réseau). Sidebar.DriveSource (tests) remplace la vraie
-    // liste.
+    // Thread de travail uniquement (IsReady peut bloquer sur un lecteur en veille / réseau). Sidebar.DriveSource (tests) remplace la
+    // vraie liste.
     internal static List<DriveCard> Read()
     {
         var list = new List<DriveCard>();

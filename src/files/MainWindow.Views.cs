@@ -1,6 +1,6 @@
 // Vues (Liste / Détails / Icônes moyennes / Grandes icônes), colonnes de détails redimensionnables, boutons de vue visibles.
-// La vue est enregistrée sous "view" dans settings.json. Détails = lignes de ListBox ; les trois autres partagent TilePanel avec une taille
-// de cellule différente.
+// La vue est enregistrée sous "view" dans settings.json. Détails = lignes de ListBox ; les trois autres partagent TilePanel avec une
+// taille de cellule différente.
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -19,8 +19,7 @@ internal enum ViewMode
 }
 
 // Largeurs de colonnes partagées de la vue détails (lignes et en-tête s'y lient, donc un glissement redimensionne en direct toutes les
-// lignes réalisées).
-// Nom prend le reste ; Emplacement a une largeur nulle sauf pendant l'affichage d'une recherche en sous-dossiers.
+// lignes réalisées). Nom prend le reste ; Emplacement a une largeur nulle sauf pendant l'affichage d'une recherche en sous-dossiers.
 public sealed class ColumnLayout : INotifyPropertyChanged
 {
     public static readonly ColumnLayout Instance = new();
@@ -168,7 +167,8 @@ public sealed partial class MainWindow
     // ---- details header: resizable columns --------------------------------------------------------------------------
 
     static void Bind(ColumnDefinition column, string property) =>
-        System.Windows.Data.BindingOperations.SetBinding(column, ColumnDefinition.WidthProperty, new System.Windows.Data.Binding(property) {
+        System.Windows.Data.BindingOperations.SetBinding(column, ColumnDefinition.WidthProperty,
+            new System.Windows.Data.Binding(property) {
             Source = ColumnLayout.Instance });
 
     FrameworkElement Header()
@@ -182,7 +182,7 @@ public sealed partial class MainWindow
             Bind(c, p);
             grid.ColumnDefinitions.Add(c);
         }
-        // matches the always-visible scrollbar lane
+        // correspond à la voie de défilement toujours visible
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Styles.ScrollWidth) });
 
         FrameworkElement Cell(SortColumn? column, string text, int col, int span, bool right, Thickness pad)

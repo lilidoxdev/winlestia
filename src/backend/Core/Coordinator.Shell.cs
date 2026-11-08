@@ -1,4 +1,5 @@
-// language: C# 12, file: Coordinator.Shell.cs, target: Windows 11 / .NET 8 WPF, barre latérale, barre d'outils, barre des tâches et menus
+// language: C# 12, file: Coordinator.Shell.cs, target: Windows 11 / .NET 8 WPF, barre latérale, barre d'outils, barre des tâches et
+// menus
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -218,7 +219,8 @@ internal sealed partial class Coordinator
                                                                                 "\uE8A7",
                                                                                 () => Launch(entry)), new MenuAction(pinned
                                                                                     ? "Détacher de la barre"
-                                                                                    : "Épingler à la barre", "\uE718", () => { string id =
+                                                                                    : "Épingler à la barre", "\uE718", () => {
+                                                                                        string id =
             Store.Entries.Any(e => e.Id == entry.Id) ? entry.Id : entry.Target;
         if (pinned) Store.State.TaskbarPins.Remove(entry.Id); else if (!string.IsNullOrWhiteSpace(id)
             && !Store.State.TaskbarPins.Contains(id)) Store.State.TaskbarPins.Add(id);

@@ -262,7 +262,8 @@ def main():
             print(f'run{i}: setOpen={a:.1f}ms  open->first-frame={b:.1f}ms')
         tot = [b for a, b in res]
         print(
-            f'first={tot[0]:.1f}  median(all)={statistics.median(tot):.1f}  median(2..n)={statistics.median(tot[1:]):.1f}  iconUrl calls={stub.icon_calls} action calls={stub.action_calls}'
+            f'first={tot[0]:.1f}  median(all)={statistics.median(tot):.1f}  median(2..n)={statistics.median(tot[1:]):.1f}  '
+            f'iconUrl calls={stub.icon_calls} action calls={stub.action_calls}'
         )
     else:
         for name, key, size in (

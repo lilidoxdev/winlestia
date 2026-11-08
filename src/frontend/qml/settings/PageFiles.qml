@@ -6,7 +6,7 @@ import qs.services
 import qs.config
 import "."
 
-// Windows Explorer theming and the Winlestia file manager.
+// Thème de l'Explorateur Windows et gestionnaire de fichiers Winlestia.
 ColumnLayout {
     id: page
 
@@ -68,7 +68,8 @@ ColumnLayout {
         SettingsRow {
             rowId: "explorerFolders"
             below: true
-            hint: (Bridge.settings.explorerStatus ?? qsTr("Prêt à personnaliser")) + " · " + qsTr("Icônes locales adaptatives. Le contenu et les menus restent ceux de Windows ; leur transparence ne change pas.")
+            hint: (Bridge.settings.explorerStatus ?? qsTr("Prêt à personnaliser")) + " · "
+                + qsTr("Icônes locales adaptatives. Le contenu et les menus restent ceux de Windows ; leur transparence ne change pas.")
 
             Flow {
                 Layout.fillWidth: true

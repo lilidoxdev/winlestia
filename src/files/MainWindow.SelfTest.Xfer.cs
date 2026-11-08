@@ -3,8 +3,8 @@
 // réactivité de l'interface, fichier verrouillé (déplacement, corbeille) avec la boîte
 // d'erreur native fermée par UI Automation, dossier refusé (message de navigation + copie depuis celui-ci), copie / déplacement entre
 // disques quand un second disque fixe inscriptible existe.
-// Exige WINLESTIA_FILES_DATA_DIR sous %TEMP% et un dossier d'essai sous %TEMP%\WinlestiaFilesOps (banc). Tout ce qui est créé est supprimé
-// à la fin (ACL rétablies d'abord).
+// Exige WINLESTIA_FILES_DATA_DIR sous %TEMP% et un dossier d'essai sous %TEMP%\WinlestiaFilesOps (banc). Tout ce qui est créé est
+// supprimé à la fin (ACL rétablies d'abord).
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,6 +18,9 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Cadence les sondes de réactivité pendant le transfert, sans saturer le thread UI.
+    const int PingGapMs = 40;
+
     static bool HasText(DependencyObject d, string text)
     {
         if (d is System.Windows.Controls.TextBlock tb && tb.Text.Contains(text, StringComparison.OrdinalIgnoreCase))
@@ -82,7 +85,7 @@ public sealed partial class MainWindow
         string sid = "*" + System.Security.Principal.WindowsIdentity.GetCurrent().User!.Value;
         string denyDir = Path.Combine(X, "denied");
         string? crossRoot = null;
-        // "=" : exact Name (not the progress window's "Annuler la vignette")
+        // « = » : Name exact (pas « Annuler la vignette » de la fenêtre de progression)
         string[] errTokens = { "=Ignorer", "=Skip", "=Annuler", "=Cancel", "=OK", "=Fermer", "=Close" };
         try
         {
@@ -141,7 +144,7 @@ public sealed partial class MainWindow
                 await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Normal);
                 worst = Math.Max(worst, (long)Perf.Ms(t0));
                 pings++;
-                await Task.Delay(40);
+                await Task.Delay(PingGapMs);
             }
             double secs = sw.Elapsed.TotalSeconds;
             copying = false;
@@ -166,7 +169,8 @@ public sealed partial class MainWindow
                 fs.Read(h);
                 fs.Position = fs.Length - 4;
                 fs.Read(tl);
-                bigOk = fs.Length == 300L * 1024 * 1024 && h.SequenceEqual(new byte[] { 1, 2, 3, 4 }) && tl.SequenceEqual(new byte[] { 9, 8,
+                bigOk = fs.Length == 300L * 1024 * 1024 && h.SequenceEqual(new byte[] { 1, 2, 3, 4 }) && tl.SequenceEqual(new byte[] {
+                    9, 8,
                     7, 6 });
             }
             Check("(a) 300 MB file intact (size, head, tail)", bigOk);
@@ -279,7 +283,8 @@ public sealed partial class MainWindow
                     await WaitLoaded();
                     var r1 = await PasteFiles(new[] { cp }, false, crossRoot, 60000);
                     Check($"(d) copy to {other.Name}: ok", r1 is { Error: null } && File.Exists(Path.Combine(crossRoot, "c.bin"))
-                        && File.Exists(cp) && File.ReadAllBytes(Path.Combine(crossRoot, "c.bin")).SequenceEqual(data), r1?.Error ?? "null");
+                        && File.Exists(cp) && File.ReadAllBytes(Path.Combine(crossRoot, "c.bin")).SequenceEqual(data), r1?.Error
+                            ?? "null");
                     var r2 = await PasteFiles(new[] { mv }, true, crossRoot, 60000);
                     Check($"(d) move to {other.Name}: ok, source gone", r2 is { Error: null } && File.Exists(Path.Combine(crossRoot,
                         "m.bin")) && !File.Exists(mv) && File.ReadAllBytes(Path.Combine(crossRoot, "m.bin")).SequenceEqual(data), r2?.Error

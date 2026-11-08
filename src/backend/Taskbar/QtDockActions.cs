@@ -1,4 +1,4 @@
-// C# 12 / QtDockActions.cs / Windows 11. Dock state and validated desktop actions.
+// C# 12 / QtDockActions.cs / Windows 11. État du dock et actions de bureau validées.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,12 +11,13 @@ namespace PanneauxGlass;
 internal sealed partial class QtShellBridge
 {
     object[] runningApps = Array.Empty<object>();
-    // Window-preview bubble (DockPreviewPopup.cs): hwnd/title per dock item id, refreshed with every RefreshDockApps.
+    // Bulle d'aperçu des fenêtres (DockPreviewPopup.cs) : hwnd/titre par id d'élément du dock, rafraîchis à chaque RefreshDockApps.
     readonly DockPreviewHost dockPreview = new(); readonly Dictionary<string, PreviewWindow[]> dockWindows = new();
     void DockPreviewOpen(JsonElement args)
     {
         string id = Text(args, "id");
-        double dpr = Number(args, "dpr") > 0 ? Number(args, "dpr") : 1, x = Number(args, "x"), y = Number(args, "y"), cx = Number(args, "cx"), cy = Number(args, "cy");
+        double dpr = Number(args, "dpr") > 0 ? Number(args, "dpr") : 1, x = Number(args, "x"), y = Number(args, "y"), cx = Number(args,
+            "cx"), cy = Number(args, "cy");
         bool light = LightRendering;
         dispatcher.BeginInvoke((Action)(() =>
         {
@@ -25,7 +26,9 @@ internal sealed partial class QtShellBridge
                 dockPreview.Close();
                 return;
             }
-            Native.GetCursorPos(out var cursor);   // physical pixels; the icon centre / dock top are offsets from the cursor in logical px * devicePixelRatio (per-monitor safe)
+            // pixels physiques ; le centre de l'icône et le haut du dock sont des décalages depuis le curseur en px logiques *
+            // devicePixelRatio (sûr par moniteur)
+            Native.GetCursorPos(out var cursor);
             dockPreview.Open(id, list, (int)Math.Round(cursor.X + (x - cx) * dpr), (int)Math.Round(cursor.Y + (y - cy) * dpr), light);
         }));
     }
@@ -45,10 +48,12 @@ internal sealed partial class QtShellBridge
     }
     [DllImport("user32.dll", SetLastError = true)] static extern bool PostMessageW(IntPtr window, uint message, IntPtr wp, IntPtr lp);
     static bool SamePath(string a, string b) => !string.IsNullOrWhiteSpace(a) && string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
-    static bool CanStop(string path) => File.Exists(path) && !path.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.Windows) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) && !SamePath(path, Environment.ProcessPath ?? "");
+    static bool CanStop(string path) => File.Exists(path) && !path.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.Windows)
+        + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) && !SamePath(path, Environment.ProcessPath ?? "");
     void RefreshDockApps()
     {
-        var windows = TaskbarNative.Applications().Where(w => !w.Title.Contains("Caelestia") && !w.Title.StartsWith("Panneaux ·", StringComparison.Ordinal)).ToArray();
+        var windows = TaskbarNative.Applications().Where(w => !w.Title.Contains("Caelestia") && !w.Title.StartsWith("Panneaux ·",
+            StringComparison.Ordinal)).ToArray();
         var livePseudo = new HashSet<string>();
         var result = new List<object>();
         var running = new List<object>();
@@ -56,7 +61,8 @@ internal sealed partial class QtShellBridge
         dockEntries.Clear();
         dockWindows.Clear();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var groups = windows.GroupBy(w => CatalogueWatchRules.WindowGroupKey(w.Path, w.Handle.ToInt64()), StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.OrdinalIgnoreCase);
+        var groups = windows.GroupBy(w => CatalogueWatchRules.WindowGroupKey(w.Path, w.Handle.ToInt64()), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.OrdinalIgnoreCase);
         var entries = Store.Entries.Where(e => !string.IsNullOrEmpty(e.Target)).ToArray();
         object Value(Entry entry, TaskbarNative.AppWindow[] matches, bool pinned, bool background = false)
         {
@@ -126,7 +132,8 @@ internal sealed partial class QtShellBridge
             string path = TaskbarNative.LaunchPath(e.Target);
             if (!seen.Add(path))
                 continue;
-            var matches = groups.GetValueOrDefault(path) ?? windows.Where(w => Store.Fold(Path.GetFileNameWithoutExtension(w.Path)).Replace(" ", "") == Store.Fold(e.Name).Replace(" ", "")).ToArray();
+            var matches = groups.GetValueOrDefault(path) ?? windows.Where(w => Store.Fold(Path.GetFileNameWithoutExtension(w.Path))
+                .Replace(" ", "") == Store.Fold(e.Name).Replace(" ", "")).ToArray();
             pinnedEntries[path] = e;
             foreach (var match in matches)
             {
@@ -137,7 +144,10 @@ internal sealed partial class QtShellBridge
         }
         foreach (var group in groups)
         {
-            var e = pinnedEntries.GetValueOrDefault(group.Key) ?? entries.FirstOrDefault(e => SamePath(e.Target, group.Key)) ?? new Entry { Id = "task:" + group.Key, Name = CatalogueWatchRules.IsPseudoPath(group.Key) || group.Key.StartsWith("shell:", StringComparison.OrdinalIgnoreCase) ? group.Value[0].Title : Path.GetFileNameWithoutExtension(group.Key), Target = group.Key, IconPath = group.Key };
+            var e = pinnedEntries.GetValueOrDefault(group.Key) ?? entries.FirstOrDefault(e => SamePath(e.Target, group.Key)) ?? new Entry {
+                Id = "task:" + group.Key, Name = CatalogueWatchRules.IsPseudoPath(group.Key) || group.Key.StartsWith("shell:",
+                StringComparison.OrdinalIgnoreCase) ? group.Value[0].Title : Path.GetFileNameWithoutExtension(group.Key),
+                Target = group.Key, IconPath = group.Key };
             bool pinned = Store.State.TaskbarPins.Contains(e.Id) || Store.State.TaskbarPins.Contains(group.Key);
             var value = Value(e, group.Value, pinned);
             running.Add(value);
@@ -177,21 +187,28 @@ internal sealed partial class QtShellBridge
                         string path = process.MainModule?.FileName ?? "";
                         if (!CanStop(path) || !paths.Add(path))
                             continue;
-                        result.Add(known.FirstOrDefault(e => SamePath(e.Target, path)) ?? new Entry { Id = "background:" + path, Name = FileVersionInfo.GetVersionInfo(path).FileDescription ?? process.ProcessName, Target = path, IconPath = path });
+                        result.Add(known.FirstOrDefault(e => SamePath(e.Target, path)) ?? new Entry { Id = "background:" + path,
+                            Name = FileVersionInfo.GetVersionInfo(path).FileDescription ?? process.ProcessName, Target = path,
+                            IconPath = path });
                     }
                     catch (Exception)
                     {
                         // Processus fermé ou inaccessible : ignoré.
                     }
-            dispatcher.BeginInvoke((Action)(() => { scanningBackground = false; if (!disposed) { backgroundEntries = result.ToArray(); nextTasks = DateTime.MinValue; } }));
+            dispatcher.BeginInvoke((Action)(() => { scanningBackground = false; if (!disposed) { backgroundEntries = result.ToArray();
+                nextTasks = DateTime.MinValue; } }));
         });
     }
-    // Pseudo-path windows: the icon comes from the window itself (WM_GETICON with a timeout, then the class icon), never from a file.
-    [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW")] static extern IntPtr SendMessageTimeoutW(IntPtr window, uint message, IntPtr wp, IntPtr lp, uint flags, uint timeout, out IntPtr result);
+    // Fenêtres à pseudo-chemin : l'icône vient de la fenêtre elle-même (WM_GETICON avec délai, puis l'icône de classe), jamais d'un
+    // fichier.
+    [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW")] static extern IntPtr SendMessageTimeoutW(IntPtr window, uint message,
+        IntPtr wp, IntPtr lp, uint flags, uint timeout, out IntPtr result);
     [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW")] static extern IntPtr GetClassLongPtrW(IntPtr window, int index);
     readonly Dictionary<string, int> windowIconTries = new();
-    string WindowIconFile(string id) => Path.Combine(cache, "icons", "win-" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(id)))[..24] + ".png");
-    // Called by each dock refresh: a window that is gone loses its attempt counter, its entry in the icon map and its PNG.
+    string WindowIconFile(string id) => Path.Combine(cache, "icons", "win-"
+        + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(id)))[..24] + ".png");
+    // Appelé à chaque rafraîchissement du dock : une fenêtre disparue perd son compteur d'essais, son entrée dans la table d'icônes
+    // et son PNG.
     void ForgetWindowIcons(HashSet<string> live)
     {
         foreach (string id in windowIconTries.Keys.Where(k => !live.Contains(k)).ToArray())
@@ -226,11 +243,13 @@ internal sealed partial class QtShellBridge
                     icon = GetClassLongPtrW(window, -14);
                 if (icon == IntPtr.Zero)
                     throw new InvalidOperationException("no window icon");
-                var bitmap = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(icon, System.Windows.Int32Rect.Empty, System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+                var bitmap = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(icon, System.Windows.Int32Rect.Empty,
+                    System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
                 bitmap.Freeze();
                 string file = WindowIconFile(entry.Id);
                 SaveImage(bitmap, file);
-                dispatcher.BeginInvoke((Action)(() => { if (disposed) return; if (windowIconTries.ContainsKey(entry.Id)) { icons[entry.Id] = file; iconRevision++; } else { Safe.Try(() => File.Delete(file)); } }));
+                dispatcher.BeginInvoke((Action)(() => { if (disposed) return; if (windowIconTries.ContainsKey(entry.Id)) {
+                    icons[entry.Id] = file; iconRevision++; } else { Safe.Try(() => File.Delete(file)); } }));
             }
             catch { dispatcher.BeginInvoke((Action)(() => { if (tries < 3) requested.Remove(entry.Id); })); }
         });
@@ -266,7 +285,8 @@ internal sealed partial class QtShellBridge
         string path = TaskbarNative.LaunchPath(entry.Target);
         var matches = TaskbarNative.Applications().Where(w => SamePath(w.Path, path)).ToArray();
         var selected = matches.FirstOrDefault(w => w.Handle.ToInt64() == handle) ?? matches.FirstOrDefault();
-        // A window whose program cannot be read (elevated) has a pseudo-path: it can be activated or closed, never launched, pinned or revealed.
+        // Une fenêtre dont le programme est illisible (élevé) a un pseudo-chemin : on peut l'activer ou la fermer, jamais la lancer,
+        // l'épingler ni la révéler.
         if (CatalogueWatchRules.IsPseudoPath(path) && action is "open" or "admin" or "pin" or "favorite" or "reveal" or "stop")
             return "Cette fenêtre n’a pas de programme lançable.";
         switch (action)
@@ -314,7 +334,8 @@ internal sealed partial class QtShellBridge
                 break;
             case "pin":
                 var pin = PersistDockEntry(entry);
-                bool wasPinned = Store.State.TaskbarPins.Contains(pin.Id) || Store.State.TaskbarPins.Contains(entry.Id) || Store.State.TaskbarPins.Contains(entry.Target);
+                bool wasPinned = Store.State.TaskbarPins.Contains(pin.Id) || Store.State.TaskbarPins.Contains(entry.Id)
+                    || Store.State.TaskbarPins.Contains(entry.Target);
                 Store.State.TaskbarPins.Remove(pin.Id);
                 Store.State.TaskbarPins.Remove(entry.Id);
                 Store.State.TaskbarPins.Remove(entry.Target);

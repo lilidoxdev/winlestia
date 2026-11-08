@@ -133,7 +133,8 @@ internal sealed partial class ControlCenterWindow
     void OpenSessions()
     {
         var sessions = media.Sessions();
-        var actions = new List<MenuAction> { new("Automatique · priorité à Spotify", "\uE8D6", () => { Store.State.Controls.MediaApp = "";
+        var actions = new List<MenuAction> { new("Automatique · priorité à Spotify", "\uE8D6", () => {
+            Store.State.Controls.MediaApp = "";
         Store.Save();
         _ = RefreshMedia(); }, string.IsNullOrEmpty(Store.State.Controls.MediaApp)) };
         foreach (var s in sessions)
@@ -182,7 +183,8 @@ internal sealed partial class ControlCenterWindow
                     ? "Absent"
                     : id == "network" ? s.Ethernet ? "Ethernet" : s.Internet ? "Connecté" : "Hors ligne" : on ? "Activé" : "Désactivé";
                 tile.button.ToolTip = id == "wifi"
-                    ? s.Wifi.Present ? "Activer/désactiver le Wi-Fi · clic droit pour les réseaux" : "Wi-Fi absent · ouvrir les réglages"
+                    ? s.Wifi.Present ? "Activer/désactiver le Wi-Fi · clic droit pour les réseaux"
+                        : "Wi-Fi absent · ouvrir les réglages"
                     : id == "bluetooth"
                         ? s.Bluetooth.Present ? "Activer/désactiver Bluetooth · clic droit pour les appareils"
                             : "Bluetooth absent · ouvrir les réglages"

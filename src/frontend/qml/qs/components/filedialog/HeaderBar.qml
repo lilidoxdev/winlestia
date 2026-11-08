@@ -86,7 +86,8 @@ StyledRect {
                         }
 
                         Item {
-                            implicitWidth: homeIcon.implicitWidth + (homeIcon.active ? Appearance.padding.small : 0) + folderName.implicitWidth + Appearance.padding.normal * 2
+                            implicitWidth: homeIcon.implicitWidth + (homeIcon.active ? Appearance.padding.small
+                                : 0) + folderName.implicitWidth + Appearance.padding.normal * 2
                             implicitHeight: folderName.implicitHeight + Appearance.padding.small * 2
 
                             Loader {
@@ -126,7 +127,8 @@ StyledRect {
                                 anchors.leftMargin: homeIcon.active ? Appearance.padding.small : 0
 
                                 text: folder.modelData
-                                color: folder.index < root.dialog.cwd.length - 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
+                                color: folder.index < root.dialog.cwd.length - 1 ? Colours.palette.m3onSurfaceVariant
+                                    : Colours.palette.m3onSurface
                                 font.bold: true
                             }
                         }

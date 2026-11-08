@@ -1,14 +1,14 @@
 // Quel lien l'icône réseau du dock doit afficher : "ethernet" | "wifi" | "none". Piloté par événements, sans sondage :
-// NetworkChange.NetworkAddressChanged / NetworkAvailabilityChanged ne font qu'armer un minuteur ponctuel de 300 ms (réarmer = anti-rebond)
-// ; la classification s'exécute ensuite sur un thread du pool.
+// NetworkChange.NetworkAddressChanged / NetworkAvailabilityChanged ne font qu'armer un minuteur ponctuel de 300 ms (réarmer =
+// anti-rebond) ; la classification s'exécute ensuite sur un thread du pool.
 // Classification : l'interface que Windows utiliserait vraiment (GetBestInterface vers une IPv4 publique, qui respecte les métriques
 // d'interface) quand c'est un lien physique, actif, non virtuel, avec une passerelle par défaut ;
 // sinon (IPv6 seul, VPN meilleure route, ...) tout lien physique actif avec passerelle, Ethernet préféré au sans-fil (les métriques
 // automatiques de Windows classent le filaire d'abord).
-// Types filaires -> "ethernet" ; Wireless80211 et haut débit mobile (Wwanpp/Wwanpp2) -> "wifi" (pictogramme sans-fil générique, pas d'icône
-// cellulaire dédiée) ; rien d'utilisable -> "none".
-// La première valeur est calculée dans Start(), hors du thread de l'appelant. Stop() se désabonne et libère le minuteur (aucune fuite).
-// L'état est lu par QtShellBridge.State() à chaque interrogation.
+// Types filaires -> "ethernet" ; Wireless80211 et haut débit mobile (Wwanpp/Wwanpp2) -> "wifi" (pictogramme sans-fil générique, pas
+// d'icône cellulaire dédiée) ; rien d'utilisable -> "none".
+// La première valeur est calculée dans Start(), hors du thread de l'appelant. Stop() se désabonne et libère le minuteur (aucune
+// fuite). L'état est lu par QtShellBridge.State() à chaque interrogation.
 using System;
 using System.Linq;
 using System.Net;
@@ -24,7 +24,7 @@ internal static class NetworkKindWatcher
     static readonly object gate = new();
     static Timer? debounce;
     static bool started;
-    static volatile string current = "wifi";   // shown until the first classification finishes (the dock's historical icon)
+    static volatile string current = "wifi";   // affiché jusqu'à la fin de la première classification (l'icône historique du dock)
     internal static string Current => current;
     // Levé (thread du pool, hors de tout verrou) seulement quand le type classé change ; les abonnés ne doivent pas lever d'exception
     // (avalée).
@@ -79,7 +79,7 @@ internal static class NetworkKindWatcher
         }
         bool changed = false;
         lock (computeGate)
-        {   // serialized: an older classification can never overwrite a newer one
+        {   // sérialisé : une ancienne classification ne peut jamais écraser une plus récente
             lock (gate)
             {
                 if (!started)

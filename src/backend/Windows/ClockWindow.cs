@@ -77,7 +77,8 @@ internal sealed class ClockWindow : GlassWindow
             double x = Math.Clamp(point.X / ActualWidth, 0, 1), y = Math.Clamp(point.Y / ActualHeight, 0, 1); if (Math.Abs(x - lastX) < .02
             && Math.Abs(y - lastY) < .02) return; lastX = x; lastY = y; var origin = new Point(x, y); sheen.Center = origin;
             sheen.GradientOrigin = origin; };
-        MouseLeave += (_, _) => { lastX = lastY = -1; var origin = new Point(.22, .5); sheen.Center = origin; sheen.GradientOrigin = origin;
+        MouseLeave += (_, _) => { lastX = lastY = -1; var origin = new Point(.22, .5); sheen.Center = origin;
+            sheen.GradientOrigin = origin;
             };
         timer.Tick += (_, _) => Update();
         IsVisibleChanged += (_, _) => { if (IsVisible) { Update(); timer.Start(); } else timer.Stop(); };

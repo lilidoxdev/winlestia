@@ -146,7 +146,13 @@ class Palette(unittest.TestCase):
                 self.assertGreaterEqual(get_contrast_ratio(p['m3' + fg], p['m3' + bg]), r, (name, fg))
 
     def test_shell_keys_present(self):
-        need = 'background surface onSurface surfaceContainer surfaceContainerLow surfaceContainerHigh surfaceContainerHighest primary secondary tertiary primaryContainer secondaryContainer tertiaryContainer onPrimary onSecondary onTertiary onPrimaryContainer onSecondaryContainer onTertiaryContainer onSurfaceVariant outline outlineVariant error onError scrim shadow inverseSurface inverseOnSurface inversePrimary'.split()
+        need = (
+            'background surface onSurface surfaceContainer surfaceContainerLow surfaceContainerHigh '
+            'surfaceContainerHighest primary secondary tertiary primaryContainer secondaryContainer '
+            'tertiaryContainer onPrimary onSecondary onTertiary onPrimaryContainer onSecondaryContainer '
+            'onTertiaryContainer onSurfaceVariant outline outlineVariant error onError scrim shadow '
+            'inverseSurface inverseOnSurface inversePrimary'
+        ).split()
         p = self.theme('navy')['palette']
         self.assertEqual([k for k in need if 'm3' + k not in p], [])
         legacy = self.theme('navy')

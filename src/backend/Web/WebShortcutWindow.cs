@@ -82,7 +82,8 @@ internal sealed class WebShortcutWindow : GlassWindow
         form.Children.Add(imageRow);
         previewFrame.DragOver += (_, e) => { e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy
             : DragDropEffects.None; e.Handled = true; };
-        previewFrame.Drop += (_, e) => { if (e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0) CropImage(files[0],
+        previewFrame.Drop += (_, e) => { if (e.Data.GetData(DataFormats.FileDrop) is string[] files
+            && files.Length > 0) CropImage(files[0],
             null); e.Handled = true; };
         if (original != null && File.Exists(original.IconPath))
         {

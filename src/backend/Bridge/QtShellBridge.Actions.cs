@@ -1,8 +1,6 @@
 // language: C# 12, file: QtShellBridge.Actions.cs, target: Windows 11 / .NET 8, table de dispatch des actions du pont
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 namespace PanneauxGlass;
@@ -41,40 +39,14 @@ internal sealed class BridgeCall
 
 internal sealed partial class QtShellBridge
 {
-    static readonly Lazy<IReadOnlyDictionary<string, Func<QtShellBridge, BridgeCall, Task>>> actionTable = new(BuildActionTable);
+    static readonly BridgeActionTable<QtShellBridge> actionTable;
+
+    // Table construite dès le premier accès au type (donc avant toute instance) : un doublon ou une signature invalide
+    // fait échouer le démarrage au lieu de se révéler à la première action.
+    static QtShellBridge() => actionTable = BridgeActionTable<QtShellBridge>.Build(typeof(QtShellBridge));
 
     // Exposé pour le test de contrat.
-    internal static IReadOnlyCollection<string> ActionNames => actionTable.Value.Keys.ToArray();
-
-    static IReadOnlyDictionary<string, Func<QtShellBridge, BridgeCall, Task>> BuildActionTable()
-    {
-        var table = new Dictionary<string, Func<QtShellBridge, BridgeCall, Task>>(StringComparer.Ordinal);
-        foreach (var method in typeof(QtShellBridge).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
-        {
-            var names = method.GetCustomAttributes<BridgeActionAttribute>().Select(a => a.Name).ToArray();
-            if (names.Length == 0)
-                continue;
-            Func<QtShellBridge, BridgeCall, Task> handler;
-            if (method.ReturnType == typeof(Task))
-                handler = method.CreateDelegate<Func<QtShellBridge, BridgeCall, Task>>();
-            else
-            {
-                var sync = method.CreateDelegate<Action<QtShellBridge, BridgeCall>>();
-                handler = (bridge, call) =>
-                {
-                    sync(bridge, call);
-                    return Task.CompletedTask;
-                };
-            }
-            foreach (string name in names)
-                table.Add(name, handler);
-        }
-        return table;
-    }
-
-    // Une commande inconnue est ignorée : la réponse porte simplement l'état courant.
-    Task DispatchAction(string command, BridgeCall call)
-        => actionTable.Value.TryGetValue(command, out var handler) ? handler(this, call) : Task.CompletedTask;
+    internal static IReadOnlyCollection<string> ActionNames => actionTable.Names;
 
     // La réponse contient déjà l'état : rien d'autre à faire.
     [BridgeAction("state")]

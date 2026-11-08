@@ -16,7 +16,8 @@ internal sealed class ShellPerformanceView : Border, IDisposable
         readonly System.Collections.Generic.List<Border> plates = new(); bool active, closed; int version;
     readonly TextBlock stamp = UI.Text("Préparation des mesures…", 12, UI.Dim), cpu = UI.Text("—", 35, null, true),
         cpuDetail = UI.Text("Processeur", 12, UI.Dim), gpu = UI.Text("—", 35, null, true), gpuDetail = UI.Text("Carte graphique", 12,
-        UI.Dim), ram = UI.Text("—", 35, null, true), ramDetail = UI.Text("Mémoire", 12, UI.Dim), network = UI.Text("—", 24, null, true),
+        UI.Dim), ram = UI.Text("—", 35, null, true), ramDetail = UI.Text("Mémoire", 12, UI.Dim), network = UI.Text("—", 24, null,
+            true),
         networkDetail = UI.Text("Connexion réseau", 12, UI.Dim), storage = UI.Text("—", 15, null, true);
     readonly TelemetryGraph cpuGraph = new("#A77967"), gpuGraph = new("#8E819D"), ramGraph = new("#7C9581"), netGraph = new("#A77967",
         false);
@@ -45,7 +46,8 @@ internal sealed class ShellPerformanceView : Border, IDisposable
         disks.Children.Add(storage);
         bottom.Children.Add(Plate(disks));
         root.Children.Add(bottom);
-        var note = UI.Text("Les mesures s’arrêtent en quittant cette page. Une température absente est indiquée par —.", 11, UI.Dim);
+        var note = UI.Text("Les mesures s’arrêtent en quittant cette page. Une température absente est indiquée par —.", 11,
+            UI.Dim);
         note.Margin = new Thickness(4, 12, 4, 0);
         note.TextWrapping = TextWrapping.Wrap;
         root.Children.Add(note);

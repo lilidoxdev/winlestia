@@ -137,7 +137,8 @@ internal sealed class PcTelemetrySource : IDisposable
             foreach (var device in storage)
                 TryUpdate(device);
             heat = storage.Select(h => new HeatReading(h.Name, Flatten(h).SelectMany(x => x.Sensors).Where(s
-                => s.SensorType == SensorType.Temperature).OrderBy(s => s.Name.Contains("Composite", StringComparison.OrdinalIgnoreCase) ? 0
+                => s.SensorType == SensorType.Temperature).OrderBy(s => s.Name.Contains("Composite", StringComparison.OrdinalIgnoreCase)
+                    ? 0
                 : 1).Select(s => Temperature(s.Value)).FirstOrDefault(v => v.HasValue))).ToArray();
         }
         var io = disk.Read();

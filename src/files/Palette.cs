@@ -1,5 +1,6 @@
 // Résout la palette du shell hors du thread UI avec l'arbre de décision propre au backend (Themes.cs Unify) :
-// auto (fond d'écran) > personnalisé > shell clair > sombre par défaut. Réutilise le code M3Palette lié, une seule fois au démarrage.
+// auto (fond d'écran) > personnalisé > shell clair > sombre par défaut. Réutilise le code M3Palette lié, une seule fois au
+// démarrage.
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -41,10 +42,10 @@ internal static class PaletteLoader
 
     static int generation;
 
-    // Mise à jour en direct (message de tube "palette" du backend) : relit preferences-glass.json + le fond d'écran hors du thread UI, puis
-    // remplace la palette et repeint les pinceaux de jetons sur place.
-    // Contrairement à Start, le "sombre par défaut" est appliqué aussi (un retour depuis le clair doit repeindre). La dernière requête
-    // gagne.
+    // Mise à jour en direct (message de tube "palette" du backend) : relit preferences-glass.json + le fond d'écran hors du thread UI,
+    // puis remplace la palette et repeint les pinceaux de jetons sur place.
+    // Contrairement à Start, le "sombre par défaut" est appliqué aussi (un retour depuis le clair doit repeindre). La dernière
+    // requête gagne.
     internal static void Refresh(Dispatcher ui, Action applied)
     {
         int mine = Interlocked.Increment(ref generation);
@@ -61,7 +62,8 @@ internal static class PaletteLoader
         });
     }
 
-    // Palette réellement affichée par le frontend (%LOCALAPPDATA%\Panneaux\palette-shell.json, écrite par frontend.py en mode auto) : elle
+    // Palette réellement affichée par le frontend (%LOCALAPPDATA%\Panneaux\palette-shell.json, écrite par frontend.py en mode auto) :
+    // elle
     // connaît les surcharges du fond d'écran animé que SPI_GETDESKWALLPAPER ne voit pas.
     internal static string ShellFile => Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_SHELL") is { Length: > 0 } over ? over
         : Path.Combine(Store.DataDir, "palette-shell.json");
@@ -116,8 +118,8 @@ internal static class PaletteLoader
     }
 
     static FileSystemWatcher? watcher; static Timer? debounce;
-    // Mise à jour en direct pilotée par événement quand le frontend réécrit la palette partagée (sans scrutation) ; un seul observateur par
-    // processus.
+    // Mise à jour en direct pilotée par événement quand le frontend réécrit la palette partagée (sans scrutation) ; un seul
+    // observateur par processus.
     static void Watch(Dispatcher ui, Action applied)
     {
         if (watcher != null)

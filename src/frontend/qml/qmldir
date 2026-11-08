@@ -15,3 +15,11 @@ DictationKeyButton DictationKeyButton.qml
 WorkspaceSpring WorkspaceSpring.qml
 WorkspaceNavItem WorkspaceNavItem.qml
 WorkspaceFilterChip WorkspaceFilterChip.qml
+WorkspaceContextMenu WorkspaceContextMenu.qml
+WorkspaceTileList WorkspaceTileList.qml
+WorkspaceSidebar WorkspaceSidebar.qml
+WorkspaceHeader WorkspaceHeader.qml
+WorkspaceSearchRow WorkspaceSearchRow.qml
+WorkspaceChips WorkspaceChips.qml
+WorkspaceTip WorkspaceTip.qml
+WorkspaceOpenAnim WorkspaceOpenAnim.qml

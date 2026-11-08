@@ -25,7 +25,8 @@ Item {
     }
 
     Timer {
-        running: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0 && (Players.active?.isPlaying ?? false)
+        running: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0
+            && (Players.active?.isPlaying ?? false)
         interval: Config.dashboard.mediaUpdateInterval
         triggeredOnStart: true
         repeat: true
@@ -237,7 +238,8 @@ Item {
         anchors.bottomMargin: Appearance.padding.large
         anchors.margins: Appearance.padding.large * 2
 
-        playing: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0 && (Players.active?.isPlaying ?? false)
+        playing: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0
+            && (Players.active?.isPlaying ?? false)
         speed: Audio.beatTracker.bpm / 300
         source: Paths.absolutePath(Config.paths.mediaGif)
         asynchronous: true

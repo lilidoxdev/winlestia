@@ -15,7 +15,8 @@ using PanneauxGlass;
 
 namespace WinlestiaFiles;
 
-// Étape 2 : onglets avec historique propre, fil d'Ariane/adresse modifiable, barre latérale, liste détaillée virtualisée, ligne d'état.
+// Étape 2 : onglets avec historique propre, fil d'Ariane/adresse modifiable, barre latérale, liste détaillée virtualisée, ligne
+// d'état.
 public sealed partial class MainWindow : Window
 {
     // Durée d'affichage de l'info-bulle : le temps de lire une courte phrase.
@@ -202,8 +203,8 @@ public sealed partial class MainWindow : Window
     // sinon un onglet de plus (max MaxTabs).
     // Jamais réentrant : OpenFirstTab peut pomper le dispatcher, et une demande traitée dans ce pompage imbriquerait un autre ShowAt (un
     // niveau de pile de plus par
-    // demande en file : c'est le 0xC00000FD vu avec ~450 ouvertures rapides). Un appel imbriqué est mis de côté et exécuté par le plus
-    // externe.
+    // demande en file : c'est le 0xC00000FD vu avec ~450 ouvertures rapides). Un appel imbriqué est mis de côté et exécuté par le
+    // plus externe.
     internal void ShowAt(string path)
     {
         if (closed)
@@ -243,7 +244,7 @@ public sealed partial class MainWindow : Window
                 Show();
             }
             catch (InvalidOperationException ex)
-            {   // window closed between the check and Show(): not a crash, a fresh process takes the request
+            {   // fenêtre fermée entre la vérification et Show() : ce n'est pas un plantage, un nouveau processus prend la requête
                 App.LogLine("ShowAt: Show after close (" + ex.Message + "), handed to a fresh process");
                 closed = true;
                 try
@@ -268,7 +269,8 @@ public sealed partial class MainWindow : Window
                 }
                 return;
             }
-            // one-shot, off the UI thread: picks up a theme/wallpaper change made while hidden
+            // une seule fois, hors du thread UI : prend en compte un changement de thème/fond fait pendant que la fenêtre était
+            // masquée
             PaletteLoader.Start(Dispatcher, ApplyDwm);
         }
         else
@@ -345,7 +347,9 @@ public sealed partial class MainWindow : Window
         TryRecycle();
     }
 
-    // Résident caché au-delà du budget de menus, sans opération de fichier, dialogue ni renommage ouvert : on quitte (code 75). Appelé au
+    // Résident caché au-delà du budget de menus, sans opération de fichier, dialogue ni renommage ouvert : on quitte (code 75).
+    // Appelé
+    // au
     // masquage et à la fin de la dernière opération.
     void TryRecycle()
     {
@@ -384,7 +388,8 @@ public sealed partial class MainWindow : Window
         toastTimer?.Stop();
         StopWatch();
         filterTimer?.Stop();
-        (Application.Current as App)?.StopServer();           // a client arriving now gets a cold start instead of an open on a dead window
+        // un client qui arrive maintenant obtient un démarrage à froid plutôt qu'une ouverture sur une fenêtre morte
+        (Application.Current as App)?.StopServer();
         base.OnClosed(e);
         foreach (var view in tabs)
             view.Tab.Dispose();
@@ -463,7 +468,8 @@ public sealed partial class MainWindow : Window
     IntPtr DeviceHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         if (msg == 0x0219 && wParam.ToInt64() is 0x8000 or 0x8004 or 0x0007)
-            // rebuilds the drive list and rechecks the pins; DBT_DEVICEARRIVAL, DBT_DEVICEREMOVECOMPLETE, DBT_DEVNODES_CHANGED
+            // reconstruit la liste des lecteurs et revérifie les épingles ; DBT_DEVICEARRIVAL, DBT_DEVICEREMOVECOMPLETE,
+            // DBT_DEVNODES_CHANGED
             sidebar.ScheduleRecheck();
         return IntPtr.Zero;
     }
@@ -580,7 +586,8 @@ public sealed partial class MainWindow : Window
         return true;
     }
 
-    // Ctrl+Espace : bascule l'élément qui a le focus clavier (le dernier sélectionné si le focus est ailleurs), sans toucher aux autres.
+    // Ctrl+Espace : bascule l'élément qui a le focus clavier (le dernier sélectionné si le focus est ailleurs), sans toucher aux
+    // autres.
     internal void ToggleFocused()
     {
         object? item = (Keyboard.FocusedElement as System.Windows.Controls.ListBoxItem)?.DataContext;

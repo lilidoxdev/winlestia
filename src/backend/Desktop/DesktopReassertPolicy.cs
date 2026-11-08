@@ -38,7 +38,8 @@ sealed class DesktopReassertPolicy
         due = wanted > floor ? wanted : floor;
         return true;
     }
-    // HideIcons (HKCU ExplorerAdvanced) à 0 : l'utilisateur ou SECOURS_BUREAU a volontairement rétabli les icônes, on ne les recache pas.
+    // HideIcons (HKCU ExplorerAdvanced) à 0 : l'utilisateur ou SECOURS_BUREAU a volontairement rétabli les icônes, on ne les recache
+    // pas.
     internal static bool StillWanted(int hideIcons) => hideIcons != 0;
     internal bool Due(DateTime now) => due <= now;
     internal TimeSpan? Delay(DateTime now) => due == DateTime.MaxValue ? null : due > now ? due - now : TimeSpan.Zero;

@@ -92,7 +92,8 @@ internal sealed partial class PersonalizeWindow : GlassWindow
                   v => Store.State.Motion = v,
                   v => v < .02 ? "Sans animation" : Math.Round(v * 160) + " ms");
         Check("Replier après 1,8 seconde hors des panneaux", Store.State.AutoHide, value => Store.State.AutoHide = value);
-        Check("Mettre le bord en pause pendant le plein écran", Store.State.PauseFullscreen, value => Store.State.PauseFullscreen = value);
+        Check("Mettre le bord en pause pendant le plein écran", Store.State.PauseFullscreen, value =>
+            Store.State.PauseFullscreen = value);
         Check("Lancer Panneaux à l’ouverture de session", Native.Autostart, value => Native.SetAutostart(value));
         Section("TES ACCÈS");
         var choices = new WrapPanel();

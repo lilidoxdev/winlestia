@@ -394,7 +394,8 @@ def run():
 
     def prefs():
         # settings tab
-        qml = 'import QtQuick\nimport QtQuick.Window\nWindow{width:900;height:700;visible:true;ShellPreferences{objectName:"prefs";anchors.fill:parent;tab:4}}'
+        qml = ('import QtQuick\nimport QtQuick.Window\n'
+               'Window{width:900;height:700;visible:true;ShellPreferences{objectName:"prefs";anchors.fill:parent;tab:4}}')
         global prefs_engine
         prefs_engine = QQmlApplicationEngine()
         prefs_engine.addImportPath(str(ROOT / 'qml'))

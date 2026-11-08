@@ -1,6 +1,6 @@
-// Opérations de fichiers via IFileOperation : un thread STA dédié par opération, la fenêtre principale comme propriétaire (le shell dessine
-// ses propres
-// dialogues de progression / conflit / accès refusé), un récepteur de progression qui ne collecte que les résultats RÉUSSIS pour que la
+// Opérations de fichiers via IFileOperation : un thread STA dédié par opération, la fenêtre principale comme propriétaire (le shell
+// dessine ses propres dialogues de progression / conflit / accès refusé), un récepteur de progression qui ne collecte que les
+// résultats RÉUSSIS pour que la
 // liste
 // puisse être mise à jour sur place. Chaque objet COM est libéré (FinalReleaseComObject) sur le thread qui l'a créé.
 using System;
@@ -17,17 +17,18 @@ internal enum DoneKind
 {
     Rename, Move, Copy, Delete, New
 }
-// Une étape réussie, quel que soit l'ensemble surveillé : Src (null pour New), Dst (nouveau chemin ; pour Delete le chemin de la Corbeille
-// quand le shell l'a fourni).
+// Une étape réussie, quel que soit l'ensemble surveillé : Src (null pour New), Dst (nouveau chemin ; pour Delete le chemin de la
+// Corbeille quand le shell l'a fourni).
 internal sealed record Done(DoneKind Kind, string? Src, string? Dst);
 
 internal sealed class OpResult
 {
     internal readonly List<Done> Log = new();
-    internal readonly List<string> Removed = new();      // paths that left their folder (moved away, renamed from, deleted)
-    internal readonly List<FileItem> Added = new();      // items that appeared (copied, moved in, renamed to, created), already stat'ed
+    internal readonly List<string> Removed = new();      // chemins qui ont quitté leur dossier (déplacés, renommés depuis, supprimés)
+    // éléments apparus (copiés, déplacés vers, renommés en, créés), déjà interrogés par stat
+    internal readonly List<FileItem> Added = new();
     internal bool Aborted;
-    // a destination existed before and was overwritten: the original cannot be restored by an undo
+    // une destination existait avant et a été écrasée : l'original ne peut pas être restauré par une annulation
     internal bool Replaced;
     internal string? Error;
 }
@@ -36,7 +37,7 @@ internal static class FileOps
 {
     // Test hook: no native progress / confirmation / error UI.
     internal static bool Quiet;
-    internal static string OddHr = "";      // diagnostics: non-zero HRESULTs seen by the sink
+    internal static string OddHr = "";      // diagnostic : HRESULT non nuls vus par le collecteur
 
     // Opérations en cours. Quand la dernière se termine, Idle est levé sur le thread de travail (l'instance résidente y revérifie son
     // recyclage).
@@ -57,8 +58,8 @@ internal static class FileOps
 
     internal static Task<OpResult> Copy(IntPtr owner, IReadOnlyList<string> sources, string destFolder, bool move, HashSet<string> watch)
     {
-        // Même dossier : « nom - Copie » de l'Explorateur au lieu d'une invite de conflit. Un déplacement sur lui-même est sans effet et
-        // filtré.
+        // Même dossier : « nom - Copie » de l'Explorateur au lieu d'une invite de conflit. Un déplacement sur lui-même est sans effet
+        // et filtré.
         bool sameFolder = false;
         var list = new List<string>();
         foreach (var s in sources)
@@ -138,7 +139,9 @@ internal static class FileOps
     static Task<OpResult> Run(IntPtr owner, uint flags, HashSet<string> watch, Action<IFileOperation, List<object>> queue) => Run(owner,
         flags, watch, null, queue);
 
-    // targets : où les copies / déplacements doivent atterrir. Ceux qui existent déjà au début de l'opération sont mémorisés ; l'un d'eux
+    // targets : où les copies / déplacements doivent atterrir. Ceux qui existent déjà au début de l'opération sont mémorisés ;
+    // l'un
+    // d'eux
     // apparaissant dans le journal signifie qu'il a été écrasé.
     static Task<OpResult> Run(IntPtr owner, uint flags, HashSet<string> watch, IEnumerable<string>? targets, Action<IFileOperation,
         List<object>> queue)
@@ -184,7 +187,8 @@ internal static class FileOps
             }
             catch (Exception ex)
             {
-                // user cancel / access denied surface here too; whatever the sink already collected stays valid
+                // l'annulation par l'utilisateur et l'accès refusé remontent aussi ici ; ce que le collecteur a déjà reçu reste
+                // valable
                 result.Error = ex.Message;
             }
             finally
@@ -275,8 +279,8 @@ internal static class FileOps
             catch { return null; }
             finally { Safe.Try(() => Marshal.FinalReleaseComObject(item)); }
         }
-        // Un HRESULT positif n'est pas toujours un succès : COPYENGINE_S_PENDING (0x27000B, observé après une invite « fichier en cours
-        // d'utilisation » annulée : l'élément est intact), S_USER_IGNORED (0x270005), S_ALREADY_DONE (0x27000A).
+        // Un HRESULT positif n'est pas toujours un succès : COPYENGINE_S_PENDING (0x27000B, observé après une invite « fichier en
+        // cours d'utilisation » annulée : l'élément est intact), S_USER_IGNORED (0x270005), S_ALREADY_DONE (0x27000A).
         // S_DONT_PROCESS_CHILDREN (0x270008, dossiers) et les autres codes S_ sont de vrais succès.
         static bool Succeeded(int hr) => hr >= 0 && hr != 0x0027000B && hr != 0x00270005 && hr != 0x0027000A;
         static string? Combine(string? folder, string? name) => folder != null && name != null ? Path.Combine(folder, name) : null;

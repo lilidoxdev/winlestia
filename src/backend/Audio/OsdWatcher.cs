@@ -1,5 +1,5 @@
-// C# 12 / OsdWatcher.cs / Windows .NET 8. Notifications de volume/sourdine de la sortie par défaut pilotées par événements (sans sondage)
-// pour l'OSD Qt.
+// C# 12 / OsdWatcher.cs / Windows .NET 8. Notifications de volume/sourdine de la sortie par défaut pilotées par événements (sans
+// sondage) pour l'OSD Qt.
 using System;
 using System.Management;
 using System.Windows.Threading;
@@ -80,7 +80,8 @@ internal sealed class OsdWatcher : IDisposable, IMMNotificationClient
         _ = dispatcher.BeginInvoke((Action)(() => { if (disposed || (volume == lastMic && muted == lastMicMuted)) return; lastMic = volume;
             lastMicMuted = muted; extra?.Invoke("osd:mic:" + volume + ":" + (muted ? 1 : 0)); }));
     }
-    // Luminosité : événement WMI uniquement (écrans internes) ; les écrans externes DDC seuls ne déclenchent rien et rien n'est affiché.
+    // Luminosité : événement WMI uniquement (écrans internes) ; les écrans externes DDC seuls ne déclenchent rien et rien n'est
+    // affiché.
     void StartBrightness()
     {
         try

@@ -26,7 +26,8 @@ internal static class TaskbarNative
         {
             get; set;
         }
-        public List<long> Visible { get; set; } = new(); public string Ready { get; set; } = ""; public string Release { get; set; } = ""; public long ParentStart
+        public List<long> Visible { get; set; } = new(); public string Ready { get; set; } = ""; public string Release { get; set; } = "";
+            public long ParentStart
         {
             get; set;
         }
@@ -36,9 +37,11 @@ internal static class TaskbarNative
         internal string RealPath => CatalogueWatchRules.IsPseudoPath(Path) ? "" : Path;
     }
     [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool QueryFullProcessImageName(IntPtr process, uint flags, StringBuilder buffer, ref uint size);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        static extern bool QueryFullProcessImageName(IntPtr process,
+        uint flags, StringBuilder buffer, ref uint size);
     [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
-    // PROCESS_QUERY_LIMITED_INFORMATION also opens most elevated processes, which Process.MainModule refuses.
+    // PROCESS_QUERY_LIMITED_INFORMATION ouvre aussi la plupart des processus élevés, que Process.MainModule refuse.
     internal static string ProcessImagePath(uint pid)
     {
         IntPtr process = OpenProcess(0x1000, false, pid);
@@ -53,7 +56,8 @@ internal static class TaskbarNative
         catch { return ""; }
         finally { CloseHandle(process); }
     }
-    // Packaged (MSIX/UWP) windows: the AppUserModelID of the window gives the same "shell:AppsFolder\<id>" key as the launcher catalogue, whatever process hosts the window.
+    // Fenêtres empaquetées (MSIX/UWP) : l'AppUserModelID de la fenêtre donne la même clé « shell:AppsFolder\<id> » que le catalogue
+    // du lanceur, quel que soit le processus hôte.
     [StructLayout(LayoutKind.Sequential, Size = 24)]
     struct PropVariant
     {
@@ -67,10 +71,14 @@ internal static class TaskbarNative
     [ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     interface IPropertyStore
     {
-        [PreserveSig] int GetCount(out uint count); [PreserveSig] int GetAt(uint index, out PropKey key); [PreserveSig] int GetValue(ref PropKey key, out PropVariant value); [PreserveSig] int SetValue(ref PropKey key, ref PropVariant value); [PreserveSig] int Commit();
+        [PreserveSig] int GetCount(out uint count); [PreserveSig] int GetAt(uint index, out PropKey key); [PreserveSig]
+            int GetValue(ref PropKey key, out PropVariant value); [PreserveSig] int SetValue(ref PropKey key, ref PropVariant value);
+            [PreserveSig] int Commit();
     }
-    [DllImport("shell32.dll")] static extern int SHGetPropertyStoreForWindow(IntPtr window, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out IPropertyStore? store);
-    [DllImport("propsys.dll", CharSet = CharSet.Unicode)] static extern int PropVariantToStringAlloc(ref PropVariant value, out IntPtr text);
+    [DllImport("shell32.dll")] static extern int SHGetPropertyStoreForWindow(IntPtr window, ref Guid iid,
+        [MarshalAs(UnmanagedType.Interface)] out IPropertyStore? store);
+    [DllImport("propsys.dll", CharSet = CharSet.Unicode)] static extern int PropVariantToStringAlloc(ref PropVariant value,
+        out IntPtr text);
     [DllImport("ole32.dll")] static extern int PropVariantClear(ref PropVariant value);
     internal static string AppUserModelId(IntPtr window)
     {
@@ -100,8 +108,10 @@ internal static class TaskbarNative
         catch { return ""; }
         finally { if (store != null) Marshal.ReleaseComObject(store); }
     }
-    // Packaged = AppsFolder id with a package family ("Name_hash!App"); plain desktop ids (a path or a bare name) keep the process path.
-    static bool NeedsPackageKey(string path) => path.Length == 0 || path.EndsWith(@"\ApplicationFrameHost.exe", StringComparison.OrdinalIgnoreCase) || path.Contains(@"\WindowsApps\", StringComparison.OrdinalIgnoreCase);
+    // Empaqueté = id AppsFolder avec une famille de paquet (« Name_hash!App ») ; les ids de bureau simples (un chemin ou un nom nu)
+    // gardent le chemin du processus.
+    static bool NeedsPackageKey(string path) => path.Length == 0 || path.EndsWith(@"\ApplicationFrameHost.exe",
+        StringComparison.OrdinalIgnoreCase) || path.Contains(@"\WindowsApps\", StringComparison.OrdinalIgnoreCase);
     internal delegate bool EnumProc(IntPtr window, IntPtr data);
     internal delegate void WinEvent(IntPtr hook, uint kind, IntPtr window, int obj, int child, uint thread, uint time);
     [DllImport("shell32.dll")] internal static extern UIntPtr SHAppBarMessage(uint message, ref BarData data);
@@ -117,8 +127,10 @@ internal static class TaskbarNative
     [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr window, uint command);
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr window, out uint pid);
     [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr window, uint attribute, out int value, int size);
-    [DllImport("user32.dll")] internal static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height, uint flags);
-    [DllImport("user32.dll")] internal static extern IntPtr SetWinEventHook(uint first, uint last, IntPtr module, WinEvent callback, uint pid, uint thread, uint flags);
+    [DllImport("user32.dll")] internal static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height,
+        uint flags);
+    [DllImport("user32.dll")] internal static extern IntPtr SetWinEventHook(uint first, uint last, IntPtr module, WinEvent callback,
+        uint pid, uint thread, uint flags);
     [DllImport("user32.dll")] internal static extern bool UnhookWinEvent(IntPtr hook);
     [DllImport("user32.dll")] static extern IntPtr MonitorFromPoint(Native.Point point, uint flags);
     [DllImport("shcore.dll")] static extern int GetDpiForMonitor(IntPtr monitor, int kind, out uint x, out uint y);
@@ -142,9 +154,12 @@ internal static class TaskbarNative
                 shell = Activator.CreateInstance(type);
                 if (shell != null)
                 {
-                    link = type.InvokeMember("CreateShortcut", System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] { path });
+                    link = type.InvokeMember("CreateShortcut", System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] {
+                        path
+                        });
                     if (link != null)
-                        target = Convert.ToString(link.GetType().InvokeMember("TargetPath", System.Reflection.BindingFlags.GetProperty, null, link, null)) ?? path;
+                        target = Convert.ToString(link.GetType().InvokeMember("TargetPath", System.Reflection.BindingFlags.GetProperty,
+                            null, link, null)) ?? path;
                 }
             }
         }
@@ -152,7 +167,8 @@ internal static class TaskbarNative
         {
             Store.Log("TaskbarNative.LaunchPath : " + ex.GetType().Name + ": " + ex.Message);
         }
-        finally { if (link != null && Marshal.IsComObject(link)) Marshal.ReleaseComObject(link); if (shell != null && Marshal.IsComObject(shell)) Marshal.ReleaseComObject(shell); }
+        finally { if (link != null && Marshal.IsComObject(link)) Marshal.ReleaseComObject(link); if (shell != null
+            && Marshal.IsComObject(shell)) Marshal.ReleaseComObject(shell); }
         linkTargets[path] = target;
         return target;
     }
@@ -165,7 +181,8 @@ internal static class TaskbarNative
     internal static List<IntPtr> ExplorerBars()
     {
         var result = new List<IntPtr>();
-        EnumWindows((h, _) => { if (ClassName(h) is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd") result.Add(h); return true; }, IntPtr.Zero);
+        EnumWindows((h, _) => { if (ClassName(h) is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd") result.Add(h); return true; },
+            IntPtr.Zero);
         return result;
     }
     internal static double Scale(Forms.Screen screen)
@@ -262,7 +279,8 @@ internal static class TaskbarNative
         var result = new List<AppWindow>();
         EnumWindows((h, _) =>
         {
-            if (!IsWindowVisible(h) || Native.Owns(h) || ClassName(h) is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd")
+            if (!IsWindowVisible(h) || Native.Owns(h)
+                || ClassName(h) is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd")
                 return true;
             long style = Native.ExtendedStyle(h);
             if ((style & 0x80) != 0 || GetWindow(h, 4) != IntPtr.Zero && (style & 0x40000) == 0)

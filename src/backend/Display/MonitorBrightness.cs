@@ -40,7 +40,8 @@ internal static partial class MonitorBrightness
             return await Task.Run(() => { var monitors = Open(point); try {
                 foreach (var monitor in monitors) if (GetMonitorBrightness(monitor.Handle, out uint min, out uint value, out uint max)
                 && max > min) return new BrightnessSnapshot(true, (value - min) * 100d / (max - min), monitor.Description);
-                return new BrightnessSnapshot(false, 0, "Luminosité de l’écran", "Cet écran ne fournit pas de réglage DDC/CI à Windows."); }
+                return new BrightnessSnapshot(false, 0, "Luminosité de l’écran",
+                    "Cet écran ne fournit pas de réglage DDC/CI à Windows."); }
                 finally { if (monitors.Length > 0) DestroyPhysicalMonitors((uint)monitors.Length, monitors); } });
         }
         finally { gate.Release(); }

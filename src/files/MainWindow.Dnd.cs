@@ -1,13 +1,13 @@
 // Étape 4b : menu contextuel natif du shell (clic droit / touche Menu / Maj+F10) et glisser-déposer.
 //
-// Choix de la cible de dépôt : on N'utilise PAS la voie AllowDrop de WPF. L'IDropTarget propre à WPF n'appelle jamais IDropTargetHelper,
-// donc un glisser entrant de l'Explorateur n'afficherait aucune image,
+// Choix de la cible de dépôt : on N'utilise PAS la voie AllowDrop de WPF. L'IDropTarget propre à WPF n'appelle jamais
+// IDropTargetHelper, donc un glisser entrant de l'Explorateur n'afficherait aucune image,
 // et son enveloppe DataObject masque l'IDataObject brut. À la place, le HWND principal est enregistré avec notre propre IDropTarget
 // (RevokeDragDrop de celui de WPF s'il est arrivé le premier).
-// OLE nous appelle alors sur le thread UI ; nous alimentons IDropTargetHelper (image de glisser), testons la zone touchée dans l'arbre WPF
-// pour trouver la ligne de dossier / l'onglet / l'entrée de la barre latérale survolé,
-// et exécutons la copie/le déplacement via FileOps. Les glissers sortants utilisent SHDoDragDrop avec l'objet de données propre au shell
-// (image de glisser à la manière de l'Explorateur).
+// OLE nous appelle alors sur le thread UI ; nous alimentons IDropTargetHelper (image de glisser), testons la zone touchée dans l'arbre
+// WPF pour trouver la ligne de dossier / l'onglet / l'entrée de la barre latérale survolé,
+// et exécutons la copie/le déplacement via FileOps. Les glissers sortants utilisent SHDoDragDrop avec l'objet de données propre au
+// shell (image de glisser à la manière de l'Explorateur).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -105,7 +105,8 @@ public sealed partial class MainWindow
     [DllImport("ole32.dll")] static extern void ReleaseStgMedium(ref STGMEDIUM medium);
     [DllImport("shell32.dll")] static extern int SHDoDragDrop(IntPtr hwnd, IntPtr dataObject, IntPtr dropSource, int okEffects,
         out int effect);
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern uint DragQueryFileW(IntPtr hdrop, uint index, StringBuilder? buffer,
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern uint DragQueryFileW(IntPtr hdrop, uint index,
+        StringBuilder? buffer,
         uint cch);
     [DllImport("user32.dll")] static extern bool GetCursorPos(out NPoint p);
     [DllImport("user32.dll")] static extern short GetAsyncKeyState(int key);
@@ -130,7 +131,7 @@ public sealed partial class MainWindow
     void WireDnd()
     {
         SourceInitialized += (_, _) => RegisterDrop();
-        ContentRendered += (_, _) => { if (!OwnsDropTarget()) RegisterDrop(); };       // WPF may have registered its own in between
+        ContentRendered += (_, _) => { if (!OwnsDropTarget()) RegisterDrop(); };       // WPF a pu enregistrer le sien entre-temps
         Closed += (_, _) => { Safe.Try(() => RevokeDragDrop(Hwnd)); };
 
         list.PreviewMouseLeftButtonDown += (_, e) =>
@@ -144,8 +145,8 @@ public sealed partial class MainWindow
                 return;
             dragItem = item;
             dragFrom = e.GetPosition(this);
-            // Appuyer dans une multi-sélection doit la conserver (WPF la réduirait à l'appui) : la sélection est tranchée au relâchement si
-            // aucun glisser n'a démarré.
+            // Appuyer dans une multi-sélection doit la conserver (WPF la réduirait à l'appui) : la sélection est tranchée au
+            // relâchement si aucun glisser n'a démarré.
             if (list.SelectedItems.Count > 1 && list.SelectedItems.Contains(item))
             {
                 swallowedPress = item;
@@ -169,7 +170,7 @@ public sealed partial class MainWindow
                 return;
             dragItem = null;
             swallowedPress = null;
-            Dispatcher.BeginInvoke(StartDrag, DispatcherPriority.Input);      // out of the input event first
+            Dispatcher.BeginInvoke(StartDrag, DispatcherPriority.Input);      // d'abord hors de l'événement d'entrée
         };
         list.PreviewMouseLeftButtonUp += (_, _) =>
         {
@@ -361,8 +362,8 @@ public sealed partial class MainWindow
         return result;
     }
 
-    // Même volume -> déplacement, sinon copie ; Ctrl copie, Maj déplace (Alt/lien n'est pas proposé). Rien pour les dépôts sans effet (sur
-    // une source, dans soi-même, déplacement dans le même dossier).
+    // Même volume -> déplacement, sinon copie ; Ctrl copie, Maj déplace (Alt/lien n'est pas proposé). Rien pour les dépôts sans
+    // effet (sur une source, dans soi-même, déplacement dans le même dossier).
     internal static int DecideEffect(string[] files, string dest, int key, int allowed)
     {
         if (files.Length == 0 || dest.Length == 0)
@@ -385,8 +386,8 @@ public sealed partial class MainWindow
         return want;
     }
 
-    // Ce qui est sous le curseur : une ligne/tuile de dossier, un onglet, une entrée de la barre latérale ou (partout ailleurs sur la carte
-    // de liste) le dossier courant.
+    // Ce qui est sous le curseur : une ligne/tuile de dossier, un onglet, une entrée de la barre latérale ou (partout ailleurs sur la
+    // carte de liste) le dossier courant.
     DropSpot? SpotAt(NPoint pt)
     {
         if (activeView == null)
@@ -566,7 +567,7 @@ public sealed partial class MainWindow
             return;
         uint cmd = session.Menu.Track(Hwnd, at.X, at.Y);
         if (cmd != 0)
-            Fire(() => ExecuteMenuCommand(session, cmd, at, shift));   // everything that needs the menu runs before the first await
+            Fire(() => ExecuteMenuCommand(session, cmd, at, shift));   // tout ce qui a besoin du menu s'exécute avant le premier await
     }
 
     // Verbes que nous traitons nous-mêmes par cohérence avec le reste de la fenêtre (renommage en ligne, suppression FileOps,
@@ -645,7 +646,7 @@ public sealed partial class MainWindow
         return Task.CompletedTask;
     }
 
-    // "Copier le chemin d'accès": full paths, one per line, no quotes; nothing selected = the current folder.
+    // « Copier le chemin d'accès » : chemins complets, un par ligne, sans guillemets ; rien de sélectionné = le dossier courant.
     internal static string PathsText(IReadOnlyList<FileItem> sel, string folder) => string.Join("\r\n", sel.Count == 0 ? new[] { folder }
         : sel.Select(i => i.FullPath));
 
@@ -679,8 +680,8 @@ public sealed partial class MainWindow
         return !unpin;
     }
 
-    // En attendant le watcher de dossier de l'étape 5 : un rafraîchissement après une commande susceptible de créer des fichiers (le shell
-    // les termine en asynchrone).
+    // En attendant le watcher de dossier de l'étape 5 : un rafraîchissement après une commande susceptible de créer des fichiers (le
+    // shell les termine en asynchrone).
     async Task ReloadSoon()
     {
         var tab = Active;

@@ -1,5 +1,6 @@
-// C# 12 / .NET 8 / Windows 11. Native window-preview bubble for the dock (hover an app icon -> one tile per open window).
-// Topmost, no-activate tool window drawn with GDI+ in physical pixels; live DWM thumbnails when allowed, title + icon otherwise.
+// C# 12 / .NET 8 / Windows 11. Bulle native d'aperçu des fenêtres pour le dock (survol d'une icône d'application -> une vignette par
+// fenêtre ouverte). Fenêtre outil au premier plan, sans activation, dessinée en GDI+ en pixels physiques ; miniatures DWM en direct
+// quand c'est permis, titre + icône sinon.
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -57,7 +58,8 @@ internal static class DwmThumb
     }
     internal static void Place(IntPtr thumb, Rectangle destination)
     {
-        var props = new Props { Flags = 1 | 4 | 8 | 0x10, Dest = new Native.Rect { Left = destination.Left, Top = destination.Top, Right = destination.Right, Bottom = destination.Bottom }, Opacity = 255, Visible = 1, ClientOnly = 0 };
+        var props = new Props { Flags = 1 | 4 | 8 | 0x10, Dest = new Native.Rect { Left = destination.Left, Top = destination.Top,
+            Right = destination.Right, Bottom = destination.Bottom }, Opacity = 255, Visible = 1, ClientOnly = 0 };
         try
         {
             DwmUpdateThumbnailProperties(thumb, ref props);
@@ -81,11 +83,15 @@ internal sealed class DockPreviewForm : Form
 {
     sealed class Tile
     {
-        public long Hwnd; public string Title = ""; public Bitmap? Icon; public bool Pending; public IntPtr Thumb; public Size Source; public Rectangle Bounds, Area;
+        public long Hwnd; public string Title = ""; public Bitmap? Icon; public bool Pending; public IntPtr Thumb; public Size Source;
+            public Rectangle Bounds, Area;
     }
-    [DllImport("user32.dll")] static extern IntPtr SendMessageTimeoutW(IntPtr window, uint message, IntPtr wp, IntPtr lp, uint flags, uint timeout, out IntPtr result);
+    [DllImport("user32.dll")] static extern IntPtr SendMessageTimeoutW(IntPtr window, uint message, IntPtr wp, IntPtr lp, uint flags,
+        uint timeout, out IntPtr result);
     [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW")] static extern IntPtr GetClassLongPtr(IntPtr window, int index);
-    static readonly Dictionary<long, Bitmap> IconCache = new();   // UI thread only; bitmaps are owned here (borrowed HICONs are copied, never destroyed), cleared when the bubble is destroyed
+    // Thread UI uniquement ; les bitmaps appartiennent à cette classe (les HICON empruntés sont copiés, jamais détruits) et sont
+    // libérés à la destruction de la bulle
+    static readonly Dictionary<long, Bitmap> IconCache = new();
     static bool faultLogged;
     static void Fault(string where, Exception ex)
     {
@@ -101,7 +107,8 @@ internal sealed class DockPreviewForm : Form
             // Le journal ne peut pas se journaliser lui-même.
         }
     }
-    readonly List<Tile> tiles = new(); readonly bool live; readonly int maxWidth; readonly Font font, small; int hover = -1; Rectangle overflowArea;
+    readonly List<Tile> tiles = new(); readonly bool live; readonly int maxWidth; readonly Font font, small; int hover = -1;
+        Rectangle overflowArea;
     internal int OverflowCount
     {
         get; private set;
@@ -150,7 +157,8 @@ internal sealed class DockPreviewForm : Form
         try
         {
             if (m.Msg == 0x02E0)
-                return;                                   // WM_DPICHANGED: this window is sized in physical pixels by the host
+                // WM_DPICHANGED : cette fenêtre est dimensionnée en pixels physiques par l'hôte
+                return;
             if (m.Msg == 0x0021)
             {
                 m.Result = new IntPtr(3);
@@ -171,7 +179,7 @@ internal sealed class DockPreviewForm : Form
             return source.ToBitmap();
         }
         catch { return null; }
-    }   // Icon.FromHandle does not own the HICON
+    }   // Icon.FromHandle ne possède pas le HICON
     void Remember(long hwnd, Bitmap bitmap)
     {
         if (IconCache.Count >= 64)
@@ -185,7 +193,8 @@ internal sealed class DockPreviewForm : Form
             old.Dispose();
         IconCache[hwnd] = bitmap;
     }
-    // Non-blocking class icon first; the blocking WM_GETICON fallback runs on a worker thread so a hung window never freezes the UI.
+    // Icône de classe non bloquante d'abord ; le repli bloquant WM_GETICON tourne sur un thread de travail pour qu'une fenêtre figée ne
+    // gèle jamais l'interface.
     void LoadIcon(Tile tile)
     {
         if (IconCache.TryGetValue(tile.Hwnd, out var cached))
@@ -234,7 +243,8 @@ internal sealed class DockPreviewForm : Form
             }
         });
     }
-    // Diff by hwnd: tiles (and their DWM thumbnails) of surviving windows are kept, vanished ones are released.
+    // Différentiel par hwnd : les vignettes (et leurs miniatures DWM) des fenêtres qui subsistent sont conservées, celles des fenêtres
+    // disparues sont libérées.
     internal void SetWindows(PreviewWindow[] windows)
     {
         var wanted = windows.Select(w => w.Hwnd).ToHashSet();
@@ -264,8 +274,10 @@ internal sealed class DockPreviewForm : Form
     }
     void Arrange()
     {
-        int pad = PixelsOf(10), gap = PixelsOf(8), tw = PixelsOf(216), header = PixelsOf(26), thumbH = PixelsOf(120), th = header + thumbH + PixelsOf(8), inset = PixelsOf(8);
-        int perRow = Math.Max(1, (maxWidth - 2 * pad + gap) / (tw + gap)), shown = Math.Min(tiles.Count, perRow * 3), cols = Math.Max(1, Math.Min(shown, perRow)), rows = Math.Max(1, (shown + cols - 1) / cols);
+        int pad = PixelsOf(10), gap = PixelsOf(8), tw = PixelsOf(216), header = PixelsOf(26), thumbH = PixelsOf(120), th = header + thumbH
+            + PixelsOf(8), inset = PixelsOf(8);
+        int perRow = Math.Max(1, (maxWidth - 2 * pad + gap) / (tw + gap)), shown = Math.Min(tiles.Count, perRow * 3), cols = Math.Max(1,
+            Math.Min(shown, perRow)), rows = Math.Max(1, (shown + cols - 1) / cols);
         for (int i = 0; i < tiles.Count; i++)
         {
             var tile = tiles[i];
@@ -280,7 +292,8 @@ internal sealed class DockPreviewForm : Form
         }
         OverflowCount = tiles.Count - shown;
         int gridH = rows * th + (rows - 1) * gap, labelH = OverflowCount > 0 ? header : 0;
-        overflowArea = OverflowCount > 0 ? new Rectangle(pad, pad + gridH + gap / 2, cols * tw + (cols - 1) * gap, labelH) : Rectangle.Empty;
+        overflowArea = OverflowCount > 0 ? new Rectangle(pad, pad + gridH + gap / 2, cols * tw + (cols - 1) * gap, labelH)
+            : Rectangle.Empty;
         ClientSize = new Size(2 * pad + cols * tw + (cols - 1) * gap, 2 * pad + gridH + (OverflowCount > 0 ? gap / 2 + labelH : 0));
         if (IsHandleCreated)
             UpdateThumbnails();
@@ -302,7 +315,8 @@ internal sealed class DockPreviewForm : Form
                 continue;
             double fit = Math.Min(Math.Min((double)tile.Area.Width / tile.Source.Width, (double)tile.Area.Height / tile.Source.Height), 1);
             int w = Math.Max(1, (int)(tile.Source.Width * fit)), h = Math.Max(1, (int)(tile.Source.Height * fit));
-            DwmThumb.Place(tile.Thumb, new Rectangle(tile.Area.X + (tile.Area.Width - w) / 2, tile.Area.Y + (tile.Area.Height - h) / 2, w, h));
+            DwmThumb.Place(tile.Thumb, new Rectangle(tile.Area.X + (tile.Area.Width - w) / 2, tile.Area.Y + (tile.Area.Height - h) / 2, w,
+                h));
         }
     }
     int Hit(Point p)
@@ -397,7 +411,10 @@ internal sealed class DockPreviewForm : Form
         using (var border = new Pen(p.OutlineVariant))
             g.DrawRectangle(border, 0, 0, Width - 1, Height - 1);
         if (OverflowCount > 0)
-            TextRenderer.DrawText(g, OverflowCount == 1 ? "+1 autre fenêtre" : "+" + OverflowCount + " autres fenêtres", font, overflowArea, p.OnSurfaceVariant, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+            TextRenderer.DrawText(g, OverflowCount == 1 ? "+1 autre fenêtre" : "+" + OverflowCount + " autres fenêtres", font,
+                overflowArea, p.OnSurfaceVariant,
+                TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter
+                    | TextFormatFlags.HorizontalCenter);
         int radius = PixelsOf(12), iconSize = PixelsOf(16), inset = PixelsOf(8), header = PixelsOf(26);
         for (int i = 0; i < tiles.Count; i++)
         {
@@ -412,7 +429,10 @@ internal sealed class DockPreviewForm : Form
             var icon = tile.Icon ?? (placeholder ??= SystemIcons.Application.ToBitmap());
             g.DrawImage(icon, new Rectangle(tile.Bounds.X + inset, tile.Bounds.Y + (header - iconSize) / 2, iconSize, iconSize));
             int textX = tile.Bounds.X + inset + iconSize + PixelsOf(6);
-            TextRenderer.DrawText(g, tile.Title, font, new Rectangle(textX, tile.Bounds.Y, tile.Bounds.Right - inset - textX, header), text, TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
+            TextRenderer.DrawText(g, tile.Title, font, new Rectangle(textX, tile.Bounds.Y, tile.Bounds.Right - inset - textX, header),
+                text,
+                TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter
+                    | TextFormatFlags.Left);
             using (var path = Round(tile.Area, PixelsOf(8)))
             using (var well = new SolidBrush(p.Surface))
                 g.FillPath(well, path);
@@ -420,7 +440,10 @@ internal sealed class DockPreviewForm : Form
             {   // fallback tile: large icon + wrapped title
                 int big = PixelsOf(32);
                 g.DrawImage(icon, new Rectangle(tile.Area.X + (tile.Area.Width - big) / 2, tile.Area.Y + PixelsOf(18), big, big));
-                TextRenderer.DrawText(g, tile.Title, small, new Rectangle(tile.Area.X + inset, tile.Area.Y + PixelsOf(58), tile.Area.Width - 2 * inset, tile.Area.Height - PixelsOf(62)), p.OnSurfaceVariant, TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.HorizontalCenter | TextFormatFlags.Top);
+                TextRenderer.DrawText(g, tile.Title, small, new Rectangle(tile.Area.X + inset, tile.Area.Y + PixelsOf(58),
+                    tile.Area.Width - 2 * inset, tile.Area.Height - PixelsOf(62)), p.OnSurfaceVariant,
+                    TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.HorizontalCenter
+                        | TextFormatFlags.Top);
             }
         }
     }
@@ -445,7 +468,8 @@ internal sealed class DockPreviewForm : Form
     }
 }
 
-// Owns the (lazily created, destroyed on close) popup: open / retarget / refresh / grace-delayed close. UI thread only.
+// Possède la bulle (créée à la demande, détruite à la fermeture) : ouverture / changement de cible / rafraîchissement / fermeture
+// après délai de grâce. Thread UI uniquement.
 internal sealed class DockPreviewHost : IDisposable
 {
     [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int w, int h, uint flags);
@@ -453,7 +477,7 @@ internal sealed class DockPreviewHost : IDisposable
     internal string OwnerId { get; private set; } = "";
     internal bool IsOpen => form != null && !form.IsDisposed;
     internal DockPreviewForm? Form => form;
-    // anchorX = physical x of the icon centre, anchorY = physical y of the dock top edge.
+    // anchorX = x physique du centre de l'icône, anchorY = y physique du bord haut du dock.
     internal void Open(string id, PreviewWindow[] windows, int ax, int ay, bool reduced)
     {
         Disarm();
@@ -487,7 +511,8 @@ internal sealed class DockPreviewHost : IDisposable
         }
         ArmSafety();
     }
-    // Safety net while open (frontend died, mouse events lost): a 1 s check that only runs while the bubble exists.
+    // Filet de sécurité pendant l'ouverture (frontend mort, événements souris perdus) : une vérification à 1 s qui ne tourne que
+    // tant que la bulle existe.
     void ArmSafety()
     {
         outsideSince = null;
@@ -518,7 +543,8 @@ internal sealed class DockPreviewHost : IDisposable
         if ((now - outsideSince.Value).TotalMilliseconds > 1500)
             Close();
     }
-    // Windows list changed while open: diff-update the existing tiles, keep the bubble where it is.
+    // La liste des fenêtres a changé pendant l'ouverture : mise à jour différentielle des vignettes existantes, la bulle reste en
+    // place.
     internal void Update(PreviewWindow[] windows)
     {
         if (!IsOpen)
@@ -537,10 +563,12 @@ internal sealed class DockPreviewHost : IDisposable
             return;
         var area = screen.WorkingArea;
         int margin = form.PixelsOf(8), w = form.Width, h = form.Height;
-        int x = Math.Clamp(anchorX - w / 2, area.Left + margin, Math.Max(area.Left + margin, area.Right - margin - w)), y = Math.Max(area.Top + margin, anchorY - margin - h);
+        int x = Math.Clamp(anchorX - w / 2, area.Left + margin, Math.Max(area.Left + margin, area.Right - margin - w)),
+            y = Math.Max(area.Top + margin, anchorY - margin - h);
         form.SetBounds(x, y, w, h);
         if (form.Visible)
-            SetWindowPos(form.Handle, new IntPtr(-1), x, y, w, h, 0x0010);   // TOPMOST, NOACTIVATE; the first show goes through Form.Show() only
+            // TOPMOST, NOACTIVATE ; le premier affichage passe uniquement par Form.Show()
+            SetWindowPos(form.Handle, new IntPtr(-1), x, y, w, h, 0x0010);
     }
     void Pick(long hwnd)
     {
@@ -560,7 +588,7 @@ internal sealed class DockPreviewHost : IDisposable
         if (closeTimer != null)
             closeTimer.Enabled = false;
     }
-    // Armed only for the grace period (not repeating); stays open while the cursor is over the bubble.
+    // Armé seulement pendant le délai de grâce (non répétitif) ; la bulle reste ouverte tant que le curseur la survole.
     internal void Retire(int milliseconds)
     {
         if (!IsOpen)
@@ -572,7 +600,8 @@ internal sealed class DockPreviewHost : IDisposable
     System.Windows.Forms.Timer CreateTimer()
     {
         var t = new System.Windows.Forms.Timer();
-        t.Tick += (_, _) => { t.Enabled = false; if (form != null && !form.IsDisposed && form.Bounds.Contains(Cursor.Position)) return; Close(); };
+        t.Tick += (_, _) => { t.Enabled = false; if (form != null && !form.IsDisposed && form.Bounds.Contains(Cursor.Position)) return;
+            Close(); };
         return t;
     }
     internal void Close()

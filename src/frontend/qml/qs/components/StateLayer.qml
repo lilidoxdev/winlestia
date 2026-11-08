@@ -28,7 +28,8 @@ MouseArea {
         rippleAnim.y = event.y;
 
         const dist = (ox, oy) => ox * ox + oy * oy;
-        rippleAnim.radius = Math.sqrt(Math.max(dist(event.x, event.y), dist(event.x, height - event.y), dist(width - event.x, event.y), dist(width - event.x, height - event.y)));
+        rippleAnim.radius = Math.sqrt(Math.max(dist(event.x, event.y), dist(event.x, height - event.y), dist(width - event.x, event.y),
+            dist(width - event.x, height - event.y)));
 
         rippleAnim.restart();
     }

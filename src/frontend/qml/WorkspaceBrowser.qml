@@ -18,6 +18,8 @@ Item {
     property string scope: "apps"
     property string category: "Tout"
     readonly property bool dialogOpen: editor.open
+    // Le champ de recherche vit dans WorkspaceSearchRow : on l'expose sous l'ancien nom `query`.
+    readonly property alias query: searchRow.queryField
     property bool favoritesOnly: false
     property bool recentSort: false
     property bool listMode: false
@@ -68,7 +70,8 @@ Item {
         const score = e => (e.favorite ? 4 : 0) + (e.recent >= 0 ? 2 : 0) + (e.category ? 1 : 0);
         const seen = new Map(), list = [];
         for (const e of raw) {
-            const k = e.target ? "p:" + String(e.target).toLowerCase().replace(/\//g, "\\").replace(/\\+$/, "") : "n:" + fold(e.name) + "|" + (e.kind || "app");
+            const k = e.target ? "p:"
+                + String(e.target).toLowerCase().replace(/\//g, "\\").replace(/\\+$/, "") : "n:" + fold(e.name) + "|" + (e.kind || "app");
             const at = seen.get(k);
             if (at === undefined) {
                 seen.set(k, list.length);
@@ -148,10 +151,12 @@ Item {
     function navY(i) {
         return i * 52 + (i >= 4 ? 17 : 0);
     }
-    readonly property string title: scope === "documents" ? qsTr("Documents & médias") : scope === "favorites" ? qsTr("Favoris") : scope === "recent" ? qsTr("Récemment ouverts") : qsTr(spaces.find(s => s.id === scope)?.name || "Tout ton espace")
+    readonly property string title: scope === "documents" ? qsTr("Documents & médias") : scope === "favorites" ? qsTr("Favoris")
+        : scope === "recent" ? qsTr("Récemment ouverts") : qsTr(spaces.find(s => s.id === scope)?.name || "Tout ton espace")
     readonly property var base: index.filter(i => {
         const e = i.entry;
-        return (scope === "all" || scope === "favorites" || scope === "recent" || e.board === scope) && (!(favoritesOnly || scope === "favorites") || e.favorite) && (scope !== "recent" || e.recent >= 0);
+        return (scope === "all" || scope === "favorites" || scope === "recent" || e.board === scope) && (!(favoritesOnly
+            || scope === "favorites") || e.favorite) && (scope !== "recent" || e.recent >= 0);
     })
     readonly property var categoryCounts: {
         const m = {};
@@ -392,7 +397,7 @@ Item {
         onTriggered: {
             if (!browser.tipTarget || !browser.visible)
                 return;
-            tipLabel.text = browser.tipText;
+            tip.label.text = browser.tipText;
             const p = browser.tipTarget.mapToItem(browser, browser.tipTarget.width / 2, browser.tipTarget.height - 4);
             tip.x = Math.max(8, Math.min(browser.width - tip.width - 8, p.x - tip.width / 2));
             tip.y = Math.max(8, p.y);
@@ -416,66 +421,10 @@ Item {
     }
 
     // ---- Open: scale + fade with a slight overshoot, regions stagger in. Stops when hidden. ------------------
-    ParallelAnimation {
+    WorkspaceOpenAnim {
         id: openAnim
-        NumberAnimation {
-            target: browser
-            property: "pPanel"
-            from: 0
-            to: 1
-            duration: Appearance.anim.durations.expressiveFastSpatial + 80
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
-        }
-        SequentialAnimation {
-            PauseAnimation {
-                duration: browser.fx ? 30 : 0
-            }
-            NumberAnimation {
-                target: browser
-                property: "pSide"
-                from: 0
-                to: 1
-                duration: Appearance.anim.durations.normal
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
-            }
-        }
-        SequentialAnimation {
-            PauseAnimation {
-                duration: browser.fx ? 80 : 0
-            }
-            NumberAnimation {
-                target: browser
-                property: "pHead"
-                from: 0
-                to: 1
-                duration: Appearance.anim.durations.normal
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
-            }
-        }
-        SequentialAnimation {
-            PauseAnimation {
-                duration: browser.fx ? 130 : 0
-            }
-            NumberAnimation {
-                target: browser
-                property: "pBody"
-                from: 0
-                to: 1
-                duration: Appearance.anim.durations.normal
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
-            }
-        }
-        NumberAnimation {
-            target: grid
-            property: "reveal"
-            from: browser.fx ? 0 : 1
-            to: 1
-            duration: browser.fx ? 900 : 1
-        }
+        browser: browser
+        grid: grid
     }
     NumberAnimation {
         id: revealAnim
@@ -532,131 +481,12 @@ Item {
     // Right-click menu: plain in-panel overlay, fully imperative. Root cause of "works only once": Menu.qml sets
     // `expanded=false` itself when an item is picked, which destroyed a `expanded:context.opened` binding, so the menu
     // stayed at height 0 / opacity 0 forever. Never bind `expanded`; openMenu/closeMenu own the whole state.
-    Item {
+    WorkspaceContextMenu {
         id: context
-        objectName: "workspaceContext"
-        anchors.fill: parent
-        z: 90
-        visible: false
-        property bool opened: false
-        function openMenu(px, py) {
-            opened = true;
-            menu.expanded = true;
-            visible = true;
-            catcher.enabled = true;
-            menu.x = Math.max(8, Math.min(px, browser.width - menu.width - 8));
-            menu.y = Math.max(8, Math.min(py, browser.height - menu.implicitHeight - 8));
-        }
-        function openAt(px, py) {
-            openMenu(px, py);
-        }
-        function close() {
-            opened = false;
-            menu.expanded = false;
-            catcher.enabled = false;
-            visible = false;
-        }
-        MouseArea {
-            id: catcher
-            anchors.fill: parent
-            enabled: false
-            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-            onPressed: context.close()
-        }
-        Menu {
-            id: menu
-            objectName: "workspaceMenu"
-            width: Math.max(260, implicitWidth)
-            height: implicitHeight
-            readonly property bool app: browser.selectedKind !== "folder"
-            readonly property var itemTexts: {
-                const r = [];
-                for (let i = 0; i < items.length; i++)
-                    r.push(items[i].text);
-                return r;
-            }
-            property MenuItem miOpen: MenuItem {
-                text: qsTr("Ouvrir")
-                icon: "open_in_new"
-                onClicked: Bridge.action("launch", {
-                    id: browser.selectedId
-                })
-            }
-            property MenuItem miFav: MenuItem {
-                text: browser.selectedFavorite ? qsTr("Retirer des favoris") : qsTr("Ajouter aux favoris")
-                icon: "star"
-                onClicked: Bridge.action("favorite", {
-                    id: browser.selectedId
-                })
-            }
-            property MenuItem miReveal: MenuItem {
-                text: qsTr("Ouvrir l’emplacement")
-                icon: "folder_open"
-                onClicked: Bridge.action("reveal", {
-                    id: browser.selectedId
-                })
-            }
-            property MenuItem miAdmin: MenuItem {
-                text: qsTr("Exécuter en administrateur")
-                icon: "admin_panel_settings"
-                onClicked: Bridge.action("dockApp", {
-                    id: browser.selectedId,
-                    action: "admin"
-                })
-            }
-            property MenuItem miEdit: MenuItem {
-                text: qsTr("Renommer et catégoriser")
-                icon: "edit"
-                onClicked: {
-                    nameField.text = browser.selectedName;
-                    categoryField.text = browser.selectedCategory;
-                    editor.open = true;
-                    nameField.forceActiveFocus();
-                }
-            }
-            property MenuItem miIcon: MenuItem {
-                text: qsTr("Choisir une icône")
-                icon: "image"
-                onClicked: Bridge.chooseEntryIcon(browser.selectedId)
-            }
-            property MenuItem miApps: MenuItem {
-                text: qsTr("Ranger dans Applications")
-                icon: "apps"
-                onClicked: Bridge.action("move", {
-                    id: browser.selectedId,
-                    board: "apps"
-                })
-            }
-            property MenuItem miGames: MenuItem {
-                text: qsTr("Ranger dans Jeux")
-                icon: "sports_esports"
-                onClicked: Bridge.action("move", {
-                    id: browser.selectedId,
-                    board: "games"
-                })
-            }
-            property MenuItem miProj: MenuItem {
-                text: qsTr("Ranger dans Projets")
-                icon: "code_blocks"
-                onClicked: Bridge.action("move", {
-                    id: browser.selectedId,
-                    board: "projects"
-                })
-            }
-            property MenuItem miDocs: MenuItem {
-                text: qsTr("Ranger dans Documents")
-                icon: "folder_open"
-                onClicked: Bridge.action("move", {
-                    id: browser.selectedId,
-                    board: "documents"
-                })
-            }
-            items: app ? [miOpen, miFav, miReveal, miAdmin, miEdit, miIcon, miApps, miGames, miProj, miDocs] : [miOpen, miFav, miReveal, miEdit, miIcon, miApps, miGames, miProj, miDocs]
-            onItemSelected: item => {
-                context.close();
-                item.clicked();
-            }
-        }
+        browser: browser
+        editor: editor
+        nameField: nameField
+        categoryField: categoryField
     }
 
 
@@ -669,683 +499,33 @@ Item {
         RowLayout {
             anchors.fill: parent
             spacing: Appearance.spacing.large
-            StyledRect {
+            WorkspaceSidebar {
                 id: side
-                Layout.preferredWidth: 252
-                Layout.minimumWidth: 252
-                Layout.maximumWidth: 252
-                Layout.fillWidth: false
-                Layout.fillHeight: true
-                radius: Appearance.rounding.large
-                color: Colours.palette.m3surfaceContainer
-                opacity: browser.pSide
-                transform: Translate {
-                    x: browser.fx ? (1 - browser.pSide) * -24 : 0
-                }
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: Appearance.padding.large
-                    spacing: Appearance.spacing.small
-                    RowLayout {
-                        Layout.leftMargin: Appearance.padding.small
-                        Layout.topMargin: Appearance.padding.small
-                        Layout.bottomMargin: Appearance.spacing.normal
-                        spacing: Appearance.spacing.normal
-                        StyledRect {
-                            implicitWidth: 40
-                            implicitHeight: 40
-                            radius: Appearance.rounding.full
-                            color: Colours.palette.m3primaryContainer
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: qsTr("space_dashboard")
-                                fill: 1
-                                font.pointSize: Appearance.font.size.larger
-                                color: Colours.palette.m3onPrimaryContainer
-                            }
-                        }
-                        Column {
-                            StyledText {
-                                text: qsTr("Ton espace")
-                                font.pointSize: Appearance.font.size.large
-                                font.weight: Font.Medium
-                            }
-                            StyledText {
-                                text: browser.counts.all + " " + qsTr("accès")
-                                font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
-                            }
-                        }
-                    }
-                    Item {
-                        Layout.fillWidth: true
-                        implicitHeight: browser.navY(6) + 48
-                        // Sliding selection pill: one rectangle that springs between items.
-                        Rectangle {
-                            width: parent.width
-                            height: 48
-                            radius: Appearance.rounding.full
-                            color: Colours.palette.m3secondaryContainer
-                            visible: browser.navIndex >= 0
-                            y: browser.navY(Math.max(0, browser.navIndex))
-                            Behavior on y {
-                                WorkspaceSpring {}
-                            }
-                        }
-                        Rectangle {
-                            y: browser.navY(3) + 48 + 8
-                            width: parent.width
-                            height: 1
-                            color: Colours.palette.m3outlineVariant
-                        }
-                        Repeater {
-                            model: browser.navItems
-                            WorkspaceNavItem {
-                                required property var modelData
-                                required property int index
-                                width: parent.width
-                                y: browser.navY(index)
-                                icon: modelData.icon
-                                label: qsTr(modelData.name)
-                                count: browser.counts[modelData.id] ?? 0
-                                selected: browser.scope === modelData.id
-                                onTriggered: browser.selectBoard(modelData.id)
-                            }
-                        }
-                    }
-                    Item {
-                        Layout.fillHeight: true
-                    }
-                    IconTextButton {
-                        Layout.fillWidth: true
-                        icon: "content_paste"
-                        text: qsTr("Presse-papiers")
-                        type: IconTextButton.Text
-                        onClicked: Bridge.navigate("clipboard")
-                    }
-                    IconTextButton {
-                        Layout.fillWidth: true
-                        icon: "settings"
-                        text: qsTr("Personnaliser")
-                        type: IconTextButton.Text
-                        onClicked: Bridge.navigate("settings")
-                    }
-                }
+                browser: browser
             }
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: Appearance.spacing.larger
-                RowLayout {
-                    Layout.fillWidth: true
-                    opacity: browser.pHead
-                    transform: Translate {
-                        y: browser.fx ? (1 - browser.pHead) * -14 : 0
-                    }
-                    Column {
-                        spacing: Appearance.padding.small
-                        StyledText {
-                            text: browser.title
-                            font.pointSize: Appearance.font.size.extraLarge
-                            font.weight: Font.Medium
-                        }
-                        Row {
-                            spacing: Appearance.spacing.small
-                            Rectangle {
-                                anchors.verticalCenter: parent.verticalCenter
-                                implicitWidth: Math.max(28, countText.implicitWidth + 16)
-                                implicitHeight: 22
-                                radius: Appearance.rounding.full
-                                color: Colours.palette.m3primaryContainer
-                                StyledText {
-                                    id: countText
-                                    anchors.centerIn: parent
-                                    text: browser.entries.length
-                                    font.pointSize: Appearance.font.size.small
-                                    font.weight: Font.Medium
-                                    color: Colours.palette.m3onPrimaryContainer
-                                }
-                            }
-                            StyledText {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: qsTr("accès · Clique pour ouvrir, clic droit pour organiser")
-                                font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
-                            }
-                        }
-                    }
-                    Item {
-                        Layout.fillWidth: true
-                    }
-                    IconButton {
-                        icon: "search"
-                        type: IconButton.Text
-                        onClicked: Bridge.navigate("palette")
-                    }
-                    IconButton {
-                        icon: "add"
-                        type: IconButton.Text
-                        onClicked: Bridge.action("addAccess", {
-                            board: browser.scope
-                        })
-                    }
-                    IconButton {
-                        icon: "create_new_folder"
-                        type: IconButton.Text
-                        visible: browser.scope === "projects" || browser.scope === "documents"
-                        onClicked: Bridge.action("addFolder", {
-                            board: browser.scope
-                        })
-                    }
-                    IconButton {
-                        icon: "close"
-                        type: IconButton.Text
-                        onClicked: Bridge.closePanel()
-                    }
+                WorkspaceHeader {
+                    browser: browser
                 }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
-                    opacity: browser.pHead
-                    transform: Translate {
-                        y: browser.fx ? (1 - browser.pHead) * -10 : 0
-                    }
-                    StyledRect {
-                        id: searchBox
-                        Layout.fillWidth: true
-                        implicitHeight: 50
-                        radius: Appearance.rounding.full
-                        color: query.activeFocus ? Colours.palette.m3surfaceContainerHighest : Colours.palette.m3surfaceContainerHigh
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: parent.radius
-                            color: "transparent"
-                            border.width: 2
-                            border.color: Colours.palette.m3primary
-                            opacity: query.activeFocus ? 1 : 0
-                            Behavior on opacity {
-                                enabled: !Appearance.reducedEffects
-                                Anim {
-                                    duration: Appearance.anim.durations.small
-                                }
-                            }
-                        }
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: Appearance.padding.large + Appearance.padding.small
-                            anchors.rightMargin: Appearance.padding.larger
-                            MaterialIcon {
-                                text: qsTr("search")
-                                color: query.activeFocus ? Colours.palette.m3primary : Colours.palette.m3outline
-                                scale: query.activeFocus && browser.fx ? 1.15 : 1
-                                Behavior on scale {
-                                    WorkspaceSpring {}
-                                }
-                            }
-                            StyledTextField {
-                                id: query
-                                objectName: "workspaceQuery"
-                                Layout.fillWidth: true
-                                placeholderText: qsTr("Rechercher dans %1  (Ctrl+F)").arg(browser.title.toLocaleLowerCase())
-                                Keys.onReturnPressed: {
-                                    if (browser.entries.length)
-                                        Bridge.action("launch", {
-                                            id: browser.entries[0].id
-                                        });
-                                }
-                                // First Esc clears the text (overrides Main's Escape shortcut only when there is text); next Esc closes via Main.
-                                Keys.onShortcutOverride: event => {
-                                    if (event.key === Qt.Key_Escape && query.text.length > 0)
-                                        event.accepted = true;
-                                }
-                                Keys.onEscapePressed: {
-                                    if (query.text.length > 0)
-                                        query.clear();
-                                }
-                                Keys.onDownPressed: {
-                                    grid.forceActiveFocus();
-                                    if (browser.cur < 0)
-                                        browser.cur = 0;
-                                }
-                            }
-                            IconButton {
-                                icon: "close"
-                                type: IconButton.Text
-                                visible: query.text.length > 0
-                                onClicked: query.clear()
-                            }
-                        }
-                    }
-                    IconButton {
-                        icon: "star"
-                        type: IconButton.Tonal
-                        toggle: true
-                        checked: browser.favoritesOnly
-                        onClicked: {
-                            browser.markBulk();
-                            browser.favoritesOnly = !browser.favoritesOnly;
-                        }
-                    }
-                    IconButton {
-                        objectName: "workspaceFlat"
-                        icon: "sort_by_alpha"
-                        type: browser.flatMode ? IconButton.Tonal : IconButton.Text
-                        toggle: true
-                        checked: browser.flatMode
-                        onClicked: {
-                            browser.markBulk();
-                            browser.flatMode = !browser.flatMode;
-                        }
-                    }
-                    IconButton {
-                        icon: browser.listMode ? "grid_view" : "view_list"
-                        type: IconButton.Text
-                        onClicked: browser.listMode = !browser.listMode
-                    }
+                WorkspaceSearchRow {
+                    id: searchRow
+                    browser: browser
+                    grid: grid
                 }
                 // Categories wrap onto several lines instead of clipping; the row collapses to one line by default.
-                Item {
+                WorkspaceChips {
                     id: chipsBox
-                    property bool open: false
-                    readonly property bool overflow: chipFlow.implicitHeight > 40
-                    Layout.fillWidth: true
-                    implicitHeight: open ? chipFlow.implicitHeight : Math.min(chipFlow.implicitHeight, 34)
-                    clip: true
-                    opacity: browser.pHead
-                    Behavior on implicitHeight {
-                        enabled: !Appearance.reducedEffects
-                        Anim {
-                            duration: Appearance.anim.durations.small
-                        }
-                    }
-                    Flow {
-                        id: chipFlow
-                        width: parent.width - (chipsBox.overflow ? 44 : 0)
-                        spacing: Appearance.spacing.small
-                        Repeater {
-                            model: browser.categories
-                            WorkspaceFilterChip {
-                                required property string modelData
-                                label: modelData
-                                count: modelData === "Tout" ? -1 : (browser.categoryCounts[modelData] ?? -1)
-                                selected: browser.category === modelData
-                                onTriggered: {
-                                    browser.markBulk();
-                                    browser.category = modelData;
-                                    browser.replay();
-                                }
-                            }
-                        }
-                    }
-                    IconButton {
-                        visible: chipsBox.overflow
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        icon: "expand_more"
-                        type: IconButton.Text
-                        rotation: chipsBox.open ? 180 : 0
-                        Behavior on rotation {
-                            WorkspaceSpring {}
-                        }
-                        onClicked: chipsBox.open = !chipsBox.open
-                    }
+                    browser: browser
                 }
-                ListView {
+                WorkspaceTileList {
                     id: grid
-                    objectName: "workspaceGrid"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-                    cacheBuffer: 260
-                    property real reveal: 1
-                    readonly property int columns: browser.listMode ? 1 : Math.max(3, Math.floor(width / 150))
-                    readonly property real iconSize: Bridge.settings.iconSize ?? 56
-                    readonly property real cellWidth: Math.floor(width / columns)
-                    readonly property real cellHeight: browser.listMode ? 74 : Math.round(iconSize + 84)
-                    onColumnsChanged: browser.syncModel()
-                    model: rows
-                    reuseItems: true
-                    currentIndex: -1
-                    boundsBehavior: Flickable.StopAtBounds
-                    opacity: browser.pBody
-                    onMovementStarted: {
-                        browser.hoverTip(null);
-                        context.close();
-                    }
-                    onContentYChanged: if (context.opened)
-                        context.close()
-                    function step(d) {
-                        if (!browser.flat.length)
-                            return;
-                        const n = Math.max(0, Math.min(browser.flat.length - 1, browser.cur < 0 ? 0 : browser.cur + d));
-                        browser.cur = n;
-                        positionViewAtIndex(browser.lineOfTile(n), ListView.Contain);
-                    }
-                    Keys.onReturnPressed: {
-                        if (browser.cur >= 0 && browser.cur < browser.flat.length)
-                            Bridge.action("launch", {
-                                id: browser.flat[browser.cur].id
-                            });
-                    }
-                    Keys.onLeftPressed: step(-1)
-                    Keys.onRightPressed: step(1)
-                    Keys.onDownPressed: step(columns)
-                    Keys.onUpPressed: {
-                        if (browser.cur < columns) {
-                            query.forceActiveFocus();
-                            browser.cur = -1;
-                        } else
-                            step(-columns);
-                    }
-                    Keys.onPressed: event => {
-                        if (event.text.length > 0 && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier)) && event.text.charCodeAt(0) > 32) {
-                            query.forceActiveFocus();
-                            query.text += event.text;
-                            query.cursorPosition = query.text.length;
-                            event.accepted = true;
-                        }
-                    }
-                    section.property: "sec"
-                    section.criteria: ViewSection.FullString
-                    section.labelPositioning: ViewSection.InlineLabels | ViewSection.CurrentLabelAtStart
-                    section.delegate: Item {
-                        id: head
-                        required property string section
-                        readonly property var info: browser.secInfo[section] ?? ({
-                                label: "",
-                                count: 0,
-                                closed: false,
-                                icon: ""
-                            })
-                        width: grid.width
-                        height: 42
-                        Rectangle {
-                            anchors.fill: parent
-                            color: Qt.alpha(Colours.palette.m3surface, .94)
-                        }
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: 2
-                            radius: Appearance.rounding.small
-                            color: Colours.palette.m3onSurface
-                            opacity: headHit.pressed ? .12 : headHit.containsMouse ? .07 : 0
-                        }
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: Appearance.padding.normal
-                            anchors.rightMargin: Appearance.padding.normal
-                            spacing: Appearance.spacing.small
-                            MaterialIcon {
-                                text: "expand_more"
-                                visible: !browser.flatMode
-                                rotation: head.info.closed ? -90 : 0
-                                color: Colours.palette.m3onSurfaceVariant
-                                Behavior on rotation {
-                                    WorkspaceSpring {}
-                                }
-                            }
-                            MaterialIcon {
-                                text: head.info.icon
-                                visible: text !== ""
-                                fill: 1
-                                color: Colours.palette.m3primary
-                                font.pointSize: Appearance.font.size.large
-                            }
-                            StyledText {
-                                text: head.info.label
-                                font.pointSize: Appearance.font.size.normal
-                                font.weight: Font.Medium
-                                color: Colours.palette.m3onSurface
-                            }
-                            Rectangle {
-                                implicitWidth: Math.max(24, cnt.implicitWidth + 14)
-                                implicitHeight: 22
-                                radius: Appearance.rounding.full
-                                color: Colours.palette.m3surfaceContainerHighest
-                                StyledText {
-                                    id: cnt
-                                    anchors.centerIn: parent
-                                    text: head.info.count
-                                    font.pointSize: Appearance.font.size.small
-                                    color: Colours.palette.m3onSurfaceVariant
-                                }
-                            }
-                            Item {
-                                Layout.fillWidth: true
-                            }
-                        }
-                        Rectangle {
-                            anchors.bottom: parent.bottom
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.leftMargin: Appearance.padding.normal
-                            anchors.rightMargin: Appearance.padding.normal
-                            height: 1
-                            color: Colours.palette.m3outlineVariant
-                            opacity: .6
-                        }
-                        MouseArea {
-                            id: headHit
-                            objectName: "sectionHeader"
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            enabled: !browser.flatMode && !query.text
-                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            onClicked: browser.toggleSection(head.section)
-                        }
-                    }
-                    delegate: Item {
-                        id: line
-                        required property int index
-                        required property string sec
-                        required property int first
-                        required property int n
-                        width: grid.width
-                        height: n > 0 ? grid.cellHeight : 0
-                        visible: n > 0
-                        property bool live: true
-                        ListView.onPooled: {
-                            live = false;
-                            if (browser.tipTarget)
-                                browser.hoverTip(null);
-                        }
-                        ListView.onReused: live = true
-                        Repeater {
-                            model: line.n
-                            delegate: Item {
-                                id: tile
-                                required property int index
-                                readonly property int flatIndex: line.first + index
-                                readonly property var e: browser.flat[flatIndex] ?? ({
-                                        id: "",
-                                        name: "",
-                                        category: "",
-                                        kind: "app",
-                                        favorite: false
-                                    })
-                                readonly property string eid: e.id
-                                readonly property string name: e.name
-                                readonly property string category: e.category || ""
-                                readonly property bool folder: e.kind === "folder"
-                                readonly property bool favorite: !!e.favorite
-                                x: index * grid.cellWidth
-                                width: grid.cellWidth
-                                height: grid.cellHeight
-                                // Entrance stagger: only the first rows ever have a non-final value, and only while grid.reveal runs.
-                                readonly property real rt: (grid.reveal * 880 - Math.min(line.index, 6) * 55) / 340
-                                readonly property real t: rt <= 0 ? 0 : rt >= 1 ? 1 : rt
-                                readonly property bool current: browser.cur === flatIndex && grid.activeFocus
-                                function backOut(x) {
-                                    const u = x - 1;
-                                    return 1 + 2.6 * u * u * u + 1.6 * u * u;
-                                }
-                                readonly property bool hov: line.live && hit.containsMouse
-                                readonly property bool prs: line.live && hit.pressed
-                                Item {
-                                    id: card
-                                    anchors.fill: parent
-                                    anchors.margins: Appearance.padding.small * .8
-                                    opacity: tile.t
-                                    transform: Translate {
-                                        y: browser.fx ? (1 - tile.t) * 18 : 0
-                                    }
-                                    scale: browser.fx ? .88 + .12 * tile.backOut(tile.t) : 1
-                                    Item {
-                                        id: body
-                                        anchors.fill: parent
-                                        // Hover lift with overshoot, press squash.
-                                        scale: tile.prs ? .96 : tile.hov && browser.fx ? 1.04 : 1
-                                        Behavior on scale {
-                                            WorkspaceSpring {}
-                                        }
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            radius: Appearance.rounding.normal
-                                            color: Colours.palette.m3onSurface
-                                            opacity: tile.prs ? .12 : tile.hov ? .07 : 0
-                                            Behavior on opacity {
-                                                enabled: !Appearance.reducedEffects
-                                                Anim {
-                                                    duration: Appearance.anim.durations.small
-                                                }
-                                            }
-                                            border.width: tile.current ? 2 : 0
-                                            border.color: Colours.palette.m3primary
-                                        }
-                                        Rectangle {
-                                            id: iconWell
-                                            width: browser.listMode ? 52 : iconBox.width + 24
-                                            height: width
-                                            radius: tile.folder ? Appearance.rounding.large : Appearance.rounding.normal
-                                            x: browser.listMode ? Appearance.padding.large + Appearance.padding.small : (parent.width - width) / 2
-                                            y: browser.listMode ? (parent.height - height) / 2 : Appearance.padding.normal
-                                            color: tile.folder ? (tile.hov ? Colours.palette.m3secondaryContainer : Qt.alpha(Colours.palette.m3secondaryContainer, .7)) : tile.hov ? Colours.palette.m3surfaceContainerHighest : Colours.palette.m3surfaceContainerHigh
-                                            Item {
-                                                id: iconBox
-                                                width: browser.listMode ? 40 : grid.iconSize
-                                                height: width
-                                                anchors.centerIn: parent
-                                                Image {
-                                                    id: logo
-                                                    anchors.fill: parent
-                                                    source: tile.folder || !tile.eid ? "" : Bridge.iconUrl(tile.eid, Bridge.iconRevision)
-                                                    asynchronous: true
-                                                    cache: true
-                                                    fillMode: Image.PreserveAspectFit
-                                                    sourceSize: Qt.size(width * 2, height * 2)
-                                                    opacity: status === Image.Ready ? 1 : 0
-                                                    Behavior on opacity {
-                                                        enabled: !Appearance.reducedEffects
-                                                        Anim {
-                                                            duration: Appearance.anim.durations.small
-                                                        }
-                                                    }
-                                                }
-                                                MaterialIcon {
-                                                    anchors.centerIn: parent
-                                                    text: tile.folder ? "folder" : "apps"
-                                                    fill: tile.folder ? 1 : 0
-                                                    font.pointSize: tile.folder ? Appearance.font.size.large : Appearance.font.size.extraLarge
-                                                    color: tile.folder ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3primary
-                                                    visible: tile.folder || logo.status !== Image.Ready
-                                                }
-                                            }
-                                        }
-                                        MaterialIcon {
-                                            x: iconWell.x + iconWell.width - width + 4
-                                            y: iconWell.y - 4
-                                            text: qsTr("star")
-                                            fill: 1
-                                            font.pointSize: Appearance.font.size.small
-                                            color: Colours.palette.m3tertiary
-                                            visible: tile.favorite
-                                        }
-                                        StyledText {
-                                            id: nameText
-                                            x: browser.listMode ? 84 : Appearance.padding.normal
-                                            y: browser.listMode ? 14 : iconWell.y + iconWell.height + 8
-                                            width: browser.listMode ? parent.width - 104 : parent.width - Appearance.padding.normal * 2
-                                            text: tile.name
-                                            horizontalAlignment: browser.listMode ? Text.AlignLeft : Text.AlignHCenter
-                                            font.pointSize: Appearance.font.size.small
-                                            font.weight: Font.Medium
-                                            elide: Text.ElideRight
-                                        }
-                                        StyledText {
-                                            id: catText
-                                            x: browser.listMode ? 84 : Appearance.padding.normal
-                                            y: browser.listMode ? 36 : iconWell.y + iconWell.height + 27
-                                            width: browser.listMode ? parent.width - 104 : parent.width - Appearance.padding.normal * 2
-                                            text: tile.category
-                                            horizontalAlignment: browser.listMode ? Text.AlignLeft : Text.AlignHCenter
-                                            font.pointSize: Appearance.font.size.small
-                                            color: Colours.palette.m3outline
-                                            elide: Text.ElideRight
-                                            opacity: .85
-                                        }
-                                        MouseArea {
-                                            id: hit
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                                            // Shared tooltip carries the full name and category (either may be elided).
-                                            onEntered: browser.hoverTip(tile, tile.name + (tile.category && (catText.truncated || nameText.truncated) ? " · " + tile.category : ""))
-                                            onExited: if (browser.tipTarget === tile)
-                                                browser.hoverTip(null)
-                                            onClicked: event => {
-                                                browser.hoverTip(null);
-                                                if (event.button === Qt.RightButton) {
-                                                    browser.selectedId = tile.eid;
-                                                    browser.selectedName = tile.name;
-                                                    browser.selectedCategory = tile.category;
-                                                    browser.selectedFavorite = tile.favorite;
-                                                    browser.selectedKind = tile.e.kind || "app";
-                                                    const p = hit.mapToItem(browser, event.x, event.y);
-                                                    context.openAt(p.x, p.y);
-                                                } else
-                                                    Bridge.action("launch", {
-                                                        id: tile.eid
-                                                    });
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    C.ScrollBar.vertical: StyledScrollBar {
-                        flickable: grid
-                    }
-                    EmptyState {
-                        id: empty
-                        anchors.centerIn: parent
-                        visible: opacity > .01 && browser.tileCount === 0
-                        opacity: browser.tileCount === 0 ? 1 : 0
-                        scale: browser.tileCount === 0 || !browser.fx ? 1 : .85
-                        Behavior on opacity {
-                            enabled: !Appearance.reducedEffects
-                            Anim {
-                                duration: Appearance.anim.durations.small
-                            }
-                        }
-                        Behavior on scale {
-                            WorkspaceSpring {}
-                        }
-                        icon: query.text ? "search_off" : "inbox"
-                        title: query.text ? qsTr("Aucun accès ne correspond à cette recherche") : qsTr("Cet espace est prêt à accueillir tes accès")
-                        body: query.text ? "" : qsTr("Ajoute une application, un dossier ou un document pour le retrouver ici.")
-                        actionText: query.text ? qsTr("Effacer la recherche") : qsTr("Ajouter un accès")
-                        actionIcon: query.text ? "close" : "add"
-                        onActionTriggered: {
-                            if (query.text)
-                                query.clear();
-                            else
-                                Bridge.action("addAccess", {
-                                    board: browser.scope
-                                });
-                        }
-                    }
+                    browser: browser
+                    context: context
+                    query: browser.query
+                    rows: rows
                 }
                 RowLayout {
                     Layout.fillWidth: true
@@ -1367,33 +547,9 @@ Item {
         }
     }
     // One shared tooltip instead of a Popup per tile.
-    StyledRect {
+    WorkspaceTip {
         id: tip
-        property bool shown: false
-        z: 50
-        visible: opacity > .01
-        opacity: shown ? 1 : 0
-        scale: shown || !browser.fx ? 1 : .92
-        implicitWidth: tipLabel.implicitWidth + Appearance.padding.large * 2
-        implicitHeight: tipLabel.implicitHeight + Appearance.padding.normal * 2
-        radius: Appearance.rounding.small
-        color: Colours.palette.m3surfaceContainerHighest
-        border.width: 1
-        border.color: Colours.palette.m3outlineVariant
-        Behavior on opacity {
-            enabled: !Appearance.reducedEffects
-            Anim {
-                duration: Appearance.anim.durations.small
-            }
-        }
-        Behavior on scale {
-            WorkspaceSpring {}
-        }
-        StyledText {
-            id: tipLabel
-            anchors.centerIn: parent
-            font.pointSize: Appearance.font.size.small
-        }
+        browser: browser
     }
     Dialog {
         id: editor

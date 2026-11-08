@@ -25,6 +25,15 @@ namespace PanneauxGlass;
 // pour le RichEdit + modificateur (Alt de la touche de dictée) encore pris en compte au début du lot.
 internal static class TextInjector
 {
+    // Pas de sondage des modificateurs encore enfoncés : tant qu'ils le sont, le texte injecté serait déformé en raccourcis.
+    const int ModifierReleasePollMs = 20;
+    // Laisse l'application cible enregistrer le relâchement des modificateurs avant la première frappe injectée.
+    const int ModifierReleaseSettleMs = 40;
+    // Espace les caractères injectés pour que les applications lentes n'en perdent pas dans leur file d'entrée.
+    const int KeystrokeGapMs = 4;
+    // Le presse-papiers peut être verrouillé par un autre processus : on réessaie après une courte pause.
+    const int ClipboardRetryMs = 30;
+
     // Laisse l'application cible lire le presse-papiers avant de le restaurer.
     const int PasteWaitMs = 1000;
     [StructLayout(LayoutKind.Sequential)]
@@ -64,9 +73,9 @@ internal static class TextInjector
                 }
             if (!down)
                 break;
-            Thread.Sleep(20);
+            Thread.Sleep(ModifierReleasePollMs);
         }
-        Thread.Sleep(40);
+        Thread.Sleep(ModifierReleaseSettleMs);
     }
 
     internal static bool Type(string text)
@@ -103,7 +112,7 @@ internal static class TextInjector
             if (SendInput((uint)batch.Length, batch, Marshal.SizeOf<Input>()) != batch.Length)
                 return any;
             any = true;
-            Thread.Sleep(4);
+            Thread.Sleep(KeystrokeGapMs);
         }
         return any;
     }
@@ -167,7 +176,7 @@ internal static class TextInjector
                 System.Windows.Forms.Clipboard.SetDataObject(text, true, 5, 20);
                 return true;
             }
-            catch { Thread.Sleep(30); }
+            catch { Thread.Sleep(ClipboardRetryMs); }
         }
         return false;
     }

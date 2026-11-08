@@ -339,7 +339,7 @@ internal static class M3
     }
     static FontFamily? body;
     internal static FontFamily Body => body ??= ResolveBody();
-    // Same switch as QtShellBridge.LightRendering (settings.reducedEffects): off = no animation at all.
+    // Même interrupteur que QtShellBridge.LightRendering (settings.reducedEffects) : désactivé = aucune animation.
     internal static bool ReducedEffects => Store.State.ReducedEffects
         ?? GC.GetGCMemoryInfo().TotalAvailableMemoryBytes <= 8L * 1024 * 1024 * 1024;
     static string? FontDirectory()

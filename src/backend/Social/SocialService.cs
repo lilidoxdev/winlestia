@@ -88,7 +88,8 @@ internal sealed partial class SocialService : IDisposable
     readonly Dispatcher dispatcher; readonly Action changed;
     readonly DispatcherTimer notifyTimer = new() { Interval = TimeSpan.FromMilliseconds(NotifyDebounceMs) };
     readonly DispatcherTimer slowTimer = new() { Interval = TimeSpan.FromSeconds(30) };
-    readonly string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia", "Social");
+    readonly string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Winlestia",
+        "Social");
     readonly object saveLock = new();
     Task<CoreWebView2Environment>? environment;
     // Historique : modifié et lu uniquement sur le dispatcher (les écritures disque reçoivent une copie).
@@ -124,7 +125,8 @@ internal sealed partial class SocialService : IDisposable
         muted = Store.State.SocialMuted,
         sound = Store.State.SocialSound,
         volume = Store.State.SocialVolume,
-        history = history.Select(h => new { seq = h.Seq, net = h.Net, title = h.Title, body = h.Body, kind = h.Kind, at = h.At }).ToArray(),
+        history = history.Select(h => new { seq = h.Seq, net = h.Net, title = h.Title, body = h.Body, kind = h.Kind, at = h.At })
+            .ToArray(),
         networks = nets.Select(n => new { id = n.Id, name = n.Name, enabled = Enabled(n), connected = n.Connected,
             muted = Store.State.SocialNetMuted.GetValueOrDefault(n.Id), count = n.Count, busy = n.Creating || n.Navigating }).ToArray()
     };

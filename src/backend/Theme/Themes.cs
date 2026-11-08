@@ -122,7 +122,8 @@ internal static class Theme
         },
         // Calque : du papier, pas du verre. Crème opaque, titres à empattements, grain, cartes au lieu d'une grille d'icônes.
         new(){
-            Id="calque",Name="Papier calque",Description="Papier crème, encre brune et titres en serif. Les accès deviennent des fiches.",
+            Id="calque",Name="Papier calque",
+                Description="Papier crème, encre brune et titres en serif. Les accès deviennent des fiches.",
             Surface=C(233,226,211),HaloA=C(201,162,39),HaloB=C(127,169,184),RimA=C(255,255,255),RimB=C(183,169,143),
             Reflection=C(255,255,255),Accent=C(162,74,42),Text=C(36,30,23),Dim=C(107,97,82),
             RadiusScale=.38,ReflectionGain=.18,HaloGain=.55,Signature="paper",Kind=SurfaceKind.Paper,
@@ -161,7 +162,7 @@ internal static class Theme
             RadiusScale=.55,ReflectionGain=.1,HaloGain=.35,Signature="bento",Kind=SurfaceKind.Bento,
             Heading="sans",Tiles="bento",Frame="flat",BorderWeight=1,Light=true
         },
-        // Néon : a dark room lit by two tubes. Outline cards, glow instead of reflection.
+        // Néon : une pièce sombre éclairée par deux tubes. Cartes à contour, lueur au lieu de reflet.
         new(){
             Id="neon",Name="Néon",Description="Noir de nuit, traits lumineux magenta et cyan. Les cadres brillent au lieu de refléter.",
             Surface=C(7,7,12),HaloA=C(255,47,185),HaloB=C(57,230,255),RimA=C(255,214,246),RimB=C(57,230,255),
@@ -171,7 +172,8 @@ internal static class Theme
         },
         // Rétro : 1995 on purpose. Grey slab, bevelled buttons, square corners, list rows.
         new(){
-            Id="retro",Name="Rétro 95",Description="Gris de bureau, bords biseautés, coins carrés et listes à l’ancienne. Un hommage " +
+            Id="retro",Name="Rétro 95",
+                Description="Gris de bureau, bords biseautés, coins carrés et listes à l’ancienne. Un hommage " +
                 "assumé.",
             Surface=C(192,192,192),HaloA=C(0,0,128),HaloB=C(0,128,128),RimA=C(255,255,255),RimB=C(64,64,64),
             Reflection=C(255,255,255),Accent=C(0,0,128),Text=C(16,16,16),Dim=C(74,74,74),
@@ -206,8 +208,8 @@ internal static class Theme
     internal static Color Mix(Color a, Color b, double t) => Color.FromRgb((byte)Math.Round(a.R + (b.R - a.R) * t), (byte)Math.Round(a.G
         + (b.G - a.G) * t), (byte)Math.Round(a.B + (b.B - a.B) * t));
     // Identifiants qui désignent « l'apparence du shell » : le thème par défaut, la bascule clair/sombre du shell et la palette
-    // personnalisée.
-    // Tout autre identifiant (amethyste, calque, retro...) est un thème hérité et ne s'applique que si l'utilisateur le choisit.
+    // personnalisée. Tout autre identifiant (amethyste, calque, retro...) est un thème hérité et ne s'applique que si l'utilisateur le
+    // choisit.
     static bool IsShellFamily(string id) => id is "shell" or "shell-dark" or "nuit" or "custom";
     // Same decision tree as QtShellBridge settings.themeMode: auto > custom > light (shell) > dark.
     static ThemeDefinition Unify(ThemeDefinition legacy, bool custom)

@@ -19,7 +19,8 @@ internal sealed class WallpaperMonitor
 {
     public int x, y; public string? path, background; public long modified;
 }
-// Mêmes clés JSON que les Preferences du backend (preferences-glass.json) : seulement ce dont l'arbre de décision de la palette a besoin.
+// Mêmes clés JSON que les Preferences du backend (preferences-glass.json) : seulement ce dont l'arbre de décision de la palette a
+// besoin.
 internal sealed class Preferences
 {
     public bool? ReducedEffects
@@ -72,7 +73,8 @@ internal static class Theme
 internal static class Store
 {
     internal static string Root = AppDomain.CurrentDomain.BaseDirectory;
-    // Dossier de données utilisateur partagé avec le backend (même règle, même variable d'environnement) : %LOCALAPPDATA%\Panneaux. Pas
+    // Dossier de données utilisateur partagé avec le backend (même règle, même variable d'environnement) : %LOCALAPPDATA%\Panneaux.
+    // Pas
     // créé ici (le backend en est propriétaire).
     internal static string DataDir = Environment.GetEnvironmentVariable("WINLESTIA_DATA_DIR") is { Length: > 0 } d ? d
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Panneaux");
@@ -83,7 +85,7 @@ internal static class Store
         var prefs = new Preferences();
         try
         {
-            // override: tests only
+            // surcharge : tests uniquement
             string path = Environment.GetEnvironmentVariable("WINLESTIA_FILES_PALETTE_FILE") is { Length: > 0 } over ? over
                 : Path.Combine(DataDir, "preferences-glass.json");
             if (File.Exists(path))

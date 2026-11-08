@@ -52,7 +52,7 @@ IconTextButton {
             button.end();
         }
     }
-    // Capture window is created on first use only.
+    // La fenêtre de capture n'est créée qu'au premier usage.
     property var cap: null
     Component {
         id: capComp

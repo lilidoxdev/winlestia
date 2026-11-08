@@ -1,6 +1,6 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=ctxthreads : quelle phase de construction d'un menu contextuel du shell laisse des threads OS derrière elle, et
-// qui les possède (adresse de départ -> module+décalage, description du thread).
+// WINLESTIA_FILES_SELFTEST=ctxthreads : quelle phase de construction d'un menu contextuel du shell laisse des threads OS derrière elle,
+// et qui les possède (adresse de départ -> module+décalage, description du thread).
 // Variantes a (SHBindToParent) b (+GetUIObjectOf) c (+QueryContextMenu) d (+remplissage des sous-menus), chacune sur le STA de l'interface
 // et sur un thread MTA du pool, même dossier vs dossier neuf. Jeu d'essai sous %TEMP%\WinlestiaFilesOps uniquement.
 // WINLESTIA_FILES_CYCLES (default 20), WINLESTIA_FILES_SETTLE (seconds per variant, default 8).
@@ -16,6 +16,9 @@ namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Espace les cycles d'ouverture/fermeture pour que le comptage de threads reflète un usage réel.
+    const int ThreadCycleGapMs = 30;
+
     [DllImport("kernel32.dll")] static extern IntPtr OpenThread(uint access, bool inherit, uint id);
     [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
     [DllImport("ntdll.dll")] static extern int NtQueryInformationThread(IntPtr h, int cls, out IntPtr info, int len, IntPtr ret);
@@ -151,7 +154,7 @@ public sealed partial class MainWindow
                             await Task.Run(() => cyc(path));
                         else
                             cyc(path);
-                        await Task.Delay(30);
+                        await Task.Delay(ThreadCycleGapMs);
                     }
                     var after = ThreadOwners();
                     await Task.Delay(settle * 1000);

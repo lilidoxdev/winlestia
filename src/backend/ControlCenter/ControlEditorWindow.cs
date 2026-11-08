@@ -98,7 +98,8 @@ internal sealed class ControlEditorWindow : GlassWindow
         var sliders = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 22) };
         foreach (bool isVolume in new[] { true, false })
         {
-            var check = new CheckBox { Content = isVolume ? "Curseur volume" : "Curseur luminosité", IsChecked = isVolume ? prefs.ShowVolume
+            var check = new CheckBox { Content = isVolume ? "Curseur volume" : "Curseur luminosité", IsChecked = isVolume
+                ? prefs.ShowVolume
                 : prefs.ShowBrightness, Margin = new Thickness(0, 0, 20, 0) };
             check.Click += (_, _) => { if (isVolume) prefs.ShowVolume = check.IsChecked == true;
                 else prefs.ShowBrightness = check.IsChecked == true; Changed(); };
@@ -229,7 +230,8 @@ internal sealed class WindowsShortcutEditor : GlassWindow
         glyph = s.Glyph; iconButton.Content = ControlCenterWindow.IconLabel(glyph, "Choisir l’icône", 13); })).ToArray());
     void OpenIcons()
     {
-        var icons = new[] { ("Réglages", "\uE713"), ("Volume", "\uE767"), ("Wi-Fi", "\uE701"), ("Bluetooth", "\uE702"), ("Écran", "\uE7F4"),
+        var icons = new[] { ("Réglages", "\uE713"), ("Volume", "\uE767"), ("Wi-Fi", "\uE701"), ("Bluetooth", "\uE702"), ("Écran",
+            "\uE7F4"),
             ("Capture", "\uE722"), ("Musique", "\uE8D6"), ("Dossier", "\uE8B7"), ("Calculatrice", "\uE8EF"), ("Horloge", "\uE917"),
             ("Applications", "\uE71D"), ("Réseau", "\uE839"), ("Alimentation", "\uE7E8"), ("Personnalisation", "\uE790") };
         GlassMenu.Open(owner, this, iconButton, "Icône du raccourci", icons.Select(i => new MenuAction(i.Item1, i.Item2, () => {

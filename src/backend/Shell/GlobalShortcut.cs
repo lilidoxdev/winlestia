@@ -20,15 +20,15 @@ public sealed class ShortcutPreferences
             View = "controls";
     }
 }
-// Quatre liaisons utilisateur partagent une fenêtre de messages : le lanceur (3/4), la palette (5/6), l'épingle (7/8) et la capture (9/10).
-// Chaque remplacement réserve la nouvelle combinaison avant de libérer la précédente.
+// Quatre liaisons utilisateur partagent une fenêtre de messages : le lanceur (3/4), la palette (5/6), l'épingle (7/8) et la capture
+// (9/10). Chaque remplacement réserve la nouvelle combinaison avant de libérer la précédente.
 internal sealed class GlobalShortcut : IDisposable
 {
     readonly IntPtr window; int customId, paletteId, pinId, captureId, wallpaperId, settingsId; uint modifiers, key, paletteModifiers,
         paletteKey, pinModifiers, pinKey, captureModifiers, captureKey, wallpaperModifiers, wallpaperKey, settingsModifiers, settingsKey;
         bool legacy, rescue;
-    // Point d'injection de l'enregistrement : les tests les remplacent (code d'erreur 0 = enregistré) pour ne toucher aucun vrai raccourci.
-    // LastCode contient l'erreur Win32 du dernier enregistrement échoué (1409 = déjà pris).
+    // Point d'injection de l'enregistrement : les tests les remplacent (code d'erreur 0 = enregistré) pour ne toucher aucun vrai
+    // raccourci. LastCode contient l'erreur Win32 du dernier enregistrement échoué (1409 = déjà pris).
     internal static Func<IntPtr, int, uint, uint, int>? TestRegister; internal static Func<IntPtr, int, bool>? TestUnregister;
         internal static int LastCode;
     static bool Reg(IntPtr w, int id, uint m, uint k)
@@ -54,7 +54,8 @@ internal sealed class GlobalShortcut : IDisposable
     internal string Error { get; private set; } = ""; internal string PaletteError { get; private set; } = ""; internal string PinError {
         get; private set; } = ""; internal string CaptureError { get; private set; } = ""; internal string WallpaperError { get;
         private set; } = ""; internal string SettingsError { get; private set; } = "";
-    internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences) : this(hwnd, preferences, new() { Modifiers = 2, Key = 0x71 }) { }
+    internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences) : this(hwnd, preferences, new() { Modifiers = 2, Key = 0x71
+        }) { }
     internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences, ShortcutPreferences? palette = null,
         ShortcutPreferences? pin = null, ShortcutPreferences? capture = null, ShortcutPreferences? wallpaper = null,
         ShortcutPreferences? settings = null)
@@ -114,7 +115,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison ("
+            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application."
+                : "Windows refuse cette combinaison ("
                 + code + ").";
             WallpaperError = error;
             return false;
@@ -144,7 +146,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison ("
+            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application."
+                : "Windows refuse cette combinaison ("
                 + code + ").";
             SettingsError = error;
             return false;
@@ -157,8 +160,8 @@ internal sealed class GlobalShortcut : IDisposable
         SettingsError = "";
         return true;
     }
-    // Un seul point d'entrée pour la page de réglages : la nouvelle combinaison est enregistrée d'abord, l'ancienne n'est libérée qu'une
-    // fois Windows d'accord, donc un refus laisse la liaison précédente intacte (retour arrière par construction).
+    // Un seul point d'entrée pour la page de réglages : la nouvelle combinaison est enregistrée d'abord, l'ancienne n'est libérée
+    // qu'une fois Windows d'accord, donc un refus laisse la liaison précédente intacte (retour arrière par construction).
     // LastCode == 1409 après un retour false signifie qu'une autre application possède la combinaison.
     internal bool TryRebind(string id, uint nextModifiers, uint nextKey, out string error)
     {
@@ -205,7 +208,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison ("
+            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application."
+                : "Windows refuse cette combinaison ("
                 + code + ").";
             CaptureError = error;
             return false;
@@ -246,7 +250,8 @@ internal sealed class GlobalShortcut : IDisposable
         if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
         {
             int code = LastCode;
-            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application." : "Windows refuse cette combinaison ("
+            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application."
+                : "Windows refuse cette combinaison ("
                 + code + ").";
             PinError = error;
             return false;

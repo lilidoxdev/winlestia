@@ -2,8 +2,8 @@
 // handle WLAN est ouvert et fermé par opération
 // (jamais conservé au repos), le minuteur de scan ne tourne que tant que la liste est ouverte. Les noms de réseau ne sont jamais
 // journalisés. Un mot de passe ne voyage que du champ QML vers WlanSetProfile :
-// il n'est jamais journalisé, jamais stocké, jamais inclus dans l'état envoyé à l'interface. Les chaînes managées produites par l'analyseur
-// JSON et le constructeur XML ne peuvent pas être effacées
+// il n'est jamais journalisé, jamais stocké, jamais inclus dans l'état envoyé à l'interface. Les chaînes managées produites par
+// l'analyseur JSON et le constructeur XML ne peuvent pas être effacées
 // (elles attendent le ramasse-miettes) ; seuls le char[] et la copie non managée remise à Windows sont effacés.
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,8 @@ static class WlanNative
         public int Mode; public IntPtr Profile; public IntPtr Ssid; public IntPtr Bssids; public int BssType; public int Flags;
     }
     const string Dll = "wlanapi.dll";
-    [DllImport(Dll)] internal static extern int WlanOpenHandle(uint clientVersion, IntPtr reserved, out uint negotiated, out IntPtr handle);
+    [DllImport(Dll)] internal static extern int WlanOpenHandle(uint clientVersion, IntPtr reserved, out uint negotiated,
+        out IntPtr handle);
     [DllImport(Dll)] internal static extern int WlanCloseHandle(IntPtr handle, IntPtr reserved);
     [DllImport(Dll)] internal static extern int WlanEnumInterfaces(IntPtr handle, IntPtr reserved, out IntPtr list);
     [DllImport(Dll)] internal static extern int WlanScan(IntPtr handle, ref Guid iface, IntPtr ssid, IntPtr raw, IntPtr reserved);
@@ -47,7 +48,8 @@ static class WlanNative
         IntPtr reserved, out IntPtr xml, ref uint flags, out uint access);
     [DllImport(Dll)] internal static extern void WlanFreeMemory(IntPtr memory);
     [DllImport(Dll)] internal static extern int WlanRegisterNotification(IntPtr handle, uint source,
-        [MarshalAs(UnmanagedType.Bool)] bool ignoreDuplicate, NotifyCallback? callback, IntPtr context, IntPtr reserved, out uint previous);
+        [MarshalAs(UnmanagedType.Bool)] bool ignoreDuplicate, NotifyCallback? callback, IntPtr context, IntPtr reserved,
+            out uint previous);
 }
 
 internal sealed class WifiHost : IDisposable
@@ -252,7 +254,7 @@ internal sealed class WifiHost : IDisposable
         catch (Exception ex) { Store.Log("Wi-Fi: réglages: " + ex.GetType().Name); }
     }
 
-    // `winlestia wifi`: read-only summary without any network name.
+    // `winlestia wifi` : résumé en lecture seule, sans aucun nom de réseau.
     internal static Task<string> SummaryAsync() => Task.Run(() =>
     {
         var s = Read(false);
@@ -434,8 +436,8 @@ internal sealed class WifiHost : IDisposable
                 return "unsupported";
             bool created = false, replaced = false;
             string profile = entry.Saved && entry.Profile.Length > 0 ? entry.Profile : ssid;
-            // Un mot de passe saisi va toujours à Windows : un nouveau profil, ou (réseau connu) un remplacement qui garde en mémoire une
-            // copie protégée de l'ancien profil à restaurer en cas d'échec.
+            // Un mot de passe saisi va toujours à Windows : un nouveau profil, ou (réseau connu) un remplacement qui garde en mémoire
+            // une copie protégée de l'ancien profil à restaurer en cas d'échec.
             if (typed.Length > 0 || !entry.Saved)
             {
                 string text = new string(typed);
@@ -460,8 +462,8 @@ internal sealed class WifiHost : IDisposable
                 {
                     if (!replace)
                     {
-                        // Profil par utilisateur uniquement. « Tous les utilisateurs » n'est utilisé que si Windows rejette lui-même la
-                        // portée par utilisateur (paramètre invalide sans aucune raison de profil).
+                        // Profil par utilisateur uniquement. « Tous les utilisateurs » n'est utilisé que si Windows rejette lui-même
+                        // la portée par utilisateur (paramètre invalide sans aucune raison de profil).
                         code = WlanNative.WlanSetProfile(handle, ref iface, ProfileUser, buffer, IntPtr.Zero, false, IntPtr.Zero,
                             out reason);
                         if (code == 87 && reason == 0)
@@ -560,8 +562,8 @@ internal sealed class WifiHost : IDisposable
                 if (key == "timeout")
                     WlanNative.WlanDisconnect(handle, ref iface, IntPtr.Zero);
             }
-            // Ne jamais garder un profil créé pour une tentative échouée (il retiendrait un mauvais mot de passe) ; un profil qui existait
-            // avant n'est jamais supprimé.
+            // Ne jamais garder un profil créé pour une tentative échouée (il retiendrait un mauvais mot de passe) ; un profil qui
+            // existait avant n'est jamais supprimé.
             if (key != "" && created)
                 WlanNative.WlanDeleteProfile(handle, ref iface, profile, IntPtr.Zero);
             else if (key != "" && replaced && backup != IntPtr.Zero)

@@ -3,7 +3,7 @@ import QtQuick
 
 QtObject {
     readonly property real surfaceOpacity: Bridge.glassEnabled ? Bridge.glassTintOpacity : 1
-    // One opaque base, one alpha: the frame, the dashboard and the dock all read surfaceColor.
+    // Une base opaque, un alpha : le cadre, le tableau de bord et le dock lisent tous surfaceColor.
     readonly property color surfaceBase: Bridge.adaptivePalette.m3surface ?? (Bridge.dark ? "#101518" : "#fff8f6")
     readonly property color surfaceColor: Qt.alpha(surfaceBase, surfaceOpacity)
     readonly property bool light: !Bridge.dark
@@ -11,15 +11,21 @@ QtObject {
         property color m3background: glassLayer(Bridge.adaptivePalette.m3background ?? (Bridge.dark ? "#101518" : "#fff8f6"), 1)
         property color m3surface: glassLayer(Bridge.adaptivePalette.m3surface ?? (Bridge.dark ? "#101518" : "#fff8f6"), 1)
         property color m3onSurface: Bridge.adaptivePalette.m3onSurface ?? (Bridge.dark ? "#e5ebef" : "#261916")
-        property color m3surfaceContainer: glassLayer(Bridge.adaptivePalette.m3surfaceContainer ?? (Bridge.dark ? "#182025" : "#fae8e3"), 0.65)
-        property color m3surfaceContainerLow: glassLayer(Bridge.adaptivePalette.m3surfaceContainerLow ?? (Bridge.dark ? "#151c21" : "#fff0eb"), 0.5)
-        property color m3surfaceContainerHigh: glassLayer(Bridge.adaptivePalette.m3surfaceContainerHigh ?? (Bridge.dark ? "#242d33" : "#f5e0d9"), 0.8)
-        property color m3surfaceContainerHighest: glassLayer(Bridge.adaptivePalette.m3surfaceContainerHighest ?? (Bridge.dark ? "#303b42" : "#eed9d2"), 1)
+        property color m3surfaceContainer: glassLayer(Bridge.adaptivePalette.m3surfaceContainer ?? (Bridge.dark ? "#182025" : "#fae8e3"),
+            0.65)
+        property color m3surfaceContainerLow: glassLayer(Bridge.adaptivePalette.m3surfaceContainerLow ?? (Bridge.dark ? "#151c21"
+            : "#fff0eb"), 0.5)
+        property color m3surfaceContainerHigh: glassLayer(Bridge.adaptivePalette.m3surfaceContainerHigh ?? (Bridge.dark ? "#242d33"
+            : "#f5e0d9"), 0.8)
+        property color m3surfaceContainerHighest: glassLayer(Bridge.adaptivePalette.m3surfaceContainerHighest ?? (Bridge.dark ? "#303b42"
+            : "#eed9d2"), 1)
         property color m3primary: Bridge.adaptivePalette.m3primary ?? (Bridge.dark ? "#afd4f0" : "#895143")
         property color m3secondary: Bridge.adaptivePalette.m3secondary ?? (Bridge.dark ? "#c3c8d0" : "#775b52")
         property color m3tertiary: Bridge.adaptivePalette.m3tertiary ?? (Bridge.dark ? "#c7cea0" : "#68613c")
-        property color m3primaryContainer: glassLayer(Bridge.adaptivePalette.m3primaryContainer ?? (Bridge.dark ? "#304b60" : "#ffdace"), 0.85)
-        property color m3secondaryContainer: glassLayer(Bridge.adaptivePalette.m3secondaryContainer ?? (Bridge.dark ? "#404851" : "#f5dcd3"), 0.85)
+        property color m3primaryContainer: glassLayer(Bridge.adaptivePalette.m3primaryContainer ?? (Bridge.dark ? "#304b60" : "#ffdace"),
+            0.85)
+        property color m3secondaryContainer: glassLayer(Bridge.adaptivePalette.m3secondaryContainer ?? (Bridge.dark ? "#404851"
+            : "#f5dcd3"), 0.85)
         property color m3onPrimary: Bridge.adaptivePalette.m3onPrimary ?? (Bridge.dark ? "#12354a" : "#ffffff")
         property color m3onSecondary: Bridge.adaptivePalette.m3onSecondary ?? (Bridge.dark ? "#253039" : "#ffffff")
         property color m3onPrimaryContainer: Bridge.adaptivePalette.m3onPrimaryContainer ?? (Bridge.dark ? "#d1e7fa" : "#351006")

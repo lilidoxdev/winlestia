@@ -214,7 +214,8 @@ EdgeRail {
                     if (i === undefined)
                         continue;
                     const cur = hist.get(i);
-                    if (cur.title !== (e.title ?? "") || cur.body !== (e.body ?? "") || cur.kind !== (e.kind ?? "") || cur.net !== (e.net ?? "") || cur.at !== (e.at ?? 0))
+                    if (cur.title !== (e.title ?? "") || cur.body !== (e.body ?? "") || cur.kind !== (e.kind ?? "") || cur.net !== (e.net
+                        ?? "") || cur.at !== (e.at ?? 0))
                         hist.set(i, {
                             net: e.net ?? "",
                             title: e.title ?? "",

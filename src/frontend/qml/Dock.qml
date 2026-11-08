@@ -1,4 +1,4 @@
-// Windows bottom-window adapter, reusing Caelestia StateLayer, typography, controls and easing.
+// Adaptateur Windows de la fenêtre du bas, réutilisant StateLayer, la typographie, les contrôles et les courbes de Caelestia.
 import QtQuick
 import QtQuick.Window
 import QtQuick.Shapes
@@ -10,11 +10,12 @@ import qs.services
 
 Window {
     id: dock
-    // A transient Window is deferred while its owning dashboard is hidden on Windows.
+    // Une Window transitoire est différée tant que son tableau de bord propriétaire est masqué sous Windows.
     transientParent: null
     title: "Panneaux · Dock Caelestia"
     color: "transparent"
-    flags: (Bridge.preview ? Qt.Window : Qt.Tool) | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus
+    flags: (Bridge.preview ? Qt.Window
+        : Qt.Tool) | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus
     property var dockItems: Bridge.taskbarApps
     property string dragId: ""
     property int dragIndex: -1
@@ -50,7 +51,8 @@ Window {
     property bool menuOpen: dockMenu.visible
     // Window previews (native bubble in the backend): requested after a hover delay, never while hidden / sliding / menu / dragging.
     property string previewId: ""
-    readonly property bool previewAllowed: shown && offset === 0 && !menuOpen && dragId === "" && (Bridge.settings.dockVisible ?? Bridge.taskbarEnabled)
+    readonly property bool previewAllowed: shown && offset === 0 && !menuOpen && dragId === "" && (Bridge.settings.dockVisible
+        ?? Bridge.taskbarEnabled)
     function previewRequest(item, cursor) {
         if (!previewAllowed || item.modelData.count < 1 || item.modelData.hwnd <= 0)
             return;
@@ -107,7 +109,7 @@ Window {
         dockMenu.openAt(kind, data, point.x, dock.y + dock.offset);
     }
     property bool shown: Bridge.preview
-    // Effets allégés: no slide, a short opacity fade only (offset stays 0, so the contour does not move either).
+    // Effets allégés : pas de glissement, juste un court fondu d'opacité (le décalage reste 0, donc le contour ne bouge pas non plus).
     property bool reduced: Appearance.reducedEffects
     property real fade: shown ? 1 : 0
     Behavior on fade {
@@ -118,11 +120,12 @@ Window {
         }
     }
     property real offset: reduced || shown ? 0 : height
-    // Icons vanish as soon as they sink under the contour line instead of drawing over the screen-edge band.
+    // Les icônes disparaissent dès qu'elles passent sous la ligne de contour au lieu de se dessiner sur la bande du bord d'écran.
     readonly property real contentOpacity: reduced ? fade : Math.max(0, Math.min(1, 1 - offset / (height * 0.6)))
-    // True only while a hide transition started from a visible dock is running: toggling reducedEffects while hidden animates offset/fade but must never show the window.
+    // Vrai seulement pendant une transition de masquage lancée depuis un dock visible : basculer reducedEffects
+    // dock masqué anime décalage/fondu mais ne doit jamais afficher la fenêtre.
     property bool hiding: false
-    // shownCore is only written by syncShown(), so the result does not depend on the order in which QML re-evaluates bindings.
+    // shownCore n'est écrit que par syncShown(), donc le résultat ne dépend pas de l'ordre de réévaluation des liaisons par QML.
     property bool shownCore: false
     function syncShown() {
         shownCore = shown || (hiding && (reduced ? fade > 0.01 : offset < height - 1));
@@ -144,7 +147,8 @@ Window {
     }
     Component.onCompleted: syncShown()
     property real customWidth: Bridge.settings.dockWidth ?? 0
-    width: Math.min(Bridge.screenWidth - 24, customWidth > 0 ? Math.max(560, customWidth) : Math.max(756, 520 + Bridge.taskbarApps.length * 47 + desktops.implicitWidth + drawer.full + drawerToggle.implicitWidth + 10))
+    width: Math.min(Bridge.screenWidth - 24, customWidth > 0 ? Math.max(560, customWidth) : Math.max(756,
+        520 + Bridge.taskbarApps.length * 47 + desktops.implicitWidth + drawer.full + drawerToggle.implicitWidth + 10))
     height: 68
     x: Bridge.screenX + (Bridge.screenWidth - width) / 2
     y: Bridge.screenY + Bridge.screenHeight - height - (Bridge.screenFullscreen ? 12 : Math.max(0, Config.border.thickness))
@@ -155,7 +159,7 @@ Window {
             easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
         }
     }
-    // Fixed (never translated) clip box = dock contour bounds; only the content inside slides.
+    // Boîte de rognage fixe (jamais translatée) = bornes du contour du dock ; seul le contenu à l'intérieur glisse.
     Item {
         objectName: "dockClip"
         anchors.fill: parent
@@ -331,7 +335,8 @@ Window {
                                             beginMove();
                                         if (moving) {
                                             dock.dragDelta = delta;
-                                            dock.dropIndex = Math.max(0, Math.min(dock.pinnedCount - 1, dock.dragIndex + Math.round(delta / 46)));
+                                            dock.dropIndex = Math.max(0, Math.min(dock.pinnedCount - 1,
+                                                dock.dragIndex + Math.round(delta / 46)));
                                         }
                                     }
                                     function finish() {
@@ -399,7 +404,8 @@ Window {
                     menuOpen: dock.menuOpen
                     onMenuRequested: (anchor, data) => dock.showMenu("desktop", data, anchor)
                 }
-                // Collapsible group (default collapsed, state persisted as dockDrawerOpen): only the clipped width animates, so hidden buttons take no space and cannot be clicked.
+                // Groupe repliable (replié par défaut, état conservé dans dockDrawerOpen) : seule la largeur rognée
+                // s'anime, donc les boutons cachés ne prennent pas de place et ne sont pas cliquables.
                 Item {
                     id: drawer
                     objectName: "dockDrawerGroup"
@@ -443,7 +449,9 @@ Window {
                             ShellToolTip {
                                 visible: tileHover.hovered
                                 delay: 400
-                                text: (tileButton.on ? qsTr("Organisation automatique : activée") + "\n" + qsTr("Ctrl+Alt+flèches : changer de fenêtre") : qsTr("Organisation automatique : désactivée"))
+                                text: (tileButton.on
+                                    ? qsTr("Organisation automatique : activée") + "\n" + qsTr("Ctrl+Alt+flèches : changer de fenêtre")
+                                    : qsTr("Organisation automatique : désactivée"))
                             }
                         }
                         IconButton {
@@ -533,7 +541,8 @@ Window {
         }
         onPositionChanged: mouse => {
             if (pressed)
-                dock.customWidth = Math.max(560, Math.min(Bridge.screenWidth - 24, originWidth + 2 * (mapToGlobal(mouse.x, mouse.y).x - originX)));
+                dock.customWidth = Math.max(560, Math.min(Bridge.screenWidth - 24, originWidth + 2 * (mapToGlobal(mouse.x,
+                    mouse.y).x - originX)));
         }
         onReleased: Bridge.action("preference", {
             key: "dockWidth",

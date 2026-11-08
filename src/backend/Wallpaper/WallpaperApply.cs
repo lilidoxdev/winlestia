@@ -1,5 +1,5 @@
-// C# 12 / WallpaperApply.cs / Applique le fond d'écran via IDesktopWallpaper (tous les écrans ou un seul) et liste les écrans. Piloté par
-// événements : chaque appel construit son objet COM sur un STA éphémère et le libère avant de retourner.
+// C# 12 / WallpaperApply.cs / Applique le fond d'écran via IDesktopWallpaper (tous les écrans ou un seul) et liste les écrans. Piloté
+// par événements : chaque appel construit son objet COM sur un STA éphémère et le libère avant de retourner.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,8 +17,8 @@ internal static class WallpaperApply
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool SystemParametersInfo(uint action,
         uint param, string value, uint flags);
 
-    // COM exige un thread STA et doit rester hors du thread UI : on utilise un thread dédié, abandonné après 5 s (un explorer figé ne doit
-    // pas geler le shell).
+    // COM exige un thread STA et doit rester hors du thread UI : on utilise un thread dédié, abandonné après 5 s (un explorer figé ne
+    // doit pas geler le shell).
     sealed class Abandon
     {
         public volatile bool Set;
@@ -27,7 +27,8 @@ internal static class WallpaperApply
     {
         T result = fallback;
         var abandon = new Abandon();
-        var thread = new Thread(() => { try { result = work(abandon); } catch (Exception ex) { Store.Log("Fond d’écran: " + ex.Message); }
+        var thread = new Thread(() => { try { result = work(abandon); } catch (Exception ex) { Store.Log("Fond d’écran: "
+            + ex.Message); }
             }) { IsBackground = true, Name = "Wallpaper STA" };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
@@ -116,7 +117,7 @@ internal static class WallpaperApply
                 monitor = target.device;
             }
             if (abandon.Set)
-                return 3;   // the caller already gave up: do not change the wallpaper after the fact
+                return 3;   // l'appelant a déjà abandonné : ne pas changer le fond d'écran après coup
             return api.SetWallpaper(monitor!, path) == 0 ? 0 : 1;
         }, -1, out bool expired);
         if (expired)
@@ -132,8 +133,8 @@ internal static class WallpaperApply
         return (1, "Windows refused the wallpaper.");
     }
 
-    // Depuis le sélecteur : le chemin vient déjà de la liste scannée (tout format du sélecteur, webp compris), on ne vérifie donc ici que
-    // la cohérence d'un chemin local.
+    // Depuis le sélecteur : le chemin vient déjà de la liste scannée (tout format du sélecteur, webp compris), on ne vérifie donc
+    // ici que la cohérence d'un chemin local.
     internal static (int code, string text) ApplyKnown(string path, int display, bool light)
     {
         if (string.IsNullOrWhiteSpace(path) || path.Length > 259 || path.StartsWith(@"\\") || !System.IO.Path.IsPathFullyQualified(path)

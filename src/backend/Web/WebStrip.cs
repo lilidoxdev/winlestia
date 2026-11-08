@@ -61,10 +61,13 @@ internal sealed class WebStrip : IDisposable
             button.Content = image;
             PrepareButton(window, button);
             button.MouseRightButtonUp += (_, e) => { GlassMenu.Open(coordinator, window, button, site.Name, new[] {
-                new MenuAction("Ouvrir dans le navigateur", "\uE774", () => Launch(site)), new MenuAction("Modifier ce site…", "\uE70F", ()
-                => coordinator.AddWebsite(site)), new MenuAction("Image et recadrage…", "\uE7A8", () => coordinator.AddWebsite(site, true)),
+                new MenuAction("Ouvrir dans le navigateur", "\uE774", () => Launch(site)), new MenuAction("Modifier ce site…",
+                    "\uE70F", ()
+                => coordinator.AddWebsite(site)), new MenuAction("Image et recadrage…", "\uE7A8", () => coordinator.AddWebsite(site,
+                    true)),
                 new MenuAction("Déplacer vers la gauche", "\uE72B", () => Move(site, 1), Separator: true),
-                new MenuAction("Déplacer vers la droite", "\uE72A", () => Move(site, -1)), new MenuAction("Retirer ce raccourci", "\uE738",
+                new MenuAction("Déplacer vers la droite", "\uE72A", () => Move(site, -1)), new MenuAction("Retirer ce raccourci",
+                    "\uE738",
                 () => { Store.State.Websites.Remove(site); Store.Save(); Refresh(); }, Separator: true) }, true); e.Handled = true; };
         }
         if (overflow)

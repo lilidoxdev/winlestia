@@ -256,8 +256,10 @@ internal sealed class CommandPalette : GlassWindow
         });
         if (item.Entry is Entry entry)
         {
-            // Une plaque arrondie derrière chaque logo : les vraies icônes d'application restent lisibles sur le verre comme sur le papier.
-            var plate = new Border { Width = 30, Height = 30, CornerRadius = new CornerRadius(9), Background = UI.Alpha(UI.White.Color, 12),
+            // Une plaque arrondie derrière chaque logo : les vraies icônes d'application restent lisibles sur le verre comme sur le
+            // papier.
+            var plate = new Border { Width = 30, Height = 30, CornerRadius = new CornerRadius(9), Background = UI.Alpha(UI.White.Color,
+                12),
                 HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 9, 0) };
             var image = new Image { Width = 23, Height = 23, Stretch = Stretch.Uniform };
             RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
@@ -382,7 +384,8 @@ internal sealed class CommandPalette : GlassWindow
         new("Son et micro","Changer de casque ou couper le micro","\uE7F5",()=>owner.OpenAudio()),
         new("Profils d’espace","Rouvrir des applications et une disposition","\uE7C3",()=>owner.OpenWorkspaces()),
         new("Gros fichiers","Ce qui remplit le disque","\uE8B7",()=>owner.OpenLargeFiles()),
-        new("Épingler au premier plan","La fenêtre active reste devant · "+owner.PinShortcutLabel,"\uE840",()=>owner.ToggleAlwaysOnTop()),
+        new("Épingler au premier plan","La fenêtre active reste devant · "+owner.PinShortcutLabel,
+            "\uE840",()=>owner.ToggleAlwaysOnTop()),
         new("Notifications",SystemTools.NotificationsOn?"Couper les notifications Windows":"Rétablir les notifications","\uE7ED",()=>owner
             .ToggleNotifications()),
         new("Redémarrer l’Explorateur","Quand la barre des tâches se bloque","\uE72C",()=>owner.RestartExplorer()),

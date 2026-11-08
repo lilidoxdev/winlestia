@@ -55,7 +55,8 @@ internal sealed class EditWindow : GlassWindow
         var choose = UI.Button("Choisir une icône…", () =>
         {
             var picker =
-            new OpenFileDialog { Title = "Choisir une icône", Filter = "Icône ou application|*.png;*.ico;*.exe;*.lnk|Tous les fichiers|*.*"
+            new OpenFileDialog { Title = "Choisir une icône",
+                Filter = "Icône ou application|*.png;*.ico;*.exe;*.lnk|Tous les fichiers|*.*"
                 };
             if (picker.ShowDialog(this) == true)
                 selectedIcon = picker.FileName;

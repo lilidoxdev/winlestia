@@ -55,7 +55,8 @@ internal static class WorkspaceVerification
             var saved = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(preferences, Store.Json), Store.Json)!;
             Check(saved.Boards[1].FavoritesOnly && saved.Boards[1].Placement!.Resolve(bounds) == panel,
                 "Persistance de la taille, position et étoile locale");
-            Store.State = new Preferences { Favorites = new() { "a", "b", "c", "d" }, Recent = new() { "b", "c", "b" }, Hidden = new() { "d"
+            Store.State = new Preferences { Favorites = new() { "a", "b", "c", "d" }, Recent = new() { "b", "c", "b" }, Hidden = new() {
+                "d"
                 } };
             Store.Entries = new() { new() { Id = "a", Name = "Alpha", Section = "Applications" }, new() { Id = "b", Name = "Beta",
                 Section = "Jeux" }, new() { Id = "c", Name = "Canada", Section = "Dossiers" }, new() { Id = "d", Name = "Masqué",

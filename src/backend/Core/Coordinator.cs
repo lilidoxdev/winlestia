@@ -38,16 +38,19 @@ internal sealed partial class Coordinator : IDisposable
     bool controlsExpanded, pcExpanded, paletteOpen;
     CommandPalette? palette;
     Button? paletteChip;
-    readonly GlassWindow leftArrow = new("Panneaux Glass — explorer à gauche"), rightArrow = new("Panneaux Glass — explorer à droite");
+    readonly GlassWindow leftArrow = new("Panneaux Glass — explorer à gauche"),
+        rightArrow = new("Panneaux Glass — explorer à droite");
     bool detailed, interacting; internal Rect PanelBounds
     {
         get; private set;
     }
     static readonly TimeSpan TimerInterval = TimeSpan.FromMilliseconds(120);
-    static readonly TimeSpan ExportPreviewDelay = TimeSpan.FromSeconds(5);
     Window DialogParent => QtShell != null ? controller : detailed ? toolbar : home;
     readonly DispatcherTimer timer = new() { Interval = TimerInterval }, debounce = new() { Interval = TimerInterval };
-    readonly Forms.NotifyIcon tray = new();
+    readonly ITrayService tray = new TrayService();
+    readonly ICatalogueService catalogue;
+    readonly IDesktopIconsService desktopIcons;
+    readonly IPreviewExportService previewExport;
     readonly bool preview;
     readonly IntPtr hwnd;
     readonly HwndSource source;
@@ -63,9 +66,6 @@ internal sealed partial class Coordinator : IDisposable
     internal bool PopupOpen, FavoritesOnly;
     internal bool Pinned;
     internal bool PreviewMode => preview;
-    AppCatalogueWatcher? catalogueWatcher;
-    readonly RefreshGate catalogueGate = new();
-    DateTime? catalogueAttempt;
     sealed class DialogOwner : Forms.IWin32Window
     {
         public IntPtr Handle
@@ -110,6 +110,13 @@ internal sealed partial class Coordinator : IDisposable
     internal Coordinator(bool isPreview, bool interactionFixture = false, bool exportPreview = false, RunOptions? options = null)
     {
         preview = isPreview;
+        catalogue = new CatalogueService(preview, () =>
+        {
+            RefreshBoards();
+            QtShell?.CatalogueChanged();
+        });
+        desktopIcons = new DesktopIconsService(preview);
+        previewExport = new PreviewExportService(Icons);
         Store.Load();
         ShellSettings.Migrate(preview);
         Theme.Use(Program.ThemeOverride ?? Store.State.Theme);
@@ -163,9 +170,7 @@ internal sealed partial class Coordinator : IDisposable
         toolbar.Shortcut = HandleShortcut;
         foreach (var board in Boards)
             board.Shortcut = HandleShortcut;
-        tray.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? System.Drawing.SystemIcons.Application;
-        tray.Text = "Panneaux Glass · dj";
-        tray.Visible = true;
+        tray.Show("Panneaux Glass · dj");
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add("Ouvrir l’espace", null, (_, _) => Open());
         menu.Items.Add("Personnaliser", null, (_, _) => Settings());
@@ -185,35 +190,32 @@ internal sealed partial class Coordinator : IDisposable
             qtMenu.Items.Add(new Forms.ToolStripSeparator());
             qtMenu.Items.Add("Retrouver le Bureau organisé", null, (_, _) => Rescue());
             qtMenu.Items.Add("Quitter", null, (_, _) => System.Windows.Application.Current.Shutdown());
-            tray.ContextMenuStrip = qtMenu;
+            tray.SetMenu(qtMenu);
         }
-        tray.MouseUp += (_, e) =>
+        tray.RightClicked += () =>
         {
-            if (e.Button == Forms.MouseButtons.Right)
-            {
-                if (QtShell != null)
-                    return;
-                if (!open)
-                    Open();
-                GlassMenu.Open(this,
-                               DialogParent,
-                               detailed ? (FrameworkElement)toolbar.ContentHost : home.ContentHost,
-                               "Panneaux",
-                               new[]
-                               {
-                           new MenuAction("Ouvrir l’espace", "\uE8A9", Open),
-                           new MenuAction("Commande rapide  ·  " + PaletteLabel, "\uE721", TogglePalette),
-                           new MenuAction("Note rapide", "\uE70B", OpenNotes),
-                           new MenuAction("Minuteur…", "\uE917", OpenFocus),
-                           new MenuAction("Personnaliser", "\uE713", () => Settings(), Separator: true),
-                           new MenuAction("Actualiser les accès", "\uE72C", RefreshCatalogue),
-                           new MenuAction("Retrouver le Bureau organisé", "\uE777", Rescue, Separator: true),
-                           new MenuAction("Quitter Panneaux", "\uE711", () => System.Windows.Application.Current.Shutdown())
-                               },
-                               true);
-            }
+            if (QtShell != null)
+                return;
+            if (!open)
+                Open();
+            GlassMenu.Open(this,
+                           DialogParent,
+                           detailed ? (FrameworkElement)toolbar.ContentHost : home.ContentHost,
+                           "Panneaux",
+                           new[]
+                           {
+                       new MenuAction("Ouvrir l’espace", "\uE8A9", Open),
+                       new MenuAction("Commande rapide  ·  " + PaletteLabel, "\uE721", TogglePalette),
+                       new MenuAction("Note rapide", "\uE70B", OpenNotes),
+                       new MenuAction("Minuteur…", "\uE917", OpenFocus),
+                       new MenuAction("Personnaliser", "\uE713", () => Settings(), Separator: true),
+                       new MenuAction("Actualiser les accès", "\uE72C", RefreshCatalogue),
+                       new MenuAction("Retrouver le Bureau organisé", "\uE777", Rescue, Separator: true),
+                       new MenuAction("Quitter Panneaux", "\uE711", () => System.Windows.Application.Current.Shutdown())
+                           },
+                           true);
         };
-        tray.DoubleClick += (_, _) => Open();
+        tray.DoubleClicked += () => Open();
         if (Program.QtMode)
             QtShell = new QtShellBridge(this, options ?? RunOptions.Default);
         taskbar = new ShellTaskbar(this);
@@ -241,13 +243,7 @@ internal sealed partial class Coordinator : IDisposable
             Open();
             if (exportPreview)
             {
-                var capture = new DispatcherTimer { Interval = ExportPreviewDelay };
-                capture.Tick += (_, _) =>
-                {
-                    capture.Stop();
-                    ExportPreview();
-                };
-                capture.Start();
+                previewExport.ScheduleExport();
             }
         }
         else if (!File.Exists(Path.Combine(Store.Root, "catalog.json"))
@@ -255,14 +251,9 @@ internal sealed partial class Coordinator : IDisposable
             RefreshCatalogue();
         if (!preview)
         {
-            catalogueWatcher = new AppCatalogueWatcher(System.Windows.Application.Current.Dispatcher,
-                                                       AddCatalogueEntries,
-                                                       RemoveCatalogueEntries,
-                                                       RefreshCatalogue,
-                                                       CatalogueTick);
-            catalogueWatcher.Start();
+            catalogue.StartWatching();
         }
-        HideDesktopIcons();
+        desktopIcons.Hide();
         if (!preview)
             Native.MigrateAutostart();
         Store.Save();
@@ -336,11 +327,11 @@ internal sealed partial class Coordinator : IDisposable
         if (disposed)
             return;
         disposed = true;
-        catalogueWatcher?.Dispose();
+        catalogue.Dispose();
         taskbar?.Dispose();
         QtShell?.Dispose();
         RestoreDesktopIcons();
-        desktopGuard?.Dispose();
+        desktopIcons.Dispose();
         dismissal.Dispose();
         Store.Save();
         timer.Stop();
@@ -349,8 +340,6 @@ internal sealed partial class Coordinator : IDisposable
         shortcut.Dispose();
         source.RemoveHook(Hook);
         clipboard.Dispose();
-        tray.Visible = false;
-        tray.ContextMenuStrip?.Dispose();
         tray.Dispose();
         Icons.Dispose();
         foreach (var window in Windows.ToArray())

@@ -2,7 +2,7 @@ import QtQuick
 import qs.services
 import qs.config
 
-// Keyboard focus outline drawn over a focusable item (same look as the rest of the shell).
+// Contour de focus clavier dessiné sur un élément focalisable (même rendu que le reste du shell).
 Rectangle {
     id: root
 

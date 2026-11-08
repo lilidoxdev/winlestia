@@ -13,6 +13,13 @@ namespace PanneauxGlass;
 
 internal static class InteractionVerification
 {
+    // Laisse l'animation de repli démarrer avant de mesurer l'interaction suivante.
+    const int CollapseSettleMs = 20;
+    // Cadence les bascules du centre de contrôle à environ deux images (60 Hz) pour mesurer un rythme réaliste.
+    const int ControlsToggleGapMs = 28;
+    // Cadence les bascules de la page PC à environ une image (60 Hz) pour mesurer un rythme réaliste.
+    const int PcToggleGapMs = 15;
+
     // Attente de test : une animation courte de l'interface.
     const int PauseAnimationMs = 250;
     // Attente de test : une animation longue ou un survol temporisé.
@@ -88,7 +95,8 @@ internal static class InteractionVerification
                 "Au moins quatre thèmes globaux, identifiants uniques");
             Check(Theme.Catalogue.All(t => t.Surface != t.HaloA && t.Accent != t.Text && t.RadiusScale is > 0 and <= 2),
                 "Chaque thème fournit verre, halos, accent et échelle d’angle");
-            Check(Theme.Catalogue.Count(t => t.Kind != SurfaceKind.Glass) >= 4, "Au moins quatre thèmes changent la matière et les formes");
+            Check(Theme.Catalogue.Count(t => t.Kind != SurfaceKind.Glass) >= 4,
+                "Au moins quatre thèmes changent la matière et les formes");
             Check(Theme.Catalogue.Select(t => t.Tiles).Distinct().Count() >= 6 && Theme.Catalogue.Select(t
                 => t.Heading).Distinct().Count() >= 4 && Theme.Catalogue.Select(t => t.Frame).Distinct().Count() >= 5,
                 "Les thèmes varient aussi la disposition, la typographie et le cadre des contrôles");
@@ -178,7 +186,7 @@ internal static class InteractionVerification
             await Task.Delay(PauseStabilisationMs);
             await Measure("Accueil stable", 8000);
             app.Collapse();
-            await Task.Delay(20);
+            await Task.Delay(CollapseSettleMs);
             app.Open();
             await Task.Delay(PauseClicMs);
             Check(app.UiActivity.open && !app.UiActivity.closing && app.UiActivity.visible >= 3,
@@ -186,14 +194,14 @@ internal static class InteractionVerification
             for (int i = 0; i < 8; i++)
             {
                 app.ToggleControls();
-                await Task.Delay(28);
+                await Task.Delay(ControlsToggleGapMs);
             }
             await Task.Delay(PauseTransitionMs);
             Check(app.UiActivity.open && !app.UiActivity.closing, "Huit bascules rapides ne laissent pas de fermeture différée");
             for (int i = 0; i < 4; i++)
             {
                 app.TogglePc();
-                await Task.Delay(15);
+                await Task.Delay(PcToggleGapMs);
             }
             app.TogglePc();
             for (int wait = 0; wait < 40 && app.PcActivity.samples == 0; wait++)

@@ -66,7 +66,8 @@ internal sealed partial class HomeWindow : GlassWindow
         header.Children.Add(brand);
         ContentHost.Children.Add(header);
         var scroll = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 9, 0), Margin = new Thickness(0, 22,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 9, 0), Margin = new Thickness(0,
+                22,
             0, 0) };
         Grid.SetRow(scroll, 1);
         ContentHost.Children.Add(scroll);
@@ -106,7 +107,8 @@ internal sealed partial class HomeWindow : GlassWindow
     {
         ShellRefresh();
         string mode = Theme.Current.Tiles;
-        date.Text = Store.State.Favorites.Count + " favoris · " + Store.Entries.Count + " accès · " + Store.State.Websites.Count + " sites";
+        date.Text = Store.State.Favorites.Count + " favoris · " + Store.Entries.Count + " accès · " + Store.State.Websites.Count
+            + " sites";
         string signature = Theme.Current.Id + "/" + mode + "/" + Store.State.IconSize + "/" + page + "/" + Store.State.HomeScope + "/"
             + string.Join("|", Store.Entries.Select(e => e.Id + e.Name + e.IconPath + Store.BoardFor(e))) + string.Join("|",
             Store.State.Favorites) + string.Join("|", Store.State.Hidden) + string.Join("|", Store.State.Recent) + string.Join("|",
@@ -440,10 +442,13 @@ internal sealed partial class HomeWindow : GlassWindow
         b.MouseRightButtonUp += (_, e) => { EntryMenu(entry, b); e.Handled = true; };
         return b;
     }
-    void EntryMenu(Entry entry, Button anchor) => GlassMenu.Open(owner, this, anchor, entry.Name, new[] { new MenuAction("Ouvrir", "\uE8A7",
-        () => owner.Launch(entry)), new MenuAction(Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris" : "Ajouter aux favoris",
+    void EntryMenu(Entry entry, Button anchor) => GlassMenu.Open(owner, this, anchor, entry.Name, new[] { new MenuAction("Ouvrir",
+        "\uE8A7",
+        () => owner.Launch(entry)), new MenuAction(Store.State.Favorites.Contains(entry.Id) ? "Retirer des favoris"
+            : "Ajouter aux favoris",
         "\uE734", () => { if (!Store.State.Favorites.Remove(entry.Id)) Store.State.Favorites.Add(entry.Id); Store.Save();
         owner.RefreshBoards(); }), new MenuAction(Store.State.TaskbarPins.Contains(entry.Id) ? "Détacher de la barre"
-        : "Épingler à la barre", "\uE718", () => owner.ToggleTaskbarPin(entry)), new MenuAction("Personnaliser cet accès…", "\uE70F", ()
+        : "Épingler à la barre", "\uE718", () => owner.ToggleTaskbarPin(entry)), new MenuAction("Personnaliser cet accès…",
+            "\uE70F", ()
         => owner.Edit(entry), Separator: true), new MenuAction("Afficher l’emplacement", "\uE8B7", () => owner.Reveal(entry)) }, true);
 }

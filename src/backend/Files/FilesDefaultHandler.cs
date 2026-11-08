@@ -1,9 +1,9 @@
 // Côté backend de « Ouvrir les dossiers avec Winlestia Fichiers » (Preferences.FilesDefaultHandler, false par défaut). Le travail de
 // registre est dans FilesHandler (partagé avec Winlestia.Files --register / --restore).
-// Garde-fous : exe absent au démarrage -> restauration + préférence désactivée ; drapeau de plantage écrit par Winlestia.Files (3 plantages
-// au démarrage en 60 s) -> préférence désactivée + toast. Pas de sondage : vérification au démarrage + FileSystemWatcher sur le drapeau.
-// Threads : le travail de registre s'exécute sous `gate` (plus le mutex inter-processus dans FilesHandler). Store.State n'est écrit et
-// sauvé que sur le dispatcher UI, comme toute autre préférence.
+// Garde-fous : exe absent au démarrage -> restauration + préférence désactivée ; drapeau de plantage écrit par Winlestia.Files (3
+// plantages au démarrage en 60 s) -> préférence désactivée + toast. Pas de sondage : vérification au démarrage + FileSystemWatcher
+// sur le drapeau. Threads : le travail de registre s'exécute sous `gate` (plus le mutex inter-processus dans FilesHandler). Store.State
+// n'est écrit et sauvé que sur le dispatcher UI, comme toute autre préférence.
 using System;
 using System.IO;
 using System.Linq;
@@ -21,9 +21,10 @@ internal static class FilesDefaultHandler
     static readonly object gate = new();
     internal static string ExePath => Path.Combine(AppContext.BaseDirectory, "Winlestia.Files.exe");
 
-    // Bascule depuis le pont des réglages (appelée hors du thread UI). Renvoie la valeur de préférence à stocker (l'appelant l'assigne sur
-    // le thread UI et sauve) et un avis (null si tout va bien).
-    // Désactiver garde la préférence à true quand la restauration a échoué, pour que l'utilisateur voie l'état et puisse réessayer.
+    // Bascule depuis le pont des réglages (appelée hors du thread UI). Renvoie la valeur de préférence à stocker (l'appelant
+    // l'assigne sur le thread UI et sauve) et un avis (null si tout va bien).
+    // Désactiver garde la préférence à true quand la restauration a échoué, pour que l'utilisateur voie l'état et puisse
+    // réessayer.
     internal static (bool pref, string? notice) Set(bool on)
     {
         lock (gate)
@@ -84,8 +85,8 @@ internal static class FilesDefaultHandler
         }
     }
 
-    // Migration unique « activé par défaut » (handler, préchargement ; l'épingle du dock a disparu, voir RemovePin), hors du thread UI ;
-    // Store.State n'est écrit que sur le dispatcher. Un refus ultérieur n'est jamais annulé (le drapeau reste posé).
+    // Migration unique « activé par défaut » (handler, préchargement ; l'épingle du dock a disparu, voir RemovePin), hors du thread
+    // UI ; Store.State n'est écrit que sur le dispatcher. Un refus ultérieur n'est jamais annulé (le drapeau reste posé).
     static void Migrate(bool tripped)
     {
         lock (gate)
@@ -112,7 +113,8 @@ internal static class FilesDefaultHandler
         }
     }
 
-    // Nettoyage unique de l'ancienne épingle du dock (FilesPinRemoved) ; l'état est écrit sur le dispatcher comme toute autre préférence.
+    // Nettoyage unique de l'ancienne épingle du dock (FilesPinRemoved) ; l'état est écrit sur le dispatcher comme toute autre
+    // préférence.
     static void RemovePin()
     {
         if (Store.State.FilesPinRemoved)
@@ -136,9 +138,8 @@ internal static class FilesDefaultHandler
     }
 
     // Bouton « Fichiers » du dock : active / ouvre une fenêtre dans l'instance résidente, sinon lance Winlestia.Files.exe, sinon
-    // l'Explorateur.
-    // Retourne immédiatement (peut être appelé sur le dispatcher) : la connexion au canal et Process.Start s'exécutent sur le pool de
-    // threads.
+    // l'Explorateur. Retourne immédiatement (peut être appelé sur le dispatcher) : la connexion au canal et Process.Start s'exécutent
+    // sur le pool de threads.
     internal static void Open()
     {
         Task.Run(() =>

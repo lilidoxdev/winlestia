@@ -118,13 +118,15 @@ Item {
             required property int index
             required property FileSystemEntry modelData
 
-            readonly property real nonAnimHeight: icon.implicitHeight + name.anchors.topMargin + name.implicitHeight + Appearance.padding.normal * 2
+            readonly property real nonAnimHeight: icon.implicitHeight + name.anchors.topMargin + name.implicitHeight
+                + Appearance.padding.normal * 2
 
             implicitWidth: Sizes.itemWidth
             implicitHeight: nonAnimHeight
 
             radius: Appearance.rounding.normal
-            color: Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, GridView.isCurrentItem ? Colours.tPalette.m3surfaceContainerHighest.a : 0)
+            color: Qt.alpha(Colours.tPalette.m3surfaceContainerHighest,
+                GridView.isCurrentItem ? Colours.tPalette.m3surfaceContainerHighest.a : 0)
             z: GridView.isCurrentItem || implicitHeight !== nonAnimHeight ? 1 : 0
             clip: true
 
@@ -156,7 +158,8 @@ Item {
                         source = Qt.resolvedUrl(file.path);
                     else if (!file.isDir)
                         source = Quickshell.iconPath(file.mimeType.replace("/", "-"), "application-x-zerosize");
-                    else if (root.dialog.cwd.length === 1 && ["Desktop", "Documents", "Downloads", "Music", "Pictures", "Public", "Templates", "Videos"].includes(file.name))
+                    else if (root.dialog.cwd.length === 1 && ["Desktop", "Documents", "Downloads", "Music", "Pictures", "Public",
+                        "Templates", "Videos"].includes(file.name))
                         source = Quickshell.iconPath(`folder-${file.name.toLowerCase()}`);
                     else
                         source = Quickshell.iconPath("inode-directory");

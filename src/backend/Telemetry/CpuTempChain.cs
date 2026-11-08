@@ -1,5 +1,5 @@
-// C# 12, fichier CpuTempChain.cs, cible Windows 11 / .NET 8, repli en lecture seule pour la température du processeur (n'installe jamais de
-// pilote)
+// C# 12, fichier CpuTempChain.cs, cible Windows 11 / .NET 8, repli en lecture seule pour la température du processeur (n'installe jamais
+// de pilote)
 using System;
 using System.Collections.Generic;
 using System.Management;
@@ -10,10 +10,13 @@ using System.Threading.Tasks;
 namespace PanneauxGlass;
 
 // Replis utilisés quand LibreHardwareMonitor n'a aucune lecture plausible du processeur (pas de pilote de capteur, pas de droits admin).
-// Les sources lentes (WMI/PDH) tournent sur une tâche séparée au plus toutes les 10 s, pour que la boucle d'échantillonnage à 1 s ne bloque
-// jamais.
+// Les sources lentes (WMI/PDH) tournent sur une tâche séparée au plus toutes les 10 s, pour que la boucle d'échantillonnage à 1 s ne
+// bloque jamais.
 internal sealed class CpuTempChain : IDisposable
 {
+    // Un compteur PDH de type taux n'a de valeur qu'avec deux relevés : on les espace pour obtenir un delta mesurable.
+    const int PdhSampleGapMs = 50;
+
     sealed class Source(string name, Func<double?> read, bool hardware = false)
     {
         internal readonly bool Hardware = hardware; internal bool EverWorked; internal readonly string Name = name;
@@ -21,7 +24,7 @@ internal sealed class CpuTempChain : IDisposable
     }
     readonly Source[] sources; readonly Func<long> clock; readonly Action<string> log;
     sealed record Reading(double Value, string Source, long At);
-    // cached: immutable, published via Volatile; probing: index of the source being read
+    // cached : immuable, publié via Volatile ; probing : index de la source en cours de lecture
     Reading? cached; int busy, disposed, generation, probing = -1; long nextProbe, busySince; int working = -1;
     internal CpuTempChain(Func<long>? clock = null, Action<string>? log = null)
     {
@@ -32,7 +35,8 @@ internal sealed class CpuTempChain : IDisposable
     }
     internal static double? Plausible(double? v) => v is > 10 and <= 125 && double.IsFinite(v.Value) ? v : null;
     // Les stubs ACPI/PDH renvoient une constante de 3000 dK (26,85 C) ou 3010 dK (27,85 C) sur les machines sans vraie zone thermique.
-    internal static double? Real(double? v) => Plausible(v) is { } t && Math.Abs(t - 26.85) > 0.06 && Math.Abs(t - 27.85) > 0.06 ? t : null;
+    internal static double? Real(double? v) => Plausible(v) is { } t && Math.Abs(t - 26.85) > 0.06 && Math.Abs(t - 27.85) > 0.06 ? t
+        : null;
     internal (double? value, string? source) Resolve(double? lhm)
     {
         var now = clock();
@@ -117,7 +121,8 @@ internal sealed class CpuTempChain : IDisposable
         }
         catch (Exception ex)
         {
-            // ACPI/PDH failing 3 times without ever producing a reading: unsupported for the process lifetime (logged once)
+            // ACPI/PDH en échec 3 fois sans jamais produire de lecture : non pris en charge pour la durée de vie du processus
+            // (journalisé une fois)
             s.RetryAt = s.Hardware && !s.EverWorked && ++s.Fails >= 3 ? long.MaxValue : now + 60000;
             if (!s.Logged)
             {
@@ -209,7 +214,7 @@ internal sealed class CpuTempChain : IDisposable
                 return list;
             if (PdhCollectQueryData(query) != 0)
                 return list;
-            Thread.Sleep(50);
+            Thread.Sleep(PdhSampleGapMs);
             if (PdhCollectQueryData(query) != 0)
                 return list;
             uint size = 0, count = 0;

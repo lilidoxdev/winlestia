@@ -109,7 +109,7 @@ public sealed partial class MainWindow
         {
             SaveView(previous);
             previous.Tab.Stale = true;
-        }   // not watched while inactive: re-synced when shown again
+        }   // non surveillé tant qu'inactif : resynchronisé à la réaffichage
         activeView = view;
         if (previous != null)
             Paint(previous);

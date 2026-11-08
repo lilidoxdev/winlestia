@@ -209,7 +209,7 @@ internal static class Native
         DwmSetWindowAttribute(hwnd, 34, ref border, 4);
         int backdrop = 1;
         DwmSetWindowAttribute(hwnd, 38, ref backdrop, 4);
-        // Accent acrylic keeps all four independent surfaces translucent while focus moves between them.
+        // L'acrylique d'accent garde les quatre surfaces indépendantes translucides quand le focus passe de l'une à l'autre.
         var policy = new Accent { State = window.AllowsTransparency || Theme.Current.Opaque ? 0 : 4, Flags = window.AllowsTransparency
             || Theme.Current.Opaque ? 0 : 2, Gradient = unchecked((int)(((uint)(tint * 255) << 24) | (light ? 0x00F8F3ECu
             : 0x003C2418u))) };
@@ -277,8 +277,8 @@ internal static class Native
         key.DeleteValue("Panneaux", false);
     }
     static readonly object autostartGate = new(); static int autostartDesired = -1; // -1 : aucune demande en cours
-    // Pendant une demande, l'état visible est celui demandé ; sinon Run ou tâche (l'état de la tâche est attendu au plus 3 s au premier
-    // appel).
+    // Pendant une demande, l'état visible est celui demandé ; sinon Run ou tâche (l'état de la tâche est attendu au plus 3 s
+    // au premier appel).
     internal static bool Autostart
     {
         get

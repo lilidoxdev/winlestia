@@ -8,12 +8,14 @@ Window {
     title: "Winlestia · Logo"
     transientParent: null
     color: "transparent"
-    flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus | Qt.WindowTransparentForInput
+    flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus
+        | Qt.WindowTransparentForInput
     x: (modelData?.x ?? 0) + (Bridge.frameEnabled ? Bridge.frameThickness : 0) + 4
     y: (modelData?.y ?? 0) + (Bridge.frameEnabled ? Bridge.frameThickness : 0) + 4
     width: 116
     height: 116
-    visible: (Bridge.settings.desktopLogo ?? false) && !Bridge.picking && !Bridge.capture.busy && !Bridge.fullscreenScreens.includes(screenName)
+    visible: (Bridge.settings.desktopLogo ?? false) && !Bridge.picking && !Bridge.capture.busy
+        && !Bridge.fullscreenScreens.includes(screenName)
     Image {
         anchors.fill: parent
         source: Bridge.localUrl(Bridge.assetRoot + "/winlestia-mark.png")

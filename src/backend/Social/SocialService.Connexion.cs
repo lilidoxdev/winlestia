@@ -40,7 +40,8 @@ internal sealed partial class SocialService
                     return false;
                 return path.StartsWith("/channels") || path.StartsWith("/app") ? true : null;
             case "instagram":
-                if (path.StartsWith("/accounts/login") || path.StartsWith("/accounts/emailsignup") || path.StartsWith("/accounts/password"))
+                if (path.StartsWith("/accounts/login") || path.StartsWith("/accounts/emailsignup")
+                    || path.StartsWith("/accounts/password"))
                     return false;
                 return true;
             case "snapchat":
@@ -123,7 +124,8 @@ internal sealed partial class SocialService
                 _ = CheckLater(n, 0);
         var now = DateTime.UtcNow;
         foreach (var n in nets)
-            if (n.Wv != null && !n.Creating && !n.Navigating && SocialPolicy.ShouldRelease(n.Win is { IsVisible: true }, n.HiddenSince, now,
+            if (n.Wv != null && !n.Creating && !n.Navigating && SocialPolicy.ShouldRelease(n.Win is { IsVisible: true }, n.HiddenSince,
+                now,
                 Store.State.SocialBackground, n.Connected))
             {
                 n.Wanted = false;

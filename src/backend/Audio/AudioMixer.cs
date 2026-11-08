@@ -139,7 +139,8 @@ internal sealed class AudioMixer : IDisposable
                     try
                     {
                         var gain = device.AudioEndpointVolume;
-                        result.Add(new(device.ID, device.FriendlyName, current == device.ID, Math.Round(gain.MasterVolumeLevelScalar * 100),
+                        result.Add(new(device.ID, device.FriendlyName, current == device.ID,
+                            Math.Round(gain.MasterVolumeLevelScalar * 100),
                             gain.Mute, flow));
                     }
                     catch (System.Runtime.InteropServices.COMException)

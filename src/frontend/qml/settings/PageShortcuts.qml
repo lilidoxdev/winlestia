@@ -6,13 +6,13 @@ import qs.services
 import qs.config
 import "."
 
-// Every keyboard shortcut, grouped. Configurable ones open the capture dialog; fixed ones show why they are fixed.
+// Tous les raccourcis clavier, groupés. Les configurables ouvrent la boîte de capture ; les fixes expliquent pourquoi ils sont fixes.
 ColumnLayout {
     id: page
 
     property var host
     readonly property var all: Bridge.settings.shortcuts ?? []
-    // Panel-local keys are handled in QML, so the backend does not list them.
+    // Les touches locales au panneau sont gérées en QML, donc le backend ne les liste pas.
     readonly property var local: [
         {
             id: "local-tabs",
@@ -58,7 +58,8 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.leftMargin: Appearance.padding.larger
         wrapMode: Text.WordWrap
-        text: qsTr("Clique sur « Modifier », puis appuie sur la nouvelle combinaison. Un raccourci déjà pris est refusé avec une explication.")
+        text: qsTr("Clique sur « Modifier », puis appuie sur la nouvelle combinaison. " +
+                   "Un raccourci déjà pris est refusé avec une explication.")
         font.pointSize: Appearance.font.size.small
         color: Colours.palette.m3outline
     }
@@ -87,7 +88,8 @@ ColumnLayout {
                     title: qsTr(modelData.label)
                     readonly property bool inactive: modelData.configurable && modelData.active === false
                     hintColor: inactive ? Colours.palette.m3error : Colours.palette.m3outline
-                    hint: modelData.configurable ? (inactive ? qsTr("Inactif : une autre application utilise cette combinaison.") : "") : qsTr(modelData.reason ?? "")
+                    hint: modelData.configurable ? (inactive ? qsTr("Inactif : une autre application utilise cette combinaison.") : "")
+                        : qsTr(modelData.reason ?? "")
 
                     SettingsKeyCaps {
                         combo: sc.modelData.combo

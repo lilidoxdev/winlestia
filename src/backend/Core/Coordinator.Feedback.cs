@@ -22,17 +22,7 @@ namespace PanneauxGlass;
 internal sealed partial class Coordinator
 {
     internal void ShowToast(string text) => Toast.Show(text, Anchor);
-    internal void Notify(string title, string text)
-    {
-        try
-        {
-            tray.BalloonTipTitle = title;
-            tray.BalloonTipText = text;
-            tray.BalloonTipIcon = Forms.ToolTipIcon.Info;
-            tray.ShowBalloonTip(4000);
-        }
-        catch (Exception ex) { Store.Log("Notification: " + ex.Message); }
-    }
+    internal void Notify(string title, string text) => tray.Notify(title, text);
     internal bool Confirm(string text)
     {
         bool previous = settingsOpen;

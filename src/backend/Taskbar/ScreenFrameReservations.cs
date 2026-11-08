@@ -1,4 +1,4 @@
-// C# 12 / ScreenFrameReservations.cs / Windows appbars. OS-owned, automatically removed if the process exits.
+// C# 12 / ScreenFrameReservations.cs / appbars Windows. Appartiennent à l'OS, retirées automatiquement à la fin du processus.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,15 +10,23 @@ namespace PanneauxGlass;
 
 internal sealed class ScreenFrameReservations : IDisposable
 {
+    // Sonde périodique du plein écran : assez fréquente pour libérer l'espace réservé vite, sans charger le thread UI.
+    const int FullscreenCheckMs = 400;
+    // Regroupe les rafales d'événements de fenêtres en un seul recalcul des réservations d'écran.
+    const int ChangeDebounceMs = 160;
+
     sealed class Edge : IDisposable
     {
-        readonly HwndSource source; readonly Forms.Screen screen; readonly uint edge, message; readonly uint explorerRestart = TaskbarNative.RegisterWindowMessage("TaskbarCreated"); int inset; bool placing, closed; Native.Rect last;
+        readonly HwndSource source; readonly Forms.Screen screen; readonly uint edge, message;
+            readonly uint explorerRestart = TaskbarNative.RegisterWindowMessage("TaskbarCreated"); int inset; bool placing, closed;
+            Native.Rect last;
         internal Edge(Forms.Screen screen, uint edge, int inset)
         {
             this.screen = screen;
             this.edge = edge;
             this.inset = inset;
-            source = new HwndSource(new HwndSourceParameters("Panneaux · marge du cadre") { WindowStyle = unchecked((int)0x80000000), ExtendedWindowStyle = 0x08000080, Width = 1, Height = 1 });
+            source = new HwndSource(new HwndSourceParameters("Panneaux · marge du cadre") { WindowStyle = unchecked((int)0x80000000),
+                ExtendedWindowStyle = 0x08000080, Width = 1, Height = 1 });
             source.AddHook(Hook);
             message = TaskbarNative.RegisterWindowMessage("PanneauxFrame-" + source.Handle);
             var data = TaskbarNative.Data(source.Handle);
@@ -69,7 +77,8 @@ internal sealed class ScreenFrameReservations : IDisposable
                 {
                     TaskbarNative.SHAppBarMessage(3, ref data);
                     last = data.Rect;
-                    TaskbarNative.SetWindowPos(source.Handle, IntPtr.Zero, last.Left, last.Top, Math.Max(1, last.Right - last.Left), Math.Max(1, last.Bottom - last.Top), 0x14);
+                    TaskbarNative.SetWindowPos(source.Handle, IntPtr.Zero, last.Left, last.Top, Math.Max(1, last.Right - last.Left),
+                        Math.Max(1, last.Bottom - last.Top), 0x14);
                 }
             }
             finally { placing = false; }
@@ -99,13 +108,18 @@ internal sealed class ScreenFrameReservations : IDisposable
             source.Dispose();
         }
     }
-    readonly List<Edge> edges = new(); readonly Dictionary<IntPtr, (Native.Rect original, Native.Rect placed)> adjusted = new(); readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
-    readonly DispatcherTimer fullscreenCheck = new() { Interval = TimeSpan.FromMilliseconds(400) };
-    readonly DispatcherTimer changes = new() { Interval = TimeSpan.FromMilliseconds(160) }; readonly TaskbarNative.WinEvent callback; readonly List<IntPtr> hooks = new(); readonly HashSet<IntPtr> pending = new(); bool enabled, disposed;
+    readonly List<Edge> edges = new(); readonly Dictionary<IntPtr, (Native.Rect original, Native.Rect placed)> adjusted = new();
+        readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
+    readonly DispatcherTimer fullscreenCheck = new() { Interval = TimeSpan.FromMilliseconds(FullscreenCheckMs) };
+    readonly DispatcherTimer changes = new() { Interval = TimeSpan.FromMilliseconds(ChangeDebounceMs) };
+        readonly TaskbarNative.WinEvent callback;
+        readonly List<IntPtr> hooks = new(); readonly HashSet<IntPtr> pending = new(); bool enabled, disposed;
     internal ScreenFrameReservations()
     {
         fullscreenCheck.Tick += (_, _) => Constrain(Native.GetForegroundWindow());
-        callback = (_, kind, h, obj, child, _, _) => { if (h == IntPtr.Zero || obj != 0 || child != 0 || Native.Owns(h)) return; dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (!enabled || disposed) return; pending.Add(h); changes.Stop(); changes.Start(); })); };
+        callback = (_, kind, h, obj, child, _, _) => { if (h == IntPtr.Zero || obj != 0 || child != 0 || Native.Owns(h)) return;
+            dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() => { if (!enabled || disposed) return; pending.Add(h);
+            changes.Stop(); changes.Start(); })); };
         changes.Tick += (_, _) => { changes.Stop(); foreach (var h in pending.ToArray()) Constrain(h); pending.Clear(); };
     }
     internal void Enable(bool constrainWindows = true)
@@ -151,7 +165,8 @@ internal sealed class ScreenFrameReservations : IDisposable
     [DllImport("user32.dll")] static extern bool GetClientRect(IntPtr h, out Native.Rect rect);
     [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr h, ref Native.Point point);
     readonly Dictionary<IntPtr, (IntPtr original, string shape)> rounded = new();
-    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int ExtendedBounds(IntPtr h, int attribute, out Native.Rect value, int size);
+    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int ExtendedBounds(IntPtr h, int attribute,
+        out Native.Rect value, int size);
     [DllImport("gdi32.dll")] static extern bool EqualRgn(IntPtr first, IntPtr second);
     [DllImport("gdi32.dll")] static extern IntPtr CreateRoundRectRgn(int l, int t, int r, int b, int ew, int eh);
     [DllImport("gdi32.dll")] static extern IntPtr CreateRectRgn(int l, int t, int r, int b);
@@ -177,7 +192,9 @@ internal sealed class ScreenFrameReservations : IDisposable
         }
         var origin = new Native.Point();
         var screenBounds = Forms.Screen.FromHandle(h).Bounds;
-        if (GetClientRect(h, out var client) && ClientToScreen(h, ref origin) && Math.Abs(origin.X - screenBounds.Left) <= 2 && Math.Abs(origin.Y - screenBounds.Top) <= 2 && Math.Abs(origin.X + client.Right - screenBounds.Right) <= 2 && Math.Abs(origin.Y + client.Bottom - screenBounds.Bottom) <= 2)
+        if (GetClientRect(h, out var client) && ClientToScreen(h, ref origin) && Math.Abs(origin.X - screenBounds.Left) <= 2
+            && Math.Abs(origin.Y - screenBounds.Top) <= 2 && Math.Abs(origin.X + client.Right - screenBounds.Right) <= 2
+            && Math.Abs(origin.Y + client.Bottom - screenBounds.Bottom) <= 2)
         {
             RestoreRound(h);
             return;
@@ -187,8 +204,9 @@ internal sealed class ScreenFrameReservations : IDisposable
         var screen = Forms.Screen.FromHandle(h);
         var area = screen.WorkingArea;
         int radius = (int)Math.Round(26 * TaskbarNative.Scale(screen));
-        int left = Math.Max(0, area.Left - rect.Left), top = Math.Max(0, area.Top - rect.Top), right = Math.Min(rect.Right - rect.Left, area.Right - rect.Left), bottom = Math.Min(rect.Bottom - rect.Top, area.Bottom - rect.Top);
-        // Native resize borders are outside the visible DWM frame; clip the visible intersection.
+        int left = Math.Max(0, area.Left - rect.Left), top = Math.Max(0, area.Top - rect.Top), right = Math.Min(rect.Right - rect.Left,
+            area.Right - rect.Left), bottom = Math.Min(rect.Bottom - rect.Top, area.Bottom - rect.Top);
+        // Les bordures de redimensionnement natives sont hors du cadre DWM visible ; on découpe l'intersection visible.
         if (ExtendedBounds(h, 9, out var visible, Marshal.SizeOf<Native.Rect>()) == 0)
         {
             left = Math.Max(left, visible.Left - rect.Left);
@@ -237,7 +255,9 @@ internal sealed class ScreenFrameReservations : IDisposable
     {
         if (!enabled || !Native.IsWindow(h) || !TaskbarNative.IsWindowVisible(h) || TaskbarNative.IsIconic(h) || Native.Owns(h))
             return;
-        if ((Style(h, -16).ToInt64() & 0x40000000) != 0 || (Native.ExtendedStyle(h) & 0x80) != 0 || string.IsNullOrWhiteSpace(Native.Title(h)) || TaskbarNative.ClassName(h) is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd")
+        if ((Style(h, -16).ToInt64() & 0x40000000) != 0 || (Native.ExtendedStyle(h) & 0x80) != 0
+            || string.IsNullOrWhiteSpace(Native.Title(h))
+            || TaskbarNative.ClassName(h) is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd")
             return;
         RoundMaximized(h);
         if (IsZoomed(h))
@@ -247,7 +267,8 @@ internal sealed class ScreenFrameReservations : IDisposable
         var screen = Forms.Screen.FromHandle(h);
         var bounds = screen.Bounds;
         var origin = new Native.Point();
-        if (GetClientRect(h, out var client) && ClientToScreen(h, ref origin) && origin.X <= bounds.Left + 1 && origin.Y <= bounds.Top + 1 && origin.X + client.Right >= bounds.Right - 1 && origin.Y + client.Bottom >= bounds.Bottom - 1)
+        if (GetClientRect(h, out var client) && ClientToScreen(h, ref origin) && origin.X <= bounds.Left + 1 && origin.Y <= bounds.Top + 1
+            && origin.X + client.Right >= bounds.Right - 1 && origin.Y + client.Bottom >= bounds.Bottom - 1)
             return;
         var area = screen.WorkingArea;
         int w = Math.Min(rect.Right - rect.Left, area.Width), height = Math.Min(rect.Bottom - rect.Top, area.Height);
@@ -279,7 +300,8 @@ internal sealed class ScreenFrameReservations : IDisposable
             edge.Dispose();
         edges.Clear();
         foreach (var item in adjusted)
-            if (Native.IsWindow(item.Key) && !IsZoomed(item.Key) && TaskbarNative.GetWindowRect(item.Key, out var rect) && Same(rect, item.Value.placed))
+            if (Native.IsWindow(item.Key) && !IsZoomed(item.Key) && TaskbarNative.GetWindowRect(item.Key, out var rect) && Same(rect,
+                item.Value.placed))
             {
                 var old = item.Value.original;
                 TaskbarNative.SetWindowPos(item.Key, IntPtr.Zero, old.Left, old.Top, old.Right - old.Left, old.Bottom - old.Top, 0x14);

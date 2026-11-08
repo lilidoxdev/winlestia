@@ -6,7 +6,8 @@ import qs.config
 import ".."
 import "."
 
-// One navigation entry: icon in a round tonal pill, title only (the subtitle is shown in the page header). Selected = full-width filled pill.
+// Une entrée de navigation : icône dans une pastille tonale ronde, titre seul
+// (le sous-titre est affiché dans l'en-tête de page). Sélection = pastille pleine sur toute la largeur.
 StyledRect {
     id: item
 

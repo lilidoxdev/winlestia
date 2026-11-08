@@ -1,9 +1,8 @@
 // Ctrl+Z / Ctrl+Y : un journal interne de ce que cette fenêtre a fait via FileOps (le shell n'expose aucune API publique d'annulation
-// fiable).
-// Annulable : renommer, déplacer, copier (les copies vont à la corbeille), nouveau dossier, suppression vers la corbeille (restaurée depuis
-// la corbeille).
-// NON annulable : suppression définitive (une entrée barrière le dit), opérations lancées depuis le menu natif du shell, glisser sortants,
-// et les fichiers qu'une
+// fiable). Annulable : renommer, déplacer, copier (les copies vont à la corbeille), nouveau dossier, suppression vers la corbeille
+// (restaurée depuis la corbeille).
+// NON annulable : suppression définitive (une entrée barrière le dit), opérations lancées depuis le menu natif du shell, glisser
+// sortants, et les fichiers qu'une
 // copie a remplacés (annuler cette copie met le remplaçant à la corbeille, l'original remplacé n'est pas restauré).
 using System;
 using System.Collections.Generic;
@@ -50,7 +49,8 @@ internal sealed class UndoJournal
     }
     // Annulation/rétablissement d'un déplacement : refuse si quelque chose occupe déjà une cible (pas de boîte de conflit).
     static Task<OpResult>? Occupied(IEnumerable<(string From, string To)> pairs) =>
-        pairs.FirstOrDefault(p => Exists(p.To)) is { To: { } t } ? Refuse("Impossible d'annuler : un élément nommé « " + Path.GetFileName(t)
+        pairs.FirstOrDefault(p => Exists(p.To)) is { To: { } t } ? Refuse("Impossible d'annuler : un élément nommé « "
+            + Path.GetFileName(t)
             + " » existe déjà à l'emplacement d'origine") : null;
 
     void Push(UndoEntry e)

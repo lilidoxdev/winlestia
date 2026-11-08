@@ -97,7 +97,8 @@ internal static class WorkspaceService
         }
         var profile = new WorkspaceProfile { Name = name, Targets = targets.Take(16).ToList() };
         foreach (var board in Store.State.Boards)
-            profile.Layout[board.Id] = board.Placement is { Valid: true } placement ? new PanelPlacement { X = placement.X, Y = placement.Y,
+            profile.Layout[board.Id] = board.Placement is { Valid: true } placement ? new PanelPlacement { X = placement.X,
+                Y = placement.Y,
                 Width = placement.Width, Height = placement.Height } : null;
         return profile;
     }
@@ -192,7 +193,8 @@ internal sealed class WorkspaceWindow : GlassWindow
         var profiles = Store.State.Workspaces;
         if (profiles.Count == 0)
         {
-            var empty = UI.Text("Aucun espace pour l’instant. Ouvre tes applications, range tes panneaux, puis enregistre l’espace actuel.",
+            var empty = UI.Text("Aucun espace pour l’instant. Ouvre tes applications, range tes panneaux, puis enregistre l’espace " +
+                "actuel.",
                 12, UI.Dim);
             empty.TextWrapping = TextWrapping.Wrap;
             empty.Margin = new Thickness(4, 20, 4, 10);
@@ -249,7 +251,8 @@ internal sealed class WorkspaceWindow : GlassWindow
         update.BorderBrush = Brushes.Transparent;
         tools.Children.Add(update);
         var remove = UI.IconButton("\uE74D", "Supprimer cet espace", () => { if (!owner.Confirm("Supprimer l’espace « " + profile.Name
-            + " » ?\n\nLes applications ne sont pas fermées.")) return; Store.State.Workspaces.Remove(profile); Store.Save(); Refresh(); });
+            + " » ?\n\nLes applications ne sont pas fermées.")) return; Store.State.Workspaces.Remove(profile); Store.Save(); Refresh();
+                });
         remove.Width = 30;
         remove.Height = 30;
         remove.Margin = new Thickness(2, 0, 0, 0);
@@ -264,7 +267,8 @@ internal sealed class WorkspaceWindow : GlassWindow
     }
     void Create()
     {
-        string? name = PromptWindow.Ask(owner, "Nommer cet espace", "Un nom court, comme « Dev », « Musique » ou « Matin ».", "Mon espace",
+        string? name = PromptWindow.Ask(owner, "Nommer cet espace", "Un nom court, comme « Dev », « Musique » ou « Matin ».",
+            "Mon espace",
             this);
         if (string.IsNullOrWhiteSpace(name))
             return;

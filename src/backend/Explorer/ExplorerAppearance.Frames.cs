@@ -33,7 +33,9 @@ internal sealed partial class ExplorerAppearance
         return pid != ExcludedProcess;
     }
     static bool ThemedExplorer(IntPtr h) => Store.State.ExplorerTheme && TaskbarNative.ClassName(h) == "CabinetWClass";
-    // Événement de premier plan (même hook, pas de nouveau minuteur) : colore la nouvelle fenêtre active, restaure la précédente. Les refus
+    // Événement de premier plan (même hook, pas de nouveau minuteur) : colore la nouvelle fenêtre active, restaure la précédente.
+    // Les
+    // refus
     // de DWM restent silencieux.
     void ForegroundChanged(IntPtr h)
     {
@@ -72,7 +74,7 @@ internal sealed partial class ExplorerAppearance
             var foreground = Native.GetForegroundWindow();
             if (foreground != IntPtr.Zero && Eligible(foreground, out _))
                 activeFrame = foreground;
-        }   // prefer the real foreground window over the top of the z-order
+        }   // préférer la vraie fenêtre de premier plan au sommet de l'ordre Z
         TaskbarNative.EnumWindows((h, _) =>
         {
             if (!Eligible(h, out bool explorer))

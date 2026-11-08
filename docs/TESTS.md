@@ -18,13 +18,19 @@ Les tests de categorie `Desktop` (`[Trait("Category","Desktop")]` : audio, explo
 
 ### Couverture
 
-La CI collecte la couverture avec coverlet (`coverlet.collector`) et verifie un plancher (etape « Resume de couverture » de `.github/workflows/ci.yml`). Valeur mesuree : 8,07 % des lignes, plancher 8 %. Le backend etant compile dans l'assembly de test, `tests/coverage.runsettings` active `IncludeTestAssembly` et exclut les fichiers de tests.
+La CI collecte la couverture avec coverlet (`coverlet.collector`) et verifie un plancher (etape « Resume de couverture » de `.github/workflows/ci.yml`). Valeur mesuree le 2026-11-08 : 8,22 % des lignes (2116/25725), plancher 8 %. Le backend etant compile dans l'assembly de test, `tests/coverage.runsettings` active `IncludeTestAssembly` et exclut les fichiers de tests.
 
 ```powershell
 dotnet test tests/Winlestia.Tests -c Release --filter "Category!=Desktop" --collect:"XPlat Code Coverage" --settings tests/coverage.runsettings --results-directory TestResults
 ```
 
-Le rapport est `TestResults/<guid>/coverage.cobertura.xml`. Le code WPF/shell non testable sans bureau pese sur le chiffre ; relever le plancher quand il monte.
+Le rapport est `TestResults/<guid>/coverage.cobertura.xml`. Le code WPF/shell non testable sans bureau pese sur le chiffre.
+
+Regle du cliquet : le plancher vaut toujours `floor(couverture mesuree)` (partie entiere, variable `$floor` de l'etape CI). Il ne baisse jamais ; une PR qui fait monter la couverture d'un point entier releve le plancher dans la meme PR, avec la valeur mesuree datee ici et dans le commentaire de `ci.yml`. Une baisse sous le plancher exige des tests, pas un plancher plus bas.
+
+### Style et fumee de l'installateur
+
+Le job `lint` de la CI echoue sur toute ligne de plus de 140 colonnes (`python tools/check_line_length.py`, perimetre : `src/**/*.cs`, `src/frontend/**/*.py|*.qml`, `src/terminal/**/*.py`, hors `src/terminal/clink` et `src/backend/VsCodeTheme*`) et sur `dotnet format whitespace --verify-no-changes` pour les trois projets. Le job `installer-smoke` execute `installer/build.ps1 -CI` (composants natifs MSVC remplaces par des fichiers vides) et publie le setup en artefact `winlestia-setup-smoke`.
 
 ### Winlestia Fichiers (harnais)
 

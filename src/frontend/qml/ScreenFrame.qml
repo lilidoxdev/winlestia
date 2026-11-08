@@ -1,4 +1,4 @@
-// One surface owns the union of frame, panel and dock silhouettes.
+// Une seule surface possède l'union des silhouettes du cadre, du panneau et du dock.
 import QtQuick
 import QtQuick.Window
 import QtQuick.Shapes
@@ -11,7 +11,8 @@ Window {
     property var drawing: Bridge.surfaceForScreen(screenName, Bridge.surfaceRevision)
     title: "Panneaux · Cadre " + screenName
     transientParent: null
-    flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus | Qt.WindowTransparentForInput
+    flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus
+        | Qt.WindowTransparentForInput
     x: modelData?.x ?? 0
     y: modelData?.y ?? 0
     width: modelData?.width ?? 1

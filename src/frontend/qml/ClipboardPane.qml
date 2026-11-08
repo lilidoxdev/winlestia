@@ -62,7 +62,8 @@ Item {
             clip: true
             spacing: Appearance.spacing.small
             reuseItems: true
-            model: root.visible ? Bridge.clipboardItems.filter(e => e.text.toLocaleLowerCase().includes(query.text.toLocaleLowerCase())) : []
+            model: root.visible ? Bridge.clipboardItems.filter(e => e.text.toLocaleLowerCase().includes(query.text.toLocaleLowerCase()))
+                : []
             delegate: StyledRect {
                 id: row
                 required property var modelData
@@ -131,7 +132,8 @@ Item {
                 anchors.centerIn: parent
                 visible: list.count === 0
                 icon: "content_paste_off"
-                title: Bridge.settings.clipboardHistory ? qsTr("Aucun élément dans cet historique") : qsTr("L’historique est désactivé")
+                title: Bridge.settings.clipboardHistory ? qsTr("Aucun élément dans cet historique")
+                    : qsTr("L’historique est désactivé")
                 body: Bridge.settings.clipboardHistory ? "" : qsTr("Active-le dans les paramètres pour retrouver ce que tu copies.")
             }
         }

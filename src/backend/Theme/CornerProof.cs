@@ -34,7 +34,8 @@ internal static class CornerProof
             var old = new GlassWindow("Panneaux Glass — ancien découpage") { Owner = background, ShowInTaskbar = true, Radius = 42 };
             old.ContentHost.Children.Add(UI.Text("Ancien", 20)); old.MoveInto(x + 35, y + 100, 440, 84, 0, false); Native.Layered = true;
             var fixedWindow = new GlassWindow("Panneaux Glass — masque alpha") { Owner = background, ShowInTaskbar = true, Radius = 42 };
-            fixedWindow.ContentHost.Children.Add(UI.Text("Masque alpha", 20)); fixedWindow.MoveInto(x + 525, y + 100, 440, 84, 0, false); };
+            fixedWindow.ContentHost.Children.Add(UI.Text("Masque alpha", 20)); fixedWindow.MoveInto(x + 525, y + 100, 440, 84, 0, false);
+                };
         background.KeyDown += (_, e) => { if (e.Key == System.Windows.Input.Key.Escape) System.Windows.Application.Current.Shutdown(); };
         background.Show();
     }

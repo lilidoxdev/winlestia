@@ -1,5 +1,5 @@
-// C# 12 / ExplorerNavigationIcons.cs / supprime les anciennes surcharges d'icônes d'espace de noms par utilisateur (HKCU n'est pas pris en
-// compte par le volet de navigation) ; valeurs d'origine restaurées.
+// C# 12 / ExplorerNavigationIcons.cs / supprime les anciennes surcharges d'icônes d'espace de noms par utilisateur (HKCU n'est pas pris
+// en compte par le volet de navigation) ; valeurs d'origine restaurées.
 using System;
 using System.IO;
 using System.Linq;

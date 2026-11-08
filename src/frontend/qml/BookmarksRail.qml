@@ -1,4 +1,4 @@
-// Left-edge hidden rail of browser bookmarks: the mirror twin of SocialRail, an EdgeRail instance with side:"left".
+// Rail caché du bord gauche pour les favoris du navigateur : jumeau miroir de SocialRail, une instance d'EdgeRail avec side:"left".
 import QtQuick
 import QtQuick.Window
 import QtQuick.Layouts
@@ -28,7 +28,8 @@ EdgeRail {
         return qsTr("le navigateur");
     }
     function errorText(e) {
-        return e === "running" ? qsTr("Fermez %1 pour supprimer un favori.").arg(browserName) : e === "unsupported" ? qsTr("Suppression non prise en charge pour ce navigateur.") : e === "notfound" ? qsTr("Favori introuvable.") : e;
+        return e === "running" ? qsTr("Fermez %1 pour supprimer un favori.").arg(browserName) : e === "unsupported"
+            ? qsTr("Suppression non prise en charge pour ce navigateur.") : e === "notfound" ? qsTr("Favori introuvable.") : e;
     }
     // Folders unfold in place: ids of the open ones; the ListModel `flat` holds the visible rows and is synced by id.
     property var openIds: ({})
@@ -64,7 +65,7 @@ EdgeRail {
             return;
         lastSig = sig;
         const keys = ["title", "url", "icon", "folder", "depth", "open"];
-        // Remove rows that are gone, then walk the target: keep, move or insert by id.
+        // Retire les lignes disparues, puis parcourt la cible : garde, déplace ou insère par id.
         const want = {};
         for (const t of target)
             want[t.id] = true;
@@ -107,7 +108,7 @@ EdgeRail {
             sync();
     }
     Component.onCompleted: sync()
-    // Once per reveal (hidden -> shown), never per frame: the backend rescans only if the files changed.
+    // Une fois par apparition (caché -> visible), jamais par image : le backend ne rescanne que si les fichiers ont changé.
     Connections {
         target: rail
         function onShownChanged() {
@@ -196,7 +197,8 @@ EdgeRail {
                             width: entry.size
                             height: entry.size
                             radius: width / 2
-                            color: entry.folder ? Colours.palette.m3secondaryContainer : entry.icon === "" ? rail.tint(entry.title, entry.url) : Colours.palette.m3surfaceContainerHigh
+                            color: entry.folder ? Colours.palette.m3secondaryContainer : entry.icon === "" ? rail.tint(entry.title,
+                                entry.url) : Colours.palette.m3surfaceContainerHigh
                             Image {
                                 id: favicon
                                 objectName: "favicon-" + entry.index
@@ -256,7 +258,7 @@ EdgeRail {
                         }
                     }
                 }
-                // Empty / busy / error states (only while there is nothing to list).
+                // États vide / occupé / erreur (seulement quand il n'y a rien à lister).
                 Rectangle {
                     objectName: "bookmarksState"
                     visible: flat.count === 0
@@ -266,7 +268,8 @@ EdgeRail {
                     radius: 24
                     color: Colours.palette.m3surfaceContainerHigh
                     readonly property string kind: rail.busy ? "busy" : rail.error !== "" && rail.error !== "sync" ? "error" : "empty"
-                    property string label: kind === "busy" ? qsTr("Chargement des favoris…") : kind === "error" ? rail.errorText(rail.error) : qsTr("Aucun favori")
+                    property string label: kind === "busy" ? qsTr("Chargement des favoris…") : kind === "error"
+                        ? rail.errorText(rail.error) : qsTr("Aucun favori")
                     MaterialIcon {
                         anchors.centerIn: parent
                         text: parent.kind === "busy" ? "hourglass_empty" : parent.kind === "error" ? "error" : "bookmark_border"
@@ -283,7 +286,7 @@ EdgeRail {
                     }
                 }
             }
-            // Error while the list is non-empty (not the sync warning, which the menu handles).
+            // Erreur alors que la liste n'est pas vide (pas l'avertissement de synchro, géré par le menu).
             Rectangle {
                 objectName: "bookmarksWarn"
                 visible: flat.count > 0 && rail.error !== "" && rail.error !== "sync"
@@ -328,7 +331,7 @@ EdgeRail {
         }
     }
 
-    // Context menu: bounded independent window (same recipe as the dock menu), closed when it loses focus or on an outside click.
+    // Menu contextuel : fenêtre indépendante bornée (même recette que le menu du dock), fermée à la perte du focus ou au clic extérieur.
     Window {
         id: menu
         objectName: "bookmarksMenu"
@@ -487,7 +490,11 @@ EdgeRail {
                     x: 6
                     wrapMode: Text.WordWrap
                     font.pointSize: Appearance.font.size.small
-                    text: menu.mode === "sync" ? qsTr("La synchronisation de %1 est active : la suppression sera répliquée sur vos autres appareils.").arg(rail.browserName) : qsTr("Supprimer ce favori dans %1 ? Une sauvegarde du fichier est faite avant. %1 doit être fermé.").arg(rail.browserName)
+                    text: menu.mode === "sync"
+                        ? qsTr("La synchronisation de %1 est active : la suppression sera répliquée " +
+                               "sur vos autres appareils.").arg(rail.browserName)
+                        : qsTr("Supprimer ce favori dans %1 ? Une sauvegarde du fichier est faite avant. " +
+                               "%1 doit être fermé.").arg(rail.browserName)
                 }
                 Row {
                     visible: menu.mode !== "menu"

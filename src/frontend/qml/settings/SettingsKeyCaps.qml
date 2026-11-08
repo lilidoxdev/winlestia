@@ -11,17 +11,17 @@ Flow {
 
     property string combo
     property bool muted: false
-    // Shown instead of keycaps when the combination is empty.
+    // Affiché à la place des touches quand la combinaison est vide.
     property string emptyText: qsTr("Aucun")
     readonly property var parts: {
         const raw = String(combo ?? "");
         if (raw === "")
             return [];
-        // "Ctrl++" style combos keep a literal plus as the last key.
+        // Les combinaisons du type « Ctrl++ » gardent un plus littéral comme dernière touche.
         const out = raw.endsWith("+") ? raw.slice(0, -1).split("+").filter(p => p !== "").concat(["+"]) : raw.split("+");
         const flat = [];
         for (const part of out.map(p => p.trim()).filter(p => p !== "")) {
-            // "←↑→↓" is four keys; the font has no arrow glyphs, so they are drawn as icons.
+            // « ←↑→↓ » fait quatre touches ; la police n'a pas de glyphes de flèches, elles sont donc dessinées en icônes.
             if (/^[←↑→↓]+$/.test(part))
                 part.split("").forEach(a => flat.push(a));
             else
@@ -85,7 +85,7 @@ Flow {
 
                 anchors.centerIn: parent
                 visible: !cap.isArrow
-                // Display token only: the backend keeps its own French spelling ("Flèches", "Maj", "Espace"...).
+                // Jeton d'affichage uniquement : le backend garde sa propre graphie française (« Flèches », « Maj », « Espace »...).
                 text: cap.isArrow ? "" : qsTr(cap.modelData)
                 font.pointSize: Appearance.font.size.small
                 font.weight: Font.Medium

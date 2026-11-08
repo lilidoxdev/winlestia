@@ -1,5 +1,5 @@
-// C# 12 / WallpaperMedia.cs / Windows. Utilitaires ponctuels pour le thème Automatique : échantillonnage d'images vidéo (Media Foundation
-// via Windows.Media.Editing) et capture de l'hôte animé (PrintWindow).
+// C# 12 / WallpaperMedia.cs / Windows. Utilitaires ponctuels pour le thème Automatique : échantillonnage d'images vidéo (Media
+// Foundation via Windows.Media.Editing) et capture de l'hôte animé (PrintWindow).
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -28,8 +28,8 @@ internal static class WallpaperMedia
     {
         Directory.CreateDirectory(folder);
         var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(video);
-        // Un clip et une composition indépendants par image pour que les miniatures se décodent en parallèle (une composition unique les
-        // sérialiserait).
+        // Un clip et une composition indépendants par image pour que les miniatures se décodent en parallèle (une composition unique
+        // les sérialiserait).
         var results = await Task.WhenAll(Enumerable.Range(0, count).Select(i => Task.Run(async () =>
         {
             try
@@ -61,8 +61,8 @@ internal static class WallpaperMedia
     // Capture ponctuelle de l'hôte du fond animé (enfant de Progman / WorkerW) avec PrintWindow(PW_RENDERFULLCONTENT). Renvoie le chemin
     // d'un PNG temporaire, ou null quand l'hôte est absent ou l'image noire
     // (les hôtes composités par le GPU impriment souvent en noir) : le frontend retombe alors sur le fichier de fond d'écran Windows.
-    // Windows.Graphics.Capture n'a pas été utilisé : il exige un périphérique D3D11 et une interop GraphicsCaptureItem pour peu de gain
-    // ici.
+    // Windows.Graphics.Capture n'a pas été utilisé : il exige un périphérique D3D11 et une interop GraphicsCaptureItem pour peu de
+    // gain ici.
     internal static string? CaptureHost(Native.Rect? monitor = null)
     {
         IntPtr host = WindowsWallpaper.FindHost(monitor);
@@ -71,8 +71,8 @@ internal static class WallpaperMedia
         int w = r.Right - r.Left, h = r.Bottom - r.Top;
         if (w < 16 || h < 16)
             return null;
-        // PrintWindow et chaque bitmap/HDC vivent dans une seule tâche qui les libère elle-même : en cas de dépassement de délai on renvoie
-        // null et on ne libère jamais ce qu'un PrintWindow figé peut encore écrire.
+        // PrintWindow et chaque bitmap/HDC vivent dans une seule tâche qui les libère elle-même : en cas de dépassement de délai on
+        // renvoie null et on ne libère jamais ce qu'un PrintWindow figé peut encore écrire.
         var work = Task.Run(() =>
         {
             using var full = new Bitmap(w, h, PixelFormat.Format32bppRgb);
@@ -114,7 +114,7 @@ internal static class WallpaperMedia
         {
             return work.Wait(3000) ? work.Result : null;
         }
-        catch { return null; }   // a hung host must not stall the command
+        catch { return null; }   // un hôte figé ne doit pas bloquer la commande
     }
     static bool IsBlack(Bitmap b)
     {

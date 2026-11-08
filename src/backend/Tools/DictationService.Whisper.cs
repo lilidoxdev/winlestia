@@ -22,6 +22,9 @@ namespace PanneauxGlass;
 
 internal sealed partial class DictationService
 {
+    // Pas de sondage de la touche de dictée ; 500 tours bornent l'attente à 10 s pour ne jamais bloquer l'injection.
+    const int HeldPollMs = 20;
+
     // --- transcription (thread de fond) -----------------------------------------------------------
     async Task Transcribe(float[] source, int rate)
     {
@@ -65,7 +68,7 @@ internal sealed partial class DictationService
             }
             // Ne jamais injecter tant que la touche de dictée est enfoncée (Alt fausserait la saisie).
             for (int i = 0; i < 500 && held; i++)
-                await Task.Delay(20).ConfigureAwait(false);
+                await Task.Delay(HeldPollMs).ConfigureAwait(false);
             if (held)
                 throw new InvalidOperationException("Touche maintenue");
             if (!TextInjector.Type(clean))
@@ -202,7 +205,8 @@ internal sealed partial class DictationService
                 {
                     // Fichier corrompu : on le supprime pour forcer un retéléchargement au prochain appui.
                     Safe.Try(() => File.Delete(path));
-                    throw new InvalidOperationException("Modèle de dictée illisible, il sera retéléchargé au prochain essai (" + ex.Message
+                    throw new InvalidOperationException("Modèle de dictée illisible, il sera retéléchargé au prochain essai ("
+                        + ex.Message
                         + ").");
                 }
                 // Préchauffage (compilation des shaders Vulkan à froid, ~20 s) sur ~1 s de silence, pendant que l'utilisateur parle.

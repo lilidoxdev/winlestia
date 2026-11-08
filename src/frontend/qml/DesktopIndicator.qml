@@ -1,4 +1,5 @@
-// One pill per Windows virtual desktop (registry-driven, see VirtualDesktops.cs). Active pill = palette primary; click switches, wheel = next/previous, right-click = close menu.
+// Une pastille par bureau virtuel Windows (pilotée par le registre, voir VirtualDesktops.cs).
+// Pastille active = primaire de la palette ; clic = bascule, molette = suivant/précédent, clic droit = menu de fermeture.
 import QtQuick
 import qs.components
 import qs.components.controls
@@ -19,7 +20,7 @@ Item {
     implicitWidth: visible ? pills.width + 8 + addButton.implicitWidth + 4 : 0
     implicitHeight: 32
     Accessible.name: qsTr("Bureaux virtuels")
-    // "+" = Win+Ctrl+D on a user gesture (VirtualDesktops.CreateNew); Windows creates and switches to the new desktop.
+    // « + » = Win+Ctrl+D sur geste utilisateur (VirtualDesktops.CreateNew) ; Windows crée le bureau et y bascule.
     IconButton {
         id: addButton
         objectName: "dockDesktopAdd"

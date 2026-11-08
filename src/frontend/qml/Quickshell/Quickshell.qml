@@ -5,7 +5,7 @@ QtObject {
     function iconPath(name) {
         return Bridge.iconPath(name);
     }
-    // Le serveur n'a jamais traité « launchKnown » : l'appel reste accepté mais ne fait rien.
+    // Appel accepté mais volontairement sans effet (Wrapper.qml l'appelle encore).
     function execDetached(args) {
     }
 }

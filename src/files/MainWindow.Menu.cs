@@ -1,8 +1,6 @@
-// Menu contextuel adapté à ce qui est sous le pointeur (fond / fichier / dossier / plusieurs éléments / lecteur), raccourcis affichés à
-// droite.
-// « Afficher plus d'options » (et Maj+F10, Maj+clic droit) ouvre le menu natif du shell (ShowShellMenu) avec toutes les extensions du
-// shell.
-// Aussi : Propriétés (Alt+Entrée) et « Ouvrir avec... ».
+// Menu contextuel adapté à ce qui est sous le pointeur (fond / fichier / dossier / plusieurs éléments / lecteur), raccourcis affichés
+// à droite. « Afficher plus d'options » (et Maj+F10, Maj+clic droit) ouvre le menu natif du shell (ShowShellMenu) avec toutes les
+// extensions du shell. Aussi : Propriétés (Alt+Entrée) et « Ouvrir avec... ».
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -81,7 +79,8 @@ public sealed partial class MainWindow
                     new(CxSortBase + 2, "Type", s.Column == SortColumn.Type), new(CxSortBase + 3, "Taille", s.Column == SortColumn.Size),
                         null,
                     new(CxSortBase + 4, "Croissant", s.Ascending), new(CxSortBase + 5, "Décroissant", !s.Ascending), null,
-                    new(CxSortBase + 6, "Dossiers en premier", s.FoldersFirst), null, new(CxSortBase + 7, "Rétablir le tri par défaut") }));
+                    new(CxSortBase + 6, "Dossiers en premier", s.FoldersFirst), null, new(CxSortBase + 7, "Rétablir le tri par défaut")
+                        }));
                 items.Add(new(0, "Affichage", false, false, new NativeMenu.Item?[] {
                     new(CxViewBase + 0, "Liste\tCtrl+Maj+5", view == ViewMode.List), new(CxViewBase + 1, "Détails\tCtrl+Maj+6",
                         view == ViewMode.Details),
@@ -102,7 +101,7 @@ public sealed partial class MainWindow
                 if (kind == CtxKind.Folder)
                     items.Add(new(CxNewTab, "Ouvrir dans un nouvel onglet\tCtrl+Entrée"));
                 if (kind == CtxKind.File)
-                    items.Add(new(CxOpenWith, "Ouvrir avec…"));   // never for several items
+                    items.Add(new(CxOpenWith, "Ouvrir avec…"));   // jamais pour plusieurs éléments
                 items.Add(null);
                 items.Add(new(CxCut, "Couper\tCtrl+X"));
                 items.Add(new(CxCopy, "Copier\tCtrl+C"));
@@ -287,7 +286,8 @@ public sealed partial class MainWindow
 
     // ---- propriétés / ouvrir avec ----------------------------------------------------------------------------------------
 
-    // Rien de sélectionné = le dossier courant ; un chemin = sa feuille de propriétés ; plusieurs = la feuille multi-fichiers du shell.
+    // Rien de sélectionné = le dossier courant ; un chemin = sa feuille de propriétés ; plusieurs = la feuille multi-fichiers du
+    // shell.
     internal void ShowProperties(IReadOnlyList<string>? paths = null)
     {
         paths ??= Selection().Select(i => i.FullPath).ToList();

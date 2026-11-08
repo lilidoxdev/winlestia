@@ -136,7 +136,8 @@ Window {
         onPressed: mouse => {
             origin = Qt.point(mouse.x, mouse.y);
             if (root.selected) {
-                if (mouse.x < root.selection.x || mouse.y < root.selection.y || mouse.x > root.selection.x + root.selection.width || mouse.y > root.selection.y + root.selection.height)
+                if (mouse.x < root.selection.x || mouse.y < root.selection.y || mouse.x > root.selection.x + root.selection.width
+                    || mouse.y > root.selection.y + root.selection.height)
                     return;
                 root.drawing = true;
                 root.strokes = root.strokes.concat([
@@ -160,7 +161,8 @@ Window {
             if (!pressed)
                 return;
             if (!root.selected)
-                root.selection = Qt.rect(Math.min(origin.x, mouse.x), Math.min(origin.y, mouse.y), Math.abs(mouse.x - origin.x), Math.abs(mouse.y - origin.y));
+                root.selection = Qt.rect(Math.min(origin.x, mouse.x), Math.min(origin.y, mouse.y), Math.abs(mouse.x - origin.x),
+                    Math.abs(mouse.y - origin.y));
             else if (root.drawing) {
                 let points = root.strokes[root.strokes.length - 1].points;
                 if (points.length < 12000)
@@ -193,7 +195,8 @@ Window {
             anchors.centerIn: parent
             spacing: 8
             StyledText {
-                text: root.selected ? Math.round(root.selection.width) + " × " + Math.round(root.selection.height) : qsTr("Glisse pour sélectionner")
+                text: root.selected ? Math.round(root.selection.width) + " × " + Math.round(root.selection.height)
+                    : qsTr("Glisse pour sélectionner")
                 font.pointSize: Appearance.font.size.small
                 Layout.leftMargin: 8
                 Layout.rightMargin: 8

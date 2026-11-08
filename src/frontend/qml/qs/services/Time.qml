@@ -3,7 +3,7 @@ import QtQuick
 
 QtObject {
     property date date: new Date()
-    // Consumers only show hh:mm / dd MMM: wake once a minute, on the minute boundary, instead of every second.
+    // Les consommateurs n'affichent que hh:mm / dd MMM : on se réveille une fois par minute, à la minute pile, au lieu de chaque seconde.
     function untilNextMinute() {
         var n = new Date();
         return 60050 - (n.getSeconds() * 1000 + n.getMilliseconds());

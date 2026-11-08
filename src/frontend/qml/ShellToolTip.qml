@@ -13,7 +13,8 @@ C.ToolTip {
     topPadding: Appearance.padding.smaller
     bottomPadding: Appearance.padding.smaller
     background: Rectangle {
-        color: Qt.alpha(Colours.palette.m3surfaceContainerHighest, .96)   // palette values are glass layers (alpha <= .06) meant for DWM-blurred panels; this window has no blur
+        color: Qt.alpha(Colours.palette.m3surfaceContainerHighest,
+            .96)   // palette values are glass layers (alpha <= .06) meant for DWM-blurred panels; this window has no blur
         radius: Appearance.rounding.small
         antialiasing: true
     }

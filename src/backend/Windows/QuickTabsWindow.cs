@@ -20,7 +20,8 @@ internal sealed class QuickTabsWindow : GlassWindow
         ("glass:note","Note rapide","\uE70B"),("glass:focus","Minuteur","\uE917"),("glass:settings","Personnalisation","\uE713"),
         ("glass:controls","Commandes Windows","\uE7F4"),("glass:pc","État du PC","\uE950"),("glass:palette","Commande rapide","\uE721"),
         ("glass:tools","Atelier","\uE74C"),("glass:capture","Capture annotée","\uE722"),("glass:text","Texte d’une image","\uE8A5"),
-        ("glass:memo","Papier pense-bête","\uE70B"),("glass:clipboard","Presse-papiers","\uE8C8"),("glass:audio","Son et micro","\uE7F5"),(
+        ("glass:memo","Papier pense-bête","\uE70B"),("glass:clipboard","Presse-papiers","\uE8C8"),("glass:audio","Son et micro",
+            "\uE7F5"),(
             "glass:workspaces","Profils d’espace","\uE7C3"),
         ("glass:files","Gros fichiers","\uE8B7"),("glass:help","Aide","\uE897"),("glass:pin","Épingler au premier plan","\uE840")
     };
@@ -82,7 +83,8 @@ internal sealed class QuickTabsWindow : GlassWindow
             var tab = tabs[index];
             int position = index;
             var card = new Border { CornerRadius = new CornerRadius(18), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 8),
-                Background = UI.T(M3Role.OnSurface, 0x0C), BorderBrush = UI.T(M3Role.OnSurface, 0x20), BorderThickness = new Thickness(1) };
+                Background = UI.T(M3Role.OnSurface, 0x0C), BorderBrush = UI.T(M3Role.OnSurface, 0x20), BorderThickness = new Thickness(1)
+                    };
             var row = new Grid();
             row.ColumnDefinitions.Add(new()
             {
@@ -154,7 +156,8 @@ internal sealed class QuickTabsWindow : GlassWindow
         add.Margin = new Thickness(0, 6, 0, 22);
         list.Children.Add(add);
         list.Children.Add(UI.Text("OUVRIR LA COMMANDE RAPIDE", 10, UI.Label, true));
-        var note = UI.Text("Un raccourci global, actif même launcher fermé, depuis n’importe quelle application. Ctrl F2 par défaut.", 12,
+        var note = UI.Text("Un raccourci global, actif même launcher fermé, depuis n’importe quelle application. Ctrl F2 par défaut.",
+            12,
             UI.Dim);
         note.Margin = new Thickness(0, 8, 0, 12);
         note.TextWrapping = TextWrapping.Wrap;

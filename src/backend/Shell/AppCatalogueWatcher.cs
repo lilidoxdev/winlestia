@@ -26,8 +26,9 @@ internal sealed class AppCatalogueWatcher : IDisposable
     }
     internal void Start()
     {
-        // Low-frequency check (packaged apps leave no Start menu event, vanished targets leave none either): one light pass per minute,
-        // nothing between.
+        // Vérification à basse fréquence (les applications empaquetées ne laissent aucun événement du menu Démarrer, les cibles
+        // disparues non plus) : un passage léger par minute,
+        // rien entre-temps.
         if (tick != null)
             poll = new System.Threading.Timer(_ => { if (!disposed) dispatcher.BeginInvoke((Action)(() => { if (!disposed) tick(); })); },
                 null, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(60));
@@ -55,7 +56,8 @@ internal sealed class AppCatalogueWatcher : IDisposable
             catch (Exception ex) { Store.Log("Veille du menu Démarrer : " + ex.Message); }
         }
     }
-    // Dépassement de tampon ou dossier perdu : un inventaire complet couvre ce qui a été manqué, puis le watcher est réarmé si possible.
+    // Dépassement de tampon ou dossier perdu : un inventaire complet couvre ce qui a été manqué, puis le watcher est réarmé si
+    // possible.
     void Failed(FileSystemWatcher watcher, Exception? error)
     {
         Store.Log("Veille du menu Démarrer : " + (error?.Message ?? "erreur"));
@@ -76,8 +78,8 @@ internal sealed class AppCatalogueWatcher : IDisposable
         }
         catch (Exception ex) { Store.Log("Veille du menu Démarrer arrêtée : " + ex.Message); }
     }
-    // Seul un raccourci réellement ajouté ou retiré déclenche un inventaire : les noms filtrés, les changements de contenu de dossier et
-    // les modifications de simples fichiers sont ignorés.
+    // Seul un raccourci réellement ajouté ou retiré déclenche un inventaire : les noms filtrés, les changements de contenu de dossier
+    // et les modifications de simples fichiers sont ignorés.
     void Event(string path, bool present, bool changed)
     {
         if (!CatalogueWatchRules.IsShortcutEvent(path))

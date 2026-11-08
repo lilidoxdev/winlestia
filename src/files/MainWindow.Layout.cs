@@ -58,7 +58,7 @@ public sealed partial class MainWindow
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        sortButton = null!;                         // the sort command lives in the command bar (MainWindow.Cmd.cs)
+        sortButton = null!;                         // la commande de tri vit dans la barre de commandes (MainWindow.Cmd.cs)
         var right = new StackPanel { Orientation = Orientation.Horizontal };
         right.Children.Add(BuildFilter());
         Grid.SetColumn(right, 2);
@@ -139,7 +139,7 @@ public sealed partial class MainWindow
                 BeginEdit();
                 e.Handled = true;
             }
-        };   // double click on the free area right of the segments (buttons mark their own clicks handled)
+        };   // double clic sur la zone libre à droite des segments (les boutons marquent leurs propres clics comme traités)
         Grid.SetColumn(pill, 1);
         grid.Children.Add(nav);
         grid.Children.Add(pill);

@@ -123,7 +123,8 @@ internal sealed class FocusSetupWindow : GlassWindow
         }
         int seconds = Seconds();
         var end = DateTime.Now.AddSeconds(seconds);
-        preview.Text = "Se termine à " + end.ToString("HH:mm:ss", CultureInfo.InvariantCulture) + " · " + FocusTimer.DurationText(seconds);
+        preview.Text = "Se termine à " + end.ToString("HH:mm:ss", CultureInfo.InvariantCulture) + " · "
+            + FocusTimer.DurationText(seconds);
         preview.Foreground = UI.Dim;
         status.Text = unit.SelectedIndex == 1 && amount > 24 ? "Vingt-quatre heures au maximum." : unit.SelectedIndex == 0 && amount > 1440
             ? "Vingt-quatre heures au maximum." : "";

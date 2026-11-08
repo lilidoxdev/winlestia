@@ -1,7 +1,6 @@
-// Côté serveur du tube d'instance unique (protocole dans backend/FilesPipe.cs). Une seule boucle d'acceptation en attente, sans minuteur ni
-// scrutation :
-// un serveur au repos est un seul ConnectNamedPipe en attente (overlapped). Un message corrompu n'atteint jamais l'interface et ne met
-// jamais fin au processus.
+// Côté serveur du tube d'instance unique (protocole dans backend/FilesPipe.cs). Une seule boucle d'acceptation en attente, sans minuteur
+// ni scrutation : un serveur au repos est un seul ConnectNamedPipe en attente (overlapped). Un message corrompu n'atteint jamais
+// l'interface et ne met jamais fin au processus.
 using System;
 using System.IO;
 using System.IO.Pipes;
@@ -15,6 +14,9 @@ namespace WinlestiaFiles;
 
 internal sealed class SingleInstance : IDisposable
 {
+    // Base du recul exponentiel (50, 100, 200, 400 ms) quand le tube est encore détenu par l'instance qui se ferme.
+    const int CreateRetryBaseMs = 50;
+
     // Reprise croissante (100 ms par échec) pour ne pas saturer le canal quand le résident est occupé.
     const int RetryStepMs = 100;
 
@@ -38,8 +40,8 @@ internal sealed class SingleInstance : IDisposable
         new(FilesPipe.Name, PipeDirection.InOut, MaxInstances, PipeTransmissionMode.Byte,
             PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly | (first ? PipeOptions.FirstPipeInstance : PipeOptions.None));
 
-    // "All pipe instances are busy" est transitoire (un client ou une instance mourante tient encore un emplacement) : courte temporisation
-    // croissante, 50 -> 800 ms.
+    // "All pipe instances are busy" est transitoire (un client ou une instance mourante tient encore un emplacement) : courte
+    // temporisation croissante, 50 -> 800 ms.
     static NamedPipeServerStream CreateRetry(CancellationToken ct)
     {
         for (int attempt = 0; ; attempt++)
@@ -48,11 +50,12 @@ internal sealed class SingleInstance : IDisposable
             {
                 return Create(false);
             }
-            catch (IOException) when (attempt < 4 && !ct.IsCancellationRequested) { Thread.Sleep(50 << attempt); }
+            catch (IOException) when (attempt < 4 && !ct.IsCancellationRequested) { Thread.Sleep(CreateRetryBaseMs << attempt); }
         }
     }
 
-    // Null quand une autre instance possède déjà le tube (ou qu'il ne peut pas être créé) : l'appelant tourne alors simplement en autonome.
+    // Null quand une autre instance possède déjà le tube (ou qu'il ne peut pas être créé) : l'appelant tourne alors simplement en
+    // autonome.
     internal static SingleInstance? TryStart(Action<Request> onRequest)
     {
         try
@@ -74,12 +77,12 @@ internal sealed class SingleInstance : IDisposable
             bool handed = false;
             try
             {
-                // saturated: the listener stays up, clients just wait their own short budget
+                // saturé : l'écouteur reste actif, les clients attendent simplement leur propre court délai
                 await slots.WaitAsync(cts.Token).ConfigureAwait(false);
                 try
                 {
                     await stream.WaitForConnectionAsync(cts.Token).ConfigureAwait(false);
-                    pending = CreateRetry(cts.Token);                       // ready for the next client before this one is served
+                    pending = CreateRetry(cts.Token);                       // prêt pour le client suivant avant de servir celui-ci
                     failures = 0;
                     handed = true;
                     _ = Handle(stream);
@@ -98,7 +101,7 @@ internal sealed class SingleInstance : IDisposable
                 {
                     logged = true;
                     App.CrashLog(ex);
-                }           // once, never one line per retry
+                }           // une fois, jamais une ligne par tentative
                 if (++failures >= 8)
                     return;
                 try
@@ -132,7 +135,7 @@ internal sealed class SingleInstance : IDisposable
                         break;
                 }
                 if (n == 0)
-                    return;                               // connected and left (probe): nothing to parse, nothing to log
+                    return;                               // connecté puis parti (sonde) : rien à analyser, rien à journaliser
                 var request = Parse(Encoding.UTF8.GetString(buffer, 0, n));
                 if (request == null)
                     return;
@@ -141,7 +144,7 @@ internal sealed class SingleInstance : IDisposable
                 stream.WaitForPipeDrain();
             }
             catch (IOException)
-            {                           // client gave up (its own 150 ms budget): nothing to report
+            {                           // le client a abandonné (son propre budget de 150 ms) : rien à signaler
             }
             catch (OperationCanceledException)
             {

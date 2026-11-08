@@ -1,6 +1,7 @@
 // Côté client du canal à instance unique de Winlestia Fichiers, partagé (lié) par le backend et Winlestia.Files.
 // Aucun type WPF ni System.Text.Json ici : le code s'exécute dans Program.Main avant que quoi que ce soit de lourd soit chargé.
-// Protocole : le serveur écrit son PID (4 octets) à la connexion ; le client répond par une ligne JSON {"args":[..],"cwd":"..","cmd":".."}
+// Protocole : le serveur écrit son PID (4 octets) à la connexion ; le client répond par une ligne JSON
+// {"args":[..],"cwd":"..","cmd":".."}
 // ; le serveur acquitte par '1'.
 using System;
 using System.Diagnostics;
@@ -83,7 +84,7 @@ internal static class FilesPipe
         {
             string name = Name;
             if (!PipeExists(name))
-                return false;     // no server: Connect would otherwise spin for the whole timeout
+                return false;     // aucun serveur : Connect tournerait sinon en boucle pendant tout le délai
             long start = Stopwatch.GetTimestamp();
             using var client = new NamedPipeClientStream(".", name, PipeDirection.InOut,
                 PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);

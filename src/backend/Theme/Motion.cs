@@ -71,7 +71,8 @@ internal static class Motion
     internal static TimeSpan Duration(MotionKind kind) => Span(kind switch { MotionKind.StandardSmall or MotionKind.FastEffects => 120,
         MotionKind.Standard => 190, MotionKind.StandardLarge or MotionKind.DefaultEffects => 250,
         MotionKind.StandardExtraLarge or MotionKind.SlowEffects => 330, MotionKind.EmphasizedSmall or MotionKind.FastSpatial => 210,
-        MotionKind.Emphasized or MotionKind.DefaultSpatial => 290, MotionKind.EmphasizedLarge or MotionKind.SlowSpatial => 370, _ => 420 });
+        MotionKind.Emphasized or MotionKind.DefaultSpatial => 290, MotionKind.EmphasizedLarge or MotionKind.SlowSpatial => 370, _ => 420
+            });
     internal static void Reveal(FrameworkElement element, int index = 0)
     {
         var state = states.GetOrCreateValue(element);
@@ -154,7 +155,8 @@ internal static class Motion
         if (!On)
             return;
         element.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(low, high, TimeSpan.FromSeconds(seconds)) {
-            AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase {
+                EasingMode = EasingMode.EaseInOut }
             });
     }
     internal static void Stop(UIElement element)

@@ -1,5 +1,5 @@
-// C# 12, fichier WebFixture.cs, cible Windows 11 / .NET 8, contrôles isolés en boucle locale pour la découverte des favicons et le repli
-// hors ligne
+// C# 12, fichier WebFixture.cs, cible Windows 11 / .NET 8, contrôles isolés en boucle locale pour la découverte des favicons et le
+// repli hors ligne
 using System;
 using System.IO;
 using System.Net;

@@ -50,8 +50,8 @@ internal static class FileQuery
 
     // Le terme va dans CONTAINS(col,'"terme*"'). LIKE avec un % initial parcourt toute la portée (4 s sans résultat), CONTAINS répond
     // depuis l'index en quelques dizaines de ms,
-    // au prix de ne trouver que les débuts de mots. Les caractères porteurs de sens pour la requête ( " * % _ [ ] ) deviennent des blancs ;
-    // une apostrophe est doublée ensuite.
+    // au prix de ne trouver que les débuts de mots. Les caractères porteurs de sens pour la requête ( " * % _ [ ] ) deviennent des
+    // blancs ; une apostrophe est doublée ensuite.
     internal static string NeutraliseContains(string term)
     {
         var sb = new StringBuilder(term.Length);
@@ -66,7 +66,8 @@ internal static class FileQuery
         ".exe", ".bat", ".cmd", ".com", ".ps1", ".psm1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".msi", ".msp", ".scr", ".lnk",
             ".url", ".hta", ".pif", ".reg", ".cpl", ".jar", ".appref-ms" };
 
-    // Vrai quand l'ouverture du fichier pourrait exécuter du code : un tel résultat n'est que révélé dans l'Explorateur, jamais lancé.
+    // Vrai quand l'ouverture du fichier pourrait exécuter du code : un tel résultat n'est que révélé dans l'Explorateur, jamais
+    // lancé.
     internal static bool IsExecutable(string path) => ExecutableExtensions.Contains(Path.GetExtension(path ?? ""));
 
     // La portée est uniquement le dossier du profil de l'utilisateur. Faux pour un terme vide ou mal formé, ou un chemin de profil
@@ -96,9 +97,9 @@ internal sealed class FileSearch : IDisposable
 
     static string Profile => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-    // Lance une requête sur un thread de travail. Une génération plus récente annule la plus ancienne ; une génération plus ancienne est
-    // ignorée.
-    // `done` n'est appelé depuis le worker que si cette requête est toujours la plus récente et que son résultat a été stocké.
+    // Lance une requête sur un thread de travail. Une génération plus récente annule la plus ancienne ; une génération plus ancienne
+    // est ignorée. `done` n'est appelé depuis le worker que si cette requête est toujours la plus récente et que son résultat a été
+    // stocké.
     internal void Start(string? term, long generation, Action done)
     {
         var cts = new CancellationTokenSource();
@@ -134,8 +135,8 @@ internal sealed class FileSearch : IDisposable
             }
             finally
             {
-                // Libérée ici seulement, une fois la requête terminée ; `current` ne pointe jamais vers une source libérée, donc Cancel()
-                // ne peut pas la toucher.
+                // Libérée ici seulement, une fois la requête terminée ; `current` ne pointe jamais vers une source libérée, donc
+                // Cancel() ne peut pas la toucher.
                 lock (gate)
                 {
                     if (ReferenceEquals(current, cts))

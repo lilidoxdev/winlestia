@@ -1,6 +1,6 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=themes : pour chaque thème Winlestia (Porcelaine = "shell", Nuit = "nuit", Personnalisé = "custom", Automatique
-// = AutoTheme + palette-shell.json)
+// WINLESTIA_FILES_SELFTEST=themes : pour chaque thème Winlestia (Porcelaine = "shell", Nuit = "nuit", Personnalisé = "custom",
+// Automatique = AutoTheme + palette-shell.json)
 // applique la palette par le vrai chemin PaletteLoader.Refresh, enregistre <thème>.png et mesure le contraste WCAG des paires de rôles
 // réellement utilisées par l'interface.
 // Les fichiers de palette sont écrits sous WINLESTIA_FILES_SHOTDIR\palettes (jamais dans le vrai profil). Puis scale-100/125/150/200.png
@@ -56,8 +56,8 @@ public sealed partial class MainWindow
         string pal = Path.Combine(dir, "palettes");
         Directory.CreateDirectory(pal);
 
-        // jeu d'essai : dossiers + fichiers de tailles diverses, une épingle d'accès rapide cassée, le jeu d'essai lui-même épinglé (entrée
-        // de barre latérale sélectionnée)
+        // jeu d'essai : dossiers + fichiers de tailles diverses, une épingle d'accès rapide cassée, le jeu d'essai lui-même épinglé
+        // (entrée de barre latérale sélectionnée)
         Directory.CreateDirectory(Path.Combine(F, "Documents"));
         Directory.CreateDirectory(Path.Combine(F, "Images"));
         File.WriteAllBytes(Path.Combine(F, "Rapport annuel.docx"), new byte[183_000]);
@@ -66,7 +66,7 @@ public sealed partial class MainWindow
         QuickAccess.Pin(Path.Combine(F, "Dossier disparu"));
         Active.Go(F);
         await WaitLoaded();
-        await Task.Delay(PauseSondeMs);       // the pin probe marks the missing one
+        await Task.Delay(PauseSondeMs);       // la sonde d'épingle marque celle qui manque
         list.Select(Active.Items.Take(2).Concat(Active.Items.Where(i => !i.IsDir).Take(2)).Distinct().ToList());
         list.Focus();
         await Task.Delay(PauseAnimationLongueMs);
@@ -167,7 +167,7 @@ public sealed partial class MainWindow
         var root = (FrameworkElement)Content;
         double w = root.ActualWidth, h = root.ActualHeight;
         var m = root.Margin;
-        // the window background around the root grid is part of the picture
+        // l'arrière-plan de la fenêtre autour de la grille racine fait partie de l'image
         double fw = w + m.Left + m.Right, fh = h + m.Top + m.Bottom;
         int pw = Math.Max(1, (int)Math.Round(fw * s)), ph = Math.Max(1, (int)Math.Round(fh * s));
         var dv = new DrawingVisual();

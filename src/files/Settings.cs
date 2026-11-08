@@ -1,8 +1,8 @@
 // Préférences persistantes de Files : <dossier de données>\settings.json, dossier de données = %LOCALAPPDATA%\Winlestia\Files sauf si
 // WINLESTIA_FILES_DATA_DIR le redirige (tests).
 // Écritures atomiques (.tmp puis remplacement). Un fichier illisible est renommé settings.<horodatage>.bak et les valeurs par défaut
-// s'appliquent ; un fichier verrouillé donne des valeurs par défaut en lecture seule (pas de Save). Save fusionne les clés modifiées dans
-// la copie disque sous un mutex nommé.
+// s'appliquent ; un fichier verrouillé donne des valeurs par défaut en lecture seule (pas de Save). Save fusionne les clés modifiées
+// dans la copie disque sous un mutex nommé.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,6 +60,9 @@ internal sealed class SettingsData
 
 internal static class FilesSettings
 {
+    // Le fichier peut être verrouillé un instant (antivirus, indexeur) : on réessaie après une courte pause.
+    const int WriteRetryMs = 50;
+
     static readonly object gate = new();
     static SettingsData? data;
     static readonly JsonSerializerOptions Options = new() { WriteIndented = true,
@@ -85,12 +88,12 @@ internal static class FilesSettings
             data = null;
     }
 
-    // Vrai quand le fichier n'a pas pu être lu (verrouillé...) : valeurs par défaut en mémoire, et Save() est désactivé pour ne jamais
-    // écraser un fichier valide.
+    // Vrai quand le fichier n'a pas pu être lu (verrouillé...) : valeurs par défaut en mémoire, et Save() est désactivé pour ne
+    // jamais écraser un fichier valide.
     static bool readOnly;
     internal static bool ReadOnly => readOnly;
-    // Valeur sérialisée de chaque clé telle que lue/écrite en dernier par cette instance ; une clé dont la valeur actuelle diffère est
-    // "modifiée" et l'emporte à la fusion.
+    // Valeur sérialisée de chaque clé telle que lue/écrite en dernier par cette instance ; une clé dont la valeur actuelle diffère
+    // est "modifiée" et l'emporte à la fusion.
     static Dictionary<string, string> baseline = new();
     static readonly JsonSerializerOptions ReadOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -141,7 +144,7 @@ internal static class FilesSettings
             {
                 if (attempt < 2)
                 {
-                    Thread.Sleep(50);
+                    Thread.Sleep(WriteRetryMs);
                     continue;
                 }
                 Perf.Log("settings.json locked (" + ex.GetType().Name + "), read-only session");
@@ -241,7 +244,7 @@ internal static class FilesSettings
         Save();
     }
 
-    // "Rétablir le tri par défaut": drops the key so a later launch starts from the default again.
+    // « Rétablir le tri par défaut » : supprime la clé pour qu'un lancement ultérieur reparte du défaut.
     internal static void ClearSort()
     {
         Data.Sort = null;

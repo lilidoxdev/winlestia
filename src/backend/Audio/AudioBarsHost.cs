@@ -1,7 +1,6 @@
-// C# 12 / AudioBarsHost.cs / Boucle WASAPI du périphérique de sortie par défaut, uniquement tant que le panneau Média du tableau de bord
-// est visible.
-// Le son n'est jamais stocké ni envoyé : les échantillons passent par un anneau de 2048 flottants, le worker en tire 28 niveaux, l'anneau
-// disparaît avec le thread.
+// C# 12 / AudioBarsHost.cs / Boucle WASAPI du périphérique de sortie par défaut, uniquement tant que le panneau Média du tableau de
+// bord est visible. Le son n'est jamais stocké ni envoyé : les échantillons passent par un anneau de 2048 flottants, le worker en tire
+// 28 niveaux, l'anneau disparaît avec le thread.
 // Silence : la boucle ne livre aucun paquet, les barres retombent à zéro, une image au repos est publiée, puis le worker se bloque (ni
 // minuteur ni réveil).
 using System;
@@ -48,10 +47,9 @@ internal sealed class AudioBarsHost : IDisposable
             return new(run != null && !run.Stop.WaitOne(0), frames, seq, idle, withBars ? (int[])published.Clone() : Array.Empty<int>());
     }
 
-    // Appelé depuis le thread UI, ne bloque jamais : un arrêt se contente de lever le drapeau. Un démarrage alors que le worker précédent
-    // finit encore
-    // le confie au nouveau worker, qui l'attend (au plus StopWaitMs) avant d'ouvrir sa propre capture : deux captures ne se chevauchent
-    // jamais.
+    // Appelé depuis le thread UI, ne bloque jamais : un arrêt se contente de lever le drapeau. Un démarrage alors que le worker
+    // précédent finit encore le confie au nouveau worker, qui l'attend (au plus StopWaitMs) avant d'ouvrir sa propre capture : deux
+    // captures ne se chevauchent jamais.
     internal void SetActive(bool on)
     {
         lock (gate)

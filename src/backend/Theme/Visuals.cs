@@ -103,7 +103,8 @@ internal static partial class UI
     }
     internal static string Hex(Color color) => "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
     static string A(byte alpha, string rgb) => "#" + alpha.ToString("X2") + rgb;
-    static int Radius(int basis) => Theme.Current.Unified ? M3.Round(basis) : Math.Clamp((int)Math.Round(basis * Theme.Current.RadiusScale),
+    static int Radius(int basis) => Theme.Current.Unified ? M3.Round(basis)
+        : Math.Clamp((int)Math.Round(basis * Theme.Current.RadiusScale),
         2, 30);
     internal static void Install()
     {
@@ -260,7 +261,7 @@ internal partial class GlassWindow : Window
         Content = Surface;
         tintLayer.CornerRadius = new CornerRadius(Radius);
         Surface.Children.Add(tintLayer);
-        // Néon lights its own frame: a blurred inner rim, clipped by the window like the tint.
+        // Le néon éclaire son propre cadre : un liseré intérieur flouté, rogné par la fenêtre comme la teinte.
         glowFrame.CornerRadius = new CornerRadius(Radius);
         glowFrame.BorderThickness = new Thickness(2);
         glowFrame.IsHitTestVisible = false;
@@ -337,7 +338,8 @@ internal partial class GlassWindow : Window
         Surface.Clip = new RectangleGeometry(new Rect(0, 0, Math.Max(0, ActualWidth), Math.Max(0, ActualHeight)), radius, radius);
         Native.Round(this, (int)radius);
     }
-    // Tout ce qui est coloré sur le verre est reconstruit depuis le thème actif, donc un changement atteint aussi les anciennes fenêtres.
+    // Tout ce qui est coloré sur le verre est reconstruit depuis le thème actif, donc un changement atteint aussi les anciennes
+    // fenêtres.
     void BuildThemeLayers()
     {
         var theme = Theme.Current;

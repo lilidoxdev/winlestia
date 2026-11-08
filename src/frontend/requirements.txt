@@ -1,5 +1,5 @@
 # Dépendances Python du frontend, versions exactes (identiques au runtime embarqué de build/payload).
-# Pas de --hash : pip-compile indisponible hors ligne.
+# Source lisible ; le verrou avec empreintes SHA256 est requirements.lock.txt (utilisé par installer/build.ps1).
 PySide6==6.10.3
 PySide6-Essentials==6.10.3
 PySide6-Addons==6.10.3

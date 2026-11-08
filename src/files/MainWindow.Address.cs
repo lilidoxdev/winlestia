@@ -78,8 +78,8 @@ public sealed partial class MainWindow
         crumbScroll.Visibility = Visibility.Visible;
     }
 
-    // Les variables d'environnement sont développées, le disque est sondé hors du thread UI. Un chemin inexistant laisse la zone en mode
-    // édition avec un message clair.
+    // Les variables d'environnement sont développées, le disque est sondé hors du thread UI. Un chemin inexistant laisse la zone en
+    // mode édition avec un message clair.
     enum AddressKind
     {
         Folder,

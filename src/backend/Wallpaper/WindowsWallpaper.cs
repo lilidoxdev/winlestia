@@ -1,4 +1,5 @@
-// C# 12 / WindowsWallpaper.cs / Windows 8+ IDesktopWallpaper, read-only background discovery. Event-driven, no polling.
+// C# 12 / WindowsWallpaper.cs / Windows 8+ IDesktopWallpaper, découverte du fond en lecture seule. Piloté par événements, sans
+// sondage.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,8 +22,8 @@ internal sealed class WindowsWallpaper : IDisposable
     internal int Revision => Volatile.Read(ref revision);
     internal WindowsWallpaper()
     {
-        // Revision n'avance que si les moniteurs diffèrent vraiment, ou si un changement d'hôte animé / de config de l'application de fond
-        // a été vu : un UserPreferenceChanged parasite (par exemple après explorerPalette) ne doit pas relancer une capture.
+        // Revision n'avance que si les moniteurs diffèrent vraiment, ou si un changement d'hôte animé / de config de l'application de
+        // fond a été vu : un UserPreferenceChanged parasite (par exemple après explorerPalette) ne doit pas relancer une capture.
         debounce = new System.Threading.Timer(_ => { bool changed = Read(); if (forced) { forced = false; changed = true;
             } if (changed) Interlocked.Increment(ref revision); }, null, Timeout.Infinite, Timeout.Infinite);
         Notify(0);
@@ -60,8 +61,8 @@ internal sealed class WindowsWallpaper : IDisposable
                 // Minuterie déjà libérée : arrêt en cours.
             }
     }
-    // WM_SETTINGCHANGE / SPI_SETDESKWALLPAPER arrivent par la fenêtre de messages cachée de SystemEvents. Le déverrouillage, la reprise et
-    // le changement d'affichage sont les seules revérifications de sécurité.
+    // WM_SETTINGCHANGE / SPI_SETDESKWALLPAPER arrivent par la fenêtre de messages cachée de SystemEvents. Le déverrouillage, la reprise
+    // et le changement d'affichage sont les seules revérifications de sécurité.
     void Preference(object? s, Microsoft.Win32.UserPreferenceChangedEventArgs e)
     {
         if (e.Category is Microsoft.Win32.UserPreferenceCategory.Desktop or Microsoft.Win32.UserPreferenceCategory.General)
@@ -191,8 +192,8 @@ internal sealed class WindowsWallpaper : IDisposable
         return libs.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    // Démarrage/arrêt de l'hôte animé sans sondage : événements de création/destruction/changement de parent de fenêtre filtrés sur les
-    // enfants de Progman / WorkerW (24H2 : enfant de Progman ; versions plus anciennes : frère de WorkerW).
+    // Démarrage/arrêt de l'hôte animé sans sondage : événements de création/destruction/changement de parent de fenêtre filtrés
+    // sur les enfants de Progman / WorkerW (24H2 : enfant de Progman ; versions plus anciennes : frère de WorkerW).
     void StartHostHook()
     {
         using var ready = new ManualResetEventSlim(false);
@@ -234,7 +235,7 @@ internal sealed class WindowsWallpaper : IDisposable
                 Notify(500, true);
             return;
         }
-        // cheap first: nearly every window has a parent that is neither Progman nor WorkerW
+        // le moins cher d'abord : presque toute fenêtre a un parent qui n'est ni Progman ni WorkerW
         IntPtr parent = WallpaperNative.GetParent(hwnd);
         if (parent == IntPtr.Zero)
         {
