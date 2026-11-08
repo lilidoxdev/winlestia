@@ -68,6 +68,8 @@ public class FullscreenWatcherIntegrationTests
             var wa = screen.WorkingArea;
             var maxed = new Popup { StartPosition = FormStartPosition.Manual, Bounds = Rectangle.Inflate(wa, 8, 8) };
             maxed.Show();
+            // with an auto-hidden taskbar the work area is the whole monitor: only a really zoomed window is not fullscreen
+            maxed.WindowState = FormWindowState.Maximized;
             Focus(maxed);
             Assert.False(Wait(() => FullscreenWatcher.Current.Length > 0, 600),
                 "a maximized captionless window must not be counted, got [" + Current() + "]");

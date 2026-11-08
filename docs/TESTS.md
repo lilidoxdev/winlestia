@@ -56,3 +56,5 @@ dotnet test tests/Winlestia.Tests --filter "Category=Desktop"
 ```
 
 Ces tests (audio, explorateur, icones de dossiers, tiling, bureaux virtuels, interop native, plein ecran) exigent une session de bureau reelle : fenetres visibles, shell Explorer, peripherique audio, plusieurs bureaux virtuels. Les runners GitHub Actions n'ont pas de session interactive, donc la CI les exclut (`Category!=Desktop`) et ne peut pas les remplacer. Fermer le shell Winlestia avant de lancer, puis consigner le resultat dans la PR de release.
+
+Dernier passage : 2026-11-08, Windows 11 26200, shell Winlestia lance, barre des taches en masquage automatique : 7/7 reussis.
