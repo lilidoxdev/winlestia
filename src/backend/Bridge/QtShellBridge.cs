@@ -66,6 +66,7 @@ internal sealed partial class QtShellBridge : IDisposable
     readonly Dictionary<string, Entry> dockEntries = new();
 
     readonly SocialService social;
+    readonly global::PanneauxGlass.Winjets.WinjetsService? winjets;
     readonly BookmarksService bookmarks;
     readonly OutsideDismiss dismissal;
     readonly string root, cache;
@@ -124,6 +125,7 @@ internal sealed partial class QtShellBridge : IDisposable
         bars = parts.Bars;
         social = parts.Social;
         bookmarks = parts.Bookmarks;
+        winjets = parts.Winjets;
         dictation = null!;
         dismissal = null!;
         networkChanged = null!;
@@ -157,6 +159,7 @@ internal sealed partial class QtShellBridge : IDisposable
         DialogOpen = Environment.GetEnvironmentVariable("PANNEAUX_VERIFY_MATERIAL84") == "1"
             || Environment.GetEnvironmentVariable("PANNEAUX_VERIFY_THICKNESS85") == "1";
         owner = coordinator;
+        winjets = coordinator.Winjets;
         root = Program.QtRoot ?? Path.GetFullPath(Path.Combine(Store.Root, "..", "Caelestia-Windows"));
         cache = Path.Combine(Store.DataDir, "Caelestia");
         Directory.CreateDirectory(Path.Combine(cache, "icons"));

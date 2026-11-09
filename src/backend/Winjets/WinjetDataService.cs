@@ -1,0 +1,431 @@
+// language: C# 12, file: WinjetDataService.cs, target: Windows 11 / .NET 8, seul accès réseau des Winjets (HTTPS, hôtes déclarés, cache disque)
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Winlestia.Shared;
+namespace PanneauxGlass.Winjets;
+
+// Dernière valeur connue d'une source. `Value` est null tant que rien n'a pu être lu ; `Stale` = servi depuis le cache après échec.
+internal sealed record WinjetDataValue(JsonElement? Value, string Updated, string? Error, bool Stale);
+
+// Une instance visible dont les sources doivent être tenues à jour.
+internal sealed record WinjetPollTarget(string InstanceId, WinjetPackage Package, IReadOnlyDictionary<string, object?> Settings,
+    IReadOnlyDictionary<string, object?> State);
+
+internal sealed class WinjetDataService : IDisposable
+{
+    readonly object gate = new();
+    readonly string cacheDir;
+    readonly HttpClient http;
+    readonly Func<DateTimeOffset> clock;
+    readonly Dictionary<(string, string), WinjetDataValue> values = new();
+    readonly Dictionary<(string, string), DateTimeOffset> lastAttempt = new();
+    readonly Dictionary<(string, string), Task<WinjetDataValue?>> inFlight = new();
+    // Une source d'annulation par instance : Forget l'annule, les requêtes en vol n'écrivent alors plus rien.
+    readonly Dictionary<string, CancellationTokenSource> cancels = new();
+    List<WinjetPollTarget> targets = new();
+    Timer? timer;
+    bool disposed;
+
+    // Délai maximal d'une requête ; réglable pour les tests seulement.
+    internal TimeSpan Timeout { get; set; } = WinjetLimits.HttpTimeout;
+
+    // `handler` et `clock` sont injectables (tests). Sans handler : pas de redirection (elle contournerait la liste d'hôtes),
+    // pas de cookies.
+    internal WinjetDataService(string cacheDir, HttpMessageHandler? handler = null, Func<DateTimeOffset>? clock = null)
+    {
+        this.cacheDir = cacheDir;
+        this.clock = clock ?? (() => DateTimeOffset.UtcNow);
+        http = new HttpClient(handler ?? new SocketsHttpHandler
+        {
+            AllowAutoRedirect = false,
+            UseCookies = false,
+            UseProxy = true,
+            ConnectCallback = ConnectPublicAsync,
+            ConnectTimeout = WinjetLimits.HttpTimeout,
+            AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
+        })
+        { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("Winlestia-Winjets/1");
+    }
+
+    internal event Action? Changed;
+
+    // Adresse joignable depuis un widget : ni boucle locale, ni lien local, ni réseau privé (RFC 1918, ULA, CGNAT), ni non spécifiée.
+    internal static bool IsPublicAddress(IPAddress address)
+    {
+        if (address.IsIPv4MappedToIPv6)
+            address = address.MapToIPv4();
+        if (IPAddress.IsLoopback(address) || address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any) || address.Equals(IPAddress.None))
+            return false;
+        var b = address.GetAddressBytes();
+        if (b.Length == 4)
+            return !(b[0] == 0 || b[0] == 10 || b[0] >= 224 || (b[0] == 172 && b[1] >= 16 && b[1] <= 31) || (b[0] == 192 && b[1] == 168)
+                || (b[0] == 169 && b[1] == 254) || (b[0] == 100 && b[1] >= 64 && b[1] <= 127));
+        return !(address.IsIPv6LinkLocal || address.IsIPv6SiteLocal || address.IsIPv6Multicast || (b[0] & 0xFE) == 0xFC);
+    }
+
+    // Résout le nom puis refuse toute adresse non publique : la liste d'hôtes ne suffit pas contre un DNS qui pointe vers le réseau local.
+    static async ValueTask<Stream> ConnectPublicAsync(SocketsHttpConnectionContext context, CancellationToken ct)
+    {
+        var all = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, ct);
+        var allowed = all.Where(IsPublicAddress).ToArray();
+        if (allowed.Length == 0)
+            throw new HttpRequestException("Adresse non publique refusée.");
+        var socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+        try
+        {
+            await socket.ConnectAsync(allowed, context.DnsEndPoint.Port, ct);
+            return new NetworkStream(socket, true);
+        }
+        catch
+        {
+            socket.Dispose();
+            throw;
+        }
+    }
+
+    // Vrai si une minuterie de scrutation est armée (jamais sans source http active).
+    internal bool HasTimer
+    {
+        get
+        {
+            lock (gate)
+                return timer != null;
+        }
+    }
+
+    internal WinjetDataValue? Get(string instanceId, string sourceId)
+    {
+        lock (gate)
+            return values.TryGetValue((instanceId, sourceId), out var v) ? v : null;
+    }
+
+    // { instanceId -> { sourceId -> valeur } } pour l'état publié.
+    internal Dictionary<string, Dictionary<string, WinjetDataValue>> Snapshot()
+    {
+        lock (gate)
+            return values.GroupBy(p => p.Key.Item1).ToDictionary(g => g.Key, g => g.ToDictionary(p => p.Key.Item2, p => p.Value));
+    }
+
+    internal void Forget(string instanceId)
+    {
+        lock (gate)
+        {
+            if (cancels.Remove(instanceId, out var cts))
+                cts.Cancel();
+            foreach (var k in inFlight.Keys.Where(k => k.Item1 == instanceId).ToList())
+                inFlight.Remove(k);
+            foreach (var key in values.Keys.Where(k => k.Item1 == instanceId).ToList())
+            {
+                values.Remove(key);
+                lastAttempt.Remove(key);
+            }
+        }
+    }
+
+    // Instances actives et visibles. Les sources « file » sont lues tout de suite ; les sources « http » sont lues au prochain
+    // passage de la minuterie (échéance immédiate si jamais lues). Sans source http active, aucune minuterie.
+    internal void SetTargets(IReadOnlyList<WinjetPollTarget> visible)
+    {
+        lock (gate)
+            targets = visible.ToList();
+        foreach (var t in visible)
+            foreach (var s in t.Package.Definition.Sources.Where(s => !s.IsHttp))
+                ReadFile(t, s);
+        Reschedule();
+    }
+
+    // Condition de la source (réglages/état de l'instance) ; seuls « settings.* » et « state.* » sont résolus.
+    internal static bool IsEnabled(WinjetSource source, WinjetPollTarget t)
+        => source.EnabledWhen.Length == 0 || WinjetCondition.Evaluate(source.EnabledWhen, path =>
+        {
+            int dot = path.IndexOf('.');
+            if (dot < 0)
+                return null;
+            var scope = path[..dot] switch { "settings" => t.Settings, "state" => t.State, _ => null };
+            return scope != null && scope.TryGetValue(path[(dot + 1)..], out var v) ? v : null;
+        });
+
+    // Rafraîchit toutes les sources actives de l'instance (action utilisateur : intervalle minimal 60 s).
+    internal async Task RefreshAsync(WinjetPollTarget t, bool force)
+    {
+        foreach (var s in t.Package.Definition.Sources)
+        {
+            if (!IsEnabled(s, t))
+                continue;
+            if (s.IsHttp)
+                await FetchAsync(t, s, force);
+            else
+                ReadFile(t, s);
+        }
+    }
+
+    // Échéance de scrutation : on interroge toutes les sources http échues, puis on réarme.
+    internal async Task PollDueAsync()
+    {
+        List<WinjetPollTarget> snapshot;
+        lock (gate)
+            snapshot = targets.ToList();
+        try
+        {
+            var now = clock();
+            foreach (var t in snapshot)
+                foreach (var s in t.Package.Definition.Sources.Where(s => s.IsHttp && IsEnabled(s, t)))
+                    if (DueAt(t, s) <= now)
+                        await FetchAsync(t, s, false);
+        }
+        finally
+        {
+            Reschedule();
+        }
+    }
+
+    DateTimeOffset DueAt(WinjetPollTarget t, WinjetSource s)
+    {
+        lock (gate)
+            return lastAttempt.TryGetValue((t.InstanceId, s.Id), out var last) ? last.AddSeconds(s.Refresh) : DateTimeOffset.MinValue;
+    }
+
+    void Reschedule()
+    {
+        lock (gate)
+        {
+            if (disposed)
+                return;
+            DateTimeOffset? next = null;
+            foreach (var t in targets)
+                foreach (var s in t.Package.Definition.Sources.Where(s => s.IsHttp && IsEnabled(s, t)))
+                {
+                    var due = lastAttempt.TryGetValue((t.InstanceId, s.Id), out var last) ? last.AddSeconds(s.Refresh) : DateTimeOffset.MinValue;
+                    if (next == null || due < next)
+                        next = due;
+                }
+            if (next == null)
+            {
+                timer?.Dispose();
+                timer = null;
+                return;
+            }
+            var wait = next.Value - clock();
+            if (wait < TimeSpan.FromMilliseconds(250))
+                wait = TimeSpan.FromMilliseconds(250);
+            if (wait > TimeSpan.FromHours(25))
+                wait = TimeSpan.FromHours(25);
+            // Une seule échéance à la fois (one-shot) : réarmée après chaque passage.
+            if (timer == null)
+                timer = new Timer(_ => _ = SafePollAsync(), null, wait, System.Threading.Timeout.InfiniteTimeSpan);
+            else
+                timer.Change(wait, System.Threading.Timeout.InfiniteTimeSpan);
+        }
+    }
+
+    async Task SafePollAsync()
+    {
+        try
+        {
+            await PollDueAsync();
+        }
+        catch (Exception ex)
+        {
+            Store.Log("Winjets : scrutation : " + ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
+    void Set((string, string) key, WinjetDataValue value)
+    {
+        lock (gate)
+            values[key] = value;
+        Changed?.Invoke();
+    }
+
+    string Now() => clock().UtcDateTime.ToString("o");
+
+    void ReadFile(WinjetPollTarget t, WinjetSource s)
+    {
+        var key = (t.InstanceId, s.Id);
+        if (!IsEnabled(s, t))
+            return;
+        lock (gate)
+            if (values.ContainsKey(key))
+                return;
+        try
+        {
+            string root = Path.GetFullPath(t.Package.Dir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            string full = Path.GetFullPath(Path.Combine(t.Package.Dir, s.Path.Replace('/', Path.DirectorySeparatorChar)));
+            if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase) || new FileInfo(full).Length > WinjetLimits.MaxJsonBytes)
+                throw new InvalidDataException("fichier hors du paquet ou trop gros");
+            using var doc = JsonDocument.Parse(File.ReadAllBytes(full), new JsonDocumentOptions { MaxDepth = WinjetLimits.MaxJsonDepth });
+            Set(key, new WinjetDataValue(doc.RootElement.Clone(), Now(), null, false));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+        {
+            Set(key, new WinjetDataValue(null, Now(), "Lecture de " + s.Path + " impossible.", false));
+        }
+    }
+
+    // Une seule requête en vol par (instance, source) : un second appel reçoit la même tâche.
+    internal Task<WinjetDataValue?> FetchAsync(WinjetPollTarget t, WinjetSource s, bool force)
+    {
+        var key = (t.InstanceId, s.Id);
+        lock (gate)
+        {
+            if (disposed)
+                return Task.FromResult<WinjetDataValue?>(null);
+            if (inFlight.TryGetValue(key, out var running))
+                return running;
+            int interval = force ? WinjetLimits.MinRefreshSeconds : Math.Max(s.Refresh, WinjetLimits.MinRefreshSeconds);
+            if (lastAttempt.TryGetValue(key, out var last) && (clock() - last).TotalSeconds < interval)
+                return Task.FromResult(values.TryGetValue(key, out var cur) ? cur : null);
+            lastAttempt[key] = clock();
+            if (!cancels.TryGetValue(t.InstanceId, out var cts))
+                cancels[t.InstanceId] = cts = new CancellationTokenSource();
+            var task = Run(t, s, key, cts);
+            inFlight[key] = task;
+            return task;
+        }
+    }
+
+    async Task<WinjetDataValue?> Run(WinjetPollTarget t, WinjetSource s, (string, string) key, CancellationTokenSource owner)
+    {
+        await Task.Yield();
+        WinjetDataValue result;
+        try
+        {
+            string? bad = WinjetDefinition.HttpsProblem(s.Url, t.Package.Manifest);
+            result = bad != null ? Failure(s, "Adresse refusée : " + bad) : await Download(s, owner.Token);
+        }
+        catch (Exception ex)
+        {
+            Store.Log("Winjets : " + s.Id + " : " + ex.GetType().Name + ": " + ex.Message);
+            result = Failure(s, "Source indisponible.");
+        }
+        lock (gate)
+        {
+            // Instance oubliée pendant la requête : on ne réécrit rien.
+            if (owner.IsCancellationRequested)
+                return null;
+            inFlight.Remove(key);
+        }
+        Set(key, result);
+        return result;
+    }
+
+    async Task<WinjetDataValue> Download(WinjetSource s, CancellationToken forget)
+    {
+        try
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(forget);
+            cts.CancelAfter(Timeout);
+            using var request = new HttpRequestMessage(HttpMethod.Get, s.Url);
+            request.Headers.Accept.ParseAdd("application/json");
+            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+            if (!response.IsSuccessStatusCode)
+                return Failure(s, "Le serveur a répondu " + (int)response.StatusCode + ".");
+            if (response.Content.Headers.ContentLength > WinjetLimits.MaxResponseBytes)
+                return Failure(s, "Réponse trop volumineuse.");
+            await using var stream = await response.Content.ReadAsStreamAsync(cts.Token);
+            using var buffer = new MemoryStream();
+            var chunk = new byte[16 * 1024];
+            int read;
+            while ((read = await stream.ReadAsync(chunk, cts.Token)) > 0)
+            {
+                if (buffer.Length + read > WinjetLimits.MaxResponseBytes)
+                    return Failure(s, "Réponse trop volumineuse.");
+                buffer.Write(chunk, 0, read);
+            }
+            using var doc = JsonDocument.Parse(buffer.ToArray(), new JsonDocumentOptions { MaxDepth = WinjetLimits.MaxJsonDepth });
+            var value = doc.RootElement.Clone();
+            string now = Now();
+            WriteCache(s.Url, value, now);
+            return new WinjetDataValue(value, now, null, false);
+        }
+        catch (OperationCanceledException)
+        {
+            return Failure(s, "Délai dépassé.");
+        }
+        catch (HttpRequestException)
+        {
+            return Failure(s, "Réseau indisponible.");
+        }
+        catch (JsonException)
+        {
+            return Failure(s, "Réponse illisible (JSON attendu).");
+        }
+    }
+
+    // Échec : on sert le cache s'il existe (périmé), sinon une valeur vide avec l'erreur.
+    WinjetDataValue Failure(WinjetSource s, string error)
+    {
+        var cached = ReadCache(s.Url);
+        return cached != null ? new WinjetDataValue(cached.Value.value, cached.Value.fetched, error, true)
+            : new WinjetDataValue(null, Now(), error, false);
+    }
+
+    string CachePath(string url) => Path.Combine(cacheDir, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(url))).ToLowerInvariant() + ".json");
+
+    void WriteCache(string url, JsonElement value, string fetched)
+    {
+        try
+        {
+            Directory.CreateDirectory(cacheDir);
+            using var ms = new MemoryStream();
+            using (var w = new Utf8JsonWriter(ms))
+            {
+                w.WriteStartObject();
+                w.WriteString("url", url);
+                w.WriteString("fetched", fetched);
+                w.WritePropertyName("body");
+                value.WriteTo(w);
+                w.WriteEndObject();
+            }
+            AtomicFile.WriteAllBytes(CachePath(url), ms.ToArray());
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Store.Log("Winjets : cache : " + ex.Message); }
+    }
+
+    (JsonElement value, string fetched)? ReadCache(string url)
+    {
+        try
+        {
+            string file = CachePath(url);
+            if (!File.Exists(file) || new FileInfo(file).Length > WinjetLimits.MaxResponseBytes + 4096)
+                return null;
+            using var doc = JsonDocument.Parse(File.ReadAllBytes(file), new JsonDocumentOptions { MaxDepth = WinjetLimits.MaxJsonDepth + 2 });
+            var root = doc.RootElement;
+            if (root.GetProperty("url").GetString() != url)
+                return null;
+            return (root.GetProperty("body").Clone(), root.GetProperty("fetched").GetString() ?? "");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or KeyNotFoundException
+            or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    public void Dispose()
+    {
+        lock (gate)
+        {
+            if (disposed)
+                return;
+            disposed = true;
+            foreach (var c in cancels.Values)
+                c.Cancel();
+            cancels.Clear();
+            timer?.Dispose();
+            timer = null;
+        }
+        http.Dispose();
+    }
+}

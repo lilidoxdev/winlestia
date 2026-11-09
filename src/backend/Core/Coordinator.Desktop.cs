@@ -27,6 +27,9 @@ internal sealed partial class Coordinator
             }
         }
         desktopIcons.OnExplorerCreated();
+        // Les fenêtres des Winjets sont réaffirmées par le frontend (compteur d'état + évènement).
+        winjets?.NotifyExplorerRestarted();
+        QtShell?.Send("desktop.explorerRestarted");
     }
     // Au lancement, la barre Windows n'est remplacée que si Explorer est prêt ; sinon TaskbarCreated reprendra la main.
     void StartTaskbar()

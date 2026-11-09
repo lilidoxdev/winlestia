@@ -623,6 +623,108 @@
       "args": {},
       "required": []
     },
+    "winjets.add": {
+      "args": {
+        "packageId": "string",
+        "screen": "string",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "packageId"
+      ]
+    },
+    "winjets.import": {
+      "args": {
+        "path": "string"
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "winjets.inspect": {
+      "args": {
+        "path": "string"
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "winjets.recoverAll": {
+      "args": {},
+      "required": []
+    },
+    "winjets.refresh": {
+      "args": {
+        "instanceId": "string"
+      },
+      "required": [
+        "instanceId"
+      ]
+    },
+    "winjets.remove": {
+      "args": {
+        "instanceId": "string"
+      },
+      "required": [
+        "instanceId"
+      ]
+    },
+    "winjets.setEditMode": {
+      "args": {
+        "enabled": "boolean"
+      },
+      "required": []
+    },
+    "winjets.setGeometry": {
+      "args": {
+        "instanceId": "string",
+        "geometry": "object"
+      },
+      "required": [
+        "instanceId",
+        "geometry"
+      ]
+    },
+    "winjets.setHidden": {
+      "args": {
+        "instanceId": "string",
+        "hidden": "boolean"
+      },
+      "required": [
+        "instanceId"
+      ]
+    },
+    "winjets.setSettings": {
+      "args": {
+        "instanceId": "string",
+        "settings": "object"
+      },
+      "required": [
+        "instanceId",
+        "settings"
+      ]
+    },
+    "winjets.setState": {
+      "args": {
+        "instanceId": "string",
+        "key": "string",
+        "value": "any"
+      },
+      "required": [
+        "instanceId",
+        "key",
+        "value"
+      ]
+    },
+    "winjets.uninstall": {
+      "args": {
+        "packageId": "string"
+      },
+      "required": [
+        "packageId"
+      ]
+    },
     "workspace": {
       "args": {
         "id": "string"
@@ -779,7 +881,9 @@
     "taskbarApps",
     "runningApps",
     "icons",
-    "iconRevision"
+    "iconRevision",
+    "winjets",
+    "desktop"
   ],
   "events": [
     "toggle",
@@ -806,7 +910,8 @@
     "dock",
     "dictation:start",
     "dictation:stop",
-    "dictation:keycancel"
+    "dictation:keycancel",
+    "desktop.explorerRestarted"
   ],
   "clientOnlyEvents": [
     "mixer"

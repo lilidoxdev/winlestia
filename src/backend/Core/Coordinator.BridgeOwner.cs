@@ -9,6 +9,7 @@ internal sealed partial class Coordinator : IBridgeOwner
     IClipboardService IBridgeOwner.QtClipboard => QtClipboard;
     IIconSource IBridgeOwner.Icons => Icons;
     bool IBridgeOwner.TaskbarEnabled => TaskbarEnabled;
+    global::PanneauxGlass.Winjets.WinjetsService? IBridgeOwner.Winjets => winjets;
 
     void IBridgeOwner.SetTheme(string id) => SetTheme(id);
     void IBridgeOwner.SetTaskbar(bool enabled) => SetTaskbar(enabled);

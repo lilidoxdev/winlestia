@@ -28,6 +28,10 @@ Le rapport est `TestResults/<guid>/coverage.cobertura.xml`. Le code WPF/shell no
 
 Regle du cliquet : le plancher vaut toujours `floor(couverture mesuree)` (partie entiere, variable `$floor` de l'etape CI). Il ne baisse jamais ; une PR qui fait monter la couverture d'un point entier releve le plancher dans la meme PR, avec la valeur mesuree datee ici et dans le commentaire de `ci.yml`. Une baisse sous le plancher exige des tests, pas un plancher plus bas.
 
+### Winjets
+
+`tests/Winlestia.Tests/Winjets/` : `WinjetValidatorTests` (paquet valide, rejets : chemins, bombe ZIP, extensions, hotes, couleurs litterales, proprietes inconnues ; validation des trois paquets inclus `src/winjets/builtin` et de `docs/winjets/examples/com.exemple.citation-1.0.0.zip`), `WinjetLibraryTests` (import, mise a jour atomique, desinstallation, paquets inclus) et `WinjetInstancesTests` (persistance, coercition des reglages, cles d'etat, reprise depuis `.bak`), `WinjetDataServiceTests` (liste d'hotes, intervalle minimal, taille, delai, cache perime, requete unique, minuteur ; gestionnaire HTTP et horloge factices), `WinjetConditionTests` (evaluateur `enabledWhen` et SemVer). `WinjetFixtures` fabrique les paquets en code ; `WINLESTIA_DATA_DIR` est redirige vers un dossier temporaire puis restaure.
+
 ### Style et fumee de l'installateur
 
 Le job `lint` de la CI echoue sur toute ligne de plus de 140 colonnes (`python tools/check_line_length.py`, perimetre : tous les `*.cs`, `*.py`, `*.qml`, `*.ps1` suivis par git, hors `src/terminal/clink`, `VsCodeTheme*` et fichiers generes) et sur `dotnet format whitespace --verify-no-changes` pour les trois projets. Le job `installer-smoke` execute `installer/build.ps1 -CI` (composants natifs MSVC remplaces par des fichiers vides) et publie le setup en artefact `winlestia-setup-smoke`.

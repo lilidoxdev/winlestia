@@ -27,6 +27,8 @@ internal interface IBridgeOwner
     {
         get;
     }
+    // Service des Winjets ; absent (null) en aperçu, en test et si son initialisation a échoué.
+    global::PanneauxGlass.Winjets.WinjetsService? Winjets => null;
 
     void SetTheme(string id);
     void SetTaskbar(bool enabled);

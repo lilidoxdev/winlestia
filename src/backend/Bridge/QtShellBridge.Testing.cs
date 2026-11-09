@@ -40,4 +40,5 @@ internal sealed record BridgeParts(
     AudioBarsHost Bars,
     SocialService Social,
     BookmarksService Bookmarks,
-    string Directory);
+    string Directory,
+    global::PanneauxGlass.Winjets.WinjetsService? Winjets = null);

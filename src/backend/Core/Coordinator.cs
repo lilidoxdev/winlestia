@@ -44,6 +44,7 @@ internal sealed partial class Coordinator : IDisposable
     readonly ITrayService tray = new TrayService();
     readonly ICatalogueService catalogue;
     readonly IDesktopIconsService desktopIcons;
+    global::PanneauxGlass.Winjets.WinjetsService? winjets;
     readonly IPreviewExportService previewExport;
     readonly IDialogService dialogs;
     readonly ILaunchService launcher;
@@ -140,7 +141,18 @@ internal sealed partial class Coordinator : IDisposable
             board.Shortcut = HandleShortcut;
         BuildTray();
         if (Program.QtMode)
+        {
+            // Les Winjets ne doivent jamais empêcher le démarrage : sans eux, le reste du shell fonctionne.
+            if (!preview)
+            {
+                try
+                {
+                    winjets = global::PanneauxGlass.Winjets.WinjetsService.CreateDefault();
+                }
+                catch (Exception ex) { Store.Log("Winjets indisponibles : " + ex.GetType().Name + ": " + ex.Message); }
+            }
             QtShell = new QtShellBridge(this, options ?? RunOptions.Default);
+        }
         taskbar = new ShellTaskbar(this);
         StartTaskbar();
         Microsoft.Win32.SystemEvents.DisplaySettingsChanged += DisplayChanged;
@@ -219,6 +231,7 @@ internal sealed partial class Coordinator : IDisposable
         catalogue.Dispose();
         taskbar?.Dispose();
         QtShell?.Dispose();
+        winjets?.Dispose();
         RestoreDesktopIcons();
         desktopIcons.Dispose();
         dismissal.Dispose();

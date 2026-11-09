@@ -128,6 +128,18 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 | `wifiPortal` | - | - |
 | `wifiSettings` | page:string | - |
 | `windowList` | - | - |
+| `winjets.inspect` | path:string | - |
+| `winjets.import` | path:string | - |
+| `winjets.uninstall` | packageId:string | - |
+| `winjets.add` | packageId:string, screen:string, x:number, y:number | - |
+| `winjets.remove` | instanceId:string | - |
+| `winjets.setHidden` | instanceId:string, hidden:boolean | - |
+| `winjets.setGeometry` | instanceId:string, geometry:object | - |
+| `winjets.setSettings` | instanceId:string, settings:object | - |
+| `winjets.setState` | instanceId:string, key:string, value:any | - |
+| `winjets.setEditMode` | enabled:boolean | - |
+| `winjets.refresh` | instanceId:string | - |
+| `winjets.recoverAll` | - | - |
 | `workspace` | id:string | - |
 | `zipFiles` | paths:array<string> | - |
 
@@ -139,16 +151,20 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 
 `{"state", "events", "notice", "wallpaperCapture", "bookmarksItems", "windows", "fileResults", "wallpaperPicker"}` ; les clés `null` sont émises telles quelles.
 
-- `state` : objet instantané, clés de premier niveau : `systemRecent`, `wallpapers`, `wallpaperRevision`, `audioReadMs`, `audioMixer`, `quickTabs`, `social`, `bookmarks`, `settings`, `clipboard`, `diagnostics`, `dark`, `taskbarEnabled`, `networkKind`, `virtualDesktops`, `fullscreenMonitors`, `quiet`, `quietForced`, `performance`, `sysInfo`, `media`, `controls`, `apps`, `favorites`, `recent`, `websites`, `profiles`, `taskbarApps`, `runningApps`, `icons`, `iconRevision`. Le contenu des sous-objets est libre (lu avec `.get` côté Python, donc tolérant aux champs manquants) et n'est pas figé par ce contrat.
+- `state` : objet instantané, clés de premier niveau : `systemRecent`, `wallpapers`, `wallpaperRevision`, `audioReadMs`, `audioMixer`, `quickTabs`, `social`, `bookmarks`, `settings`, `clipboard`, `diagnostics`, `dark`, `taskbarEnabled`, `networkKind`, `virtualDesktops`, `fullscreenMonitors`, `quiet`, `quietForced`, `performance`, `sysInfo`, `media`, `controls`, `apps`, `favorites`, `recent`, `websites`, `profiles`, `taskbarApps`, `runningApps`, `icons`, `iconRevision`, `winjets`, `desktop`. Le contenu des sous-objets est libre (lu avec `.get` côté Python, donc tolérant aux champs manquants) et n'est pas figé par ce contrat.
 - `events` : tableau de chaînes, vidé à chaque réponse (32 maximum en file).
 - `notice` : texte à afficher une fois (erreur ou confirmation).
 - `wallpaperCapture`, `bookmarksItems`, `windows`, `fileResults`, `wallpaperPicker` : réponses ponctuelles aux commandes homonymes.
 
 ### Évènements (`events`)
 
-Exacts : `toggle`, `access`, `media`, `performance`, `controls`, `palette`, `settings`, `settings:social`, `settings:bookmarks`, `clipboard`, `audio`, `microphone`, `tools`, `capture`, `capture-ocr`, `capture-select`, `wallpaper-switcher`, `close`, `bookmarks`, `social`, `files`, `dock`, `dictation:start`, `dictation:stop`, `dictation:keycancel`.
+Exacts : `toggle`, `access`, `media`, `performance`, `controls`, `palette`, `settings`, `settings:social`, `settings:bookmarks`, `clipboard`, `audio`, `microphone`, `tools`, `capture`, `capture-ocr`, `capture-select`, `wallpaper-switcher`, `close`, `bookmarks`, `social`, `files`, `dock`, `desktop.explorerRestarted`, `dictation:start`, `dictation:stop`, `dictation:keycancel`.
 Préfixes (suffixe variable) : `workspace:`, `osd:volume:`, `osd:brightness:`, `shortcut-key:`, `shortcut-saved:`, `osd:mic:`, `dictation:key:` — `workspace:<id>`, `osd:volume:<n>:<muet>`, `osd:brightness:<n>`, `osd:mic:<n>:<muet>`, `shortcut-key:<mods>:<vk>`, `shortcut-saved:<kind>`, `dictation:key:<vk>`.
 Évènements gérés côté client seulement (jamais émis par le serveur actuel) : `mixer`.
+
+### Winjets
+
+Actions `winjets.*` (voir `docs/WINJETS-DESIGN.md` §4), état `state.winjets` (`editMode`, `packages`, `instances`, `data`, `lastImport`) et `state.desktop.explorerEpoch` (compteur incrémenté à chaque redémarrage d'Explorer, avec l'évènement `desktop.explorerRestarted`).
 
 ## Faire évoluer le contrat
 

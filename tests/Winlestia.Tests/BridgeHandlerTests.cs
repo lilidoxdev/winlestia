@@ -14,7 +14,7 @@ public class BridgeHandlerTests
     });
 
     [Fact]
-    public void RealTableRegistersExactlyTheSchemaActions() => Assert.Equal(102, QtShellBridge.ActionNames.Count);
+    public void RealTableRegistersExactlyTheSchemaActions() => Assert.Equal(114, QtShellBridge.ActionNames.Count);
 
     [Fact]
     public void UnknownCommandLeavesTheStateReply() => With(r =>

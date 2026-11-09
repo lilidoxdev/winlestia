@@ -125,6 +125,8 @@ internal sealed partial class QtShellBridge
                 names = VirtualDesktops.Current.Names
             },
             fullscreenMonitors = FullscreenWatcher.Current,
+            winjets = winjets?.Snapshot(),
+            desktop = new { explorerEpoch = winjets?.ExplorerEpoch ?? 0 },
             quiet = Quiet,
             quietForced = QuietPolicy.Label(quietForce),
             performance = new
