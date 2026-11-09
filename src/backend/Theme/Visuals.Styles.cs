@@ -20,7 +20,15 @@ internal static partial class UI
     {
         if (System.Windows.Application.Current == null)
             return;
-        var theme = Theme.Current;
+        var dictionary = (ResourceDictionary)System.Windows.Markup.XamlReader.Parse(StylesXaml(Theme.Current));
+        if (style != null)
+            System.Windows.Application.Current.Resources.MergedDictionaries.Remove(style);
+        System.Windows.Application.Current.Resources.MergedDictionaries.Add(dictionary);
+        style = dictionary;
+    }
+    // Produit le XAML des styles pour un thème donné (séparé de Restyle pour pouvoir être testé sans fenêtre).
+    internal static string StylesXaml(ThemeDefinition theme)
+    {
         string themeText = Hex(theme.Text), surfaceRgb = Hex(theme.Surface)[1..], accentRgb = Hex(theme.Accent)[1..];
         string overlay = theme.Unified ? Hex(theme.Text)[1..] : theme.Light ? "000000" : "FFFFFF";
         string popRgb = theme.Unified ? Hex(theme.Role(M3Role.SurfaceHigh))[1..] : surfaceRgb,
@@ -92,8 +100,8 @@ internal static partial class UI
             <ControlTemplate TargetType="ToggleButton"><Border CornerRadius="13" Background="#14FFFFFF" BorderBrush="#38FFFFFF"
             BorderThickness="1"/></ControlTemplate></ToggleButton.Template></ToggleButton><ContentPresenter Margin="13,8,35,8"
             IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}"
-            ContentTemplate="{TemplateBinding " +
-                "SelectionBoxItemTemplate}"/><TextBlock Text="⌄" Margin="0,0,14,0" HorizontalAlignment="Right"
+            ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                /><TextBlock Text="⌄" Margin="0,0,14,0" HorizontalAlignment="Right"
             VerticalAlignment="Center" IsHitTestVisible="False"/><Popup x:Name="PART_Popup" Placement="Bottom"
             IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False"><Border Background="#FA243041"
             BorderBrush="#60D6E6FC" BorderThickness="1" CornerRadius="14" Padding="6" MinWidth="{TemplateBinding ActualWidth}">
@@ -115,8 +123,8 @@ internal static partial class UI
           <Style TargetType="ToolTip"><Setter Property="Background" Value="#EF263646"/><Setter Property="Foreground" Value="#EEF7FF"/>
             <Setter Property="BorderBrush" Value="#45D6E6FC"/><Setter Property="Padding" Value="12,8"/><Setter Property="Template">
             <Setter.Value><ControlTemplate TargetType="ToolTip"><Border CornerRadius="12" Background="{TemplateBinding Background}"
-            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Padding="{TemplateBinding " +
-                "Padding}"><ContentPresenter/></Border>
+            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Padding="{TemplateBinding Padding}"
+                ><ContentPresenter/></Border>
             </ControlTemplate></Setter.Value></Setter></Style>
         </ResourceDictionary>
         """;
@@ -147,11 +155,7 @@ internal static partial class UI
             .Replace("CornerRadius=\"10\"", "CornerRadius=\"" + Radius(10) + "\"")
             .Replace("__BUTTON__", ButtonStyle(theme, raised, hover, pressed, line))
             .Replace("__FIELD__", FieldStyle(theme, field, fieldLine));
-        var dictionary = (ResourceDictionary)System.Windows.Markup.XamlReader.Parse(xaml);
-        if (style != null)
-            System.Windows.Application.Current.Resources.MergedDictionaries.Remove(style);
-        System.Windows.Application.Current.Resources.MergedDictionaries.Add(dictionary);
-        style = dictionary;
+        return xaml;
     }
     // Un cadre de bouton par matière : le verre flotte, bento et zen sont à plat, suisse trace des filets, rétro biseaute,
     // néon rayonne. La mécanique (clic, survol, focus, désactivé) est identique partout.
@@ -312,8 +316,8 @@ internal static partial class UI
           <Setter Property="Padding" Value="12,9"/><Setter Property="FontSize" Value="%FONT%"/>
           <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox"><Border x:Name="box" CornerRadius="%RADIUS%"
             Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-            BorderThickness="{TemplateBinding BorderThickness}"><ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding " +
-                "Padding}"/>
+            BorderThickness="{TemplateBinding BorderThickness}"><ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                />
             </Border>
             <ControlTemplate.Triggers><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="box" Property="BorderBrush"
               Value="%PRIMARY%"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
@@ -341,8 +345,8 @@ internal static partial class UI
           <Setter Property="Padding" Value="13,9"/><Setter Property="FontSize" Value="14"/>
           <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox"><Border CornerRadius="%RADIUS%"
             Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-            BorderThickness="{TemplateBinding BorderThickness}"><ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding " +
-                "Padding}"/>
+            BorderThickness="{TemplateBinding BorderThickness}"><ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                />
             </Border></ControlTemplate></Setter.Value></Setter>
         </Style>
         """.Replace("%TEXT%", text).Replace("%SELECTION%",
