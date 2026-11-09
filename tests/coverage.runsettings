@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Couverture coverlet. Le backend est compile DANS l'assembly de test : IncludeTestAssembly est donc indispensable,
-     et les fichiers de tests eux-memes sont exclus pour ne mesurer que src/. -->
+     et les fichiers de tests eux-memes sont exclus pour ne mesurer que src/. L'application Fichiers, referencee pour un
+     seul test de styles, reste hors du perimetre : le plancher porte sur le backend. -->
 <RunSettings>
   <DataCollectionRunSettings>
     <DataCollectors>
@@ -8,6 +9,7 @@
         <Configuration>
           <Format>cobertura</Format>
           <IncludeTestAssembly>true</IncludeTestAssembly>
+          <Exclude>[Winlestia.Files]*</Exclude>
           <ExcludeByFile>**/tests/**/*.cs,**/obj/**</ExcludeByFile>
         </Configuration>
       </DataCollector>

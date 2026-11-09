@@ -22,7 +22,7 @@ Winlestia est un shell de bureau libre pour Windows 11, inspiré de Caelestia. C
 
 Télécharger `Winlestia-Setup-0.9.2.exe` ci-dessous, comparer son SHA-256 (`Get-FileHash`) à la valeur indiquée dans ces notes, puis lancer l'installateur. Il n'est pas signé : SmartScreen peut avertir (Informations complémentaires, puis Exécuter quand même). Guide : `docs/INSTALL.md`.
 
-SHA-256 de `Winlestia-Setup-0.9.2.exe` : `1DB3D7994B8066195A7C14E67810400097762F5EBC3EB7FD88D5F3B7DEEEAA0F`
+SHA-256 de `Winlestia-Setup-0.9.2.exe` : `A7E525FB7FF2AB3A918F5185414D7B563EEB19E39454E354D996446A2AD4142B`
 
 ## Restauration
 
