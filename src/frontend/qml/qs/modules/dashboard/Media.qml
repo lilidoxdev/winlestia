@@ -18,8 +18,9 @@ Item {
     id: root
 
     required property PersistentProperties visibilities
-    // Animations/timers only run while this tab is actually on screen.
-    readonly property bool onScreen: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 1
+    // Animations et timers ne tournent que lorsque cet onglet est réellement à l'écran.
+    readonly property bool onScreen: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard"
+        && Bridge.window.dashboardTab === 1
     readonly property bool spinning: onScreen && (Players.active?.isPlaying ?? false)
 
     property real playerProgress: {
@@ -40,8 +41,10 @@ Item {
         return `${mins}:${secs}`;
     }
 
-    implicitWidth: cover.implicitWidth + Config.dashboard.sizes.mediaVisualiserSize * 2 + details.implicitWidth + details.anchors.leftMargin + bongocat.implicitWidth + bongocat.anchors.leftMargin * 2 + Appearance.padding.large * 2
-    implicitHeight: Math.max(cover.implicitHeight + Config.dashboard.sizes.mediaVisualiserSize * 2, details.implicitHeight, bongocat.implicitHeight) + Appearance.padding.large * 2
+    implicitWidth: cover.implicitWidth + Config.dashboard.sizes.mediaVisualiserSize * 2 + details.implicitWidth
+        + details.anchors.leftMargin + bongocat.implicitWidth + bongocat.anchors.leftMargin * 2 + Appearance.padding.large * 2
+    implicitHeight: Math.max(cover.implicitHeight + Config.dashboard.sizes.mediaVisualiserSize * 2, details.implicitHeight,
+        bongocat.implicitHeight) + Appearance.padding.large * 2
 
     Behavior on playerProgress {
         Anim {
@@ -50,7 +53,8 @@ Item {
     }
 
     Timer {
-        running: (Bridge.window?.visible??false) && Bridge.window.pageMode==="dashboard" && Bridge.window.dashboardTab===1 && (Players.active?.isPlaying ?? false)
+        running: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 1
+            && (Players.active?.isPlaying ?? false)
         interval: Config.dashboard.mediaUpdateInterval
         triggeredOnStart: true
         repeat: true
@@ -135,14 +139,20 @@ Item {
             anchors.centerIn: parent
 
             grade: 200
-            text:qsTr("art_track")
+            text: qsTr("art_track")
             color: Colours.palette.m3onSurfaceVariant
             font.pointSize: (parent.width * 0.4) || 1
         }
 
         Image {
             id: image
-            RotationAnimator on rotation {from:0;to:360;duration:16000;loops:Animation.Infinite;running:root.spinning&&!Appearance.reducedEffects}
+            RotationAnimator on rotation {
+                from: 0
+                to: 360
+                duration: 16000
+                loops: Animation.Infinite
+                running: root.spinning && !Appearance.reducedEffects
+            }
 
             anchors.fill: parent
 
@@ -323,9 +333,21 @@ Item {
             }
 
             StyledSlider {
-                id: mediaVolume;visible:false;from:0;to:100;implicitWidth:100;implicitHeight:28
-                onMoved:Bridge.action("mediaVolume",{value:value})
-                Binding{target:mediaVolume;property:"value";value:Players.active?.volume??70;when:!mediaVolume.pressed}
+                id: mediaVolume
+                visible: false
+                from: 0
+                to: 100
+                implicitWidth: 100
+                implicitHeight: 28
+                onMoved: Bridge.action("mediaVolume", {
+                    value: value
+                })
+                Binding {
+                    target: mediaVolume
+                    property: "value"
+                    value: Players.active?.volume ?? 70
+                    when: !mediaVolume.pressed
+                }
             }
 
             SplitButton {
@@ -389,7 +411,8 @@ Item {
             width: visualiser.width * 0.75
             height: visualiser.height * 0.75
 
-            playing: (Bridge.window?.visible??false) && Bridge.window.pageMode==="dashboard" && Bridge.window.dashboardTab===1 && (Players.active?.isPlaying ?? false)
+            playing: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 1
+                && (Players.active?.isPlaying ?? false)
             speed: Audio.beatTracker.bpm / 300
             source: Paths.absolutePath(Config.paths.mediaGif)
             asynchronous: true
@@ -398,7 +421,8 @@ Item {
     }
 
     component PlayerControl: IconButton {
-        Layout.preferredWidth: implicitWidth + (stateLayer.pressed ? Appearance.padding.large : internalChecked ? Appearance.padding.smaller : 0)
+        Layout.preferredWidth: implicitWidth + (stateLayer.pressed ? Appearance.padding.large : internalChecked
+            ? Appearance.padding.smaller : 0)
         radius: stateLayer.pressed ? Appearance.rounding.small / 2 : internalChecked ? Appearance.rounding.small : implicitHeight / 2
         radiusAnim.duration: Appearance.anim.durations.expressiveFastSpatial
         radiusAnim.easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial

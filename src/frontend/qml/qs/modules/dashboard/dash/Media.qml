@@ -25,7 +25,8 @@ Item {
     }
 
     Timer {
-        running: (Bridge.window?.visible??false) && Bridge.window.pageMode==="dashboard" && Bridge.window.dashboardTab===0 && (Players.active?.isPlaying ?? false)
+        running: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0
+            && (Players.active?.isPlaying ?? false)
         interval: Config.dashboard.mediaUpdateInterval
         triggeredOnStart: true
         repeat: true
@@ -96,7 +97,7 @@ Item {
             anchors.centerIn: parent
 
             grade: 200
-            text:qsTr("art_track")
+            text: qsTr("art_track")
             color: Colours.palette.m3onSurfaceVariant
             font.pointSize: (parent.width * 0.4) || 1
         }
@@ -131,7 +132,10 @@ Item {
         elide: Text.ElideRight
     }
 
-    FontMetrics { id: albumFm; font: album.font }
+    FontMetrics {
+        id: albumFm
+        font: album.font
+    }
 
     StyledText {
         id: album
@@ -152,7 +156,10 @@ Item {
         elide: Text.ElideRight
     }
 
-    FontMetrics { id: artistFm; font: artist.font }
+    FontMetrics {
+        id: artistFm
+        font: artist.font
+    }
 
     StyledText {
         id: artist
@@ -231,7 +238,8 @@ Item {
         anchors.bottomMargin: Appearance.padding.large
         anchors.margins: Appearance.padding.large * 2
 
-        playing: (Bridge.window?.visible??false) && Bridge.window.pageMode==="dashboard" && Bridge.window.dashboardTab===0 && (Players.active?.isPlaying ?? false)
+        playing: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0
+            && (Players.active?.isPlaying ?? false)
         speed: Audio.beatTracker.bpm / 300
         source: Paths.absolutePath(Config.paths.mediaGif)
         asynchronous: true

@@ -13,11 +13,15 @@ GridView {
     required property var visibilities
 
     readonly property int columns: Math.max(1, Math.floor(width / 60))
-    // The first word is the "emoji" command itself; the rest filters the bundled French/English keywords.
+    // Le premier mot est la commande « emoji » elle-même ; le reste filtre les mots-clés français/anglais embarqués.
     readonly property string term: search.text.split(" ").slice(1).join(" ")
 
-    function incrementCurrentIndex(): void { moveCurrentIndexDown() }
-    function decrementCurrentIndex(): void { moveCurrentIndexUp() }
+    function incrementCurrentIndex(): void {
+        moveCurrentIndexDown();
+    }
+    function decrementCurrentIndex(): void {
+        moveCurrentIndexUp();
+    }
 
     model: Bridge.emojiChoices(term)
     onModelChanged: currentIndex = 0

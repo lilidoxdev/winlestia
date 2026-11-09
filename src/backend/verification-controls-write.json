@@ -1,0 +1,111 @@
+{
+  "At": "2026-10-20T22:53:05.0735233+02:00",
+  "Passed": 20,
+  "Failed": 0,
+  "WriteTest": true,
+  "Live": {
+    "Audio": {
+      "Available": true,
+      "Volume": 51.94174575805664,
+      "Muted": false,
+      "Device": "Haut-parleurs (Realtek(R) Audio)"
+    },
+    "Brightness": {
+      "Available": true,
+      "Value": 50,
+      "Device": "Generic PnP Monitor"
+    },
+    "Network": {
+      "WifiAvailable": true,
+      "BluetoothAvailable": true,
+      "Internet": true
+    },
+    "Media": {
+      "Available": true,
+      "App": "Spotify",
+      "Artwork": true
+    }
+  },
+  "Checks": [
+    {
+      "Name": "Paire centr\u00E9e sans chevauchement : 3440;1440",
+      "Pass": true
+    },
+    {
+      "Name": "Paire centr\u00E9e sans chevauchement : 1920;1080",
+      "Pass": true
+    },
+    {
+      "Name": "Paire centr\u00E9e sans chevauchement : 1366;768",
+      "Pass": true
+    },
+    {
+      "Name": "Paire centr\u00E9e sans chevauchement : 1280;720",
+      "Pass": true
+    },
+    {
+      "Name": "Quatre modules et raccourcis identifiables",
+      "Pass": true
+    },
+    {
+      "Name": "Migration 5.2 sans perte des favoris",
+      "Pass": true
+    },
+    {
+      "Name": "Persistance des modules, ordre, ic\u00F4nes et raccourcis",
+      "Pass": true
+    },
+    {
+      "Name": "Configuration de modules invalide r\u00E9cup\u00E9r\u00E9e",
+      "Pass": true
+    },
+    {
+      "Name": "Adresses Windows et chemins avec espaces accept\u00E9s, cibles invalides refus\u00E9es",
+      "Pass": true
+    },
+    {
+      "Name": "Dur\u00E9es de musique et absence de dur\u00E9e",
+      "Pass": true
+    },
+    {
+      "Name": "Lecture du volume et du p\u00E9riph\u00E9rique Windows",
+      "Pass": true
+    },
+    {
+      "Name": "R\u00E9glage r\u00E9el du volume et relecture",
+      "Pass": true
+    },
+    {
+      "Name": "Volume et mode muet restaur\u00E9s apr\u00E8s l\u2019essai",
+      "Pass": true
+    },
+    {
+      "Name": "Lecture des radios Wi-Fi/Bluetooth et de la connexion",
+      "Pass": true
+    },
+    {
+      "Name": "Luminosit\u00E9 lue ou indisponibilit\u00E9 signal\u00E9e explicitement",
+      "Pass": true
+    },
+    {
+      "Name": "R\u00E9glage r\u00E9el de la luminosit\u00E9 et relecture",
+      "Pass": true
+    },
+    {
+      "Name": "Luminosit\u00E9 restaur\u00E9e apr\u00E8s l\u2019essai",
+      "Pass": true
+    },
+    {
+      "Name": "Acc\u00E8s aux sessions musicales Windows",
+      "Pass": true
+    },
+    {
+      "Name": "Titre r\u00E9el et progression musicale born\u00E9e",
+      "Pass": true
+    },
+    {
+      "Name": "Lecture musicale suspendue quand le panneau est masqu\u00E9",
+      "Pass": true
+    }
+  ]
+}

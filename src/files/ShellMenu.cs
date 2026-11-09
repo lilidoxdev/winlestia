@@ -1,6 +1,8 @@
-// Step 4b: the native shell context menu (IContextMenu/2/3 through IShellFolder.GetUIObjectOf) and the shell data object used for outgoing drags.
-// Everything runs on the UI thread (STA) because shell extensions require it; every COM object, PIDL and HMENU is released in Dispose.
-// Native menus cannot take our rounded M3 style: the best we can do is the system dark/light popup theme (uxtheme ordinals 135/136).
+// Étape 4b : le menu contextuel natif du shell (IContextMenu/2/3 via IShellFolder.GetUIObjectOf) et l'objet de données du shell utilisé
+// pour les glisser sortants.
+// Tout s'exécute sur le thread UI (STA) car les extensions du shell l'exigent ; chaque objet COM, PIDL et HMENU est libéré dans
+// Dispose. Les menus natifs ne peuvent pas prendre notre style M3 arrondi : le mieux possible est le thème sombre/clair système des
+// menus (ordinaux uxtheme 135/136).
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -12,10 +14,7 @@ namespace WinlestiaFiles;
 [StructLayout(LayoutKind.Sequential)]
 internal struct NPoint
 {
-    public int X,
-        Y;
-
-    internal NPoint(int x, int y)
+    public int X, Y; internal NPoint(int x, int y)
     {
         X = x;
         Y = y;
@@ -26,129 +25,57 @@ internal struct NPoint
 internal interface IShellFolder
 {
     [PreserveSig]
-    int ParseDisplayName(
-        IntPtr hwnd,
-        IntPtr pbc,
-        [MarshalAs(UnmanagedType.LPWStr)] string name,
-        out uint eaten,
-        out IntPtr pidl,
-        ref uint attrs
-    );
-
+    int ParseDisplayName(IntPtr hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string name, out uint eaten,
+        out IntPtr pidl, ref uint attrs);
+    [PreserveSig] int EnumObjects(IntPtr hwnd, uint flags, out IntPtr enumIdList);
+    [PreserveSig] int BindToObject(IntPtr pidl, IntPtr pbc, ref Guid riid, out IntPtr ppv);
+    [PreserveSig] int BindToStorage(IntPtr pidl, IntPtr pbc, ref Guid riid, out IntPtr ppv);
+    [PreserveSig] int CompareIDs(IntPtr lParam, IntPtr pidl1, IntPtr pidl2);
+    [PreserveSig] int CreateViewObject(IntPtr hwnd, ref Guid riid, out IntPtr ppv);
+    [PreserveSig] int GetAttributesOf(uint cidl, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0)] IntPtr[] apidl, ref uint attrs);
     [PreserveSig]
-    int EnumObjects(IntPtr hwnd, uint flags, out IntPtr enumIdList);
-
-    [PreserveSig]
-    int BindToObject(IntPtr pidl, IntPtr pbc, ref Guid riid, out IntPtr ppv);
-
-    [PreserveSig]
-    int BindToStorage(IntPtr pidl, IntPtr pbc, ref Guid riid, out IntPtr ppv);
-
-    [PreserveSig]
-    int CompareIDs(IntPtr lParam, IntPtr pidl1, IntPtr pidl2);
-
-    [PreserveSig]
-    int CreateViewObject(IntPtr hwnd, ref Guid riid, out IntPtr ppv);
-
-    [PreserveSig]
-    int GetAttributesOf(
-        uint cidl,
-        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0)] IntPtr[] apidl,
-        ref uint attrs
-    );
-
-    [PreserveSig]
-    int GetUIObjectOf(
-        IntPtr hwnd,
-        uint cidl,
-        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] IntPtr[] apidl,
-        ref Guid riid,
-        IntPtr reserved,
-        out IntPtr ppv
-    );
-
-    [PreserveSig]
-    int GetDisplayNameOf(IntPtr pidl, uint flags, IntPtr strret);
-
-    [PreserveSig]
-    int SetNameOf(
-        IntPtr hwnd,
-        IntPtr pidl,
-        [MarshalAs(UnmanagedType.LPWStr)] string name,
-        uint flags,
-        out IntPtr newPidl
-    );
+    int GetUIObjectOf(IntPtr hwnd, uint cidl, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] IntPtr[] apidl,
+        ref Guid riid, IntPtr reserved, out IntPtr ppv);
+    [PreserveSig] int GetDisplayNameOf(IntPtr pidl, uint flags, IntPtr strret);
+    [PreserveSig] int SetNameOf(IntPtr hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string name, uint flags, out IntPtr newPidl);
 }
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct CmInvokeInfoEx
 {
-    public uint cbSize,
-        fMask;
-    public IntPtr hwnd,
-        lpVerb,
-        lpParameters,
-        lpDirectory;
-    public int nShow;
-    public uint dwHotKey;
-    public IntPtr hIcon,
-        lpTitle,
-        lpVerbW,
-        lpParametersW,
-        lpDirectoryW,
-        lpTitleW;
-    public NPoint ptInvoke;
+    public uint cbSize, fMask; public IntPtr hwnd, lpVerb, lpParameters, lpDirectory; public int nShow; public uint dwHotKey;
+    public IntPtr hIcon, lpTitle,
+    lpVerbW, lpParametersW, lpDirectoryW, lpTitleW; public NPoint ptInvoke;
 }
 
 [ComImport, Guid("000214e4-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IContextMenu
 {
-    [PreserveSig]
-    int QueryContextMenu(IntPtr hmenu, uint indexMenu, uint idCmdFirst, uint idCmdLast, uint flags);
-
-    [PreserveSig]
-    int InvokeCommand(ref CmInvokeInfoEx info);
-
-    [PreserveSig]
-    int GetCommandString(UIntPtr idCmd, uint type, IntPtr reserved, IntPtr name, uint cch);
+    [PreserveSig] int QueryContextMenu(IntPtr hmenu, uint indexMenu, uint idCmdFirst, uint idCmdLast, uint flags);
+    [PreserveSig] int InvokeCommand(ref CmInvokeInfoEx info);
+    [PreserveSig] int GetCommandString(UIntPtr idCmd, uint type, IntPtr reserved, IntPtr name, uint cch);
 }
 
 [ComImport, Guid("000214f4-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IContextMenu2
 {
-    [PreserveSig]
-    int QueryContextMenu(IntPtr hmenu, uint indexMenu, uint idCmdFirst, uint idCmdLast, uint flags);
-
-    [PreserveSig]
-    int InvokeCommand(ref CmInvokeInfoEx info);
-
-    [PreserveSig]
-    int GetCommandString(UIntPtr idCmd, uint type, IntPtr reserved, IntPtr name, uint cch);
-
-    [PreserveSig]
-    int HandleMenuMsg(uint msg, IntPtr wParam, IntPtr lParam);
+    [PreserveSig] int QueryContextMenu(IntPtr hmenu, uint indexMenu, uint idCmdFirst, uint idCmdLast, uint flags);
+    [PreserveSig] int InvokeCommand(ref CmInvokeInfoEx info);
+    [PreserveSig] int GetCommandString(UIntPtr idCmd, uint type, IntPtr reserved, IntPtr name, uint cch);
+    [PreserveSig] int HandleMenuMsg(uint msg, IntPtr wParam, IntPtr lParam);
 }
 
 [ComImport, Guid("bcfce0a0-ec17-11d0-8d10-00a0c90f2719"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 internal interface IContextMenu3
 {
-    [PreserveSig]
-    int QueryContextMenu(IntPtr hmenu, uint indexMenu, uint idCmdFirst, uint idCmdLast, uint flags);
-
-    [PreserveSig]
-    int InvokeCommand(ref CmInvokeInfoEx info);
-
-    [PreserveSig]
-    int GetCommandString(UIntPtr idCmd, uint type, IntPtr reserved, IntPtr name, uint cch);
-
-    [PreserveSig]
-    int HandleMenuMsg(uint msg, IntPtr wParam, IntPtr lParam);
-
-    [PreserveSig]
-    int HandleMenuMsg2(uint msg, IntPtr wParam, IntPtr lParam, out IntPtr result);
+    [PreserveSig] int QueryContextMenu(IntPtr hmenu, uint indexMenu, uint idCmdFirst, uint idCmdLast, uint flags);
+    [PreserveSig] int InvokeCommand(ref CmInvokeInfoEx info);
+    [PreserveSig] int GetCommandString(UIntPtr idCmd, uint type, IntPtr reserved, IntPtr name, uint cch);
+    [PreserveSig] int HandleMenuMsg(uint msg, IntPtr wParam, IntPtr lParam);
+    [PreserveSig] int HandleMenuMsg2(uint msg, IntPtr wParam, IntPtr lParam, out IntPtr result);
 }
 
-// The items (or one folder) of a single parent: IShellFolder + child PIDLs, all freed in Dispose.
+// Les éléments (ou un dossier) d'un seul parent : IShellFolder + PIDL enfants, tous libérés dans Dispose.
 internal sealed class ShellItems : IDisposable
 {
     static Guid iidFolder = new("000214E6-0000-0000-C000-000000000046");
@@ -156,23 +83,21 @@ internal sealed class ShellItems : IDisposable
         IidDataObject = new("0000010e-0000-0000-C000-000000000046");
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
-    static extern int SHParseDisplayName(string name, IntPtr bc, out IntPtr pidl, uint sfgaoIn, out uint sfgaoOut);
-
-    [DllImport("shell32.dll")]
-    static extern int SHBindToParent(IntPtr pidl, ref Guid riid, out IntPtr ppv, out IntPtr pidlLast);
-
-    [DllImport("ole32.dll")]
-    static extern void CoTaskMemFree(IntPtr pointer);
+    static extern int SHParseDisplayName(string name, IntPtr bc, out IntPtr pidl,
+        uint sfgaoIn, out uint sfgaoOut);
+    [DllImport("shell32.dll")] static extern int SHBindToParent(IntPtr pidl, ref Guid riid, out IntPtr ppv, out IntPtr pidlLast);
+    [DllImport("ole32.dll")] static extern void CoTaskMemFree(IntPtr pointer);
 
     readonly List<IntPtr> full = new();
     readonly List<IntPtr> children = new();
     IShellFolder? folder;
-    bool background,
-        disposed;
-    readonly int owner = Environment.CurrentManagedThreadId; // the COM objects below live in this STA; calling them from another thread or after Dispose is a native crash, not an exception
+    bool background, disposed;
+    // les objets COM ci-dessous vivent dans ce STA ; les appeler depuis un autre thread ou après Dispose est un plantage natif, pas une
+    // exception
+    readonly int owner = Environment.CurrentManagedThreadId;
     string? parentDir;
 
-    // Items of one folder (all paths must share the parent; the first one decides). Null when nothing parses.
+    // Éléments d'un même dossier (tous les chemins doivent partager le parent ; le premier décide). Null si rien ne s'analyse.
     internal static ShellItems? Of(IReadOnlyList<string> paths)
     {
         var s = new ShellItems();
@@ -180,7 +105,8 @@ internal sealed class ShellItems : IDisposable
         {
             foreach (var path in paths)
             {
-                // Child PIDLs are relative to ONE folder: a path from another parent would be handed to the wrong IShellFolder (access violation in GetUIObjectOf).
+                // Les PIDL enfants sont relatifs à UN dossier : un chemin d'un autre parent serait confié au mauvais IShellFolder
+                // (violation d'accès dans GetUIObjectOf).
                 string dir = System.IO.Path.GetDirectoryName(path) ?? "";
                 if (s.parentDir == null)
                     s.parentDir = dir;
@@ -206,15 +132,12 @@ internal sealed class ShellItems : IDisposable
             if (s.folder != null && s.children.Count > 0)
                 return s;
         }
-        catch (Exception ex)
-        {
-            App.CrashLog(ex);
-        }
+        catch (Exception ex) { App.CrashLog(ex); }
         s.Dispose();
         return null;
     }
 
-    // The folder itself (background menu).
+    // Le dossier lui-même (menu de fond).
     internal static ShellItems? OfFolder(string path)
     {
         var s = new ShellItems { background = true };
@@ -240,43 +163,30 @@ internal sealed class ShellItems : IDisposable
                 s.folder = (IShellFolder)Marshal.GetObjectForIUnknown(self);
                 Marshal.Release(self);
             }
-            finally
-            {
-                Marshal.ReleaseComObject(parent);
-            }
+            finally { Marshal.ReleaseComObject(parent); }
             return s;
         }
-        catch (Exception ex)
-        {
-            App.CrashLog(ex);
-            s.Dispose();
-            return null;
-        }
+        catch (Exception ex) { App.CrashLog(ex); s.Dispose(); return null; }
     }
 
     internal bool IsBackground => background;
     internal int Count => children.Count;
 
-    // Raw interface pointer (caller releases with Marshal.Release), or Zero.
+    // Pointeur d'interface brut (l'appelant libère avec Marshal.Release), ou Zero.
     internal IntPtr Ui(Guid iid, IntPtr hwnd)
     {
-        if (
-            disposed
-            || folder == null
-            || Environment.CurrentManagedThreadId != owner
-            || (!background && children.Count == 0)
-        )
+        if (disposed || folder == null || Environment.CurrentManagedThreadId != owner || (!background && children.Count == 0))
             return IntPtr.Zero;
-        int hr = background
-            ? folder.CreateViewObject(hwnd, ref iid, out var p)
-            : folder.GetUIObjectOf(hwnd, (uint)children.Count, children.ToArray(), ref iid, IntPtr.Zero, out p);
+        int hr = background ? folder.CreateViewObject(hwnd, ref iid, out var p) : folder.GetUIObjectOf(hwnd, (uint)children.Count,
+            children.ToArray(), ref iid, IntPtr.Zero, out p);
         return hr == 0 ? p : IntPtr.Zero;
     }
 
-    // Shell data object (CF_HDROP, shell IDList array, drag description) as a raw pointer for SHDoDragDrop; caller releases.
+    // Objet de données du shell (CF_HDROP, tableau d'IDList du shell, description du glisser) en pointeur brut pour SHDoDragDrop ;
+    // l'appelant le libère.
     internal IntPtr DataObject(IntPtr hwnd) => background ? IntPtr.Zero : Ui(IidDataObject, hwnd);
 
-    // Managed view of the same data object (used by the tests and by anything that needs to read it back).
+    // Vue managée du même objet de données (utilisée par les tests et par tout ce qui doit le relire).
     internal System.Runtime.InteropServices.ComTypes.IDataObject? ManagedDataObject(IntPtr hwnd)
     {
         var p = DataObject(hwnd);
@@ -286,10 +196,7 @@ internal sealed class ShellItems : IDisposable
         {
             return (System.Runtime.InteropServices.ComTypes.IDataObject)Marshal.GetObjectForIUnknown(p);
         }
-        finally
-        {
-            Marshal.Release(p);
-        }
+        finally { Marshal.Release(p); }
     }
 
     public void Dispose()
@@ -297,11 +204,7 @@ internal sealed class ShellItems : IDisposable
         disposed = true;
         if (folder != null)
         {
-            try
-            {
-                Marshal.FinalReleaseComObject(folder);
-            }
-            catch { }
+            Safe.Try(() => Marshal.FinalReleaseComObject(folder));
             folder = null;
         }
         foreach (var p in full)
@@ -313,77 +216,39 @@ internal sealed class ShellItems : IDisposable
 
 internal sealed class ShellMenu : IDisposable
 {
-    internal const uint First = 0x100,
-        Last = 0x7FFF;
-    const uint CMF_CANRENAME = 0x10,
-        CMF_EXTENDEDVERBS = 0x100,
-        CMIC_MASK_UNICODE = 0x4000,
-        CMIC_MASK_SHIFT_DOWN = 0x10000000,
+    internal const uint First = 0x100, Last = 0x7FFF;
+    const uint CMF_CANRENAME = 0x10, CMF_EXTENDEDVERBS = 0x100, CMIC_MASK_UNICODE = 0x4000, CMIC_MASK_SHIFT_DOWN = 0x10000000,
         CMIC_MASK_PTINVOKE = 0x20000000;
-    const uint TPM_RIGHTBUTTON = 0x2,
-        TPM_RETURNCMD = 0x100,
-        MF_STRING = 0,
-        MF_SEPARATOR = 0x800,
-        MF_BYPOSITION = 0x400;
-    const int WM_INITMENUPOPUP = 0x117,
-        WM_MENUCHAR = 0x120,
-        WM_DRAWITEM = 0x2B,
-        WM_MEASUREITEM = 0x2C;
+    const uint TPM_RIGHTBUTTON = 0x2, TPM_RETURNCMD = 0x100, MF_STRING = 0, MF_SEPARATOR = 0x800, MF_BYPOSITION = 0x400;
+    const int WM_INITMENUPOPUP = 0x117, WM_MENUCHAR = 0x120, WM_DRAWITEM = 0x2B, WM_MEASUREITEM = 0x2C;
 
-    [DllImport("user32.dll")]
-    static extern IntPtr CreatePopupMenu();
-
-    [DllImport("user32.dll")]
-    static extern bool DestroyMenu(IntPtr menu);
-
+    [DllImport("user32.dll")] static extern IntPtr CreatePopupMenu();
+    [DllImport("user32.dll")] static extern bool DestroyMenu(IntPtr menu);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    static extern bool InsertMenuW(IntPtr menu, uint position, uint flags, UIntPtr id, string? text);
-
-    [DllImport("user32.dll")]
-    static extern uint TrackPopupMenuEx(IntPtr menu, uint flags, int x, int y, IntPtr hwnd, IntPtr tpm);
-
-    [DllImport("user32.dll")]
-    static extern bool SetForegroundWindow(IntPtr hwnd);
-
-    [DllImport("user32.dll")]
-    static extern int GetMenuItemCount(IntPtr menu);
-
-    [DllImport("user32.dll")]
-    static extern IntPtr GetSubMenu(IntPtr menu, int position);
-
+    static extern bool InsertMenuW(IntPtr menu, uint position, uint flags, UIntPtr id,
+        string? text);
+    [DllImport("user32.dll")] static extern uint TrackPopupMenuEx(IntPtr menu, uint flags, int x, int y, IntPtr hwnd, IntPtr tpm);
+    [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern int GetMenuItemCount(IntPtr menu);
+    [DllImport("user32.dll")] static extern IntPtr GetSubMenu(IntPtr menu, int position);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    static extern bool GetMenuItemInfoW(IntPtr menu, uint item, bool byPosition, ref MenuItemInfo info);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-    static extern IntPtr LoadLibraryW(string name);
-
-    [DllImport("kernel32.dll")]
-    static extern IntPtr GetProcAddress(IntPtr module, IntPtr ordinal);
+    static extern bool GetMenuItemInfoW(IntPtr menu, uint item, bool byPosition,
+        ref MenuItemInfo info);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern IntPtr LoadLibraryW(string name);
+    [DllImport("kernel32.dll")] static extern IntPtr GetProcAddress(IntPtr module, IntPtr ordinal);
 
     [StructLayout(LayoutKind.Sequential)]
     struct MenuItemInfo
     {
-        public uint cbSize,
-            fMask,
-            fType,
-            fState,
-            wID;
-        public IntPtr hSubMenu,
-            hbmpChecked,
-            hbmpUnchecked,
-            dwItemData,
-            dwTypeData;
-        public uint cch;
-        public IntPtr hbmpItem;
+        public uint cbSize, fMask, fType, fState, wID; public IntPtr hSubMenu, hbmpChecked, hbmpUnchecked, dwItemData, dwTypeData;
+        public uint cch; public IntPtr hbmpItem;
     }
 
-    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-    delegate int SetPreferredAppModeFn(int mode);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate int SetPreferredAppModeFn(int mode);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate void FlushMenuThemesFn();
 
-    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-    delegate void FlushMenuThemesFn();
-
-    // Win32 popup menus follow the system theme only when the process opts in: ForceDark/ForceLight from our palette. Guarded: Windows 10 1903+ only, never throws.
+    // Les menus contextuels Win32 ne suivent le thème système que si le processus s'y engage : ForceDark/ForceLight selon notre palette.
+    // Gardé : Windows 10 1903+ uniquement, ne lève jamais.
     internal static void InitMenuTheme(bool dark)
     {
         try
@@ -401,18 +266,13 @@ internal sealed class ShellMenu : IDisposable
             if (flush != IntPtr.Zero)
                 Marshal.GetDelegateForFunctionPointer<FlushMenuThemesFn>(flush)();
         }
-        catch (Exception ex)
-        {
-            Perf.Log("menu theme: " + ex.Message);
-        }
+        catch (Exception ex) { Perf.Log("menu theme: " + ex.Message); }
     }
 
     readonly ShellItems items;
     IntPtr menu;
     object? com;
-    IContextMenu? c1;
-    IContextMenu2? c2;
-    IContextMenu3? c3;
+    IContextMenu? c1; IContextMenu2? c2; IContextMenu3? c3;
     internal IntPtr Handle => menu;
 
     ShellMenu(ShellItems items)
@@ -420,7 +280,9 @@ internal sealed class ShellMenu : IDisposable
         this.items = items;
     }
 
-    // Every QueryContextMenu (item or background menu) leaks one suspended WorkFoldersShell.dll thread in this process; the resident instance recycles itself on this count.
+    // Chaque QueryContextMenu (menu d'élément ou de fond) fait fuir un thread WorkFoldersShell.dll suspendu dans ce processus ;
+    // l'instance
+    // résidente se recycle sur ce compteur.
     static int builds;
     internal static int Builds => Volatile.Read(ref builds);
 
@@ -439,10 +301,7 @@ internal sealed class ShellMenu : IDisposable
             {
                 m.com = Marshal.GetObjectForIUnknown(p);
             }
-            finally
-            {
-                Marshal.Release(p);
-            }
+            finally { Marshal.Release(p); }
             m.c1 = (IContextMenu)m.com;
             m.c2 = m.com as IContextMenu2;
             m.c3 = m.com as IContextMenu3;
@@ -456,15 +315,10 @@ internal sealed class ShellMenu : IDisposable
             }
             return m;
         }
-        catch (Exception ex)
-        {
-            App.CrashLog(ex);
-            m.Dispose();
-            return null;
-        }
+        catch (Exception ex) { App.CrashLog(ex); m.Dispose(); return null; }
     }
 
-    // Our own entries go first (ids below First), followed by a separator.
+    // Nos propres entrées viennent d'abord (ids sous First), suivies d'un séparateur.
     internal void Prepend(IReadOnlyList<(uint id, string text)> own)
     {
         if (own.Count == 0)
@@ -474,7 +328,8 @@ internal sealed class ShellMenu : IDisposable
             InsertMenuW(menu, 0, MF_BYPOSITION | MF_STRING, (UIntPtr)own[i].id, own[i].text);
     }
 
-    // Modal: returns the chosen command id (0 = dismissed). The window hook forwards the owner-draw / submenu messages the extensions need ("Open with", "Send to", "New").
+    // Modal : renvoie l'id de commande choisi (0 = fermé sans choix). Le crochet de fenêtre transmet les messages owner-draw / sous-menu
+    // dont les extensions ont besoin ("Ouvrir avec", "Envoyer vers", "Nouveau").
     internal uint Track(IntPtr hwnd, int x, int y)
     {
         var source = HwndSource.FromHwnd(hwnd);
@@ -484,10 +339,7 @@ internal sealed class ShellMenu : IDisposable
             SetForegroundWindow(hwnd);
             return TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, x, y, hwnd, IntPtr.Zero);
         }
-        finally
-        {
-            source?.RemoveHook(Hook);
-        }
+        finally { source?.RemoveHook(Hook); }
     }
 
     IntPtr Hook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -507,10 +359,7 @@ internal sealed class ShellMenu : IDisposable
                 return msg == WM_INITMENUPOPUP ? IntPtr.Zero : (IntPtr)1;
             }
         }
-        catch (Exception ex)
-        {
-            Perf.Log("menu msg: " + ex.Message);
-        }
+        catch (Exception ex) { Perf.Log("menu msg: " + ex.Message); }
         return IntPtr.Zero;
     }
 
@@ -523,50 +372,32 @@ internal sealed class ShellMenu : IDisposable
             lpVerb = (IntPtr)(id - First),
             lpVerbW = (IntPtr)(id - First),
             nShow = 1,
-            ptInvoke = new NPoint(x, y),
+            ptInvoke = new NPoint(x, y)
         };
         info.cbSize = (uint)Marshal.SizeOf<CmInvokeInfoEx>();
         try
         {
             return c1!.InvokeCommand(ref info) >= 0;
         }
-        catch (Exception ex)
-        {
-            Perf.Log("menu invoke: " + ex.Message);
-            return false;
-        }
+        catch (Exception ex) { Perf.Log("menu invoke: " + ex.Message); return false; }
     }
 
-    // Canonical verb of a command ("open", "copy", "properties"...), empty when the extension has none.
+    // Verbe canonique d'une commande ("open", "copy", "properties"...), vide quand l'extension n'en a pas.
     internal string Verb(uint id)
     {
         var buffer = Marshal.AllocHGlobal(1024);
         try
         {
             Marshal.WriteInt16(buffer, 0);
-            return
-                c1!.GetCommandString(
-                    (UIntPtr)(id - First),
-                    4 /* GCS_VERBW */
-                    ,
-                    IntPtr.Zero,
-                    buffer,
-                    512
-                ) == 0
-                ? Marshal.PtrToStringUni(buffer) ?? ""
-                : "";
+            return c1!.GetCommandString((UIntPtr)(id - First), 4 /* GCS_VERBW */, IntPtr.Zero, buffer, 512) == 0
+                ? Marshal.PtrToStringUni(buffer) ?? "" : "";
         }
-        catch
-        {
-            return "";
-        }
-        finally
-        {
-            Marshal.FreeHGlobal(buffer);
-        }
+        catch { return ""; }
+        finally { Marshal.FreeHGlobal(buffer); }
     }
 
-    // (id, verb, text, depth) for every command; submenus are populated first (what WM_INITMENUPOPUP does) when requested.
+    // (id, verbe, texte, profondeur) pour chaque commande ; les sous-menus sont remplis d'abord (ce que fait WM_INITMENUPOPUP) sur
+    // demande.
     internal List<(uint id, string verb, string text, int depth)> Enumerate(bool populate)
     {
         var all = new List<(uint, string, string, int)>();
@@ -583,16 +414,7 @@ internal sealed class ShellMenu : IDisposable
             for (int i = 0; i < n; i++)
             {
                 Marshal.WriteInt16(text, 0);
-                var info = new MenuItemInfo
-                {
-                    fMask =
-                        0x2
-                        | 0x4
-                        | 0x40 /* ID | SUBMENU | STRING */
-                    ,
-                    dwTypeData = text,
-                    cch = 511,
-                };
+                var info = new MenuItemInfo { fMask = 0x2 | 0x4 | 0x40 /* ID | SUBMENU | STRING */, dwTypeData = text, cch = 511 };
                 info.cbSize = (uint)Marshal.SizeOf<MenuItemInfo>();
                 if (!GetMenuItemInfoW(hmenu, (uint)i, true, ref info))
                     continue;
@@ -608,7 +430,10 @@ internal sealed class ShellMenu : IDisposable
                             else
                                 c2?.HandleMenuMsg(WM_INITMENUPOPUP, info.hSubMenu, (IntPtr)(i & 0xFFFF));
                         }
-                        catch { }
+                        catch (Exception)
+                        {
+                            // Message relayé à l'extension shell : une extension défaillante ne doit pas casser le menu.
+                        }
                     }
                     all.Add((0, "", label, depth));
                     if (depth < 2)
@@ -620,10 +445,7 @@ internal sealed class ShellMenu : IDisposable
                     all.Add((info.wID, "", label, depth));
             }
         }
-        finally
-        {
-            Marshal.FreeHGlobal(text);
-        }
+        finally { Marshal.FreeHGlobal(text); }
     }
 
     public void Dispose()
@@ -638,11 +460,7 @@ internal sealed class ShellMenu : IDisposable
         c3 = null;
         if (com != null)
         {
-            try
-            {
-                Marshal.FinalReleaseComObject(com);
-            }
-            catch { }
+            Safe.Try(() => Marshal.FinalReleaseComObject(com));
             com = null;
         }
     }

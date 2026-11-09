@@ -62,7 +62,7 @@ CustomMouseArea {
                     id: prevMonthText
 
                     anchors.centerIn: parent
-                    text:qsTr("chevron_left")
+                    text: qsTr("chevron_left")
                     color: Colours.palette.m3tertiary
                     font.pointSize: Appearance.font.size.normal
                     font.weight: 700
@@ -122,7 +122,7 @@ CustomMouseArea {
                     id: nextMonthText
 
                     anchors.centerIn: parent
-                    text:qsTr("chevron_right")
+                    text: qsTr("chevron_right")
                     color: Colours.palette.m3tertiary
                     font.pointSize: Appearance.font.size.normal
                     font.weight: 700

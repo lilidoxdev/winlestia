@@ -8,39 +8,77 @@
 # d'utilisateur, jamais depuis le dossier personnel :
 #   git clone --no-hardlinks <depot> C:\wl-build\src   (ou git worktree add --detach, au commit final)
 #   cmd /c src\backend\build-backdrop.cmd, build-process-audio.cmd, build-rescue.cmd, build-taskbar-rescue.cmd
+#   cmd /c src\native\qtglass\build-qt-glass.cmd   (verre natif Qt : build\QtGlassBackdrop.dll, ignore par git)
 #   $env:TEMP = $env:TMP = 'C:\wl-build\tmp'; $env:NUGET_PACKAGES = 'C:\wl-build\nuget'; $env:PIP_CACHE_DIR = 'C:\wl-build\pip'
 #   pwsh C:\wl-build\src\installer\build.ps1
 # Aucun .pdb ni lanceur pip n'est livre. Verifier ensuite que build\payload ne contient ni le nom
 # d'utilisateur ni C:\Users\ (UTF-8 et UTF-16LE).
 
+# -CI : fabrication de verification sur runner CI. Les composants natifs ignores par git (MSVC requis) sont
+# remplaces par des fichiers vides : le setup produit sert uniquement de test de fumee, jamais de livraison.
+param([switch]$CI)
+
 $ErrorActionPreference = 'Stop'
 $root    = Split-Path $PSScriptRoot -Parent
 $payload = Join-Path $root 'build\payload'
+$filesStage = Join-Path $root 'build\files-staging'
 $pythonVersion = '3.12.10'
+# SHA256 de python-3.12.10-embed-amd64.zip (MD5 fe8ef205f2e9c3ba44d0cf9954e1abd3 confirmé sur la page de release python.org)
+$pythonSha256 = '4acbed6dd1c744b0376e3b1cf57ce906f9dc9e95e68824584c8099a63025a3c3'
+# Version unique lue dans Directory.Build.props
+$version = ([xml](Get-Content (Join-Path $root 'Directory.Build.props') -Raw)).Project.PropertyGroup.Version
+if (-not $version) { throw 'Version introuvable dans Directory.Build.props.' }
 $pythonUrl = "https://www.python.org/ftp/python/$pythonVersion/python-$pythonVersion-embed-amd64.zip"
+
+# Fusionne un publish secondaire dans le dossier principal : ajoute les fichiers absents et les assemblies
+# gérées dont l'AssemblyVersion est strictement supérieure ; Winlestia.Files.* est toujours copié.
+function Merge-Publish([string]$Source, [string]$Dest) {
+    $srcRoot = (Resolve-Path $Source).Path.TrimEnd('\')
+    foreach ($f in Get-ChildItem $srcRoot -Recurse -File) {
+        $rel = $f.FullName.Substring($srcRoot.Length).TrimStart('\')
+        $target = Join-Path $Dest $rel
+        $copy = $false
+        if ($f.Name -like 'Winlestia.Files.*' -or -not (Test-Path $target)) { $copy = $true }
+        else {
+            try {
+                $new = [Reflection.AssemblyName]::GetAssemblyName($f.FullName).Version
+                $old = [Reflection.AssemblyName]::GetAssemblyName($target).Version
+                if ($new -gt $old) { $copy = $true }
+            } catch { }  # natif ou illisible : on garde la copie du backend
+        }
+        if ($copy) {
+            New-Item -ItemType Directory -Force -Path (Split-Path $target -Parent) | Out-Null
+            Copy-Item $f.FullName $target -Force
+        }
+    }
+}
 
 Write-Host '→ Nettoyage' -ForegroundColor Cyan
 Remove-Item -Recurse -Force $payload -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $payload | Out-Null
 
 # Composants natifs (ignorés par git) : compilés au besoin AVANT le publish, qui copie ProcessAudio.dll.
+# Source unique partagée avec la CI (tools/build-native.ps1). En mode -CI, les absents sont remplacés par des fichiers vides plus bas.
 $nativeDir = Join-Path $root 'src\backend\native'
-$missingNative = @('RETABLIR_BARRE_WINDOWS.exe','SECOURS_BUREAU.exe','GlassBackdrop.dll','ProcessAudio.dll') | Where-Object { -not (Test-Path (Join-Path $nativeDir $_)) }
-if ($missingNative) { & (Join-Path $root 'tools\build-native.ps1') }   # source unique, partagée avec la CI
+$missingNative = @('RETABLIR_BARRE_WINDOWS.exe','SECOURS_BUREAU.exe','GlassBackdrop.dll','ProcessAudio.dll') |
+    Where-Object { -not (Test-Path (Join-Path $nativeDir $_)) }
+if ($missingNative -and -not $CI) { & (Join-Path $root 'tools\build-native.ps1') }
 
-Write-Host '→ Backend .NET 10 (auto-suffisant)' -ForegroundColor Cyan
+Write-Host '→ Backend .NET 8 (auto-suffisant)' -ForegroundColor Cyan
 dotnet publish (Join-Path $root 'src\backend\Panneaux.Glass.csproj') `
     -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:DebugType=none -p:DebugSymbols=false `
     -o (Join-Path $payload 'Glass-v5') --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation du backend échouée.' }
 
-Write-Host '→ Winlestia Fichiers (.NET 10, auto-suffisant)' -ForegroundColor Cyan
+Write-Host '→ Winlestia Fichiers (.NET 8, auto-suffisant)' -ForegroundColor Cyan
 dotnet publish (Join-Path $root 'src\files\Winlestia.Files.csproj') `
     -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:DebugType=none -p:DebugSymbols=false `
-    -o (Join-Path $payload 'Glass-v5') --nologo
+    -o $filesStage --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation de Winlestia Fichiers échouée.' }
+Merge-Publish $filesStage (Join-Path $payload 'Glass-v5')
+Remove-Item -Recurse -Force $filesStage -ErrorAction SilentlyContinue
 
-Write-Host '→ Commande winlestia.exe (.NET 10, auto-suffisant)' -ForegroundColor Cyan
+Write-Host '→ Commande winlestia.exe (.NET 8, auto-suffisant)' -ForegroundColor Cyan
 dotnet publish (Join-Path $root 'src\cli\winlestia.csproj') `
     -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true `
     -p:EnableCompressionInSingleFile=true -p:DebugType=none `
@@ -50,7 +88,14 @@ if ($LASTEXITCODE -ne 0) { throw 'Compilation de winlestia.exe échouée.' }
 # Composants natifs précompilés (ignorés par git) : sans eux le setup serait livré sans outil de restauration.
 $nativeDir = Join-Path $root 'src\backend\native'
 foreach ($required in 'RETABLIR_BARRE_WINDOWS.exe','SECOURS_BUREAU.exe','GlassBackdrop.dll') {
-    if (-not (Test-Path (Join-Path $nativeDir $required))) { throw "Composant natif manquant : $required dans $nativeDir. Copie-le depuis une installation de Winlestia (Glass-v5) ou recompile-le (voir native\README.md)." }
+    if ($CI -and -not (Test-Path (Join-Path $nativeDir $required))) {
+        Write-Warning "CI : $required absent, remplace par un fichier vide (setup de fumee)."
+        New-Item -ItemType File -Force -Path (Join-Path $nativeDir $required) | Out-Null
+    }
+    if (-not (Test-Path (Join-Path $nativeDir $required))) {
+        throw ("Composant natif manquant : $required dans $nativeDir. " +
+            "Copie-le depuis une installation de Winlestia (Glass-v5) ou recompile-le (voir native\README.md).")
+    }
 }
 
 # Fichiers attendus à côté de l’exécutable mais hors du publish
@@ -68,15 +113,33 @@ foreach ($leak in 'catalog.json', 'preferences-glass.json', 'taskbar-session.jso
 Get-ChildItem (Join-Path $payload 'Glass-v5') -Filter '*.log' -ErrorAction SilentlyContinue | Remove-Item -Force
 
 Write-Host '→ Frontend QML' -ForegroundColor Cyan
+# Verre natif Qt (ignoré par git) : sans lui native_glass.py retombe sans flou natif. Copié avec le frontend.
+$qtGlass = Join-Path $root 'build\QtGlassBackdrop.dll'
+if ($CI -and -not (Test-Path $qtGlass)) {
+    Write-Warning 'CI : QtGlassBackdrop.dll absent, remplace par un fichier vide (setup de fumee).'
+    New-Item -ItemType File -Force -Path $qtGlass | Out-Null
+}
+if (-not (Test-Path $qtGlass)) {
+    cmd /c (Join-Path $root 'src\native\qtglass\build-qt-glass.cmd')
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $qtGlass)) {
+        throw "QtGlassBackdrop.dll manquant dans build : compilation (src\native\qtglass\build-qt-glass.cmd) echouee." }
+}
 $frontDest = Join-Path $payload 'Caelestia-Windows'
 robocopy (Join-Path $root 'src\frontend') $frontDest /E /NFL /NDL /NJH /NJS /NP `
     /XD '.venv' 'validation-*' 'checkpoint-*' '__pycache__' '/XF' '*.zip' '*.pyc' | Out-Null
+# La DLL est produite dans build\ : elle doit finir a cote des modules du frontend (native_glass.default_library).
+Copy-Item -LiteralPath $qtGlass -Destination $frontDest -Force
 
 Write-Host '→ Python embarqué' -ForegroundColor Cyan
 $pyDir = Join-Path $frontDest '.venv\Scripts'
 New-Item -ItemType Directory -Force -Path $pyDir | Out-Null
 $zip = Join-Path $env:TEMP "python-$pythonVersion-embed-amd64.zip"
 if (-not (Test-Path $zip)) { Invoke-WebRequest $pythonUrl -OutFile $zip }
+$actualSha = (Get-FileHash -Algorithm SHA256 -Path $zip).Hash
+if ($actualSha -ne $pythonSha256) {
+    Remove-Item -Force $zip -ErrorAction SilentlyContinue
+    throw "SHA256 de l'archive Python invalide : attendu $pythonSha256, obtenu $actualSha."
+}
 Expand-Archive -Path $zip -DestinationPath $pyDir -Force
 # Le backend lance `.venv\Scripts\pythonw.exe` : la distribution embarquée vit donc dans Scripts.
 # `..\..` est indispensable : sans lui, un `._pth` retire le dossier du script de sys.path
@@ -86,8 +149,8 @@ Expand-Archive -Path $zip -DestinationPath $pyDir -Force
 
 Write-Host '→ Dépendances Python' -ForegroundColor Cyan
 python -m pip install --target (Join-Path $pyDir 'Lib\site-packages') `
-    --no-warn-script-location --disable-pip-version-check --only-binary=:all: `
-    -r (Join-Path $root 'src\frontend\requirements.txt')
+    --no-warn-script-location --disable-pip-version-check --only-binary=:all: --no-deps --require-hashes `
+    -r (Join-Path $root 'src\frontend\requirements.lock.txt')
 if ($LASTEXITCODE -ne 0) { throw 'Installation des dépendances Python échouée.' }
 
 # Allègement : modules Qt que le frontend n’importe jamais
@@ -104,7 +167,8 @@ Get-ChildItem $site -Filter 'Qt63D*.dll'          | Remove-Item -Force
 Get-ChildItem $site -Filter 'Qt6Quick3D*.dll'     | Remove-Item -Force
 Get-ChildItem $site -Filter 'Qt6Charts*.dll'      | Remove-Item -Force
 Get-ChildItem $site -Filter 'Qt6Multimedia*.dll'  | Remove-Item -Force
-Get-ChildItem $site -Filter '*.pyd' | Where-Object { $_.Name -match 'WebEngine|Pdf|3D|Quick3D|Charts|Multimedia|DataVisualization|Graphs' } | Remove-Item -Force
+Get-ChildItem $site -Filter '*.pyd' | Where-Object { $_.Name -match 'WebEngine|Pdf|3D|Quick3D|Charts|Multimedia|DataVisualization|Graphs'
+} | Remove-Item -Force
 
 # Lanceurs pip (pyside6-*.exe, f2py.exe...) : outils de developpement, jamais lances par l'application,
 # et chacun embarque le chemin de l'interpreteur de construction.
@@ -122,6 +186,7 @@ Write-Host '→ Vérification du frontend dans le payload' -ForegroundColor Cyan
 $probe = Join-Path $frontDest '_probe.py'
 Set-Content -LiteralPath $probe -Encoding ASCII -Value @'
 import interaction, search, live_model, capture_native, wallpaper_theme, native_glass, surface_geometry
+import win_native, bridge_client, windows_player
 from PySide6.QtQuick import QQuickWindow
 print('frontend ok')
 '@
@@ -133,19 +198,23 @@ if ($probeCode -ne 0) { throw "Le frontend ne s'importe pas depuis le payload : 
 Write-Host 'Terminal Winlestia' -ForegroundColor Cyan
 $terminalDest = Join-Path $payload 'Winlestia-Terminal'
 New-Item -ItemType Directory -Force -Path $terminalDest | Out-Null
-foreach ($file in 'Profile.ps1','Banner.ps1','Colors.ps1','ConfigurePackagedCmd.ps1','Configure-Policy.ps1','sync_theme.py','install.py','theme-template.json','winlestia.ico') {
+foreach ($file in 'Profile.ps1','Banner.ps1','Colors.ps1','ConfigurePackagedCmd.ps1','Configure-Policy.ps1','sync_theme.py','install.py',
+    'theme-template.json','winlestia.ico') {
     Copy-Item (Join-Path $root "src\terminal\$file") $terminalDest -Force
 }
 foreach ($dir in 'clink','clink-profile') {
-    robocopy (Join-Path $root "src\terminal\$dir") (Join-Path $terminalDest $dir) /E /NFL /NDL /NJH /NJS /NP /XF '*.log' '*history*' '*.tmp' 'clink_errorlevel*' | Out-Null
+    $terminalSrc = Join-Path $root "src\terminal\$dir"
+    $terminalDst = Join-Path $terminalDest $dir
+    robocopy $terminalSrc $terminalDst /E /NFL /NDL /NJH /NJS /NP /XF '*.log' '*history*' '*.tmp' 'clink_errorlevel*' | Out-Null
 }
 Write-Host '→ Compilation du setup' -ForegroundColor Cyan
 $iscc = @(
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+    "${env:ProgramFiles}\Inno Setup 6\ISCC.exe",
     "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
 ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $iscc) { throw 'Inno Setup 6 introuvable : winget install JRSoftware.InnoSetup' }
-& $iscc /Qp (Join-Path $PSScriptRoot 'Winlestia.iss')
+& $iscc /Qp "/DAppVersion=$version" (Join-Path $PSScriptRoot 'Winlestia.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Compilation Inno Setup échouée.' }
 
-Write-Host "`nTerminé : build\out\Winlestia-Setup-0.9.1.exe" -ForegroundColor Green
+Write-Host "`nTerminé : build\out\Winlestia-Setup-$version.exe" -ForegroundColor Green

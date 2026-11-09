@@ -1,0 +1,73 @@
+{
+  "At": "2026-10-21T12:12:42.6708328+02:00",
+  "Passed": 4,
+  "Failed": 2,
+  "Checks": [
+    {
+      "Name": "R\u00E9ouverture pendant le repli : derni\u00E8re intention respect\u00E9e",
+      "Pass": true
+    },
+    {
+      "Name": "Huit bascules rapides ne laissent pas de fermeture diff\u00E9r\u00E9e",
+      "Pass": true
+    },
+    {
+      "Name": "R\u00E9ouvertures rapides : un collecteur actif et red\u00E9marrage possible",
+      "Pass": false
+    },
+    {
+      "Name": "Aucun relev\u00E9 ni boucle de capteurs apr\u00E8s masquage",
+      "Pass": false
+    },
+    {
+      "Name": "Retour depuis les quatre panneaux sans surfaces fant\u00F4mes",
+      "Pass": true
+    },
+    {
+      "Name": "Repli complet de toutes les surfaces",
+      "Pass": true
+    }
+  ],
+  "Measurements": [
+    {
+      "Name": "Accueil stable",
+      "ElapsedMs": 8003.9173,
+      "CpuMs": 515.625,
+      "TotalCpuPercent": 0.5368434428900213,
+      "WorkingSetMB": 161.04296875,
+      "PrivateMB": 142.98046875,
+      "Samples": 0,
+      "Sampling": false
+    },
+    {
+      "Name": "Accueil \u002B \u00E9tat PC",
+      "ElapsedMs": 12003.2226,
+      "CpuMs": 359.375,
+      "TotalCpuPercent": 0.2494981149724026,
+      "WorkingSetMB": 238.55078125,
+      "PrivateMB": 214.63671875,
+      "Samples": 0,
+      "Sampling": false
+    },
+    {
+      "Name": "Accueil apr\u00E8s repli PC",
+      "ElapsedMs": 6008.2721,
+      "CpuMs": 1062.5,
+      "TotalCpuPercent": 1.473637516638096,
+      "WorkingSetMB": 252.0234375,
+      "PrivateMB": 226.08984375,
+      "Samples": 4,
+      "Sampling": true
+    },
+    {
+      "Name": "Interface repli\u00E9e",
+      "ElapsedMs": 6001.9645,
+      "CpuMs": 187.5,
+      "TotalCpuPercent": 0.2603295560583836,
+      "WorkingSetMB": 305.56640625,
+      "PrivateMB": 262.94140625,
+      "Samples": 4,
+      "Sampling": false
+    }
+  ]
+}

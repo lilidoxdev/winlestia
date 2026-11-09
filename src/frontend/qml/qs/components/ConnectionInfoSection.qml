@@ -50,11 +50,11 @@ ColumnLayout {
     }
 
     StyledText {
-        text: (root.deviceDetails && root.deviceDetails.dns && root.deviceDetails.dns.length > 0) ? root.deviceDetails.dns.join(", ") : qsTr("Not available")
+        text: (root.deviceDetails && root.deviceDetails.dns && root.deviceDetails.dns.length > 0) ? root.deviceDetails.dns.join(", ")
+            : qsTr("Not available")
         color: Colours.palette.m3outline
         font.pointSize: Appearance.font.size.small
         wrapMode: Text.Wrap
         Layout.maximumWidth: parent.width
     }
 }
-

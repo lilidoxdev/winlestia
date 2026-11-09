@@ -27,10 +27,10 @@ Popup {
     // Popup properties - doesn't affect layout
     parent: {
         let p = target;
-        // Walk up to find the root Item (usually has anchors.fill: parent)
+        // Remonte pour trouver l'Item racine (a généralement anchors.fill: parent)
         while (p && p.parent) {
             const parentItem = p.parent;
-            // Check if this looks like a root pane Item
+            // Vérifie si cela ressemble à un Item de panneau racine
             if (parentItem && parentItem.anchors && parentItem.anchors.fill !== undefined) {
                 return parentItem;
             }
@@ -47,7 +47,7 @@ Popup {
     margins: 0
     background: Item {}
 
-    // Update position when target moves or tooltip becomes visible
+    // Met à jour la position quand la cible bouge ou que l'infobulle devient visible
     onTooltipVisibleChanged: {
         if (tooltipVisible) {
             Qt.callLater(updatePosition);
@@ -55,33 +55,47 @@ Popup {
     }
     Connections {
         target: root.target
-        function onXChanged() { if (root.tooltipVisible) root.updatePosition(); }
-        function onYChanged() { if (root.tooltipVisible) root.updatePosition(); }
-        function onWidthChanged() { if (root.tooltipVisible) root.updatePosition(); }
-        function onHeightChanged() { if (root.tooltipVisible) root.updatePosition(); }
+        function onXChanged() {
+            if (root.tooltipVisible)
+                root.updatePosition();
+        }
+        function onYChanged() {
+            if (root.tooltipVisible)
+                root.updatePosition();
+        }
+        function onWidthChanged() {
+            if (root.tooltipVisible)
+                root.updatePosition();
+        }
+        function onHeightChanged() {
+            if (root.tooltipVisible)
+                root.updatePosition();
+        }
     }
 
     function updatePosition() {
-        if (!target || !parent) return;
-        
-        // Wait for tooltipRect to have its size calculated
+        if (!target || !parent)
+            return;
+
+        // Attend que tooltipRect ait sa taille calculée
         Qt.callLater(() => {
-            if (!target || !parent || !tooltipRect) return;
-            
-            // Get target position in parent's coordinate system
+            if (!target || !parent || !tooltipRect)
+                return;
+
+            // Position de la cible dans le repère du parent
             const targetPos = target.mapToItem(parent, 0, 0);
             const targetCenterX = targetPos.x + target.width / 2;
-            
-            // Get tooltip size (use width/height if available, otherwise implicit)
+
+            // Taille de l'info-bulle (width/height si disponibles, sinon implicites)
             const tooltipWidth = tooltipRect.width > 0 ? tooltipRect.width : tooltipRect.implicitWidth;
             const tooltipHeight = tooltipRect.height > 0 ? tooltipRect.height : tooltipRect.implicitHeight;
-            
-            // Center tooltip horizontally on target
+
+            // Centre l'infobulle horizontalement sur la cible
             let newX = targetCenterX - tooltipWidth / 2;
-            
+
             // Position tooltip above target
             let newY = targetPos.y - tooltipHeight - Appearance.spacing.small;
-            
+
             // Keep within bounds
             const padding = Appearance.padding.normal;
             if (newX < padding) {
@@ -89,7 +103,7 @@ Popup {
             } else if (newX + tooltipWidth > (parent.width - padding)) {
                 newX = parent.width - tooltipWidth - padding;
             }
-            
+
             // Update popup position
             x = newX;
             y = newY;
@@ -144,7 +158,7 @@ Popup {
         radius: Appearance.rounding.small
         antialiasing: true
 
-        // Add elevation for depth
+        // Ajoute de l'élévation pour la profondeur
         Elevation {
             anchors.fill: parent
             radius: parent.radius
@@ -156,7 +170,7 @@ Popup {
             id: tooltipText
 
             anchors.centerIn: parent
-            
+
             text: root.text
             color: Colours.palette.m3onSurface
             font.pointSize: Appearance.font.size.small
@@ -169,4 +183,3 @@ Popup {
         }
     }
 }
-

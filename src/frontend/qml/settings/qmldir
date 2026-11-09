@@ -1,0 +1,22 @@
+singleton SettingsIndex SettingsIndex.qml
+PageAppearance PageAppearance.qml
+PageApps PageApps.qml
+PageDocks PageDocks.qml
+PageFiles PageFiles.qml
+PageGeneral PageGeneral.qml
+PageInterface PageInterface.qml
+PageMedia PageMedia.qml
+PageShortcuts PageShortcuts.qml
+SettingsChips SettingsChips.qml
+SettingsFocusRing SettingsFocusRing.qml
+SettingsKeyCaps SettingsKeyCaps.qml
+SettingsNav SettingsNav.qml
+SettingsNavItem SettingsNavItem.qml
+SettingsOptionList SettingsOptionList.qml
+SettingsPageSlot SettingsPageSlot.qml
+SettingsRow SettingsRow.qml
+SettingsSection SettingsSection.qml
+SettingsShortcutDialog SettingsShortcutDialog.qml
+SettingsSliderRow SettingsSliderRow.qml
+SettingsStepper SettingsStepper.qml
+SettingsSwitch SettingsSwitch.qml

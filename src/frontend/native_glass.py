@@ -1,4 +1,4 @@
-# Python 3.12 / native_glass.py / Windows 11. One shared shell geometry and one material.
+# Python 3.12 / native_glass.py / Windows 11. Une géométrie de shell partagée et une seule matière.
 from pathlib import Path
 import ctypes
 from PySide6.QtCore import QObject, QTimer
@@ -6,8 +6,15 @@ from PySide6.QtWidgets import QApplication
 from surface_geometry import path_commands
 
 
+def default_library():
+    """DLL installée à côté du frontend ; en dépôt (dev), repli sur <depot>/build/ où build-qt-glass.cmd la produit."""
+    local = Path(__file__).with_name('QtGlassBackdrop.dll')
+    built = Path(__file__).resolve().parents[2] / 'build' / 'QtGlassBackdrop.dll'
+    return local if local.exists() or not built.exists() else built
+
+
 class SurfaceCommand(ctypes.Structure):
-    _fields_ = [("kind", ctypes.c_uint32), ("points", ctypes.c_float * 6)]
+    _fields_ = [('kind', ctypes.c_uint32), ('points', ctypes.c_float * 6)]
 
 
 class NativeGlass(QObject):
@@ -21,19 +28,19 @@ class NativeGlass(QObject):
         self.queued = False
         self.watched = set()
         try:
-            self.dll = ctypes.WinDLL(str(library or Path(__file__).with_name("QtGlassBackdrop.dll")))
+            self.dll = ctypes.WinDLL(str(library or default_library()))
             signatures = {
-                "BackdropAttach": [ctypes.c_void_p],
-                "BackdropUpdate": [ctypes.c_void_p, ctypes.c_double, ctypes.c_int, ctypes.c_int],
-                "BackdropSurface": [ctypes.c_void_p, ctypes.POINTER(SurfaceCommand), ctypes.c_uint32],
-                "BackdropMaterial": [ctypes.c_void_p, ctypes.c_float],
-                "BackdropDetach": [ctypes.c_void_p],
-                "BackdropPart": [ctypes.c_void_p, ctypes.c_int],
+                'BackdropAttach': [ctypes.c_void_p],
+                'BackdropUpdate': [ctypes.c_void_p, ctypes.c_double, ctypes.c_int, ctypes.c_int],
+                'BackdropSurface': [ctypes.c_void_p, ctypes.POINTER(SurfaceCommand), ctypes.c_uint32],
+                'BackdropMaterial': [ctypes.c_void_p, ctypes.c_float],
+                'BackdropDetach': [ctypes.c_void_p],
+                'BackdropPart': [ctypes.c_void_p, ctypes.c_int],
             }
             for name, args in signatures.items():
                 getattr(self.dll, name).argtypes = args
             self.dll.BackdropPart.restype = ctypes.c_void_p
-            if hasattr(self.dll, "BackdropSurfaceDirty"):
+            if hasattr(self.dll, 'BackdropSurfaceDirty'):
                 self.dll.BackdropSurfaceDirty.argtypes = [
                     ctypes.c_void_p,
                     ctypes.POINTER(SurfaceCommand),
@@ -70,13 +77,15 @@ class NativeGlass(QObject):
         if self.stopped:
             return
         scene = self.bridge.surface_scene
-        if not scene or not self.dll:
+        if not scene:
             return
         live = set()
         native_bump = {3: -1, 4: -1}
         busy = False
-        for window in QApplication.allWindows():
-            if not window.title().startswith("Panneaux · Cadre "):
+        # Sans la DLL native, la partie fond est ignorée, mais les fenêtres de contenu doivent rester au-dessus de la
+        # fenêtre de cadre ci-dessous.
+        for window in QApplication.allWindows() if self.dll else ():
+            if not window.title().startswith('Panneaux · Cadre '):
                 continue
             handle = int(window.winId())
             live.add(handle)
@@ -84,7 +93,7 @@ class NativeGlass(QObject):
                 self.watched.add(handle)
                 window.visibleChanged.connect(self.request_sync)
             record = self.windows.get(handle)
-            name = window.property("screenName")
+            name = window.property('screenName')
             if not self.bridge.glassEnabled or self.bridge.reducedEffects:
                 if record:
                     self.dll.BackdropDetach(handle)
@@ -98,27 +107,27 @@ class NativeGlass(QObject):
             if record is None:
                 status = self.dll.BackdropAttach(handle)
                 if status < 0:
-                    self.error("Attach", status)
+                    self.error('Attach', status)
                     continue
-                record = {"key": None, "opacity": None, "components": None}
+                record = {'key': None, 'opacity': None, 'components': None}
                 self.windows[handle] = record
-            if record["opacity"] != self.bridge.glassOpacity:
+            if record['opacity'] != self.bridge.glassOpacity:
                 status = self.dll.BackdropMaterial(handle, self.bridge.glassOpacity)
                 if status < 0:
-                    self.error("Material", status)
+                    self.error('Material', status)
                     continue
-                record["opacity"] = self.bridge.glassOpacity
-            components = scene.data[name].get("components")
+                record['opacity'] = self.bridge.glassOpacity
+            components = scene.data[name].get('components')
             key = (window.width(), window.height(), window.devicePixelRatio(), components)
-            if record["key"] != key:
+            if record['key'] != key:
                 commands = path_commands(path, window.devicePixelRatio())
                 array = (SurfaceCommand * len(commands))()
                 for index, (kind, *points) in enumerate(commands):
                     array[index].kind = kind
                     array[index].points[:] = points
-                old = record["components"]
+                old = record['components']
                 dirty = None
-                if old and components and old[0] == components[0] and record["key"][:3] == key[:3]:
+                if old and components and old[0] == components[0] and record['key'][:3] == key[:3]:
                     boxes = [
                         spec
                         for previous, current in zip(old[1:], components[1:])
@@ -134,49 +143,51 @@ class NativeGlass(QObject):
                             (max(b[0] + b[2] for b in boxes) + 2) * scale,
                             (max(b[1] + b[3] for b in boxes) + 2) * scale,
                         )
-                if dirty and hasattr(self.dll, "BackdropSurfaceDirty"):
+                if dirty and hasattr(self.dll, 'BackdropSurfaceDirty'):
                     status = self.dll.BackdropSurfaceDirty(handle, array, len(commands), *dirty)
                 else:
                     status = self.dll.BackdropSurface(handle, array, len(commands))
                 if status < 0:
-                    self.error("Geometry", status)
+                    self.error('Geometry', status)
                     self.dll.BackdropUpdate(handle, 0, False, True)
                     continue
-                record["key"] = key
-                record["components"] = components
+                record['key'] = key
+                record['components'] = components
             status = self.dll.BackdropUpdate(handle, 0, True, True)
             if status < 0:
-                self.error("Update", status)
+                self.error('Update', status)
             elif components:
                 for slot in (3, 4):
                     if len(components) > slot and components[slot]:
                         native_bump[slot] = components[slot][2]
-        # The rail content follows the bump width last sent to the native backdrop (-1 = no native backdrop: QML follows its own animation).
-        for slot, attr in ((3, "social_win"), (4, "bookmarks_win")):
+        # Le contenu du rail suit la largeur de bosse envoyée en dernier au fond natif (-1 = pas de fond natif : le
+        # QML suit sa propre animation).
+        for slot, attr in ((3, 'social_win'), (4, 'bookmarks_win')):
             rail = getattr(self.bridge, attr, None)
-            if rail and rail.property("nativeBump") != native_bump[slot]:
-                rail.setProperty("nativeBump", native_bump[slot])
+            if rail and rail.property('nativeBump') != native_bump[slot]:
+                rail.setProperty('nativeBump', native_bump[slot])
         for handle in set(self.windows) - live:
             self.dll.BackdropDetach(handle)
             self.windows.pop(handle, None)
-        # Content-only windows stay above the shared background and never tint their text twice.
+        # Les fenêtres de contenu seules restent au-dessus du fond partagé et ne teintent jamais leur texte deux fois.
         for window in (
             self.bridge.top,
             self.bridge.dock,
-            getattr(self.bridge, "social_win", None),
-            getattr(self.bridge, "bookmarks_win", None),
-            getattr(self.bridge, "dictation_win", None),
+            getattr(self.bridge, 'social_win', None),
+            getattr(self.bridge, 'bookmarks_win', None),
+            getattr(self.bridge, 'dictation_win', None),
         ):
             if window and window.isVisible():
                 self.user.SetWindowPos(int(window.winId()), ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
                 busy = True
-        # Back-off: nothing native to keep on top/updated -> 500 ms safety tick (changed/surfaceChanged still sync at once); 250 ms otherwise.
-        interval = 250 if busy or any(r.get("key") for r in self.windows.values()) else 500
+        # Repli : rien de natif à garder au premier plan ou à jour -> tick de sécurité à 500 ms
+        # (changed/surfaceChanged synchronisent toujours aussitôt) ; 250 ms sinon.
+        interval = 250 if busy or any(r.get('key') for r in self.windows.values()) else 500
         if self.timer.interval() != interval:
             self.timer.setInterval(interval)
 
     def error(self, phase, status):
-        message = f"{phase}: {status:#x}"
+        message = f'{phase}: {status:#x}'
         if message not in self.errors:
             self.errors.append(message)
 

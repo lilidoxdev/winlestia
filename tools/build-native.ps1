@@ -7,7 +7,8 @@ New-Item -ItemType Directory -Force -Path $native | Out-Null
 
 if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
     $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-    $vs = if (Test-Path $vswhere) { & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath }
+    $vs = if (Test-Path $vswhere) { & $vswhere -latest -products * `
+        -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath }
     if ($vs) {
         $vcvars = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
         # A temporary .cmd avoids quoting differences between Windows PowerShell and pwsh 7.

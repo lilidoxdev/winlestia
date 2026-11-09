@@ -1,2 +1,5 @@
 import QtQuick
-QtObject { default property list<QtObject> data }
+
+QtObject {
+    default property list<QtObject> data
+}

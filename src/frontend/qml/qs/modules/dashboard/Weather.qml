@@ -169,7 +169,8 @@ Item {
 
                         StyledText {
                             Layout.alignment: Qt.AlignHCenter
-                            text: forecastItem.index === 0 ? qsTr("Today") : new Date(forecastItem.modelData.date).toLocaleDateString(Qt.locale(Bridge.language || "en"), "ddd")
+                            text: forecastItem.index === 0 ? qsTr("Today")
+                                : new Date(forecastItem.modelData.date).toLocaleDateString(Qt.locale(Bridge.language || "en"), "ddd")
                             font.pointSize: Appearance.font.size.normal
                             font.weight: 600
                             color: Colours.palette.m3primary
@@ -193,7 +194,9 @@ Item {
 
                         StyledText {
                             Layout.alignment: Qt.AlignHCenter
-                            text: Config.services.useFahrenheit ? forecastItem.modelData.maxTempF + "°" + " / " + forecastItem.modelData.minTempF + "°" : forecastItem.modelData.maxTempC + "°" + " / " + forecastItem.modelData.minTempC + "°"
+                            text: Config.services.useFahrenheit
+                                ? forecastItem.modelData.maxTempF + "°" + " / " + forecastItem.modelData.minTempF + "°"
+                                : forecastItem.modelData.maxTempC + "°" + " / " + forecastItem.modelData.minTempC + "°"
                             font.weight: 600
                             color: Colours.palette.m3tertiary
                         }

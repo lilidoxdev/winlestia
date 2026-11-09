@@ -1,13 +1,14 @@
-# Python 3.12 / chromatic_palette.py / Windows. Wallpaper -> seeds (pooled quantiser + HCT scoring) -> Material You palette (light or dark).
+# Python 3.12 / chromatic_palette.py / Windows. Fond d'écran -> graines (quantificateur groupé + score HCT) -> palette
+# Material You (claire ou sombre).
 from pathlib import Path
 import math
 
-HEX = "#{:02x}{:02x}{:02x}"
-MONO_CHROMA = 8.0  # HCT chroma under which a wallpaper is treated as colourless
+HEX = '#{:02x}{:02x}{:02x}'
+MONO_CHROMA = 8.0  # chroma HCT en dessous de laquelle un fond est traité comme sans couleur
 TO_LIGHT = 62.0
-TO_DARK = 50.0  # hysteresis on area-weighted L*
+TO_DARK = 50.0  # hystérésis sur L* pondéré par la surface
 _cache = {}
-_dark_state = {}  # _dark_state: bounded (<=16) light/dark hysteresis memory, keyed by monitor slot
+_dark_state = {}  # _dark_state : mémoire d'hystérésis clair/sombre bornée (<=16), indexée par emplacement de moniteur
 
 
 def _oklab(rgb):
@@ -48,13 +49,14 @@ def _pixels(paths, background):
             if not path or not Path(path).is_file():
                 continue
             with Image.open(path) as original:
-                original.draft("RGB", (192, 192))
+                original.draft('RGB', (192, 192))
                 original.thumbnail((96, 96))
-                chunks.append(np.asarray(original.convert("RGB"), dtype=np.uint8).reshape(-1, 3))
+                chunks.append(np.asarray(original.convert('RGB'), dtype=np.uint8).reshape(-1, 3))
         except Exception:
+            # Image illisible : elle est simplement absente de la palette.
             continue
     if not chunks:
-        value = background if isinstance(background, str) and len(background) == 7 else "#182025"
+        value = background if isinstance(background, str) and len(background) == 7 else '#182025'
         chunks.append(np.array([[int(value[i : i + 2], 16) for i in (1, 3, 5)]], dtype=np.uint8))
     return np.concatenate(chunks)
 
@@ -97,7 +99,7 @@ def _hex(rgb):
     return HEX.format(*(int(round(min(255, max(0, v)))) for v in rgb))
 
 
-def analyze_images(paths, key=None, background="#182025"):
+def analyze_images(paths, key=None, background='#182025'):
     """Seeds + lightness for 1..N small images pooled together. Deterministic; cached by `key` (or by paths+mtimes)."""
     from material_color_utilities import Hct
 
@@ -116,64 +118,67 @@ def analyze_images(paths, key=None, background="#182025"):
         h = Hct(_hex(rgb)).dict()
         items.append(
             {
-                "hex": _hex(rgb),
-                "proportion": float(proportion),
-                "chroma": float(h["chroma"]),
-                "hue": float(h["hue"]),
-                "tone": float(h["tone"]),
+                'hex': _hex(rgb),
+                'proportion': float(proportion),
+                'chroma': float(h['chroma']),
+                'hue': float(h['hue']),
+                'tone': float(h['tone']),
             }
         )
-    # Hue-smoothed "excited" proportion (+-15 deg) as in Material's Score, then chroma-aware rank.
+    # Proportion « excitée » lissée en teinte (+-15 deg) comme dans le Score de Material, puis classement tenant
+    # compte de la chroma.
     for it in items:
-        it["excited"] = sum(
-            o["proportion"]
+        it['excited'] = sum(
+            o['proportion']
             for o in items
-            if o["chroma"] >= 5 and min((o["hue"] - it["hue"]) % 360, (it["hue"] - o["hue"]) % 360) <= 15
+            if o['chroma'] >= 5 and min((o['hue'] - it['hue']) % 360, (it['hue'] - o['hue']) % 360) <= 15
         )
 
     def score(it):
-        bonus = (it["chroma"] - 48) * (0.1 if it["chroma"] < 48 else 0.3)
-        return it["excited"] * 100 * 0.7 + bonus + math.sqrt(it["proportion"]) * it["chroma"] * 0.35
+        bonus = (it['chroma'] - 48) * (0.1 if it['chroma'] < 48 else 0.3)
+        return it['excited'] * 100 * 0.7 + bonus + math.sqrt(it['proportion']) * it['chroma'] * 0.35
 
     ranked = [
         it
-        for it in sorted(items, key=lambda i: (-score(i), i["hex"]))
-        if it["chroma"] >= 5 and it["excited"] >= 0.01 and it["proportion"] >= 0.004
+        for it in sorted(items, key=lambda i: (-score(i), i['hex']))
+        if it['chroma'] >= 5 and it['excited'] >= 0.01 and it['proportion'] >= 0.004
     ]
     seeds = []
     for it in ranked:
-        if all(min((it["hue"] - s["hue"]) % 360, (s["hue"] - it["hue"]) % 360) >= 15 for s in seeds):
+        if all(min((it['hue'] - s['hue']) % 360, (s['hue'] - it['hue']) % 360) >= 15 for s in seeds):
             seeds.append(it)
         if len(seeds) == 4:
             break
-    for s in seeds:  # a dark image's bulk is low-chroma: a seed inherits the vivid accents of its own hue family
+    # le gros d'une image sombre est peu chromatique : une graine hérite des accents vifs de sa propre famille de
+    # teinte
+    for s in seeds:
         family = [
-            o["chroma"]
+            o['chroma']
             for o in items
-            if o["proportion"] >= 0.01 and min((o["hue"] - s["hue"]) % 360, (s["hue"] - o["hue"]) % 360) <= 20
+            if o['proportion'] >= 0.01 and min((o['hue'] - s['hue']) % 360, (s['hue'] - o['hue']) % 360) <= 20
         ]
-        s["familyChroma"] = max([s["chroma"]] + [c * 0.9 for c in family])
-    top = max([o["chroma"] for o in items if o["proportion"] > 0.01] + [0.0])
+        s['familyChroma'] = max([s['chroma']] + [c * 0.9 for c in family])
+    top = max([o['chroma'] for o in items if o['proportion'] > 0.01] + [0.0])
     mono = top < MONO_CHROMA or not seeds
     if mono and not seeds:
-        tint = max(items, key=lambda i: (i["chroma"] * math.sqrt(i["proportion"]), i["hex"]))
-        seeds = [dict(tint, familyChroma=tint["chroma"], excited=tint["proportion"])]
-    colourfulness = min(1.0, sum(it["proportion"] * it["chroma"] for it in items) / 40.0)
+        tint = max(items, key=lambda i: (i['chroma'] * math.sqrt(i['proportion']), i['hex']))
+        seeds = [dict(tint, familyChroma=tint['chroma'], excited=tint['proportion'])]
+    colourfulness = min(1.0, sum(it['proportion'] * it['chroma'] for it in items) / 40.0)
     result = {
-        "seeds": [
+        'seeds': [
             {
-                "hex": s["hex"],
-                "proportion": round(s["proportion"], 4),
-                "chroma": round(s["chroma"], 2),
-                "hue": round(s["hue"], 1),
-                "familyChroma": round(s["familyChroma"], 2),
+                'hex': s['hex'],
+                'proportion': round(s['proportion'], 4),
+                'chroma': round(s['chroma'], 2),
+                'hue': round(s['hue'], 1),
+                'familyChroma': round(s['familyChroma'], 2),
             }
             for s in seeds
         ],
-        "lightness": round(lightness, 2),
-        "colorfulness": round(colourfulness, 3),
-        "monochrome": bool(mono),
-        "maxChroma": round(top, 2),
+        'lightness': round(lightness, 2),
+        'colorfulness': round(colourfulness, 3),
+        'monochrome': bool(mono),
+        'maxChroma': round(top, 2),
     }
     if len(_cache) > 48:
         _cache.clear()
@@ -206,25 +211,25 @@ def _dh(a, b):
 def build_scheme(analysis, dark):
     from material_color_utilities import TonalPalette, get_contrast_ratio
 
-    seeds = analysis["seeds"]
+    seeds = analysis['seeds']
     first = seeds[0]
-    hue = first["hue"]
-    mono = analysis["monochrome"]
+    hue = first['hue']
+    mono = analysis['monochrome']
     if mono:
-        primary_c = min(10.0, 3 + analysis["maxChroma"])
+        primary_c = min(10.0, 3 + analysis['maxChroma'])
     else:
-        primary_c = _boost(first["familyChroma"])
-        primary_c = max(primary_c, min(first["familyChroma"], 78.0), 48.0 if first["familyChroma"] >= 30 else 0)
+        primary_c = _boost(first['familyChroma'])
+        primary_c = max(primary_c, min(first['familyChroma'], 78.0), 48.0 if first['familyChroma'] >= 30 else 0)
     secondary_c = max(8.0, min(40.0, primary_c * 0.55)) if not mono else 6.0
     tertiary_hue = hue if mono else (hue + 60) % 360
     tertiary_c = max(22.0, primary_c * 0.65) if not mono else 8.0
     tertiary_hex = None
     if not mono:
         for s in seeds[1:]:
-            if _dh(s["hue"], hue) >= 40 and s["familyChroma"] >= 12 and s["proportion"] >= 0.02:
-                tertiary_hue = s["hue"]
-                tertiary_c = max(22.0, min(60.0, _boost(s["familyChroma"]) * 0.85))
-                tertiary_hex = s["hex"]
+            if _dh(s['hue'], hue) >= 40 and s['familyChroma'] >= 12 and s['proportion'] >= 0.02:
+                tertiary_hue = s['hue']
+                tertiary_c = max(22.0, min(60.0, _boost(s['familyChroma']) * 0.85))
+                tertiary_hex = s['hex']
                 break
     neutral_c = 3.0 if mono else min(16.0, 6 + primary_c * 0.14)
     P = TonalPalette(hue, primary_c)
@@ -243,78 +248,78 @@ def build_scheme(analysis, dark):
     def put(name, palette, dt, lt):
         roles[name] = palette.get(tone(dt, lt))
 
-    for n, p in (("primary", P), ("secondary", S), ("tertiary", T)):
-        put(n, p, 60 if n == "primary" else 72, 40)
-        put("on" + n.capitalize(), p, 20, 100)
-        put(n + "Container", p, 30, 90)
-        put("on" + n.capitalize() + "Container", p, 90, 10)
-        put(n + "Fixed", p, 90, 90)
-        put(n + "FixedDim", p, 80, 80)
-        put("on" + n.capitalize() + "Fixed", p, 10, 10)
-        put("on" + n.capitalize() + "FixedVariant", p, 30, 30)
-    put("inversePrimary", P, 40, 80)
-    put("surfaceTint", P, 80, 40)
-    put("error", E, 80, 40)
-    put("onError", E, 20, 100)
-    put("errorContainer", E, 30, 90)
-    put("onErrorContainer", E, 90, 10)
-    put("background", N, 6, 98)
-    put("onBackground", N, 90, 10)
-    put("surface", N, 6, 98)
-    put("onSurface", N, 90, 10)
-    put("surfaceDim", N, 6, 87)
-    put("surfaceBright", N, 24, 98)
-    put("surfaceContainerLowest", N, 4, 100)
-    put("surfaceContainerLow", N, 10, 96)
-    put("surfaceContainer", N, 12, 94)
-    put("surfaceContainerHigh", N, 17, 92)
-    put("surfaceContainerHighest", N, 22, 90)
-    put("surfaceVariant", NV, 30, 90)
-    put("onSurfaceVariant", NV, 80, 30)
-    put("outline", NV, 60, 50)
-    put("outlineVariant", NV, 30, 80)
-    put("inverseSurface", N, 90, 20)
-    put("inverseOnSurface", N, 20, 95)
-    roles["shadow"] = "#000000"
-    roles["scrim"] = "#000000"
-    palette = {"m3" + k: v for k, v in roles.items()}
+    for n, p in (('primary', P), ('secondary', S), ('tertiary', T)):
+        put(n, p, 60 if n == 'primary' else 72, 40)
+        put('on' + n.capitalize(), p, 20, 100)
+        put(n + 'Container', p, 30, 90)
+        put('on' + n.capitalize() + 'Container', p, 90, 10)
+        put(n + 'Fixed', p, 90, 90)
+        put(n + 'FixedDim', p, 80, 80)
+        put('on' + n.capitalize() + 'Fixed', p, 10, 10)
+        put('on' + n.capitalize() + 'FixedVariant', p, 30, 30)
+    put('inversePrimary', P, 40, 80)
+    put('surfaceTint', P, 80, 40)
+    put('error', E, 80, 40)
+    put('onError', E, 20, 100)
+    put('errorContainer', E, 30, 90)
+    put('onErrorContainer', E, 90, 10)
+    put('background', N, 6, 98)
+    put('onBackground', N, 90, 10)
+    put('surface', N, 6, 98)
+    put('onSurface', N, 90, 10)
+    put('surfaceDim', N, 6, 87)
+    put('surfaceBright', N, 24, 98)
+    put('surfaceContainerLowest', N, 4, 100)
+    put('surfaceContainerLow', N, 10, 96)
+    put('surfaceContainer', N, 12, 94)
+    put('surfaceContainerHigh', N, 17, 92)
+    put('surfaceContainerHighest', N, 22, 90)
+    put('surfaceVariant', NV, 30, 90)
+    put('onSurfaceVariant', NV, 80, 30)
+    put('outline', NV, 60, 50)
+    put('outlineVariant', NV, 30, 80)
+    put('inverseSurface', N, 90, 20)
+    put('inverseOnSurface', N, 20, 95)
+    roles['shadow'] = '#000000'
+    roles['scrim'] = '#000000'
+    palette = {'m3' + k: v for k, v in roles.items()}
 
     def fix(
         fg, bg, ratio, pal, start, step
-    ):  # walk the foreground along its own tonal palette until the contrast target holds
+    ):  # on fait glisser le premier plan le long de sa propre palette tonale jusqu'à atteindre le contraste visé
         t = start
         while get_contrast_ratio(palette[fg], palette[bg]) < ratio and 0 < t < 100:
             t += step
             palette[fg] = pal.get(t)
 
     s = 1 if d else -1
-    fix("m3onSurface", "m3surface", 9, N, 90 if d else 10, s)
-    fix("m3onSurfaceVariant", "m3surfaceContainer", 6, NV, 80 if d else 30, s)
-    fix("m3outline", "m3surface", 3.2, NV, 60 if d else 50, s)
-    for n, p, bg in (("Primary", P, "m3primary"), ("Secondary", S, "m3secondary"), ("Tertiary", T, "m3tertiary")):
-        fix("m3on" + n, bg, 4.5, p, 20 if d else 100, -s)
+    fix('m3onSurface', 'm3surface', 9, N, 90 if d else 10, s)
+    fix('m3onSurfaceVariant', 'm3surfaceContainer', 6, NV, 80 if d else 30, s)
+    fix('m3outline', 'm3surface', 3.2, NV, 60 if d else 50, s)
+    for n, p, bg in (('Primary', P, 'm3primary'), ('Secondary', S, 'm3secondary'), ('Tertiary', T, 'm3tertiary')):
+        fix('m3on' + n, bg, 4.5, p, 20 if d else 100, -s)
     return palette, {
-        "primary": palette["m3primary"],
-        "primaryHue": round(hue, 1),
-        "primaryChroma": round(primary_c, 1),
-        "tertiaryHue": round(tertiary_hue, 1),
-        "tertiaryHex": tertiary_hex,
+        'primary': palette['m3primary'],
+        'primaryHue': round(hue, 1),
+        'primaryChroma': round(primary_c, 1),
+        'tertiaryHue': round(tertiary_hue, 1),
+        'tertiaryHex': tertiary_hex,
     }
 
 
 def variant_name(analysis):
-    if analysis["monochrome"]:
-        return "neutral"
-    c = analysis["seeds"][0]["familyChroma"]
-    return "faithful" if c < 24 else "vibrant" if c >= 60 and analysis["colorfulness"] >= 0.6 else "tonalspot"
+    if analysis['monochrome']:
+        return 'neutral'
+    c = analysis['seeds'][0]['familyChroma']
+    return 'faithful' if c < 24 else 'vibrant' if c >= 60 and analysis['colorfulness'] >= 0.6 else 'tonalspot'
 
 
-def palette_from_images(paths, background="#182025", key=None, previous_dark=None, source="", slot=None):
+def palette_from_images(paths, background='#182025', key=None, previous_dark=None, source='', slot=None):
     """Full theme dict (same shape the shell has always consumed) from one image or several pooled frames."""
     analysis = analyze_images(paths, key, background)
-    state_key = slot if slot is not None else key if key is not None else "default"
+    state_key = slot if slot is not None else key if key is not None else 'default'
     dark = decide_dark(
-        analysis["lightness"], previous_dark if previous_dark is not None else _dark_state.get(state_key)
+        analysis['lightness'], previous_dark if previous_dark is not None else _dark_state.get(state_key)
     )
     _dark_state.pop(state_key, None)
     _dark_state[state_key] = dark
@@ -324,25 +329,25 @@ def palette_from_images(paths, background="#182025", key=None, previous_dark=Non
     others = []
     from material_color_utilities import TonalPalette
 
-    for s in analysis["seeds"][1:]:
-        others.append(TonalPalette(s["hue"], _boost(s["familyChroma"])).get(80 if dark else 40))
-    colors = [palette["m3primary"], palette["m3secondary"], palette["m3tertiary"]] + others
+    for s in analysis['seeds'][1:]:
+        others.append(TonalPalette(s['hue'], _boost(s['familyChroma'])).get(80 if dark else 40))
+    colors = [palette['m3primary'], palette['m3secondary'], palette['m3tertiary']] + others
     return {
-        "palette": palette,
-        "dark": dark,
-        "colors": colors[:5],
-        "sourceColor": info["primary"],
-        "source": source or "Couleur du Bureau",
-        "luminance": analysis["lightness"] / 100,
-        "monochrome": analysis["monochrome"],
-        "path": paths[0] if paths else "",
-        "provider": "Windows",
-        "seeds": analysis["seeds"],
-        "colorfulness": analysis["colorfulness"],
-        "variant": variant_name(analysis),
+        'palette': palette,
+        'dark': dark,
+        'colors': colors[:5],
+        'sourceColor': info['primary'],
+        'source': source or 'Couleur du Bureau',
+        'luminance': analysis['lightness'] / 100,
+        'monochrome': analysis['monochrome'],
+        'path': paths[0] if paths else '',
+        'provider': 'Windows',
+        'seeds': analysis['seeds'],
+        'colorfulness': analysis['colorfulness'],
+        'variant': variant_name(analysis),
     }
 
 
-def generate_palette(path="", background="#182025"):
+def generate_palette(path='', background='#182025'):
     """Single-image entry point kept for wallpaper_theme.py."""
-    return palette_from_images([path] if path else [], background, source=Path(path).name if path else "")
+    return palette_from_images([path] if path else [], background, source=Path(path).name if path else '')

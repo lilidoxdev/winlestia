@@ -6,7 +6,7 @@ fully transparent once offset >= 0.6*height, nothing outside the window; (2) Eff
 
 import os, sys, ast, time
 
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 from pathlib import Path
 from PySide6.QtCore import QPointF, QObject, Property, Signal, Slot, QUrl, qInstallMessageHandler
 from PySide6.QtGui import QGuiApplication, QFontDatabase, QImage, QPainter, QColor, QFont
@@ -14,22 +14,22 @@ from PySide6.QtQuick import QQuickItem
 from PySide6.QtQml import QQmlEngine, QQmlComponent
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(os.environ.get("TEMP", ".")) / "dock-test"
+OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(os.environ.get('TEMP', '.')) / 'dock-test'
 OUT.mkdir(parents=True, exist_ok=True)
-_src = (Path(__file__).parent / "render_workspaces.py").read_text(encoding="utf8")
+_src = (Path(__file__).parent / 'render_workspaces.py').read_text(encoding='utf8')
 PAL = next(
-    eval(compile(ast.Expression(n.value), "pal", "eval"))
+    eval(compile(ast.Expression(n.value), 'pal', 'eval'))
     for n in ast.parse(_src).body
-    if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "PAL"
-)["red-dark"]
+    if isinstance(n, ast.Assign) and getattr(n.targets[0], 'id', '') == 'PAL'
+)['red-dark']
 MSGS = []
 qInstallMessageHandler(lambda k, c, m: MSGS.append(m))
 results = []
 
 
-def check(name, ok, detail=""):
+def check(name, ok, detail=''):
     results.append(bool(ok))
-    print(("PASS " if ok else "FAIL ") + name + (" -- " + str(detail) if detail else ""))
+    print(('PASS ' if ok else 'FAIL ') + name + (' -- ' + str(detail) if detail else ''))
 
 
 class Stub(QObject):
@@ -40,18 +40,18 @@ class Stub(QObject):
     def __init__(self):
         super().__init__()
         self.reduced = False
-        self.kind = "wifi"
+        self.kind = 'wifi'
         self.log = []
 
-    dark = Property(bool, lambda s: PAL["dark"], notify=changed)
-    adaptivePalette = Property("QVariantMap", lambda s: PAL["p"], notify=changed)
+    dark = Property(bool, lambda s: PAL['dark'], notify=changed)
+    adaptivePalette = Property('QVariantMap', lambda s: PAL['p'], notify=changed)
     reducedEffects = Property(bool, lambda s: s.reduced, notify=changed)
     networkKind = Property(str, lambda s: s.kind, notify=changed)
     preview = Property(bool, lambda s: False, constant=True)
     taskbarEnabled = Property(bool, lambda s: True, constant=True)
-    taskbarApps = Property("QVariantList", lambda s: [], notify=dockChanged)
-    runningApps = Property("QVariantList", lambda s: [], notify=dockChanged)
-    settings = Property("QVariantMap", lambda s: {"motionScale": 1}, notify=changed)
+    taskbarApps = Property('QVariantList', lambda s: [], notify=dockChanged)
+    runningApps = Property('QVariantList', lambda s: [], notify=dockChanged)
+    settings = Property('QVariantMap', lambda s: {'motionScale': 1}, notify=changed)
     screenX = Property(int, lambda s: 0, constant=True)
     screenY = Property(int, lambda s: 0, constant=True)
     screenWidth = Property(int, lambda s: 1280, constant=True)
@@ -62,37 +62,37 @@ class Stub(QObject):
     glassEnabled = Property(bool, lambda s: False, constant=True)
     glassOpacity = Property(float, lambda s: 1.0, constant=True)
     glassTintOpacity = Property(float, lambda s: 1.0, constant=True)
-    themeMode = Property(str, lambda s: "dark", constant=True)
+    themeMode = Property(str, lambda s: 'dark', constant=True)
     iconRevision = Property(int, lambda s: 0, constant=True)
-    assetRoot = Property(str, lambda s: ROOT.joinpath("assets").as_uri(), constant=True)
+    assetRoot = Property(str, lambda s: ROOT.joinpath('assets').as_uri(), constant=True)
 
     @Slot()
     def updateSurfaces(self):
         pass
 
-    @Slot(str, "QVariant")
+    @Slot(str, 'QVariant')
     def action(self, n, p=None):
-        self.log.append(("action", n))
+        self.log.append(('action', n))
 
     @Slot(str)
     def navigate(self, t):
-        self.log.append(("navigate", t))
+        self.log.append(('navigate', t))
 
     @Slot(int)
     def openTab(self, t):
-        self.log.append(("tab", t))
+        self.log.append(('tab', t))
 
     @Slot()
     def closePanel(self):
         pass
 
-    @Slot(str, "QVariant", result=str)
+    @Slot(str, 'QVariant', result=str)
     def iconUrl(self, i, r=0):
-        return ""
+        return ''
 
     @Slot(str, result=str)
     def localUrl(self, p):
-        return ""
+        return ''
 
     @Slot()
     def menuOutsideClick(self):
@@ -100,7 +100,7 @@ class Stub(QObject):
 
 
 app = QGuiApplication([])
-for f in (ROOT / "assets/fonts").glob("*.ttf"):
+for f in (ROOT / 'assets/fonts').glob('*.ttf'):
     QFontDatabase.addApplicationFont(str(f))
 
 
@@ -112,17 +112,17 @@ def pump(ms):
 
 stub = Stub()
 eng = QQmlEngine()
-eng.addImportPath(str(ROOT / "qml"))
-eng.rootContext().setContextProperty("Bridge", stub)
-comp = QQmlComponent(eng, QUrl.fromLocalFile(str(ROOT / "qml/Dock.qml")))
+eng.addImportPath(str(ROOT / 'qml'))
+eng.rootContext().setContextProperty('Bridge', stub)
+comp = QQmlComponent(eng, QUrl.fromLocalFile(str(ROOT / 'qml/Dock.qml')))
 dock = comp.create()
 if dock is None:
-    print("QML errors:", [e.toString() for e in comp.errors()])
+    print('QML errors:', [e.toString() for e in comp.errors()])
     sys.exit(1)
-dock.setProperty("shown", True)
+dock.setProperty('shown', True)
 dock.show()
 pump(600)
-H = int(dock.property("height"))
+H = int(dock.property('height'))
 
 
 def grab(name=None):
@@ -158,32 +158,32 @@ def sceneX(o):
 
 
 # --- (4) system zone order + (3) network icon
-names = ["dockStart", "dockRecycle", "dockFiles", "dockSearch"]
+names = ['dockStart', 'dockRecycle', 'dockFiles', 'dockSearch']
 items = [child(n) for n in names]
 xs = [sceneX(o) for o in items if o is not None]
 check(
-    "system zone order grid < trash < Fichiers < loupe",
+    'system zone order grid < trash < Fichiers < loupe',
     all(o is not None for o in items) and xs == sorted(xs) and len(set(xs)) == 4,
     xs,
 )
-check('Fichiers icon is "folder"', child("dockFiles").property("icon") == "folder")
-grab("order.png")
-for kind, icon in (("wifi", "wifi"), ("ethernet", "lan"), ("none", "wifi_off")):
+check('Fichiers icon is "folder"', child('dockFiles').property('icon') == 'folder')
+grab('order.png')
+for kind, icon in (('wifi', 'wifi'), ('ethernet', 'lan'), ('none', 'wifi_off')):
     stub.kind = kind
     stub.changed.emit()
     pump(150)
     check(
-        f"networkKind={kind} -> icon {icon}",
-        child("dockNetwork").property("icon") == icon,
-        child("dockNetwork").property("icon"),
+        f'networkKind={kind} -> icon {icon}',
+        child('dockNetwork').property('icon') == icon,
+        child('dockNetwork').property('icon'),
     )
-    grab(f"network-{kind}.png")
+    grab(f'network-{kind}.png')
 
 
 def glyph_width(txt):
     img = QImage(600, 80, QImage.Format_ARGB32)
     img.fill(0)
-    f = QFont("Material Symbols Rounded")
+    f = QFont('Material Symbols Rounded')
     f.setPixelSize(40)
     p = QPainter(img)
     p.setFont(f)
@@ -194,66 +194,66 @@ def glyph_width(txt):
 
 check(
     '"lan" is a ligature in the bundled font (one glyph wide, not 3 letters)',
-    glyph_width("lan") < 60,
-    glyph_width("lan"),
+    glyph_width('lan') < 60,
+    glyph_width('lan'),
 )
-stub.kind = "wifi"
+stub.kind = 'wifi'
 stub.changed.emit()
 
 # --- (1) hide animation, sampled every frame
-clip = child("dockClip")
+clip = child('dockClip')
 samples = []
-dock.setProperty("shown", False)
+dock.setProperty('shown', False)
 t0 = time.perf_counter()
-while dock.property("visible") and time.perf_counter() - t0 < 1.5 and len(samples) < 400:
+while dock.property('visible') and time.perf_counter() - t0 < 1.5 and len(samples) < 400:
     app.processEvents()
-    off = float(dock.property("offset"))
-    op = float(dock.property("contentOpacity"))
+    off = float(dock.property('offset'))
+    op = float(dock.property('contentOpacity'))
     mx, first, last = alpha_rows(grab())
     samples.append((off, op, mx, first, last, sceneY(clip), clip.height()))
-check("hide animation ran and the window ended hidden", len(samples) > 3 and not dock.property("visible"), len(samples))
+check('hide animation ran and the window ended hidden', len(samples) > 3 and not dock.property('visible'), len(samples))
 check(
-    "opacity never exceeds the fade rule clamp(1 - offset/(0.6*height))",
+    'opacity never exceeds the fade rule clamp(1 - offset/(0.6*height))',
     not [s for s in samples if s[2] > s[1] * 255 + 4],
     [s for s in samples if s[2] > s[1] * 255 + 4][:2],
 )
 check(
-    "nothing drawn above the contour line (row < offset)",
+    'nothing drawn above the contour line (row < offset)',
     not [s for s in samples if 0 <= s[3] < s[0] - 1],
     [s for s in samples if 0 <= s[3] < s[0] - 1][:2],
 )
 check(
-    "fully transparent once offset >= 0.6*height",
+    'fully transparent once offset >= 0.6*height',
     not [s for s in samples if s[0] >= 0.6 * H and s[2] > 8],
     [s for s in samples if s[0] >= 0.6 * H and s[2] > 8][:2],
 )
 check(
-    "clip box is fixed (never translated) and equals the window bounds", all(s[5] == 0 and s[6] == H for s in samples)
+    'clip box is fixed (never translated) and equals the window bounds', all(s[5] == 0 and s[6] == H for s in samples)
 )
-check("no drawn row at or past the window bottom", all(s[4] < H for s in samples))
+check('no drawn row at or past the window bottom', all(s[4] < H for s in samples))
 
-# --- PNGs at about 0 / 25 / 50 / 75 % of the slide
+# --- PNG à environ 0 / 25 / 50 / 75 % du glissement
 for pct in (0, 25, 50, 75):
-    dock.setProperty("shown", True)
+    dock.setProperty('shown', True)
     pump(900)
-    dock.setProperty("shown", False)
+    dock.setProperty('shown', False)
     target = H * pct / 100.0
     best = None
     img = None
     t0 = time.perf_counter()
     while time.perf_counter() - t0 < 1.5:
         app.processEvents()
-        o = float(dock.property("offset"))
+        o = float(dock.property('offset'))
         if best is None or abs(o - target) < abs(best - target):
             best = o
             img = grab()
         if o >= target:
             break
-    img.save(str(OUT / f"hide-{pct:02d}.png"))
+    img.save(str(OUT / f'hide-{pct:02d}.png'))
     print(
-        f"  hide-{pct:02d}.png captured at offset={best:.1f}/{H} opacity={float(dock.property('contentOpacity')):.2f}"
+        f'  hide-{pct:02d}.png captured at offset={best:.1f}/{H} opacity={float(dock.property("contentOpacity")):.2f}'
     )
-dock.setProperty("shown", True)
+dock.setProperty('shown', True)
 pump(900)
 
 # --- (2) Effets alleges: no slide, short fade
@@ -261,30 +261,30 @@ stub.reduced = True
 stub.changed.emit()
 pump(200)
 offs, ops = [], []
-dock.setProperty("shown", False)
+dock.setProperty('shown', False)
 t0 = time.perf_counter()
-while dock.property("visible") and time.perf_counter() - t0 < 1.5:
+while dock.property('visible') and time.perf_counter() - t0 < 1.5:
     app.processEvents()
-    offs.append(float(dock.property("offset")))
-    ops.append(float(dock.property("contentOpacity")))
-check("reduced: no slide (offset stays 0)", len(offs) > 2 and max(offs) == 0, (len(offs), max(offs) if offs else None))
+    offs.append(float(dock.property('offset')))
+    ops.append(float(dock.property('contentOpacity')))
+check('reduced: no slide (offset stays 0)', len(offs) > 2 and max(offs) == 0, (len(offs), max(offs) if offs else None))
 check(
-    "reduced: opacity fades down monotonically",
+    'reduced: opacity fades down monotonically',
     ops and ops[-1] < 0.1 and all(a >= b - 1e-6 for a, b in zip(ops, ops[1:])),
     (ops[:1], ops[-1:]),
 )
-check("reduced: window hidden at the end", not dock.property("visible"))
-dock.setProperty("shown", True)
+check('reduced: window hidden at the end', not dock.property('visible'))
+dock.setProperty('shown', True)
 pump(400)
 check(
-    "reduced: shown again -> opaque and visible",
-    dock.property("visible") and float(dock.property("contentOpacity")) > 0.99,
+    'reduced: shown again -> opaque and visible',
+    dock.property('visible') and float(dock.property('contentOpacity')) > 0.99,
 )
-grab("reduced-shown.png")
-# --- (3) toggling reducedEffects while hidden must never show the dock
-dock.setProperty("shown", False)
+grab('reduced-shown.png')
+# --- (3) basculer reducedEffects pendant que le dock est masqué ne doit jamais l'afficher
+dock.setProperty('shown', False)
 pump(600)
-check("flip: hidden before test", not dock.property("visible"))
+check('flip: hidden before test', not dock.property('visible'))
 seen = False
 for to in (False, True, False, True):
     stub.reduced = to
@@ -292,15 +292,15 @@ for to in (False, True, False, True):
     t0 = time.perf_counter()
     while time.perf_counter() - t0 < 0.4:
         app.processEvents()
-        seen = seen or bool(dock.property("visible"))
-check("flip while hidden (reduced true<->false): visible stays false", not seen)
+        seen = seen or bool(dock.property('visible'))
+check('flip while hidden (reduced true<->false): visible stays false', not seen)
 stub.reduced = False
 stub.changed.emit()
 pump(300)
-dock.setProperty("shown", True)
+dock.setProperty('shown', True)
 pump(900)
-check("flip: shown afterwards -> visible, offset 0", dock.property("visible") and float(dock.property("offset")) == 0)
-warn = [m for m in MSGS if "Dock.qml" in m or "ReferenceError" in m or "TypeError" in m]
-check("no QML warnings from Dock.qml", not warn, warn[:3])
-print(f"TOTAL {sum(results)}/{len(results)}  PNGs in {OUT}")
+check('flip: shown afterwards -> visible, offset 0', dock.property('visible') and float(dock.property('offset')) == 0)
+warn = [m for m in MSGS if 'Dock.qml' in m or 'ReferenceError' in m or 'TypeError' in m]
+check('no QML warnings from Dock.qml', not warn, warn[:3])
+print(f'TOTAL {sum(results)}/{len(results)}  PNGs in {OUT}')
 sys.exit(0 if all(results) else 1)

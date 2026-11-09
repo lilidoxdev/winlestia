@@ -1,5 +1,6 @@
-// Server side of the single-instance pipe (see backend/Shared/FilesPipe.cs for the protocol). One awaiting accept loop, no timer, no polling:
-// an idle server is one pending overlapped ConnectNamedPipe. A broken message never reaches the UI and never ends the process.
+// Côté serveur du tube d'instance unique (protocole dans backend/FilesPipe.cs). Une seule boucle d'acceptation en attente, sans minuteur
+// ni scrutation : un serveur au repos est un seul ConnectNamedPipe en attente (overlapped). Un message corrompu n'atteint jamais
+// l'interface et ne met jamais fin au processus.
 using System;
 using System.IO;
 using System.IO.Pipes;
@@ -13,6 +14,12 @@ namespace WinlestiaFiles;
 
 internal sealed class SingleInstance : IDisposable
 {
+    // Base du recul exponentiel (50, 100, 200, 400 ms) quand le tube est encore détenu par l'instance qui se ferme.
+    const int CreateRetryBaseMs = 50;
+
+    // Reprise croissante (100 ms par échec) pour ne pas saturer le canal quand le résident est occupé.
+    const int RetryStepMs = 100;
+
     internal sealed record Request(string[] Args, string Cwd, string? Cmd);
 
     readonly Action<Request> onRequest;
@@ -24,23 +31,17 @@ internal sealed class SingleInstance : IDisposable
         this.onRequest = onRequest;
     }
 
-    // Many instances allowed, but at most MaxHandlers are served at once: a listener can then always be created ("all pipe instances are busy" cannot happen).
-    const int MaxInstances = 32,
-        MaxHandlers = 16;
+    // Plusieurs instances permises, mais au plus MaxHandlers servies à la fois : un écouteur peut ainsi toujours être créé ("all pipe
+    // instances are busy" ne peut pas se produire).
+    const int MaxInstances = 32, MaxHandlers = 16;
     readonly SemaphoreSlim slots = new(MaxHandlers, MaxHandlers);
 
     static NamedPipeServerStream Create(bool first) =>
-        new(
-            FilesPipe.Name,
-            PipeDirection.InOut,
-            MaxInstances,
-            PipeTransmissionMode.Byte,
-            PipeOptions.Asynchronous
-                | PipeOptions.CurrentUserOnly
-                | (first ? PipeOptions.FirstPipeInstance : PipeOptions.None)
-        );
+        new(FilesPipe.Name, PipeDirection.InOut, MaxInstances, PipeTransmissionMode.Byte,
+            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly | (first ? PipeOptions.FirstPipeInstance : PipeOptions.None));
 
-    // "All pipe instances are busy" is transient (a client or a dying instance still holds a slot): short backoff, 50 -> 800 ms.
+    // "All pipe instances are busy" est transitoire (un client ou une instance mourante tient encore un emplacement) : courte
+    // temporisation croissante, 50 -> 800 ms.
     static NamedPipeServerStream CreateRetry(CancellationToken ct)
     {
         for (int attempt = 0; ; attempt++)
@@ -49,14 +50,12 @@ internal sealed class SingleInstance : IDisposable
             {
                 return Create(false);
             }
-            catch (IOException) when (attempt < 4 && !ct.IsCancellationRequested)
-            {
-                Thread.Sleep(50 << attempt);
-            }
+            catch (IOException) when (attempt < 4 && !ct.IsCancellationRequested) { Thread.Sleep(CreateRetryBaseMs << attempt); }
         }
     }
 
-    // Null when another instance already owns the pipe (or it cannot be created): the caller then simply runs standalone.
+    // Null quand une autre instance possède déjà le tube (ou qu'il ne peut pas être créé) : l'appelant tourne alors simplement en
+    // autonome.
     internal static SingleInstance? TryStart(Action<Request> onRequest)
     {
         try
@@ -65,10 +64,7 @@ internal sealed class SingleInstance : IDisposable
             _ = server.Loop();
             return server;
         }
-        catch
-        {
-            return null;
-        }
+        catch { return null; }
     }
 
     async Task Loop()
@@ -81,20 +77,17 @@ internal sealed class SingleInstance : IDisposable
             bool handed = false;
             try
             {
-                await slots.WaitAsync(cts.Token).ConfigureAwait(false); // saturated: the listener stays up, clients just wait their own short budget
+                // saturé : l'écouteur reste actif, les clients attendent simplement leur propre court délai
+                await slots.WaitAsync(cts.Token).ConfigureAwait(false);
                 try
                 {
                     await stream.WaitForConnectionAsync(cts.Token).ConfigureAwait(false);
-                    pending = CreateRetry(cts.Token); // ready for the next client before this one is served
+                    pending = CreateRetry(cts.Token);                       // prêt pour le client suivant avant de servir celui-ci
                     failures = 0;
                     handed = true;
                     _ = Handle(stream);
                 }
-                finally
-                {
-                    if (!handed)
-                        slots.Release();
-                }
+                finally { if (!handed) slots.Release(); }
             }
             catch (OperationCanceledException)
             {
@@ -108,22 +101,16 @@ internal sealed class SingleInstance : IDisposable
                 {
                     logged = true;
                     App.CrashLog(ex);
-                } // once, never one line per retry
+                }           // une fois, jamais une ligne par tentative
                 if (++failures >= 8)
                     return;
                 try
                 {
-                    await Task.Delay(100 * failures, cts.Token).ConfigureAwait(false);
+                    await Task.Delay(RetryStepMs * failures, cts.Token).ConfigureAwait(false);
                     pending = CreateRetry(cts.Token);
                 }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-                catch
-                {
-                    continue;
-                }
+                catch (OperationCanceledException) { return; }
+                catch { continue; }
             }
         }
     }
@@ -135,9 +122,7 @@ internal sealed class SingleInstance : IDisposable
             try
             {
                 using var limit = new CancellationTokenSource(2000);
-                await stream
-                    .WriteAsync(BitConverter.GetBytes(Environment.ProcessId), limit.Token)
-                    .ConfigureAwait(false);
+                await stream.WriteAsync(BitConverter.GetBytes(Environment.ProcessId), limit.Token).ConfigureAwait(false);
                 var buffer = new byte[65536];
                 int n = 0;
                 while (n < buffer.Length)
@@ -150,7 +135,7 @@ internal sealed class SingleInstance : IDisposable
                         break;
                 }
                 if (n == 0)
-                    return; // connected and left (probe): nothing to parse, nothing to log
+                    return;                               // connecté puis parti (sonde) : rien à analyser, rien à journaliser
                 var request = Parse(Encoding.UTF8.GetString(buffer, 0, n));
                 if (request == null)
                     return;
@@ -159,24 +144,17 @@ internal sealed class SingleInstance : IDisposable
                 stream.WaitForPipeDrain();
             }
             catch (IOException)
-            { // client gave up (its own 150 ms budget): nothing to report
+            {                           // le client a abandonné (son propre budget de 150 ms) : rien à signaler
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                // Client parti ou requête annulée : rien à reporter.
+            }
             catch (System.Text.Json.JsonException)
-            { // garbage from a foreign client
+            {        // garbage from a foreign client
             }
-            catch (Exception ex)
-            {
-                App.CrashLog(ex);
-            }
-            finally
-            {
-                try
-                {
-                    slots.Release();
-                }
-                catch (ObjectDisposedException) { }
-            }
+            catch (Exception ex) { App.CrashLog(ex); }
+            finally { try { slots.Release(); } catch (ObjectDisposedException) { /* Sémaphore déjà libéré à l'arrêt. */ } }
         }
     }
 
@@ -188,10 +166,7 @@ internal sealed class SingleInstance : IDisposable
         {
             return ParseCore(text.Trim());
         }
-        catch (JsonException)
-        {
-            return null;
-        }
+        catch (JsonException) { return null; }
     }
 
     static Request? ParseCore(string text)
@@ -213,20 +188,18 @@ internal sealed class SingleInstance : IDisposable
                 args.Add(s);
             }
         }
-        string cwd =
-            root.TryGetProperty("cwd", out var c) && c.ValueKind == JsonValueKind.String ? c.GetString() ?? "" : "";
-        string? cmd =
-            root.TryGetProperty("cmd", out var m) && m.ValueKind == JsonValueKind.String ? m.GetString() : null;
+        string cwd = root.TryGetProperty("cwd", out var c) && c.ValueKind == JsonValueKind.String ? c.GetString() ?? "" : "";
+        string? cmd = root.TryGetProperty("cmd", out var m) && m.ValueKind == JsonValueKind.String ? m.GetString() : null;
         return new Request(args.ToArray(), cwd, cmd);
     }
 
     public void Dispose()
     {
-        try
+        Safe.Try(() =>
         {
             cts.Cancel();
             pending?.Dispose();
-        }
-        catch { }
+
+        });
     }
 }

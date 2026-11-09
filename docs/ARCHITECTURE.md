@@ -1,106 +1,53 @@
-# Architecture
+# Architecture de Winlestia
 
-Winlestia is a Windows 11 desktop shell (dock, dashboard, glass panels) and a Windows port of
-[Caelestia](https://github.com/caelestia-dots/shell) (Quickshell/Linux). Attribution and licences:
-`THIRD_PARTY_NOTICES.md`, `src/backend/CAELESTIA-NOTICES.md`, `src/backend/LICENSE-CAELESTIA.txt`,
-`src/frontend/LICENSE`, `src/frontend/THIRD_PARTY_NOTICES.md`, `src/frontend/licenses/`.
+Vue d'ensemble pour s'orienter dans le dépôt. Les détails vivent dans les documents cités en fin de page.
 
-## Process map
+## Processus
 
-```mermaid
-flowchart LR
-    Setup["installer/Winlestia.iss<br/>(Inno Setup, built by installer/build.ps1)"] -->|installs| Backend
-    subgraph Install["%LOCALAPPDATA%\Programs\Winlestia"]
-      Backend["Glass-v5\Panneaux.Glass.exe<br/>(.NET 10, WPF + WinForms)"]
-      Front["Caelestia-Windows\.venv\Scripts\pythonw.exe<br/>frontend.py (PySide6 + QML)"]
-      Guard["Glass-v5\RETABLIR_BARRE_WINDOWS.exe<br/>--watch-parent (taskbar watchdog)"]
-      Files["Glass-v5\Winlestia.Files.exe"]
-      Cli["Glass-v5\winlestia.exe"]
-    end
-    Backend -->|starts| Front
-    Backend -->|starts, lease file| Guard
-    Front <-->|"pipe PanneauxCaelestia (JSON lines) + event Local-PanneauxCaelestiaWake"| Backend
-    Cli -->|"pipe WinlestiaCli"| Backend
-    Files <-->|"single-instance pipe (FilesPipe)"| Backend
-```
+| Processus | Source | Rôle |
+|---|---|---|
+| Glass (backend) | `src/backend/` (`Panneaux.Glass.exe`, C# .NET 8, WPF) | Chef d'orchestre : réglages, barre des tâches, dock, tuilage, audio, fond d'écran, télémétrie. Il est l'unique propriétaire de l'état. |
+| Frontend | `src/frontend/` (PySide6 / QML) | Interface (tableau de bord, palette, réglages). Lancé et surveillé par le backend ; il n'a aucun droit sur le bureau. |
+| Garde (watchdog) | `Panneaux.Glass.exe --taskbar-guard <pid> <fichier>` | Processus séparé qui rétablit la barre Windows si le backend s'arrête ou plante. |
+| Secours | `SECOURS_BUREAU.exe` (`Secours.cpp`) | Outil indépendant (Ctrl+Alt+Retour arrière) qui arrête Winlestia et rend un bureau normal. |
+| Winlestia Fichiers | `src/files/` (WPF) | Gestionnaire de fichiers. Préchargé masqué par le backend, joint par tube nommé (`src/backend/Files/`). |
+| CLI `winlestia` | `src/cli/` | Petite commande qui parle au backend par le tube `WinlestiaCli` (`Bridge/CliServer.cs`). |
+| Synchro terminal | `src/terminal/` (`sync_theme.py`) | Service local qui relit les réglages et le fond d'écran toutes les quatre secondes et applique la palette à Windows Terminal et à CMD. |
 
-Start-up: the backend runs in Qt mode when `--qt-shell` is passed or `caelestia.enabled` sits next to the exe
-(`Coordinator.cs`, `QtMode`), unless `--legacy-shell`. It launches
-`<Glass-v5>\..\Caelestia-Windows\.venv\Scripts\pythonw.exe` on `frontend.py` (override with `--qt-root=<folder>`).
-A second launch signals the first instance through the `Local\PanneauxGlassV5` mutex and show/quit events, then exits.
+Instance unique : un mutex `Local\PanneauxGlassV5` et des événements nommés (afficher, quitter, restaurer la barre) permettent aux relances de signaler l'instance déjà active.
 
-## Folders
+## Flux de données
 
-| Path | Responsibility |
-|---|---|
-| `src/backend` | `Panneaux.Glass.csproj` (net10.0-windows10.0.19041.0, WPF + WinForms). Windows integrations (taskbar hide/restore, audio, media, bookmarks, file search, hotkeys, autostart), the IPC servers, and the legacy "Glass" WPF shell (kept for compatibility, no new features). Native helpers `*.cpp` are built by `build-*.cmd` into `native/` (binaries are git-ignored). |
-| `src/backend/Inventory.ps1`, `Install.ps1` | App inventory (writes `catalog.json`) and installation helper. |
-| `src/frontend` | Qt Quick shell: `frontend.py` (Bridge, IPC client), `localization.py`, `interaction.py`, `search.py`, palette modules (`wallpaper_theme.py`, `chromatic_palette.py`, `custom_palette.py`), `qml/` (`qml/qs/config/Appearance.qml`, `qml/qs/services/Colours.qml`, panes, dock). Upstream tracking: `UPSTREAM.json`, `PORT_PATCHES.json`, `PORTAGE.md`. |
-| `src/files` | Winlestia Files file manager (WPF, `Winlestia.Files.csproj`). |
-| `src/cli` | `winlestia.exe` (`winlestia.csproj`, trimmed single file); talks to pipe `WinlestiaCli`. |
-| `src/terminal` | Terminal theming (Clink, PowerShell profile, `sync_theme.py`). |
-| `installer` | `build.ps1` (full chain) and `Winlestia.iss`. |
-| `tests` | Console test projects (one per area) and Python scripts. |
-| `docs` | User and developer documentation. |
+1. `Program.Main` lit la ligne de commande une seule fois et fabrique un `RunOptions` immuable (mode de lancement normal, revue ou vérification).
+2. Le `Coordinator` charge les réglages (`Store`, `Core/Models.cs`), crée les fenêtres WPF et, en mode Qt, le `QtShellBridge`.
+3. Le pont démarre le frontend (rattaché à un Job Object : il meurt avec le backend) et ouvre le tube `PanneauxCaelestia`.
+4. Le frontend envoie `{command, args}` ; le pont répond par l'état complet, les évènements en file, un éventuel message et des listes ponctuelles.
+5. Chaque commande est traitée par une méthode `[BridgeAction("nom")]` (`Bridge/QtShellBridge.Actions.*.cs`). Un test de contrat vérifie que le schéma et les handlers coïncident.
+6. Dans l'autre sens, le backend pousse des évènements (`Send("…")`) que le frontend récupère à son prochain échange ; le minuteur de 500 ms échantillonne audio, réseau et télémétrie seulement quand une page les affiche.
+7. Les réglages persistent dans `%LOCALAPPDATA%\Panneaux` ; les outils externes (terminal, Fichiers) les relisent.
 
-## Contracts that must not be renamed
+## Découpage des gros fichiers
 
-Renaming any of these breaks existing installs or the other side of an IPC boundary.
+`Coordinator` et `QtShellBridge` sont des classes partielles découpées par domaine : `Coordinator.<Domaine>.cs` (Shell, Tools, Views, Layout, Boards, Preview, Palette, Feedback, Dialogs, Desktop, Catalogue) et `QtShellBridge.<Domaine>.cs` (Frontend, Pipe, Cli, Sampling, Icons, State, Actions). Aucun fichier `Coordinator.*` ne dépasse 350 lignes ; les fichiers sources restent sous 500 lignes.
 
-- **Preferences JSON.** `preferences-glass.json` is `Store.State`, serialized from `Preferences` in
-  `src/backend/Storage/Models.cs` (`Store.Json`: case-insensitive read, indented). Property names are the file keys
-  (for example `ReplaceTaskbar`, `ShortcutPreferences.Modifiers/Key/View`). Add properties with defaults; never rename.
-- **Pipes, events, mutexes.** `PanneauxCaelestia` (`QtShellBridge.cs` server, `frontend.py` client; one JSON object per
-  line, 128 KiB cap, current user only); `Local\PanneauxCaelestiaWake`; `WinlestiaCli` (`CliServer.cs`; allow-list in
-  `CliCommands.cs`; reply keys `code` and `text`); the Files pipe (`FilesPipe.cs`, `src/files/SingleInstance.cs`;
-  `WINLESTIA_FILES_PIPE` is test-only); `Local\PanneauxGlassV5`, `Local\PanneauxGlassTaskbarRestore`,
-  `Local\PanneauxGuardReady-*` / `Local\PanneauxGuardRelease-*`.
-- **JSON keys in IPC messages** are shared by `QtShellBridge.cs` / `QtDockActions.cs` and `frontend.py`; change both
-  sides in one commit. `src/frontend/tests/check_bridge.py` exercises the pipe.
-- **Bridge API used by QML.** The `Bridge(QObject)` class in `frontend.py` exposes `Property` / `Slot` names that
-  `qml/**/*.qml` reference as `Bridge.<name>` (hundreds of uses). Grep the QML before touching one.
-- **Localization.** `ROWS` in `src/frontend/localization.py` are `fr|en|es` lines keyed by the French text. The French
-  string passed to `qsTr(...)` / `QCoreApplication.translate` must match the first column exactly.
-- **Command-line switches** (`Coordinator.cs`, `Main`): `--qt-shell`, `--legacy-shell`, `--qt-root=`, `--show`,
-  `--quit`, `--restore` (launches `SECOURS_BUREAU.exe`), `--restore-taskbar`, `--taskbar-guard <parentPid> <leaseFile>`
-  (managed watchdog), `--taskbar-state`, plus `--verify-*`, `--benchmark*` and `--preview*` developer switches.
-  `RETABLIR_BARRE_WINDOWS.exe` takes `--watch-parent` (`ShellTaskbar.cs`).
-- **CLI commands** of `winlestia.exe`: `CliCommands.HelpText` and `tests/CliCommands`.
-- **Catalogue.** `catalog.json` is written by `Inventory.ps1` (`Id`, `Name`, `Target`, `Section`, `Category`,
-  `IconPath`, `SearchText`, ...) and read by `Store.LoadCatalogue` (`Models.cs`) and `AppCatalogueWatcher.cs`.
-  Keep PowerShell and C# field names identical.
-- **Partial classes** spread over several files: `QtShellBridge` (`QtShellBridge.cs`, `QtDockActions.cs`), `HomeWindow`
-  (+`HomeShellPages.cs`), `ExplorerAppearance` (+`.StableIcons.cs`), `MonitorBrightness` (+`MonitorDisplays.cs`),
-  `UI` (`UiTokens.cs`, `Visuals.cs`), `WindowTiler` (+`WindowTilerKeys.cs`), `MainWindow.*.cs` in `src/files`. Tests
-  link source files by name; update `tests/*/*.csproj` if you move or rename a file.
-- **Legacy names.** Namespace `PanneauxGlass`, assembly `Panneaux.Glass`, folder `%LOCALAPPDATA%\Panneaux`,
-  `Glass-v5`, `Caelestia-Windows`, scheduled task `WinlestiaShell`. These are compatibility constraints.
+Le Coordinator ne fait plus qu'orchestrer. Les collaborateurs vivent dans `Core/Services/` derrière des interfaces :
 
-## Data locations
+- `ShellState` : état partagé (ouvert, replié, détaillé, dialogue ouvert, épinglé…) lu par le Coordinator, le dialogue et la boucle d'horloge.
+- `IDialogService` (`Scope`, `ScopeAsync`, `Layers`, `Confirm`, `Message`, `PickFiles`, `PickFolder`) : portée des dialogues modaux.
+- `ILaunchService` (`Launch`, `Reveal`, `LaunchTarget`, `LaunchShortcut`, `WebSearch`, `AddPath`, `Rescue`) et `LaunchRules` (décisions pures).
+- `ITickController` (`Tick`) : poignée latérale et repli automatique ; `TickRules` garde les seuils.
+- `IShortcutBindings` : libellés, états, réaffectation et aiguillage des raccourcis globaux (`Resolve` renvoie un `HotkeyAction`).
+- `QuickTabRules` (cibles `glass:`), `LayoutRules` (disposition des panneaux) et `ShellChrome` (construction de la poignée et de la barre d'outils).
+- `ICatalogueService`, `IDesktopIconsService`, `ITrayService`, `IPreviewExportService` : catalogue, icônes du Bureau, zone de notification, export d'aperçu.
 
-| What | Where |
-|---|---|
-| User data (preferences, `glass.log`, clipboard, pins) | `%LOCALAPPDATA%\Panneaux` (`Store.DataDir`, `Models.cs`); `WINLESTIA_DATA_DIR` overrides it (tests). Legacy install-folder data is migrated by `Store.MigrateLegacyData`. |
-| Installed program | `%LOCALAPPDATA%\Programs\Winlestia` (`Glass-v5`, `Caelestia-Windows`, `Winlestia-Terminal`) |
-| Taskbar lease (restore data) | `TaskbarNative.LeasePath` (`taskbar-session.json`) |
-| Autostart | Scheduled task `WinlestiaShell` (see `docs/WINDOWS-INTEGRATIONS.md`) |
+Les règles pures (`*Rules`) sont testées dans `tests/Winlestia.Tests` sans fenêtre ni processus.
 
-## Restore paths (invariant)
+## Où lire la suite
 
-Every way back to the Windows taskbar must keep working. User instructions: `docs/RESTORE.md`.
-
-| Path | Code |
-|---|---|
-| Watchdog, started when the taskbar is hidden | `ShellTaskbar.Enable` starts `RETABLIR_BARRE_WINDOWS.exe --watch-parent` (source `src/backend/TaskbarRescue.cpp`); fallback `Panneaux.Glass.exe --taskbar-guard` -> `TaskbarNative.Guard` |
-| `--restore-taskbar` | `Coordinator.cs` -> `TaskbarNative.RestoreSaved` |
-| `RETABLIR_BARRE_WINDOWS.exe` | `src/backend/native/`, copied to `Glass-v5` by `installer/build.ps1` |
-| `SECOURS_BUREAU.exe` | `src/backend/Secours.cpp`, `build-rescue.cmd` |
-| Ctrl+Alt+Backspace | `GlobalShortcut.cs` (`RegisterHotKey`, modifiers 0x4003, key 0x08) |
-
-## Backend namespaces
-
-`src/backend` is split into one folder per area, each with its own namespace `PanneauxGlass.<Area>` (listed as global usings in `src/backend/GlobalUsings.cs`): Shell (coordinator, Qt bridge, CLI server), Media, Social, Explorer, Desktop (tiling, virtual desktops, wallpaper, fullscreen), Platform (network, power, telemetry, autostart, app catalogue), Storage (Store, Preferences, models), Interop (P/Invoke), Views (WPF windows and visual tokens), Tools (clipboard, capture, dictation, palette, bookmarks), SelfTest (verification harnesses) and Shared (`Winlestia.Shared`, also linked by `src/files`). `Program.cs` stays at the root.
-
-## Localisation of the Glass shell
-
-User-visible text of the WPF shell and of Winlestia Files lives in `src/backend/Views/Strings.cs` (`PanneauxGlass.Views`), linked into `src/files` as `Shared\Strings.cs`. It holds one table of `(Fr, En, Es?)` per key; French values are the original literals, English is the fallback, Spanish exists only where the Qt shell already has a translation and falls back to English otherwise. The language is resolved once, on first use, in this order: the `language` key (`auto`, `fr`, `en`, `es`) of `<DataDir>\Caelestia\language.json` (the file the Qt shell writes), then `CurrentUICulture`, then English. Strings with counts or names are format methods (`Strings.StatusLine`, `Strings.DeletePermanentlyConfirm`). Exception messages that reach a message box, toast or status label are thrown from `Strings`; log-only messages stay English. Category and folder names that double as data keys (board filters, tool categories) keep their key; only the displayed text goes through `Strings.CategoryLabel` or `Strings.KnownFolder`. `tests/StringsTable` checks the table.
+- Carte des dossiers du backend : `src/backend/README.md`.
+- Contrat du pont : `docs/BRIDGE.md` et `docs/bridge-schema.json` (test : `tests/Winlestia.Tests/BridgeContractTests.cs`).
+- Règle de threading (thread UI, tâches, sondes) : `docs/THREADING.md`.
+- Restauration de la barre des tâches, du bureau et du terminal : `docs/RESTORE.md`, `docs/TROUBLESHOOTING.md`.
+- Explorateur natif : `docs/NATIVE-EXPLORER.md`. Raccourcis : `docs/SHORTCUTS.md`.
+- Tests et commandes de vérification : `docs/TESTS.md`.
+- Installation et désinstallation : `docs/INSTALL.md`.

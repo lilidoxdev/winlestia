@@ -1,0 +1,107 @@
+{
+  "At": "2026-10-24T23:55:37.8092873+02:00",
+  "Passed": 24,
+  "Failed": 1,
+  "Checks": [
+    {
+      "Name": "Catalogue local complet",
+      "Pass": true
+    },
+    {
+      "Name": "Identifiants uniques",
+      "Pass": true
+    },
+    {
+      "Name": "Toutes les cibles locales existent",
+      "Pass": true
+    },
+    {
+      "Name": "Chrome est dans Applications",
+      "Pass": true
+    },
+    {
+      "Name": "Canada est dans Documents",
+      "Pass": true
+    },
+    {
+      "Name": "Les projets sont class\u00E9s",
+      "Pass": true
+    },
+    {
+      "Name": "Logos des jeux extraits des ressources install\u00E9es",
+      "Pass": false
+    },
+    {
+      "Name": "Quatre panneaux identifiables et persistants",
+      "Pass": true
+    },
+    {
+      "Name": "Aller-retour complet de la personnalisation JSON",
+      "Pass": true
+    },
+    {
+      "Name": "Param\u00E8tres invalides born\u00E9s et r\u00E9cup\u00E9r\u00E9s",
+      "Pass": true
+    },
+    {
+      "Name": "Calcul direct saisi dans la recherche",
+      "Pass": true
+    },
+    {
+      "Name": "Priorit\u00E9s, parenth\u00E8ses et espaces du calcul",
+      "Pass": true
+    },
+    {
+      "Name": "Une recherche ordinaire n\u2019est jamais \u00E9valu\u00E9e",
+      "Pass": true
+    },
+    {
+      "Name": "Palette : la recherche retrouve Chrome",
+      "Pass": true
+    },
+    {
+      "Name": "Palette : la liste vide reste born\u00E9e",
+      "Pass": true
+    },
+    {
+      "Name": "Salutation de l\u2019horloge selon l\u2019heure",
+      "Pass": true
+    },
+    {
+      "Name": "Sonnerie de fin : WAV PCM local g\u00E9n\u00E9r\u00E9",
+      "Pass": true
+    },
+    {
+      "Name": "Le th\u00E8me choisi survit \u00E0 la normalisation",
+      "Pass": true
+    },
+    {
+      "Name": "Un th\u00E8me inconnu revient \u00E0 Nuit bor\u00E9ale \u00E0 l\u2019ouverture",
+      "Pass": true
+    },
+    {
+      "Name": "Dur\u00E9es libres lisibles en heures, minutes et secondes",
+      "Pass": true
+    },
+    {
+      "Name": "La note rapide survit \u00E0 l\u2019enregistrement JSON",
+      "Pass": true
+    },
+    {
+      "Name": "Deux copies du secours sont disponibles",
+      "Pass": true
+    },
+    {
+      "Name": "Copie de secours identique dans Documents",
+      "Pass": true
+    },
+    {
+      "Name": "Secours natif ind\u00E9pendant du runtime .NET",
+      "Pass": true
+    },
+    {
+      "Name": "Sauvegarde originale des positions conserv\u00E9e",
+      "Pass": true
+    }
+  ]
+}

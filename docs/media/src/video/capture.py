@@ -117,14 +117,16 @@ def main():
                     shot(float(t), frames / f"t{float(t):05.2f}.png")
             finally:
                 edge.terminate()
-            out = Path(os.environ.get("WL_DEBUG_DIR", Path(tempfile.gettempdir()) / "winlestia-frames-debug")); out.mkdir(parents=True, exist_ok=True)
+            out = Path(os.environ.get("WL_DEBUG_DIR", Path(tempfile.gettempdir()) / "winlestia-frames-debug"))
+            out.mkdir(parents=True, exist_ok=True)
             for f in frames.glob("t*.png"):
                 shutil.copy(f, out / f.name)
             print("dumped to", out); return
         n = round(a.seconds * a.fps)
         if not a.frames_dir:
             t0 = time.time()
-            ps = [multiprocessing.Process(target=worker, args=(k, a.workers, n, a.fps, w, h, str(tmp), str(frames))) for k in range(a.workers)]
+            ps = [multiprocessing.Process(target=worker, args=(k, a.workers, n, a.fps, w, h, str(tmp), str(frames)))
+                  for k in range(a.workers)]
             [p.start() for p in ps]; [p.join() for p in ps]
             got = len(list(frames.glob("f*.png")))
             print(f"captured {got}/{n} frames in {time.time() - t0:.1f}s")

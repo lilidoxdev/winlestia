@@ -1,4 +1,4 @@
-// language: C# 12, file: ClipboardTools.cs, target: Windows 11 / .NET 8 WPF, clipboard history
+// C# 12, fichier ClipboardTools.cs, cible Windows 11 / .NET 8 WPF, historique du presse-papiers
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,26 +16,21 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Streams;
 using WinClipboard = Windows.ApplicationModel.DataTransfer.Clipboard;
 
-namespace PanneauxGlass.Tools;
-
-// A quiet observer: it only records what Windows already put on the clipboard, and never writes
-// to it unless dj asks for an item back.
-internal sealed class ClipboardService : IDisposable
+namespace PanneauxGlass;
+// Un observateur discret : il n'enregistre que ce que Windows a déjà mis dans le presse-papiers, et n'y écrit jamais
+// sauf si dj redemande un élément.
+internal sealed class ClipboardService : IClipboardService, IDisposable
 {
-    readonly List<ClipboardItem> items = new();
-    readonly string folder;
-    readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromMilliseconds(750) };
-    bool busy,
-        disposed;
-    string last = "";
-    uint lastSequence;
-
-    [DllImport("user32.dll")]
-    static extern uint GetClipboardSequenceNumber();
-
+    // Intervalle de sondage du presse-papiers : réactif sans coûter de processeur.
+    const int PollMs = 750;
+    readonly List<ClipboardItem> items = new(); readonly string folder; readonly DispatcherTimer timer = new()
+    {
+        Interval = TimeSpan.FromMilliseconds(PollMs)
+    };
+    bool busy, disposed; string last = ""; uint lastSequence;
+    [DllImport("user32.dll")] static extern uint GetClipboardSequenceNumber();
     internal event Action? Changed;
-    internal IReadOnlyList<ClipboardItem> Items => items;
-
+    public IReadOnlyList<ClipboardItem> Items => items;
     internal ClipboardService()
     {
         folder = Path.Combine(Store.DataDir, "clipboard");
@@ -43,57 +38,41 @@ internal sealed class ClipboardService : IDisposable
         {
             Directory.CreateDirectory(folder);
         }
-        catch (Exception ex)
-        {
-            Store.Log("Clipboard: " + ex.Message);
-        }
+        catch (Exception ex) { Store.Log("Presse-papiers: " + ex.Message); }
         Load();
         timer.Tick += (_, _) => _ = PollAsync();
         ApplySettings();
         Prune();
     }
-
     internal void ApplySettings()
     {
         timer.Stop();
         if (Store.State.ClipboardHistory)
             timer.Start();
     }
-
     internal void Clear()
     {
         items.Clear();
         Save();
         foreach (var file in Directory.EnumerateFiles(folder, "*.png").ToArray())
-            try
-            {
-                File.Delete(file);
-            }
-            catch { }
+            Safe.Try(() => File.Delete(file));
         Changed?.Invoke();
     }
-
     internal void Remove(ClipboardItem item)
     {
         items.Remove(item);
         if (!string.IsNullOrEmpty(item.ImagePath))
-            try
-            {
-                File.Delete(item.ImagePath);
-            }
-            catch { }
+            Safe.Try(() => File.Delete(item.ImagePath));
         Save();
         Changed?.Invoke();
     }
-
-    internal void TogglePin(ClipboardItem item)
+    public void TogglePin(ClipboardItem item)
     {
         item.Pinned = !item.Pinned;
         Save();
         Changed?.Invoke();
     }
-
-    internal void CopyBack(ClipboardItem item)
+    public void CopyBack(ClipboardItem item)
     {
         try
         {
@@ -112,12 +91,8 @@ internal sealed class ClipboardService : IDisposable
             last = Signature(item);
             lastSequence = GetClipboardSequenceNumber();
         }
-        catch (Exception ex)
-        {
-            Store.Log("Clipboard copy: " + ex.Message);
-        }
+        catch (Exception ex) { Store.Log("Presse-papiers copie: " + ex.Message); }
     }
-
     async Task PollAsync()
     {
         if (busy || disposed || !Store.State.ClipboardHistory)
@@ -137,14 +112,7 @@ internal sealed class ClipboardService : IDisposable
                 if (!string.IsNullOrWhiteSpace(text) && text.Length < 200000 && Signature(text) != last)
                 {
                     last = Signature(text);
-                    Add(
-                        new ClipboardItem
-                        {
-                            Kind = "text",
-                            Text = text,
-                            At = DateTime.Now.ToString("HH:mm"),
-                        }
-                    );
+                    Add(new ClipboardItem { Kind = "text", Text = text, At = DateTime.Now.ToString("HH:mm") });
                 }
             }
             else if (Store.State.ClipboardImages && view.Contains(StandardDataFormats.Bitmap))
@@ -157,27 +125,13 @@ internal sealed class ClipboardService : IDisposable
                 string path = Path.Combine(folder, Guid.NewGuid().ToString("N") + ".png");
                 await File.WriteAllBytesAsync(path, bytes);
                 last = "image:" + new FileInfo(path).Length;
-                Add(
-                    new ClipboardItem
-                    {
-                        Kind = "image",
-                        ImagePath = path,
-                        At = DateTime.Now.ToString("HH:mm"),
-                    }
-                );
+                Add(new ClipboardItem { Kind = "image", ImagePath = path, At = DateTime.Now.ToString("HH:mm") });
             }
             lastSequence = sequence;
         }
-        catch (Exception ex)
-        {
-            Store.Log("Clipboard read: " + ex.Message);
-        }
-        finally
-        {
-            busy = false;
-        }
+        catch (Exception ex) { Store.Log("Presse-papiers lecture: " + ex.Message); }
+        finally { busy = false; }
     }
-
     static async Task<byte[]> ReadAll(IRandomAccessStream stream)
     {
         uint size = (uint)stream.Size;
@@ -188,12 +142,8 @@ internal sealed class ClipboardService : IDisposable
         reader.Dispose();
         return bytes;
     }
-
     static string Signature(string text) => text.Length + "|" + text.GetHashCode();
-
-    static string Signature(ClipboardItem item) =>
-        item.Kind == "image" ? "image:" + item.ImagePath : Signature(item.Text);
-
+    static string Signature(ClipboardItem item) => item.Kind == "image" ? "image:" + item.ImagePath : Signature(item.Text);
     void Add(ClipboardItem item)
     {
         if (item.Kind == "image" && !Store.State.ClipboardImages)
@@ -203,7 +153,6 @@ internal sealed class ClipboardService : IDisposable
         Save();
         Changed?.Invoke();
     }
-
     void Prune()
     {
         int limit = Math.Clamp(Store.State.ClipboardLimit, 8, 80);
@@ -214,14 +163,9 @@ internal sealed class ClipboardService : IDisposable
                 break;
             items.Remove(victim);
             if (!string.IsNullOrEmpty(victim.ImagePath))
-                try
-                {
-                    File.Delete(victim.ImagePath);
-                }
-                catch { }
+                Safe.Try(() => File.Delete(victim.ImagePath));
         }
     }
-
     void Load()
     {
         try
@@ -239,27 +183,16 @@ internal sealed class ClipboardService : IDisposable
                 items.Add(item);
             }
         }
-        catch (Exception ex)
-        {
-            Store.Log("Clipboard load: " + ex.Message);
-        }
+        catch (Exception ex) { Store.Log("Presse-papiers chargement: " + ex.Message); }
     }
-
     void Save()
     {
         try
         {
-            Winlestia.Shared.AtomicFile.WriteAllText(
-                Path.Combine(folder, "history.json"),
-                JsonSerializer.Serialize(items, Store.Json)
-            );
+            Winlestia.Shared.AtomicFile.WriteAllText(Path.Combine(folder, "history.json"), JsonSerializer.Serialize(items, Store.Json));
         }
-        catch (Exception ex)
-        {
-            Store.Log("Clipboard save: " + ex.Message);
-        }
+        catch (Exception ex) { Store.Log("Presse-papiers sauvegarde: " + ex.Message); }
     }
-
     public void Dispose()
     {
         disposed = true;
@@ -267,18 +200,11 @@ internal sealed class ClipboardService : IDisposable
         Save();
     }
 }
-
 internal sealed class ClipboardWindow : GlassWindow
 {
-    readonly Coordinator owner;
-    readonly ClipboardService service;
-    readonly StackPanel list = new();
-    readonly TextBox search;
-    readonly TextBlock count,
-        status;
-
-    internal ClipboardWindow(Coordinator coordinator, ClipboardService clipboard)
-        : base(Strings.PanneauxGlassClipboard)
+    readonly Coordinator owner; readonly ClipboardService service; readonly StackPanel list = new(); readonly TextBox search;
+    readonly TextBlock count, status;
+    internal ClipboardWindow(Coordinator coordinator, ClipboardService clipboard) : base("Winlestia — presse-papiers")
     {
         owner = coordinator;
         service = clipboard;
@@ -288,34 +214,52 @@ internal sealed class ClipboardWindow : GlassWindow
         Radius = 34;
         ShowActivated = true;
         ContentHost.Margin = new Thickness(26, 22, 26, 18);
-        ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        ContentHost.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
-        ContentHost.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        ContentHost.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        ContentHost.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
+        ContentHost.RowDefinitions.Add(new()
+        {
+            Height = new GridLength(1, GridUnitType.Star)
+        });
+        ContentHost.RowDefinitions.Add(new()
+        {
+            Height = GridLength.Auto
+        });
         var header = new DockPanel();
-        var close = UI.IconButton("\uE711", Strings.CloseTheClipboard, Close);
+        var close = UI.IconButton("\uE711", "Fermer le presse-papiers", Close);
         DockPanel.SetDock(close, Dock.Right);
         header.Children.Add(close);
         var titles = new StackPanel();
-        titles.Children.Add(UI.Text(Strings.YourClipboard, 25, null, true));
-        var sub = UI.Text(Strings.ClickAnItemToPutIt, 11, UI.Dim);
+        titles.Children.Add(UI.Text("Ton presse-papiers.", 25, null, true));
+        var sub = UI.Text("Clique un élément pour le remettre dans le presse-papiers", 11, UI.Dim);
         sub.Margin = new Thickness(0, 6, 0, 0);
         titles.Children.Add(sub);
         header.Children.Add(titles);
         ContentHost.Children.Add(header);
-        var palette = UI.Button(owner.PaletteLabel, () => owner.TogglePalette());
+        var palette = UI.Button(owner.Keys.PaletteLabel, () => owner.TogglePalette());
         palette.FontSize = 11;
         palette.Padding = new Thickness(10, 6, 10, 6);
         palette.Margin = new Thickness(0, 14, 0, 10);
         palette.HorizontalAlignment = HorizontalAlignment.Left;
-        palette.ToolTip = Strings.OpenTheQuickCommand;
+        palette.ToolTip = "Ouvrir la commande rapide";
         ContentHost.Children.Add(palette);
         var searchRow = new Grid { Margin = new Thickness(0, 0, 0, 12) };
-        searchRow.ColumnDefinitions.Add(new() { Width = new GridLength(28) });
-        searchRow.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        searchRow.ColumnDefinitions.Add(new()
+        {
+            Width = new GridLength(28)
+        });
+        searchRow.ColumnDefinitions.Add(new()
+        {
+            Width = new GridLength(1, GridUnitType.Star)
+        });
         searchRow.Children.Add(UI.Glyph("\uE721", 15));
         search = new TextBox { FontSize = 13, Padding = new Thickness(10, 8, 10, 8) };
-        System.Windows.Automation.AutomationProperties.SetName(search, Strings.SearchTheClipboard);
+        System.Windows.Automation.AutomationProperties.SetName(search, "Rechercher dans le presse-papiers");
         Grid.SetColumn(search, 1);
         searchRow.Children.Add(search);
         Grid.SetRow(searchRow, 1);
@@ -325,22 +269,19 @@ internal sealed class ClipboardWindow : GlassWindow
             Content = list,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Margin = new Thickness(0, 0, 0, 10),
+            Margin = new Thickness(0, 0, 0, 10)
         };
         Grid.SetRow(scroll, 2);
         ContentHost.Children.Add(scroll);
         var footer = new DockPanel();
         var actions = new StackPanel { Orientation = Orientation.Horizontal };
-        var clear = UI.Button(
-            Strings.Clear,
-            () =>
+        var clear = UI.Button("Vider", () =>
+        {
+            if (owner.Confirm("Vider l’historique du presse-papiers ?\n\nLes éléments épinglés restent."))
             {
-                if (owner.Confirm(Strings.ClearTheClipboardHistoryPinnedItems))
-                {
-                    service.Clear();
-                }
+                service.Clear();
             }
-        );
+        });
         clear.FontSize = 12;
         clear.Padding = new Thickness(12, 7, 12, 7);
         actions.Children.Add(clear);
@@ -351,48 +292,34 @@ internal sealed class ClipboardWindow : GlassWindow
         footer.Children.Add(count);
         Grid.SetRow(footer, 3);
         ContentHost.Children.Add(footer);
-        status = UI.Text(Strings.WindowsKeepsTheseItemsWhilePanneaux, 10, UI.Dim);
+        status = UI.Text("Windows garde ces éléments tant que Winlestia tourne. Rien n’est envoyé sur Internet.", 10, UI.Dim);
         status.Margin = new Thickness(0, 8, 0, 0);
         status.TextWrapping = TextWrapping.Wrap;
         ContentHost.Children.Add(status);
         search.TextChanged += (_, _) => Refresh();
         service.Changed += Refresh;
-        Closed += (_, _) =>
-        {
-            service.Changed -= Refresh;
-        };
-        Loaded += (_, _) =>
-        {
-            ApplyGlass();
-            Refresh();
-            search.Focus();
-        };
+        Closed += (_, _) => { service.Changed -= Refresh; };
+        Loaded += (_, _) => { ApplyGlass(); Refresh(); search.Focus(); };
         KeyDown += (_, e) =>
         {
             if (e.Key == Key.Escape)
                 Close();
-            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+            if (e.Key == Key.F
+            && Keyboard.Modifiers == ModifierKeys.Control)
                 search.Focus();
         };
     }
-
     void Refresh()
     {
         list.Children.Clear();
         string query = Store.Fold(search?.Text ?? "");
-        var visible = service
-            .Items.Where(item =>
-                query.Length == 0 || Store.Fold(item.Kind == "image" ? "image capture" : item.Text).Contains(query)
-            )
-            .ToList();
-        count.Text = visible.Count + Strings.Item + (visible.Count == 1 ? "" : "s");
+        var visible = service.Items.Where(item => query.Length == 0 || Store.Fold(item.Kind == "image" ? "image capture"
+            : item.Text).Contains(query)).ToList();
+        count.Text = visible.Count + " élément" + (visible.Count == 1 ? "" : "s");
         if (visible.Count == 0)
         {
-            var empty = UI.Text(
-                query.Length == 0 ? Strings.NothingYetCopySomeTextOr : Strings.NoItemMatches,
-                12,
-                UI.Dim
-            );
+            var empty = UI.Text(query.Length == 0 ? "Rien encore : copie du texte ou une image, elle apparaîtra ici."
+                : "Aucun élément ne correspond.", 12, UI.Dim);
             empty.Margin = new Thickness(6, 24, 6, 10);
             empty.TextWrapping = TextWrapping.Wrap;
             list.Children.Add(empty);
@@ -404,7 +331,6 @@ internal sealed class ClipboardWindow : GlassWindow
             list.Children.Add(Row(item, index++));
         }
     }
-
     FrameworkElement Row(ClipboardItem item, int index)
     {
         var row = new Border
@@ -415,20 +341,24 @@ internal sealed class ClipboardWindow : GlassWindow
             Background = UI.T(M3Role.OnSurface, 0x0C),
             BorderBrush = UI.T(M3Role.OnSurface, 0x1C),
             BorderThickness = new Thickness(1),
-            Cursor = Cursors.Hand,
+            Cursor = Cursors.Hand
         };
         var grid = new Grid();
-        grid.ColumnDefinitions.Add(new() { Width = new GridLength(52) });
-        grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new()
+        {
+            Width = new GridLength(52)
+        });
+        grid.ColumnDefinitions.Add(new()
+        {
+            Width = new GridLength(1, GridUnitType.Star)
+        });
+        grid.ColumnDefinitions.Add(new()
+        {
+            Width = GridLength.Auto
+        });
         if (item.Kind == "image" && File.Exists(item.ImagePath))
         {
-            var image = new Image
-            {
-                Width = 42,
-                Height = 42,
-                Stretch = Stretch.UniformToFill,
-            };
+            var image = new Image { Width = 42, Height = 42, Stretch = Stretch.UniformToFill };
             try
             {
                 var source = new BitmapImage();
@@ -440,63 +370,57 @@ internal sealed class ClipboardWindow : GlassWindow
                 source.Freeze();
                 image.Source = source;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Store.Log("ClipboardTools.Row : " + ex.GetType().Name + ": " + ex.Message);
+            }
             image.Clip = new RectangleGeometry(new Rect(0, 0, 42, 42), 9, 9);
-            grid.Children.Add(
-                new Border
-                {
-                    Width = 42,
-                    Height = 42,
-                    CornerRadius = new CornerRadius(9),
-                    Background = UI.T(M3Role.OnSurface, 0x18),
-                    Child = image,
-                    VerticalAlignment = VerticalAlignment.Center,
-                }
-            );
+            grid.Children.Add(new Border
+            {
+                Width = 42,
+                Height = 42,
+                CornerRadius = new CornerRadius(9),
+                Background = UI.T(M3Role.OnSurface,
+                0x18),
+                Child = image,
+                VerticalAlignment = VerticalAlignment.Center
+            });
         }
         else
         {
             var glyph = UI.Glyph("\uE8C8", 17);
             glyph.HorizontalAlignment = HorizontalAlignment.Center;
-            grid.Children.Add(
-                new Border
-                {
-                    Width = 42,
-                    Height = 42,
-                    CornerRadius = new CornerRadius(9),
-                    Background = UI.T(M3Role.OnSurface, 0x18),
-                    Child = glyph,
-                    VerticalAlignment = VerticalAlignment.Center,
-                }
-            );
+            grid.Children.Add(new Border
+            {
+                Width = 42,
+                Height = 42,
+                CornerRadius = new CornerRadius(9),
+                Background = UI.T(M3Role.OnSurface,
+                0x18),
+                Child = glyph,
+                VerticalAlignment = VerticalAlignment.Center
+            });
         }
         var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 8, 0) };
-        var preview = UI.Text(
-            item.Kind == "image" ? Strings.CopiedImage : item.Text.Replace("\r", " ").Replace("\n", "  "),
-            12
-        );
+        var preview = UI.Text(item.Kind == "image" ? "Image copiée" : item.Text.Replace("\r", " ").Replace("\n", "  "), 12);
         preview.TextTrimming = TextTrimming.CharacterEllipsis;
         preview.MaxHeight = 34;
         preview.TextWrapping = TextWrapping.Wrap;
         text.Children.Add(preview);
-        var meta = UI.Text(item.At + (item.Pinned ? Strings.Pinned : ""), 10, UI.Dim);
+        var meta = UI.Text(item.At + (item.Pinned ? " · épinglé" : ""), 10, UI.Dim);
         meta.Margin = new Thickness(0, 4, 0, 0);
         text.Children.Add(meta);
         Grid.SetColumn(text, 1);
         grid.Children.Add(text);
-        var tools = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        var pin = UI.IconButton("\uE840", item.Pinned ? Strings.Unpin : Strings.Pin, () => service.TogglePin(item));
+        var tools = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        var pin = UI.IconButton("\uE840", item.Pinned ? "Détacher" : "Épingler", () => service.TogglePin(item));
         pin.Width = 28;
         pin.Height = 28;
         pin.Background = item.Pinned ? UI.Selected : Brushes.Transparent;
         pin.BorderBrush = Brushes.Transparent;
         pin.Margin = new Thickness(0, 0, 2, 0);
         tools.Children.Add(pin);
-        var remove = UI.IconButton("\uE74D", Strings.Delete, () => service.Remove(item));
+        var remove = UI.IconButton("\uE74D", "Supprimer", () => service.Remove(item));
         remove.Width = 28;
         remove.Height = 28;
         remove.Background = Brushes.Transparent;
@@ -510,7 +434,7 @@ internal sealed class ClipboardWindow : GlassWindow
             if (e.OriginalSource is Button)
                 return;
             service.CopyBack(item);
-            owner.ShowToast(Strings.ItemCopied);
+            owner.ShowToast("Élément copié");
             Close();
         };
         Motion.Stagger(row, index);

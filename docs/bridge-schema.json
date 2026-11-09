@@ -1,0 +1,823 @@
+{
+  "protocol": 1,
+  "description": "Contrat du pont Winlestia (voir docs/BRIDGE.md). Un message client->serveur = {\"command\":nom,\"args\":{...}}. Tous les champs d'args absents prennent la valeur par défaut du serveur (\"\"/0/false) ; \"required\" liste ceux sans lesquels la commande est sans effet.",
+  "envelope": {
+    "request": {
+      "required": [
+        "command",
+        "args"
+      ],
+      "commonArgs": {
+        "pid": "number",
+        "epoch": "number",
+        "protocol": "number",
+        "visible": "boolean",
+        "page": "number",
+        "dock": "boolean",
+        "controls": "boolean",
+        "mixer": "boolean",
+        "wifi": "boolean",
+        "bars": "boolean"
+      }
+    },
+    "reply": {
+      "required": []
+    }
+  },
+  "commands": {
+    "activate": {
+      "args": {
+        "hwnd": "number",
+        "id": "string"
+      },
+      "required": [
+        "hwnd"
+      ]
+    },
+    "addAccess": {
+      "args": {
+        "board": "string"
+      },
+      "required": []
+    },
+    "addFolder": {
+      "args": {
+        "board": "string"
+      },
+      "required": []
+    },
+    "audio": {
+      "args": {},
+      "required": []
+    },
+    "audioBars": {
+      "args": {
+        "seq": "number"
+      },
+      "required": []
+    },
+    "bookmarksBrowser": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "bookmarksDeleteInBrowser": {
+      "args": {
+        "confirmSync": "boolean",
+        "id": "string"
+      },
+      "required": []
+    },
+    "bookmarksHide": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "bookmarksItems": {
+      "args": {},
+      "required": []
+    },
+    "bookmarksOpen": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "bookmarksRefresh": {
+      "args": {
+        "ifDirty": "boolean"
+      },
+      "required": []
+    },
+    "bookmarksUnhideAll": {
+      "args": {},
+      "required": []
+    },
+    "brightness": {
+      "args": {
+        "id": "string",
+        "value": "number"
+      },
+      "required": []
+    },
+    "capture": {
+      "args": {},
+      "required": []
+    },
+    "captureExport": {
+      "args": {
+        "path": "string"
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "captureShortcutMode": {
+      "args": {
+        "enabled": "boolean"
+      },
+      "required": []
+    },
+    "clipboard": {
+      "args": {},
+      "required": []
+    },
+    "clipboardCopy": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "clipboardFiles": {
+      "args": {
+        "paths": "array<string>"
+      },
+      "required": []
+    },
+    "clipboardPin": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "copyText": {
+      "args": {
+        "text": "string"
+      },
+      "required": [
+        "text"
+      ]
+    },
+    "customTheme": {
+      "args": {
+        "colors": "object",
+        "glass": "boolean",
+        "opacity": "number"
+      },
+      "required": []
+    },
+    "desktopClose": {
+      "args": {
+        "index": "number"
+      },
+      "required": []
+    },
+    "desktopNew": {
+      "args": {},
+      "required": []
+    },
+    "desktopSwitch": {
+      "args": {
+        "index": "number",
+        "relative": "number"
+      },
+      "required": []
+    },
+    "deviceMute": {
+      "args": {
+        "id": "string",
+        "muted": "boolean"
+      },
+      "required": []
+    },
+    "deviceSelect": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "deviceVolume": {
+      "args": {
+        "id": "string",
+        "value": "number"
+      },
+      "required": []
+    },
+    "dictation": {
+      "args": {},
+      "required": []
+    },
+    "dictationCapture": {
+      "args": {
+        "enabled": "boolean"
+      },
+      "required": []
+    },
+    "dockApp": {
+      "args": {
+        "action": "string",
+        "confirmed": "boolean",
+        "hwnd": "number",
+        "id": "string",
+        "index": "number"
+      },
+      "required": []
+    },
+    "dockPreview": {
+      "args": {
+        "cx": "number",
+        "cy": "number",
+        "dpr": "number",
+        "id": "string",
+        "x": "number",
+        "y": "number"
+      },
+      "required": []
+    },
+    "dockPreviewEnd": {
+      "args": {
+        "now": "boolean"
+      },
+      "required": []
+    },
+    "edit": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "editEntry": {
+      "args": {
+        "category": "string",
+        "id": "string",
+        "name": "string"
+      },
+      "required": []
+    },
+    "emptyRecycleBin": {
+      "args": {},
+      "required": []
+    },
+    "entryIcon": {
+      "args": {
+        "id": "string",
+        "path": "string"
+      },
+      "required": []
+    },
+    "explorerFolder": {
+      "args": {},
+      "required": []
+    },
+    "explorerOpen": {
+      "args": {},
+      "required": []
+    },
+    "explorerPalette": {
+      "args": {
+        "accent": "string",
+        "background": "string",
+        "text": "string"
+      },
+      "required": []
+    },
+    "explorerReport": {
+      "args": {},
+      "required": []
+    },
+    "explorerRestore": {
+      "args": {},
+      "required": []
+    },
+    "favorite": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "fileCancel": {
+      "args": {},
+      "required": []
+    },
+    "fileOpen": {
+      "args": {
+        "gen": "number",
+        "index": "number"
+      },
+      "required": [
+        "index"
+      ]
+    },
+    "fileResults": {
+      "args": {},
+      "required": []
+    },
+    "fileSearch": {
+      "args": {
+        "gen": "number",
+        "term": "string"
+      },
+      "required": [
+        "term"
+      ]
+    },
+    "icon": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "launch": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "masterMute": {
+      "args": {
+        "muted": "boolean"
+      },
+      "required": []
+    },
+    "media": {
+      "args": {
+        "action": "string",
+        "value": "number"
+      },
+      "required": []
+    },
+    "mediaVolume": {
+      "args": {
+        "value": "number"
+      },
+      "required": []
+    },
+    "microphone": {
+      "args": {},
+      "required": []
+    },
+    "move": {
+      "args": {
+        "board": "string",
+        "id": "string"
+      },
+      "required": []
+    },
+    "openFiles": {
+      "args": {},
+      "required": []
+    },
+    "palette": {
+      "args": {},
+      "required": []
+    },
+    "paletteRun": {
+      "args": {
+        "id": "string",
+        "kind": "string",
+        "query": "string"
+      },
+      "required": []
+    },
+    "preference": {
+      "args": {
+        "enabled": "boolean",
+        "key": "string",
+        "value": "string"
+      },
+      "required": [
+        "key"
+      ]
+    },
+    "profiles": {
+      "args": {},
+      "required": []
+    },
+    "quit": {
+      "args": {},
+      "required": []
+    },
+    "radio": {
+      "args": {
+        "kind": "string"
+      },
+      "required": []
+    },
+    "raiseMedia": {
+      "args": {},
+      "required": []
+    },
+    "recycleFiles": {
+      "args": {
+        "paths": "array<string>"
+      },
+      "required": []
+    },
+    "refreshCatalogue": {
+      "args": {},
+      "required": []
+    },
+    "restoreTaskbar": {
+      "args": {},
+      "required": []
+    },
+    "reveal": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "runningRefresh": {
+      "args": {},
+      "required": []
+    },
+    "sessionMute": {
+      "args": {
+        "id": "string",
+        "muted": "boolean"
+      },
+      "required": []
+    },
+    "sessionVolume": {
+      "args": {
+        "id": "string",
+        "value": "number"
+      },
+      "required": []
+    },
+    "settings": {
+      "args": {
+        "section": "string"
+      },
+      "required": []
+    },
+    "shortcut": {
+      "args": {
+        "combo": "string",
+        "id": "any",
+        "key": "number",
+        "kind": "string",
+        "modifiers": "number"
+      },
+      "required": []
+    },
+    "shortcut-reset": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "socialEnable": {
+      "args": {
+        "enabled": "boolean",
+        "id": "string"
+      },
+      "required": []
+    },
+    "socialGlobalMute": {
+      "args": {
+        "muted": "boolean"
+      },
+      "required": []
+    },
+    "socialHistoryClear": {
+      "args": {},
+      "required": []
+    },
+    "socialLogin": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "socialLogout": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "socialMute": {
+      "args": {
+        "id": "string",
+        "muted": "boolean"
+      },
+      "required": []
+    },
+    "socialOpen": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "socialSound": {
+      "args": {
+        "enabled": "boolean"
+      },
+      "required": []
+    },
+    "socialTestSound": {
+      "args": {},
+      "required": []
+    },
+    "socialVolume": {
+      "args": {
+        "value": "number"
+      },
+      "required": []
+    },
+    "state": {
+      "args": {},
+      "required": []
+    },
+    "systemAction": {
+      "args": {
+        "confirmed": "boolean",
+        "id": "string"
+      },
+      "required": []
+    },
+    "theme": {
+      "args": {
+        "dark": "boolean",
+        "mode": "string"
+      },
+      "required": []
+    },
+    "toolRun": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "tools": {
+      "args": {},
+      "required": []
+    },
+    "visualizer": {
+      "args": {},
+      "required": []
+    },
+    "volume": {
+      "args": {
+        "value": "number"
+      },
+      "required": []
+    },
+    "wallpaperApply": {
+      "args": {
+        "display": "number",
+        "path": "string"
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "wallpaperCapture": {
+      "args": {
+        "h": "number",
+        "token": "string",
+        "w": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": []
+    },
+    "wallpaperChanged": {
+      "args": {},
+      "required": []
+    },
+    "wallpaperPicker": {
+      "args": {},
+      "required": []
+    },
+    "website": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "websites": {
+      "args": {},
+      "required": []
+    },
+    "wifiConnect": {
+      "args": {
+        "password": "string",
+        "ssid": "string"
+      },
+      "required": [
+        "ssid"
+      ]
+    },
+    "wifiForget": {
+      "args": {
+        "ssid": "string"
+      },
+      "required": [
+        "ssid"
+      ]
+    },
+    "wifiPortal": {
+      "args": {},
+      "required": []
+    },
+    "wifiSettings": {
+      "args": {
+        "page": "string"
+      },
+      "required": []
+    },
+    "windowList": {
+      "args": {},
+      "required": []
+    },
+    "workspace": {
+      "args": {
+        "id": "string"
+      },
+      "required": []
+    },
+    "zipFiles": {
+      "args": {
+        "paths": "array<string>"
+      },
+      "required": []
+    }
+  },
+  "preferenceKeys": {
+    "accentBorders": {
+      "enabled": "boolean"
+    },
+    "activeBorderOnly": {
+      "enabled": "boolean"
+    },
+    "autoTile": {
+      "enabled": "boolean"
+    },
+    "autostart": {
+      "enabled": "boolean"
+    },
+    "bookmarksRailVisible": {
+      "enabled": "boolean"
+    },
+    "clipboardHistory": {
+      "enabled": "boolean"
+    },
+    "clipboardImages": {
+      "enabled": "boolean"
+    },
+    "clipboardLimit": {
+      "value": "number"
+    },
+    "customGlassOpacity": {
+      "value": "number"
+    },
+    "desktopIndicator": {
+      "enabled": "boolean"
+    },
+    "desktopLogo": {
+      "enabled": "boolean"
+    },
+    "dictationEnabled": {
+      "enabled": "boolean"
+    },
+    "dictationKey": {
+      "value": "number"
+    },
+    "dockDrawerOpen": {
+      "enabled": "boolean"
+    },
+    "dockVisible": {
+      "enabled": "boolean"
+    },
+    "dockWidth": {
+      "value": "number"
+    },
+    "explorerTheme": {
+      "enabled": "boolean"
+    },
+    "filesDefaultHandler": {
+      "enabled": "boolean"
+    },
+    "filesPreload": {
+      "enabled": "boolean"
+    },
+    "frameThickness": {
+      "value": "number"
+    },
+    "glassOpacity": {
+      "value": "number"
+    },
+    "iconSize": {
+      "value": "number"
+    },
+    "motion": {
+      "value": "number"
+    },
+    "osd": {
+      "enabled": "boolean"
+    },
+    "quietFullscreen": {
+      "enabled": "boolean"
+    },
+    "reducedEffects": {
+      "enabled": "boolean"
+    },
+    "replaceTaskbar": {
+      "enabled": "boolean"
+    },
+    "screenFrame": {
+      "enabled": "boolean"
+    },
+    "socialBackground": {
+      "enabled": "boolean"
+    },
+    "socialRailVisible": {
+      "enabled": "boolean"
+    },
+    "taskbar": {},
+    "tileExclusionRemove": {
+      "value": "string"
+    },
+    "topActivationMargin": {
+      "value": "number"
+    }
+  },
+  "replyKeys": {
+    "state": "object",
+    "events": "array<string>",
+    "notice": "string|null",
+    "wallpaperCapture": "object|null",
+    "bookmarksItems": "array|null",
+    "windows": "array|null",
+    "fileResults": "object|null",
+    "wallpaperPicker": "object|null",
+    "dictation": "object",
+    "audioBars": "object",
+    "spectrum": "array<number>"
+  },
+  "stateKeys": [
+    "systemRecent",
+    "wallpapers",
+    "wallpaperRevision",
+    "audioReadMs",
+    "audioMixer",
+    "quickTabs",
+    "social",
+    "bookmarks",
+    "settings",
+    "clipboard",
+    "diagnostics",
+    "dark",
+    "taskbarEnabled",
+    "networkKind",
+    "virtualDesktops",
+    "fullscreenMonitors",
+    "quiet",
+    "quietForced",
+    "performance",
+    "sysInfo",
+    "media",
+    "controls",
+    "apps",
+    "favorites",
+    "recent",
+    "websites",
+    "profiles",
+    "taskbarApps",
+    "runningApps",
+    "icons",
+    "iconRevision"
+  ],
+  "events": [
+    "toggle",
+    "access",
+    "media",
+    "performance",
+    "controls",
+    "palette",
+    "settings",
+    "settings:social",
+    "settings:bookmarks",
+    "clipboard",
+    "audio",
+    "microphone",
+    "tools",
+    "capture",
+    "capture-ocr",
+    "capture-select",
+    "wallpaper-switcher",
+    "close",
+    "bookmarks",
+    "social",
+    "files",
+    "dock",
+    "dictation:start",
+    "dictation:stop",
+    "dictation:keycancel"
+  ],
+  "clientOnlyEvents": [
+    "mixer"
+  ],
+  "eventPrefixes": [
+    "workspace:",
+    "osd:volume:",
+    "osd:brightness:",
+    "shortcut-key:",
+    "shortcut-saved:",
+    "osd:mic:",
+    "dictation:key:"
+  ]
+}

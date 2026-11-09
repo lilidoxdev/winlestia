@@ -8,11 +8,16 @@ if(!$PSCmdlet.ShouldProcess('Windows Terminal et profils de la session','Rétabl
 [IO.File]::WriteAllText((Join-Path $root 'theme-sync.stop'),'stop')
 Start-Sleep -Seconds 5
 if(Test-Path -LiteralPath (Join-Path $root 'backups\packaged-autorun-before.json')){
-    & "$env:LOCALAPPDATA\Microsoft\WindowsApps\wt.exe" -w Winlestia-Restore new-tab powershell.exe -NoProfile -File (Join-Path $root 'RestorePackagedCmd.ps1')
-    for($i=0;$i -lt 30;$i++){if(Test-Path -LiteralPath (Join-Path $root 'validation\package-restored.flag')){break};Start-Sleep -Milliseconds 300}
+    $packagedScript=Join-Path $root 'RestorePackagedCmd.ps1'
+    & "$env:LOCALAPPDATA\Microsoft\WindowsApps\wt.exe" -w Winlestia-Restore new-tab powershell.exe -NoProfile -File $packagedScript
+    $flag=Join-Path $root 'validation\package-restored.flag'
+    for($i=0;$i -lt 30;$i++){
+        if(Test-Path -LiteralPath $flag){break}
+        Start-Sleep -Milliseconds 300
+    }
 }
 foreach($file in $snapshot.files){
-    # Windows Terminal settings.json is restored by install.py --restore (merge, never overwrite user edits).
+    # settings.json de Windows Terminal est restaure par install.py --restore (fusion, sans ecraser l'utilisateur).
     if($file.path -like '*\Packages\Microsoft.WindowsTerminal*\settings.json'){continue}
     if($file.existed){Copy-Item -LiteralPath $file.backup -Destination $file.path -Force}
     elseif(Test-Path -LiteralPath $file.path){
@@ -24,7 +29,8 @@ foreach($file in $snapshot.files){
 foreach($item in $snapshot.registry){
     $key='HKCU:\'+$item.key
     $now=[string](Get-ItemProperty -LiteralPath $key -Name $item.name -ErrorAction SilentlyContinue).($item.name)
-    if($now -and $now.IndexOf($root,[StringComparison]::OrdinalIgnoreCase) -lt 0){continue}  # not ours (changed since the install): leave it
+    # Valeur modifiee depuis l'installation (pas la notre) : on la laisse.
+    if($now -and $now.IndexOf($root,[StringComparison]::OrdinalIgnoreCase) -lt 0){continue}
     if($item.existed){New-Item -Path $key -Force | Out-Null;Set-ItemProperty -LiteralPath $key -Name $item.name -Value $item.value}
     elseif(Test-Path -LiteralPath $key){Remove-ItemProperty -LiteralPath $key -Name $item.name -ErrorAction SilentlyContinue}
 }

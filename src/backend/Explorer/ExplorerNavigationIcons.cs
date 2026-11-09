@@ -1,37 +1,40 @@
-// C#12 / ExplorerNavigationIcons.cs / removes legacy per-user namespace icon overrides (HKCU is not honoured by the navigation pane); original values restored.
+// C# 12 / ExplorerNavigationIcons.cs / supprime les anciennes surcharges d'icônes d'espace de noms par utilisateur (HKCU n'est pas pris
+// en compte par le volet de navigation) ; valeurs d'origine restaurées.
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.Win32;
-
-namespace PanneauxGlass.Explorer;
+namespace PanneauxGlass;
 
 internal static class ExplorerNavigationIcons
 {
     internal sealed class Entry
     {
-        public string Key { get; set; } = "";
-        public bool HadValue { get; set; }
-        public string? Original { get; set; }
-        public int Kind { get; set; }
+        public string Key { get; set; } = ""; public bool HadValue
+        {
+            get; set;
+        }
+        public string? Original
+        {
+            get; set;
+        }
+        public int Kind
+        {
+            get; set;
+        }
         public string Applied { get; set; } = "";
     }
-
     static string Manifest(string root) => Path.Combine(root, "navigation-icons.json");
-
-    static List<Entry> Read(string root) =>
-        File.Exists(Manifest(root))
-            ? JsonSerializer.Deserialize<List<Entry>>(File.ReadAllText(Manifest(root))) ?? new()
-            : new();
-
+    static List<Entry> Read(string root) => File.Exists(Manifest(root))
+        ? JsonSerializer.Deserialize<List<Entry>>(File.ReadAllText(Manifest(root))) ?? new() : new();
     static void Save(string root, List<Entry> data)
     {
         Directory.CreateDirectory(root);
-        Winlestia.Shared.AtomicFile.WriteAllText(Manifest(root), JsonSerializer.Serialize(data));
+        File.WriteAllText(Manifest(root) + ".tmp", JsonSerializer.Serialize(data));
+        File.Move(Manifest(root) + ".tmp", Manifest(root), true);
     }
-
     internal static int Restore(string root)
     {
         var data = Read(root);
@@ -58,10 +61,7 @@ internal static class ExplorerNavigationIcons
                 if (check != null && check.ValueCount == 0 && check.SubKeyCount == 0)
                     Registry.CurrentUser.DeleteSubKey(entry.Key, false);
             }
-            catch
-            {
-                remaining.Add(entry);
-            }
+            catch { remaining.Add(entry); }
         }
         Save(root, remaining);
         return remaining.Count;

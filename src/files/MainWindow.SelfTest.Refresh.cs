@@ -1,5 +1,8 @@
-// WINLESTIA_FILES_SELFTEST=refresh : auto refresh + filter + selection/scroll on a fixture folder (first command-line argument, must live under %TEMP%\WinlestiaFilesOps).
-// WINLESTIA_FILES_SELFTEST=states  : empty / denied / filter screenshots (WINLESTIA_FILES_SHOTDIR). Results: PASS/FAIL lines in selftest.log. Fixture: any folder with >= 12 files.
+#if WINLESTIA_SELFTEST
+// WINLESTIA_FILES_SELFTEST=refresh : rafraîchissement auto + filtre + sélection/défilement sur un dossier d'essai (premier argument de
+// ligne de commande, sous %TEMP%\WinlestiaFilesOps obligatoirement).
+// WINLESTIA_FILES_SELFTEST=states  : captures vide / refusé / filtre (WINLESTIA_FILES_SHOTDIR). Résultats : lignes PASS/FAIL dans
+// selftest.log. Jeu d'essai : tout dossier de 12 fichiers ou plus.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,12 +13,16 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PanneauxGlass;
-using PanneauxGlass.Views;
 
 namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
+    // Pas de sondage de la convergence de la liste après un changement disque.
+    const int RefreshPollMs = 10;
+    // Pas de sondage de l'arrivée de la navigation à l'emplacement attendu (3 s max).
+    const int NavigatePollMs = 20;
+
     string Fixture()
     {
         string f = Path.GetFullPath(Active.Location);
@@ -25,7 +32,7 @@ public sealed partial class MainWindow
         return f;
     }
 
-    // Polls until the shown list equals the disk (and extra holds). Returns the elapsed ms, -1 on timeout.
+    // Attend que la liste affichée égale le disque (et que cela tienne). Renvoie les ms écoulées, -1 en cas de délai dépassé.
     async Task<double> WaitMatch(Func<bool>? extra = null, int limit = 3000)
     {
         long t = Stopwatch.GetTimestamp();
@@ -33,7 +40,7 @@ public sealed partial class MainWindow
         {
             if (DiskMatches() && OrderOk() && (extra?.Invoke() ?? true))
                 return Perf.Ms(t);
-            await Task.Delay(10);
+            await Task.Delay(RefreshPollMs);
         }
         return -1;
     }
@@ -59,68 +66,43 @@ public sealed partial class MainWindow
         Check("initial load matches disk", DiskMatches() && OrderOk());
         var sel = Active.Items.Where(i => !i.IsDir).Skip(2).Take(3).Select(i => i.Name).ToList();
         SelectNames(sel);
-        bool SelKept() =>
-            list.SelectedItems.Count == sel.Count && list.SelectedItems.Cast<FileItem>().All(i => sel.Contains(i.Name));
+        bool SelKept() => list.SelectedItems.Count == sel.Count && list.SelectedItems.Cast<FileItem>().All(i => sel.Contains(i.Name));
         Check("selection set", SelKept());
 
-        // 1 file, then 20 files, from a background thread
-        var t1 = await Task.Run(() =>
-        {
-            File.WriteAllText(Path.Combine(F, "new-001.txt"), "x");
-            return 0;
-        });
+        // 1 fichier, puis 20 fichiers, depuis un thread d'arrière-plan
+        var t1 = await Task.Run(() => { File.WriteAllText(Path.Combine(F, "new-001.txt"), "x"); return 0; });
         double ms = await WaitMatch(() => Active.Find(Path.Combine(F, "new-001.txt")) != null);
         Check("1 created file appears", ms >= 0, $"{ms:F0} ms");
-        await Task.Run(() =>
-        {
-            for (int i = 0; i < 20; i++)
-                File.WriteAllText(Path.Combine(F, $"batch20-{i:00}.txt"), "x");
-        });
+        await Task.Run(() => { for (int i = 0; i < 20; i++) File.WriteAllText(Path.Combine(F, $"batch20-{i:00}.txt"), "x"); });
         ms = await WaitMatch(() => Active.Items.Count(i => i.Name.StartsWith("batch20-")) == 20);
         Check("20 created files appear", ms >= 0, $"{ms:F0} ms");
-        Check(
-            "no Reset for <= 20 changes",
-            RangeObservableCollection<FileItem>.Resets == resets0,
-            $"resets {RangeObservableCollection<FileItem>.Resets - resets0}"
-        );
+        Check("no Reset for <= 20 changes", RangeObservableCollection<FileItem>.Resets == resets0,
+            $"resets {RangeObservableCollection<FileItem>.Resets - resets0}");
         Check("selection preserved (1 + 20)", SelKept());
 
-        // scroll anchor kept across a bulk change
+        // l'ancre de défilement est conservée malgré un changement en masse
         var sv = ListScroller();
         if (sv != null && sv.ScrollableHeight > 12)
         {
             sv.ScrollToVerticalOffset(10);
-            await Task.Delay(100);
+            await Task.Delay(PauseTickMs);
             string top = TopPathNow();
-            await Task.Run(() =>
-            {
-                for (int i = 0; i < 300; i++)
-                    File.WriteAllText(Path.Combine(F, $"bulk300-{i:000}.txt"), "x");
-            });
+            await Task.Run(() => { for (int i = 0; i < 300; i++) File.WriteAllText(Path.Combine(F, $"bulk300-{i:000}.txt"), "x"); });
             ms = await WaitMatch(() => Active.Items.Count(i => i.Name.StartsWith("bulk300-")) == 300);
             Check("300 created files appear", ms >= 0, $"{ms:F0} ms");
-            await Task.Delay(150);
-            Check(
-                "scroll anchor preserved after a bulk change",
-                TopPathNow() == top,
-                $"top before '{top}' now '{TopPathNow()}'"
-            );
+            await Task.Delay(PauseRenduMs);
+            Check("scroll anchor preserved after a bulk change", TopPathNow() == top, $"top before '{top}' now '{TopPathNow()}'");
         }
         else
         {
-            await Task.Run(() =>
-            {
-                for (int i = 0; i < 300; i++)
-                    File.WriteAllText(Path.Combine(F, $"bulk300-{i:000}.txt"), "x");
-            });
+            await Task.Run(() => { for (int i = 0; i < 300; i++) File.WriteAllText(Path.Combine(F, $"bulk300-{i:000}.txt"), "x"); });
             ms = await WaitMatch(() => Active.Items.Count(i => i.Name.StartsWith("bulk300-")) == 300);
             Check("300 created files appear", ms >= 0, $"{ms:F0} ms");
         }
         Check("selection preserved (300)", SelKept());
 
         // rename, delete, subfolder, size change
-        string a = Path.Combine(F, "new-001.txt"),
-            b = Path.Combine(F, "renamed-001.txt");
+        string a = Path.Combine(F, "new-001.txt"), b = Path.Combine(F, "renamed-001.txt");
         await Task.Run(() => File.Move(a, b));
         ms = await WaitMatch(() => Active.Find(b) != null && Active.Find(a) == null);
         Check("rename", ms >= 0, $"{ms:F0} ms");
@@ -137,18 +119,17 @@ public sealed partial class MainWindow
         Check("size change", ms >= 0, $"{ms:F0} ms");
         Check("selection preserved (end)", SelKept());
         Check("status bar consistent", StatusOk(), status.Text);
-        T(
-            $"refresh: events {WatchEvents}, batches {WatchBatches}, resets {RangeObservableCollection<FileItem>.Resets - resets0}, max UI stall {Perf.Stall?.Max ?? -1:F1} ms"
-        );
+        T($"refresh: events {WatchEvents}, batches {WatchBatches}, resets {RangeObservableCollection<FileItem>.Resets - resets0}, max UI " +
+            $"stall {Perf.Stall?.Max ?? -1:F1} ms");
 
-        // sort change keeps the selection
+        // un changement de tri conserve la sélection
         Active.SetSort(SortColumn.Size);
-        await Task.Delay(400);
+        await Task.Delay(PauseTransitionMs);
         Check("selection kept on sort change", SelKept());
         Active.SetSort(SortColumn.Name);
-        await Task.Delay(300);
+        await Task.Delay(PauseAnimationLongueMs);
 
-        // tab switch keeps selection; inactive tab is re-synced when shown
+        // un changement d'onglet conserve la sélection ; l'onglet inactif est resynchronisé à l'affichage
         var first = activeView;
         AddTab(sub);
         await WaitLoaded();
@@ -159,7 +140,7 @@ public sealed partial class MainWindow
         Check("selection kept on tab switch", SelKept());
         CloseTab(tabs.Last());
 
-        // external delete of the current folder -> nearest parent + toast
+        // suppression externe du dossier courant -> parent le plus proche + toast
         string gone = Path.Combine(F, "gone-dir");
         Directory.CreateDirectory(gone);
         File.WriteAllText(Path.Combine(gone, "a.txt"), "x");
@@ -167,27 +148,17 @@ public sealed partial class MainWindow
         await WaitLoaded();
         await Task.Run(() => Directory.Delete(gone, true));
         long t = Stopwatch.GetTimestamp();
-        while (
-            Perf.Ms(t) < 3000
-            && !string.Equals(Active.Location.TrimEnd('\\'), F.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase)
-        )
-            await Task.Delay(20);
-        Check(
-            "deleted current folder -> navigates to parent",
-            string.Equals(Active.Location.TrimEnd('\\'), F.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase),
-            $"{Perf.Ms(t):F0} ms, at {Active.Location}"
-        );
+        while (Perf.Ms(t) < 3000 && !string.Equals(Active.Location.TrimEnd('\\'), F.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
+            await Task.Delay(NavigatePollMs);
+        Check("deleted current folder -> navigates to parent", string.Equals(Active.Location.TrimEnd('\\'), F.TrimEnd('\\'),
+            StringComparison.OrdinalIgnoreCase), $"{Perf.Ms(t):F0} ms, at {Active.Location}");
         Check("toast shown", toast.Visibility == Visibility.Visible, toastText.Text);
         await WaitLoaded();
 
-        // filter on a big folder (fixture creates 2000 files under F\many)
+        // filtre sur un gros dossier (le jeu d'essai crée 2000 fichiers sous F\many)
         string many = Path.Combine(F, "many");
-        await Task.Run(() =>
-        {
-            Directory.CreateDirectory(many);
-            for (int i = 0; i < 2000; i++)
-                File.WriteAllText(Path.Combine(many, $"item{i:0000}-é.txt"), "");
-        });
+        await Task.Run(() => { Directory.CreateDirectory(many); for (int i = 0; i < 2000; i++) File.WriteAllText(Path.Combine(many,
+            $"item{i:0000}-é.txt"), ""); });
         Active.Go(many);
         await WaitLoaded();
         Check("2000-file folder loaded", Active.Items.Count == 2000, Active.Items.Count.ToString());
@@ -197,18 +168,12 @@ public sealed partial class MainWindow
         Active.SetFilter("ITEM01");
         list.UpdateLayout();
         double applyMs = Perf.Ms(f0);
-        Check(
-            "filter case/diacritic-insensitive",
-            Active.Items.Count == 100 && Active.Total == 2000 && status.Text.Contains("sur 2000"),
-            $"{Active.Items.Count} shown, status '{status.Text}'"
-        );
+        Check("filter case/diacritic-insensitive", Active.Items.Count == 100 && Active.Total == 2000 && status.Text.Contains("sur 2000"),
+            $"{Active.Items.Count} shown, status '{status.Text}'");
         T($"filter apply {applyMs:F1} ms");
         Active.SetFilter("ITEM0150-E.TXT");
-        Check(
-            "filter ignores case and diacritics",
-            Active.Items.Count == 1 && Active.Items[0].Name == "item0150-é.txt",
-            Active.Items.Count.ToString()
-        );
+        Check("filter ignores case and diacritics", Active.Items.Count == 1 && Active.Items[0].Name == "item0150-é.txt",
+            Active.Items.Count.ToString());
         f0 = Stopwatch.GetTimestamp();
         Active.SetFilter("");
         list.UpdateLayout();
@@ -216,10 +181,10 @@ public sealed partial class MainWindow
         Check("filter cleared", Active.Items.Count == 2000, $"{clearMs:F1} ms");
         T($"filter clear {clearMs:F1} ms");
         Active.SetFilter("zzzz-none");
-        await Task.Delay(100);
+        await Task.Delay(PauseTickMs);
         Check("no-result state", Active.FilterEmpty && content.Child != listHost);
         Active.SetFilter("");
-        await Task.Delay(100);
+        await Task.Delay(PauseTickMs);
         Check("list back after clear", content.Child == listHost);
         Active.Go(F);
         await WaitLoaded();
@@ -233,8 +198,7 @@ public sealed partial class MainWindow
     void Shot(string path)
     {
         var root = (FrameworkElement)Content;
-        int w = Math.Max(1, (int)root.ActualWidth),
-            h = Math.Max(1, (int)root.ActualHeight);
+        int w = Math.Max(1, (int)root.ActualWidth), h = Math.Max(1, (int)root.ActualHeight);
         var dv = new DrawingVisual();
         using (var dc = dv.RenderOpen())
         {
@@ -262,26 +226,24 @@ public sealed partial class MainWindow
         Directory.CreateDirectory(empty);
         Active.Go(empty);
         await WaitLoaded();
-        await Task.Delay(500);
+        await Task.Delay(PauseStabilisationMs);
         Shot(Path.Combine(dir, "files-step5-empty.png"));
         Check("empty state shown", content.Child != listHost && Active.State == LoadState.Empty);
         Active.Go(@"C:\System Volume Information");
         await WaitLoaded();
-        await Task.Delay(500);
+        await Task.Delay(PauseStabilisationMs);
         Shot(Path.Combine(dir, "files-step5-denied.png"));
         Check("denied state", Active.State == LoadState.Denied, Active.State.ToString());
         Active.Go(F);
         await WaitLoaded();
-        await Task.Delay(300);
+        await Task.Delay(PauseAnimationLongueMs);
         ShowFilter("file00");
-        await Task.Delay(500);
-        Check(
-            "filter applied from the field",
-            Active.Filter == "file00" && Active.Items.Count < Active.Total,
-            $"{Active.Items.Count}/{Active.Total}"
-        );
+        await Task.Delay(PauseStabilisationMs);
+        Check("filter applied from the field", Active.Filter == "file00" && Active.Items.Count < Active.Total,
+            $"{Active.Items.Count}/{Active.Total}");
         Shot(Path.Combine(dir, "files-step5-filter.png"));
         T($"states done: fails={testFails}");
         Close();
     }
 }
+#endif

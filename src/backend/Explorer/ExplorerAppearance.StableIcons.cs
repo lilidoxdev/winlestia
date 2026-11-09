@@ -1,52 +1,34 @@
-// C#12 / ExplorerAppearance.StableIcons.cs / Windows11: stable icon paths (<kind>-current.ico), debounced regeneration, background migration of legacy <hex>-<kind>-v2.ico inis.
-// A palette change rewrites ONE small set of .ico files (atomic temp + replace) instead of every folder's desktop.ini.
+// C# 12 / ExplorerAppearance.StableIcons.cs / Windows 11 : chemins d'icônes stables (<kind>-current.ico), régénération avec
+// anti-rebond, migration en arrière-plan des anciens ini <hex>-<kind>-v2.ico.
+// Un changement de palette réécrit UN petit jeu de fichiers .ico (temporaire atomique + remplacement) au lieu du desktop.ini de chaque
+// dossier.
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-
-[assembly: InternalsVisibleTo("FolderIcons")]
-
-namespace PanneauxGlass.Explorer;
+namespace PanneauxGlass;
 
 internal sealed partial class ExplorerAppearance
 {
-    internal static readonly string[] IconKinds =
-    {
-        "folder",
-        "desktop",
-        "download",
-        "document",
-        "picture",
-        "music",
-        "video",
-    };
+    internal static readonly string[] IconKinds = { "folder", "desktop", "download", "document", "picture", "music", "video" };
     const string Scheme = "current-v3";
-
     sealed class IconState
     {
-        public string Accent { get; set; } = "";
-        public bool Migrated { get; set; }
+        public string Accent { get; set; } = ""; public bool Migrated
+        {
+            get; set;
+        }
     }
-
-    readonly object iconGate = new();
-    IconState? iconState;
-    Timer? iconTimer;
-    int shellGen,
-        iconRetry;
-    bool migrationStarted;
-    internal Action<uint, uint, string?>? NotifySink; // tests: capture shell notifications instead of broadcasting them
+    readonly object iconGate = new(); IconState? iconState; Timer? iconTimer; int shellGen, iconRetry; bool migrationStarted;
+    internal Action<uint, uint, string?>? NotifySink; // tests : capturer les notifications du shell au lieu de les diffuser
     string IconsDir => Path.Combine(root, "icons");
     string StatePath => Path.Combine(IconsDir, "state.json");
-
-    internal string StableIcon(string kind) =>
-        Path.Combine(IconsDir, (IconKinds.Contains(kind) ? kind : "folder") + "-current.ico");
-
+    internal string StableIcon(string kind) => Path.Combine(IconsDir, (IconKinds.Contains(kind) ? kind : "folder") + "-current.ico");
     void Shell(uint kind, uint flags, string? path)
     {
         if (NotifySink != null)
@@ -54,7 +36,6 @@ internal sealed partial class ExplorerAppearance
         else
             SHChangeNotify(kind, flags, path, IntPtr.Zero);
     }
-
     IconState LoadState()
     {
         lock (iconGate)
@@ -63,15 +44,15 @@ internal sealed partial class ExplorerAppearance
                 return iconState;
             try
             {
-                iconState = File.Exists(StatePath)
-                    ? JsonSerializer.Deserialize<IconState>(File.ReadAllText(StatePath))
-                    : null;
+                iconState = File.Exists(StatePath) ? JsonSerializer.Deserialize<IconState>(File.ReadAllText(StatePath)) : null;
             }
-            catch { }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                Store.Log("ExplorerAppearance.StableIcons.LoadState : " + ex.GetType().Name + ": " + ex.Message);
+            }
             return iconState ??= new();
         }
     }
-
     void SaveState()
     {
         lock (iconGate)
@@ -80,8 +61,7 @@ internal sealed partial class ExplorerAppearance
             Winlestia.Shared.AtomicFile.WriteAllText(StatePath, JsonSerializer.Serialize(iconState ?? new()));
         }
     }
-
-    // Draws to a temp file then swaps it in: readers (Explorer) never see a half-written .ico.
+    // Dessine dans un fichier temporaire puis l'échange : les lecteurs (Explorateur) ne voient jamais un .ico à moitié écrit.
     static void DrawAtomic(string path, string hex, string kind)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -94,17 +74,9 @@ internal sealed partial class ExplorerAppearance
             else
                 File.Move(temp, path, true);
         }
-        finally
-        {
-            try
-            {
-                File.Delete(temp);
-            }
-            catch { }
-        }
+        finally { Safe.Try(() => File.Delete(temp)); }
     }
-
-    // Stable icon path for a kind; drawn on demand (current accent) if it does not exist yet.
+    // Chemin d'icône stable pour un type ; dessiné à la demande (accent courant) s'il n'existe pas encore.
     internal string EnsureIcon(string kind)
     {
         lock (iconGate)
@@ -115,8 +87,8 @@ internal sealed partial class ExplorerAppearance
             return path;
         }
     }
-
-    // Regenerates every stable icon when the accent differs from the stored one (or a file is missing). Returns true when existing icon content was replaced (shell caches must be refreshed).
+    // Régénère toutes les icônes stables quand l'accent diffère de celui stocké (ou qu'un fichier manque). Renvoie true quand du
+    // contenu d'icône existant a été remplacé (les caches du shell doivent être rafraîchis).
     internal bool RegenerateIcons(string hex)
     {
         lock (iconGate)
@@ -138,8 +110,8 @@ internal sealed partial class ExplorerAppearance
             return replaced;
         }
     }
-
-    // Called by Sync (already off the UI thread): arms ONE 1 s debounced regeneration when needed and starts the one-shot migration.
+    // Appelé par Sync (déjà hors du thread UI) : arme UNE régénération avec anti-rebond de 1 s si nécessaire et lance la migration
+    // ponctuelle.
     void StartIconMaintenance()
     {
         if (disposed)
@@ -149,16 +121,10 @@ internal sealed partial class ExplorerAppearance
             lock (iconGate)
             {
                 var state = LoadState();
-                if (
-                    !state.Accent.Equals(accent, StringComparison.OrdinalIgnoreCase)
-                    || !IconKinds.All(k => File.Exists(StableIcon(k)))
-                )
+                if (!state.Accent.Equals(accent, StringComparison.OrdinalIgnoreCase) || !IconKinds.All(k => File.Exists(StableIcon(k))))
                 {
                     iconRetry = 0;
-                    (iconTimer ??= new Timer(_ => IconTick(), null, Timeout.Infinite, Timeout.Infinite)).Change(
-                        1000,
-                        Timeout.Infinite
-                    );
+                    (iconTimer ??= new Timer(_ => IconTick(), null, Timeout.Infinite, Timeout.Infinite)).Change(1000, Timeout.Infinite);
                 }
                 if (!migrationStarted && !state.Migrated)
                 {
@@ -171,18 +137,15 @@ internal sealed partial class ExplorerAppearance
                         }
                         catch (Exception ex)
                         {
-                            Store.Log("Icon migration: " + ex.Message);
+                            Store.Log("Migration icônes: "
+                        + ex.Message);
                         }
                     });
                 }
             }
         }
-        catch (Exception ex)
-        {
-            Store.Log("Folder icons: " + ex.Message);
-        }
+        catch (Exception ex) { Store.Log("Icônes dossier: " + ex.Message); }
     }
-
     void IconTick()
     {
         if (disposed || !Store.State.ExplorerTheme)
@@ -197,14 +160,16 @@ internal sealed partial class ExplorerAppearance
         }
         catch (Exception ex)
         {
-            Store.Log("Folder icons regeneration: " + ex.Message);
-            if (!disposed && ++iconRetry <= 3)
+            Store.Log("Icônes dossier régénération: " + ex.Message);
+            if (!disposed
+            && ++iconRetry <= 3)
                 lock (iconGate)
                     iconTimer?.Change(5000, Timeout.Infinite);
         }
     }
-
-    // Shell refresh after the icon files changed: one ASSOCCHANGED (flush nowait), then SHCNE_UPDATEITEM per manifest folder in bounded batches (64 per 250 ms; 32 per 500 ms with reduced effects). Never touches ie4uinit / explorer.exe.
+    // Rafraîchissement du shell après modification des fichiers d'icônes : un ASSOCCHANGED (flush nowait), puis SHCNE_UPDATEITEM par
+    // dossier du manifeste en lots bornés (64 par 250 ms ; 32 par 500 ms avec effets réduits). Ne touche jamais à ie4uinit /
+    // explorer.exe.
     internal async Task RefreshShellAsync(int gen, int batch = 64, int pauseMs = 250)
     {
         Shell(0x08000000, 0x2000, null);
@@ -218,10 +183,7 @@ internal sealed partial class ExplorerAppearance
         {
             data = Read();
         }
-        catch
-        {
-            return;
-        }
+        catch { return; }
         for (int i = 0; i < data.Count; i += batch)
         {
             if (disposed || gen != Volatile.Read(ref shellGen))
@@ -231,25 +193,20 @@ internal sealed partial class ExplorerAppearance
             await Task.Delay(pauseMs);
         }
     }
-
-    Regex OldIconPattern() =>
-        new(Regex.Escape(IconsDir) + @"[\\/][0-9a-f]{6}-(?<kind>[a-z]+)-v2\.ico", RegexOptions.IgnoreCase);
-
-    // One-shot migration of every manifest entry whose desktop.ini still points at a legacy <hex>-<kind>-v2.ico. Bounded batches, throttled, each batch re-reads the manifest under the gate (no lost update with visible-folder theming).
-    // A desktop.ini whose hash differs from AppliedHash was edited by the user/another tool: skipped, never overwritten. Afterwards legacy icons nobody references are deleted.
-    internal async Task<(int migrated, int edited, int failed, int removed)> MigrateAsync(
-        int batch = 64,
-        int pauseMs = 250
-    )
+    Regex OldIconPattern() => new(Regex.Escape(IconsDir) + @"[\\/][0-9a-f]{6}-(?<kind>[a-z]+)-v2\.ico", RegexOptions.IgnoreCase);
+    // Migration ponctuelle de chaque entrée du manifeste dont le desktop.ini pointe encore vers un ancien <hex>-<kind>-v2.ico. Lots
+    // bornés, étalés, chaque lot relit le manifeste sous le gate (aucune mise à jour perdue avec le thématage des dossiers visibles).
+    // Un desktop.ini dont le hash diffère d'AppliedHash a été modifié par l'utilisateur ou un autre outil : ignoré, jamais écrasé.
+    // Ensuite
+    // les anciennes icônes que personne ne référence sont supprimées.
+    internal async Task<(int migrated, int edited, int failed, int removed)> MigrateAsync(int batch = 64, int pauseMs = 250)
     {
         List<string> folders;
         lock (gate)
         {
             folders = Read().Where(p => p.AppliedHash != null).Select(p => p.Folder).ToList();
         }
-        int migrated = 0,
-            edited = 0,
-            failed = 0;
+        int migrated = 0, edited = 0, failed = 0;
         var pattern = OldIconPattern();
         for (int i = 0; i < folders.Count; i += batch)
         {
@@ -263,9 +220,7 @@ internal sealed partial class ExplorerAppearance
                 {
                     try
                     {
-                        var saved = data.FirstOrDefault(p =>
-                            p.Folder.Equals(folder, StringComparison.OrdinalIgnoreCase)
-                        );
+                        var saved = data.FirstOrDefault(p => p.Folder.Equals(folder, StringComparison.OrdinalIgnoreCase));
                         if (saved?.AppliedHash == null || !Directory.Exists(folder) || Protected(folder))
                             continue;
                         if ((File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0)
@@ -285,11 +240,7 @@ internal sealed partial class ExplorerAppearance
                         migrated++;
                         dirty = true;
                     }
-                    catch (Exception ex)
-                    {
-                        failed++;
-                        Store.Log("Icon migration skipped: " + folder + ": " + ex.Message);
-                    }
+                    catch (Exception ex) { failed++; Store.Log("Migration icône ignorée: " + folder + ": " + ex.Message); }
                 }
                 if (dirty)
                     Save(data);
@@ -311,12 +262,16 @@ internal sealed partial class ExplorerAppearance
             {
                 SaveState();
             }
-            catch { }
+            catch (Exception err)
+            {
+                Store.Log("ExplorerAppearance.StableIcons.MigrateAsync : " + err.GetType().Name + ": " + err.Message);
+            }
         }
         return (migrated, edited, failed, removed);
     }
-
-    // Deletes legacy <hex>-<kind>-v2.ico files that no manifest desktop.ini references any more (referenced ones - e.g. user-edited inis - are kept).
+    // Supprime les anciens fichiers <hex>-<kind>-v2.ico qu'aucun desktop.ini du manifeste ne référence plus (les référencés, p. ex.
+    // ini
+    // modifiés par l'utilisateur, sont conservés).
     internal int CleanupLegacyIcons()
     {
         int removed = 0;
@@ -336,7 +291,10 @@ internal sealed partial class ExplorerAppearance
                     foreach (Match m in pattern.Matches(File.ReadAllText(ini)))
                         used.Add(Path.GetFileName(m.Value));
                 }
-                catch { }
+                catch (Exception)
+                {
+                    // desktop.ini illisible : ce dossier est laissé tel quel.
+                }
             }
             var legacy = new Regex(@"^[0-9a-f]{6}-[a-z]+-v2\.ico$", RegexOptions.IgnoreCase);
             foreach (string file in Directory.EnumerateFiles(IconsDir, "*-v2.ico"))
@@ -349,21 +307,18 @@ internal sealed partial class ExplorerAppearance
                     File.Delete(file);
                     removed++;
                 }
-                catch { }
+                catch (Exception err) when (err is IOException or UnauthorizedAccessException)
+                {
+                    Store.Log("ExplorerAppearance.StableIcons.CleanupLegacyIcons : " + err.GetType().Name + ": " + err.Message);
+                }
             }
         }
-        catch (Exception ex)
-        {
-            Store.Log("Icon cleanup: " + ex.Message);
-        }
+        catch (Exception ex) { Store.Log("Nettoyage icônes: " + ex.Message); }
         return removed;
     }
-
-    // Public entry for the Files app (navigation): safe from any thread. Per-folder 3 s debounce + global budget of 12 calls / 10 s; the heavy work stays bounded by ColourVisibleTree (256 themed / 1024 examined).
-    readonly Dictionary<string, DateTime> visitedAt = new(StringComparer.OrdinalIgnoreCase);
-    DateTime budgetStart;
-    int budgetUsed;
-
+    // Entrée publique pour l'application Fichiers (navigation) : utilisable depuis n'importe quel thread. Anti-rebond de 3 s par dossier
+    // + budget global de 12 appels / 10 s ; le gros du travail reste borné par ColourVisibleTree (256 thémés / 1024 examinés).
+    readonly Dictionary<string, DateTime> visitedAt = new(StringComparer.OrdinalIgnoreCase); DateTime budgetStart; int budgetUsed;
     internal void ColourVisibleFolder(string parent)
     {
         if (disposed || string.IsNullOrWhiteSpace(parent))
@@ -389,22 +344,18 @@ internal sealed partial class ExplorerAppearance
         {
             ColourVisibleTree(parent, new[] { 1024 });
         }
-        catch (Exception ex)
-        {
-            Store.Log("Folder shown: " + ex.Message);
-        }
+        catch (Exception ex) { Store.Log("Dossier affiché: " + ex.Message); }
     }
-
     void DisposeIcons()
     {
-        try
+        Safe.Try(() =>
         {
             lock (iconGate)
             {
                 iconTimer?.Dispose();
                 iconTimer = null;
             }
-        }
-        catch { }
+
+        });
     }
 }

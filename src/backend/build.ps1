@@ -12,12 +12,16 @@ if(-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'glass.ico'))) {
         $taskPath=[Drawing.Drawing2D.GraphicsPath]::new()
         $taskD=$taskR*2
         $taskPath.AddArc($taskX,$taskY,$taskD,$taskD,180,90);$taskPath.AddArc($taskX+$taskW-$taskD,$taskY,$taskD,$taskD,270,90)
-        $taskPath.AddArc($taskX+$taskW-$taskD,$taskY+$taskH-$taskD,$taskD,$taskD,0,90);$taskPath.AddArc($taskX,$taskY+$taskH-$taskD,$taskD,$taskD,90,90);$taskPath.CloseFigure()
-        $taskBrush=[Drawing.Drawing2D.LinearGradientBrush]::new([Drawing.Point]::new($taskX,$taskY),[Drawing.Point]::new($taskX+$taskW,$taskY+$taskH),[Drawing.Color]::FromArgb(240,112,205,235),[Drawing.Color]::FromArgb(240,37,64,108))
-        $taskGraphics.FillPath($taskBrush,$taskPath);$taskPen=[Drawing.Pen]::new([Drawing.Color]::FromArgb(200,231,251,255),1.2);$taskGraphics.DrawPath($taskPen,$taskPath)
+        $taskPath.AddArc($taskX+$taskW-$taskD,$taskY+$taskH-$taskD,$taskD,$taskD,0,90);
+        $taskPath.AddArc($taskX,$taskY+$taskH-$taskD,$taskD,$taskD,90,90);$taskPath.CloseFigure()
+        $taskBrush=[Drawing.Drawing2D.LinearGradientBrush]::new([Drawing.Point]::new($taskX,$taskY),[Drawing.Point]::new($taskX+$taskW,
+            $taskY+$taskH),[Drawing.Color]::FromArgb(240,112,205,235),[Drawing.Color]::FromArgb(240,37,64,108))
+        $taskGraphics.FillPath($taskBrush,$taskPath);$taskPen=[Drawing.Pen]::new([Drawing.Color]::FromArgb(200,231,251,255),1.2);
+        $taskGraphics.DrawPath($taskPen,$taskPath)
         $taskPen.Dispose();$taskBrush.Dispose();$taskPath.Dispose()
     }
-    $taskIcon=[Drawing.Icon]::FromHandle($taskBitmap.GetHicon());$taskStream=[IO.File]::Create((Join-Path $PSScriptRoot 'glass.ico'));$taskIcon.Save($taskStream);$taskStream.Dispose();$taskIcon.Dispose();$taskGraphics.Dispose();$taskBitmap.Dispose()
+    $taskIcon=[Drawing.Icon]::FromHandle($taskBitmap.GetHicon());$taskStream=[IO.File]::Create((Join-Path $PSScriptRoot 'glass.ico'));
+    $taskIcon.Save($taskStream);$taskStream.Dispose();$taskIcon.Dispose();$taskGraphics.Dispose();$taskBitmap.Dispose()
 }
 & dotnet publish (Join-Path $PSScriptRoot 'Panneaux.Glass.csproj') -c Release -o $PSScriptRoot --nologo -v minimal
 if($LASTEXITCODE -ne 0){throw 'Compilation Glass échouée.'}

@@ -2,13 +2,16 @@ import qs.services
 import qs.config
 import QtQuick
 
-// Audio bars of the default output. The backend captures only while wanted is true (dashboard open, Dash tab shown, not fullscreen, effects not reduced).
-// One light item: a Repeater of rectangles whose height follows Bridge.audioBars (0-100). Nothing moves when the levels stop changing.
+// Barres audio de la sortie par défaut. Le backend ne capture que lorsque wanted est vrai
+// (tableau de bord ouvert, onglet Dash affiché, pas de plein écran, effets non réduits).
+// Un seul élément léger : un Repeater de rectangles dont la hauteur suit Bridge.audioBars (0-100). Rien ne bouge quand les niveaux se
+// stabilisent.
 Item {
     id: root
 
     readonly property int count: 28
-    readonly property bool wanted: !Appearance.reducedEffects && (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0
+    readonly property bool wanted: !Appearance.reducedEffects && (Bridge.window?.visible ?? false)
+        && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0
     readonly property real gap: Math.max(1, Appearance.padding.small / 2)
     readonly property real barWidth: Math.max(1, (width - gap * (count - 1)) / count)
 

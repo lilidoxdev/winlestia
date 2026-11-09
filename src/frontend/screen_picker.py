@@ -1,4 +1,4 @@
-# Python3.12 / screen_picker.py / Temporary click capture on a dedicated Windows message thread.
+# Python3.12 / screen_picker.py / Capture de clic temporaire sur un thread de messages Windows dédié.
 import ctypes, threading
 from ctypes import wintypes
 
@@ -15,8 +15,8 @@ class ClickPicker:
         self.thread.start()
 
     def run(self):
-        user = ctypes.WinDLL("user32", use_last_error=True)
-        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        user = ctypes.WinDLL('user32', use_last_error=True)
+        kernel = ctypes.WinDLL('kernel32', use_last_error=True)
         callback_type = ctypes.WINFUNCTYPE(ctypes.c_ssize_t, ctypes.c_int, ctypes.c_size_t, ctypes.c_void_p)
         user.SetWindowsHookExW.argtypes = [ctypes.c_int, callback_type, ctypes.c_void_p, ctypes.c_ulong]
         user.SetWindowsHookExW.restype = ctypes.c_void_p

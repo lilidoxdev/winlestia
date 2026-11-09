@@ -1,0 +1,165 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # Style : longueur de ligne (.editorconfig, 140) et espaces blancs. Les fins de ligne sont verifiees telles que
+  # commitees : autocrlf est donc desactive avant le checkout.
+  lint:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout sans conversion de fins de ligne
+        shell: pwsh
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Longueur de ligne (140)
+        shell: pwsh
+        run: |
+          python tools/check_line_length.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: dotnet format whitespace
+        shell: pwsh
+        run: |
+          foreach ($p in 'src/backend/Panneaux.Glass.csproj', 'src/files/Winlestia.Files.csproj', 'src/cli/winlestia.csproj') {
+            dotnet format whitespace $p --verify-no-changes
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # Composants natifs MSVC (ProcessAudio.dll...) compilés AVANT .NET : le csproj copie ProcessAudio.dll dans la sortie.
+      - name: Composants natifs
+        shell: pwsh
+        run: ./tools/build-native.ps1
+
+      - name: Build
+        shell: pwsh
+        run: |
+          foreach ($p in 'src/backend/Panneaux.Glass.csproj', 'src/files/Winlestia.Files.csproj', 'src/cli/winlestia.csproj') {
+            dotnet restore $p --locked-mode
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            dotnet build $p -c Release --no-restore
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      # Tests xUnit (tests/Winlestia.Tests). La categorie Desktop (Audio, Explorateur, icones de dossiers, tiling,
+      # bureaux virtuels, interop native, plein ecran) touche au bureau : elle reste locale.
+      - name: Tests .NET (avec couverture)
+        shell: pwsh
+        run: |
+          dotnet restore tests/Winlestia.Tests --locked-mode
+          dotnet test tests/Winlestia.Tests -c Release --no-restore --filter "Category!=Desktop" `
+            --collect:"XPlat Code Coverage" --settings tests/coverage.runsettings --results-directory TestResults
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # Resume de couverture + plancher. Valeur mesuree le 2026-11-09 : 17,61 % des lignes (backend compile dans les tests,
+      # beaucoup de code WPF/shell non testable sans bureau). Plancher = valeur arrondie a l'entier inferieur ; a relever
+      # quand la couverture monte.
+      - name: Resume de couverture
+        shell: pwsh
+        run: |
+          $floor = 17
+          $file = Get-ChildItem TestResults -Recurse -Filter coverage.cobertura.xml | Select-Object -First 1
+          if (-not $file) { throw 'coverage.cobertura.xml introuvable.' }
+          $root = ([xml](Get-Content $file.FullName -Raw)).coverage
+          $pct = [math]::Round([double]$root.'line-rate' * 100, 2)
+          $line = "Couverture des lignes : $pct % ($($root.'lines-covered')/$($root.'lines-valid')), plancher $floor %"
+          Write-Host $line
+          Add-Content $env:GITHUB_STEP_SUMMARY "### Couverture`n$line"
+          if ($pct -lt $floor) { throw "Couverture sous le plancher ($pct < $floor)." }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: TestResults/**/coverage.cobertura.xml
+
+      # Verifications statiques sans execution : syntaxe des scripts PowerShell (installateur, outils) et compilation Python.
+      - name: Syntaxe PowerShell (installer, tests)
+        shell: pwsh
+        run: |
+          $bad = 0
+          foreach ($f in Get-ChildItem installer, tests/FilesHarness -Recurse -Filter *.ps1) {
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$errors)
+            foreach ($e in $errors) { Write-Host "$($f.FullName): $($e.Message)"; $bad++ }
+          }
+          if ($bad -gt 0) { exit 1 }
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Tests Python
+        shell: pwsh
+        run: |
+          python -m pip install -r src/frontend/requirements.txt pytest
+          pytest -q
+
+      - name: Compilation Python (compileall)
+        shell: pwsh
+        run: |
+          python -m compileall -q src/frontend src/terminal tools tests conftest.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  # Test de fumee de l'installateur : fabrique le setup avec installer/build.ps1 -CI (composants natifs MSVC compiles
+  # par tools/build-native.ps1). L'artefact prouve que la chaine payload + Inno Setup passe ;
+  # il n'est jamais une release.
+  installer-smoke:
+    needs: build-and-test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Composants natifs
+        shell: pwsh
+        run: ./tools/build-native.ps1
+
+      - name: Inno Setup 6
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup --no-progress -y
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          if (-not (Test-Path $iscc)) { throw 'ISCC.exe introuvable apres installation.' }
+
+      - name: Fabrication du setup
+        shell: pwsh
+        run: ./installer/build.ps1 -CI
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: winlestia-setup-smoke
+          path: build/out/Winlestia-Setup-*.exe
+          if-no-files-found: error

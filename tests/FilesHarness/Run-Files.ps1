@@ -1,8 +1,11 @@
 <#
   Capped launcher for Winlestia Fichiers tests. EVERY launch of the app in tests goes through this script.
   Safety: the process lives in a Job Object (ProcessMemoryLimit 800 MB, ActiveProcessLimit 4, KILL_ON_JOB_CLOSE), hard timeout <= 120 s,
-  free RAM >= 4 GB required, <= 60 pipe requests spaced >= 20 ms, fixtures only under %TEMP%\WinlestiaFilesOps (removed with Remove-Item, never the Recycle Bin).
-  Modes: any WINLESTIA_FILES_SELFTEST mode (ops, dnd, refresh, states, palette, ...), 'handler' (--register/--restore CLI on a sandbox registry root), 'tabs' (pipe opens), 'idle' (idle CPU over 10 s with a watched folder).
+  free RAM >= 4 GB required, <= 60 pipe requests spaced >= 20 ms, fixtures only under %TEMP%\WinlestiaFilesOps (removed with Remove-Item,
+      never the Recycle Bin).
+  Modes: any WINLESTIA_FILES_SELFTEST mode (ops, dnd, refresh, states, palette, ...),
+      'handler' (--register/--restore CLI on a sandbox registry root), 'tabs' (pipe opens),
+      'idle' (idle CPU over 10 s with a watched folder).
 #>
 param(
   [Parameter(Mandatory)][string]$Mode,
@@ -17,17 +20,30 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-if (-not $Exe) { $Exe = Join-Path $here '..\..\src\files\bin\Debug\net10.0-windows10.0.19041.0\win-x64\Winlestia.Files.exe' }
+if (-not $Exe) { $Exe = Join-Path $here '..\..\src\files\bin\Debug\net8.0-windows10.0.19041.0\win-x64\Winlestia.Files.exe' }
 if ($Seconds -gt 120) { $Seconds = 120 }
+# Les auto-tests ne sont compilés qu'avec : dotnet build src/files/Winlestia.Files.csproj -p:SelfTest=true
+if ($Mode -notin 'handler', 'idle' -and (Test-Path $Exe)) {
+  $dll = Join-Path (Split-Path $Exe) 'Winlestia.Files.dll'
+  $needle = [Text.Encoding]::Unicode.GetBytes('WINLESTIA_FILES_SELFTEST')
+  $hay = [Text.Encoding]::GetEncoding(28591).GetString([IO.File]::ReadAllBytes($dll));
+  $pin = [Text.Encoding]::GetEncoding(28591).GetString($needle)
+  if (-not $hay.Contains($pin)) { Write-Output 'SKIP: binaire sans auto-tests, relancer le build avec -p:SelfTest=true'; return }
+}
 $free = (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB
 if ($free -lt 4) { Write-Output ("SKIP: free RAM {0:F1} GB < 4 GB" -f $free); return }
 
 Add-Type -TypeDefinition @'
 using System; using System.Runtime.InteropServices;
 public static class Job {
-  [StructLayout(LayoutKind.Sequential)] struct BASIC { public long PerProcessUserTimeLimit, PerJobUserTimeLimit; public uint LimitFlags; public UIntPtr MinWs, MaxWs; public uint ActiveProcessLimit; public UIntPtr Affinity; public uint Priority, Scheduling; }
+  [StructLayout(LayoutKind.Sequential)] struct BASIC {
+    public long PerProcessUserTimeLimit, PerJobUserTimeLimit; public uint LimitFlags; public UIntPtr MinWs, MaxWs;
+    public uint ActiveProcessLimit; public UIntPtr Affinity; public uint Priority, Scheduling;
+  }
   [StructLayout(LayoutKind.Sequential)] struct IO { public ulong a, b, c, d, e, f; }
-  [StructLayout(LayoutKind.Sequential)] struct EXT { public BASIC Basic; public IO Io; public UIntPtr ProcessMemoryLimit, JobMemoryLimit, PeakProcess, PeakJob; }
+  [StructLayout(LayoutKind.Sequential)] struct EXT {
+    public BASIC Basic; public IO Io; public UIntPtr ProcessMemoryLimit, JobMemoryLimit, PeakProcess, PeakJob;
+  }
   [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern IntPtr CreateJobObject(IntPtr a, string name);
   [DllImport("kernel32.dll")] static extern bool SetInformationJobObject(IntPtr job, int cls, ref EXT info, int size);
   [DllImport("kernel32.dll")] static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
@@ -38,10 +54,14 @@ public static class Job {
     info.Basic.LimitFlags = 0x2000 | 0x100 | 0x8;                 // KILL_ON_JOB_CLOSE | PROCESS_MEMORY | ACTIVE_PROCESS
     info.Basic.ActiveProcessLimit = 4;
     info.ProcessMemoryLimit = (UIntPtr)(800UL * 1024 * 1024);
-    if (!SetInformationJobObject(job, 9, ref info, Marshal.SizeOf(typeof(EXT)))) throw new Exception("SetInformationJobObject " + Marshal.GetLastWin32Error());
+    if (!SetInformationJobObject(job, 9, ref info, Marshal.SizeOf(typeof(EXT))))
+      throw new Exception("SetInformationJobObject " + Marshal.GetLastWin32Error());
     return job;
   }
-  public static void Assign(IntPtr job, IntPtr process) { if (!AssignProcessToJobObject(job, process)) throw new Exception("AssignProcessToJobObject " + Marshal.GetLastWin32Error()); }
+  public static void Assign(IntPtr job, IntPtr process) {
+    if (!AssignProcessToJobObject(job, process))
+      throw new Exception("AssignProcessToJobObject " + Marshal.GetLastWin32Error());
+  }
 }
 '@
 
@@ -57,12 +77,14 @@ if ($Mode -eq 'ops') {
 }
 if ($Mode -eq 'dnd') {
   Get-ChildItem $fx -File | Remove-Item; 1..12 | ForEach-Object { Set-Content -Path (Join-Path $fx ("file{0:000}.txt" -f $_)) -Value "x" }
-  Set-Content (Join-Path $fx 'ctxtest.txt') 'x'; 'Cible', 'Autre', 'Third' | ForEach-Object { New-Item -ItemType Directory (Join-Path $fx $_) | Out-Null }
+  Set-Content (Join-Path $fx 'ctxtest.txt') 'x'; 'Cible', 'Autre', 'Third' | ForEach-Object {
+      New-Item -ItemType Directory (Join-Path $fx $_) | Out-Null }
 }
 if ($Mode -eq 'tabs') { 1..60 | ForEach-Object { New-Item -ItemType Directory -Path (Join-Path $fx ("d{0:00}" -f $_)) | Out-Null } }
 
 if ($Mode -eq 'handler') {
-  # --register / --restore CLI of the exe against a SANDBOX root (WINLESTIA_FILES_HANDLER_ROOT under Software\WinlestiaTest\, no shell effect, own backup file in the fixture). Never the real HKCU\Software\Classes.
+  # --register / --restore CLI of the exe against a SANDBOX root (WINLESTIA_FILES_HANDLER_ROOT under Software\WinlestiaTest\, no shell
+  # effect, own backup file in the fixture). Never the real HKCU\Software\Classes.
   $rel = 'Software\WinlestiaTest\Sandbox\files-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
   $bk = Join-Path $fx 'backup.json'
   $fake = Join-Path $fx 'file001.txt'
@@ -78,7 +100,8 @@ if ($Mode -eq 'handler') {
     if (-not $q.WaitForExit(20000)) { try { $q.Kill() } catch { } ; [void][Job]::CloseHandle($j); return 'TIMEOUT' }
     $code = $q.ExitCode; [void][Job]::CloseHandle($j); return $code
   }
-  function Val([string]$sub, [string]$name = '') { $k = $hk.OpenSubKey("$rel\Classes\$sub"); if ($k -eq $null) { return '<no key>' }; try { $v = $k.GetValue($name, '<no value>'); return $v } finally { $k.Dispose() } }
+  function Val([string]$sub, [string]$name = '') { $k = $hk.OpenSubKey("$rel\Classes\$sub"); if ($k -eq $null) { return '<no key>' };
+  try { $v = $k.GetValue($name, '<no value>'); return $v } finally { $k.Dispose() } }
   function Chk([string]$name, [bool]$ok) { "{0} {1}" -f $(if ($ok) { 'PASS' } else { 'FAIL' }), $name }
   try {
     $k = $hk.CreateSubKey("$rel\Classes\Directory\shell"); $k.SetValue('', 'none'); $k.Dispose()
@@ -100,20 +123,25 @@ if ($Mode -eq 'handler') {
     Chk 'restore again exit 0 (idempotent)' ((RunCli @('--restore')) -eq 0)
   } finally {
     try { $hk.DeleteSubKeyTree($rel, $false) } catch { }
-    foreach ($parent in 'Software\WinlestiaTest\Sandbox', 'Software\WinlestiaTest') { try { $pk = $hk.OpenSubKey($parent); if ($pk -ne $null) { $empty = $pk.SubKeyCount -eq 0 -and $pk.ValueCount -eq 0; $pk.Dispose(); if ($empty) { $hk.DeleteSubKey($parent, $false) } } } catch { } }
+    foreach ($parent in 'Software\WinlestiaTest\Sandbox', 'Software\WinlestiaTest') { try { $pk = $hk.OpenSubKey($parent);
+    if ($pk -ne $null) { $empty = $pk.SubKeyCount -eq 0 -and $pk.ValueCount -eq 0; $pk.Dispose();
+    if ($empty) { $hk.DeleteSubKey($parent, $false) } } } catch { } }
     Chk 'sandbox deleted' ($hk.OpenSubKey($rel) -eq $null)
     Remove-Item -LiteralPath $fx -Recurse -Force -ErrorAction SilentlyContinue
   }
   return
 }
-$logDir = Join-Path $env:LOCALAPPDATA 'Winlestia\Files'
+# WINLESTIA_FILES_DATA_DIR: settings.json + logs of the test run never touch the real profile
+$logDir = Join-Path $root ('data-' + (Split-Path $fx -Leaf))
+New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 $selfLog = Join-Path $logDir 'selftest.log'
-$before = if (Test-Path $selfLog) { @(Get-Content $selfLog).Count } else { 0 }
+$before = 0
 $tabLog = Join-Path $root ('tablog-' + (Split-Path $fx -Leaf) + '.txt')
 $pipe = 'harness' + (Get-Random -Maximum 99999)
 
 $psi = New-Object System.Diagnostics.ProcessStartInfo $Exe
 $psi.UseShellExecute = $false
+$psi.Environment['WINLESTIA_FILES_DATA_DIR'] = $logDir
 $psi.Environment['WINLESTIA_FILES_PIPE'] = $pipe
 $psi.Environment['WINLESTIA_FILES_OPS_NOBIN'] = '1'
 $psi.Environment['WINLESTIA_FILES_TABLOG'] = $tabLog
@@ -131,10 +159,12 @@ $p = [System.Diagnostics.Process]::Start($psi)
 [Job]::Assign($job, $p.Handle)
 $sw = [Diagnostics.Stopwatch]::StartNew()
 $peakMb = 0.0; $peakThreads = 0
-function Sample { try { $p.Refresh(); $script:peakMb = [Math]::Max($script:peakMb, $p.PrivateMemorySize64 / 1MB); $script:peakThreads = [Math]::Max($script:peakThreads, $p.Threads.Count) } catch { } }
+function Sample { try { $p.Refresh(); $script:peakMb = [Math]::Max($script:peakMb, $p.PrivateMemorySize64 / 1MB);
+$script:peakThreads = [Math]::Max($script:peakThreads, $p.Threads.Count) } catch { } }
 
 function Send([string]$path, [string]$cmd = $null) {
-  $c = New-Object System.IO.Pipes.NamedPipeClientStream '.', "Winlestia.Files.test.$pipe", ([System.IO.Pipes.PipeDirection]::InOut), ([System.IO.Pipes.PipeOptions]::None)
+  $c = New-Object System.IO.Pipes.NamedPipeClientStream '.', "Winlestia.Files.test.$pipe", ([System.IO.Pipes.PipeDirection]::InOut),
+      ([System.IO.Pipes.PipeOptions]::None)
   try {
     $c.Connect(300)
     $body = if ($cmd) { @{ cmd = $cmd; args = @() } } else { @{ args = @($path); cwd = $fx } }
@@ -172,5 +202,7 @@ try {
   Remove-Item -LiteralPath $fx -Recurse -Force -ErrorAction SilentlyContinue
   Remove-Item -LiteralPath $tabLog -Force -ErrorAction SilentlyContinue
 }
-"peak private {0:F0} MB, peak threads {1}, exit {2}, {3:F1}s" -f $peakMb, $peakThreads, $(if ($p.HasExited) { $p.ExitCode } else { 'killed' }), $sw.Elapsed.TotalSeconds
+"peak private {0:F0} MB, peak threads {1}, exit {2}, {3:F1}s" -f $peakMb, $peakThreads, $(if ($p.HasExited) { $p.ExitCode } else { 'killed'
+}), $sw.Elapsed.TotalSeconds
 if (Test-Path $selfLog) { Get-Content $selfLog | Select-Object -Skip $before }
+Remove-Item -LiteralPath $logDir -Recurse -Force -ErrorAction SilentlyContinue

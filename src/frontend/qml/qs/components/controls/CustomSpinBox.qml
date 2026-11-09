@@ -101,7 +101,7 @@ RowLayout {
 
             function onClicked(): void {
                 let newValue = Math.min(root.max, root.value + root.step);
-                // Round to avoid floating point precision errors
+                // Arrondi pour éviter les erreurs de précision des flottants
                 const decimals = root.step < 1 ? Math.max(1, Math.ceil(-Math.log10(root.step))) : 0;
                 newValue = Math.round(newValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
                 root.value = newValue;
@@ -114,7 +114,7 @@ RowLayout {
             id: upIcon
 
             anchors.centerIn: parent
-            text:qsTr("keyboard_arrow_up")
+            text: qsTr("keyboard_arrow_up")
             color: Colours.palette.m3onPrimary
         }
     }
@@ -149,7 +149,7 @@ RowLayout {
             id: downIcon
 
             anchors.centerIn: parent
-            text:qsTr("keyboard_arrow_down")
+            text: qsTr("keyboard_arrow_down")
             color: Colours.palette.m3onPrimary
         }
     }

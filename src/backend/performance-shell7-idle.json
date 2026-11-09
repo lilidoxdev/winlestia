@@ -1,0 +1,15 @@
+{
+  "At": "2026-10-25T18:45:12.7842051+01:00",
+  "Seconds": 6.0153605,
+  "CpuMilliseconds": 0.0,
+  "OneCorePercent": 0.0,
+  "TotalCpuPercent": 0.0,
+  "WorkingSetMB": 251.625,
+  "PrivateMB": 229.24609375,
+  "GuardianCpuMilliseconds": 0.0,
+  "GuardianWorkingSetMB": 6.28515625,
+  "TaskbarState": 1,
+  "WindowsTaskbarVisible": 0,
+  "WorkHeight": 1378,
+  "Note": "Local sample without automated input; CPU share across 12 logical processors. No game FPS measurement."
+}

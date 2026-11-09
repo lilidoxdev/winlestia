@@ -1,0 +1,17 @@
+{
+  "At": "2026-10-20T18:20:21.4153142+02:00",
+  "RenderTier": 2,
+  "Cycles": 6,
+  "ElapsedMs": 15546.6503,
+  "CpuMs": 6578.125,
+  "OneCorePercent": 42.31216932949216,
+  "LogicalProcessors": 12,
+  "WorkingSetMB": 228.27734375,
+  "PrivateMB": 223.90234375,
+  "Frames": 752,
+  "FrameP50Ms": 18.1818,
+  "FrameP95Ms": 54.5431,
+  "FrameP99Ms": 103.0267,
+  "Over25Ms": 75,
+  "Note": "WPF composition intervals, warm cache; does not measure DWM presentation or game FPS."
+}

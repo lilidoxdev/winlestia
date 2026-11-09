@@ -1,3 +1,8 @@
 pragma Singleton
 import QtQuick
-QtObject {function launch(entry){Bridge.executeResult(entry)}}
+
+QtObject {
+    function launch(entry) {
+        Bridge.executeResult(entry);
+    }
+}

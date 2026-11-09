@@ -1,2 +1,5 @@
 import QtQuick
-QtObject { property string reloadableId: "" }
+
+QtObject {
+    property string reloadableId: ""
+}

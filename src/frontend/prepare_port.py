@@ -2,22 +2,29 @@ from pathlib import Path
 import shutil,re,json,hashlib
 root=Path(__file__).resolve().parent;src=root/"upstream";q=root/"qml";records=[]
 if (root/"qml"/"Main.qml").exists():
-    raise SystemExit("Extraction initiale uniquement : les adaptations Windows existent d�j�. Construire les sources pr�sentes ; voir PORTAGE.md.")
+    raise SystemExit("Extraction initiale uniquement : les adaptations Windows existent déjà. "
+                     "Construire les sources présentes ; voir PORTAGE.md.")
 def put(rel,text):
  p=q/rel;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text,encoding="utf-8")
 def tree(part,dest):
  for p in (src/part).rglob("*"):
   if p.is_file():
    t=q/dest/p.relative_to(src/part);t.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,t)
-   records.append({"source":str(p.relative_to(src)).replace("\\","/"),"destination":str(t.relative_to(root)).replace("\\","/"),"sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
+   records.append({"source":str(p.relative_to(src)).replace("\\","/"),"destination":str(t.relative_to(root)).replace("\\","/"),
+           "sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
 tree("components","qs/components");tree("modules/dashboard","qs/modules/dashboard")
 for name in ["AppearanceConfig.qml","DashboardConfig.qml"]:
- p=src/"config"/name;put("qs/config/"+name,p.read_text(encoding="utf-8"));records.append({"source":"config/"+name,"destination":"qml/qs/config/"+name,"sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
-put("qs/config/Appearance.qml",re.sub(r"readonly property AppearanceConfig\.\w+","readonly property var",(src/"config/Appearance.qml").read_text(encoding="utf-8")))
+ p=src/"config"/name;put("qs/config/"+name,p.read_text(encoding="utf-8"));records.append({
+         "source":"config/"+name,"destination":"qml/qs/config/"+name,"sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
+put("qs/config/Appearance.qml",re.sub(r"readonly property AppearanceConfig\.\w+","readonly property var",
+    (src/"config/Appearance.qml").read_text(encoding="utf-8")))
 for name in ["bongocat.gif","dino.png","kurukuru.gif","logo.svg"]:
  p=root/"assets"/name;p.parent.mkdir(exist_ok=True);shutil.copy2(src/"assets"/name,p)
 shutil.copy2(src/"LICENSE",root/"LICENSE")
-(root/"UPSTREAM.json").write_text(json.dumps({"repository":"https://github.com/caelestia-dots/shell","tag":"v1.4.0","commit":"04bfc87f65d6e13b287358e1024d9bbc055b0c58","license":"GPL-3.0","files":records},indent=2),encoding="utf-8")
+(root/"UPSTREAM.json").write_text(json.dumps({
+        "repository":"https://github.com/caelestia-dots/shell","tag":"v1.4.0","commit":"04bfc87f65d6e13b287358e1024d9bbc055b0c58",
+        "license":"GPL-3.0","files":records
+},indent=2),encoding="utf-8")
 put("Quickshell/PersistentProperties.qml",'import QtQuick\nQtObject { property string reloadableId: "" }\n')
 put("Quickshell/Singleton.qml",'import QtQuick\nQtObject { default property list<QtObject> data }\n')
 put("Quickshell/Variants.qml",'''import QtQuick
@@ -32,7 +39,8 @@ put("Quickshell/Quickshell.qml",'''pragma Singleton
 import QtQuick
 QtObject {
  function iconPath(name) { return Bridge.iconPath(name) }
- function execDetached(args) { Bridge.action("launchKnown", {args:args}) }
+ // Appel accepté mais volontairement sans effet (Wrapper.qml l'appelle encore).
+ function execDetached(args) { }
 }
 ''')
 put("Quickshell/QsWindow.qml",'''pragma Singleton
@@ -51,13 +59,16 @@ Rectangle {
 }
 ''')
 put("Quickshell/Io/JsonObject.qml",'import QtQuick\nQtObject {default property list<QtObject> data}\n')
-put("Caelestia/Services/ServiceRef.qml",'import QtQuick\nQtObject { required property var service; Component.onCompleted: { if(service)service.refCount++ } Component.onDestruction: { if(service)service.refCount-- } }\n')
+put("Caelestia/Services/ServiceRef.qml",'import QtQuick\nQtObject { required property var service; '
+    'Component.onCompleted: { if(service)service.refCount++ } '
+    'Component.onDestruction: { if(service)service.refCount-- } }\n')
 put("qs/config/Config.qml",'''pragma Singleton
 import QtQuick
 QtObject {
  property AppearanceConfig appearance: AppearanceConfig {}
  property DashboardConfig dashboard: DashboardConfig {}
- property QtObject services: QtObject {property bool useFahrenheit:false;property bool useTwelveHourClock:false;property int visualiserBars:48}
+ property QtObject services: QtObject {property bool useFahrenheit:false;property bool useTwelveHourClock:false;
+ property int visualiserBars:48}
  property QtObject paths: QtObject {property string mediaGif: Bridge.assetRoot + "/bongocat.gif"}
  property QtObject border: QtObject {property int thickness:0}
 }
@@ -105,7 +116,7 @@ QtObject {
  readonly property string osLogo: Bridge.assetRoot + "/windows.svg"
  readonly property string wm: "Winlestia"
  readonly property string userName: Bridge.sysInfo.userName || ""
- readonly property string uptime: Bridge.sysInfo.uptime || "—"
+ readonly property string uptime: Bridge.sysInfo.uptime || "â€”"
 }
 ''')
 put("qs/services/SystemUsage.qml",'''pragma Singleton
@@ -151,7 +162,7 @@ put("qs/services/Weather.qml",'''pragma Singleton
 import QtQuick
 QtObject {
  readonly property string icon: "sunny"
- readonly property string temp: Bridge.weather.temperature || "—°C"
+ readonly property string temp: Bridge.weather.temperature || "â€”Â°C"
  readonly property string description: Bridge.weather.description || "Choisir une ville"
  function reload() {Bridge.refreshWeather()}
 }
@@ -180,10 +191,22 @@ QtObject {
  function onColour(color) {return palette.m3onSurface}
 }
 ''')
-p=q/"qs/modules/dashboard/Content.qml";t=p.read_text(encoding="utf-8").replace('sourceComponent: Weather {}','sourceComponent: Workspaces {}');p.write_text(t,encoding="utf-8")
-p=q/"qs/modules/dashboard/Tabs.qml";t=p.read_text(encoding="utf-8").replace('iconName: "cloud"','iconName: "workspaces"').replace('qsTr("Weather")','qsTr("Workspaces")');p.write_text(t,encoding="utf-8")
-p=q/"qs/modules/dashboard/Performance.qml";t=p.read_text(encoding="utf-8").replace('function displayTemp(temp: real): string {','function displayTemp(temp: real): string {\n        if (!Number.isFinite(temp)) return "—";',1).replace('value1: Math.min(1, SystemUsage.cpuTemp / 90)','value1: Number.isFinite(SystemUsage.cpuTemp) ? Math.min(1, SystemUsage.cpuTemp / 90) : 0',1).replace('label1: root.displayTemp(SystemUsage.cpuTemp)','label1: Number.isFinite(SystemUsage.cpuTemp) ? root.displayTemp(SystemUsage.cpuTemp) : qsTr("N/D")',1);p.write_text(t,encoding="utf-8")
-p=q/"qs/modules/dashboard/Media.qml";t=p.read_text(encoding="utf-8").replace('required property MprisPlayer modelData','required property var modelData');p.write_text(t,encoding="utf-8")
+p=q/"qs/modules/dashboard/Content.qml";
+t=p.read_text(encoding="utf-8").replace('sourceComponent: Weather {}','sourceComponent: Workspaces {}');p.write_text(t,encoding="utf-8")
+p=q/"qs/modules/dashboard/Tabs.qml";
+t=p.read_text(encoding="utf-8").replace('iconName: "cloud"','iconName: "workspaces"').replace('qsTr("Weather")','qsTr("Workspaces")');
+p.write_text(t,encoding="utf-8")
+p=q/"qs/modules/dashboard/Performance.qml";
+t=p.read_text(encoding="utf-8").replace('function displayTemp(temp: real): string {',
+    'function displayTemp(temp: real): string {\n        if (!Number.isFinite(temp)) return "â€”";',1).replace(
+    'value1: Math.min(1, SystemUsage.cpuTemp / 90)',
+    'value1: Number.isFinite(SystemUsage.cpuTemp) ? Math.min(1, SystemUsage.cpuTemp / 90) : 0',1).replace(
+    'label1: root.displayTemp(SystemUsage.cpuTemp)',
+    'label1: Number.isFinite(SystemUsage.cpuTemp) ? root.displayTemp(SystemUsage.cpuTemp) : qsTr("N/D")',1);
+p.write_text(t,encoding="utf-8")
+p=q/"qs/modules/dashboard/Media.qml";
+t=p.read_text(encoding="utf-8").replace('required property MprisPlayer modelData','required property var modelData');
+p.write_text(t,encoding="utf-8")
 def qmldirs():
  for folder in [q]+[p for p in q.rglob("*") if p.is_dir()]:
   files=list(folder.glob("*.qml"))

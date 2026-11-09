@@ -125,7 +125,7 @@ Row {
             anchors.centerIn: parent
             anchors.horizontalCenterOffset: root.expanded ? 0 : -Math.floor(root.verticalPadding / 4)
 
-            text:qsTr("expand_more")
+            text: qsTr("expand_more")
             color: root.disabled ? root.disabledTextColour : root.textColour
             rotation: root.expanded ? 180 : 0
 

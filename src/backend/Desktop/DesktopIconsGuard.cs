@@ -1,78 +1,36 @@
-// language: C# 12, file: DesktopIconsGuard.cs, target: Windows 11 / .NET 8, event-driven re-application of FWF_NOICONS
+// C# 12, fichier DesktopIconsGuard.cs, cible Windows 11 / .NET 8, réapplication de FWF_NOICONS pilotée par événements
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
-namespace PanneauxGlass.Desktop;
+namespace PanneauxGlass;
 
 // Wallpaper Engine / DesktopHut peuvent faire recréer SHELLDLL_DefView après nous : le drapeau FWF_NOICONS est alors perdu.
 // Hook hors contexte limité au processus Explorer du Bureau ; aucun minuteur périodique, aucun hook souris.
 internal sealed class DesktopIconsGuard : IDisposable
 {
     delegate void WinEventProc(IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time);
-
     [StructLayout(LayoutKind.Sequential)]
     struct Msg
     {
-        public IntPtr Hwnd;
-        public uint Message;
-        public UIntPtr W;
-        public IntPtr L;
-        public uint Time;
-        public int X,
-            Y;
+        public IntPtr Hwnd; public uint Message; public UIntPtr W; public IntPtr L; public uint Time; public int X, Y;
     }
-
     [DllImport("user32.dll")]
-    static extern IntPtr SetWinEventHook(
-        uint min,
-        uint max,
-        IntPtr module,
-        WinEventProc proc,
-        uint pid,
-        uint thread,
-        uint flags
-    );
+    static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc proc, uint pid,
+        uint thread, uint flags);
+    [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
+    [DllImport("user32.dll")] static extern int GetMessage(out Msg message, IntPtr hwnd, uint min, uint max);
+    [DllImport("user32.dll")] static extern bool PostThreadMessage(uint thread, uint message, UIntPtr w, IntPtr l);
+    [DllImport("user32.dll")] static extern IntPtr GetShellWindow();
+    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
+    [DllImport("user32.dll")] static extern IntPtr GetParent(IntPtr hwnd);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr hwnd, StringBuilder text, int count);
+    [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
 
-    [DllImport("user32.dll")]
-    static extern bool UnhookWinEvent(IntPtr hook);
-
-    [DllImport("user32.dll")]
-    static extern int GetMessage(out Msg message, IntPtr hwnd, uint min, uint max);
-
-    [DllImport("user32.dll")]
-    static extern bool PostThreadMessage(uint thread, uint message, UIntPtr w, IntPtr l);
-
-    [DllImport("user32.dll")]
-    static extern IntPtr GetShellWindow();
-
-    [DllImport("user32.dll")]
-    static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
-
-    [DllImport("user32.dll")]
-    static extern IntPtr GetParent(IntPtr hwnd);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    static extern int GetClassName(IntPtr hwnd, StringBuilder text, int count);
-
-    [DllImport("kernel32.dll")]
-    static extern uint GetCurrentThreadId();
-
-    readonly Func<bool> managed;
-    readonly Action reassert,
-        relinquished;
-    readonly object gate = new();
-    readonly DesktopReassertPolicy policy = new();
-    readonly Timer timer;
-    Thread? thread;
-    uint threadId;
-    WinEventProc? proc;
-    bool active,
-        running,
-        disposed,
-        forced;
-    int logged;
+    readonly Func<bool> managed; readonly Action reassert, relinquished; readonly object gate = new();
+    readonly DesktopReassertPolicy policy = new(); readonly Timer timer;
+    Thread? thread; uint threadId; WinEventProc? proc; bool active, running, disposed, forced; int logged;
 
     internal bool Installed
     {
@@ -107,7 +65,7 @@ internal sealed class DesktopIconsGuard : IDisposable
         uint pid = 0;
         if (shell == IntPtr.Zero || GetWindowThreadProcessId(shell, out pid) == 0 || pid == 0)
         {
-            Store.Log("Desktop watcher: Explorer not ready.");
+            Store.Log("Surveillance du Bureau: Explorateur pas prêt.");
             return false;
         }
         using var ready = new ManualResetEventSlim(false);
@@ -118,15 +76,16 @@ internal sealed class DesktopIconsGuard : IDisposable
         var worker = new Thread(() =>
         {
             id = GetCurrentThreadId();
-            IntPtr a = SetWinEventHook(0x8000, 0x8000, IntPtr.Zero, callback, pid, 0, 0),
-                b = SetWinEventHook(0x8002, 0x8002, IntPtr.Zero, callback, pid, 0, 0),
-                c = SetWinEventHook(0x800F, 0x800F, IntPtr.Zero, callback, pid, 0, 0);
+            IntPtr a = SetWinEventHook(0x8000, 0x8000, IntPtr.Zero, callback, pid, 0, 0), b = SetWinEventHook(0x8002, 0x8002, IntPtr.Zero,
+                callback, pid, 0, 0), c = SetWinEventHook(0x800F, 0x800F, IntPtr.Zero, callback, pid, 0, 0);
             installed = a != IntPtr.Zero && b != IntPtr.Zero && c != IntPtr.Zero;
             ready.Set();
             try
             {
                 if (installed)
-                    while (GetMessage(out _, IntPtr.Zero, 0, 0) > 0) { }
+                    while (GetMessage(out _, IntPtr.Zero, 0, 0) > 0)
+                    {
+                    }
             }
             finally
             {
@@ -140,13 +99,13 @@ internal sealed class DesktopIconsGuard : IDisposable
         })
         {
             IsBackground = true,
-            Name = "Desktop icons hook",
+            Name = "Desktop icons hook"
         };
         worker.SetApartmentState(ApartmentState.STA);
         worker.Start();
         if (!ready.Wait(2000) || !installed)
         {
-            Store.Log("Desktop watch: hook unavailable.");
+            Store.Log("Surveillance du Bureau: hook indisponible.");
             return false;
         }
         lock (gate)
@@ -161,7 +120,7 @@ internal sealed class DesktopIconsGuard : IDisposable
             active = true;
             policy.Reset();
         }
-        Store.Log("Desktop watcher installed (Explorer pid " + pid + ").");
+        Store.Log("Surveillance du Bureau installée (Explorateur pid " + pid + ").");
         return true;
     }
 
@@ -212,7 +171,6 @@ internal sealed class DesktopIconsGuard : IDisposable
             Arm(now);
         }
     }
-
     void Arm(DateTime now)
     {
         var delay = policy.Delay(now);
@@ -237,14 +195,16 @@ internal sealed class DesktopIconsGuard : IDisposable
         bool gaveUp = false;
         try
         {
-            // HideIcons à 0 : quelqu'un a volontairement rétabli les icônes (SECOURS_BUREAU --show-only, menu, case Windows). On se retire.
+            // HideIcons à 0 : quelqu'un a volontairement rétabli les icônes (SECOURS_BUREAU --show-only, menu, case Windows). On se
+            // retire.
             bool intent;
             lock (gate)
-                intent = forced; // après un redémarrage d'Explorer, HideIcons peut valoir 0 sans choix de l'utilisateur (le premier masquage a échoué)
+                // après un redémarrage d'Explorer, HideIcons peut valoir 0 sans choix de l'utilisateur (le premier masquage a échoué)
+                intent = forced;
             if (!intent && !DesktopReassertPolicy.StillWanted(Native.DesktopHidden() ? 1 : 0))
             {
                 gaveUp = true;
-                Store.Log("Desktop icons restored elsewhere: watcher removed.");
+                Store.Log("Icônes du Bureau rétablies par ailleurs : surveillance retirée.");
                 relinquished();
                 Uninstall();
                 return;
@@ -253,26 +213,10 @@ internal sealed class DesktopIconsGuard : IDisposable
             lock (gate)
                 forced = false;
             if (logged++ < 20)
-                Store.Log("Desktop icons re-asserted (Explorer).");
+                Store.Log("Icônes du Bureau réaffirmées (Explorateur).");
         }
-        catch (Exception ex)
-        {
-            if (logged++ < 20)
-                Store.Log("Desktop re-assert: " + ex.Message);
-        }
-        finally
-        {
-            lock (gate)
-            {
-                running = false;
-                if (!disposed && !gaveUp)
-                {
-                    var end = DateTime.UtcNow;
-                    policy.Ran(end);
-                    Arm(end);
-                }
-            }
-        }
+        catch (Exception ex) { if (logged++ < 20) Store.Log("Réaffirmation du Bureau: " + ex.Message); }
+        finally { lock (gate) { running = false; if (!disposed && !gaveUp) { var end = DateTime.UtcNow; policy.Ran(end); Arm(end); } } }
     }
 
     public void Dispose()

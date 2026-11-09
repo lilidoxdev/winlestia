@@ -1,23 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF><ImplicitUsings>disable</ImplicitUsings><Nullable>enable</Nullable>
     <AssemblyName>Winlestia.Files</AssemblyName><RootNamespace>WinlestiaFiles</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets\winlestia-files.ico</ApplicationIcon>
-    <Version>0.9.1</Version><Company>dj</Company><Product>Panneaux</Product>
+    <Company>dj</Company><Product>Panneaux</Product>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>false</SelfContained>
     <PublishReadyToRun>true</PublishReadyToRun><TieredPGO>false</TieredPGO>
     <StartupObject>WinlestiaFiles.Program</StartupObject>
     <NoWarn>$(NoWarn);CS0649</NoWarn>
+    <!-- Auto-tests (MainWindow.SelfTest.*.cs) absents du binaire livré : dotnet build -p:SelfTest=true pour les inclure. -->
+    <DefineConstants Condition="'$(SelfTest)'=='true'">$(DefineConstants);WINLESTIA_SELFTEST</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Resource Include="Assets\winlestia-files.ico" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Shared tokens, linked not copied. Theme/Store/UI/Motion are satisfied by BackendShim.cs (Visuals.cs and Themes.cs drag in GlassWindow, Native, Motion, Store...). -->
-    <Compile Include="..\backend\Views\Tokens.cs" Link="Shared\Tokens.cs" />
-    <Compile Include="..\backend\Views\UiTokens.cs" Link="Shared\UiTokens.cs" />
-    <Compile Include="..\backend\Views\Strings.cs" Link="Shared\Strings.cs" />
-    <Compile Include="..\backend\Shared\FilesPipe.cs" Link="Shared\FilesPipe.cs" />
-    <Compile Include="..\backend\Shared\AtomicFile.cs" Link="Shared\AtomicFile.cs" />
-    <Compile Include="..\backend\Shared\FilesHandler.cs" Link="Shared\FilesHandler.cs" />
-    <Compile Include="..\backend\Shared\FilesHandlerGuard.cs" Link="Shared\FilesHandlerGuard.cs" />
+    <Compile Include="../backend/Core/Safe.cs" Link="Shared\Safe.cs" />
+    <Compile Include="../backend/Core/AtomicFile.cs" Link="Shared\AtomicFile.cs" />
+    <Compile Include="../backend/Theme/Tokens.cs" Link="Shared\Tokens.cs" />
+    <Compile Include="../backend/Theme/UiTokens.cs" Link="Shared\UiTokens.cs" />
+    <Compile Include="../backend/Files/FilesPipe.cs" Link="Shared\FilesPipe.cs" />
+    <Compile Include="../backend/Files/FilesHandler.cs" Link="Shared\FilesHandler.cs" />
+    <Compile Include="../backend/Files/FilesHandlerGuard.cs" Link="Shared\FilesHandlerGuard.cs" />
   </ItemGroup>
 </Project>

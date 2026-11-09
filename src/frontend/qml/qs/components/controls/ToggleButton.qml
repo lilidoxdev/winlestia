@@ -36,11 +36,13 @@ StyledRect {
         }
     }
 
-    Layout.preferredWidth: implicitWidth + (toggleStateLayer.pressed ? Appearance.padding.normal * 2 : toggled ? Appearance.padding.small * 2 : 0)
+    Layout.preferredWidth: implicitWidth + (toggleStateLayer.pressed ? Appearance.padding.normal * 2 : toggled
+        ? Appearance.padding.small * 2 : 0)
     implicitWidth: toggleBtnInner.implicitWidth + horizontalPadding * 2
     implicitHeight: toggleBtnIcon.implicitHeight + verticalPadding * 2
 
-    radius: toggled || toggleStateLayer.pressed ? Appearance.rounding.small : Math.min(width, height) / 2 * Math.min(1, Appearance.rounding.scale)
+    radius: toggled || toggleStateLayer.pressed ? Appearance.rounding.small : Math.min(width, height) / 2 * Math.min(1,
+        Appearance.rounding.scale)
     color: toggled ? Colours.palette[`m3${accent.toLowerCase()}`] : Colours.palette[`m3${accent.toLowerCase()}Container`]
 
     StateLayer {
@@ -113,7 +115,7 @@ StyledRect {
                 text: root.tooltip
             }
         }
-        // Completely remove from layout
+        // Retire complètement de la mise en page
         Layout.fillWidth: false
         Layout.fillHeight: false
         Layout.preferredWidth: 0
@@ -124,4 +126,3 @@ StyledRect {
         Layout.minimumHeight: 0
     }
 }
-

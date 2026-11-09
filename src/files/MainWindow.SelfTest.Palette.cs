@@ -1,18 +1,21 @@
-// WINLESTIA_FILES_SELFTEST=palette : live palette update. Points Store.DataDir at <fixture>\prefs (never the real preferences), writes a light then a dark choice,
-// sends the "palette" message over this instance's own pipe (WINLESTIA_FILES_PIPE from the harness) and checks that a live token brush changed colour both ways.
+#if WINLESTIA_SELFTEST
+// WINLESTIA_FILES_SELFTEST=palette : mise à jour de palette en direct. Pointe Store.DataDir vers <fixture>\prefs (jamais les vraies
+// préférences), écrit un choix clair puis un choix sombre,
+// envoie le message "palette" sur le canal propre à cette instance (WINLESTIA_FILES_PIPE fourni par le harnais) et vérifie qu'un pinceau
+// de jeton vivant change de couleur dans les deux sens.
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using PanneauxGlass;
-using PanneauxGlass.Views;
 using Winlestia.Shared;
 
 namespace WinlestiaFiles;
 
 public sealed partial class MainWindow
 {
-    // WINLESTIA_FILES_SELFTEST=themeshot : one screenshot of the window after the palette settled (WINLESTIA_FILES_SHOTDIR, WINLESTIA_FILES_SHOTNAME; palette source via WINLESTIA_FILES_PALETTE_FILE).
+    // WINLESTIA_FILES_SELFTEST=themeshot : une capture de la fenêtre une fois la palette stabilisée (WINLESTIA_FILES_SHOTDIR,
+    // WINLESTIA_FILES_SHOTNAME ; source de palette via WINLESTIA_FILES_PALETTE_FILE).
     async Task ThemeShot()
     {
         await WaitLoaded();
@@ -27,15 +30,14 @@ public sealed partial class MainWindow
         Active.Go(F);
         await WaitLoaded();
         Activate();
-        await Task.Delay(3000); // palette resolves off-thread (wallpaper scan)
+        await Task.Delay(PauseScanMs);          // palette resolves off-thread (wallpaper scan)
         list.SelectedIndex = 1;
         list.Focus();
-        await Task.Delay(500);
+        await Task.Delay(PauseStabilisationMs);
         string dir = Environment.GetEnvironmentVariable("WINLESTIA_FILES_SHOTDIR") ?? Path.GetTempPath();
         Shot(Path.Combine(dir, Environment.GetEnvironmentVariable("WINLESTIA_FILES_SHOTNAME") ?? "files-theme.png"));
-        T(
-            $"themeshot dark={Theme.Current.IsDark} primary={Theme.Current.Role(M3Role.Primary)} surface={Theme.Current.Role(M3Role.Surface)}"
-        );
+        T($"themeshot dark={Theme.Current.IsDark} primary={Theme.Current.Role(M3Role.Primary)} " +
+            $"surface={Theme.Current.Role(M3Role.Surface)}");
         Close();
     }
 
@@ -57,17 +59,17 @@ public sealed partial class MainWindow
         async Task<bool> Send()
         {
             for (int i = 0; i < 40; i++)
-            { // the server starts at ApplicationIdle
+            {      // le serveur démarre à ApplicationIdle
                 if (await Task.Run(() => FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "palette"), 300)))
                     return true;
-                await Task.Delay(250);
+                await Task.Delay(PauseAnimationMs);
             }
             return false;
         }
         async Task<bool> Until(Func<bool> cond)
         {
             for (int i = 0; i < 60 && !cond(); i++)
-                await Task.Delay(100);
+                await Task.Delay(PauseTickMs);
             return cond();
         }
 
@@ -84,3 +86,4 @@ public sealed partial class MainWindow
         Close();
     }
 }
+#endif

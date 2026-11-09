@@ -33,7 +33,7 @@ Item {
 
         StyledText {
             Layout.alignment: Qt.AlignHCenter
-            text:qsTr("•••")
+            text: qsTr("•••")
             color: Colours.palette.m3primary
             font.pointSize: Appearance.font.size.extraLarge * 0.9
             font.family: Appearance.font.family.clock
