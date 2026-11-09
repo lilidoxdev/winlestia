@@ -1,0 +1,17 @@
+{
+  "format": "winjet/1",
+  "id": "winlestia.graphique-btc",
+  "name": "Bitcoin",
+  "version": "1.0.0",
+  "author": "Winlestia",
+  "description": "Cours du Bitcoin et courbe sur 7 ou 30 jours. Données de démonstration hors ligne, ou en direct via CoinGecko (désactivé par défaut).",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  },
+  "permissions": {
+    "network": [
+      "api.coingecko.com"
+    ]
+  }
+}

@@ -4,6 +4,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 
 ## [Non publié]
 
+### Ajouts
+
+- Winjets : widgets de bureau décrits par un paquet JSON (format `winjet/1`), placés derrière les fenêtres. Trois paquets inclus (horloge, calendrier, graphique Bitcoin) et import de paquets créés par l'utilisateur depuis Réglages > Winjets. Aucun code de paquet n'est exécuté ; le réseau passe uniquement par Winlestia, vers les hôtes déclarés.
+- Documentation créateur : `docs/winjets/FORMAT-v1.md`, guide `docs/winjets/MON-PREMIER-WINJET.md`, schémas JSON, gabarit et exemple.
+
 ### Modifications
 
 - Intégration continue : contrôle de longueur de ligne (140), `dotnet format whitespace`, test de fumee de l'installateur, plancher de couverture documenté (règle du cliquet).

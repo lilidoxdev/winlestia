@@ -1,0 +1,76 @@
+{
+  "size": {
+    "default": [
+      352,
+      168
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      536,
+      352
+    ]
+  },
+  "settings": [
+    {
+      "id": "message",
+      "type": "text",
+      "label": "Message affiché",
+      "default": "Bonjour",
+      "maxLength": 40
+    }
+  ],
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "gap": 8,
+        "children": [
+          {
+            "type": "text",
+            "text": "{{ settings.message }}",
+            "style": "title",
+            "maxLines": 2
+          },
+          {
+            "type": "clock",
+            "variant": "digital",
+            "format": "HH:mm"
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "minHeight": 340,
+      "root": {
+        "type": "column",
+        "padding": 24,
+        "gap": 8,
+        "children": [
+          {
+            "type": "text",
+            "text": "{{ settings.message }}",
+            "style": "display",
+            "maxLines": 2
+          },
+          {
+            "type": "clock",
+            "variant": "digital",
+            "format": "HH:mm"
+          },
+          {
+            "type": "text",
+            "text": "{{ now | date:dddd d MMMM }}",
+            "style": "caption",
+            "tone": "secondary"
+          }
+        ]
+      }
+    }
+  ]
+}

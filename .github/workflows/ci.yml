@@ -112,7 +112,7 @@ jobs:
       - name: Tests Python
         shell: pwsh
         run: |
-          python -m pip install -r src/frontend/requirements.txt pytest
+          python -m pip install -r src/frontend/requirements.txt pytest jsonschema
           pytest -q
 
       - name: Compilation Python (compileall)

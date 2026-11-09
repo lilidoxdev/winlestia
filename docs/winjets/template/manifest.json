@@ -1,0 +1,15 @@
+{
+  "format": "winjet/1",
+  "id": "com.exemple.mon-winjet",
+  "name": "Mon Winjet",
+  "version": "1.0.0",
+  "author": "Votre nom",
+  "description": "Une phrase qui décrit votre Winjet.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  },
+  "permissions": {
+    "network": []
+  }
+}

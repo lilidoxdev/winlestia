@@ -1,0 +1,12 @@
+{
+  "format": "winjet/1",
+  "id": "winlestia.calendrier",
+  "name": "Calendrier",
+  "version": "1.0.0",
+  "author": "Winlestia",
+  "description": "Jour du mois en petit format, grille du mois en grand format.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  }
+}

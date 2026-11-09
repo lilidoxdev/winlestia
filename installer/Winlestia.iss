@@ -179,6 +179,9 @@ Source: "..\assets\wallpapers\*"; DestDir: "{app}\wallpapers"; Flags: ignorevers
 
 Source: "..\build\payload\Winlestia-Terminal\*"; DestDir: "{app}\Winlestia-Terminal"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+; Winjets inclus (lecture seule) : horloge, calendrier, graphique BTC
+Source: "..\build\payload\Winjets\builtin\*"; DestDir: "{app}\Winjets\builtin"; Flags: ignoreversion recursesubdirs createallsubdirs
+
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDir: "{app}\Glass-v5"; IconFilename: "{app}\Glass-v5\{#AppExe}"; Tasks: startmenu
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDir: "{app}\Glass-v5"; IconFilename: "{app}\Glass-v5\{#AppExe}"; Tasks: desktopicon

@@ -1,0 +1,377 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Winjet v1 - widget.json",
+  "description": "Definition d'un Winjet (format winjet/1). Voir docs/winjets/FORMAT-v1.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["size", "layouts"],
+  "properties": {
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default"],
+      "properties": {
+        "default": { "$ref": "#/$defs/sizePair" },
+        "min": { "$ref": "#/$defs/sizePair" },
+        "max": { "$ref": "#/$defs/sizePair" }
+      }
+    },
+    "settings": { "type": "array", "items": { "$ref": "#/$defs/setting" } },
+    "state": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": { "type": ["string", "number", "boolean"] }
+    },
+    "data": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": { "$ref": "#/$defs/dataSource" }
+    },
+    "layouts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["minWidth", "root"],
+        "properties": {
+          "minWidth": { "type": "integer", "minimum": 0, "maximum": 5000 },
+          "minHeight": { "type": "integer", "minimum": 0, "maximum": 5000 },
+          "root": { "$ref": "#/$defs/node" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]{0,31}$" },
+    "sizePair": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        { "type": "integer", "minimum": 120, "maximum": 1600 },
+        { "type": "integer", "minimum": 120, "maximum": 1000 }
+      ]
+    },
+    "setting": {
+      "type": "object",
+      "required": ["id", "type", "label", "default"],
+      "oneOf": [
+        {
+          "properties": {
+            "id": { "$ref": "#/$defs/identifier" },
+            "type": { "const": "toggle" },
+            "label": { "type": "string", "minLength": 1 },
+            "default": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "id": { "$ref": "#/$defs/identifier" },
+            "type": { "const": "text" },
+            "label": { "type": "string", "minLength": 1 },
+            "default": { "type": "string" },
+            "maxLength": { "type": "integer", "minimum": 1, "maximum": 200 }
+          },
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "id": { "$ref": "#/$defs/identifier" },
+            "type": { "const": "choice" },
+            "label": { "type": "string", "minLength": 1 },
+            "default": { "type": "string" },
+            "options": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["value", "label"],
+                "properties": {
+                  "value": { "type": "string" },
+                  "label": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          },
+          "required": ["options"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "id": { "$ref": "#/$defs/identifier" },
+            "type": { "const": "number" },
+            "label": { "type": "string", "minLength": 1 },
+            "default": { "type": "number" },
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "dataSource": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path"],
+          "properties": {
+            "type": { "const": "file" },
+            "path": { "type": "string", "pattern": "^assets/[^\\\\:*?\"<>|]+\\.json$" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "url"],
+          "properties": {
+            "type": { "const": "http" },
+            "url": { "type": "string", "pattern": "^https://[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(:443)?(/\\S*)?$" },
+            "refresh": { "type": "integer", "minimum": 60, "maximum": 86400 },
+            "enabledWhen": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "paletteRole": {
+      "enum": ["accent", "primary", "secondary", "tertiary", "onSurface", "onSurfaceVariant", "positive", "negative"]
+    },
+    "alignment": { "enum": ["start", "center", "end", "stretch"] },
+    "boolOrExpr": { "type": ["boolean", "string"] },
+    "action": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "key", "value"],
+          "properties": {
+            "type": { "const": "setState" },
+            "key": { "$ref": "#/$defs/identifier" },
+            "value": { "type": ["string", "number", "boolean"] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": { "type": { "const": "refresh" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "url"],
+          "properties": {
+            "type": { "const": "openUrl" },
+            "url": { "type": "string", "pattern": "^https://[A-Za-z0-9.-]+(:[0-9]+)?(/\\S*)?$" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": { "type": { "const": "openSettings" } }
+        }
+      ]
+    },
+    "containerProps": {
+      "properties": {
+        "children": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "gap": { "type": "integer", "minimum": 0, "maximum": 64 },
+        "padding": { "type": "integer", "minimum": 0, "maximum": 64 },
+        "align": { "$ref": "#/$defs/alignment" },
+        "grow": { "type": "number", "minimum": 0 },
+        "visibleWhen": { "type": "string", "minLength": 1 },
+        "action": { "$ref": "#/$defs/action" }
+      },
+      "required": ["children"]
+    },
+    "node": {
+      "oneOf": [
+        { "$ref": "#/$defs/column" },
+        { "$ref": "#/$defs/row" },
+        { "$ref": "#/$defs/stack" },
+        { "$ref": "#/$defs/grid" },
+        { "$ref": "#/$defs/text" },
+        { "$ref": "#/$defs/image" },
+        { "$ref": "#/$defs/clock" },
+        { "$ref": "#/$defs/calendar" },
+        { "$ref": "#/$defs/list" },
+        { "$ref": "#/$defs/chart" },
+        { "$ref": "#/$defs/stat" },
+        { "$ref": "#/$defs/progress" },
+        { "$ref": "#/$defs/dots" },
+        { "$ref": "#/$defs/buttons" },
+        { "$ref": "#/$defs/spacer" },
+        { "$ref": "#/$defs/divider" }
+      ]
+    },
+    "column": {
+      "allOf": [{ "$ref": "#/$defs/containerProps" }, { "properties": { "type": { "const": "column" } }, "required": ["type"] }],
+      "unevaluatedProperties": false
+    },
+    "row": {
+      "allOf": [{ "$ref": "#/$defs/containerProps" }, { "properties": { "type": { "const": "row" } }, "required": ["type"] }],
+      "unevaluatedProperties": false
+    },
+    "stack": {
+      "allOf": [{ "$ref": "#/$defs/containerProps" }, { "properties": { "type": { "const": "stack" } }, "required": ["type"] }],
+      "unevaluatedProperties": false
+    },
+    "grid": {
+      "allOf": [
+        { "$ref": "#/$defs/containerProps" },
+        {
+          "properties": { "type": { "const": "grid" }, "columns": { "type": "integer", "minimum": 1, "maximum": 12 } },
+          "required": ["type", "columns"]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "text"],
+      "properties": {
+        "type": { "const": "text" },
+        "text": { "type": "string" },
+        "style": { "enum": ["title", "label", "body", "caption", "display", "mono"] },
+        "align": { "enum": ["start", "center", "end"] },
+        "maxLines": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "tone": { "enum": ["primary", "secondary", "accent"] },
+        "action": { "$ref": "#/$defs/action" }
+      }
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "src"],
+      "properties": {
+        "type": { "const": "image" },
+        "src": { "type": "string", "pattern": "^assets/[^\\\\:*?\"<>|]+\\.(png|jpg|jpeg|webp|gif)$" },
+        "fit": { "enum": ["contain", "cover"] },
+        "radius": { "type": "integer", "minimum": 0, "maximum": 200 },
+        "action": { "$ref": "#/$defs/action" }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "variant"],
+      "properties": {
+        "type": { "const": "clock" },
+        "variant": { "enum": ["analog", "digital"] },
+        "showSeconds": { "$ref": "#/$defs/boolOrExpr" },
+        "format": { "type": "string", "minLength": 1 },
+        "timezone": { "type": "string" }
+      }
+    },
+    "calendar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "variant"],
+      "properties": {
+        "type": { "const": "calendar" },
+        "variant": { "enum": ["month", "day"] },
+        "firstDay": { "enum": ["monday", "sunday"] }
+      }
+    },
+    "list": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "items", "title"],
+      "properties": {
+        "type": { "const": "list" },
+        "items": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "subtitle": { "type": "string", "minLength": 1 },
+        "trailing": { "type": "string", "minLength": 1 },
+        "max": { "type": "integer", "minimum": 1, "maximum": 50 }
+      }
+    },
+    "chart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "series"],
+      "properties": {
+        "type": { "const": "chart" },
+        "series": { "type": "string", "minLength": 1 },
+        "variant": { "enum": ["line", "area", "bars"] },
+        "axes": { "$ref": "#/$defs/boolOrExpr" },
+        "period": { "type": "string" },
+        "color": { "$ref": "#/$defs/paletteRole" }
+      }
+    },
+    "stat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "value"],
+      "properties": {
+        "type": { "const": "stat" },
+        "value": { "type": "string" },
+        "label": { "type": "string" },
+        "delta": { "type": ["string", "number"] },
+        "action": { "$ref": "#/$defs/action" }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "value"],
+      "properties": {
+        "type": { "const": "progress" },
+        "value": { "type": ["string", "number"] },
+        "variant": { "enum": ["ring", "bar"] },
+        "label": { "type": "string" }
+      }
+    },
+    "dots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "anyOf": [{ "required": ["matrix"] }, { "required": ["pattern"] }],
+      "properties": {
+        "type": { "const": "dots" },
+        "matrix": { "type": "string", "minLength": 1 },
+        "pattern": { "enum": ["pulse", "ripple", "torus"] },
+        "shape": { "enum": ["circle", "square"] }
+      }
+    },
+    "buttons": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "options", "bind"],
+      "properties": {
+        "type": { "const": "buttons" },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["value", "label"],
+            "properties": {
+              "value": { "type": "string" },
+              "label": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "bind": { "type": "string", "pattern": "^state\\.[A-Za-z][A-Za-z0-9_]{0,31}$" }
+      }
+    },
+    "spacer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": { "type": { "const": "spacer" } }
+    },
+    "divider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": { "type": { "const": "divider" } }
+    }
+  }
+}

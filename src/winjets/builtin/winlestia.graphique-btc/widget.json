@@ -1,0 +1,509 @@
+{
+  "size": {
+    "default": [
+      352,
+      168
+    ],
+    "min": [
+      352,
+      168
+    ],
+    "max": [
+      720,
+      352
+    ]
+  },
+  "settings": [
+    {
+      "id": "source",
+      "type": "choice",
+      "label": "Source des données",
+      "default": "demo",
+      "options": [
+        {
+          "value": "demo",
+          "label": "Démonstration (hors ligne)"
+        },
+        {
+          "value": "live",
+          "label": "En direct (CoinGecko)"
+        }
+      ]
+    },
+    {
+      "id": "range",
+      "type": "choice",
+      "label": "Période",
+      "default": "7d",
+      "options": [
+        {
+          "value": "7d",
+          "label": "7 jours"
+        },
+        {
+          "value": "30d",
+          "label": "30 jours"
+        }
+      ]
+    },
+    {
+      "id": "currency",
+      "type": "choice",
+      "label": "Devise",
+      "default": "EUR",
+      "options": [
+        {
+          "value": "EUR",
+          "label": "Euro"
+        },
+        {
+          "value": "USD",
+          "label": "Dollar US"
+        }
+      ]
+    }
+  ],
+  "data": {
+    "demo": {
+      "type": "file",
+      "path": "assets/btc-demo.json"
+    },
+    "live": {
+      "type": "http",
+      "url": "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur,usd&include_24hr_change=true",
+      "refresh": 300,
+      "enabledWhen": "settings.source == 'live'"
+    },
+    "live7d": {
+      "type": "http",
+      "url": "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=eur&days=7",
+      "refresh": 300,
+      "enabledWhen": "settings.source == 'live' && settings.range == '7d'"
+    },
+    "live30d": {
+      "type": "http",
+      "url": "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=eur&days=30",
+      "refresh": 300,
+      "enabledWhen": "settings.source == 'live' && settings.range == '30d'"
+    }
+  },
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "row",
+        "padding": 16,
+        "gap": 12,
+        "children": [
+          {
+            "type": "column",
+            "align": "start",
+            "grow": 1,
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.currency == 'EUR'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.demo.price | currency:EUR }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.demo.change24h }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.currency == 'USD'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.demo.priceUsd | currency:USD }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.demo.change24h }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.currency == 'EUR'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.live.bitcoin.eur | currency:EUR }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.live.bitcoin.eur_24h_change }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.currency == 'USD'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.live.bitcoin.usd | currency:USD }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.live.bitcoin.usd_24h_change }}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "grow": 1,
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.range == '7d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.demo.points7d }}",
+                    "variant": "area",
+                    "axes": false,
+                    "color": "accent"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.range == '30d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.demo.points30d }}",
+                    "variant": "area",
+                    "axes": false,
+                    "color": "accent"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.range == '7d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.live7d.prices }}",
+                    "variant": "area",
+                    "axes": false,
+                    "color": "accent"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.range == '30d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.live30d.prices }}",
+                    "variant": "area",
+                    "axes": false,
+                    "color": "accent"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 520,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "gap": 8,
+        "children": [
+          {
+            "type": "column",
+            "align": "start",
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.currency == 'EUR'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.demo.price | currency:EUR }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.demo.change24h }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.currency == 'USD'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.demo.priceUsd | currency:USD }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.demo.change24h }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.currency == 'EUR'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.live.bitcoin.eur | currency:EUR }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.live.bitcoin.eur_24h_change }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.currency == 'USD'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.live.bitcoin.usd | currency:USD }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.live.bitcoin.usd_24h_change }}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "grow": 1,
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.range == '7d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.demo.points7d }}",
+                    "variant": "line",
+                    "axes": true,
+                    "color": "accent",
+                    "period": "7 derniers jours"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.range == '30d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.demo.points30d }}",
+                    "variant": "line",
+                    "axes": true,
+                    "color": "accent",
+                    "period": "30 derniers jours"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.range == '7d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.live7d.prices }}",
+                    "variant": "line",
+                    "axes": true,
+                    "color": "accent",
+                    "period": "7 derniers jours"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.range == '30d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.live30d.prices }}",
+                    "variant": "line",
+                    "axes": true,
+                    "color": "accent",
+                    "period": "30 derniers jours"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 520,
+      "minHeight": 340,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "gap": 8,
+        "children": [
+          {
+            "type": "column",
+            "align": "start",
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.currency == 'EUR'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.demo.price | currency:EUR }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.demo.change24h }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.currency == 'USD'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.demo.priceUsd | currency:USD }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.demo.change24h }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.currency == 'EUR'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.live.bitcoin.eur | currency:EUR }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.live.bitcoin.eur_24h_change }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.currency == 'USD'",
+                "children": [
+                  {
+                    "type": "stat",
+                    "value": "{{ data.live.bitcoin.usd | currency:USD }}",
+                    "label": "Bitcoin · 24 h",
+                    "delta": "{{ data.live.bitcoin.usd_24h_change }}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "grow": 1,
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.range == '7d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.demo.points7d }}",
+                    "variant": "line",
+                    "axes": true,
+                    "color": "accent",
+                    "period": "7 derniers jours"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'demo' && settings.range == '30d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.demo.points30d }}",
+                    "variant": "line",
+                    "axes": true,
+                    "color": "accent",
+                    "period": "30 derniers jours"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.range == '7d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.live7d.prices }}",
+                    "variant": "line",
+                    "axes": true,
+                    "color": "accent",
+                    "period": "7 derniers jours"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.source == 'live' && settings.range == '30d'",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "chart",
+                    "series": "{{ data.live30d.prices }}",
+                    "variant": "line",
+                    "axes": true,
+                    "color": "accent",
+                    "period": "30 derniers jours"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "column",
+            "visibleWhen": "settings.source == 'demo'",
+            "children": [
+              {
+                "type": "list",
+                "items": "{{ data.demo.daily }}",
+                "title": "day",
+                "subtitle": "change",
+                "trailing": "price",
+                "max": 7
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "settings.source == 'live'",
+            "children": [
+              {
+                "type": "text",
+                "text": "La liste des jours est disponible avec la source de démonstration.",
+                "style": "caption",
+                "tone": "secondary"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

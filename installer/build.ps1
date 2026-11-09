@@ -207,6 +207,12 @@ foreach ($dir in 'clink','clink-profile') {
     $terminalDst = Join-Path $terminalDest $dir
     robocopy $terminalSrc $terminalDst /E /NFL /NDL /NJH /NJS /NP /XF '*.log' '*history*' '*.tmp' 'clink_errorlevel*' | Out-Null
 }
+Write-Host 'Winjets inclus' -ForegroundColor Cyan
+$winjetsDest = Join-Path $payload 'Winjets\builtin'
+New-Item -ItemType Directory -Force -Path $winjetsDest | Out-Null
+robocopy (Join-Path $root 'src\winjets\builtin') $winjetsDest /E /NFL /NDL /NJH /NJS /NP /XF '*.log' '*.tmp' | Out-Null
+if ($LASTEXITCODE -ge 8) { throw "Copie des Winjets inclus échouée (robocopy $LASTEXITCODE)." }
+$LASTEXITCODE = 0
 Write-Host '→ Compilation du setup' -ForegroundColor Cyan
 $iscc = @(
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",

@@ -1,0 +1,180 @@
+{
+  "size": {
+    "default": [
+      168,
+      168
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      720,
+      352
+    ]
+  },
+  "settings": [
+    {
+      "id": "showSeconds",
+      "type": "toggle",
+      "label": "Afficher les secondes",
+      "default": false
+    },
+    {
+      "id": "timezone2",
+      "type": "text",
+      "label": "Second fuseau horaire (ex. Asia/Tokyo)",
+      "default": "America/New_York",
+      "maxLength": 40
+    }
+  ],
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "align": "center",
+        "children": [
+          {
+            "type": "clock",
+            "variant": "analog",
+            "showSeconds": "{{ settings.showSeconds }}"
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "root": {
+        "type": "column",
+        "padding": 20,
+        "gap": 4,
+        "align": "start",
+        "children": [
+          {
+            "type": "text",
+            "text": "Heure locale",
+            "style": "label",
+            "tone": "secondary"
+          },
+          {
+            "type": "column",
+            "visibleWhen": "!settings.showSeconds",
+            "children": [
+              {
+                "type": "clock",
+                "variant": "digital",
+                "format": "HH:mm"
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "settings.showSeconds",
+            "children": [
+              {
+                "type": "clock",
+                "variant": "digital",
+                "format": "HH:mm:ss"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "{{ now | date:dddd d MMMM }}",
+            "style": "caption",
+            "tone": "secondary"
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "minHeight": 340,
+      "root": {
+        "type": "column",
+        "padding": 20,
+        "gap": 8,
+        "align": "start",
+        "children": [
+          {
+            "type": "text",
+            "text": "Heure locale",
+            "style": "label",
+            "tone": "secondary"
+          },
+          {
+            "type": "column",
+            "visibleWhen": "!settings.showSeconds",
+            "children": [
+              {
+                "type": "clock",
+                "variant": "digital",
+                "format": "HH:mm"
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "settings.showSeconds",
+            "children": [
+              {
+                "type": "clock",
+                "variant": "digital",
+                "format": "HH:mm:ss"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "{{ now | date:dddd d MMMM }}",
+            "style": "caption",
+            "tone": "secondary"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "column",
+            "visibleWhen": "settings.timezone2 != ''",
+            "gap": 4,
+            "align": "start",
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ settings.timezone2 }}",
+                "style": "label",
+                "tone": "secondary"
+              },
+              {
+                "type": "column",
+                "visibleWhen": "!settings.showSeconds",
+                "children": [
+                  {
+                    "type": "clock",
+                    "variant": "digital",
+                    "format": "HH:mm",
+                    "timezone": "{{ settings.timezone2 }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.showSeconds",
+                "children": [
+                  {
+                    "type": "clock",
+                    "variant": "digital",
+                    "format": "HH:mm:ss",
+                    "timezone": "{{ settings.timezone2 }}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

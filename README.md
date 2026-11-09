@@ -130,6 +130,12 @@ All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` c
 
 **Why "Panneaux" in some file names?** Same reason: legacy name.
 
+## Winjets
+
+Winjets are small desktop widgets placed behind your windows, on the desktop. Each one is a package (a ZIP or a folder) that describes its layout, settings and data in JSON; no code from a package is ever run. Clock, calendar and Bitcoin chart Winjets are included. Add them from Settings > Winjets.
+
+To make your own, see [docs/winjets/MON-PREMIER-WINJET.md](docs/winjets/MON-PREMIER-WINJET.md) (step-by-step guide, in French) and the format reference [docs/winjets/FORMAT-v1.md](docs/winjets/FORMAT-v1.md). A fill-in template and an example are in `docs/winjets/`.
+
 ## Known limitations
 
 - The installer wizard is in French only.

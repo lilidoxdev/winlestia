@@ -1,0 +1,12 @@
+{
+  "format": "winjet/1",
+  "id": "com.exemple.citation",
+  "name": "Citation du jour",
+  "version": "1.0.0",
+  "author": "Exemple Winlestia",
+  "description": "Une citation locale, avec un bouton pour afficher la fiche de son auteur.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  }
+}
