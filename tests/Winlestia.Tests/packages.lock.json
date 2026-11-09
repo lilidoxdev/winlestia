@@ -486,6 +486,9 @@
         "dependencies": {
           "xunit.extensibility.core": "[2.9.2]"
         }
+      },
+      "winlestia.files": {
+        "type": "Project"
       }
     },
     "net8.0-windows10.0.19041/win-x64": {

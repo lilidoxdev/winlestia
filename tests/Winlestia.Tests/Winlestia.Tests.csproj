@@ -39,6 +39,10 @@
     <Compile Include="../../src/backend/**/*.cs" Exclude="../../src/backend/checkpoint-*/**;../../src/backend/obj/**;../../src/backend/bin/**" LinkBase="Backend" />
     <Compile Include="../../src/files/PathRouter.cs" Link="Files/PathRouter.cs" />
   </ItemGroup>
+  <!-- Application Files (WPF) : son XAML de styles est charge par reflexion (Styles est internal) dans FilesStylesXamlTests. -->
+  <ItemGroup>
+    <ProjectReference Include="../../src/files/Winlestia.Files.csproj" />
+  </ItemGroup>
   <!-- Echantillonneur FolderIcons.exe (processus separe) copie a cote des tests Desktop d'icones de dossiers. -->
   <ItemGroup>
     <ProjectReference Include="../FolderIcons/FolderIcons.csproj" ReferenceOutputAssembly="false" Private="false" />

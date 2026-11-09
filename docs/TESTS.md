@@ -12,7 +12,7 @@ dotnet test tests/Winlestia.Tests --filter "Category!=Desktop"
 dotnet test tests/Winlestia.Tests --filter "FullyQualifiedName~CliCommandsTests"
 ```
 
-Les tests de categorie `Desktop` (`[Trait("Category","Desktop")]` : audio, explorateur, icones de dossiers, tiling, bureaux virtuels, interop native, plein ecran) ouvrent de vraies fenetres ou touchent au shell. Ne les lancez pas pendant que le shell Winlestia tourne : `dotnet test tests/Winlestia.Tests --filter "Category=Desktop"`, a la main uniquement.
+Les tests de categorie `Desktop` (`[Trait("Category","Desktop")]` : demarrage du coordinateur en preview, audio, explorateur, icones de dossiers, tiling, bureaux virtuels, interop native, plein ecran) ouvrent de vraies fenetres ou touchent au shell. Ne les lancez pas pendant que le shell Winlestia tourne : `dotnet test tests/Winlestia.Tests --filter "Category=Desktop"`, a la main uniquement.
 
 `SettingsMigrationAndShortcutsTests` genere un fichier de preferences pre-refonte ; `WINLESTIA_LEGACY_PREFS` peut pointer vers une vraie sauvegarde.
 
@@ -55,6 +55,6 @@ Etape manuelle, a faire par un humain sur un poste de bureau Windows 11 interact
 dotnet test tests/Winlestia.Tests --filter "Category=Desktop"
 ```
 
-Ces tests (audio, explorateur, icones de dossiers, tiling, bureaux virtuels, interop native, plein ecran) exigent une session de bureau reelle : fenetres visibles, shell Explorer, peripherique audio, plusieurs bureaux virtuels. Les runners GitHub Actions n'ont pas de session interactive, donc la CI les exclut (`Category!=Desktop`) et ne peut pas les remplacer. Fermer le shell Winlestia avant de lancer, puis consigner le resultat dans la PR de release.
+Ces tests (demarrage du coordinateur en preview, audio, explorateur, icones de dossiers, tiling, bureaux virtuels, interop native, plein ecran) exigent une session de bureau reelle : fenetres visibles, shell Explorer, peripherique audio, plusieurs bureaux virtuels. Les runners GitHub Actions n'ont pas de session interactive, donc la CI les exclut (`Category!=Desktop`) et ne peut pas les remplacer. Fermer le shell Winlestia avant de lancer, puis consigner le resultat dans la PR de release.
 
 Dernier passage : 2026-11-08, Windows 11 26200, shell Winlestia lance, barre des taches en masquage automatique : 7/7 reussis.

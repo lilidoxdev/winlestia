@@ -98,6 +98,12 @@ internal sealed partial class Coordinator : IDisposable
         websites = new WebStrip(this);
         ticks = new TickController(state, rail, new TickHost(() => Boards.Cast<Window>().Append(toolbar).Concat(websites.Windows),
             () => Windows, () => taskbar?.PointerTick(), SetTaskbar, () => Open(), Collapse, () => QtShell != null && !state.Open));
+        // HomeWindow lit Keys dans son constructeur : les liaisons existent avant toute fenetre. Le hook reste branche apres.
+        hwnd = new WindowInteropHelper(controller).EnsureHandle();
+        source = HwndSource.FromHwnd(hwnd);
+        var global = new GlobalShortcut(hwnd, Store.State.Shortcut, Store.State.PaletteShortcut, Store.State.PinShortcut,
+            Store.State.CaptureShortcut, Store.State.WallpaperShortcut, Store.State.SettingsShortcut);
+        Keys = new ShortcutBindings(global, BuildRail, RefreshPaletteLabels);
         foreach (var model in Store.State.Boards)
             Boards.Add(new BoardWindow(this, model));
         home = new HomeWindow(this);
@@ -107,12 +113,7 @@ internal sealed partial class Coordinator : IDisposable
         leftArrow.Radius = rightArrow.Radius = 25;
         leftArrow.ContentHost.Children.Add(UI.IconButton("", "Afficher l’état du PC", TogglePc));
         rightArrow.ContentHost.Children.Add(UI.IconButton("", "Afficher les commandes Windows", ToggleControls));
-        hwnd = new WindowInteropHelper(controller).EnsureHandle();
-        source = HwndSource.FromHwnd(hwnd);
         source.AddHook(Hook);
-        var global = new GlobalShortcut(hwnd, Store.State.Shortcut, Store.State.PaletteShortcut, Store.State.PinShortcut,
-            Store.State.CaptureShortcut, Store.State.WallpaperShortcut, Store.State.SettingsShortcut);
-        Keys = new ShortcutBindings(global, BuildRail, RefreshPaletteLabels);
         Shortcuts = new ShortcutManager(global, () => Store.State, Store.Save, id =>
         {
             if (id == "dashboard")

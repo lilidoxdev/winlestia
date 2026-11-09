@@ -115,8 +115,8 @@ internal static class Styles
         <ColumnDefinition Width="{Binding SizeW, Source={x:Static local:ColumnLayout.Instance}}"/>
       </Grid.ColumnDefinitions>
       <TextBlock x:Name="Ic" Text="{Binding Icon, Mode=OneTime}" FontFamily="{DynamicResource IconFont}" FontSize="20"
-        Foreground="{Binding Label, Source={x:Static " +
-            "local:LiveBrushes.Instance}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}"
+            HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <local:ShellImage Cell="22" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <TextBlock Grid.Column="1" Text="{Binding Name, Mode=OneTime}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
         Margin="4,0,8,0"/>
@@ -168,8 +168,8 @@ internal static class Styles
     <Grid Opacity="{Binding CutOpacity}">
       <Grid.RowDefinitions><RowDefinition Height="112"/><RowDefinition Height="*"/></Grid.RowDefinitions>
       <TextBlock x:Name="Ic" Text="{Binding Icon, Mode=OneTime}" FontFamily="{DynamicResource IconFont}" FontSize="52"
-        Foreground="{Binding Label, Source={x:Static " +
-            "local:LiveBrushes.Instance}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}"
+            HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <local:ShellImage Thumb="True" Cell="104" Width="104" Height="104" HorizontalAlignment="Center" VerticalAlignment="Center"
         Margin="0,6,0,0"/>
       <TextBlock Grid.Row="1" Text="{Binding Name, Mode=OneTime}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
@@ -189,8 +189,8 @@ internal static class Styles
     <Grid Opacity="{Binding CutOpacity}">
       <Grid.RowDefinitions><RowDefinition Height="76"/><RowDefinition Height="*"/></Grid.RowDefinitions>
       <TextBlock x:Name="Ic" Text="{Binding Icon, Mode=OneTime}" FontFamily="{DynamicResource IconFont}" FontSize="38"
-        Foreground="{Binding Label, Source={x:Static " +
-            "local:LiveBrushes.Instance}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}"
+            HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <local:ShellImage Thumb="True" Cell="68" Width="68" Height="68" HorizontalAlignment="Center" VerticalAlignment="Center"
         Margin="0,4,0,0"/>
       <TextBlock Grid.Row="1" Text="{Binding Name, Mode=OneTime}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
@@ -210,8 +210,8 @@ internal static class Styles
     <Grid Opacity="{Binding CutOpacity}">
       <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
       <TextBlock x:Name="Ic" Text="{Binding Icon, Mode=OneTime}" FontFamily="{DynamicResource IconFont}" FontSize="18"
-        Foreground="{Binding Label, Source={x:Static " +
-            "local:LiveBrushes.Instance}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        Foreground="{Binding Label, Source={x:Static local:LiveBrushes.Instance}}"
+            HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <local:ShellImage Cell="20" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       <TextBlock Grid.Column="1" Text="{Binding Name, Mode=OneTime}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
         Margin="2,0,6,0"/>
