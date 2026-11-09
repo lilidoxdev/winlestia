@@ -7,6 +7,7 @@ PageGeneral PageGeneral.qml
 PageInterface PageInterface.qml
 PageMedia PageMedia.qml
 PageShortcuts PageShortcuts.qml
+PageWinjets PageWinjets.qml
 SettingsChips SettingsChips.qml
 SettingsFocusRing SettingsFocusRing.qml
 SettingsKeyCaps SettingsKeyCaps.qml

@@ -8,6 +8,7 @@ import qs.config
 import qs.services
 import qs.components
 import qs.modules.dashboard as Dashboard
+import "winjets"
 
 Window {
     id: window
@@ -158,6 +159,12 @@ Window {
                     preferences.item.openSection("bookmarks");
                 else
                     preferences.pendingSection = "bookmarks";
+            }
+            if (pageMode === "settings" && mode === "settings:winjets") {
+                if (preferences.item)
+                    preferences.item.openSection("winjets");
+                else
+                    preferences.pendingSection = "winjets";
             }
         }
         subscribe();
@@ -555,6 +562,10 @@ Window {
         id: osdLoader
         active: Bridge.settings.osd ?? true
         sourceComponent: Osd {}
+    }
+    // Cartes Winjets du bureau (fenêtres natives sous les autres fenêtres) ; rien tant qu'il n'y a pas d'instance.
+    WinjetLayer {
+        id: winjetLayer
     }
     Dock {
         id: bottomDock

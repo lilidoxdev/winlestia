@@ -42,6 +42,16 @@ Le Coordinator ne fait plus qu'orchestrer. Les collaborateurs vivent dans `Core/
 
 Les règles pures (`*Rules`) sont testées dans `tests/Winlestia.Tests` sans fenêtre ni processus.
 
+## Winjets (frontend)
+
+Spécification : `docs/WINJETS-DESIGN.md`. Le backend publie `state.winjets` ; le frontend ne fait que l'afficher et renvoyer des actions `winjets.*`.
+
+- `bridge_winjets.py` : objet `Bridge.winjets` (seule propriété ajoutée au Bridge). Fonctions pures testées : clé d'écran, géométrie relative à la zone de travail, rééchelonnage et clamp, repli sur l'écran principal (`recovered`), première place libre, aimantation (`snap_move`, `snap_resize`, seuil 8, grille 8, marge 16).
+- `winjet_expr.py` : gabarits `{{ }}`, filtres et conditions, sans `eval` ni `Qt.createQmlObject` : le contenu d'un paquet n'est jamais du code.
+- `desktop_layer.py` (ctypes) : style `WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE`, fond de pile tenu par `WM_WINDOWPOSCHANGING` (filtre natif), `SetWinEventHook(EVENT_SYSTEM_FOREGROUND)` pour « Afficher le bureau », réapplication au redémarrage d'Explorer et aux changements d'écran. Ni minuteur de scrutation ni hook souris. `desktop_glass.py` pose le verre natif par carte.
+- `qml/winjets/` : `WinjetLayer` (une `WinjetWindow` par instance, `EditOverlay` par écran en édition), `WinjetCard` (voile de palette, liseré, habillage d'édition), `WinjetRenderer` (choix de la mise en page selon la taille réelle) et `BlockNode` (types de blocs d'une liste fermée, chargés par URL). Réglages d'une instance : `WinjetSettingsForm`, dans Réglages > Winjets (`settings/PageWinjets.qml`).
+- Tests : `tests/test_winjet_expr.py`, `tests/test_winjet_geometry.py`, `tests/test_winjets_qml.py` (hors écran, vrais paquets).
+
 ## Où lire la suite
 
 - Carte des dossiers du backend : `src/backend/README.md`.

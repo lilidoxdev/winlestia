@@ -63,6 +63,13 @@ QtObject {
             group: 3,
             title: qsTr("Général"),
             subtitle: qsTr("Langue, démarrage, restauration, à propos")
+        },
+        {
+            id: "winjets",
+            icon: "widgets",
+            group: 3,
+            title: qsTr("Winjets"),
+            subtitle: qsTr("Cartes sur le bureau, galerie, import")
         }
     ]
 
@@ -436,6 +443,30 @@ QtObject {
             label: qsTr("À propos de Winlestia"),
             desc: qsTr("Version et dossier des données"),
             kw: "version dossier donnees data folder about"
+        },
+        {
+            id: "winjetsEdit",
+            page: 8,
+            section: qsTr("Bureau"),
+            label: qsTr("Modifier les Winjets"),
+            desc: qsTr("Déplacez, redimensionnez ou retirez les cartes directement sur le bureau."),
+            kw: "widgets cartes deplacer edition desktop"
+        },
+        {
+            id: "winjetsRecover",
+            page: 8,
+            section: qsTr("Bureau"),
+            label: qsTr("Ramener tous les Winjets sur l'écran principal"),
+            desc: qsTr("Utile après le débranchement d'un écran."),
+            kw: "widgets ecran principal recuperer hors ecran"
+        },
+        {
+            id: "winjetsGallery",
+            page: 8,
+            section: qsTr("Galerie"),
+            label: qsTr("Galerie de Winjets"),
+            desc: qsTr("Ajouter une carte au bureau"),
+            kw: "widgets ajouter importer zip galerie"
         }
     ]
 

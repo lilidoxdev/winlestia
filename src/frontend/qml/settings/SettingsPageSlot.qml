@@ -22,7 +22,7 @@ Item {
     readonly property Item page: loader.item
 
     function component(i: int): Component {
-        return [appearance, iface, docks, shortcuts, media, apps, files, general][i];
+        return [appearance, iface, docks, shortcuts, media, apps, files, general, winjets][i];
     }
 
     function find(root: Item, id: string): Item {
@@ -125,6 +125,10 @@ Item {
     Component {
         id: general
         PageGeneral {}
+    }
+    Component {
+        id: winjets
+        PageWinjets {}
     }
 
     SequentialAnimation {

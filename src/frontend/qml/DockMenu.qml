@@ -183,6 +183,11 @@ Window {
             icon: "folder_open"
         },
         {
+            id: "winjets",
+            text: qsTr("Ajouter un Winjet"),
+            icon: "widgets"
+        },
+        {
             id: "run",
             text: qsTr("Exécuter / rechercher"),
             icon: "search"
@@ -475,6 +480,10 @@ Window {
                                     menu.visible = false;
                                     if (row.modelData.id === "run")
                                         Bridge.navigate("palette");
+                                    else if (row.modelData.id === "winjets")
+                                        Bridge.action("settings", {
+                                            section: "winjets"
+                                        });
                                     else
                                         Bridge.action("systemAction", {
                                             id: row.modelData.id

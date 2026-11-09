@@ -1,0 +1,9 @@
+singleton WinjetTheme WinjetTheme.qml
+WinjetLayer WinjetLayer.qml
+WinjetWindow WinjetWindow.qml
+WinjetCard WinjetCard.qml
+WinjetRenderer WinjetRenderer.qml
+BlockNode BlockNode.qml
+EditChrome EditChrome.qml
+EditOverlay EditOverlay.qml
+WinjetSettingsForm WinjetSettingsForm.qml

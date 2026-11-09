@@ -23,6 +23,7 @@ from bridge_state import StateMixin
 from bridge_theme import ThemeMixin
 from bridge_wallpaper import WallpaperMixin
 from bridge_weather import WeatherMixin
+from bridge_winjets import WinjetsBridge
 from capture_native import CaptureController
 from custom_palette import make_palette
 from interaction import EdgePolicy
@@ -182,6 +183,10 @@ class Bridge(
             self.city = json.loads((CONFIG / 'weather.json').read_text(encoding='utf-8')).get('city', '')
         except (OSError, ValueError):
             self.city = ''
+        self._winjets = WinjetsBridge(self)
+
+    # Winjets : géométrie, expressions et actions (bridge_winjets.py), lues par qml/winjets/ et la page Réglages.
+    winjets = Property(QObject, lambda s: s._winjets, constant=True)
 
     languageMode = Property(str, lambda s: app_state.TRANSLATOR.mode, notify=changed)
 
