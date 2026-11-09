@@ -256,6 +256,26 @@ public class WinjetDataServiceTests
     public void OnlyPublicAddressesAllowed(string ip, bool expected)
         => Assert.Equal(expected, WinjetDataService.IsPublicAddress(IPAddress.Parse(ip)));
 
+    sealed class FixedProxy : IWebProxy
+    {
+        internal Uri? Via;
+        internal bool Bypass;
+        public ICredentials? Credentials { get; set; }
+        public Uri? GetProxy(Uri destination) => Via;
+        public bool IsBypassed(Uri host) => Bypass;
+    }
+
+    [Fact]
+    public void AddressFilterSkippedOnlyThroughAProxy()
+    {
+        var target = new Uri("https://api.example.com/v1");
+        Assert.True(WinjetDataService.ShouldFilterAddresses(target, null));
+        Assert.True(WinjetDataService.ShouldFilterAddresses(target, new FixedProxy { Via = new Uri("http://10.0.0.1:3128") , Bypass = true }));
+        Assert.True(WinjetDataService.ShouldFilterAddresses(target, new FixedProxy { Via = target }));
+        Assert.True(WinjetDataService.ShouldFilterAddresses(target, new FixedProxy { Via = null }));
+        Assert.False(WinjetDataService.ShouldFilterAddresses(target, new FixedProxy { Via = new Uri("http://10.0.0.1:3128") }));
+    }
+
     [Fact]
     public void EnabledWhenEvaluated()
     {

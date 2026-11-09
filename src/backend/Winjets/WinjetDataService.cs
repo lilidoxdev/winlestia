@@ -74,10 +74,37 @@ internal sealed class WinjetDataService : IDisposable
         return !(address.IsIPv6LinkLocal || address.IsIPv6SiteLocal || address.IsIPv6Multicast || (b[0] & 0xFE) == 0xFC);
     }
 
+    // Faux quand la requête passe par un proxy (non contourné) : l'adresse vue par la connexion est alors celle du proxy.
+    internal static bool ShouldFilterAddresses(Uri target, IWebProxy? proxy)
+    {
+        if (proxy == null || proxy.IsBypassed(target))
+            return true;
+        var via = proxy.GetProxy(target);
+        return via == null || (via.Host == target.Host && via.Port == target.Port);
+    }
+
     // Résout le nom puis refuse toute adresse non publique : la liste d'hôtes ne suffit pas contre un DNS qui pointe vers le réseau local.
     static async ValueTask<Stream> ConnectPublicAsync(SocketsHttpConnectionContext context, CancellationToken ct)
     {
+        // Via un proxy système, le point de connexion est le proxy (configuration de l'utilisateur) : pas de filtre d'adresse,
+        // la liste d'hôtes et HTTPS de bout en bout restent appliqués.
+        var target = context.InitialRequestMessage?.RequestUri;
+        bool filter = target == null || ShouldFilterAddresses(target, HttpClient.DefaultProxy);
         var all = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, ct);
+        if (!filter)
+        {
+            var any = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            try
+            {
+                await any.ConnectAsync(all, context.DnsEndPoint.Port, ct);
+                return new NetworkStream(any, true);
+            }
+            catch
+            {
+                any.Dispose();
+                throw;
+            }
+        }
         var allowed = all.Where(IsPublicAddress).ToArray();
         if (allowed.Length == 0)
             throw new HttpRequestException("Adresse non publique refusée.");
