@@ -4,23 +4,27 @@ import qs.components
 import qs.config
 import ".."
 
-// Bloc `chart` : series (nombres ou paires [t, v]), variant line|area|bars, axes, period, color (rôle de palette).
+// Bloc `chart` : series (nombres ou paires [t, v]), variant line|area|bars|candles, axes, period, color (rôle de palette),
+// valueFormat (currency|percent|number : étiquettes d'axe). `candles` (séries [t,o,h,l,c], hover) est délégué à ChartCandles.
 Item {
     id: block
 
     property var spec: null
     property var ctx: ({})
     property var host: null
+    readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
 
     readonly property string variant: spec ? String(Bridge.winjets.resolve(spec.variant, ctx) ?? "line") : "line"
     readonly property bool axes: spec ? Bridge.winjets.resolve(spec.axes, ctx) === true : false
+    readonly property bool candles: variant === "candles"
+    readonly property string valueFormat: spec && spec.valueFormat ? String(Bridge.winjets.resolve(spec.valueFormat, ctx)) : ""
     readonly property color tint: WinjetTheme.role(spec && spec.color ? String(Bridge.winjets.resolve(spec.color, ctx)) : "accent")
     readonly property var values: {
-        const raw = spec ? Bridge.winjets.resolve(spec.series, ctx) : null;
+        const raw = spec && !candles ? Bridge.winjets.resolve(spec.series, ctx) : null;
         const out = [];
-        if (Array.isArray(raw))
+        if (raw && raw.length)
             for (const p of raw) {
-                const v = Array.isArray(p) ? Number(p[p.length - 1]) : Number(p);
+                const v = p && p.length ? Number(p[p.length - 1]) : Number(p);
                 if (isFinite(v))
                     out.push(v);
             }
@@ -29,8 +33,8 @@ Item {
     readonly property real lo: values.length ? Math.min(...values) : 0
     readonly property real hi: values.length ? Math.max(...values) : 1
     readonly property real span: hi > lo ? hi - lo : 1
-    readonly property real gutter: axes ? 36 : 0
-    readonly property real footer: axes && !!spec.period ? 16 : 0
+    readonly property real gutter: axes ? 36 * sc : 0
+    readonly property real footer: axes && !!spec.period ? 16 * sc : 0
     readonly property real plotW: Math.max(1, width - gutter)
     readonly property real plotH: Math.max(1, height - footer)
     readonly property var points: {
@@ -42,12 +46,12 @@ Item {
     }
     readonly property var areaPoints: points.length ? [Qt.point(points[0].x, plotH)].concat(points, [Qt.point(points[points.length - 1].x, plotH)]) : []
 
-    implicitWidth: 200
-    implicitHeight: 80
+    implicitWidth: 200 * sc
+    implicitHeight: 80 * sc
 
     Shape {
         anchors.fill: parent
-        visible: block.variant !== "bars" && block.values.length > 1
+        visible: block.variant !== "bars" && !block.candles && block.values.length > 1
         preferredRendererType: Shape.CurveRenderer
 
         ShapePath {
@@ -60,7 +64,7 @@ Item {
         ShapePath {
             fillColor: "transparent"
             strokeColor: block.tint
-            strokeWidth: 2
+            strokeWidth: 2 * block.sc
             capStyle: ShapePath.RoundCap
             joinStyle: ShapePath.RoundJoin
             PathPolyline {
@@ -81,7 +85,7 @@ Item {
             width: slot * 0.7
             height: barH
             y: block.plotH - barH
-            radius: Math.min(3, width / 2)
+            radius: Math.min(3 * block.sc, width / 2)
             color: block.tint
         }
     }
@@ -91,9 +95,9 @@ Item {
         x: 0
         y: 0
         width: block.gutter - 4
-        text: Number(block.hi).toLocaleString(Qt.locale(), "f", 0)
+        text: block.valueFormat ? Bridge.winjets.fmt(block.hi, block.valueFormat) : Number(block.hi).toLocaleString(Qt.locale(), "f", 0)
         color: WinjetTheme.textSecondary
-        font.pointSize: Appearance.font.size.small
+        font.pointSize: (Appearance.font.size.small) * block.sc
         horizontalAlignment: Text.AlignRight
         elide: Text.ElideLeft
     }
@@ -102,9 +106,9 @@ Item {
         x: 0
         y: block.plotH - implicitHeight
         width: block.gutter - 4
-        text: Number(block.lo).toLocaleString(Qt.locale(), "f", 0)
+        text: block.valueFormat ? Bridge.winjets.fmt(block.lo, block.valueFormat) : Number(block.lo).toLocaleString(Qt.locale(), "f", 0)
         color: WinjetTheme.textSecondary
-        font.pointSize: Appearance.font.size.small
+        font.pointSize: (Appearance.font.size.small) * block.sc
         horizontalAlignment: Text.AlignRight
         elide: Text.ElideLeft
     }
@@ -114,7 +118,18 @@ Item {
         y: block.height - implicitHeight
         text: block.spec && block.spec.period ? Bridge.winjets.renderText(block.spec.period, block.ctx) : ""
         color: WinjetTheme.textSecondary
-        font.pointSize: Appearance.font.size.small
+        font.pointSize: (Appearance.font.size.small) * block.sc
+    }
+
+    Loader {
+        anchors.fill: parent
+        active: block.candles
+        source: active ? Qt.resolvedUrl("ChartCandles.qml") : ""
+        onLoaded: {
+            item.spec = Qt.binding(() => block.spec);
+            item.ctx = Qt.binding(() => block.ctx);
+            item.host = Qt.binding(() => block.host);
+        }
     }
 
     ActionArea {

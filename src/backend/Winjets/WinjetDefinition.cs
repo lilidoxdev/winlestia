@@ -12,10 +12,13 @@ internal sealed record WinjetSize(int W, int H);
 internal sealed record WinjetSetting(string Id, string Type, string Label, object Default, IReadOnlyList<string> Options, double Min,
     double Max, int MaxLength);
 
-// Source de données : « file » (JSON local sous assets/) ou « http » (HTTPS, hôte déclaré).
-internal sealed record WinjetSource(string Id, string Type, string Path, string Url, int Refresh, string EnabledWhen)
+// Source de données : « file » (JSON local sous assets/), « http » (HTTPS, hôte déclaré) ou « market » (cours crypto en direct).
+internal sealed record WinjetSource(string Id, string Type, string Path, string Url, int Refresh, string EnabledWhen,
+    IReadOnlyList<string>? Symbols = null)
 {
     internal bool IsHttp => Type == "http";
+    internal bool IsMarket => Type == "market";
+    internal bool IsFile => Type == "file";
 }
 
 internal sealed class WinjetDefinition
@@ -266,7 +269,8 @@ internal sealed class WinjetDefinition
                 continue;
             }
             string? type = issues.Str(p.Value, "type", at, true, 10);
-            issues.Only(p.Value, at, type == "file" ? new[] { "type", "path" } : new[] { "type", "url", "refresh", "enabledWhen" });
+            issues.Only(p.Value, at, type == "file" ? new[] { "type", "path" } : type == "market" ? new[] { "type", "symbols", "enabledWhen" }
+                : new[] { "type", "url", "refresh", "enabledWhen" });
             string? when = issues.Str(p.Value, "enabledWhen", at, false, 400);
             if (when != null && !WinjetCondition.TryParse(when, out _, out string why))
                 issues.Add(at + ".enabledWhen", "expression invalide (" + why + ").");
@@ -291,10 +295,44 @@ internal sealed class WinjetDefinition
                         result.Add(new WinjetSource(p.Name, type, "", url, clamped, when ?? ""));
                 }
             }
+            else if (type == "market")
+            {
+                var symbols = ParseMarketSymbols(p.Value, at, manifest, issues);
+                if (symbols != null)
+                    result.Add(new WinjetSource(p.Name, type, "", "", 0, when ?? "", symbols));
+            }
             else if (type != null)
-                issues.Add(at + ".type", "type de source « " + type + " » inconnu (file ou http).");
+                issues.Add(at + ".type", "type de source « " + type + " » inconnu (file, http ou market).");
         }
         return result;
+    }
+
+    // « symbols » d'une source market (1 à 4 tickers) et hôtes Binance déclarés dans permissions.network ; null si invalide.
+    static IReadOnlyList<string>? ParseMarketSymbols(JsonElement source, string at, WinjetManifest manifest, WinjetIssues issues)
+    {
+        int before = issues.Count;
+        foreach (string host in WinjetMarket.Hosts)
+            if (!manifest.Network.Contains(host, StringComparer.OrdinalIgnoreCase))
+                issues.Add(at + ".type", "l'hôte « " + host + " » n'est pas déclaré dans permissions.network du manifeste.");
+        var list = new List<string>();
+        if (issues.Arr(source, "symbols", at, true, WinjetMarket.MaxSymbols) is { } arr)
+        {
+            int i = 0;
+            foreach (var item in arr.EnumerateArray())
+            {
+                string sat = at + ".symbols[" + i++ + "]";
+                string? sym = item.ValueKind == JsonValueKind.String ? item.GetString() : null;
+                if (sym == null || !WinjetMarket.IsValidSymbol(sym))
+                    issues.Add(sat, "doit être un ticker en majuscules (2 à 10 lettres ou chiffres, ex. BTC).");
+                else if (list.Contains(sym))
+                    issues.Add(sat, "ticker en double « " + sym + " ».");
+                else
+                    list.Add(sym);
+            }
+            if (arr.GetArrayLength() == 0)
+                issues.Add(at + ".symbols", "au moins un ticker est nécessaire.");
+        }
+        return issues.Count > before ? null : list;
     }
 
     // Problème d'une URL réseau (null = acceptable) : HTTPS, sans identifiants, hôte déclaré dans permissions.network.

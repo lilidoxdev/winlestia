@@ -4,8 +4,8 @@ import qs.config
 import qs.services
 import ".."
 
-// Bloc `clock` : analog|digital, showSeconds, format, timezone. Une minute par minute ; la seconde seulement si les secondes
-// sont affichées (et la carte visible).
+// Bloc `clock` : analog|digital, seconds (alias showSeconds), format, timezone. Une minute par minute ; la seconde seulement si
+// les secondes sont affichées, la carte visible et non suspendue. En numérique, les secondes sont en rôle secondaire.
 Item {
     id: block
 
@@ -14,14 +14,23 @@ Item {
     property var host: null
 
     readonly property bool analog: !!spec && Bridge.winjets.resolve(spec.variant, ctx) === "analog"
-    readonly property bool seconds: !!spec && Bridge.winjets.resolve(spec.showSeconds, ctx) === true
-    readonly property string pattern: spec && spec.format ? spec.format : (seconds ? "HH:mm:ss" : "HH:mm")
+    readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
+    readonly property bool seconds: !!spec && (Bridge.winjets.resolve(spec.seconds, ctx) === true || Bridge.winjets.resolve(spec.showSeconds, ctx) === true)
+    // Secondes séparées (rôle secondaire) seulement sans `format` personnalisé.
+    readonly property bool split: seconds && !analog && !(spec && spec.format)
+    readonly property string pattern: spec && spec.format ? spec.format : (seconds && !split ? "HH:mm:ss" : "HH:mm")
+    readonly property bool ticking: seconds && visible && (!host || host.live)
     property double stamp: Time.date.getTime()
-    readonly property var parts: Bridge.winjets.clockInfo(spec && spec.timezone ? Bridge.winjets.renderText(spec.timezone, ctx) : "", pattern, stamp)
+    readonly property string zone: spec && spec.timezone ? Bridge.winjets.renderText(spec.timezone, ctx) : ""
+    readonly property var parts: Bridge.winjets.clockInfo(zone, pattern, stamp)
+    readonly property var secParts: Bridge.winjets.clockInfo(zone, "ss", stamp)
+    readonly property real maxPt: Math.max(Appearance.font.size.normal, Appearance.font.size.extraLarge + 12) * sc
+    readonly property real fitPt: Math.max(Appearance.font.size.normal * sc, Math.min(maxPt, block.height * 0.375))
     readonly property real size: Math.min(width, height)
 
-    implicitWidth: analog ? 96 : label.implicitWidth
-    implicitHeight: analog ? 96 : label.implicitHeight
+    // Indépendant de la hauteur réelle (la taille de police en dépend) : évite la boucle de liaison.
+    implicitWidth: analog ? 96 * sc : Appearance.font.size.normal * sc * (split ? 8 : 5)
+    implicitHeight: analog ? 96 * sc : Appearance.font.size.normal * sc * 2
 
     Connections {
         target: Time
@@ -32,28 +41,84 @@ Item {
         }
     }
 
+    // Demande des secondes au rendu (ctx.time passe alors à la seconde) tant que ce bloc les affiche.
+    onSecondsChanged: registerSeconds()
+    Component.onCompleted: registerSeconds()
+    Component.onDestruction: if (registered && host)
+        host.secondsUsers -= 1
+    property bool registered: false
+    function registerSeconds(): void {
+        if (!host || seconds === registered)
+            return;
+        registered = seconds;
+        host.secondsUsers += seconds ? 1 : -1;
+    }
+
+    // 1000 ms, recalé sur la seconde pile à chaque tour ; arrêtée si cachée ou suspendue.
     Timer {
+        id: secondTimer
+
         interval: 1000
         repeat: true
-        running: block.seconds && (!block.host || block.host.active)
+        running: block.ticking
         triggeredOnStart: true
-        onTriggered: block.stamp = Date.now()
+        onTriggered: {
+            block.stamp = Date.now();
+            interval = 1000 - (block.stamp % 1000) + 5;
+            if (block.host && block.host.tick)
+                block.host.tick();
+        }
     }
 
     StyledText {
         id: label
 
-        visible: !block.analog
+        visible: !block.analog && !block.split
         anchors.fill: parent
         text: block.parts.text
         color: WinjetTheme.textPrimary
-        font.pointSize: Math.max(Appearance.font.size.normal, Math.min(Appearance.font.size.extraLarge + 12, block.height * 0.375))
+        font.pointSize: block.fitPt
         font.weight: Font.Medium
         horizontalAlignment: block.spec && block.spec.align === "center" ? Text.AlignHCenter : Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         fontSizeMode: Text.HorizontalFit
-        minimumPixelSize: 12
+        minimumPixelSize: 12 * block.sc
         elide: Text.ElideNone
+    }
+
+    // HH:MM en rôle principal, :SS en rôle secondaire ; réduit d'un bloc si la largeur manque (même effet que HorizontalFit).
+    Item {
+        id: splitRow
+
+        visible: block.split
+        implicitWidth: mainText.implicitWidth + secText.implicitWidth
+        implicitHeight: mainText.implicitHeight
+        width: implicitWidth
+        height: implicitHeight
+        readonly property real fit: implicitWidth > 0 ? Math.min(1, block.width / implicitWidth) : 1
+        x: block.spec && block.spec.align === "center" ? (block.width - implicitWidth * fit) / 2 : 0
+        y: (block.height - implicitHeight * fit) / 2
+        transformOrigin: Item.TopLeft
+        scale: fit
+
+        StyledText {
+            id: mainText
+
+            text: block.parts.text
+            color: WinjetTheme.textPrimary
+            font.pointSize: block.fitPt
+            font.weight: Font.Medium
+        }
+        StyledText {
+            id: secText
+
+            anchors.left: mainText.right
+            anchors.baseline: mainText.baseline
+            text: ":" + block.secParts.text
+            color: WinjetTheme.textSecondary
+            font.pointSize: block.fitPt * 0.6
+            font.weight: Font.Medium
+        }
     }
 
     Item {
@@ -78,7 +143,7 @@ Item {
             Rectangle {
                 required property int index
 
-                width: index % 3 === 0 ? 3 : 2
+                width: (index % 3 === 0 ? 3 : 2) * block.sc
                 height: index % 3 === 0 ? face.height * 0.09 : face.height * 0.05
                 radius: width / 2
                 color: WinjetTheme.textSecondary
@@ -93,7 +158,7 @@ Item {
         }
 
         Rectangle {
-            width: Math.max(3, face.width * 0.04)
+            width: Math.max(3 * block.sc, face.width * 0.04)
             height: face.height * 0.26
             radius: width / 2
             color: WinjetTheme.textPrimary
@@ -107,7 +172,7 @@ Item {
         }
 
         Rectangle {
-            width: Math.max(2, face.width * 0.028)
+            width: Math.max(2 * block.sc, face.width * 0.028)
             height: face.height * 0.38
             radius: width / 2
             color: WinjetTheme.textPrimary
@@ -122,7 +187,7 @@ Item {
 
         Rectangle {
             visible: block.seconds
-            width: 1.5
+            width: 1.5 * block.sc
             height: face.height * 0.42
             color: WinjetTheme.accent
             x: face.width / 2 - width / 2

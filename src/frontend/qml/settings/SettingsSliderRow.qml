@@ -18,6 +18,8 @@ SettingsRow {
     property alias slider: sl
 
     signal moved(real value)
+    // Valeur en direct pendant le geste quand commitOnRelease (aperçu local, aucun envoi).
+    signal previewed(real value)
 
     below: true
 
@@ -29,8 +31,7 @@ SettingsRow {
         from: row.from
         to: row.to
         stepSize: row.stepSize
-        onMoved: if (!row.commitOnRelease)
-            row.moved(value)
+        onMoved: row.commitOnRelease ? row.previewed(value) : row.moved(value)
         onPressedChanged: if (!pressed && row.commitOnRelease)
             row.moved(value)
 

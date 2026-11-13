@@ -10,14 +10,15 @@ import re
 from datetime import datetime
 from urllib.parse import urlparse
 
-from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtCore import Property, QObject, QPointF, QTimer, QUrl, Signal, Slot
+from PySide6.QtGui import QCursor, QGuiApplication
 
 import winjet_expr
 
 GRID = 8  # pas d'aimantage
-CELL = 168
+CELL = 168  # côté d'une cellule : 4 × 2 cellules = 720 × 352 px
 GUTTER = 16
+PITCH = CELL + GUTTER  # pas de la grille d'édition
 MARGIN = 16  # marge des bords de la zone de travail
 THRESHOLD = 8
 MIN_SIDE = 120  # minSize imposé par le moteur
@@ -39,6 +40,13 @@ def parse_key(key):
     if not name or not match:
         return str(key or ''), None
     return name, (int(match.group(1)), int(match.group(2)))
+
+
+def opacity_of(value):
+    """Opacité de fond d'une instance : entier 0..100, ou None pour suivre le verre global."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value or value in (float('inf'), float('-inf')):
+        return None
+    return int(max(0, min(100, round(value))))
 
 
 def clamp_size(width, height, minimum=(MIN_SIDE, MIN_SIDE), maximum=(MAX_W, MAX_H)):
@@ -131,19 +139,32 @@ def _targets(others, work, axis):
     return out
 
 
-def _best(anchors, targets, grid_anchor=None, threshold=THRESHOLD):
-    """Meilleur décalage (anchor -> target). Retourne (delta, target) ; la grille n'est utilisée que si rien d'autre."""
+def grid_line(anchor, end=False):
+    """Ligne de cellule la plus proche : débuts à MARGIN + k·PITCH, fins une gouttière avant la cellule suivante."""
+    base = MARGIN - (GUTTER if end else 0)
+    return base + round((anchor - base) / PITCH) * PITCH
+
+
+def _best(anchors, targets, grid_anchors=(), threshold=THRESHOLD):
+    """Meilleur décalage (anchor -> target). Retourne (delta, target) ; la grille (cellules puis pas de 8) ne sert que si
+    rien d'autre n'est à portée. grid_anchors = [(position, est_une_fin)] ; le premier est aussi aimanté sur le pas de 8."""
     best = None
     for anchor in anchors:
         for target in targets:
             delta = target[0] - anchor
             if abs(delta) <= threshold and (best is None or abs(delta) < abs(best[0])):
                 best = (delta, target)
-    if best is None and grid_anchor is not None:
-        delta = round(grid_anchor / GRID) * GRID - grid_anchor
+    if best is not None:
+        return best
+    cells = [grid_line(a, end) - a for a, end in grid_anchors]
+    cells = [d for d in cells if abs(d) <= threshold]
+    if cells:
+        return min(cells, key=abs), None
+    if grid_anchors:
+        delta = round(grid_anchors[0][0] / GRID) * GRID - grid_anchors[0][0]
         if abs(delta) <= threshold:
             return delta, None
-    return best if best else (0, None)
+    return 0, None
 
 
 def _guide(axis, target, rect):
@@ -155,15 +176,17 @@ def _guide(axis, target, rect):
     return {'axis': axis, 'pos': round(target[0], 2), 'from': round(start, 2), 'to': round(end, 2)}
 
 
-def snap_move(rect, others, work, threshold=THRESHOLD):
+def snap_move(rect, others, work, threshold=THRESHOLD, snap=True):
     """Déplacement : aimante la carte (bords/centre) sur les autres cartes, les bords de zone (marge 16) puis la grille 8.
 
     rect = (x, y, w, h) relatif à la zone de travail ; work = (W, H). Renvoie (x, y, repères).
     """
     x, y, w, h = rect
+    if not snap:  # Alt : position libre
+        return round(x, 2), round(y, 2), []
     guides = []
-    delta_x, target_x = _best([x, x + w / 2, x + w], _targets(others, work, 'x'), x, threshold)
-    delta_y, target_y = _best([y, y + h / 2, y + h], _targets(others, work, 'y'), y, threshold)
+    delta_x, target_x = _best([x, x + w / 2, x + w], _targets(others, work, 'x'), [(x, False), (x + w, True)], threshold)
+    delta_y, target_y = _best([y, y + h / 2, y + h], _targets(others, work, 'y'), [(y, False), (y + h, True)], threshold)
     x, y = x + delta_x, y + delta_y
     if target_x:
         guides.append(_guide('x', target_x, (x, y, w, h)))
@@ -172,7 +195,7 @@ def snap_move(rect, others, work, threshold=THRESHOLD):
     return round(x, 2), round(y, 2), guides
 
 
-def snap_resize(rect, handle, others, work, minimum=(MIN_SIDE, MIN_SIDE), maximum=(MAX_W, MAX_H), threshold=THRESHOLD):
+def snap_resize(rect, handle, others, work, minimum=(MIN_SIDE, MIN_SIDE), maximum=(MAX_W, MAX_H), threshold=THRESHOLD, snap=True):
     """Redimensionnement par une poignée (n s e w ne nw se sw) : seuls les bords déplacés s'aimantent.
 
     Renvoie (x, y, w, h, repères) en respectant min/max et la zone de travail.
@@ -182,23 +205,25 @@ def snap_resize(rect, handle, others, work, minimum=(MIN_SIDE, MIN_SIDE), maximu
     min_w, min_h = max(MIN_SIDE, minimum[0]), max(MIN_SIDE, minimum[1])
     max_w, max_h = min(MAX_W, maximum[0]), min(MAX_H, maximum[1])
     guides = []
+    if not snap:  # Alt : seules les bornes min/max et la zone de travail s'appliquent
+        threshold = -1
     if 'e' in handle:
-        delta, target = _best([right], _targets(others, work, 'x'), right, threshold)
+        delta, target = _best([right], _targets(others, work, 'x'), [(right, True)], threshold)
         right = min(left + max_w, max(left + min_w, min(right + delta, work[0])))
         if target and right == target[0]:
             guides.append(_guide('x', target, (left, top, right - left, bottom - top)))
     if 'w' in handle:
-        delta, target = _best([left], _targets(others, work, 'x'), left, threshold)
+        delta, target = _best([left], _targets(others, work, 'x'), [(left, False)], threshold)
         left = max(right - max_w, min(right - min_w, max(left + delta, 0)))
         if target and left == target[0]:
             guides.append(_guide('x', target, (left, top, right - left, bottom - top)))
     if 's' in handle:
-        delta, target = _best([bottom], _targets(others, work, 'y'), bottom, threshold)
+        delta, target = _best([bottom], _targets(others, work, 'y'), [(bottom, True)], threshold)
         bottom = min(top + max_h, max(top + min_h, min(bottom + delta, work[1])))
         if target and bottom == target[0]:
             guides.append(_guide('y', target, (left, top, right - left, bottom - top)))
     if 'n' in handle:
-        delta, target = _best([top], _targets(others, work, 'y'), top, threshold)
+        delta, target = _best([top], _targets(others, work, 'y'), [(top, False)], threshold)
         top = max(bottom - max_h, min(bottom - min_h, max(top + delta, 0)))
         if target and top == target[0]:
             guides.append(_guide('y', target, (left, top, right - left, bottom - top)))
@@ -270,6 +295,7 @@ class WinjetsBridge(QObject):
     editModeChanged = Signal()
     importChanged = Signal()
     guidesChanged = Signal()
+    gestureChanged = Signal()  # rectangle en cours de geste (cellules éclairées de la grille)
     settingsRequested = Signal(str)
     screensChanged = Signal()
 
@@ -285,6 +311,8 @@ class WinjetsBridge(QObject):
         self._last_packages = None
         self._last_edit = None
         self._guides = []
+        self._gesture = None  # {'id', 'info', 'screen', 'others'} figé au début d'un geste
+        self._live = {}  # rectangle courant du geste, relatif à la zone de travail
         self._pending = ''
         self._local = {}  # géométries validées localement, en attendant l'écho du backend
         self._sent = {}
@@ -433,6 +461,8 @@ class WinjetsBridge(QObject):
             ident = inst.get('id')
             if ident:
                 fps[ident] = (inst, self._package(inst.get('packageId')), data.get(ident), self._local.get(ident), self._screen_gen)
+        if self._gesture and self._gesture['id'] not in fps:  # instance retirée en plein geste : plus de repère ni d'étiquette
+            self.endGesture()
         touched = diff_snapshots(self._fps, fps)
         self._fps = fps
         packages = raw.get('packages') or []
@@ -475,6 +505,7 @@ class WinjetsBridge(QObject):
     packages = Property('QVariantList', lambda s: list(s._winjets.get('packages') or []), notify=packagesChanged)
     lastImport = Property('QVariantMap', lambda s: dict(s._import), notify=importChanged)
     guides = Property('QVariantList', lambda s: list(s._guides), notify=guidesChanged)
+    gestureRect = Property('QVariantMap', lambda s: dict(s._live), notify=gestureChanged)
     pendingSettings = Property(str, lambda s: s._pending, notify=settingsRequested)
 
     @Property('QVariantList', notify=instancesChanged)
@@ -483,6 +514,9 @@ class WinjetsBridge(QObject):
         return [self.instance(i['id']) for i in self._winjets.get('instances') or [] if i.get('id')]
 
     screenNames = Property('QVariantList', lambda s: [x['name'] for x in s._screens], notify=screensChanged)
+    cellSize = Property(int, lambda s: CELL, constant=True)
+    cellGap = Property(int, lambda s: GUTTER, constant=True)
+    gridMargin = Property(int, lambda s: MARGIN, constant=True)
     desktopLayer = Property(QObject, lambda s: s.layer, constant=True)
 
     @Slot(str, result='QVariantMap')
@@ -527,6 +561,7 @@ class WinjetsBridge(QObject):
             'packageName': package.get('name', inst.get('packageId', '')),
             'packageOk': bool(package),
             'hidden': bool(inst.get('hidden')),
+            'opacity': opacity_of(inst.get('opacity')),
             'definition': definition,
             'layouts': definition.get('layouts') or [],
             'settingsSpec': definition.get('settings') or [],
@@ -564,6 +599,12 @@ class WinjetsBridge(QObject):
         """Valeur d'un champ de bloc : chaînes en gabarit, autres types tels quels."""
         value = value.toVariant() if hasattr(value, 'toVariant') else value
         return winjet_expr.render(value, self._ctx(ctx)) if isinstance(value, str) else value
+
+    @Slot('QVariant', str, result=str)
+    def fmt(self, value, kind):
+        """Format d'affichage (currency, percent, number), le même que `fmt(x, 'kind')` des gabarits."""
+        value = value.toVariant() if hasattr(value, 'toVariant') else value
+        return winjet_expr.fmt(value, kind) or ''
 
     @Slot('QVariant', 'QVariant', result=bool)
     def condition(self, expression, ctx):
@@ -607,7 +648,28 @@ class WinjetsBridge(QObject):
 
     # Aimantage et géométrie depuis le QML ---------------------------------------------------------------------------
 
+    @Slot(result=QPointF)
+    def cursorPos(self):
+        """Position globale du curseur (px logiques) : référence d'un geste, indépendante de la fenêtre qui se déplace."""
+        return QCursor.pos()
+
+    @Slot(str)
+    def beginGesture(self, instance_id):
+        """Début d'un geste : écran et cartes voisines figés, pas de relecture de toutes les instances à chaque mouvement."""
+        self._gesture = None
+        info, screen, others = self._frame(instance_id)
+        self._gesture = {'id': instance_id, 'info': info, 'screen': screen, 'others': others}
+
+    @Slot()
+    def endGesture(self):
+        self._gesture = None
+        self._live = {}
+        self.gestureChanged.emit()
+        self.clearGuides()
+
     def _frame(self, instance_id):
+        if self._gesture and self._gesture['id'] == instance_id:
+            return self._gesture['info'], self._gesture['screen'], self._gesture['others']
         info = self.instance(instance_id)
         screen = next((s for s in self._screens if s['name'] == info.get('screenName')), None)
         others = [
@@ -619,27 +681,35 @@ class WinjetsBridge(QObject):
         ] if screen else []
         return info, screen, others
 
-    @Slot(str, float, float, float, float, result='QVariantMap')
-    def snapMove(self, instance_id, x, y, w, h):
-        """Coordonnées globales logiques en entrée et en sortie ; publie les repères."""
+    def _publish_live(self, screen, x, y, w, h):
+        live = {'screen': screen['name'], 'x': x, 'y': y, 'w': w, 'h': h}
+        if live != self._live:
+            self._live = live
+            self.gestureChanged.emit()
+
+    @Slot(str, float, float, float, float, bool, result='QVariantMap')
+    def snapMove(self, instance_id, x, y, w, h, snap):
+        """Coordonnées globales logiques en entrée et en sortie ; publie les repères. snap faux (Alt) : position libre."""
         info, screen, others = self._frame(instance_id)
         if screen is None:
             return {'x': x, 'y': y, 'guides': []}
-        nx, ny, guides = snap_move((x - screen['x'], y - screen['y'], w, h), others, (screen['w'], screen['h']))
+        nx, ny, guides = snap_move((x - screen['x'], y - screen['y'], w, h), others, (screen['w'], screen['h']), snap=snap)
         nx, ny, w, h = clamp_rect(nx, ny, w, h, screen['w'], screen['h'])
         self.setGuides(screen['name'], guides)
+        self._publish_live(screen, nx, ny, w, h)
         return {'x': screen['x'] + nx, 'y': screen['y'] + ny, 'guides': guides}
 
-    @Slot(str, str, float, float, float, float, result='QVariantMap')
-    def snapResize(self, instance_id, handle, x, y, w, h):
+    @Slot(str, str, float, float, float, float, bool, result='QVariantMap')
+    def snapResize(self, instance_id, handle, x, y, w, h, snap):
         info, screen, others = self._frame(instance_id)
         if screen is None or handle not in HANDLES:
             return {'x': x, 'y': y, 'w': w, 'h': h, 'guides': []}
         rx, ry, rw, rh, guides = snap_resize(
             (x - screen['x'], y - screen['y'], w, h), handle, others, (screen['w'], screen['h']),
-            (info['minW'], info['minH']), (info['maxW'], info['maxH']),
+            (info['minW'], info['minH']), (info['maxW'], info['maxH']), snap=snap,
         )
         self.setGuides(screen['name'], guides)
+        self._publish_live(screen, rx, ry, rw, rh)
         return {'x': screen['x'] + rx, 'y': screen['y'] + ry, 'w': rw, 'h': rh, 'guides': guides}
 
     def setGuides(self, screen_name, guides):
@@ -654,8 +724,8 @@ class WinjetsBridge(QObject):
 
     @Slot(str, float, float, float, float)
     def commitGeometry(self, instance_id, x, y, w, h):
-        """Fin d'un geste : écran contenant le centre de la carte, géométrie relative, persistance."""
-        self.clearGuides()
+        """Fin d'un geste : écran contenant le centre de la carte, géométrie relative, une seule persistance."""
+        self.endGesture()
         cx, cy = x + w / 2, y + h / 2
         screen = next(
             (s for s in self._screens if s['x'] <= cx < s['x'] + s['w'] and s['y'] <= cy < s['y'] + s['h']), None
@@ -708,6 +778,12 @@ class WinjetsBridge(QObject):
         self.bridge.action('winjets.setHidden', {'instanceId': instance_id, 'hidden': bool(hidden)})
 
     @Slot(str, 'QVariant')
+    def setOpacity(self, instance_id, opacity):
+        """Opacité du fond 0..100 ; null = suivre le verre global. Un seul envoi, au relâchement du curseur."""
+        opacity = opacity.toVariant() if hasattr(opacity, 'toVariant') else opacity
+        self.bridge.action('winjets.setOpacity', {'instanceId': instance_id, 'opacity': opacity_of(opacity)})
+
+    @Slot(str, 'QVariant')
     def setSettings(self, instance_id, settings):
         settings = settings.toVariant() if hasattr(settings, 'toVariant') else settings
         self.bridge.action('winjets.setSettings', {'instanceId': instance_id, 'settings': settings})
@@ -726,7 +802,7 @@ class WinjetsBridge(QObject):
         self._edit = bool(enabled)
         self.layer.set_editing(self._edit)
         if not enabled:
-            self.clearGuides()
+            self.endGesture()
         self.bridge.action('winjets.setEditMode', {'enabled': bool(enabled)})
         self.editModeChanged.emit()
 

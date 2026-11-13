@@ -1,0 +1,40 @@
+{
+  "size": { "default": [720, 352], "min": [352, 168], "max": [720, 352] },
+  "settings": [
+    { "id": "showVisualizer", "type": "toggle", "label": "Afficher le visualiseur", "default": true },
+    { "id": "showArt", "type": "toggle", "label": "Afficher la pochette", "default": true },
+    { "id": "showProgress", "type": "toggle", "label": "Afficher la progression", "default": true }
+  ],
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "gap": 8,
+        "children": [
+          {
+            "type": "stack",
+            "grow": 4,
+            "children": [
+              {
+                "type": "media",
+                "showArt": "{{ settings.showArt }}",
+                "showProgress": "{{ settings.showProgress }}",
+                "showControls": true
+              }
+            ]
+          },
+          {
+            "type": "stack",
+            "grow": 1,
+            "visibleWhen": "settings.showVisualizer",
+            "children": [
+              { "type": "visualizer", "bars": 24 }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

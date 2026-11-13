@@ -102,6 +102,7 @@ internal sealed class WinjetInstances
                 || result.Count >= MaxInstances)
                 continue;
             i.Geometry ??= new WinjetGeometry();
+            i.Opacity = i.Opacity is { } o ? Math.Clamp(o, 0, 100) : null;
             i.Settings = Plain(i.Settings);
             i.State = Plain(i.State);
             result.Add(i);
@@ -203,6 +204,29 @@ internal sealed class WinjetInstances
             if (i == null)
                 return false;
             i.Hidden = hidden;
+        }
+        Save();
+        return true;
+    }
+
+    // Null JSON = retour au réglage de verre global ; un nombre fini est arrondi puis borné à 0..100 ; le reste est refusé.
+    internal bool SetOpacity(string id, JsonElement value)
+    {
+        int? opacity;
+        if (value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+            opacity = null;
+        else if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double d) && double.IsFinite(d))
+            opacity = (int)Math.Clamp(Math.Round(d), 0, 100);
+        else
+            return false;
+        lock (gate)
+        {
+            var i = items.FirstOrDefault(x => x.Id == id);
+            if (i == null)
+                return false;
+            if (i.Opacity == opacity)
+                return true;
+            i.Opacity = opacity;
         }
         Save();
         return true;

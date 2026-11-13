@@ -1,0 +1,146 @@
+{
+  "size": {
+    "default": [
+      720,
+      536
+    ],
+    "min": [
+      536,
+      352
+    ],
+    "max": [
+      1000,
+      720
+    ]
+  },
+  "state": {
+    "pair": "BTC",
+    "tf": "1j",
+    "hover": ""
+  },
+  "data": {
+    "market": {
+      "type": "market",
+      "symbols": [
+        "BTC",
+        "ETH",
+        "SOL"
+      ]
+    }
+  },
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 20,
+        "gap": 8,
+        "children": [
+          {
+            "type": "row",
+            "gap": 8,
+            "children": [
+              {
+                "type": "buttons",
+                "bind": "state.pair",
+                "options": [
+                  {
+                    "value": "BTC",
+                    "label": "BTC"
+                  },
+                  {
+                    "value": "ETH",
+                    "label": "ETH"
+                  },
+                  {
+                    "value": "SOL",
+                    "label": "SOL"
+                  }
+                ]
+              },
+              {
+                "type": "spacer"
+              },
+              {
+                "type": "column",
+                "visibleWhen": "data.market.live",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "• en direct",
+                    "style": "caption",
+                    "tone": "accent"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "!data.market.live",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "• hors ligne",
+                    "style": "caption",
+                    "tone": "secondary"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "gap": 12,
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ fmt(state.hover ?? data.market.symbols[state.pair].price, 'currency') }}",
+                "style": "display"
+              },
+              {
+                "type": "text",
+                "text": "{{ data.market.symbols[state.pair].change24h | number:2 }} %",
+                "style": "label",
+                "tone": "secondary"
+              }
+            ]
+          },
+          {
+            "type": "stack",
+            "grow": 1,
+            "children": [
+              {
+                "type": "chart",
+                "variant": "candles",
+                "series": "{{ data.market.symbols[state.pair].candles[state.tf] }}",
+                "hover": true,
+                "valueFormat": "currency"
+              }
+            ]
+          },
+          {
+            "type": "buttons",
+            "bind": "state.tf",
+            "options": [
+              {
+                "value": "1h",
+                "label": "1h"
+              },
+              {
+                "value": "1j",
+                "label": "1j"
+              },
+              {
+                "value": "1s",
+                "label": "1s"
+              },
+              {
+                "value": "1m",
+                "label": "1m"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

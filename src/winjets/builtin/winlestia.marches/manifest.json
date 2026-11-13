@@ -1,0 +1,18 @@
+{
+  "format": "winjet/1",
+  "id": "winlestia.marches",
+  "name": "Marchés",
+  "version": "1.0.0",
+  "author": "Winlestia",
+  "description": "Cours en direct de BTC, ETH et SOL avec bougies, via Binance.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  },
+  "permissions": {
+    "network": [
+      "api.binance.com",
+      "stream.binance.com"
+    ]
+  }
+}

@@ -7,10 +7,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 ### Ajouts
 
 - Winjets : widgets de bureau décrits par un paquet JSON (format `winjet/1`), placés derrière les fenêtres. Trois paquets inclus (horloge, calendrier, graphique Bitcoin) et import de paquets créés par l'utilisateur depuis Réglages > Winjets. Aucun code de paquet n'est exécuté ; le réseau passe uniquement par Winlestia, vers les hôtes déclarés.
+- Winjets : trois nouveaux paquets inclus, qui remplacent horloge, calendrier et graphique Bitcoin : Lecteur (lecture en cours et visualiseur), Système (heure, uptime, processeur, mémoire, batterie, police mono) et Marchés (BTC, ETH et SOL en direct, bougies de 1h à 1m).
+- Winjets, format `winjet/1` : blocs `media` et `visualizer`, graphique en bougies avec survol (`hover`, `valueFormat`), source `market` (Binance), actions `media.playPause`, `media.next` et `media.prev`, racines `media`, `system` et `time`, indexation de chemins, `??` et `fmt()` dans les expressions, mise à l'échelle automatique du contenu.
+- Winjets : curseur Transparence par widget (0 à 100 %, « Par défaut » pour suivre le verre global) dans Réglages > Winjets, sous le bouton de réglages de chaque ligne. Il s'applique au fond de la carte seulement ; le texte reste opaque. La valeur est enregistrée au relâchement du curseur.
+- Winjets : le double-clic sur un widget entre en édition (et en sort ; Échap ou un clic dans le vide aussi), sans passer par un bouton. Pendant l'édition, une grille de cellules (168 px, gouttière 16 px) s'affiche sous les cartes avec les axes du centre de l'écran ; les cartes s'aimantent à la grille, au centre de l'écran et aux autres cartes avec un repère d'alignement, Alt désactive l'aimantation. Une pastille indique la taille en cellules.
 - Documentation créateur : `docs/winjets/FORMAT-v1.md`, guide `docs/winjets/MON-PREMIER-WINJET.md`, schémas JSON, gabarit et exemple.
 
 ### Modifications
 
+- Winjets : déplacement et redimensionnement plus fluides. Le geste suit le curseur global (et non la fenêtre qui bouge), la fenêtre est placée en un seul appel natif par image, le verre n'est recalculé qu'au relâchement, les voisines sont lues une fois par geste, et la position n'est écrite qu'une fois, au relâchement (aucune écriture sur un simple clic).
+- Winjets : les couleurs de la barre d'édition, de la grille et des poignées viennent bien de la palette (import manquant).
 - Intégration continue : contrôle de longueur de ligne (140), `dotnet format whitespace`, test de fumee de l'installateur, plancher de couverture documenté (règle du cliquet).
 - Dépendances Python verrouillées par hachage (`src/frontend/requirements.lock.txt`), installées avec `--require-hashes` par `installer/build.ps1`.
 - Historique du portage Caelestia condensé dans `docs/history/caelestia-windows.md`.

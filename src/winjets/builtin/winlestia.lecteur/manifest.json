@@ -1,10 +1,10 @@
 {
   "format": "winjet/1",
-  "id": "winlestia.horloge",
-  "name": "Horloge",
+  "id": "winlestia.lecteur",
+  "name": "Lecteur",
   "version": "1.0.0",
   "author": "Winlestia",
-  "description": "Horloge analogique ou numérique, avec date et second fuseau horaire.",
+  "description": "Lecture en cours avec pochette, progression, commandes et visualiseur.",
   "license": "MIT",
   "compatibility": {
     "winlestia": ">=0.9.2"

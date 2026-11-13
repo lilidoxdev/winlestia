@@ -32,10 +32,10 @@ FILTERS_WITH_ARG = {'number', 'currency', 'percent', 'date', 'default'}
 FILTERS_NO_ARG = FILTERS - FILTERS_WITH_ARG
 WINDOWS_RESERVED = re.compile(r'^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$', re.IGNORECASE)
 EXPR = re.compile(r'\{\{(.*?)\}\}', re.DOTALL)
-PATH_ROOT = re.compile(r'^(settings|state)\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+)*$|^data\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+)+$'
-                       r'|^now$|^instance\.(width|height)$')
+PATH_ROOT = re.compile(r'^(settings|state)\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+)*$|^data\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+|\[[^\[\]]+\])+$'
+                       r'|^now$|^instance\.(width|height)$|^media\.[a-zA-Z]+$|^system\.[a-zA-Z]+$|^time\.[a-zA-Z]+$')
 COND_TOKEN = re.compile(r"\s*(?:(?P<str>'[^']*')|(?P<num>-?\d+(?:\.\d+)?)|(?P<lit>true|false|null)\b"
-                        r"|(?P<path>(?:settings|state|data|instance)(?:\.[A-Za-z0-9_]+)+|now)"
+                        r"|(?P<path>(?:settings|state|data|instance|media|system|time)(?:\.[A-Za-z0-9_]+|\[[^\[\]]+\])+|now)"
                         r"|(?P<op>==|!=|<=|>=|&&|\|\||<|>|!|\(|\)))")
 COLOR_LITERAL = re.compile(r'#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(')
 
@@ -99,8 +99,14 @@ class Refs:
         self.data = set(widget.get('data', {}))
 
     def check_path(self, path, where):
-        assert PATH_ROOT.match(path), f'{where} : chemin non autorise "{path}"'
-        head, *rest = path.split('.')
+        # Indexation `a.b[state.x].c[state.y]` : chaque indice est lui-meme un chemin, litteral ou nombre.
+        for inner in re.findall(r'\[([^\[\]]+)\]', path):
+            inner = inner.strip()
+            if not (inner[:1] in ('"', "'") or re.fullmatch(r'-?d+', inner)):
+                self.check_path(inner, where)
+        flat = re.sub(r'\[[^\[\]]+\]', '[]', path)
+        assert PATH_ROOT.match(flat.replace('[]', '.x')), f'{where} : chemin non autorise "{path}"'
+        head, *rest = re.split(r'[.\[]', flat)
         if head == 'settings':
             assert rest[0] in self.settings, f'{where} : reglage inconnu "{path}"'
         elif head == 'state':
@@ -108,14 +114,25 @@ class Refs:
         elif head == 'data':
             assert rest[0] in self.data, f'{where} : source inconnue "{path}"'
 
+    def check_head(self, head, where):
+        head = head.strip()
+        call = re.fullmatch(r"fmt\((.*),\s*'(currency|percent|number)'\s*\)", head, re.S)
+        if call:
+            return self.check_head(call.group(1), where)
+        alternatives = [a.strip() for a in head.split('??')]
+        for alt in alternatives:
+            if re.fullmatch(r"'[^']*'|-?\d+(\.\d+)?", alt):
+                continue
+            self.check_path(alt, where)
+
     def check_expression(self, body, where):
         parts = [p.strip() for p in body.split('|')]
-        self.check_path(parts[0], where)
+        self.check_head(parts[0], where)
         for flt in parts[1:]:
             name, sep, arg = flt.partition(':')
             assert name in FILTERS, f'{where} : filtre non autorise "{name}"'
             if name in FILTERS_NO_ARG:
-                assert not sep, f'{where} : le filtre {name} ne prend pas d\'argument'
+                assert not sep, f"{where} : le filtre {name} ne prend pas d'argument"
             elif name != 'default':
                 assert sep and arg.strip(), f'{where} : le filtre {name} attend un argument'
 
@@ -149,6 +166,10 @@ def check_widget_semantics(pkg_dir, manifest, widget):
     for sid, src in widget.get('data', {}).items():
         if src['type'] == 'file':
             assert (pkg_dir / src['path']).is_file(), f"source {sid} : fichier absent {src['path']}"
+        elif src['type'] == 'market':
+            assert {'api.binance.com', 'stream.binance.com'} <= network, f'source {sid} : hotes Binance non declares'
+            if 'enabledWhen' in src:
+                refs.check_condition(src['enabledWhen'], f'source {sid}.enabledWhen')
         else:
             assert urlparse(src['url']).hostname in network, f"source {sid} : hote non declare dans permissions.network"
             if 'enabledWhen' in src:
@@ -235,23 +256,17 @@ def test_package_files_and_limits(pkg):
 
 def test_builtin_set_is_complete():
     ids = {p.name for p in BUILTIN.iterdir() if p.is_dir()}
-    assert {'winlestia.horloge', 'winlestia.calendrier', 'winlestia.graphique-btc'} <= ids
+    assert {'winlestia.lecteur', 'winlestia.systeme', 'winlestia.marches'} <= ids
     for name in ids:
         assert (BUILTIN / name / 'preview.png').is_file()
 
 
-def test_btc_package_contract():
-    pkg = BUILTIN / 'winlestia.graphique-btc'
+def test_marches_package_contract():
+    pkg = BUILTIN / 'winlestia.marches'
     manifest, widget = load(pkg / 'manifest.json'), load(pkg / 'widget.json')
-    assert manifest['permissions']['network'] == ['api.coingecko.com']
-    assert widget['data']['demo'] == {'type': 'file', 'path': 'assets/btc-demo.json'}
-    assert widget['data']['live']['refresh'] == 300
-    assert widget['data']['live']['enabledWhen'] == "settings.source == 'live'"
-    source = next(s for s in widget['settings'] if s['id'] == 'source')
-    assert source['default'] == 'demo'
-    demo = load(pkg / 'assets' / 'btc-demo.json')
-    assert len(demo['points30d']) == 30 and len(demo['points24h']) == 24 and len(demo['points7d']) == 7
-    assert all(k in demo for k in ('price', 'change24h', 'daily'))
+    assert manifest['permissions']['network'] == ['api.binance.com', 'stream.binance.com']
+    assert widget['data']['market'] == {'type': 'market', 'symbols': ['BTC', 'ETH', 'SOL']}
+    assert {'pair', 'tf', 'hover'} <= set(widget['state'])
 
 
 def test_zip_matches_folder_and_layout():

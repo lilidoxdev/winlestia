@@ -47,8 +47,6 @@ class PipeClient(QThread):
                                 )
                                 bars = (
                                     self.subscription.get('bars')
-                                    and self.subscription.get('visible')
-                                    and self.subscription.get('page') == 0
                                     and time.monotonic() - self.last_state < 0.6
                                 )
                                 request = {

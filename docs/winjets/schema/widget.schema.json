@@ -133,6 +133,22 @@
             "refresh": { "type": "integer", "minimum": 60, "maximum": 86400 },
             "enabledWhen": { "type": "string", "minLength": 1 }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "symbols"],
+          "properties": {
+            "type": { "const": "market" },
+            "symbols": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "uniqueItems": true,
+              "items": { "type": "string", "pattern": "^[A-Z0-9]{2,10}$" }
+            },
+            "enabledWhen": { "type": "string", "minLength": 1 }
+          }
         }
       ]
     },
@@ -173,6 +189,12 @@
           "additionalProperties": false,
           "required": ["type"],
           "properties": { "type": { "const": "openSettings" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": { "type": { "enum": ["media.playPause", "media.next", "media.prev"] } }
         }
       ]
     },
@@ -204,6 +226,8 @@
         { "$ref": "#/$defs/progress" },
         { "$ref": "#/$defs/dots" },
         { "$ref": "#/$defs/buttons" },
+        { "$ref": "#/$defs/visualizer" },
+        { "$ref": "#/$defs/media" },
         { "$ref": "#/$defs/spacer" },
         { "$ref": "#/$defs/divider" }
       ]
@@ -264,6 +288,7 @@
         "type": { "const": "clock" },
         "variant": { "enum": ["analog", "digital"] },
         "showSeconds": { "$ref": "#/$defs/boolOrExpr" },
+        "seconds": { "$ref": "#/$defs/boolOrExpr" },
         "format": { "type": "string", "minLength": 1 },
         "timezone": { "type": "string" }
       }
@@ -298,10 +323,12 @@
       "properties": {
         "type": { "const": "chart" },
         "series": { "type": "string", "minLength": 1 },
-        "variant": { "enum": ["line", "area", "bars"] },
+        "variant": { "enum": ["line", "area", "bars", "candles"] },
         "axes": { "$ref": "#/$defs/boolOrExpr" },
         "period": { "type": "string" },
-        "color": { "$ref": "#/$defs/paletteRole" }
+        "color": { "$ref": "#/$defs/paletteRole" },
+        "hover": { "$ref": "#/$defs/boolOrExpr" },
+        "valueFormat": { "type": "string", "minLength": 1, "maxLength": 20 }
       }
     },
     "stat": {
@@ -366,6 +393,27 @@
       "additionalProperties": false,
       "required": ["type"],
       "properties": { "type": { "const": "spacer" } }
+    },
+    "visualizer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "visualizer" },
+        "bars": { "type": "integer", "minimum": 8, "maximum": 64 },
+        "source": { "enum": ["spectrum"] }
+      }
+    },
+    "media": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "media" },
+        "showArt": { "$ref": "#/$defs/boolOrExpr" },
+        "showProgress": { "$ref": "#/$defs/boolOrExpr" },
+        "showControls": { "$ref": "#/$defs/boolOrExpr" }
+      }
     },
     "divider": {
       "type": "object",

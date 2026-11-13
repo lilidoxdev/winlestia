@@ -11,11 +11,18 @@ Règles obligatoires :
   state, data (file sous assets/ ou http avec refresh >= 60), layouts du plus petit au plus grand
   (le premier a minWidth 0, le dernier dont les seuils sont atteints est utilisé).
 - Conteneurs autorisés : column, row, stack, grid. Blocs autorisés, et aucun autre : text, image, clock, calendar,
-  list, chart, stat, progress, dots, buttons, spacer, divider.
-- Expressions : {{ settings.x }}, {{ state.x }}, {{ data.source.champ }}, {{ now }}, avec les seuls filtres
+  list, chart (variant line, area, bars, candles ; hover, valueFormat), stat, progress, dots, buttons, media, visualizer,
+  spacer, divider. Le contenu se met à l'échelle tout seul avec la taille de la carte.
+- Expressions : {{ settings.x }}, {{ state.x }}, {{ data.source.champ }}, {{ now }}, {{ media.title }} (title, artist, album,
+  art, playing, position, length, canNext, canPrev, app), {{ system.cpu }} (cpu, ram en % de 0 à 100, uptime, battery, charging),
+  {{ time.hours }} (hours, minutes, seconds). Indexation : data.m.symbols[state.pair].candles[state.tf]. Repli : a ?? b.
+  Mise en forme : fmt(x, 'currency'|'percent'|'number') (percent attend une proportion). Aucun calcul (pas de division). Filtres :
   number:n, currency:EUR, percent:n, date:motif, upper, lower, default:valeur, first, last, delta.
 - Conditions (visibleWhen, enabledWhen) sans accolades : == != < <= > >= && || ! et littéraux.
-- Actions : setState (clé déclarée dans state), refresh, openUrl (hôte déclaré), openSettings.
+- Actions : setState (clé déclarée dans state), refresh, openUrl (hôte déclaré), openSettings, media.playPause, media.next, media.prev.
+- Source data "market" : { "type": "market", "symbols": ["BTC","ETH"] } (4 au plus) ; permissions.network doit contenir api.binance.com et
+  stream.binance.com. Valeur : data.market = {live, updated, symbols:{BTC:{price, change24h en %, candles:{"1h","1j","1s","1m"}}}}.
+- chart candles : series = tableau de [t,o,h,l,c] ; hover:true écrit la valeur survolée dans state.hover (à déclarer dans state).
 - Couleurs : seulement les rôles accent, primary, secondary, tertiary, onSurface, onSurfaceVariant, positive, negative.
   Jamais de #rrggbb ni rgb().
 - Interdits : code, script, HTML, QML, CSS, SVG, exécutable, champ inconnu. Extensions : json png jpg jpeg webp gif txt md.

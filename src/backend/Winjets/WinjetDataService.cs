@@ -26,6 +26,7 @@ internal sealed class WinjetDataService : IDisposable
     readonly object gate = new();
     readonly string cacheDir;
     readonly HttpClient http;
+    readonly WinjetMarketFeed market;
     readonly Func<DateTimeOffset> clock;
     readonly Dictionary<(string, string), WinjetDataValue> values = new();
     readonly Dictionary<(string, string), DateTimeOffset> lastAttempt = new();
@@ -56,6 +57,7 @@ internal sealed class WinjetDataService : IDisposable
         })
         { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
         http.DefaultRequestHeaders.UserAgent.ParseAdd("Winlestia-Winjets/1");
+        market = new WinjetMarketFeed(GetJsonAsync, PublishMarket, this.clock);
     }
 
     internal event Action? Changed;
@@ -146,6 +148,7 @@ internal sealed class WinjetDataService : IDisposable
 
     internal void Forget(string instanceId)
     {
+        market.Forget(instanceId);
         lock (gate)
         {
             if (cancels.Remove(instanceId, out var cts))
@@ -167,8 +170,11 @@ internal sealed class WinjetDataService : IDisposable
         lock (gate)
             targets = visible.ToList();
         foreach (var t in visible)
-            foreach (var s in t.Package.Definition.Sources.Where(s => !s.IsHttp))
+            foreach (var s in t.Package.Definition.Sources.Where(s => s.IsFile))
                 ReadFile(t, s);
+        // Une seule connexion en direct pour l'union des tickers des sources market actives ; aucune sans source market.
+        market.Update(visible.SelectMany(t => t.Package.Definition.Sources.Where(s => s.IsMarket && IsEnabled(s, t))
+            .Select(s => new MarketSub(t.InstanceId, s.Id, s.Symbols ?? Array.Empty<string>()))).ToList());
         Reschedule();
     }
 
@@ -192,8 +198,52 @@ internal sealed class WinjetDataService : IDisposable
                 continue;
             if (s.IsHttp)
                 await FetchAsync(t, s, force);
+            else if (s.IsMarket)
+                market.RefreshNow();
             else
                 ReadFile(t, s);
+        }
+    }
+
+    // Publication d'une charge « market » : même chemin que les autres sources (valeur + Changed -> état publié au frontend).
+    void PublishMarket(string instanceId, string sourceId, JsonElement payload)
+    {
+        lock (gate)
+            if (disposed || !targets.Any(t => t.InstanceId == instanceId))
+                return;
+        Set((instanceId, sourceId), new WinjetDataValue(payload, Now(), null, false));
+    }
+
+    // GET JSON borné (délai et taille comme les sources http) ; null au moindre échec. Hôtes fixés par le code appelant.
+    async Task<JsonElement?> GetJsonAsync(string url, CancellationToken ct)
+    {
+        try
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(Timeout);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Accept.ParseAdd("application/json");
+            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+            if (!response.IsSuccessStatusCode || response.Content.Headers.ContentLength > WinjetLimits.MaxResponseBytes)
+                return null;
+            await using var stream = await response.Content.ReadAsStreamAsync(cts.Token);
+            using var buffer = new MemoryStream();
+            var chunk = new byte[16 * 1024];
+            int read;
+            while ((read = await stream.ReadAsync(chunk, cts.Token)) > 0)
+            {
+                if (buffer.Length + read > WinjetLimits.MaxResponseBytes)
+                    return null;
+                buffer.Write(chunk, 0, read);
+            }
+            using var doc = JsonDocument.Parse(buffer.ToArray(), new JsonDocumentOptions { MaxDepth = WinjetLimits.MaxJsonDepth });
+            return doc.RootElement.Clone();
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException or JsonException or IOException or InvalidOperationException)
+        {
+            if (ct.IsCancellationRequested)
+                throw;
+            return null;
         }
     }
 
@@ -453,6 +503,7 @@ internal sealed class WinjetDataService : IDisposable
             timer?.Dispose();
             timer = null;
         }
+        market.Dispose();
         http.Dispose();
     }
 }

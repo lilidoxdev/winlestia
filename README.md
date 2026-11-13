@@ -132,7 +132,9 @@ All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` c
 
 ## Winjets
 
-Winjets are small desktop widgets placed behind your windows, on the desktop. Each one is a package (a ZIP or a folder) that describes its layout, settings and data in JSON; no code from a package is ever run. Clock, calendar and Bitcoin chart Winjets are included. Add them from Settings > Winjets.
+Winjets are small desktop widgets placed behind your windows, on the desktop. Each one is a package (a ZIP or a folder) that describes its layout, settings and data in JSON; no code from a package is ever run. Player, system and markets Winjets are included. Add them from Settings > Winjets. Each Winjet has its own background transparency slider (0 to 100 %, or "Par défaut" to follow the global glass setting), under the settings button of its row; text stays opaque.
+
+To move or resize Winjets, double-click one: edit mode starts for all of them (double-click again, Esc, or a click on the empty desktop ends it). A grid of cells (168 px with a 16 px gap, so 4 x 2 cells is 720 x 352) appears under the cards with the screen centre lines. Drag a card by its body or a handle; edges and sizes snap to the grid, to the screen centre and to the other cards, with an accent guide line when they align. Hold Alt for free placement. The position is saved once, when you release.
 
 To make your own, see [docs/winjets/MON-PREMIER-WINJET.md](docs/winjets/MON-PREMIER-WINJET.md) (step-by-step guide, in French) and the format reference [docs/winjets/FORMAT-v1.md](docs/winjets/FORMAT-v1.md). A fill-in template and an example are in `docs/winjets/`.
 

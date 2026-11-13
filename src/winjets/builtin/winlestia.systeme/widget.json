@@ -1,0 +1,165 @@
+{
+  "size": {
+    "default": [
+      536,
+      536
+    ],
+    "min": [
+      352,
+      352
+    ],
+    "max": [
+      720,
+      720
+    ]
+  },
+  "settings": [
+    {
+      "id": "prompt",
+      "type": "text",
+      "label": "Invite",
+      "default": "winlestia",
+      "maxLength": 24
+    },
+    {
+      "id": "showSeconds",
+      "type": "toggle",
+      "label": "Afficher les secondes",
+      "default": true
+    },
+    {
+      "id": "showBattery",
+      "type": "toggle",
+      "label": "Afficher la batterie",
+      "default": true
+    },
+    {
+      "id": "showMedia",
+      "type": "toggle",
+      "label": "Afficher la lecture en cours",
+      "default": true
+    }
+  ],
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 20,
+        "gap": 8,
+        "children": [
+          {
+            "type": "text",
+            "text": "{{ settings.prompt }} ~ $ état",
+            "style": "mono",
+            "tone": "secondary"
+          },
+          {
+            "type": "stack",
+            "grow": 1,
+            "children": [
+              {
+                "type": "clock",
+                "variant": "digital",
+                "seconds": "{{ settings.showSeconds }}"
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "row",
+            "children": [
+              {
+                "type": "text",
+                "text": "uptime",
+                "style": "mono",
+                "tone": "secondary"
+              },
+              {
+                "type": "spacer"
+              },
+              {
+                "type": "text",
+                "text": "{{ system.uptime }}",
+                "style": "mono"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "children": [
+              {
+                "type": "text",
+                "text": "cpu",
+                "style": "mono",
+                "tone": "secondary"
+              },
+              {
+                "type": "spacer"
+              },
+              {
+                "type": "text",
+                "text": "{{ system.cpu }} %",
+                "style": "mono"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "children": [
+              {
+                "type": "text",
+                "text": "ram",
+                "style": "mono",
+                "tone": "secondary"
+              },
+              {
+                "type": "spacer"
+              },
+              {
+                "type": "text",
+                "text": "{{ system.ram }} %",
+                "style": "mono"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "visibleWhen": "settings.showBattery && system.battery >= 0",
+            "children": [
+              {
+                "type": "text",
+                "text": "batterie",
+                "style": "mono",
+                "tone": "secondary"
+              },
+              {
+                "type": "spacer"
+              },
+              {
+                "type": "text",
+                "text": "{{ system.battery }} %",
+                "style": "mono"
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "settings.showMedia && media.playing",
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ media.artist }} — {{ media.title }}",
+                "style": "mono",
+                "tone": "accent",
+                "maxLines": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

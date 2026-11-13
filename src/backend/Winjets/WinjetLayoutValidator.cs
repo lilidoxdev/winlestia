@@ -26,7 +26,8 @@ internal static class WinjetLayoutValidator
         ["clock.variant"] = new[] { "analog", "digital" },
         ["calendar.variant"] = new[] { "month", "day" },
         ["calendar.firstDay"] = new[] { "monday", "sunday" },
-        ["chart.variant"] = new[] { "line", "area", "bars" },
+        ["chart.variant"] = new[] { "line", "area", "bars", "candles" },
+        ["visualizer.source"] = new[] { "spectrum" },
         ["progress.variant"] = new[] { "ring", "bar" },
         ["dots.pattern"] = new[] { "pulse", "ripple", "torus" },
         ["dots.shape"] = new[] { "circle", "square" }
@@ -43,14 +44,16 @@ internal static class WinjetLayoutValidator
         ["grid"] = ContainerProps.Append("columns").ToArray(),
         ["text"] = new[] { "type", "text", "style", "align", "maxLines", "tone", "action" },
         ["image"] = new[] { "type", "src", "fit", "radius", "action" },
-        ["clock"] = new[] { "type", "variant", "showSeconds", "format", "timezone" },
+        ["clock"] = new[] { "type", "variant", "showSeconds", "seconds", "format", "timezone" },
         ["calendar"] = new[] { "type", "variant", "firstDay" },
         ["list"] = new[] { "type", "items", "title", "subtitle", "trailing", "max" },
-        ["chart"] = new[] { "type", "series", "variant", "axes", "period", "color" },
+        ["chart"] = new[] { "type", "series", "variant", "axes", "period", "color", "hover", "valueFormat" },
         ["stat"] = new[] { "type", "value", "label", "delta", "action" },
         ["progress"] = new[] { "type", "value", "variant", "label" },
         ["dots"] = new[] { "type", "matrix", "pattern", "shape" },
         ["buttons"] = new[] { "type", "options", "bind" },
+        ["visualizer"] = new[] { "type", "bars", "source" },
+        ["media"] = new[] { "type", "showArt", "showProgress", "showControls" },
         ["spacer"] = new[] { "type" },
         ["divider"] = new[] { "type" }
     };
@@ -61,12 +64,12 @@ internal static class WinjetLayoutValidator
         ["list"] = new[] { "items", "title" }, ["chart"] = new[] { "series" }, ["stat"] = new[] { "value" },
         ["progress"] = new[] { "value" }, ["buttons"] = new[] { "options", "bind" },
         ["column"] = new[] { "children" }, ["row"] = new[] { "children" }, ["stack"] = new[] { "children" }, ["grid"] = new[] { "children" },
-        ["dots"] = Array.Empty<string>(), ["spacer"] = Array.Empty<string>(), ["divider"] = Array.Empty<string>()
+        ["dots"] = Array.Empty<string>(), ["visualizer"] = Array.Empty<string>(), ["media"] = Array.Empty<string>(), ["spacer"] = Array.Empty<string>(), ["divider"] = Array.Empty<string>()
     };
 
     static readonly string[] ColorProperties = { "color", "background", "fill", "stroke", "border", "tint" };
     static readonly Regex LiteralColor = new(@"^\s*(#[0-9a-fA-F]{3,8}|(rgb|hsl)a?\s*\()", RegexOptions.Compiled);
-    static readonly string[] ActionTypes = { "setState", "refresh", "openUrl", "openSettings" };
+    static readonly string[] ActionTypes = { "setState", "refresh", "openUrl", "openSettings", "media.playPause", "media.next", "media.prev" };
 
     sealed class Walk
     {
@@ -172,9 +175,10 @@ internal static class WinjetLayoutValidator
         Int(node, "radius", at, 0, 200, false, issues);
         Int(node, "maxLines", at, 1, 20, false, issues);
         Int(node, "max", at, 1, 50, false, issues);
+        Int(node, "bars", at, 8, 64, false, issues);
         if (issues.Num(node, "grow", at, false) is { } g && g < 0)
             issues.Add(at + ".grow", "doit être positif ou nul.");
-        foreach (string key in new[] { "showSeconds", "axes" })
+        foreach (string key in new[] { "showSeconds", "seconds", "axes", "hover", "showArt", "showProgress", "showControls" })
             if (node.TryGetProperty(key, out var b) && b.ValueKind is not (JsonValueKind.True or JsonValueKind.False or JsonValueKind.String))
                 issues.Add(at + "." + key, "doit être vrai/faux ou une expression.");
         if (node.TryGetProperty("action", out var action) && action.ValueKind != JsonValueKind.Null)
@@ -204,6 +208,9 @@ internal static class WinjetLayoutValidator
         var issues = ctx.Issues;
         switch (type)
         {
+            case "chart":
+                issues.Str(node, "valueFormat", at, false, 20);
+                break;
             case "image":
                 if (issues.Str(node, "src", at, true, 200) is { } src)
                     WinjetDefinition.CheckAsset(src, ctx.Dir, at + ".src", issues);
@@ -276,6 +283,9 @@ internal static class WinjetLayoutValidator
                 }
             case "refresh":
             case "openSettings":
+            case "media.playPause":
+            case "media.next":
+            case "media.prev":
                 break;
             default:
                 issues.Add(at + ".type", "action « " + type + " » inconnue (" + string.Join(", ", ActionTypes) + ").");

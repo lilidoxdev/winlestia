@@ -10,22 +10,23 @@ Item {
     property var spec: null
     property var ctx: ({})
     property var host: null
+    readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
 
     readonly property var matrix: {
         const m = spec && spec.matrix ? Bridge.winjets.resolve(spec.matrix, ctx) : null;
-        return Array.isArray(m) && Array.isArray(m[0]) ? m : null;
+        return m && typeof m === "object" && m.length && m[0] && typeof m[0] === "object" && m[0].length ? m : null;
     }
     readonly property string pattern: spec && spec.pattern ? String(Bridge.winjets.resolve(spec.pattern, ctx)) : "pulse"
     readonly property bool square: !!spec && Bridge.winjets.resolve(spec.shape, ctx) === "square"
-    readonly property real cell: 12
+    readonly property real cell: 12 * sc
     readonly property int cols: matrix ? matrix[0].length : Math.max(1, Math.min(40, Math.floor(width / cell)))
     readonly property int rows: matrix ? matrix.length : Math.max(1, Math.min(40, Math.floor(height / cell)))
     readonly property real pitch: Math.min(width / cols, height / rows)
     property real phase: 0
-    readonly property bool animated: !matrix && !Appearance.reducedEffects && !!Window.window && Window.window.visible && (!host || host.active) && !(host && host.editing)
+    readonly property bool animated: !matrix && !Appearance.reducedEffects && !!Window.window && Window.window.visible && (!host || host.live) && !(host && host.editing)
 
-    implicitWidth: 96
-    implicitHeight: 96
+    implicitWidth: 96 * sc
+    implicitHeight: 96 * sc
 
     Timer {
         interval: 66
@@ -35,8 +36,10 @@ Item {
     }
 
     function level(c: int, r: int): real {
-        if (matrix)
-            return Math.max(0, Math.min(1, Number(matrix[r][c]) || 0));
+        if (matrix) {
+            const row = matrix[r];
+            return row ? Math.max(0, Math.min(1, Number(row[c]) || 0)) : 0;
+        }
         const dx = (c + 0.5) / cols - 0.5;
         const dy = (r + 0.5) / rows - 0.5;
         const d = Math.sqrt(dx * dx + dy * dy);

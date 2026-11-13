@@ -14,8 +14,11 @@ MAX_PATH = 12  # profondeur maximale d'un chemin
 
 # Au-delà, le gabarit n'est plus interprété : texte brut tronqué (évite les balayages quadratiques sur un paquet hostile).
 MAX_TEMPLATE = 2000
-_TEMPLATE = re.compile(r'\{\{(.*?)\}\}', re.S)
-_PATH = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_-]+)*$')
+_TEMPLATE = re.compile(r'\{\{((?:(?!\{\{|\}\}).)*)\}\}', re.S)  # jamais d'accolades doubles à l'intérieur : deux gabarits restent distincts
+# Un chemin : segments `.nom` ou indices `[expr]` où expr est un nombre, un texte entre guillemets ou un autre chemin
+# (`data.market.symbols[state.pair].candles[state.tf]`).
+_PATH = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_-]+|\[[^\[\]]{1,80}\])*$')
+_SEGMENT = re.compile(r'\.([A-Za-z0-9_-]+)|\[([^\[\]]{1,80})\]|^([A-Za-z_][A-Za-z0-9_]*)')
 
 MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
 JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
@@ -30,7 +33,22 @@ def lookup(path, ctx):
     """Valeur au bout de `path` dans `ctx`, ou None. Seuls dict et list sont parcourus."""
     if not isinstance(path, str) or not _PATH.match(path):
         return None
-    parts = path.split('.')
+    parts = []
+    for match in _SEGMENT.finditer(path):
+        key, index, head = match.groups()
+        if index is not None:
+            index = index.strip()
+            if index[:1] in ('"', "'"):
+                key = _unquote(index)
+            else:
+                number = _as_number(index) if re.match(r'^-?\d', index) else None
+                key = lookup(index, ctx) if number is None else int(number)
+                if isinstance(key, float) and key == int(key):
+                    key = int(key)
+                if not isinstance(key, (str, int)) or isinstance(key, bool):
+                    return None
+                key = str(key)
+        parts.append(key if key is not None else head)
     if len(parts) > MAX_PATH:
         return None
     node = ctx
@@ -205,6 +223,24 @@ def _f_delta(value, arg):
     return (last - first) / abs(first)
 
 
+def fmt(value, kind):
+    """Format d'affichage commun aux gabarits (`fmt(x, 'currency')`) et aux graphiques (`valueFormat`).
+
+    currency : regroupement fr-FR et « $ », 0 décimale au-dessus de 1000, 2 en dessous ; percent : proportion signée,
+    1 décimale ; number : nombre groupé. Valeur illisible : None.
+    """
+    number = _as_number(value)
+    if number is None:
+        return None
+    kind = (kind or 'number').strip().lower() if isinstance(kind, str) else 'number'
+    if kind == 'currency':
+        return f'{_group(number, 0 if abs(number) >= 1000 else 2)}{NBSP}$'
+    if kind == 'percent':
+        text = _group(number * 100, 1)
+        return f'{"+" if number > 0 and text[0] != "-" and float(text.replace(NBSP, "").replace(",", ".")) != 0 else ""}{text}{NBSP}%'
+    return _f_number(number, None)
+
+
 FILTERS = {
     'number': _f_number,
     'currency': _f_currency,
@@ -246,7 +282,7 @@ def _unquote(text):
     return text
 
 
-ROOTS = ('settings', 'state', 'data', 'instance', 'now')
+ROOTS = ('settings', 'state', 'data', 'instance', 'now', 'media', 'system')
 
 
 def _filter_arg(arg, ctx):
@@ -263,6 +299,66 @@ def _filter_arg(arg, ctx):
     return arg
 
 
+def _split_top(source, separator):
+    """Découpe sur `separator` (un ou deux caractères) hors guillemets, crochets et parenthèses."""
+    out, current, quote, depth, i = [], '', '', 0, 0
+    while i < len(source):
+        char = source[i]
+        if quote:
+            current += char
+            if char == quote:
+                quote = ''
+        elif char in '\'"':
+            quote = char
+            current += char
+        elif char in '[(':
+            depth += 1
+            current += char
+        elif char in '])':
+            depth -= 1
+            current += char
+        elif depth == 0 and source.startswith(separator, i):
+            out.append(current)
+            current = ''
+            i += len(separator)
+            continue
+        else:
+            current += char
+        i += 1
+    out.append(current)
+    return [part.strip() for part in out]
+
+
+_FMT_CALL = re.compile(r'^fmt\((.*)\)$', re.S)
+
+
+def _eval_head(head, ctx, depth=0):
+    """Tête d'expression : `a ?? b ?? 0`, `fmt(x, 'currency')`, littéral ou chemin."""
+    if depth > 6:
+        return None
+    alternatives = _split_top(head, '??')
+    if len(alternatives) > 1:
+        for alternative in alternatives:
+            value = _eval_head(alternative, ctx, depth + 1)
+            if value is not None and value != '':
+                return value
+        return None
+    call = _FMT_CALL.match(head)
+    if call:
+        args = _split_top(call.group(1), ',')
+        if len(args) != 2:
+            return None
+        return fmt(_eval_head(args[0], ctx, depth + 1), _unquote(args[1]))
+    if head[:1] in ('"', "'"):
+        return _unquote(head)
+    number = _as_number(head) if re.match(r'^-?\d', head) else None
+    if number is not None:
+        return number
+    if head == 'null':
+        return None
+    return lookup(head, ctx) if _is_path_head(head) else None
+
+
 def _is_path_head(text):
     return text in ('now',) or bool(_PATH.match(text))
 
@@ -272,12 +368,7 @@ def evaluate_pipeline(source, ctx):
     if len(source) > MAX_EXPR:
         return None
     parts = _split_pipes(source)
-    head = parts[0]
-    if head[:1] in ('"', "'"):
-        value = _unquote(head)
-    else:
-        number = _as_number(head) if re.match(r'^-?\d', head) else None
-        value = number if number is not None else lookup(head, ctx) if _is_path_head(head) else None
+    value = _eval_head(parts[0], ctx)
     for stage in parts[1:]:
         name, _, arg = stage.partition(':')
         name = name.strip()
@@ -323,8 +414,8 @@ def render_text(text, ctx):
 # --- Conditions ----------------------------------------------------------------------------------------------------
 
 _TOKEN = re.compile(
-    r"""\s*(?:(?P<num>-?\d+(?:\.\d+)?)|(?P<str>'[^']*'|"[^"]*")|(?P<op>==|!=|<=|>=|&&|\|\||<|>|!|\(|\))"""
-    r"""|(?P<id>[A-Za-z_][A-Za-z0-9_.\-]*))"""
+    r"""\s*(?:(?P<num>-?\d+(?:\.\d+)?)|(?P<str>'[^']*'|"[^"]*")|(?P<op>==|!=|<=|>=|&&|\|\||\?\?|<|>|!|\(|\))"""
+    r"""|(?P<id>[A-Za-z_][A-Za-z0-9_.\-]*(?:\[[^\[\]]*\][A-Za-z0-9_.\-]*)*))"""
 )
 
 
@@ -372,9 +463,17 @@ class _Condition:
         return False
 
     def parse(self):
-        value = self.or_()
+        value = self.coalesce()
         if self.i != len(self.tokens):
             raise _Parse('reste')
+        return value
+
+    def coalesce(self):
+        value = self.or_()
+        while self.accept('??'):
+            right = self.or_()
+            if value is None or value == '':
+                value = right
         return value
 
     def or_(self):
@@ -409,7 +508,7 @@ class _Condition:
         if kind == 'v':
             return value
         if kind == 'op' and value == '(':
-            inner = self.or_()
+            inner = self.coalesce()
             if not self.accept(')'):
                 raise _Parse('parenthèse')
             return inner

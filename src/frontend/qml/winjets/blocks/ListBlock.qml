@@ -11,6 +11,7 @@ Item {
     property var spec: null
     property var ctx: ({})
     property var host: null
+    readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
 
     readonly property var items: {
         const v = spec ? Bridge.winjets.resolve(spec.items, ctx) : null;
@@ -18,7 +19,7 @@ Item {
     }
     readonly property int limit: spec && spec.max >= 1 ? Math.floor(spec.max) : 5
     readonly property bool hasSub: !!spec && !!spec.subtitle
-    readonly property real rowHeight: hasSub ? 40 : 26
+    readonly property real rowHeight: (hasSub ? 40 : 26) * sc
     readonly property int shown: Math.max(0, Math.min(limit, items.length, Math.floor(height / rowHeight)))
 
     function field(item, name): string {
@@ -32,7 +33,7 @@ Item {
         return v === undefined || v === null || typeof v === "object" ? "" : String(v);
     }
 
-    implicitWidth: 200
+    implicitWidth: 200 * sc
     implicitHeight: rowHeight * Math.min(limit, Math.max(1, items.length))
     clip: true
 
@@ -50,7 +51,7 @@ Item {
 
                 width: parent.width
                 height: block.rowHeight
-                spacing: Appearance.spacing.small
+                spacing: Appearance.spacing.small * block.sc
 
                 ColumnLayout {
                     Layout.fillWidth: true
@@ -60,7 +61,7 @@ Item {
                         Layout.fillWidth: true
                         text: block.field(row.entry, block.spec.title)
                         color: WinjetTheme.textPrimary
-                        font.pointSize: Appearance.font.size.normal
+                        font.pointSize: (Appearance.font.size.normal) * block.sc
                         elide: Text.ElideRight
                     }
                     StyledText {
@@ -68,7 +69,7 @@ Item {
                         visible: block.hasSub
                         text: block.field(row.entry, block.spec.subtitle)
                         color: WinjetTheme.textSecondary
-                        font.pointSize: Appearance.font.size.small
+                        font.pointSize: (Appearance.font.size.small) * block.sc
                         elide: Text.ElideRight
                     }
                 }
@@ -77,7 +78,7 @@ Item {
                     visible: !!block.spec.trailing
                     text: block.field(row.entry, block.spec.trailing)
                     color: WinjetTheme.textSecondary
-                    font.pointSize: Appearance.font.size.normal
+                    font.pointSize: (Appearance.font.size.normal) * block.sc
                 }
             }
         }

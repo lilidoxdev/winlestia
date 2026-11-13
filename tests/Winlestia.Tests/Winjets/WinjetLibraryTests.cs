@@ -144,6 +144,42 @@ public class WinjetInstancesTests
     }
 
     [Fact]
+    public void OpacityDefaultsToNullClampsAndPersists()
+    {
+        using var t = new TempDir();
+        string file = t.Combine("i.json");
+        var a = new WinjetInstances(file);
+        var inst = a.Add(Package(t), "", 0, 0)!;
+        Assert.Null(inst.Opacity);
+        Assert.True(a.SetOpacity(inst.Id, J("30")));
+        Assert.Equal(30, a.Find(inst.Id)!.Opacity);
+        Assert.True(a.SetOpacity(inst.Id, J("250")));
+        Assert.Equal(100, a.Find(inst.Id)!.Opacity);
+        Assert.True(a.SetOpacity(inst.Id, J("-5")));
+        Assert.Equal(0, a.Find(inst.Id)!.Opacity);
+        Assert.True(a.SetOpacity(inst.Id, J("42.6")));
+        Assert.Equal(43, new WinjetInstances(file).Find(inst.Id)!.Opacity);
+        Assert.False(a.SetOpacity(inst.Id, J("\"x\"")));
+        Assert.False(a.SetOpacity("absent", J("10")));
+        Assert.Equal(43, a.Find(inst.Id)!.Opacity);
+        Assert.True(a.SetOpacity(inst.Id, J("null")));
+        Assert.Null(new WinjetInstances(file).Find(inst.Id)!.Opacity);
+    }
+
+    [Fact]
+    public void OpacityChangeSavesOnce()
+    {
+        using var t = new TempDir();
+        var a = new WinjetInstances(t.Combine("i.json"));
+        var inst = a.Add(Package(t), "", 0, 0)!;
+        int saves = 0;
+        a.Changed += () => saves++;
+        a.SetOpacity(inst.Id, J("50"));
+        a.SetOpacity(inst.Id, J("50"));
+        Assert.Equal(1, saves);
+    }
+
+    [Fact]
     public void SettingsAreCoerced()
     {
         using var t = new TempDir();

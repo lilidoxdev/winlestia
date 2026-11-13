@@ -12,6 +12,7 @@ Item {
     property var spec: null
     property var ctx: ({})
     property var host: null
+    readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
 
     readonly property string variant: spec ? String(Bridge.winjets.resolve(spec.variant, ctx) ?? "month") : "month"
     readonly property bool sundayFirst: spec ? Bridge.winjets.resolve(spec.firstDay, ctx) === "sunday" : false
@@ -28,8 +29,8 @@ Item {
         return out;
     }
 
-    implicitWidth: variant === "day" ? 96 : 224
-    implicitHeight: variant === "day" ? 96 : 190
+    implicitWidth: (variant === "day" ? 96 : 224) * sc
+    implicitHeight: (variant === "day" ? 96 : 190) * sc
 
     ColumnLayout {
         visible: block.variant === "day"
@@ -40,7 +41,7 @@ Item {
             Layout.fillWidth: true
             text: Qt.locale().dayName(block.today.getDay(), Locale.LongFormat)
             color: WinjetTheme.accent
-            font.pointSize: Appearance.font.size.small
+            font.pointSize: (Appearance.font.size.small) * block.sc
             font.capitalization: Font.AllUppercase
             font.letterSpacing: 0.8
             elide: Text.ElideRight
@@ -50,17 +51,17 @@ Item {
             Layout.fillHeight: true
             text: String(block.today.getDate())
             color: WinjetTheme.textPrimary
-            font.pointSize: Appearance.font.size.extraLarge + 14
+            font.pointSize: (Appearance.font.size.extraLarge + 14) * block.sc
             font.weight: Font.Medium
             fontSizeMode: Text.Fit
-            minimumPixelSize: 16
+            minimumPixelSize: 16 * block.sc
             verticalAlignment: Text.AlignVCenter
         }
         StyledText {
             Layout.fillWidth: true
             text: Qt.locale().monthName(block.today.getMonth(), Locale.LongFormat) + " " + block.today.getFullYear()
             color: WinjetTheme.textSecondary
-            font.pointSize: Appearance.font.size.small
+            font.pointSize: (Appearance.font.size.small) * block.sc
             elide: Text.ElideRight
         }
     }
@@ -68,13 +69,13 @@ Item {
     ColumnLayout {
         visible: block.variant !== "day"
         anchors.fill: parent
-        spacing: 4
+        spacing: Math.round(4 * block.sc)
 
         StyledText {
             Layout.fillWidth: true
             text: Qt.locale().monthName(block.today.getMonth(), Locale.LongFormat) + " " + block.today.getFullYear()
             color: WinjetTheme.textPrimary
-            font.pointSize: Appearance.font.size.normal
+            font.pointSize: (Appearance.font.size.normal) * block.sc
             font.weight: Font.Medium
             font.capitalization: Font.Capitalize
             elide: Text.ElideRight
@@ -97,7 +98,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     text: modelData
                     color: WinjetTheme.textSecondary
-                    font.pointSize: Appearance.font.size.small
+                    font.pointSize: (Appearance.font.size.small) * block.sc
                 }
             }
 
@@ -129,7 +130,7 @@ Item {
                         visible: cell.inMonth
                         text: String(cell.day)
                         color: cell.isToday ? Colours.palette.m3onPrimary : WinjetTheme.textPrimary
-                        font.pointSize: Appearance.font.size.small
+                        font.pointSize: (Appearance.font.size.small) * block.sc
                     }
                 }
             }

@@ -7,3 +7,4 @@ BlockNode BlockNode.qml
 EditChrome EditChrome.qml
 EditOverlay EditOverlay.qml
 WinjetSettingsForm WinjetSettingsForm.qml
+singleton WinjetAudio WinjetAudio.qml

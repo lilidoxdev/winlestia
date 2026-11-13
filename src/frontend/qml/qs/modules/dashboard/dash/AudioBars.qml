@@ -20,9 +20,22 @@ Item {
     visible: shown
     implicitHeight: shown ? Appearance.padding.large * 3 : 0
 
-    onWantedChanged: Bridge.setAudioBars(wanted)
-    Component.onCompleted: Bridge.setAudioBars(wanted)
-    Component.onDestruction: Bridge.setAudioBars(false)
+    // Une seule référence sur le compteur partagé du pont (Bridge.audioBarsRef), jamais d'appel on/off direct.
+    property bool held: false
+
+    function sync(): void {
+        if (wanted === held)
+            return;
+        held = wanted;
+        Bridge.audioBarsRef(wanted);
+    }
+
+    onWantedChanged: sync()
+    Component.onCompleted: sync()
+    Component.onDestruction: {
+        if (held)
+            Bridge.audioBarsRef(false);
+    }
 
     Repeater {
         model: root.count

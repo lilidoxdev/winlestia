@@ -42,7 +42,7 @@ internal static class WinjetLimits
 
     internal static readonly HashSet<string> Blocks = new(StringComparer.Ordinal)
     {
-        "text", "image", "clock", "calendar", "list", "chart", "stat", "progress", "dots", "buttons", "spacer", "divider"
+        "text", "image", "clock", "calendar", "list", "chart", "stat", "progress", "dots", "buttons", "spacer", "divider", "visualizer", "media"
     };
 
     // Noms réservés de Windows (avec ou sans extension).

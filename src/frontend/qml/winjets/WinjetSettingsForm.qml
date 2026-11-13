@@ -23,6 +23,67 @@ ColumnLayout {
         Bridge.winjets.setSettings(inst.id, next);
     }
 
+    // Transparence du fond de la carte (0 % = fond plein, 100 % = sans fond) ; le contenu reste opaque. Le backend stocke l'opacité
+    // du fond (100 - transparence). Sans valeur propre, le curseur affiche la transparence réellement appliquée par le shell
+    // (WinjetTheme.defaultTransparency : automatique, personnalisé ou opaque). `draft` : valeur locale pendant et juste après le geste,
+    // pour que la poignée ne dépende jamais d'un aller-retour Bridge (sinon elle retombe sur l'ancienne valeur au relâchement).
+    property var draft: null
+    readonly property var stored: inst ? inst.opacity : null
+    readonly property bool opacitySet: stored !== null && stored !== undefined
+    readonly property real transparencyShown: draft !== null ? draft : (opacitySet ? 100 - stored : WinjetTheme.defaultTransparency)
+    // Le brouillon s'efface à l'écho du backend (même clampé ou rejeté) ; sinon un minuteur à usage unique, armé après l'écriture.
+    onStoredChanged: {
+        draftTimer.stop();
+        draft = null;
+    }
+
+    Timer {
+        id: draftTimer
+
+        interval: 1500
+        onTriggered: form.draft = null
+    }
+
+    function commitOpacity(v: real): void {
+        const t = Math.round(v);
+        draft = t;
+        Bridge.winjets.setOpacity(inst.id, 100 - t);
+        if (stored !== null && stored !== undefined && stored === 100 - t)
+            draft = null;
+        else
+            draftTimer.restart();
+    }
+
+    SettingsSliderRow {
+        id: opacitySlider
+
+        Layout.fillWidth: true
+        rowId: "winjets.opacity"
+        title: qsTr("Transparence")
+        hint: qsTr("Transparence du fond de la carte. 0 % : fond plein ; 100 % : sans fond.")
+        from: 0
+        to: 100
+        stepSize: 1
+        commitOnRelease: true
+        value: form.transparencyShown
+        valueText: form.opacitySet || form.draft !== null || slider.pressed ? Math.round(slider.value) + " %" : qsTr("Par défaut") + " (" + Math.round(slider.value) + " %)"
+        slider.objectName: "winjetOpacity"
+        onPreviewed: v => form.draft = Math.round(v)
+        onMoved: v => form.commitOpacity(v)
+
+        TextButton {
+            objectName: "winjetOpacityReset"
+            visible: form.opacitySet || form.draft !== null
+            text: qsTr("Par défaut")
+            type: TextButton.Text
+            onClicked: {
+                draftTimer.stop();
+                form.draft = null;
+                Bridge.winjets.setOpacity(form.inst.id, null);
+            }
+        }
+    }
+
     Repeater {
         model: form.spec
 

@@ -26,6 +26,7 @@ internal sealed partial class QtShellBridge
         double mem = reading == null || reading.MemoryTotal == 0 ? 0 : 1 - (double)reading.MemoryAvailable / reading.MemoryTotal;
         long total = reading?.Drives.Sum(d => d.Total) ?? 0, free = reading?.Drives.Sum(d => d.Free) ?? 0;
         var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
+        var battery = BatteryStatus.Read();
 
         return new
         {
@@ -137,6 +138,8 @@ internal sealed partial class QtShellBridge
                 gpu = gpu?.Load,
                 gpuTemp = gpu?.Temperature,
                 memPercent = mem,
+                batteryPerc = battery.percent,
+                batteryCharging = battery.charging,
                 memUsedKiB = reading == null ? 0 : (reading.MemoryTotal - reading.MemoryAvailable) / 1024d,
                 diskPercent = total > 0 ? 1 - (double)free / total : 0,
                 diskUsedKiB = (total - free) / 1024d,

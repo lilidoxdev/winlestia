@@ -25,6 +25,8 @@ internal sealed class WinjetInstance
     public string PackageId { get; set; } = "";
     public bool Hidden { get; set; }
     public WinjetGeometry Geometry { get; set; } = new();
+    // Opacité du fond de la carte, entier 0..100 ; null = suit le réglage de verre global.
+    public int? Opacity { get; set; }
     // Valeurs bool, double ou string uniquement (validées contre widget.json).
     public Dictionary<string, object?> Settings { get; set; } = new();
     public Dictionary<string, object?> State { get; set; } = new();

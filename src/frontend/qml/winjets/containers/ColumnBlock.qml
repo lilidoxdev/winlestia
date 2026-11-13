@@ -10,18 +10,20 @@ Item {
     property var spec: null
     property var ctx: ({})
     property var host: null
+    readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
 
     readonly property real pad: spec && spec.padding >= 0 ? Number(spec.padding) : 0
+    readonly property real padPx: pad * sc
 
-    implicitWidth: lay.implicitWidth + pad * 2
-    implicitHeight: lay.implicitHeight + pad * 2
+    implicitWidth: lay.implicitWidth + padPx * 2
+    implicitHeight: lay.implicitHeight + padPx * 2
 
     ColumnLayout {
         id: lay
 
         anchors.fill: parent
-        anchors.margins: box.pad
-        spacing: box.spec && box.spec.gap >= 0 ? Number(box.spec.gap) : 8
+        anchors.margins: box.padPx
+        spacing: box.spec && box.spec.gap >= 0 ? Number(box.spec.gap) * box.sc : 8 * box.sc
 
         Repeater {
             model: box.spec && box.spec.children ? box.spec.children : []

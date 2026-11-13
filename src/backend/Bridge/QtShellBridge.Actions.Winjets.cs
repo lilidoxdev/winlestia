@@ -37,6 +37,9 @@ internal sealed partial class QtShellBridge
     [BridgeAction("winjets.setHidden")]
     void OnWinjetsSetHidden(BridgeCall c) => Winjet(c, w => w.SetHidden(Text(c.Args, "instanceId"), Flag(c.Args, "hidden")));
 
+    [BridgeAction("winjets.setOpacity")]
+    void OnWinjetsSetOpacity(BridgeCall c) => Winjet(c, w => w.SetOpacity(Text(c.Args, "instanceId"), Member(c.Args, "opacity")));
+
     [BridgeAction("winjets.setGeometry")]
     void OnWinjetsSetGeometry(BridgeCall c) => Winjet(c, w => w.SetGeometry(Text(c.Args, "instanceId"), Member(c.Args, "geometry")));
 

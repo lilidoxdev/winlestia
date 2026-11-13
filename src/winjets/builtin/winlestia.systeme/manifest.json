@@ -1,0 +1,12 @@
+{
+  "format": "winjet/1",
+  "id": "winlestia.systeme",
+  "name": "Système",
+  "version": "1.0.0",
+  "author": "Winlestia",
+  "description": "Aperçu du système façon terminal : heure, uptime, processeur, mémoire et batterie.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  }
+}

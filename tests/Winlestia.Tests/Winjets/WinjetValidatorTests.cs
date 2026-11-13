@@ -169,7 +169,7 @@ public class WinjetValidatorTests
     {
         string root = Root();
         string builtin = Path.Combine(root, "src", "winjets", "builtin");
-        foreach (string id in new[] { "winlestia.calendrier", "winlestia.graphique-btc", "winlestia.horloge" })
+        foreach (string id in new[] { "winlestia.lecteur", "winlestia.systeme", "winlestia.marches" })
         {
             string dir = Path.Combine(builtin, id);
             Assert.True(Directory.Exists(dir), "paquet fourni absent : " + id);

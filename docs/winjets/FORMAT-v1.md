@@ -128,6 +128,12 @@ Le nom de la source (une lettre puis lettres, chiffres ou `_`) devient `data.<no
 - `file` : un JSON du paquet sous `assets/` (obligatoire : `path`). Lu localement, hors ligne.
 - `http` : un JSON distant. `url` en `https://` seulement, dont l'hôte figure dans `permissions.network` ; sans cela l'import échoue. `refresh` : intervalle en secondes, 300 par défaut, **minimum 60** (une valeur plus petite est relevée à 60), 86 400 au plus. `enabledWhen` : condition ; tant qu'elle est fausse, la source n'est jamais appelée.
 
+- `market` : cours en direct de cryptomonnaies via Binance. Obligatoire : `symbols` (1 à 4 symboles en majuscules, ex. `["BTC", "ETH", "SOL"]`) ; facultatif : `enabledWhen`. Le manifeste doit déclarer `api.binance.com` et `stream.binance.com` dans `permissions.network`. Valeur : `{ "live", "updated", "symbols": { "BTC": { "price", "change24h", "candles": { "1h": [...], "1j": [...], "1s": [...], "1m": [...] } } } }`. `change24h` est en pourcents (2.41 pour +2,41 %). Chaque bougie est `[t, o, h, l, c]`. Les mises à jour arrivent en direct, au plus une fois par seconde ; `live` vaut `false` quand le flux est coupé.
+
+```json
+"data": { "market": { "type": "market", "symbols": ["BTC", "ETH", "SOL"] } }
+```
+
 Une source indisponible ne bloque pas la carte : les chemins `data.*` sans valeur sont simplement vides, et le dernier résultat en cache est réutilisé en cas d'échec.
 
 ### 3.5 Mises en page (`layouts`)
@@ -163,16 +169,20 @@ Les blocs n'ont pas d'enfants. Une valeur de type texte accepte des expressions 
 |---|---|
 | `text` | **`text`**, `style` (`title`, `label`, `body`, `caption`, `display`, `mono`), `align` (`start`, `center`, `end`), `maxLines`, `tone` (`primary`, `secondary`, `accent`), `action` |
 | `image` | **`src`** (chemin sous `assets/`, image `.png .jpg .jpeg .webp .gif`), `fit` (`contain`, `cover`), `radius`, `action` |
-| `clock` | **`variant`** (`analog`, `digital`), `showSeconds` (vrai/faux ou expression), `format` (`HH:mm`, `HH:mm:ss`...), `timezone` (nom IANA, ex. `Europe/Paris` ; vide = fuseau local) |
+| `clock` | **`variant`** (`analog`, `digital`), `showSeconds` ou `seconds` (vrai/faux ou expression), `format` (`HH:mm`, `HH:mm:ss`...), `timezone` (nom IANA, ex. `Europe/Paris` ; vide = fuseau local) |
 | `calendar` | **`variant`** (`month`, `day`), `firstDay` (`monday`, `sunday`, valeur littérale) |
 | `list` | **`items`** (expression vers un tableau), **`title`**, `subtitle`, `trailing` (**noms de champs** de chaque élément, sans accolades), `max` |
-| `chart` | **`series`** (expression vers un tableau de nombres ou de paires `[t, v]`), `variant` (`line`, `area`, `bars`), `axes` (vrai/faux), `period` (texte), `color` (rôle de palette) |
+| `chart` | **`series`** (expression vers un tableau de nombres ou de paires `[t, v]`), `variant` (`line`, `area`, `bars`, `candles`), `axes` (vrai/faux), `period` (texte), `color` (rôle de palette), `hover` (vrai/faux : réticule au survol ; la valeur survolée est écrite dans `state.hover`, à déclarer dans `state`), `valueFormat` (`currency`, `percent`, `number`). Avec `candles`, la série est un tableau de `[t, o, h, l, c]` |
 | `stat` | **`value`**, `label`, `delta` (nombre signé, coloré selon le signe), `action` |
 | `progress` | **`value`** (0 à 1), `variant` (`ring`, `bar`), `label` |
 | `dots` | **`matrix`** (expression vers un tableau 2D de nombres de 0 à 1) ou **`pattern`** (`pulse`, `ripple`, `torus`, animé seulement quand la carte est visible), `shape` (`circle`, `square`) |
 | `buttons` | **`options`** (`[{ "value": "a", "label": "A" }]`, 16 au plus), **`bind`** (`state.<clé>`, clé déclarée dans `state`) |
+| `media` | `showArt`, `showProgress`, `showControls` (vrai/faux ou expression) : carte de lecture en cours avec pochette, titre, artiste, progression et commandes |
+| `visualizer` | `bars` (8 à 64) : barres animées pendant la lecture |
 | `spacer` | aucune : espace flexible |
 | `divider` | aucune : filet de séparation |
+
+Le contenu s'adapte automatiquement à la taille de la carte : inutile de multiplier les mises en page pour agrandir ou réduire les textes. Une mise en page de plus ne sert qu'à changer la disposition.
 
 Exemple de `list` : avec `"items": "{{ data.demo.jours }}"` et `"title": "jour"`, chaque ligne affiche le champ `jour` de l'élément. Les valeurs sont affichées telles qu'elles sont dans le JSON : préparez-les déjà mises en forme.
 
@@ -189,6 +199,14 @@ Chemins permis :
 | `settings.<id>` | réglage |
 | `state.<clé>` | état d'instance |
 | `data.<source>.<chemin>` | contenu de la source, champs séparés par des points |
+| `a.b[state.x].c[state.y]` | indexation : l'indice est un chemin, un nombre ou un texte entre apostrophes |
+| `media.title`, `media.artist`, `media.album`, `media.art`, `media.app` | lecture en cours (texte) |
+| `media.playing`, `media.canNext`, `media.canPrev` | lecture en cours (vrai/faux) |
+| `media.position`, `media.length` | position et durée de la piste |
+| `system.cpu`, `system.ram` | usage en pourcents, entier de 0 à 100 |
+| `system.uptime` | durée depuis le démarrage, déjà mise en forme |
+| `system.battery`, `system.charging` | niveau en pourcents (vide sans batterie) ; en charge ou non |
+| `time.hours`, `time.minutes`, `time.seconds` | heure locale |
 | `now` | date et heure actuelles |
 | `instance.width`, `instance.height` | taille réelle de la carte |
 
@@ -205,7 +223,12 @@ Filtres (liste fermée) :
 | `first`, `last` | premier ou dernier élément d'un tableau |
 | `delta` | variation relative entre le premier et le dernier élément d'une série |
 
-Aucun autre filtre, appel de fonction ni calcul n'existe.
+Autres écritures de tête d'expression :
+
+- `a ?? b ?? 0` : première valeur non vide (absente ou chaîne vide comptent comme vides) ;
+- `fmt(valeur, 'currency')`, `fmt(valeur, 'percent')`, `fmt(valeur, 'number')` : `currency` donne un montant en `$` (0 décimale au-dessus de 1 000, 2 en dessous), `percent` attend une **proportion** (0.0241 donne « +2,4 % »), `number` un nombre groupé. Valeur illisible : texte vide. Exemple : `{{ fmt(state.hover ?? data.market.symbols[state.pair].price, 'currency') }}`.
+
+Aucun autre filtre ni fonction n'existe, et il n'y a **pas de calcul** (ni division, ni addition) : préparez les valeurs dans les données. `system.cpu`, `system.ram` et `system.battery` vont de 0 à 100 alors que `progress` attend 0 à 1 : ne les passez pas tels quels à `progress`.
 
 ### Conditions
 
@@ -214,7 +237,8 @@ Aucun autre filtre, appel de fonction ni calcul n'existe.
 - comparaisons : `==  !=  <  <=  >  >=` ;
 - logique : `&&`, `||`, `!`, parenthèses ;
 - littéraux : `'texte'`, `"texte"`, `1.5`, `true`, `false`, `null` ;
-- valeurs : les chemins de la section 6 (un chemin inconnu vaut `null`, donc faux).
+- valeurs : les chemins de la section 6 (un chemin inconnu vaut `null`, donc faux) ;
+- `??` pour une valeur de repli. L'import refuse l'indexation `[...]` dans `visibleWhen` : réservez-la aux gabarits `{{ ... }}` et à `series`.
 
 Une condition invalide est refusée à l'import (`visibleWhen`) ou laisse la source désactivée (`enabledWhen`).
 
@@ -228,6 +252,7 @@ Le champ `action` d'un `text`, `image`, `stat` ou d'un conteneur le rend cliquab
 | `{ "type": "refresh" }` | rafraîchit les sources réseau, en respectant l'intervalle minimal |
 | `{ "type": "openUrl", "url": "https://exemple.com/page" }` | ouvre l'adresse dans le navigateur ; l'hôte doit être dans `permissions.network` ou être celui de `homepage` |
 | `{ "type": "openSettings" }` | ouvre les réglages du Winjet |
+| `{ "type": "media.playPause" }`, `media.next`, `media.prev` | commande le lecteur multimédia en cours |
 
 ## 8. Couleurs
 

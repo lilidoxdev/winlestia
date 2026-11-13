@@ -8,11 +8,12 @@ Item {
     property var spec: null
     property var ctx: ({})
     property var host: null
+    readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
 
     readonly property string url: spec && host ? Bridge.winjets.assetUrl(host.packageId, Bridge.winjets.renderText(spec.src ?? "", ctx)) : ""
 
-    implicitWidth: 64
-    implicitHeight: 64
+    implicitWidth: 64 * sc
+    implicitHeight: 64 * sc
 
     StyledClippingRect {
         anchors.fill: parent

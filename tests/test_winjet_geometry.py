@@ -199,3 +199,59 @@ def test_diff_snapshots_reports_only_changed_ids():
     assert diff_snapshots(old, dict(old)) == []
     assert diff_snapshots(old, {**old, 'b': (2, 'changed')}) == ['b']
     assert diff_snapshots(old, {'a': old['a'], 'b': old['b'], 'd': (4, 'w')}) == ['c', 'd']
+
+
+# --- Grille de cellules, repères de symétrie, Alt ------------------------------------------------------------------
+
+
+def test_cell_pitch_matches_package_sizes():
+    assert (g.CELL, g.GUTTER, g.PITCH) == (168, 16, 184)
+    assert 4 * g.CELL + 3 * g.GUTTER == 720 and 2 * g.CELL + g.GUTTER == 352
+
+
+def test_grid_line_starts_and_ends():
+    assert g.grid_line(20) == 16 and g.grid_line(205) == 200
+    assert g.grid_line(16 + 168 + 3, end=True) == 16 + 168  # fin de la première cellule
+    assert g.grid_line(16 + 2 * 184 - 16 - 2, end=True) == 16 + 2 * 184 - 16
+
+
+def test_snap_move_snaps_to_cell_line_without_guide():
+    x, y, guides = g.snap_move((200 + 5, 16 + 184 - 6, 352, 168), [], (1920, 1040))
+    assert (x, y) == (200, 16 + 184) and guides == []
+
+
+def test_snap_move_end_edge_snaps_to_cell_end():
+    x, _, _ = g.snap_move((16 + 184 + 4 - 0.0, 500, 352, 168), [], (1920, 1040))
+    # le bord droit (16 + 184 + 4 + 352 = 556) n'est pas proche d'une fin de cellule : on reste sur le début (200)
+    assert x == 200
+    x, _, _ = g.snap_move((16 + 3, 500, 352 + 4, 168), [], (1920, 1040))
+    assert x == 16
+
+
+def test_snap_move_screen_center_guide_beats_grid():
+    x, _, guides = g.snap_move((960 - 176 + 4, 500, 352, 168), [], (1920, 1040))
+    assert x == 960 - 176 and any(a['axis'] == 'x' and a['pos'] == 960 for a in guides)
+
+
+def test_snap_move_alt_disables_snapping_and_guides():
+    rect = (960 - 176 + 4, 503, 352, 168)
+    x, y, guides = g.snap_move(rect, [(100, 100, 352, 168)], (1920, 1040), snap=False)
+    assert (x, y, guides) == (rect[0], rect[1], [])
+
+
+def test_snap_resize_size_follows_cells():
+    # 4 × 2 cellules : largeur 720, hauteur 352, à partir de (16, 16)
+    _, _, w, h, guides = g.snap_resize((16, 16, 718, 355), 'se', [], (1920, 1040))
+    assert (w, h) == (720, 352) and guides == []
+
+
+def test_snap_resize_alt_keeps_raw_size():
+    _, _, w, h, guides = g.snap_resize((16, 16, 718, 355), 'se', [], (1920, 1040), snap=False)
+    assert (w, h, guides) == (718, 355, [])
+
+
+def test_snap_resize_still_clamps_with_alt():
+    _, _, w, _, _ = g.snap_resize((100, 100, 200, 200), 'e', [], (1920, 1040), (168, 168), (720, 352), snap=False)
+    assert w == 200
+    _, _, w, _, _ = g.snap_resize((100, 100, 900, 200), 'e', [], (1920, 1040), (168, 168), (720, 352), snap=False)
+    assert w == 720

@@ -159,6 +159,8 @@ Type: files; Name: "{app}\Glass-v5\winlestia.deps.json"
 Type: files; Name: "{app}\Glass-v5\winlestia.runtimeconfig.json"
 ; Les anciens fonds d'écran fournis sont remplacés par les nouveaux (le dossier utilisateur %LOCALAPPDATA%\Panneaux\Wallpapers n'est jamais touché).
 Type: files; Name: "{app}\wallpapers\*"
+; Winjets inclus : le dossier est remplacé en entier (retire les anciens horloge/calendrier/graphique-btc).
+Type: filesandordirs; Name: "{app}\Winjets\builtin"
 
 [Files]
 Source: "Close-Winlestia.ps1"; Flags: dontcopy
@@ -179,7 +181,7 @@ Source: "..\assets\wallpapers\*"; DestDir: "{app}\wallpapers"; Flags: ignorevers
 
 Source: "..\build\payload\Winlestia-Terminal\*"; DestDir: "{app}\Winlestia-Terminal"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-; Winjets inclus (lecture seule) : horloge, calendrier, graphique BTC
+; Winjets inclus (lecture seule)
 Source: "..\build\payload\Winjets\builtin\*"; DestDir: "{app}\Winjets\builtin"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]

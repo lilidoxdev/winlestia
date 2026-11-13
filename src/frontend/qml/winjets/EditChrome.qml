@@ -1,6 +1,7 @@
 import QtQuick
 import qs.components
 import qs.config
+import qs.services
 
 // Habillage du mode édition : contour, déplacement par le corps, 8 poignées de redimensionnement, boutons ⚙ et supprimer.
 // Ne bouge rien lui-même : il émet des deltas en coordonnées écran (la fenêtre se déplace pendant le geste).
@@ -12,44 +13,98 @@ Item {
     property bool allowSettings: true
 
     signal pressedAt(string handle)
-    signal dragged(string handle, real dx, real dy)
+    signal dragged(string handle, real dx, real dy, bool snap)
     signal released(string handle)
     signal removeRequested
     signal settingsRequested
 
     readonly property real grip: 10
+    property point origin
 
+    // Le curseur global vient du pont : la fenêtre se déplace sous la souris, mapToGlobal oscillerait d'une image à l'autre.
+    function press(handle: string): void {
+        const p = Bridge.winjets.cursorPos();
+        origin = Qt.point(p.x, p.y);
+        gesture = handle;
+        pressedAt(handle);
+    }
+
+    function move(handle: string, modifiers: int): void {
+        const p = Bridge.winjets.cursorPos();
+        // Alt maintenu : pas d'aimantation.
+        dragged(handle, p.x - origin.x, p.y - origin.y, (modifiers & Qt.AltModifier) === 0);
+    }
+
+    function release(handle: string): void {
+        gesture = "";
+        released(handle);
+    }
+
+    // Contour d'accent discret.
     Rectangle {
         anchors.fill: parent
         radius: WinjetTheme.radius
         color: "transparent"
         border.width: 2
-        border.color: WinjetTheme.accent
+        border.color: Qt.alpha(WinjetTheme.accent, 0.7)
     }
 
-    // Corps : déplacement.
+    // Corps : déplacement ; un double-clic quitte l'édition. Il recouvre le contenu, qui ne reçoit donc aucun clic.
     MouseArea {
         id: body
 
         anchors.fill: parent
         anchors.margins: chrome.grip
         cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-        property point origin
 
-        onPressed: mouse => {
-            origin = mapToGlobal(mouse.x, mouse.y);
-            chrome.gesture = "move";
-            chrome.pressedAt("move");
-        }
+        onPressed: chrome.press("move")
         onPositionChanged: mouse => {
-            if (!pressed)
-                return;
-            const p = mapToGlobal(mouse.x, mouse.y);
-            chrome.dragged("move", p.x - origin.x, p.y - origin.y);
+            if (pressed)
+                chrome.move("move", mouse.modifiers);
         }
-        onReleased: {
-            chrome.gesture = "";
-            chrome.released("move");
+        onReleased: chrome.release("move")
+        onDoubleClicked: Bridge.winjets.setEditMode(false)
+    }
+
+    // Bords et coins : zones de saisie avec le curseur de redimensionnement ; seules les poignées visibles sont dessinées.
+    Repeater {
+        model: [
+            {
+                h: "n",
+                cursor: Qt.SizeVerCursor
+            },
+            {
+                h: "s",
+                cursor: Qt.SizeVerCursor
+            },
+            {
+                h: "w",
+                cursor: Qt.SizeHorCursor
+            },
+            {
+                h: "e",
+                cursor: Qt.SizeHorCursor
+            }
+        ]
+
+        MouseArea {
+            id: edge
+
+            required property var modelData
+            readonly property bool horizontal: modelData.h === "n" || modelData.h === "s"
+
+            x: modelData.h === "e" ? chrome.width - chrome.grip : 0
+            y: modelData.h === "s" ? chrome.height - chrome.grip : 0
+            width: horizontal ? chrome.width : chrome.grip
+            height: horizontal ? chrome.grip : chrome.height
+            cursorShape: modelData.cursor
+
+            onPressed: chrome.press(modelData.h)
+            onPositionChanged: mouse => {
+                if (pressed)
+                    chrome.move(modelData.h, mouse.modifiers);
+            }
+            onReleased: chrome.release(modelData.h)
         }
     }
 
@@ -109,12 +164,11 @@ Item {
             id: handle
 
             required property var modelData
-            property point origin
 
             x: modelData.ax * chrome.width - width / 2
             y: modelData.ay * chrome.height - height / 2
-            width: 20
-            height: 20
+            width: 24
+            height: 24
             cursorShape: modelData.cursor
             hoverEnabled: true
 
@@ -128,21 +182,12 @@ Item {
                 border.color: Colours.palette.m3onPrimary
             }
 
-            onPressed: mouse => {
-                origin = mapToGlobal(mouse.x, mouse.y);
-                chrome.gesture = modelData.h;
-                chrome.pressedAt(modelData.h);
-            }
+            onPressed: chrome.press(modelData.h)
             onPositionChanged: mouse => {
-                if (!pressed)
-                    return;
-                const p = mapToGlobal(mouse.x, mouse.y);
-                chrome.dragged(modelData.h, p.x - origin.x, p.y - origin.y);
+                if (pressed)
+                    chrome.move(modelData.h, mouse.modifiers);
             }
-            onReleased: {
-                chrome.gesture = "";
-                chrome.released(modelData.h);
-            }
+            onReleased: chrome.release(modelData.h)
         }
     }
 

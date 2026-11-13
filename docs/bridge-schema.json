@@ -676,6 +676,15 @@
       },
       "required": []
     },
+    "winjets.setOpacity": {
+      "args": {
+        "instanceId": "string",
+        "opacity": "number|null"
+      },
+      "required": [
+        "instanceId"
+      ]
+    },
     "winjets.setGeometry": {
       "args": {
         "instanceId": "string",

@@ -17,7 +17,7 @@ import ctypes
 import ctypes.wintypes as wt
 import sys
 
-from PySide6.QtCore import QAbstractNativeEventFilter, QCoreApplication, QObject, QRectF, Slot
+from PySide6.QtCore import QAbstractNativeEventFilter, QCoreApplication, QObject, QRectF, QTimer, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QPainterPath
 
 GWL_EXSTYLE = -20
@@ -27,7 +27,15 @@ WS_EX_NOACTIVATE = 0x08000000
 SWP_NOSIZE, SWP_NOMOVE, SWP_NOZORDER, SWP_NOACTIVATE, SWP_FRAMECHANGED = 0x1, 0x2, 0x4, 0x10, 0x20
 HWND_TOP, HWND_BOTTOM = 0, 1
 WM_WINDOWPOSCHANGING = 0x0046
+WM_WTSSESSION_CHANGE = 0x02B1
+WTS_SESSION_LOCK, WTS_SESSION_UNLOCK = 7, 8
 EVENT_SYSTEM_FOREGROUND = 0x0003
+EVENT_SYSTEM_MOVESIZEEND = 0x000B
+EVENT_SYSTEM_MINIMIZESTART = 0x0016
+EVENT_SYSTEM_MINIMIZEEND = 0x0017
+OBJID_WINDOW = 0
+GEOMETRY_DEBOUNCE_MS = 150
+EDIT_FADE_MS = 220  # fondu de sortie de la grille (180 ms dans WinjetLayer.qml) + marge avant destruction des overlays
 WINEVENT_OUTOFCONTEXT = 0x0000
 
 DESKTOP_CLASSES = {'Progman', 'WorkerW'}
@@ -109,24 +117,51 @@ class _ZFilter(QAbstractNativeEventFilter):
             msg = Msg.from_address(int(message))
             if msg.message == WM_WINDOWPOSCHANGING and msg.hwnd in self.layer.handles:
                 self.layer.keep_bottom(msg.lParam)
+            elif msg.message == WM_WTSSESSION_CHANGE and msg.hwnd == self.layer.session_hwnd:
+                if msg.wParam == WTS_SESSION_LOCK:
+                    self.layer.set_locked(True)
+                elif msg.wParam == WTS_SESSION_UNLOCK:
+                    self.layer.set_locked(False)
         except Exception:
             pass
         return False, 0
 
 
+def is_covered(rect, windows):
+    """Vrai si une fenêtre ordinaire visible (ni réduite, ni masquée, ni outil, ni coquille, ni nous) contient entièrement `rect`."""
+    left, top, right, bottom = rect
+    for w in windows:
+        if w.get('ours') or w.get('shell') or w.get('tool') or w.get('minimized') or w.get('cloaked') or not w.get('visible'):
+            continue
+        r = w.get('rect')
+        if r and r[0] <= left and r[1] <= top and r[2] >= right and r[3] >= bottom:
+            return True
+    return False
+
+
 class DesktopLayer(QObject):
+    # Les Winjets à rendu animé peuvent se mettre en pause : plein écran/présentation/session verrouillée, ou carte recouverte.
+    pauseChanged = Signal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.windows = {}  # id(QWindow) -> QWindow
         self.hwnds = {}  # id(QWindow) -> HWND, retenu à l'enregistrement (la fenêtre peut être détruite avant le nettoyage)
         self.handles = set()
+        self.backdrops = set()  # HWND de la grille d'édition : toujours sous les cartes
         self.mode = 'bottom'
         self.native = sys.platform == 'win32' and QGuiApplication.platformName() == 'windows'
         self.user = None
         self.filter = None
         self.hook = None
+        self.geometry_hooks = []
+        self.recompute = None
         self.callback = None
         self.glass = None
+        self.locked = False
+        self.fullscreen = False
+        self.covered = set()
+        self.session_hwnd = 0
         if self.native:
             self._setup()
 
@@ -176,14 +211,38 @@ class DesktopLayer(QObject):
             EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, None, self.callback, 0, 0, WINEVENT_OUTOFCONTEXT
         )
 
+        # Fenêtre déplacée/redimensionnée/réduite/restaurée sans changement de premier plan : recalcul différé, un seul coup.
+        self.recompute = QTimer(self)
+        self.recompute.setSingleShot(True)
+        self.recompute.setInterval(GEOMETRY_DEBOUNCE_MS)
+        self.recompute.timeout.connect(self._refresh_pause)
+
+        def on_geometry(hook, event, hwnd, object_id, child_id, thread, time):
+            if hwnd and object_id == OBJID_WINDOW and hwnd not in self.handles:  # filtre bon marché, avant tout appel système
+                self.recompute.start()
+
+        self.geometry_callback = proc(on_geometry)
+        for first, last in ((EVENT_SYSTEM_MOVESIZEEND, EVENT_SYSTEM_MOVESIZEEND),
+                            (EVENT_SYSTEM_MINIMIZESTART, EVENT_SYSTEM_MINIMIZEEND)):
+            handle = self.user.SetWinEventHook(first, last, None, self.geometry_callback, 0, 0, WINEVENT_OUTOFCONTEXT)
+            if handle:
+                self.geometry_hooks.append(handle)
+
     def _unhook(self):
         if self.hook and self.user:
             self.user.UnhookWinEvent.argtypes = [ctypes.c_void_p]
             self.user.UnhookWinEvent(self.hook)
         self.hook = None
+        for handle in self.geometry_hooks:
+            if self.user:
+                self.user.UnhookWinEvent(handle)
+        self.geometry_hooks = []
+        if self.recompute is not None:
+            self.recompute.stop()
 
     def stop(self):
         self._unhook()
+        self._unregister_session()
         if self.filter is not None and QCoreApplication.instance() is not None:
             QCoreApplication.instance().removeNativeEventFilter(self.filter)
             self.filter = None
@@ -191,6 +250,26 @@ class DesktopLayer(QObject):
             self.glass.close()  # détache chaque enregistrement de verre
         self.handles.clear()
         self.hwnds.clear()
+
+    def _unregister_session(self):
+        hwnd, self.session_hwnd = self.session_hwnd, 0
+        if hwnd:
+            try:
+                ctypes.windll.wtsapi32.WTSUnRegisterSessionNotification(ctypes.c_void_p(hwnd))
+            except Exception:
+                pass
+
+    def _register_session(self):
+        """Notifications de verrouillage de session sur une carte vivante (au besoin la suivante)."""
+        if self.session_hwnd:
+            return
+        for hwnd in sorted(self.handles):
+            try:
+                if ctypes.windll.wtsapi32.WTSRegisterSessionNotification(ctypes.c_void_p(hwnd), 0):
+                    self.session_hwnd = hwnd
+                    return
+            except Exception:
+                return
 
     def _class_of(self, hwnd):
         buffer = ctypes.create_unicode_buffer(256)
@@ -202,7 +281,43 @@ class DesktopLayer(QObject):
         self.user.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
         return pid.value == ctypes.windll.kernel32.GetCurrentProcessId()
 
+    def set_locked(self, locked):
+        if locked != self.locked:
+            self.locked = locked
+            self.pauseChanged.emit()
+
+    def _refresh_pause(self):
+        """Recalcul de l'état de pause (appelé à chaque changement de premier plan, jamais par minuteur)."""
+        try:
+            state = ctypes.c_int(0)
+            ok = ctypes.windll.shell32.SHQueryUserNotificationState(ctypes.byref(state)) == 0
+            # QUNS_BUSY 2 (plein écran), QUNS_RUNNING_D3D_FULL_SCREEN 3, QUNS_PRESENTATION_MODE 4
+            fullscreen = ok and state.value in (2, 3, 4)
+            covered = set()
+            if self.mode != 'edit' and self.handles:
+                windows = self._top_windows()
+                for hwnd in self.handles:
+                    rect = wt.RECT()
+                    if self.user.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(rect)) and self.mode == 'bottom'                             and is_covered((rect.left, rect.top, rect.right, rect.bottom), windows):
+                        covered.add(hwnd)
+        except Exception:
+            return
+        if fullscreen != self.fullscreen or covered != self.covered:
+            self.fullscreen, self.covered = fullscreen, covered
+            self.pauseChanged.emit()
+
+    @Slot(QObject, result=bool)
+    def paused(self, window):
+        """Vrai si le rendu animé de cette carte doit être suspendu."""
+        if self.locked or self.fullscreen:
+            return True
+        if window is None:
+            return False
+        return int(window.property('winjetHandle') or 0) in self.covered
+
     def on_foreground(self, hwnd):
+        if self.native:
+            self._refresh_pause()
         if not hwnd or self.mode == 'edit':
             return
         kind = classify_foreground(self._class_of(hwnd))
@@ -229,6 +344,7 @@ class DesktopLayer(QObject):
                 'cloaked': cloaked.value != 0,
                 'tool': bool(exstyle & WS_EX_TOOLWINDOW) and not exstyle & WS_EX_APPWINDOW,
                 'ours': hwnd in self.handles or self._is_ours(hwnd),
+                'rect': self._rect_of(hwnd),
                 'shell': cls in DESKTOP_CLASSES or cls in SHELL_CLASSES,
             })
             return True
@@ -239,6 +355,12 @@ class DesktopLayer(QObject):
         user.IsIconic.argtypes = [ctypes.c_void_p]
         user.EnumWindows(proc(visit), None)
         return found
+
+    def _rect_of(self, hwnd):
+        rect = wt.RECT()
+        if self.user.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(rect)):
+            return (rect.left, rect.top, rect.right, rect.bottom)
+        return None
 
     def keep_bottom(self, lparam):
         """WM_WINDOWPOSCHANGING : réécrit la demande en place pour garder le fond de pile."""
@@ -260,8 +382,9 @@ class DesktopLayer(QObject):
         self.user.SetWindowPos(hwnd, ctypes.c_void_p(after), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
 
     def _stack_all(self):
+        # Fonds d'abord, cartes ensuite : HWND_TOP place chaque fenêtre au-dessus des précédentes.
         if self.native:
-            for hwnd in list(self.handles):
+            for hwnd in sorted(self.handles, key=lambda h: h not in self.backdrops):
                 self._stack(hwnd)
 
     # API QML / pont ---------------------------------------------------------------------------------------------------
@@ -281,6 +404,7 @@ class DesktopLayer(QObject):
         self.hwnds[key] = hwnd
         self.handles.add(hwnd)
         window.setProperty('winjetHandle', hwnd)
+        self._register_session()
         self._style(hwnd)
         self._stack(hwnd)
 
@@ -293,9 +417,32 @@ class DesktopLayer(QObject):
         self.windows.pop(key, None)
         hwnd = self.hwnds.pop(key, 0)
         if hwnd:
+            if hwnd == self.session_hwnd:
+                self._unregister_session()
             self.handles.discard(hwnd)
+            self.backdrops.discard(hwnd)
+            if self.native:
+                self._register_session()
             if self.glass:
                 self.glass.detach(hwnd)
+
+    @Slot(QObject, int, int, int, int)
+    def place(self, window, x, y, width, height):
+        """Une seule mise en place native par image (x, y, largeur, hauteur) : pas de saut entre quatre SetWindowPos."""
+        if window is not None:
+            window.setGeometry(x, y, width, height)
+
+    @Slot(QObject)
+    def registerBackdrop(self, window):
+        """Fond de la grille d'édition : même traitement qu'une carte, mais toujours sous les cartes en mode édition."""
+        if window is None:
+            return
+        self.register(window)
+        hwnd = int(window.property('winjetHandle') or 0)
+        if hwnd:
+            self.backdrops.add(hwnd)
+            if self.native:
+                self._stack_all()
 
     @Slot(QObject, float, bool, float)
     def shape(self, window, radius, glass, opacity):
@@ -313,7 +460,22 @@ class DesktopLayer(QObject):
         self.glass.apply(hwnd, path, window.devicePixelRatio(), opacity)
 
     def set_editing(self, editing):
-        mode = 'edit' if editing else 'bottom'
+        # Sortie différée : les overlays (grille) restent EDIT_FADE_MS pour le fondu, les cartes ne repassent dessous qu'ensuite.
+        pending = getattr(self, '_exit_timer', None)
+        if editing:
+            if pending is not None:
+                pending.stop()
+            self._apply_mode('edit')
+            return
+        if self.mode != 'edit':
+            return
+        if pending is None:
+            pending = self._exit_timer = QTimer(self)
+            pending.setSingleShot(True)
+            pending.timeout.connect(lambda: self._apply_mode('bottom'))
+        pending.start(EDIT_FADE_MS)
+
+    def _apply_mode(self, mode):
         if mode != self.mode:
             self.mode = mode
             self._stack_all()

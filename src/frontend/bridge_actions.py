@@ -107,6 +107,13 @@ class ActionMixin:
         self.palette_lifecycle(was)
 
     @Slot(bool)
+    def audioBarsRef(self, take):
+        # Compteur partagé : chaque consommateur (tableau de bord, Winjets) prend puis rend UNE référence ; la capture ne
+        # tourne que tant que le compteur est > 0, quelle que soit la fenêtre demandeuse.
+        self._bars_refs = max(0, getattr(self, '_bars_refs', 0) + (1 if take else -1))
+        self.setAudioBars(self._bars_refs > 0)
+
+    @Slot(bool)
     def setAudioBars(self, wanted):
         self._bars_want = bool(wanted)
         wanted = self._bars_want and not self.reducedEffects and not self.quiet_on

@@ -9,19 +9,21 @@ Item {
     property var spec: null
     property var ctx: ({})
     property var host: null
+    readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
 
     readonly property real pad: spec && spec.padding >= 0 ? Number(spec.padding) : 0
+    readonly property real padPx: pad * sc
     property real childWidth: 0
     property real childHeight: 0
 
-    implicitWidth: childWidth + pad * 2
-    implicitHeight: childHeight + pad * 2
+    implicitWidth: childWidth + padPx * 2
+    implicitHeight: childHeight + padPx * 2
 
     Item {
         id: area
 
         anchors.fill: parent
-        anchors.margins: box.pad
+        anchors.margins: box.padPx
 
         Repeater {
             model: box.spec && box.spec.children ? box.spec.children : []

@@ -134,6 +134,7 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 | `winjets.add` | packageId:string, screen:string, x:number, y:number | - |
 | `winjets.remove` | instanceId:string | - |
 | `winjets.setHidden` | instanceId:string, hidden:boolean | - |
+| `winjets.setOpacity` | instanceId:string, opacity:number|null | - |
 | `winjets.setGeometry` | instanceId:string, geometry:object | - |
 | `winjets.setSettings` | instanceId:string, settings:object | - |
 | `winjets.setState` | instanceId:string, key:string, value:any | - |

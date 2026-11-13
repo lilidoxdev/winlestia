@@ -174,6 +174,17 @@ internal sealed class WinjetsService : IDisposable
         }
     }
 
+    internal string? SetOpacity(string instanceId, JsonElement value)
+    {
+        lock (gate)
+        {
+            if (!instances.SetOpacity(instanceId, value))
+                return "Transparence invalide ou instance inconnue.";
+            Mutated();
+            return null;
+        }
+    }
+
     // Package de l'instance, ou message d'erreur.
     string? Resolve(string instanceId, out WinjetPackage package)
     {
@@ -305,7 +316,7 @@ internal sealed class WinjetsService : IDisposable
             var known = library.Packages;
             var views = instances.All
                 .Where(i => known.Any(p => p.Id == i.PackageId))
-                .Select(i => new { id = i.Id, packageId = i.PackageId, hidden = i.Hidden, geometry = i.Geometry, settings = i.Settings, state = i.State })
+                .Select(i => new { id = i.Id, packageId = i.PackageId, hidden = i.Hidden, opacity = i.Opacity, geometry = i.Geometry, settings = i.Settings, state = i.State })
                 .ToArray();
             var values = data.Snapshot().ToDictionary(p => p.Key, p => p.Value.ToDictionary(q => q.Key, q => (object)new
             {

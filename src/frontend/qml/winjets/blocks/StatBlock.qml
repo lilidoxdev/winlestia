@@ -12,6 +12,7 @@ Item {
     property var spec: null
     property var ctx: ({})
     property var host: null
+    readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
 
     readonly property var rawDelta: spec && spec.delta !== undefined ? Bridge.winjets.resolve(spec.delta, ctx) : null
     readonly property real deltaNumber: {
@@ -40,38 +41,38 @@ Item {
         id: col
 
         anchors.fill: parent
-        spacing: 2
+        spacing: Math.round(2 * block.sc)
 
         StyledText {
             Layout.fillWidth: true
             visible: !!block.spec && !!block.spec.label
             text: block.spec && block.spec.label ? Bridge.winjets.renderText(block.spec.label, block.ctx) : ""
             color: WinjetTheme.textSecondary
-            font.pointSize: Appearance.font.size.small
+            font.pointSize: (Appearance.font.size.small) * block.sc
             elide: Text.ElideRight
         }
         StyledText {
             Layout.fillWidth: true
             text: block.spec ? Bridge.winjets.renderText(block.spec.value ?? "", block.ctx) : ""
             color: WinjetTheme.textPrimary
-            font.pointSize: Appearance.font.size.extraLarge + 4
+            font.pointSize: (Appearance.font.size.extraLarge + 4) * block.sc
             font.weight: Font.Medium
             fontSizeMode: Text.HorizontalFit
-            minimumPixelSize: 14
+            minimumPixelSize: 14 * block.sc
         }
         RowLayout {
             visible: block.deltaText !== ""
-            spacing: 4
+            spacing: Math.round(4 * block.sc)
 
             MaterialIcon {
                 text: block.deltaNumber < 0 ? "trending_down" : "trending_up"
                 color: block.deltaNumber < 0 ? WinjetTheme.role("negative") : WinjetTheme.role("positive")
-                font.pointSize: Appearance.font.size.normal
+                font.pointSize: (Appearance.font.size.normal) * block.sc
             }
             StyledText {
                 text: block.deltaText
                 color: block.deltaNumber < 0 ? WinjetTheme.role("negative") : WinjetTheme.role("positive")
-                font.pointSize: Appearance.font.size.small
+                font.pointSize: (Appearance.font.size.small) * block.sc
             }
         }
     }

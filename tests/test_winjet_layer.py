@@ -38,10 +38,21 @@ def test_unregister_after_destruction_forgets_handle_and_glass():
             self.detached.append(hwnd)
 
     layer = dl.DesktopLayer.__new__(dl.DesktopLayer)
+    layer.backdrops = set()
     layer.windows, layer.hwnds, layer.handles, layer.glass = {7: object()}, {7: 4242}, {4242}, Glass()
+    layer.session_hwnd, layer.native = 0, False
     layer._forget(7)
     assert not layer.handles and not layer.hwnds and Glass.detached == [4242]
     layer._forget(7)  # idempotent
+
+
+def test_session_registration_reset_when_its_window_is_destroyed():
+    layer = dl.DesktopLayer.__new__(dl.DesktopLayer)
+    layer.backdrops = set()
+    layer.windows, layer.hwnds, layer.handles, layer.glass = {7: object()}, {7: 4242}, {4242}, None
+    layer.session_hwnd, layer.native = 4242, False
+    layer._forget(7)
+    assert layer.session_hwnd == 0
 
 
 def test_template_length_is_capped():
