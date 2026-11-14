@@ -3,6 +3,7 @@
 // Le fond est un aperçu en direct du fichier sélectionné ; le fond d'écran du système ne change qu'avec Entrée.
 import QtQuick
 import QtQuick.Window
+import Qt5Compat.GraphicalEffects
 import qs.components
 import qs.components.controls
 import qs.services
@@ -38,6 +39,18 @@ Window {
     readonly property var animated: (Bridge.wallpaperPicker || {}).animated || []
     readonly property bool multi: displays.length > 1
     property int pending: -1
+    // Révélation circulaire à la validation : le fond choisi s’étend depuis la vignette pendant que Windows l’applique.
+    property bool revealing: false
+    property bool revealCovered: false
+    property bool holdPassed: false
+    property string revealUrl: ""
+    property real revealX: width / 2
+    property real revealY: height / 2
+    property real revealProgress: 0
+    readonly property int revealDuration: Appearance.anim.durations.large
+    readonly property int holdDuration: 400   // laisse à Windows le temps de poser le vrai fond avant de découvrir l’écran
+    readonly property int safetyDuration: revealDuration + holdDuration + 1500
+    readonly property real revealRadius: Math.sqrt(Math.pow(Math.max(revealX, width - revealX), 2) + Math.pow(Math.max(revealY, height - revealY), 2))
     readonly property string currentPath: current >= 0 && current < items.count ? items.get(current).path : ""
     readonly property string currentUrl: current >= 0 && current < items.count ? items.get(current).url : ""
     readonly property string currentName: current >= 0 && current < items.count ? items.get(current).name : ""
@@ -107,7 +120,35 @@ Window {
             return w.path === currentPath;
         }))
             Bridge.applyWallpaper(currentPath, multi ? target : 0);
-        closeRequested();
+        else {
+            closeRequested();
+            return;
+        }
+        if (reduced || currentUrl === "")
+            closeRequested();
+        else
+            startReveal();
+    }
+    function startReveal() {
+        revealUrl = currentUrl;
+        var p = list.mapToItem(keys, list.width / 2, list.height / 2);
+        if (isFinite(p.x) && isFinite(p.y)) {
+            revealX = p.x;
+            revealY = p.y;
+        } else {
+            revealX = width / 2;
+            revealY = height / 2;
+        }
+        revealCovered = false;
+        holdPassed = false;
+        revealProgress = 0;
+        revealing = true;
+        holdTimer.start();
+        safetyTimer.start();
+    }
+    function tryFinish() {
+        if (revealing && revealCovered && holdPassed && !windowFade.running)
+            windowFade.start();
     }
     function cycleTarget() {
         if (multi)
@@ -160,6 +201,43 @@ Window {
         }
     }
     Timer {
+        id: holdTimer
+        interval: root.holdDuration
+        repeat: false
+        onTriggered: {
+            root.holdPassed = true;
+            root.tryFinish();
+        }
+    }
+    // Garde-fou : quoi qu’il arrive (image illisible, animation interrompue), le sélecteur ne reste pas ouvert.
+    Timer {
+        id: safetyTimer
+        interval: root.safetyDuration
+        repeat: false
+        onTriggered: root.closeRequested()
+    }
+    Anim {
+        id: windowFade
+        target: root
+        property: "opacity"
+        to: 0
+        duration: Appearance.anim.durations.small
+        onFinished: root.closeRequested()
+    }
+    Anim {
+        id: revealAnim
+        target: root
+        property: "revealProgress"
+        from: 0
+        to: 1
+        duration: root.revealDuration
+        easing.bezierCurve: Appearance.anim.curves.emphasized
+        onFinished: {
+            root.revealCovered = true;
+            root.tryFinish();
+        }
+    }
+    Timer {
         id: addTimer
         interval: 80
         repeat: false
@@ -203,7 +281,7 @@ Window {
     onActiveChanged: {
         if (active)
             seenActive = true;
-        else if (seenActive && !dialogOpen)
+        else if (seenActive && !dialogOpen && !revealing)
             closeRequested();
     }
     onClosing: event => {
@@ -229,6 +307,12 @@ Window {
         anchors.fill: parent
         focus: true
         Keys.onPressed: event => {
+            if (root.revealing) {
+                if (event.key === Qt.Key_Escape)
+                    root.closeRequested();
+                event.accepted = true;
+                return;
+            }
             if (root.confirmDelete) {
                 if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
                     root.removeCurrent();
@@ -305,6 +389,13 @@ Window {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             height: parent.height * .4
+            opacity: root.revealing ? 0 : 1
+            Behavior on opacity {
+                enabled: !root.reduced
+                Anim {
+                    duration: root.revealDuration
+                }
+            }
             gradient: Gradient {
                 GradientStop {
                     position: 0
@@ -351,6 +442,13 @@ Window {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Appearance.padding.large * 2
             width: parent.width
+            opacity: root.revealing ? 0 : 1
+            Behavior on opacity {
+                enabled: !root.reduced
+                Anim {
+                    duration: root.revealDuration * .6
+                }
+            }
             spacing: Appearance.spacing.normal
             ListView {
                 id: list
@@ -494,6 +592,52 @@ Window {
                 text: qsTr("← → choisir · Entrée appliquer · Ctrl+O ajouter · Suppr retirer · Échap fermer")
                 font.pointSize: Appearance.font.size.small
                 color: Colours.palette.m3outline
+            }
+        }
+    }
+
+    // Instanciée seulement pendant la révélation : image à la taille de l’écran, découpée par un disque qui grandit.
+    Loader {
+        id: reveal
+        anchors.fill: parent
+        active: root.revealing
+        sourceComponent: Item {
+            MouseArea {
+                anchors.fill: parent
+            }
+            Image {
+                id: revealImage
+                anchors.fill: parent
+                visible: false
+                asynchronous: true
+                fillMode: Image.PreserveAspectCrop
+                source: root.revealUrl
+                sourceSize: Qt.size(Bridge.screenWidth * Screen.devicePixelRatio, Bridge.screenHeight * Screen.devicePixelRatio)
+                onStatusChanged: {
+                    if (status === Image.Ready)
+                        revealAnim.restart();
+                    else if (status === Image.Error)
+                        root.closeRequested();
+                }
+            }
+            Item {
+                id: disc
+                anchors.fill: parent
+                visible: false
+                layer.enabled: true
+                Rectangle {
+                    readonly property real r: root.revealRadius * root.revealProgress
+                    x: root.revealX - r
+                    y: root.revealY - r
+                    width: r * 2
+                    height: r * 2
+                    radius: r
+                }
+            }
+            OpacityMask {
+                anchors.fill: parent
+                source: revealImage
+                maskSource: disc
             }
         }
     }
