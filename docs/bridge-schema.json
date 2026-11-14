@@ -635,6 +635,18 @@
       "args": {},
       "required": []
     },
+    "lyrics": {
+      "args": {
+        "title": "string",
+        "artist": "string",
+        "album": "string",
+        "duration": "number",
+        "key": "string"
+      },
+      "required": [
+        "title"
+      ]
+    },
     "overviewAct": {
       "args": {
         "hwnd": "string",
@@ -842,6 +854,9 @@
     "osd": {
       "enabled": "boolean"
     },
+    "lyrics": {
+      "enabled": "boolean"
+    },
     "pill": {
       "enabled": "boolean"
     },
@@ -879,6 +894,7 @@
     "bookmarksItems": "array|null",
     "windows": "array|null",
     "fileResults": "object|null",
+    "lyrics": "object|null",
     "wallpaperPicker": "object|null",
     "dictation": "object",
     "audioBars": "object",
@@ -943,6 +959,7 @@
     "bookmarks",
     "social",
     "files",
+    "lyrics",
     "dock",
     "dictation:start",
     "dictation:stop",

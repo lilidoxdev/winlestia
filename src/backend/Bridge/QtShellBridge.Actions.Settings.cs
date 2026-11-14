@@ -194,6 +194,9 @@ internal sealed partial class QtShellBridge
             case "pill":
                 Store.State.Pill = Flag(c.Args, "enabled");
                 break;
+            case "lyrics":
+                Store.State.Lyrics = Flag(c.Args, "enabled");
+                break;
             case "quietFullscreen":
                 Store.State.QuietFullscreen = Flag(c.Args, "enabled");
                 ApplyQuiet();

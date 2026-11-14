@@ -59,6 +59,10 @@ internal sealed class BridgeCall
     {
         get; set;
     }
+    internal object? Lyrics
+    {
+        get; set;
+    }
 
     // Réponse complète qui court-circuite l'état (sondes rapides du frontend : dictée, barres audio, spectre).
     internal string? RawReply

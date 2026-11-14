@@ -13,6 +13,7 @@ import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
+import "../../../lyrics"
 
 Item {
     id: root
@@ -22,6 +23,11 @@ Item {
     readonly property bool onScreen: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard"
         && Bridge.window.dashboardTab === 1
     readonly property bool spinning: onScreen && (Players.active?.isPlaying ?? false)
+    // Paroles : elles remplacent le chat dans l'emplacement de droite (même géométrie) dès qu'un état les concerne.
+    readonly property string lyricsPhase: Bridge.lyrics?.state ?? "idle"
+    readonly property bool lyricsSlot: lyricsPhase !== "off" && lyricsPhase !== "idle"
+    readonly property real restLevel: 0.05
+    readonly property real restAlpha: 0.45
 
     property real playerProgress: {
         const active = Players.active;
@@ -76,7 +82,6 @@ Item {
         readonly property real centerY: height / 2
         readonly property real innerX: cover.implicitWidth / 2 + Appearance.spacing.small
         readonly property real innerY: cover.implicitHeight / 2 + Appearance.spacing.small
-        property color colour: Colours.palette.m3primary
 
         anchors.fill: cover
         anchors.margins: -Config.dashboard.sizes.mediaVisualiserSize
@@ -97,7 +102,7 @@ Item {
             id: visualiserBar
 
             required property int modelData
-            readonly property real value: Math.max(1e-3, Math.min(1, Audio.cava.values[modelData]))
+            readonly property real value: Math.max(root.restLevel, Math.min(1, Audio.cava.values[modelData] ?? 0))
 
             readonly property real angle: modelData * 2 * Math.PI / Config.services.visualiserBars
             readonly property real magnitude: value * Config.dashboard.sizes.mediaVisualiserSize
@@ -106,7 +111,8 @@ Item {
 
             capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
             strokeWidth: 360 / Config.services.visualiserBars - Appearance.spacing.small / 4
-            strokeColor: Colours.palette.m3primary
+            // Une couronne de bâtonnets dont l'éclat suit le niveau ; au repos, un anneau de petits points.
+            strokeColor: Qt.alpha(Colours.palette.m3primary, root.restAlpha + (1 - root.restAlpha) * value)
 
             startX: visualiser.centerX + (visualiser.innerX + strokeWidth / 2) * cos
             startY: visualiser.centerY + (visualiser.innerY + strokeWidth / 2) * sin
@@ -114,10 +120,6 @@ Item {
             PathLine {
                 x: visualiser.centerX + (visualiser.innerX + visualiserBar.strokeWidth / 2 + visualiserBar.magnitude) * visualiserBar.cos
                 y: visualiser.centerY + (visualiser.innerY + visualiserBar.strokeWidth / 2 + visualiserBar.magnitude) * visualiserBar.sin
-            }
-
-            Behavior on strokeColor {
-                CAnim {}
             }
         }
     }
@@ -182,8 +184,9 @@ Item {
             animate: true
             horizontalAlignment: Text.AlignHCenter
             text: Players.active ? (Players.active.trackTitle || qsTr("Unknown title")) : qsTr("No media playing")
-            color: Players.active ? Colours.palette.m3primary : Colours.palette.m3onSurface
-            font.pointSize: Appearance.font.size.normal
+            color: Colours.palette.m3onSurface
+            font.pointSize: Appearance.font.size.large
+            font.weight: Font.Bold
             elide: Text.ElideRight
         }
 
@@ -197,7 +200,7 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             visible: !!Players.active
             text: Players.active?.trackAlbum || qsTr("Unknown album")
-            color: Colours.palette.m3outline
+            color: Colours.palette.m3onSurfaceVariant
             font.pointSize: Appearance.font.size.small
             elide: Text.ElideRight
         }
@@ -211,7 +214,9 @@ Item {
             animate: true
             horizontalAlignment: Text.AlignHCenter
             text: (Players.active?.trackArtist ?? qsTr("Play some music for stuff to show up here!")) || qsTr("Unknown artist")
-            color: Players.active ? Colours.palette.m3secondary : Colours.palette.m3outline
+            color: Players.active ? Colours.palette.m3primary : Colours.palette.m3outline
+            font.pointSize: Appearance.font.size.normal
+            font.weight: Font.Medium
             elide: Text.ElideRight
             wrapMode: Players.active ? Text.NoWrap : Text.WordWrap
         }
@@ -407,6 +412,7 @@ Item {
 
         AnimatedImage {
             anchors.centerIn: parent
+            visible: !root.lyricsSlot
 
             width: visualiser.width * 0.75
             height: visualiser.height * 0.75
@@ -417,6 +423,42 @@ Item {
             source: Paths.absolutePath(Config.paths.mediaGif)
             asynchronous: true
             fillMode: AnimatedImage.PreserveAspectFit
+        }
+
+        // Paroles : titre discret puis la vue complète, ligne en cours ancrée vers le centre.
+        Item {
+            anchors.fill: parent
+            opacity: root.lyricsSlot ? 1 : 0
+
+            Behavior on opacity {
+                enabled: !Appearance.reducedEffects
+                Anim {
+                    duration: Appearance.anim.durations.normal
+                }
+            }
+
+            StyledText {
+                id: lyricsCaption
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.leftMargin: Appearance.padding.small
+                text: qsTr("Paroles")
+                color: Colours.palette.m3outline
+                font.pointSize: Appearance.font.size.small
+                font.weight: Font.Medium
+            }
+
+            LyricsView {
+                anchors.top: lyricsCaption.bottom
+                anchors.topMargin: Appearance.spacing.smaller
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                active: root.onScreen
+                fontSize: Appearance.font.size.larger
+            }
         }
     }
 

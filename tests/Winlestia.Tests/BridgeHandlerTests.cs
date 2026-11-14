@@ -14,7 +14,7 @@ public class BridgeHandlerTests
     });
 
     [Fact]
-    public void RealTableRegistersExactlyTheSchemaActions() => Assert.Equal(118,QtShellBridge.ActionNames.Count);
+    public void RealTableRegistersExactlyTheSchemaActions() => Assert.Equal(119,QtShellBridge.ActionNames.Count);
 
     [Fact]
     public void UnknownCommandLeavesTheStateReply() => With(r =>
@@ -285,6 +285,7 @@ public class BridgeHandlerTests
     [InlineData("desktopLogo", nameof(Preferences.DesktopLogo))]
     [InlineData("osd", nameof(Preferences.Osd))]
     [InlineData("pill", nameof(Preferences.Pill))]
+    [InlineData("lyrics", nameof(Preferences.Lyrics))]
     [InlineData("quietFullscreen", nameof(Preferences.QuietFullscreen))]
     [InlineData("desktopIndicator", nameof(Preferences.DesktopIndicator))]
     [InlineData("dockDrawerOpen", nameof(Preferences.DockDrawerOpen))]

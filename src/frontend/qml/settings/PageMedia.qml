@@ -50,6 +50,22 @@ ColumnLayout {
                 })
             }
         }
+
+        SettingsRow {
+            rowId: "lyrics"
+            target: lyrics
+
+            SettingsSwitch {
+                id: lyrics
+
+                objectName: "lyricsToggle"
+                value: Bridge.settings.lyrics ?? true
+                onToggled: Bridge.action("preference", {
+                    key: "lyrics",
+                    enabled: checked
+                })
+            }
+        }
     }
 
     SettingsSection {

@@ -64,6 +64,7 @@ internal sealed partial class QtShellBridge
                 desktopLogo = Store.State.DesktopLogo,
                 osd = Store.State.Osd,
                 pill = Store.State.Pill,
+                lyrics = Store.State.Lyrics,
                 quietFullscreen = Store.State.QuietFullscreen,
                 desktopIndicator = Store.State.DesktopIndicator,
                 dockDrawerOpen = Store.State.DockDrawerOpen,

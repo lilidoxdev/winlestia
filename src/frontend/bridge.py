@@ -16,6 +16,7 @@ from bridge_actions import ActionMixin
 from bridge_assets import AssetMixin
 from bridge_client import PipeClient
 from bridge_dictation import DictationMixin
+from bridge_lyrics import LyricsMixin
 from bridge_palette import PaletteMixin
 from bridge_pointer import PointerMixin
 from bridge_shortcuts import ShortcutMixin
@@ -44,6 +45,7 @@ class Bridge(
     AssetMixin,
     WeatherMixin,
     DictationMixin,
+    LyricsMixin,
     StateMixin,
     PointerMixin,
 ):
@@ -356,6 +358,9 @@ class Bridge(
     clipboardItems = Property('QVariantList', lambda s: s._state.get('clipboard', []), notify=clipboardChanged)
 
     settings = Property('QVariantMap', lambda s: s._state.get('settings', {}), notify=changed)
+
+    lyricsChanged = Signal()
+    lyrics = Property('QVariantMap', lambda s: s.lyrics_current(), notify=lyricsChanged)
 
     paletteResults = Property('QVariantList', lambda s: s._results, notify=searchChanged)
 

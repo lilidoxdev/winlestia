@@ -6,6 +6,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 
 ### Ajouts
 
+- Paroles synchronisées du morceau en cours, cherchées sur lrclib.net (le titre et l'artiste y sont envoyés), avec cache local ; réglage « Paroles » (activé par défaut).
+- Surfaces média redessinées : la pilule et la page Média du tableau de bord partagent la même présentation de la lecture en cours.
 - Pilule : capsule en haut de l'écran qui n'apparaît que lorsqu'il se passe quelque chose (musique avec égaliseur en direct, changement de piste, volume, luminosité, micro) et change de forme en douceur ; réglage « Pilule » (activé par défaut), qui remplace l'indicateur du bord droit.
 - Pilule déployée : spectre en barres arrondies en fond, piste de progression visible avec temps écoulé et total (clic ou glissé pour se déplacer), pochette en fondu, molette pour le volume du lecteur. Elle descend avec le panneau du haut au lieu d'être recouverte, le bord haut ne l'ouvre plus à son aplomb, et elle s'efface quand la page Média du tableau de bord est affichée.
 - Fonds d'écran : le fond choisi se déploie en cercle depuis la vignette, puis les couleurs de tout le shell glissent vers la nouvelle palette au lieu de changer d'un coup (instantané avec les effets allégés).

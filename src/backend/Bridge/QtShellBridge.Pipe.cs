@@ -114,6 +114,7 @@ internal sealed partial class QtShellBridge
         object? windowItems = null;
         object? wallpaperPicker = null;
         object? fileItems = null;
+        object? lyricsItems = null;
         try
         {
             string command = Text(request, "command");
@@ -170,6 +171,7 @@ internal sealed partial class QtShellBridge
             windowItems = call.WindowItems;
             wallpaperPicker = call.WallpaperPicker;
             fileItems = call.FileItems;
+            lyricsItems = call.Lyrics;
             if (raw != null)
                 return raw;
         }
@@ -193,6 +195,7 @@ internal sealed partial class QtShellBridge
             bookmarksItems,
             windows = windowItems,
             fileResults = fileItems,
+            lyrics = lyricsItems,
             wallpaperPicker
         }, Json);
     }

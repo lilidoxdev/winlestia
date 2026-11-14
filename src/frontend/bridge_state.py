@@ -159,6 +159,10 @@ class StateMixin:
         ):
             self._bm_requested = bm_version
             self.action('bookmarksItems', {})
+        if 'lyrics' in message:
+            self.lyrics_reply(message['lyrics'])
+        if 'state' in message:
+            self.lyrics_sync()
         for event in message.get('events', []):
             if self.quiet_on and event.startswith('osd'):
                 continue  # mode silencieux : pas d'OSD, donc rien ne prend le focus ni n'anime par-dessus le jeu
@@ -172,6 +176,9 @@ class StateMixin:
                 continue
             if event == 'files':
                 self.action('fileResults', {})
+                continue
+            if event == 'lyrics':
+                self.lyrics_event()
                 continue
             if event.startswith('dictation:'):
                 self.dictation_event(event)

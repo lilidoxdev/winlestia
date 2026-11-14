@@ -1014,5 +1014,11 @@
  "Navigateur": "Browser",
  "Lecteur Windows": "Windows player",
  "Aucune session audio pour ce lecteur.": "No audio session for this player.",
- "Cette application n’a plus de session audio. Relance sa lecture.": "This application no longer has an audio session. Restart its playback."
+ "Cette application n’a plus de session audio. Relance sa lecture.": "This application no longer has an audio session. Restart its playback.",
+ "Paroles": "Lyrics",
+ "Affiche les paroles synchronisées du morceau en cours. Le titre et l’artiste sont envoyés à lrclib.net.": "Shows synced lyrics for the current track. The title and artist are sent to lrclib.net.",
+ "Recherche des paroles…": "Searching for lyrics…",
+ "Paroles introuvables": "Lyrics not found",
+ "Morceau instrumental": "Instrumental track",
+ "Paroles non synchronisées": "Unsynced lyrics"
 }

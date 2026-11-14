@@ -273,6 +273,14 @@ QtObject {
             kw: "pilule capsule musique volume luminosite ile dynamique pill"
         },
         {
+            id: "lyrics",
+            page: 4,
+            section: qsTr("Affichage à l’écran"),
+            label: qsTr("Paroles"),
+            desc: qsTr("Affiche les paroles synchronisées du morceau en cours. Le titre et l’artiste sont envoyés à lrclib.net."),
+            kw: "paroles lyrics chanson musique karaoke lrclib synchronisees"
+        },
+        {
             id: "dictationEnabled",
             page: 4,
             section: qsTr("Dictée vocale"),

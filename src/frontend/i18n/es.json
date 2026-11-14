@@ -1014,5 +1014,11 @@
  "Navigateur": "Navegador",
  "Lecteur Windows": "Reproductor de Windows",
  "Aucune session audio pour ce lecteur.": "Ninguna sesión de audio para este reproductor.",
- "Cette application n’a plus de session audio. Relance sa lecture.": "Esta aplicación ya no tiene sesión de audio. Reinicia su reproducción."
+ "Cette application n’a plus de session audio. Relance sa lecture.": "Esta aplicación ya no tiene sesión de audio. Reinicia su reproducción.",
+ "Paroles": "Letras",
+ "Affiche les paroles synchronisées du morceau en cours. Le titre et l’artiste sont envoyés à lrclib.net.": "Muestra la letra sincronizada de la canción en curso. El título y el artista se envían a lrclib.net.",
+ "Recherche des paroles…": "Buscando la letra…",
+ "Paroles introuvables": "Letra no encontrada",
+ "Morceau instrumental": "Canción instrumental",
+ "Paroles non synchronisées": "Letra sin sincronizar"
 }

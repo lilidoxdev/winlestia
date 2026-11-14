@@ -42,6 +42,7 @@ public sealed class Preferences
     public bool DesktopLogo { get; set; } = false;
     public bool Osd { get; set; } = true;
     public bool Pill { get; set; } = true;
+    public bool Lyrics { get; set; } = true;
     public bool QuietFullscreen { get; set; } = true;
     public bool DesktopIndicator { get; set; } = true;
     public bool DockDrawerOpen { get; set; } = false;

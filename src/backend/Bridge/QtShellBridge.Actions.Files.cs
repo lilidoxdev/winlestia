@@ -176,6 +176,27 @@ internal sealed partial class QtShellBridge
         c.Notice = WindowOverview.Act(hwnd, Text(c.Args, "action"));
     }
 
+    // Paroles : le canal est strictement séquentiel, la commande ne doit donc jamais attendre le réseau. Elle répond tout de suite
+    // (résultat connu, ou "loading" et recherche lancée hors du canal) ; à la fin, l'évènement `lyrics` invite le client à
+    // renvoyer la commande pour lire le résultat.
+    [BridgeAction("lyrics")]
+    async Task OnLyrics(BridgeCall c)
+    {
+        string title = Text(c.Args, "title"), key = Text(c.Args, "key");
+        if (!Store.State.Lyrics)
+        {
+            c.Lyrics = LyricsService.Payload(LyricsResult.Off, key);
+            return;
+        }
+        string artist = Text(c.Args, "artist"), album = Text(c.Args, "album");
+        double duration = Number(c.Args, "duration");
+        var result = title.Length == 0
+            ? LyricsResult.None
+            : await Task.Run(() => LyricsService.Shared.Request(title, artist, album, duration,
+                () => _ = dispatcher.BeginInvoke((Action)(() => { if (!disposed) Send("lyrics"); }))));
+        c.Lyrics = LyricsService.Payload(result, key);
+    }
+
     [BridgeAction("fileSearch")]
     void OnFileSearch(BridgeCall c)
     {

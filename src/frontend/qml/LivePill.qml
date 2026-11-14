@@ -4,12 +4,14 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Window
 import qs.components
 import qs.components.controls
 import qs.services
 import qs.config
 import "PillMath.js" as PillMath
+import "lyrics"
 
 Window {
     id: root
@@ -22,24 +24,34 @@ Window {
     readonly property int slimHeight: 40
     readonly property int coverSmall: 30
     readonly property int compactWidth: 128
+    readonly property int compactMaxWidth: 320
+    readonly property int compactEqWidth: 33
     readonly property int flashWidth: 360
     readonly property int levelWidth: 250
-    readonly property int expandedWidth: 360
-    readonly property int expandedHeight: 148
-    readonly property int coverLarge: 80
+    readonly property int expandedWidth: 400
+    readonly property int coverLarge: 88
+    readonly property int lyricsHeight: 112
     readonly property int eqCompactBars: 6
     readonly property int eqBarWidth: 3
     readonly property int eqBarMin: 2
     readonly property int eqCompactHeight: 18
-    readonly property int backdropBars: 36
-    readonly property int backdropGap: 3
-    readonly property int backdropHeight: 60
-    readonly property real backdropOpacity: .3
+    readonly property int bandBars: 48
+    readonly property int bandGap: 3
+    readonly property int bandHeight: 64
+    readonly property int bandBaseline: 3
+    readonly property real bandTipAlpha: .55
+    readonly property real bandFootAlpha: .04
+    readonly property real tintAlpha: .16
+    readonly property real tintReach: .62
+    readonly property real glowOpacity: .4
     readonly property int controlSize: 36
     readonly property int playSize: 44
     readonly property int seekHitHeight: 16
     readonly property int progressHeight: 4
     readonly property int progressHoverHeight: 6
+    readonly property int thumbSize: 12
+    readonly property int slideDistance: 10
+    readonly property int contentDelayMs: 80
     readonly property int wheelNotch: 120
     readonly property int wheelStep: 5
     readonly property real hiddenScale: .92
@@ -83,15 +95,28 @@ Window {
     property string shown: "idle"
     property real contentOpacity: 1
 
+    readonly property string lyricsPhase: Bridge.lyrics?.state ?? "idle"
+    // Zone de paroles de la carte : repliée sans paroles (off, none, idle).
+    readonly property bool lyricsShown: lyricsPhase === "synced" || lyricsPhase === "plain" || lyricsPhase === "loading"
+        || lyricsPhase === "instrumental"
+    readonly property string fallbackLine: ((player?.trackTitle ?? "") + ((player?.trackArtist ?? "") !== "" ? " · " + player.trackArtist
+        : ""))
+    // Compact : largeur fixe avec des paroles synchronisées (la pilule ne bouge pas à chaque ligne), sinon ajustée au titre.
+    readonly property real compactWidthWanted: lyricsPhase === "synced" ? compactMaxWidth : fallbackLine === "" ? compactWidth
+        : Math.max(compactWidth, Math.min(compactMaxWidth, slimHeight + compactEqWidth + Appearance.padding.larger + Appearance.spacing.small * 2
+        + Math.ceil(compactMetrics.advanceWidth)))
+    readonly property real expandedHeight: Appearance.padding.large + coverLarge + Appearance.spacing.small + seekHitHeight + timeMetrics.height
+        + (lyricsShown ? Appearance.spacing.small + lyricsHeight : 0) + Appearance.padding.larger
     readonly property real targetWidth: stateName === "expanded" ? expandedWidth : stateName === "flash" ? flashWidth : stateName
-        === "level" ? levelWidth : stateName === "compact" ? compactWidth : slimHeight
+        === "level" ? levelWidth : stateName === "compact" ? compactWidthWanted : slimHeight
     readonly property real targetHeight: stateName === "expanded" ? expandedHeight : slimHeight
     readonly property real targetRadius: stateName === "expanded" ? Appearance.rounding.large : targetHeight / 2
     // Lu par le pointeur (bridge_pointer.py) : la Pilule déployée est celle qu'on est en train de viser.
     readonly property bool expanded: stateName === "expanded"
     property real inlineValue: 0
-    readonly property bool wantsSpectrum: !suppressed && !mediaPageShown && playing && (stateName === "compact" || stateName === "flash" || stateName
-        === "expanded")
+    // Le spectre est aussi demandé tant que la page Média est ouverte : la couronne autour de sa pochette lit le même flux.
+    readonly property bool wantsSpectrum: !suppressed && playing && (mediaPageShown || stateName === "compact" || stateName === "flash"
+        || stateName === "expanded")
 
     // La fenêtre épouse la taille animée de la capsule : aucune zone morte autour, aucun clic avalé.
     width: Math.max(1, pill.width)
@@ -187,6 +212,19 @@ Window {
     }
 
     // Le contenu sortant s'efface avant que le suivant n'apparaisse ; la taille, elle, anime tout de suite vers la cible.
+    TextMetrics {
+        id: compactMetrics
+        text: root.fallbackLine
+        font.family: Appearance.font.family.sans
+        font.pointSize: Appearance.font.size.normal
+        font.weight: Font.DemiBold
+    }
+    TextMetrics {
+        id: timeMetrics
+        text: "0"
+        font.family: Appearance.font.family.sans
+        font.pointSize: Appearance.font.size.small
+    }
     SequentialAnimation {
         id: swap
         NumberAnimation {
@@ -199,6 +237,9 @@ Window {
         }
         ScriptAction {
             script: root.shown = root.stateName
+        }
+        PauseAnimation {
+            duration: root.reduced ? 0 : root.contentDelayMs
         }
         NumberAnimation {
             target: root
@@ -355,14 +396,15 @@ Window {
             }
         }
 
-        // Média compact : pochette ronde à gauche, mini égaliseur à droite.
+        // Média compact : pochette ronde, ligne de paroles en cours (repli titre · artiste) qui glisse, mini égaliseur.
         Item {
-            width: root.compactWidth
+            width: pill.width
             height: root.slimHeight
             anchors.centerIn: parent
             opacity: root.shown === "compact" ? root.contentOpacity : 0
             visible: opacity > 0
             Cover {
+                id: compactCover
                 size: root.coverSmall
                 anchors.left: parent.left
                 anchors.leftMargin: (root.slimHeight - root.coverSmall) / 2
@@ -371,8 +413,9 @@ Window {
                 art: root.player?.trackArtUrl ?? ""
             }
             Equaliser {
+                id: compactEq
                 anchors.right: parent.right
-                anchors.rightMargin: Appearance.padding.larger + Appearance.padding.small
+                anchors.rightMargin: Appearance.padding.larger
                 anchors.verticalCenter: parent.verticalCenter
                 count: root.eqCompactBars
                 barWidth: root.eqBarWidth
@@ -380,6 +423,16 @@ Window {
                 animated: !root.reduced
                 height: root.eqCompactHeight
                 live: root.playing && root.shown === "compact"
+            }
+            LyricsView {
+                anchors.left: compactCover.right
+                anchors.leftMargin: Appearance.spacing.small
+                anchors.right: compactEq.left
+                anchors.rightMargin: Appearance.spacing.small
+                anchors.verticalCenter: parent.verticalCenter
+                compact: true
+                active: root.visible && root.shown === "compact"
+                fallbackText: root.fallbackLine
             }
         }
 
@@ -464,30 +517,47 @@ Window {
             }
         }
 
-        // Média déployé : spectre en fond, pochette, titre, artiste, commandes, progression avec temps.
+        // Média déployé : voile de couleur en tête, pochette et son halo, titre, artiste, commandes, progression, paroles ;
+        // le spectre court le long du bord bas, découpé par les coins arrondis de la carte.
         Item {
             id: card
             width: root.expandedWidth
             height: root.expandedHeight
-            anchors.centerIn: parent
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
             opacity: root.shown === "expanded" ? root.contentOpacity : 0
             visible: opacity > 0
             readonly property real inner: width - Appearance.padding.large * 2
             readonly property real position: seek.dragging ? seek.dragFraction * (root.player?.length ?? 0) : (root.player?.position ?? 0)
 
+            Rectangle {
+                width: parent.width
+                height: parent.height * root.tintReach
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop {
+                        position: 0
+                        color: Qt.alpha(Colours.palette.m3primary, root.tintAlpha)
+                    }
+                    GradientStop {
+                        position: 1
+                        color: Qt.alpha(Colours.palette.m3primary, 0)
+                    }
+                }
+            }
             Equaliser {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                height: root.backdropHeight
-                opacity: root.backdropOpacity
-                count: root.backdropBars
-                barGap: root.backdropGap
-                barMin: root.eqBarMin
+                height: root.bandHeight
+                count: root.bandBars
+                barGap: root.bandGap
+                barMin: root.bandBaseline
                 animated: !root.reduced
                 live: root.playing && root.shown === "expanded"
                 fill: true
                 bottomAligned: true
+                faded: true
             }
             Cover {
                 id: bigCover
@@ -495,6 +565,7 @@ Window {
                 x: Appearance.padding.large
                 y: Appearance.padding.large
                 circle: false
+                glow: true
                 art: root.player?.trackArtUrl ?? ""
             }
             Column {
@@ -504,17 +575,18 @@ Window {
                 anchors.rightMargin: Appearance.padding.large
                 anchors.top: bigCover.top
                 spacing: 0
-                StyledText {
+                SwapText {
                     width: parent.width
                     elide: Text.ElideRight
-                    text: root.player ? (root.player.trackTitle || qsTr("Unknown title")) : ""
+                    wanted: root.player ? (root.player.trackTitle || qsTr("Unknown title")) : ""
                     color: Colours.palette.m3onSurface
-                    font.pointSize: Appearance.font.size.normal
+                    font.pointSize: Appearance.font.size.large
+                    font.weight: Font.Bold
                 }
-                StyledText {
+                SwapText {
                     width: parent.width
                     elide: Text.ElideRight
-                    text: (root.player?.trackArtist ?? "") || qsTr("Unknown artist")
+                    wanted: (root.player?.trackArtist ?? "") || qsTr("Unknown artist")
                     color: Colours.palette.m3onSurfaceVariant
                     font.pointSize: Appearance.font.size.small
                 }
@@ -550,15 +622,16 @@ Window {
                     }
                 }
             }
-            // Progression : piste visible sous la partie lue, clic ou glissé pour se déplacer si le lecteur le permet.
+            // Progression : piste fine qui s'épaissit au survol, poignée, clic ou glissé pour se déplacer si le lecteur le permet.
             Item {
                 id: seek
                 x: Appearance.padding.large
                 width: card.inner
                 anchors.top: bigCover.bottom
-                anchors.topMargin: Appearance.spacing.smaller
+                anchors.topMargin: Appearance.spacing.small
                 height: root.seekHitHeight
                 readonly property bool canSeek: (root.player?.canSeek ?? false) && (root.player?.lengthKnown ?? false)
+                readonly property bool engaged: dragging || seekArea.containsMouse
                 property bool dragging: false
                 property real dragFraction: 0
                 readonly property real shownFraction: dragging ? dragFraction : PillMath.fraction(root.player?.position ?? 0,
@@ -566,7 +639,7 @@ Window {
                 StyledRect {
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width
-                    height: seek.dragging || seekArea.containsMouse ? root.progressHoverHeight : root.progressHeight
+                    height: seek.engaged ? root.progressHoverHeight : root.progressHeight
                     radius: Appearance.rounding.full
                     color: Colours.palette.m3surfaceContainerHighest
                     Behavior on height {
@@ -587,6 +660,21 @@ Window {
                             Anim {
                                 duration: Appearance.anim.durations.small
                             }
+                        }
+                    }
+                }
+                Rectangle {
+                    width: root.thumbSize
+                    height: root.thumbSize
+                    radius: Appearance.rounding.full
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: Math.max(0, Math.min(seek.width - width, seek.width * seek.shownFraction - width / 2))
+                    color: Colours.palette.m3onSurface
+                    opacity: seek.engaged && seek.canSeek ? 1 : 0
+                    Behavior on opacity {
+                        enabled: !root.reduced
+                        Anim {
+                            duration: Appearance.anim.durations.small
                         }
                     }
                 }
@@ -616,6 +704,7 @@ Window {
                 }
             }
             StyledText {
+                id: elapsed
                 x: Appearance.padding.large
                 anchors.top: seek.bottom
                 text: PillMath.clock(card.position)
@@ -656,6 +745,25 @@ Window {
                 color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.small
             }
+            // Paroles : zone repliée quand il n'y en a pas ; ligne en cours ancrée au centre, voisines estompées.
+            LyricsView {
+                anchors.left: parent.left
+                anchors.leftMargin: Appearance.padding.large
+                anchors.right: parent.right
+                anchors.rightMargin: Appearance.padding.large
+                anchors.top: elapsed.bottom
+                anchors.topMargin: Appearance.spacing.small
+                height: root.lyricsHeight
+                opacity: root.lyricsShown ? 1 : 0
+                active: root.visible && root.shown === "expanded"
+                fontSize: Appearance.font.size.normal
+                Behavior on opacity {
+                    enabled: !root.reduced
+                    Anim {
+                        duration: Appearance.anim.durations.normal
+                    }
+                }
+            }
         }
     }
 
@@ -666,10 +774,20 @@ Window {
         required property int size
         property bool circle: true
         property url art
+        // Halo doux de la couleur d'accent derrière la pochette.
+        property bool glow: false
         implicitWidth: size
         implicitHeight: size
         radius: circle ? Appearance.rounding.full : Appearance.rounding.normal
         color: Colours.tPalette.m3surfaceContainerHigh
+        layer.enabled: glow
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Colours.palette.m3primary
+            shadowOpacity: root.glowOpacity
+            shadowBlur: 1
+            shadowVerticalOffset: Appearance.spacing.smaller / 2
+        }
         onArtChanged: {
             previousImage.source = String(art) === "" ? "" : currentImage.source;
             currentImage.source = art;
@@ -719,6 +837,7 @@ Window {
         property int barGap: 3
         property int barMin: 2
         property bool animated: true
+        property bool faded: false
         readonly property var values: live ? Bridge.spectrum : []
         readonly property real cell: fill ? Math.max(1, (width - (count - 1) * barGap) / count) : barWidth
         readonly property real step: fill ? cell + barGap : barWidth * 2
@@ -733,13 +852,84 @@ Window {
                 anchors.verticalCenter: eq.bottomAligned ? undefined : eq.verticalCenter
                 anchors.bottom: eq.bottomAligned ? eq.bottom : undefined
                 radius: Appearance.rounding.full
-                color: Colours.palette.m3primary
+                color: eq.faded ? "transparent" : Colours.palette.m3primary
+                // faded : la pointe est lumineuse et le pied se fond dans la carte.
+                gradient: eq.faded ? fade : null
+                property Gradient fade: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop {
+                        position: 0
+                        color: Qt.alpha(Colours.palette.m3primary, root.bandTipAlpha)
+                    }
+                    GradientStop {
+                        position: 1
+                        color: Qt.alpha(Colours.palette.m3primary, root.bandFootAlpha)
+                    }
+                }
                 Behavior on height {
                     enabled: eq.animated
                     Anim {
                         duration: Appearance.anim.durations.expressiveFastEffects
                         easing.bezierCurve: Appearance.anim.curves.expressiveFastEffects
                     }
+                }
+            }
+        }
+    }
+
+    // Texte qui change de valeur en glissant : l'ancien sort vers la gauche en s'effaçant, le nouveau arrive de la droite.
+    component SwapText: StyledText {
+        id: swapText
+        property string wanted
+        property real shift: 0
+        transform: Translate {
+            x: swapText.shift
+        }
+        onWantedChanged: {
+            if (text === "" || root.reduced || !swapText.visible || !root.visible)
+                text = wanted;
+            else
+                swapAnim.restart();
+        }
+        Component.onCompleted: text = wanted
+        SequentialAnimation {
+            id: swapAnim
+            ParallelAnimation {
+                Anim {
+                    target: swapText
+                    property: "opacity"
+                    to: 0
+                    duration: Appearance.anim.durations.small
+                    easing.bezierCurve: Appearance.anim.curves.standardAccel
+                }
+                Anim {
+                    target: swapText
+                    property: "shift"
+                    to: -root.slideDistance
+                    duration: Appearance.anim.durations.small
+                    easing.bezierCurve: Appearance.anim.curves.standardAccel
+                }
+            }
+            ScriptAction {
+                script: {
+                    swapText.text = swapText.wanted;
+                    swapText.shift = root.slideDistance;
+                }
+            }
+            ParallelAnimation {
+                Anim {
+                    target: swapText
+                    property: "opacity"
+                    to: 1
+                    duration: Appearance.anim.durations.normal
+                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                }
+                Anim {
+                    target: swapText
+                    property: "shift"
+                    to: 0
+                    duration: Appearance.anim.durations.normal
+                    easing.bezierCurve: Appearance.anim.curves.standardDecel
                 }
             }
         }

@@ -1014,5 +1014,11 @@
  "Navigateur": "Navigateur",
  "Lecteur Windows": "Lecteur Windows",
  "Aucune session audio pour ce lecteur.": "Aucune session audio pour ce lecteur.",
- "Cette application n’a plus de session audio. Relance sa lecture.": "Cette application n’a plus de session audio. Relance sa lecture."
+ "Cette application n’a plus de session audio. Relance sa lecture.": "Cette application n’a plus de session audio. Relance sa lecture.",
+ "Paroles": "Paroles",
+ "Affiche les paroles synchronisées du morceau en cours. Le titre et l’artiste sont envoyés à lrclib.net.": "Affiche les paroles synchronisées du morceau en cours. Le titre et l’artiste sont envoyés à lrclib.net.",
+ "Recherche des paroles…": "Recherche des paroles…",
+ "Paroles introuvables": "Paroles introuvables",
+ "Morceau instrumental": "Morceau instrumental",
+ "Paroles non synchronisées": "Paroles non synchronisées"
 }
