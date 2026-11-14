@@ -151,6 +151,31 @@ internal sealed partial class QtShellBridge
         c.WindowItems = await Task.Run(() => desktopPort.PaletteWindows().Take(60).ToArray());
     }
 
+    // Vue d'ensemble : fenêtres du bureau virtuel courant, ordre Z. Activation et fermeture : overviewAct (hwnd).
+    [BridgeAction("overviewWindows")]
+    async Task OnOverviewWindows(BridgeCall c)
+    {
+        var raw = await Task.Run(WindowOverview.Read);
+        var shellPids = new HashSet<uint> { (uint)Environment.ProcessId, System.Threading.Volatile.Read(ref frontendWindowPid) };
+        c.WindowItems = await dispatcher.InvokeAsync(() =>
+        {
+            var items = OverviewItems(raw, shellPids);
+            overviewHwnds = new HashSet<long>(items.Select(i => i.Hwnd));
+            return items;
+        });
+    }
+
+    HashSet<long> overviewHwnds = new();
+
+    // Agit directement sur la poignée, sans passer par le dock : seulement une fenêtre de la dernière liste, encore valide.
+    [BridgeAction("overviewAct")]
+    void OnOverviewAct(BridgeCall c)
+    {
+        if (!long.TryParse(Text(c.Args, "hwnd"), out long hwnd) || !overviewHwnds.Contains(hwnd))
+            return;
+        c.Notice = WindowOverview.Act(hwnd, Text(c.Args, "action"));
+    }
+
     [BridgeAction("fileSearch")]
     void OnFileSearch(BridgeCall c)
     {

@@ -139,6 +139,8 @@ internal static class ShortcutCatalog
         new("settings","Shell","Ouvrir les paramètres","global",true,"",9,0x53,"",Array.Empty<(uint,uint)>()),
         new("palette","Shell","Commande rapide","global",true,"",2,0x71,"",Array.Empty<(uint,uint)>()),
         new("wallpaper","Apparence","Changer de fond d’écran","global",true,"",9,0x57,"",Array.Empty<(uint,uint)>()),
+        new("overview","Shell","Vue d’ensemble des fenêtres","global",false,"Fixe : Win+Alt+Tab, ou Win+Alt+V si Windows refuse " +
+            "la première combinaison.",9,0x09,"Win+Alt+Tab",Keys(9,0x09,0x56)),
         new("capture","Outils","Capturer l’écran","global",true,"",2,0x72,"",Array.Empty<(uint,uint)>()),
         new("pin","Outils","Épingler au premier plan","global",true,"",2,0x77,"",Array.Empty<(uint,uint)>()),
         new("dictation","Outils","Dictée (touche maintenue)","global",false,
@@ -221,6 +223,8 @@ internal sealed class ShortcutManager
     {
         if (d.Id == "dictation")
             return ShortcutCatalog.DictationKeyName(prefs().DictationKey);
+        if (d.Id == "overview" && hotkeys.OverviewCombo.Length > 0)
+            return hotkeys.OverviewCombo;
         if (!d.Configurable)
             return d.FixedCombo;
         var c = Current(d.Id);
@@ -238,7 +242,7 @@ internal sealed class ShortcutManager
         configurable = d.Configurable,
         reason = d.Reason,
         scope = d.Scope,
-        active = !d.Configurable || hotkeys.IsActive(d.Id)
+        active = d.Id == "overview" ? hotkeys.IsActive(d.Id) : !d.Configurable || hotkeys.IsActive(d.Id)
     }).ToArray();
     internal object Status() => new
     {
@@ -261,7 +265,7 @@ internal sealed class ShortcutManager
                 if (c.m == m && c.k == k)
                     return d;
             }
-            else if (d.Fixed.Any(f => f.m == m && f.k == k))
+            else if ((d.Id == "overview" ? hotkeys.OverviewKeys : d.Fixed).Any(f => f.m == m && f.k == k))
                 return d;
         }
         return null;

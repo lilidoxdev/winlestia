@@ -182,7 +182,29 @@ internal sealed partial class QtShellBridge
         ForgetWindowIcons(livePseudo);
         SyncDockPreview();
     }
-    Entry[] backgroundEntries = Array.Empty<Entry>(); bool scanningBackground; DateTime backgroundAt;
+    // Vue d'ensemble : l'id d'entrée du dock (nécessaire à dockApp) et l'icône viennent de dockWindows ; si une fenêtre y manque
+    // (dock masqué, liste périmée), le dock est rafraîchi une fois. Thread UI.
+    OverviewItem[] OverviewItems(List<OverviewRaw> raw, ISet<uint> shellPids)
+    {
+        if (disposed)
+            return Array.Empty<OverviewItem>();
+        OverviewItem[] Build()
+        {
+            var owners = new Dictionary<long, string>();
+            foreach (var pair in dockWindows)
+                foreach (var w in pair.Value)
+                    owners.TryAdd(w.Hwnd, pair.Key);
+            return WindowOverview.Project(raw, shellPids, w =>
+            {
+                string id = owners.GetValueOrDefault(w.Hwnd, "");
+                return (id.Length > 0 && dockEntries.TryGetValue(id, out var entry) ? entry.Name : "", id, id);
+            });
+        }
+        // Jamais de RefreshDockApps ici : le sondage tourne toutes les 1,5 s. Sans entrée de dock, la fenêtre garde son nom de fichier.
+        var items = Build();
+        return items;
+    }
+    Entry[] backgroundEntries =Array.Empty<Entry>(); bool scanningBackground; DateTime backgroundAt;
     // Un seul balayage à la fois : le cache de noms n'est touché que par ce thread de travail.
     string BackgroundName(string path)
     {

@@ -210,6 +210,9 @@ internal sealed partial class Coordinator : IDisposable
             case HotkeyAction.Wallpaper:
                 QtShell?.Send("wallpaper-switcher");
                 break;
+            case HotkeyAction.Overview:
+                QtShell?.Send("overview");
+                break;
             case HotkeyAction.Pin:
                 ToggleAlwaysOnTop();
                 break;

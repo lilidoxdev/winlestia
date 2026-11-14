@@ -179,7 +179,7 @@ public class SettingsMigrationAndShortcutsTests
         var (g, m, p, saves) = Rig();
         var ids = m.List().Select(o => (string)((dynamic)o).id).ToArray();
         Check(string.Join(",",
-                          ids) == "dashboard,dashboardFixed,settings,palette,wallpaper,capture,pin,dictation,rescue,"
+                          ids) == "dashboard,dashboardFixed,settings,palette,wallpaper,overview,capture,pin,dictation,rescue,"
                           + "tileFocus,tileSwap,tileFloat,tileGrow,tileShrink,tileExclude",
               "(s) catalogue ids and order");
         Check(Combo(m, "dashboard") == "Ctrl+F1"

@@ -114,6 +114,7 @@ After installing, move the pointer to the bottom edge of the screen to reveal th
 | Ctrl+F3 | Screen capture |
 | Ctrl+F8 | Pin window on top |
 | Win+Alt+W | Wallpaper switcher (Ctrl+Alt+W if Windows refuses it) |
+| Win+Alt+Tab | Window overview (Win+Alt+V if Windows refuses it) |
 | Ctrl+Alt+Backspace | Emergency rescue |
 
 All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` command: [docs/SHORTCUTS.md](docs/SHORTCUTS.md).

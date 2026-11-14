@@ -551,11 +551,20 @@ Window {
             onCloseRequested: wallpaperSwitcher.active = false
         }
     }
+    Loader {
+        id: windowOverview
+        active: false
+        sourceComponent: WindowOverview {
+            onCloseRequested: windowOverview.active = false
+        }
+    }
     Connections {
         target: Bridge
         function onShellEvent(event) {
             if (event === "wallpaper-switcher")
                 wallpaperSwitcher.active = !wallpaperSwitcher.active;
+            else if (event === "overview")
+                windowOverview.active = !windowOverview.active;
         }
     }
     Loader {

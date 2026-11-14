@@ -83,6 +83,8 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 | `microphone` | - | - |
 | `move` | board:string, id:string | - |
 | `openFiles` | - | - |
+| `overviewAct` | action:string, hwnd:string | - |
+| `overviewWindows` | - | - |
 | `palette` | - | - |
 | `paletteRun` | id:string, kind:string, query:string | - |
 | `preference` | enabled:boolean, key:string, value:string | key |
@@ -161,7 +163,7 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 
 ### Évènements (`events`)
 
-Exacts : `toggle`, `access`, `media`, `performance`, `controls`, `palette`, `settings`, `settings:social`, `settings:bookmarks`, `clipboard`, `audio`, `microphone`, `tools`, `capture`, `capture-ocr`, `capture-select`, `wallpaper-switcher`, `close`, `bookmarks`, `social`, `files`, `dock`, `desktop.explorerRestarted`, `dictation:start`, `dictation:stop`, `dictation:keycancel`.
+Exacts : `toggle`, `access`, `media`, `performance`, `controls`, `palette`, `settings`, `settings:social`, `settings:bookmarks`, `clipboard`, `audio`, `microphone`, `tools`, `capture`, `capture-ocr`, `capture-select`, `wallpaper-switcher`, `overview`, `close`, `bookmarks`, `social`, `files`, `dock`, `desktop.explorerRestarted`, `dictation:start`, `dictation:stop`, `dictation:keycancel`.
 Préfixes (suffixe variable) : `workspace:`, `osd:volume:`, `osd:brightness:`, `shortcut-key:`, `shortcut-saved:`, `osd:mic:`, `dictation:key:` — `workspace:<id>`, `osd:volume:<n>:<muet>`, `osd:brightness:<n>`, `osd:mic:<n>:<muet>`, `shortcut-key:<mods>:<vk>`, `shortcut-saved:<kind>`, `dictation:key:<vk>`.
 Évènements gérés côté client seulement (jamais émis par le serveur actuel) : `mixer`.
 

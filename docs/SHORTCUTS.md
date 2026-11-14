@@ -13,6 +13,7 @@ Everything below was checked against the source (`src/backend/GlobalShortcut.cs`
 | Ctrl+F3 | Screen capture | Yes |
 | Ctrl+F8 | Keep the active window on top (pin) | Yes |
 | Win+Alt+W | Wallpaper switcher. If Windows refuses the combination, Ctrl+Alt+W is the fallback | Yes |
+| Win+Alt+Tab | Window overview: live thumbnails of the open windows. If Windows refuses the combination, Win+Alt+V is the fallback | No |
 | Ctrl+Alt+Backspace | Emergency rescue (see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)) | No, reserved |
 | Hold AltGr | Push-to-talk dictation. Off by default, enable it in Settings; the key is chosen in Settings, Media and audio, not on the Keyboard shortcuts page | Set elsewhere |
 
@@ -67,6 +68,16 @@ Ctrl+H and Ctrl+1 to 4 work only while the dashboard window is open, and not on 
 | Ctrl+O | Add images |
 | Delete | Remove the selected image from the list |
 | Esc | Close |
+
+## Window overview
+
+| Key | Action |
+|---|---|
+| Arrows | Move the selection |
+| Enter / click | Switch to the window |
+| Delete / middle click / close button | Close the window |
+| Letters | Filter by title or application; Backspace edits |
+| Esc | Clear the filter, then close |
 
 ## Command line: `winlestia`
 

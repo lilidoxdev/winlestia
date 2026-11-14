@@ -55,7 +55,7 @@ class StateMixin:
         if isinstance(message.get('wallpaperPicker'), dict):
             self._wpicker = dict(self._wpicker, **message['wallpaperPicker'])
             self.wallpaperPickerChanged.emit()
-        if isinstance(message.get('windows'), list) and self.mode == 'palette':
+        if isinstance(message.get('windows'), list) and not self.overview.receive(message['windows']) and self.mode == 'palette':
             self._windows = message['windows']
             self.searchPalette(self.query)
         if message.get('fileResults'):

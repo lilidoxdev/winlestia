@@ -25,6 +25,7 @@ from bridge_wallpaper import WallpaperMixin
 from bridge_weather import WeatherMixin
 from bridge_winjets import WinjetsBridge
 from capture_native import CaptureController
+from overview_native import OverviewController
 from custom_palette import make_palette
 from interaction import EdgePolicy
 from live_model import LiveListModel
@@ -289,6 +290,12 @@ class Bridge(
             self._capture = CaptureController(self)
             self.config_path = CONFIG
         return self._capture
+
+    @Property(QObject, constant=True)
+    def overview(self):
+        if not hasattr(self, '_overview'):
+            self._overview = OverviewController(self)
+        return self._overview
 
     @Property(QObject, constant=True)
     def audioApplications(self):

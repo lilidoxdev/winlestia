@@ -6,6 +6,7 @@ import ctypes.wintypes
 user32 = ctypes.windll.user32
 user32.GetForegroundWindow.restype = ctypes.c_void_p
 user32.GetWindowLongPtrW.restype = ctypes.c_ssize_t
+user32.AllowSetForegroundWindow.argtypes = [ctypes.c_ulong]
 user32.GetWindowLongPtrW.argtypes = [ctypes.c_void_p, ctypes.c_int]
 user32.SetWindowLongPtrW.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_ssize_t]
 user32.GetWindowThreadProcessId.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulong)]
@@ -41,6 +42,25 @@ class MonitorInfo(ctypes.Structure):
         ('name', ctypes.c_wchar * 32),
     ]
 
+
+class ThumbnailProperties(ctypes.Structure):
+    """DWM_THUMBNAIL_PROPERTIES."""
+
+    _fields_ = [
+        ('flags', ctypes.c_ulong),
+        ('destination', ctypes.c_long * 4),
+        ('source', ctypes.c_long * 4),
+        ('opacity', ctypes.c_ubyte),
+        ('visible', ctypes.c_int),
+        ('client_only', ctypes.c_int),
+    ]
+
+
+dwmapi = ctypes.windll.dwmapi
+dwmapi.DwmRegisterThumbnail.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p)]
+dwmapi.DwmUnregisterThumbnail.argtypes = [ctypes.c_void_p]
+dwmapi.DwmUpdateThumbnailProperties.argtypes = [ctypes.c_void_p, ctypes.POINTER(ThumbnailProperties)]
+dwmapi.DwmQueryThumbnailSourceSize.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_long * 2)]
 
 kernel32 = ctypes.windll.kernel32
 kernel32.CreateEventW.argtypes = [ctypes.c_void_p, ctypes.c_bool, ctypes.c_bool, ctypes.c_wchar_p]

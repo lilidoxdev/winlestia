@@ -27,6 +27,9 @@ internal sealed class GlobalShortcut : IDisposable
     readonly IntPtr window; int customId, paletteId, pinId, captureId, wallpaperId, settingsId; uint modifiers, key, paletteModifiers,
         paletteKey, pinModifiers, pinKey, captureModifiers, captureKey, wallpaperModifiers, wallpaperKey, settingsModifiers, settingsKey;
     bool legacy, rescue;
+    // Vue d'ensemble : liaison fixe (id 15), Win+Alt+Tab ou, si Windows la refuse, Win+Alt+V. Texte de la combinaison réellement active.
+    const int OverviewBindingId = 15;
+    int overviewId; string overviewCombo = ""; (uint m, uint k)[] overviewKeys = Array.Empty<(uint, uint)>();
     // Point d'injection de l'enregistrement : les tests les remplacent (code d'erreur 0 = enregistré) pour ne toucher aucun vrai
     // raccourci. LastCode contient l'erreur Win32 du dernier enregistrement échoué (1409 = déjà pris).
     internal static Func<IntPtr, int, uint, uint, int>? TestRegister; internal static Func<IntPtr, int, bool>? TestUnregister;
@@ -89,7 +92,27 @@ internal sealed class GlobalShortcut : IDisposable
             if (!TrySetWallpaper(3, 0x57, out failure))
                 Store.Log("Sélecteur de fonds d’écran · repli refusé : " + failure);
         }
+        TrySetOverview();
     }
+    // Jamais bloquant : sans raccourci, la Vue d'ensemble reste simplement inaccessible au clavier.
+    void TrySetOverview()
+    {
+        foreach (var (mods, vk, text) in new[] { (9u, 0x09u, "Win+Alt+Tab"), (9u, 0x56u, "Win+Alt+V") })
+        {
+            if (!Reg(window, OverviewBindingId, mods | 0x4000, vk))
+            {
+                Store.Log("Vue d’ensemble · " + text + " refusé (" + LastCode + ")");
+                continue;
+            }
+            overviewId = OverviewBindingId;
+            overviewCombo = text;
+            overviewKeys = new[] { (mods, vk) };
+            return;
+        }
+    }
+    internal bool MatchesOverview(int id) => id == overviewId && overviewId != 0;
+    internal string OverviewCombo => overviewCombo;
+    internal (uint m, uint k)[] OverviewKeys => overviewKeys;
     internal bool Matches(int id) => id == 1 && legacy || id == customId && customId != 0;
     internal bool MatchesPalette(int id) => id == paletteId && paletteId != 0;
     internal bool MatchesPin(int id) => id == pinId && pinId != 0;
@@ -105,6 +128,7 @@ internal sealed class GlobalShortcut : IDisposable
         "pin" => pinId != 0,
         "settings"
         => settingsId != 0,
+        "overview" => overviewId != 0,
         _ => true
     }; internal bool WallpaperRegistered => wallpaperId != 0;
     internal uint WallpaperModifiers => wallpaperModifiers; internal uint WallpaperKey => wallpaperKey; internal bool WallpaperActive
@@ -387,6 +411,8 @@ internal sealed class GlobalShortcut : IDisposable
             Unreg(window, wallpaperId);
         if (settingsId != 0)
             Unreg(window, settingsId);
+        if (overviewId != 0)
+            Unreg(window, overviewId);
         if (legacy)
             Unreg(window, 1);
         if (rescue)

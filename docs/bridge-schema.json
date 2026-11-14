@@ -631,6 +631,20 @@
       "args": {},
       "required": []
     },
+    "overviewWindows": {
+      "args": {},
+      "required": []
+    },
+    "overviewAct": {
+      "args": {
+        "hwnd": "string",
+        "action": "string"
+      },
+      "required": [
+        "hwnd",
+        "action"
+      ]
+    },
     "winjets.add": {
       "args": {
         "packageId": "string",
@@ -921,6 +935,7 @@
     "capture-ocr",
     "capture-select",
     "wallpaper-switcher",
+    "overview",
     "close",
     "bookmarks",
     "social",
