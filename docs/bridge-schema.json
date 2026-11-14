@@ -476,6 +476,14 @@
       "args": {},
       "required": []
     },
+    "socialHistoryRemove": {
+      "args": {
+        "seq": "number"
+      },
+      "required": [
+        "seq"
+      ]
+    },
     "socialLogin": {
       "args": {
         "id": "string"

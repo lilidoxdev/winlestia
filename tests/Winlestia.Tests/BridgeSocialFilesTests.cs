@@ -36,6 +36,17 @@ public class BridgeSocialFilesTests
     });
 
     [Fact]
+    public void SocialHistoryRemoveIgnoresUnknownOrMissingSeq() => With(r =>
+    {
+        foreach (string args in new[] { "{\"seq\":999}", "{}" })
+        {
+            var (raw, call, _) = r.Run("socialHistoryRemove", args);
+            Assert.Null(raw);
+            Assert.Null(call.Notice);
+        }
+    });
+
+    [Fact]
     public void SocialActionsOnUnknownNetworksAreIgnored() => With(r =>
     {
         foreach (string command in new[] { "socialOpen", "socialLogin", "socialEnable", "socialLogout" })

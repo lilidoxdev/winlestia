@@ -71,8 +71,65 @@ internal static class SocialRules
             Title = Clip(h.Title, 120),
             Body = Clip(h.Body, 140),
             Kind = h.Kind == "count" ? "count" : "notif",
-            At = h.At
+            At = h.At,
+            N = h.Kind == "count" ? RestoreN(h.N, h.Title) : 0
         }).OrderByDescending(h => h.Seq).Take(100).ToList();
+
+    // Ancienne ligne "count" sans N (0) : on relit l'entier en tête du titre ("5 nouveaux messages"), à défaut 1.
+    static int RestoreN(int saved, string? title)
+    {
+        if (saved > 0)
+            return Math.Min(saved, MaxMerged);
+        int digits = 0;
+        string t = (title ?? "").TrimStart();
+        while (digits < t.Length && digits < 6 && t[digits] >= '0' && t[digits] <= '9')
+            digits++;
+        return digits > 0 ? Math.Clamp(int.Parse(t[..digits]), 1, MaxMerged) : 1;
+    }
+
+    // Lignes génériques consécutives : une hausse du titre fusionne dans la dernière ligne "count" intacte du même réseau si elle
+    // date de moins de CountMergeMs et du même jour local ; la ligne remonte en tête avec un nouveau Seq.
+    internal const long CountMergeMs = 30L * 60 * 1000;
+    internal const int MaxMerged = 99999;
+
+    internal static string CountTitle(int n) => n == 1 ? "1 nouveau message" : n + " nouveaux messages";
+
+    internal static SocialService.HistoryItem? MergeCount(
+        List<SocialService.HistoryItem> history, string net, int added, long nowMs, Func<int> newSeq)
+    {
+        var last = history.FirstOrDefault(h => h.Net == net);
+        if (added <= 0 || last == null || last.Kind != "count")
+            return null;
+        long age = nowMs - last.At;
+        if (age < 0 || age >= CountMergeMs || LocalDay(last.At) != LocalDay(nowMs))
+            return null;
+        last.N = Math.Min(MaxMerged, Math.Max(1, last.N) + added);
+        last.Title = CountTitle(last.N);
+        last.At = nowMs;
+        last.Seq = newSeq();
+        history.Remove(last);
+        history.Insert(0, last);
+        return last;
+    }
+
+    static DateTime LocalDay(long ms) => DateTimeOffset.FromUnixTimeMilliseconds(ms).ToLocalTime().Date;
+
+    // Une vraie notification reçue dans les 3 s consomme un message de la ligne générique. true = la ligne n'en couvrait qu'un
+    // (elle devient la notification) ; false = le message est retiré du regroupement et la notification a sa propre ligne.
+    internal static bool ReleaseOne(SocialService.HistoryItem entry)
+    {
+        if (entry.N <= 1)
+            return true;
+        entry.N--;
+        entry.Title = CountTitle(entry.N);
+        return false;
+    }
+
+    internal static bool RemoveBySeq(List<SocialService.HistoryItem> history, int seq, out SocialService.HistoryItem? removed)
+    {
+        removed = history.FirstOrDefault(h => h.Seq == seq);
+        return removed != null && history.Remove(removed);
+    }
 
     // Le prochain numéro doit dépasser tout Seq déjà présent, même si le champ NextSeq du fichier est absent ou en retard.
     internal static int NextSeqAfter(int savedNext, IEnumerable<int> seqs)

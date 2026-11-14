@@ -24,7 +24,7 @@ public class BridgeSystemTests
     public void RegisteredActionCountIsPinned()
     {
         // Ajouter ou retirer une action impose de mettre ce nombre à jour avec docs/bridge-schema.json.
-        Assert.Equal(115, QtShellBridge.ActionNames.Count);
+        Assert.Equal(116, QtShellBridge.ActionNames.Count);
         Assert.Equal(QtShellBridge.ActionNames.Count, QtShellBridge.ActionNames.Distinct().Count());
     }
 

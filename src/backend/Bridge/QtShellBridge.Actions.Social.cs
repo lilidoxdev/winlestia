@@ -62,6 +62,14 @@ internal sealed partial class QtShellBridge
         social.Volume(Number(c.Args, "value"));
     }
 
+    [BridgeAction("socialHistoryRemove")]
+    void OnSocialHistoryRemove(BridgeCall c)
+    {
+        double seq = Number(c.Args, "seq");
+        if (seq >= 1 && seq <= int.MaxValue)
+            social.HistoryRemove((int)seq);
+    }
+
     [BridgeAction("socialHistoryClear")]
     void OnSocialHistoryClear(BridgeCall c)
     {

@@ -103,6 +103,7 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 | `socialEnable` | enabled:boolean, id:string | - |
 | `socialGlobalMute` | muted:boolean | - |
 | `socialHistoryClear` | - | - |
+| `socialHistoryRemove` | seq:number | seq |
 | `socialLogin` | id:string | - |
 | `socialLogout` | id:string | - |
 | `socialMute` | id:string, muted:boolean | - |

@@ -50,7 +50,8 @@ internal sealed partial class SocialService
             Title = h.Title,
             Body = h.Body,
             Kind = h.Kind,
-            At = h.At
+            At = h.At,
+            N = h.N
         }).ToList()
     };
 

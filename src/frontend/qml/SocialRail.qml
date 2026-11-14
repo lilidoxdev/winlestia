@@ -221,7 +221,8 @@ EdgeRail {
                             title: e.title ?? "",
                             body: e.body ?? "",
                             kind: e.kind ?? "",
-                            at: e.at ?? 0
+                            at: e.at ?? 0,
+                            day: panel.dayKey(e.at ?? 0)
                         });
                 }
                 const have = hist.count > 0 ? hist.get(0).seq : -1;
@@ -234,7 +235,8 @@ EdgeRail {
                             title: e.title ?? "",
                             body: e.body ?? "",
                             kind: e.kind ?? "",
-                            at: e.at ?? 0
+                            at: e.at ?? 0,
+                            day: panel.dayKey(e.at ?? 0)
                         });
                 if (hist.count === 0)
                     for (const e of list)
@@ -244,8 +246,22 @@ EdgeRail {
                             title: e.title ?? "",
                             body: e.body ?? "",
                             kind: e.kind ?? "",
-                            at: e.at ?? 0
+                            at: e.at ?? 0,
+                            day: panel.dayKey(e.at ?? 0)
                         });
+            }
+            // Clé de jour local (tri des sections) et libellé : Aujourd’hui, Hier, sinon date courte.
+            function dayKey(at) {
+                return Qt.formatDate(new Date(at), "yyyy-MM-dd");
+            }
+            function dayLabel(key) {
+                const today = new Date(panel.nowMs);
+                if (key === panel.dayKey(today.getTime()))
+                    return qsTr("Aujourd’hui");
+                if (key === panel.dayKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1).getTime()))
+                    return qsTr("Hier");
+                const d = new Date(key + "T00:00:00");
+                return Qt.formatDate(d, d.getFullYear() === today.getFullYear() ? "d MMM" : "d MMM yyyy");
             }
             function rel(at) {
                 const d = panel.nowMs - at;
@@ -305,9 +321,27 @@ EdgeRail {
                 spacing: Appearance.spacing.small
                 boundsBehavior: Flickable.StopAtBounds
                 model: hist
+                section.property: "day"
+                section.criteria: ViewSection.FullString
+                section.delegate: Item {
+                    required property string section
+                    width: list.width
+                    implicitHeight: dayText.implicitHeight + Appearance.padding.smaller
+                    height: implicitHeight
+                    StyledText {
+                        id: dayText
+                        anchors.left: parent.left
+                        anchors.leftMargin: Appearance.padding.smaller
+                        anchors.bottom: parent.bottom
+                        text: panel.dayLabel(parent.section)
+                        color: Colours.palette.m3onSurfaceVariant
+                        font.pointSize: Appearance.font.size.small
+                    }
+                }
                 delegate: Item {
                     id: entry
                     required property int index
+                    required property int seq
                     required property string net
                     required property string title
                     required property string body
@@ -316,9 +350,20 @@ EdgeRail {
                     width: ListView.view.width
                     implicitHeight: row.implicitHeight + 2 * Appearance.padding.smaller
                     height: implicitHeight
+                    HoverHandler {
+                        id: rowHover
+                    }
                     StateLayer {
                         radius: Appearance.rounding.normal
-                        function onClicked() {
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                        function onClicked(mouse) {
+                            // Clic milieu : retire la ligne ; clic gauche : ouvre le réseau.
+                            if (mouse && mouse.button === Qt.MiddleButton) {
+                                Bridge.action("socialHistoryRemove", {
+                                    seq: entry.seq
+                                });
+                                return;
+                            }
                             Bridge.action("socialOpen", {
                                 id: entry.net
                             });
@@ -362,11 +407,32 @@ EdgeRail {
                                 font.pointSize: Appearance.font.size.small
                             }
                         }
-                        StyledText {
+                        // Heure à droite ; au survol, elle laisse la place à la croix de retrait (largeur fixe : rien ne bouge).
+                        Item {
                             Layout.alignment: Qt.AlignTop
-                            text: panel.rel(entry.at)
-                            color: Colours.palette.m3outline
-                            font.pointSize: Appearance.font.size.small
+                            implicitWidth: Math.max(timeText.implicitWidth, dismiss.implicitWidth)
+                            implicitHeight: timeText.implicitHeight
+                            StyledText {
+                                id: timeText
+                                anchors.right: parent.right
+                                visible: !rowHover.hovered
+                                text: panel.rel(entry.at)
+                                color: Colours.palette.m3outline
+                                font.pointSize: Appearance.font.size.small
+                            }
+                            IconButton {
+                                id: dismiss
+                                objectName: "socialHistoryRemove-" + entry.index
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: rowHover.hovered
+                                icon: "close"
+                                type: IconButton.Text
+                                padding: Appearance.padding.small / 4
+                                onClicked: Bridge.action("socialHistoryRemove", {
+                                    seq: entry.seq
+                                })
+                            }
                         }
                     }
                 }

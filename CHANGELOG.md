@@ -13,6 +13,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 - Winjets : le double-clic sur un widget entre en édition (et en sort ; Échap ou un clic dans le vide aussi), sans passer par un bouton. Pendant l'édition, une grille de cellules (168 px, gouttière 16 px) s'affiche sous les cartes avec les axes du centre de l'écran ; les cartes s'aimantent à la grille, au centre de l'écran et aux autres cartes avec un repère d'alignement, Alt désactive l'aimantation. Une pastille indique la taille en cellules.
 - Winjets : trois paquets inclus de plus. Horloge (24 h ou 12 h, secondes et date en option), Calendrier (mois avec le jour courant en accent, semaine commençant le lundi ou le dimanche ; date du jour en petit format) et Batterie (niveau, état de charge, anneau ou barre ; message discret sur un PC sans batterie).
 - Documentation créateur : `docs/winjets/FORMAT-v1.md`, guide `docs/winjets/MON-PREMIER-WINJET.md`, schémas JSON, gabarit et exemple.
+- Rail social : les lignes « N nouveaux messages » consécutives d'un même réseau sont fusionnées (même jour, moins de 30 min d'écart) en une seule ligne remontée en tête ; une notification réelle reçue dans les 3 s retire un message de la ligne fusionnée et garde sa propre ligne.
+- Rail social : l'historique est séparé par jour (« Aujourd’hui », « Hier », puis date courte).
+- Rail social : une ligne de l'historique se retire seule, par une croix au survol (à la place de l'heure) ou par clic milieu ; nouvelle action de pont `socialHistoryRemove` (`seq`).
 
 ### Modifications
 

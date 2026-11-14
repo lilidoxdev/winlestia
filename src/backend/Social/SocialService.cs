@@ -51,6 +51,11 @@ internal sealed partial class SocialService : IDisposable
         {
             get; set;
         }
+        // Nombre de messages regroupés dans une ligne générique (kind "count") ; 0 pour une notification ou une ancienne ligne.
+        public int N
+        {
+            get; set;
+        }
     }
 
     sealed class Net

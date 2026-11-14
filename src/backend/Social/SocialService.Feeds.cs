@@ -23,6 +23,17 @@ internal sealed partial class SocialService : IDisposable
         Store.Save();
         Changed();
     }
+    internal void HistoryRemove(int seq)
+    {
+        if (!SocialRules.RemoveBySeq(history, seq, out var removed))
+            return;
+        foreach (var n in nets)
+            if (ReferenceEquals(n.LastCountEntry, removed))
+                n.LastCountEntry = null;
+        countsDirty = true;
+        QueueSave();
+        Changed();
+    }
     internal void HistoryClear()
     {
         if (history.Count == 0)
@@ -72,7 +83,14 @@ internal sealed partial class SocialService : IDisposable
         {
             int d = r.Rise;
             Chime(n);
-            n.LastCountEntry = AddHistory(n, "count", d == 1 ? "1 nouveau message" : d + " nouveaux messages", "");
+            var merged = SocialRules.MergeCount(history, n.Id, d, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), () => nextSeq++);
+            if (merged != null)
+            {
+                countsDirty = true;
+                QueueSave();
+                Changed();
+            }
+            n.LastCountEntry = merged ?? AddHistory(n, "count", SocialRules.CountTitle(d), "", d);
         }
         if (r.ZeroToken > 0)
             _ = ResetLater(n, r.ZeroToken);
@@ -156,10 +174,18 @@ internal sealed partial class SocialService : IDisposable
         if (n.U.ConsumeCredit(now))
         {
             var entry = n.LastCountEntry;
+            if (entry != null && history.Contains(entry) && !SocialRules.ReleaseOne(entry))
+            {
+                // Ligne regroupée (N > 1) : les messages précédents restent comptés, la notification réelle prend sa propre ligne.
+                // LastCountEntry est conservée pour les crédits restants de la même hausse.
+                AddHistory(n, "notif", title, body);
+                return;
+            }
             n.LastCountEntry = null;
             if (entry != null && history.Contains(entry))
             {
                 entry.Kind = "notif";
+                entry.N = 0;
                 entry.Title = title;
                 entry.Body = body;
                 countsDirty = true;
@@ -183,7 +209,7 @@ internal sealed partial class SocialService : IDisposable
         Store.Log("Social processus " + (n?.Id ?? "?") + ": " + e.ProcessFailedKind);
     }
 
-    HistoryItem AddHistory(Net n, string kind, string title, string body)
+    HistoryItem AddHistory(Net n, string kind, string title, string body, int count = 0)
     {
         var item = new HistoryItem
         {
@@ -192,6 +218,7 @@ internal sealed partial class SocialService : IDisposable
             Title = title,
             Body = body,
             Kind = kind,
+            N = count,
             At = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
         history.Insert(0, item);
