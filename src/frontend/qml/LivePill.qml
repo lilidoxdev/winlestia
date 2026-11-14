@@ -9,6 +9,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.config
+import "PillMath.js" as PillMath
 
 Window {
     id: root
@@ -24,15 +25,26 @@ Window {
     readonly property int flashWidth: 360
     readonly property int levelWidth: 250
     readonly property int expandedWidth: 360
-    readonly property int expandedHeight: 156
-    readonly property int coverLarge: 72
+    readonly property int expandedHeight: 148
+    readonly property int coverLarge: 80
     readonly property int eqCompactBars: 6
-    readonly property int eqExpandedBars: 20
     readonly property int eqBarWidth: 3
     readonly property int eqBarMin: 2
     readonly property int eqCompactHeight: 18
-    readonly property int eqExpandedHeight: 24
+    readonly property int backdropBars: 36
+    readonly property int backdropGap: 3
+    readonly property int backdropHeight: 60
+    readonly property real backdropOpacity: .3
+    readonly property int controlSize: 36
+    readonly property int playSize: 44
+    readonly property int seekHitHeight: 16
     readonly property int progressHeight: 4
+    readonly property int progressHoverHeight: 6
+    readonly property int wheelNotch: 120
+    readonly property int wheelStep: 5
+    readonly property real hiddenScale: .92
+    readonly property real disabledAlpha: .38
+    readonly property int mediaPageMinHeight: 95
     readonly property int levelBarHeight: 6
     readonly property int levelValueWidth: 40
     readonly property real glassOpacity: .94
@@ -49,6 +61,12 @@ Window {
     readonly property var player: Players.active
     readonly property bool playing: player?.isPlaying ?? false
     readonly property bool suppressed: Bridge.quiet
+    // Fenêtre du panneau du haut (tableau de bord, menus) : sa hauteur animée pilote la position de la pilule.
+    readonly property var panel: Bridge.window
+    readonly property real panelBottom: (panel?.visible ?? false) ? panel.y + panel.panelHeight : 0
+    // La page Média du tableau de bord ouverte fait doublon avec la pilule : elle s'efface.
+    readonly property bool mediaPageShown: (panel?.visible ?? false) && panel.pageMode === "dashboard" && panel.dashboardTab === 1
+        && panel.panelHeight >= mediaPageMinHeight
     readonly property string trackKey: (player?.trackTitle ?? "") + "\u0000" + (player?.trackArtist ?? "")
 
     property bool lingering: false
@@ -69,7 +87,10 @@ Window {
         === "level" ? levelWidth : stateName === "compact" ? compactWidth : slimHeight
     readonly property real targetHeight: stateName === "expanded" ? expandedHeight : slimHeight
     readonly property real targetRadius: stateName === "expanded" ? Appearance.rounding.large : targetHeight / 2
-    readonly property bool wantsSpectrum: !suppressed && playing && (stateName === "compact" || stateName === "flash" || stateName
+    // Lu par le pointeur (bridge_pointer.py) : la Pilule déployée est celle qu'on est en train de viser.
+    readonly property bool expanded: stateName === "expanded"
+    property real inlineValue: 0
+    readonly property bool wantsSpectrum: !suppressed && !mediaPageShown && playing && (stateName === "compact" || stateName === "flash" || stateName
         === "expanded")
 
     // La fenêtre épouse la taille animée de la capsule : aucune zone morte autour, aucun clic avalé.
@@ -77,8 +98,11 @@ Window {
     height: Math.max(1, pill.height)
     x: Bridge.screenX + (Bridge.screenWidth - width) / 2
     // Avec le cadre d'écran, la pilule est suspendue à son bord haut ; sans cadre, petite marge depuis le haut de l'écran.
-    y: Bridge.screenY + ((Bridge.settings.screenFrame ?? true) ? Math.max(0, Bridge.frameThickness) : Appearance.spacing.normal)
-    visible: !suppressed && (stateName !== "idle" || pill.opacity > 0.01)
+    readonly property real restY: Bridge.screenY + ((Bridge.settings.screenFrame ?? true) ? Math.max(0, Bridge.frameThickness)
+        : Appearance.spacing.normal)
+    // Le panneau du haut descend : la pilule le suit, juste en dessous, dans le même mouvement (aucun minuteur propre).
+    y: Math.round(PillMath.followY(restY, panelBottom, Appearance.spacing.normal))
+    visible: !suppressed && ((stateName !== "idle" && !mediaPageShown) || pill.opacity > 0.01)
 
     function levelIcon() {
         if (levelKind === "brightness")
@@ -99,6 +123,30 @@ Window {
     onSuppressedChanged: {
         if (suppressed)
             resetHover();
+    }
+    onMediaPageShownChanged: {
+        if (mediaPageShown)
+            resetHover();
+    }
+    // Molette sur la pilule : volume du lecteur, affiché par le même retour de niveau que les touches de volume.
+    function nudgeVolume(notches) {
+        // Déployée, la carte reste ouverte et affiche le volume en ligne ; sinon, le retour de niveau habituel.
+        const inline = expanded;
+        const base = inline ? (inlineTimer.running ? inlineValue : (player?.volume ?? 0)) : levelTimer.running && levelKind === "volume"
+            ? levelValue : (player?.volume ?? 0);
+        const next = PillMath.stepVolume(base, notches, wheelStep);
+        if (inline) {
+            inlineValue = next;
+            inlineTimer.restart();
+        } else {
+            levelKind = "volume";
+            levelValue = next;
+            levelMuted = false;
+            levelTimer.restart();
+        }
+        Bridge.action("mediaVolume", {
+            "value": next
+        });
     }
     onStateNameChanged: {
         if (stateName === "idle")
@@ -128,6 +176,7 @@ Window {
     }
     onWantsSpectrumChanged: Bridge.setPillSpectrum(wantsSpectrum)
     Component.onCompleted: {
+        Bridge.setPillSpectrum(wantsSpectrum);
         previousKey = trackKey;
         lingering = playing;
         Bridge.mediaRef(true);
@@ -184,6 +233,10 @@ Window {
         interval: root.levelMs
     }
     Timer {
+        id: inlineTimer
+        interval: root.levelMs
+    }
+    Timer {
         id: enterTimer
         interval: root.hoverIntentMs
         onTriggered: root.expandedWanted = true
@@ -227,8 +280,16 @@ Window {
         color: Qt.alpha(Colours.palette.m3surfaceContainer, Bridge.glassEnabled ? root.glassOpacity : 1)
         border.width: 1
         border.color: Colours.palette.m3outlineVariant
-        opacity: root.stateName === "idle" ? 0 : 1
+        opacity: root.stateName === "idle" || root.mediaPageShown ? 0 : 1
+        scale: root.mediaPageShown ? root.hiddenScale : 1
 
+        Behavior on scale {
+            enabled: !root.reduced
+            Anim {
+                duration: Appearance.anim.durations.expressiveEffects
+                easing.bezierCurve: Appearance.anim.curves.expressiveEffects
+            }
+        }
         Behavior on width {
             enabled: !root.reduced
             Anim {
@@ -269,6 +330,19 @@ Window {
                     enterTimer.stop();
                     leaveTimer.restart();
                 }
+            }
+        }
+        property real wheelAcc: 0
+        WheelHandler {
+            enabled: root.mediaWanted && (root.player?.available ?? false)
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            onWheel: event => {
+                pill.wheelAcc += event.angleDelta.y;
+                const notches = Math.trunc(pill.wheelAcc / root.wheelNotch);
+                if (notches === 0)
+                    return;
+                pill.wheelAcc -= notches * root.wheelNotch;
+                root.nudgeVolume(notches);
             }
         }
         MouseArea {
@@ -390,13 +464,31 @@ Window {
             }
         }
 
-        // Média déployé : carte avec pochette, titre, artiste, commandes, progression et spectre.
+        // Média déployé : spectre en fond, pochette, titre, artiste, commandes, progression avec temps.
         Item {
+            id: card
             width: root.expandedWidth
             height: root.expandedHeight
             anchors.centerIn: parent
             opacity: root.shown === "expanded" ? root.contentOpacity : 0
             visible: opacity > 0
+            readonly property real inner: width - Appearance.padding.large * 2
+            readonly property real position: seek.dragging ? seek.dragFraction * (root.player?.length ?? 0) : (root.player?.position ?? 0)
+
+            Equaliser {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: root.backdropHeight
+                opacity: root.backdropOpacity
+                count: root.backdropBars
+                barGap: root.backdropGap
+                barMin: root.eqBarMin
+                animated: !root.reduced
+                live: root.playing && root.shown === "expanded"
+                fill: true
+                bottomAligned: true
+            }
             Cover {
                 id: bigCover
                 size: root.coverLarge
@@ -416,22 +508,24 @@ Window {
                     width: parent.width
                     elide: Text.ElideRight
                     text: root.player ? (root.player.trackTitle || qsTr("Unknown title")) : ""
-                    color: Colours.palette.m3primary
+                    color: Colours.palette.m3onSurface
                     font.pointSize: Appearance.font.size.normal
                 }
                 StyledText {
                     width: parent.width
                     elide: Text.ElideRight
                     text: (root.player?.trackArtist ?? "") || qsTr("Unknown artist")
-                    color: Colours.palette.m3secondary
+                    color: Colours.palette.m3onSurfaceVariant
+                    font.pointSize: Appearance.font.size.small
                 }
             }
             Row {
                 anchors.left: bigCover.right
                 anchors.leftMargin: Appearance.spacing.small
                 anchors.bottom: bigCover.bottom
-                spacing: Appearance.spacing.small
+                spacing: Appearance.spacing.smaller
                 Control {
+                    anchors.verticalCenter: parent.verticalCenter
                     icon: "skip_previous"
                     canUse: root.player?.canGoPrevious ?? false
                     function onClicked(): void {
@@ -439,6 +533,8 @@ Window {
                     }
                 }
                 Control {
+                    anchors.verticalCenter: parent.verticalCenter
+                    emphasis: true
                     icon: root.playing ? "pause" : "play_arrow"
                     canUse: root.player?.canTogglePlaying ?? false
                     function onClicked(): void {
@@ -446,6 +542,7 @@ Window {
                     }
                 }
                 Control {
+                    anchors.verticalCenter: parent.verticalCenter
                     icon: "skip_next"
                     canUse: root.player?.canGoNext ?? false
                     function onClicked(): void {
@@ -453,43 +550,119 @@ Window {
                     }
                 }
             }
-            StyledRect {
-                id: progress
+            // Progression : piste visible sous la partie lue, clic ou glissé pour se déplacer si le lecteur le permet.
+            Item {
+                id: seek
                 x: Appearance.padding.large
-                width: parent.width - Appearance.padding.large * 2
+                width: card.inner
                 anchors.top: bigCover.bottom
                 anchors.topMargin: Appearance.spacing.smaller
-                height: root.progressHeight
-                radius: Appearance.rounding.full
-                color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+                height: root.seekHitHeight
+                readonly property bool canSeek: (root.player?.canSeek ?? false) && (root.player?.lengthKnown ?? false)
+                property bool dragging: false
+                property real dragFraction: 0
+                readonly property real shownFraction: dragging ? dragFraction : PillMath.fraction(root.player?.position ?? 0,
+                    root.player?.lengthKnown ? root.player.length : 0)
                 StyledRect {
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width
+                    height: seek.dragging || seekArea.containsMouse ? root.progressHoverHeight : root.progressHeight
                     radius: Appearance.rounding.full
-                    color: Colours.palette.m3primary
-                    width: parent.width * Math.max(0, Math.min(1, root.player?.lengthKnown && root.player?.length ? root.player.position
-                        / root.player.length : 0))
+                    color: Colours.palette.m3surfaceContainerHighest
+                    Behavior on height {
+                        enabled: !root.reduced
+                        Anim {
+                            duration: Appearance.anim.durations.small
+                        }
+                    }
+                    StyledRect {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        radius: Appearance.rounding.full
+                        color: Colours.palette.m3primary
+                        width: parent.width * seek.shownFraction
+                        Behavior on width {
+                            enabled: !root.reduced && !seek.dragging
+                            Anim {
+                                duration: Appearance.anim.durations.small
+                            }
+                        }
+                    }
+                }
+                MouseArea {
+                    id: seekArea
+                    anchors.fill: parent
+                    enabled: seek.canSeek
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    function fractionAt(x: real): real {
+                        return Math.max(0, Math.min(1, x / width));
+                    }
+                    onPressed: mouse => {
+                        seek.dragFraction = fractionAt(mouse.x);
+                        seek.dragging = true;
+                    }
+                    onPositionChanged: mouse => {
+                        if (pressed)
+                            seek.dragFraction = fractionAt(mouse.x);
+                    }
+                    onReleased: {
+                        if (seek.dragging && root.player)
+                            root.player.position = seek.dragFraction * root.player.length;
+                        seek.dragging = false;
+                    }
+                    onCanceled: seek.dragging = false
                 }
             }
-            Equaliser {
+            StyledText {
                 x: Appearance.padding.large
-                width: parent.width - Appearance.padding.large * 2
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: Appearance.padding.large
-                count: root.eqExpandedBars
-                barWidth: root.eqBarWidth
-                barMin: root.eqBarMin
-                animated: !root.reduced
-                height: root.eqExpandedHeight
-                live: root.playing && root.shown === "expanded"
-                stretch: true
+                anchors.top: seek.bottom
+                text: PillMath.clock(card.position)
+                color: Colours.palette.m3onSurfaceVariant
+                font.pointSize: Appearance.font.size.small
+            }
+            // Volume en ligne (molette) : icône et pourcentage entre les deux temps, la carte reste ouverte.
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: seek.bottom
+                spacing: Appearance.spacing.smaller
+                opacity: inlineTimer.running ? 1 : 0
+                visible: opacity > 0
+                Behavior on opacity {
+                    enabled: !root.reduced
+                    Anim {
+                        duration: Appearance.anim.durations.small
+                    }
+                }
+                MaterialIcon {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.inlineValue <= 0 ? "volume_mute" : root.inlineValue < 50 ? "volume_down" : "volume_up"
+                    color: Colours.palette.m3primary
+                    font.pointSize: Appearance.font.size.normal
+                }
+                StyledText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Math.round(root.inlineValue) + "%"
+                    color: Colours.palette.m3primary
+                    font.pointSize: Appearance.font.size.small
+                }
+            }
+            StyledText {
+                anchors.right: parent.right
+                anchors.rightMargin: Appearance.padding.large
+                anchors.top: seek.bottom
+                text: root.player?.lengthKnown ? PillMath.clock(root.player.length) : PillMath.clock(-1)
+                color: Colours.palette.m3onSurfaceVariant
+                font.pointSize: Appearance.font.size.small
             }
         }
     }
 
     // Pochette : cercle (compact) ou carré arrondi (déployé), icône de repli tant qu'aucune image n'est disponible.
+    // Au changement de piste, la nouvelle image apparaît en fondu par-dessus l'ancienne.
     component Cover: StyledClippingRect {
+        id: cover
         required property int size
         property bool circle: true
         property url art
@@ -497,6 +670,11 @@ Window {
         implicitHeight: size
         radius: circle ? Appearance.rounding.full : Appearance.rounding.normal
         color: Colours.tPalette.m3surfaceContainerHigh
+        onArtChanged: {
+            previousImage.source = String(art) === "" ? "" : currentImage.source;
+            currentImage.source = art;
+        }
+        Component.onCompleted: currentImage.source = art
         MaterialIcon {
             anchors.centerIn: parent
             grade: root.coverIconGrade
@@ -505,46 +683,55 @@ Window {
             font.pointSize: (parent.width * root.coverIconScale) || 1
         }
         Image {
+            id: previousImage
             anchors.fill: parent
-            source: parent.art
             asynchronous: true
             fillMode: Image.PreserveAspectCrop
             sourceSize.width: width
             sourceSize.height: height
         }
+        Image {
+            id: currentImage
+            anchors.fill: parent
+            asynchronous: true
+            fillMode: Image.PreserveAspectCrop
+            sourceSize.width: width
+            sourceSize.height: height
+            opacity: status === Image.Ready ? 1 : 0
+            Behavior on opacity {
+                enabled: !root.reduced
+                Anim {
+                    duration: Appearance.anim.durations.expressiveSlowEffects
+                }
+            }
+        }
     }
 
-    // Égaliseur : `count` barres m3primary regroupées depuis les 48 bandes ; barres plates quand rien ne joue.
+    // Égaliseur : `count` barres arrondies m3primary regroupées depuis les 48 bandes ; barres plates quand rien ne joue.
+    // fill : les barres se partagent toute la largeur (écart barGap) ; bottomAligned : posées sur le bas au lieu d'être centrées.
     component Equaliser: Item {
         id: eq
         property int count: 6
         property bool live: false
-        property bool stretch: false
+        property bool fill: false
+        property bool bottomAligned: false
         property int barWidth: 3
+        property int barGap: 3
         property int barMin: 2
         property bool animated: true
         readonly property var values: live ? Bridge.spectrum : []
-        readonly property real gap: stretch ? (width - count * eq.barWidth) / Math.max(1, count - 1) : eq.barWidth
-        implicitWidth: count * eq.barWidth + (count - 1) * eq.barWidth
-        function level(i) {
-            const s = values;
-            if (!s || s.length === 0)
-                return 0;
-            const a = Math.floor(i * s.length / count);
-            const b = Math.max(a + 1, Math.floor((i + 1) * s.length / count));
-            let t = 0;
-            for (let k = a; k < b; k++)
-                t += s[k] || 0;
-            return Math.min(1, Math.sqrt(t / (b - a)));
-        }
+        readonly property real cell: fill ? Math.max(1, (width - (count - 1) * barGap) / count) : barWidth
+        readonly property real step: fill ? cell + barGap : barWidth * 2
+        implicitWidth: count * barWidth + (count - 1) * barWidth
         Repeater {
             model: eq.count
             delegate: StyledRect {
                 required property int index
-                x: index * (eq.barWidth + eq.gap)
-                width: eq.barWidth
-                height: Math.max(eq.barMin, eq.level(index) * eq.height)
-                anchors.verticalCenter: eq.verticalCenter
+                x: index * eq.step
+                width: eq.cell
+                height: Math.max(eq.barMin, PillMath.level(eq.values, index, eq.count) * eq.height)
+                anchors.verticalCenter: eq.bottomAligned ? undefined : eq.verticalCenter
+                anchors.bottom: eq.bottomAligned ? eq.bottom : undefined
                 radius: Appearance.rounding.full
                 color: Colours.palette.m3primary
                 Behavior on height {
@@ -558,16 +745,20 @@ Window {
         }
     }
 
+    // Commande ronde : couche d'état au survol et à l'appui ; la lecture/pause est pleine (m3primary), les autres sont discrètes.
     component Control: StyledRect {
         id: control
         required property string icon
         required property bool canUse
+        property bool emphasis: false
         function onClicked(): void {
         }
-        implicitWidth: ctrlIcon.implicitHeight + Appearance.padding.small
+        implicitWidth: emphasis ? root.playSize : root.controlSize
         implicitHeight: implicitWidth
         radius: Appearance.rounding.full
+        color: emphasis ? Qt.alpha(Colours.palette.m3primary, canUse ? 1 : root.disabledAlpha) : "transparent"
         StateLayer {
+            color: control.emphasis ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
             disabled: !control.canUse
             radius: Appearance.rounding.full
             function onClicked(): void {
@@ -580,8 +771,8 @@ Window {
             anchors.verticalCenterOffset: font.pointSize * root.controlIconNudge
             animate: true
             text: control.icon
-            color: control.canUse ? Colours.palette.m3onSurface : Colours.palette.m3outline
-            font.pointSize: Appearance.font.size.large
+            color: control.emphasis ? Colours.palette.m3onPrimary : control.canUse ? Colours.palette.m3onSurface : Colours.palette.m3outline
+            font.pointSize: control.emphasis ? Appearance.font.size.extraLarge : Appearance.font.size.large
         }
     }
 }

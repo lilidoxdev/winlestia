@@ -7,6 +7,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 ### Ajouts
 
 - Pilule : capsule en haut de l'écran qui n'apparaît que lorsqu'il se passe quelque chose (musique avec égaliseur en direct, changement de piste, volume, luminosité, micro) et change de forme en douceur ; réglage « Pilule » (activé par défaut), qui remplace l'indicateur du bord droit.
+- Pilule déployée : spectre en barres arrondies en fond, piste de progression visible avec temps écoulé et total (clic ou glissé pour se déplacer), pochette en fondu, molette pour le volume du lecteur. Elle descend avec le panneau du haut au lieu d'être recouverte, le bord haut ne l'ouvre plus à son aplomb, et elle s'efface quand la page Média du tableau de bord est affichée.
 - Fonds d'écran : le fond choisi se déploie en cercle depuis la vignette, puis les couleurs de tout le shell glissent vers la nouvelle palette au lieu de changer d'un coup (instantané avec les effets allégés).
 - Vue d'ensemble (Win+Alt+Tab, ou Win+Alt+V si Windows refuse la première) : plein écran, vignettes en direct de toutes les fenêtres ouvertes sur le bureau virtuel courant, disposées en grille. Clic ou Entrée pour basculer, Suppr ou clic milieu pour fermer, flèches pour naviguer, lettres pour filtrer, Échap pour quitter.
 - Vue d'ensemble : les vignettes partent de la vraie position des fenêtres pour rejoindre la grille (et reviennent à la fermeture), la fenêtre choisie grandit jusqu'à sa place pendant que les autres s'effacent, et la grille glisse quand une fenêtre se ferme.

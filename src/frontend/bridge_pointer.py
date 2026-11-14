@@ -11,6 +11,12 @@ from PySide6.QtCore import QRect
 from interaction import is_fullscreen
 
 
+def pill_blocks_edge(pill, x, expanded, reaching):
+    # Le bord haut n'ouvre pas le panneau à l'aplomb de la Pilule, mais seulement quand on va vers elle : déployée, ou
+    # survolée (maintenant ou au sondage précédent). Une pilule compacte non survolée n'exclut rien.
+    return pill is not None and (expanded or reaching) and pill.left() - 8 <= x <= pill.right() + 8
+
+
 class PointerMixin:
     """Sondage du pointeur : bords d’écran, plein écran, mode silencieux et glisser de fichiers."""
 
@@ -116,6 +122,14 @@ class PointerMixin:
         bx = rg.x() + rg.width() - bw + offset
         return QRect(int(bx) - 16, int(by) - 16, int(edge - bx) + 17, int(bh) + 32)
 
+    def pill_window(self):
+        # Fenêtre de la Pilule (capsule du haut) quand elle est affichée : le bord haut ne doit pas ouvrir le panneau au-dessus
+        # d'elle, et la survoler garde le panneau ouvert.
+        for window in QApplication.topLevelWindows():
+            if window.objectName() == 'livePill' and window.isVisible():
+                return window
+        return None
+
     def social_zone(self, screen_right):
         return self.edge_zone(self.social_win, screen_right, 'right')
 
@@ -214,12 +228,21 @@ class PointerMixin:
             round(panel_width),
             round(panel_height),
         )
-        top_inside = self.top.isVisible() and panel_rect.adjusted(-12, -2, 12, 16).contains(point)
+        pill_win = self.pill_window() if point.y() < geometry.top() + 400 else None
+        # Seulement si la Pilule est sur l'écran du pointeur.
+        pill = pill_win.geometry() if pill_win is not None else None
+        if pill is not None and not geometry.contains(pill.center()):
+            pill = None
+        over_pill = pill is not None and pill.adjusted(-8, -8, 8, 8).contains(point)
+        reaching = over_pill or getattr(self, 'pill_was_over', False)
+        self.pill_was_over = over_pill
+        top_inside = self.top.isVisible() and (panel_rect.adjusted(-12, -2, 12, 16).contains(point) or over_pill)
         top_edge = (
             geometry.top()
             <= point.y()
             <= geometry.top() + int(self._state.get("settings", {}).get("topActivationMargin", 2))
             and abs(point.x() - geometry.center().x()) < 460
+            and not pill_blocks_edge(pill, point.x(), bool(pill_win and pill_win.property('expanded')), reaching)
         )
         if self.fileDragNearTop:
             if self.top.isVisible():
