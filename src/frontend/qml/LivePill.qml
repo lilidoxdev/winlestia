@@ -22,19 +22,24 @@ Window {
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus
 
     readonly property int slimHeight: 40
-    readonly property int coverSmall: 30
-    readonly property int compactWidth: 128
-    readonly property int compactMaxWidth: 320
-    readonly property int compactEqWidth: 33
-    readonly property int flashWidth: 360
+    readonly property int discSize: 44
+    readonly property int discBack: 4
+    readonly property real discBackAlpha: .5
+    readonly property int discRing: 2
+    readonly property int discHole: 6
+    readonly property int spinPeriodMs: 9000
+    readonly property int spinStopMs: 900
+    readonly property real hoverScale: 1.06
+    readonly property int histBars: 6
+    readonly property int histGap: 3
+    readonly property int histHeight: 14
+    readonly property int histSpacing: 4
+    readonly property int closeSize: 28
     readonly property int levelWidth: 250
     readonly property int expandedWidth: 400
     readonly property int coverLarge: 88
     readonly property int lyricsHeight: 112
-    readonly property int eqCompactBars: 6
-    readonly property int eqBarWidth: 3
     readonly property int eqBarMin: 2
-    readonly property int eqCompactHeight: 18
     readonly property int bandBars: 48
     readonly property int bandGap: 3
     readonly property int bandHeight: 64
@@ -63,10 +68,7 @@ Window {
     readonly property int coverIconGrade: 200
     readonly property real coverIconScale: 0.4
     readonly property real controlIconNudge: 0.05
-    readonly property int hoverIntentMs: 220
-    readonly property int hoverLeaveMs: 450
     readonly property int pausedHoldMs: 5000
-    readonly property int flashMs: 2600
     readonly property int levelMs: 1500
 
     readonly property bool reduced: Appearance.reducedEffects
@@ -75,23 +77,27 @@ Window {
     readonly property bool suppressed: Bridge.quiet
     // Fenêtre du panneau du haut (tableau de bord, menus) : sa hauteur animée pilote la position de la pilule.
     readonly property var panel: Bridge.window
-    readonly property real panelBottom: (panel?.visible ?? false) ? panel.y + panel.panelHeight : 0
+    // Le panneau est centré : il ne gêne la pilule du coin que sur les écrans assez étroits pour que leurs largeurs se chevauchent.
+    // Bord droit réel du contenu du panneau (décalé vers la gauche par dashboardShift quand le rail est lié), comparé à la
+    // position CIBLE de la pilule : le résultat ne bascule donc pas pendant l'animation de largeur.
+    readonly property real panelRight: Bridge.screenX + Bridge.screenWidth / 2 + (panel?.panelWidth ?? 0) / 2 - (panel?.dashboardShift ?? 0)
+    readonly property real targetX: Bridge.screenX + Bridge.screenWidth - cornerInset - Math.round(targetWidth)
+    readonly property bool panelOverlaps: (panel?.visible ?? false) && panelRight + Appearance.spacing.normal > targetX
+    readonly property real panelBottom: panelOverlaps ? panel.y + panel.panelHeight : 0
     // La page Média du tableau de bord ouverte fait doublon avec la pilule : elle s'efface.
     readonly property bool mediaPageShown: (panel?.visible ?? false) && panel.pageMode === "dashboard" && panel.dashboardTab === 1
         && panel.panelHeight >= mediaPageMinHeight
-    readonly property string trackKey: (player?.trackTitle ?? "") + "\u0000" + (player?.trackArtist ?? "")
 
     property bool lingering: false
     property bool expandedWanted: false
     property string levelKind: "volume"
     property real levelValue: 0
     property bool levelMuted: false
-    property string previousKey: ""
 
     readonly property bool mediaWanted: (player?.available ?? false) && (playing || lingering || expandedWanted)
-    // Priorité : niveau > déployé > changement de piste > compact > repos.
-    readonly property string stateName: levelTimer.running ? "level" : mediaWanted && expandedWanted ? "expanded" : mediaWanted
-        && flashTimer.running ? "flash" : mediaWanted ? "compact" : "idle"
+    // Priorité : niveau > déployé > disque > repos.
+    readonly property string stateName: levelTimer.running ? "level" : mediaWanted && expandedWanted ? "expanded" : mediaWanted ? "compact"
+        : "idle"
     property string shown: "idle"
     property real contentOpacity: 1
 
@@ -99,32 +105,32 @@ Window {
     // Zone de paroles de la carte : repliée sans paroles (off, none, idle).
     readonly property bool lyricsShown: lyricsPhase === "synced" || lyricsPhase === "plain" || lyricsPhase === "loading"
         || lyricsPhase === "instrumental"
-    readonly property string fallbackLine: ((player?.trackTitle ?? "") + ((player?.trackArtist ?? "") !== "" ? " · " + player.trackArtist
-        : ""))
-    // Compact : largeur fixe avec des paroles synchronisées (la pilule ne bouge pas à chaque ligne), sinon ajustée au titre.
-    readonly property real compactWidthWanted: lyricsPhase === "synced" ? compactMaxWidth : fallbackLine === "" ? compactWidth
-        : Math.max(compactWidth, Math.min(compactMaxWidth, slimHeight + compactEqWidth + Appearance.padding.larger + Appearance.spacing.small * 2
-        + Math.ceil(compactMetrics.advanceWidth)))
+    // Disque compact : le disque, un espace, puis l'histogramme, le tout sur un fond rond très discret.
+    readonly property real compactWidthWanted: discSize + discBack * 2
+    readonly property real compactHeightWanted: discBack * 2 + discSize + histSpacing + histHeight
     readonly property real expandedHeight: Appearance.padding.large + coverLarge + Appearance.spacing.small + seekHitHeight + timeMetrics.height
         + (lyricsShown ? Appearance.spacing.small + lyricsHeight : 0) + Appearance.padding.larger
-    readonly property real targetWidth: stateName === "expanded" ? expandedWidth : stateName === "flash" ? flashWidth : stateName
-        === "level" ? levelWidth : stateName === "compact" ? compactWidthWanted : slimHeight
-    readonly property real targetHeight: stateName === "expanded" ? expandedHeight : slimHeight
-    readonly property real targetRadius: stateName === "expanded" ? Appearance.rounding.large : targetHeight / 2
+    readonly property real targetWidth: stateName === "expanded" ? expandedWidth : stateName === "level" ? levelWidth : stateName
+        === "compact" ? compactWidthWanted : slimHeight
+    readonly property real targetHeight: stateName === "expanded" ? expandedHeight : stateName === "compact" ? compactHeightWanted
+        : slimHeight
+    readonly property real targetRadius: stateName === "expanded" ? Appearance.rounding.large : stateName === "compact"
+        ? compactWidthWanted / 2 : targetHeight / 2
     // Lu par le pointeur (bridge_pointer.py) : la Pilule déployée est celle qu'on est en train de viser.
     readonly property bool expanded: stateName === "expanded"
     property real inlineValue: 0
     // Le spectre est aussi demandé tant que la page Média est ouverte : la couronne autour de sa pochette lit le même flux.
-    readonly property bool wantsSpectrum: !suppressed && playing && (mediaPageShown || stateName === "compact" || stateName === "flash"
-        || stateName === "expanded")
+    readonly property bool wantsSpectrum: !suppressed && playing && (mediaPageShown || stateName === "compact" || stateName === "expanded")
 
     // La fenêtre épouse la taille animée de la capsule : aucune zone morte autour, aucun clic avalé.
-    width: Math.max(1, pill.width)
+    width: Math.max(1, Math.round(pill.width))
     height: Math.max(1, pill.height)
-    x: Bridge.screenX + (Bridge.screenWidth - width) / 2
-    // Avec le cadre d'écran, la pilule est suspendue à son bord haut ; sans cadre, petite marge depuis le haut de l'écran.
-    readonly property real restY: Bridge.screenY + ((Bridge.settings.screenFrame ?? true) ? Math.max(0, Bridge.frameThickness)
-        : Appearance.spacing.normal)
+    // Coin haut droit, à l'intérieur du cadre d'écran s'il est actif, avec de quoi dégager son coin intérieur arrondi.
+    // Ancrée par son coin haut droit : toute variation de taille s'étend vers la gauche et vers le bas.
+    readonly property real cornerInset: ((Bridge.settings.screenFrame ?? true) ? Math.max(0, Bridge.frameThickness) : 0)
+        + Appearance.spacing.normal + Appearance.padding.small
+    x: Math.round(Bridge.screenX + Bridge.screenWidth - cornerInset - width)
+    readonly property real restY: Bridge.screenY + cornerInset
     // Le panneau du haut descend : la pilule le suit, juste en dessous, dans le même mouvement (aucun minuteur propre).
     y: Math.round(PillMath.followY(restY, panelBottom, Appearance.spacing.normal))
     visible: !suppressed && ((stateName !== "idle" && !mediaPageShown) || pill.opacity > 0.01)
@@ -139,10 +145,8 @@ Window {
     function fadeTime() {
         return reduced ? 0 : Appearance.anim.durations.expressiveFastEffects;
     }
-    // Masquée ou en silence : plus de survol en attente, elle ne doit jamais revenir déployée sans survol.
+    // Masquée, en silence ou sans lecteur : la carte se referme, elle ne revient jamais ouverte toute seule.
     function resetHover() {
-        enterTimer.stop();
-        leaveTimer.stop();
         expandedWanted = false;
     }
     onSuppressedChanged: {
@@ -151,6 +155,10 @@ Window {
     }
     onMediaPageShownChanged: {
         if (mediaPageShown)
+            resetHover();
+    }
+    onPlayerChanged: {
+        if (!(player?.available ?? false))
             resetHover();
     }
     // Molette sur la pilule : volume du lecteur, affiché par le même retour de niveau que les touches de volume.
@@ -194,15 +202,9 @@ Window {
             holdTimer.restart();
         }
     }
-    onTrackKeyChanged: {
-        if (previousKey !== "" && (player?.trackTitle ?? "") !== "" && mediaWanted && !expandedWanted)
-            flashTimer.restart();
-        previousKey = trackKey;
-    }
     onWantsSpectrumChanged: Bridge.setPillSpectrum(wantsSpectrum)
     Component.onCompleted: {
         Bridge.setPillSpectrum(wantsSpectrum);
-        previousKey = trackKey;
         lingering = playing;
         Bridge.mediaRef(true);
     }
@@ -212,13 +214,6 @@ Window {
     }
 
     // Le contenu sortant s'efface avant que le suivant n'apparaisse ; la taille, elle, anime tout de suite vers la cible.
-    TextMetrics {
-        id: compactMetrics
-        text: root.fallbackLine
-        font.family: Appearance.font.family.sans
-        font.pointSize: Appearance.font.size.normal
-        font.weight: Font.DemiBold
-    }
     TextMetrics {
         id: timeMetrics
         text: "0"
@@ -266,26 +261,12 @@ Window {
         onTriggered: root.lingering = false
     }
     Timer {
-        id: flashTimer
-        interval: root.flashMs
-    }
-    Timer {
         id: levelTimer
         interval: root.levelMs
     }
     Timer {
         id: inlineTimer
         interval: root.levelMs
-    }
-    Timer {
-        id: enterTimer
-        interval: root.hoverIntentMs
-        onTriggered: root.expandedWanted = true
-    }
-    Timer {
-        id: leaveTimer
-        interval: root.hoverLeaveMs
-        onTriggered: root.expandedWanted = false
     }
     // Position du lecteur : mise à jour seulement quand la pilule déployée est visible et que la musique joue.
     Timer {
@@ -314,12 +295,14 @@ Window {
     StyledClippingRect {
         id: pill
         anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.right: parent.right
         width: root.targetWidth
         height: root.targetHeight
         radius: Math.max(0, root.targetRadius)
-        color: Qt.alpha(Colours.palette.m3surfaceContainer, Bridge.glassEnabled ? root.glassOpacity : 1)
-        border.width: 1
+        // Disque compact : fond rond à peine visible ; carte et niveau : fond plein.
+        color: Qt.alpha(Colours.palette.m3surfaceContainer, root.stateName === "compact" ? root.discBackAlpha : Bridge.glassEnabled
+            ? root.glassOpacity : 1)
+        border.width: root.stateName === "compact" ? 0 : 1
         border.color: Colours.palette.m3outlineVariant
         opacity: root.stateName === "idle" || root.mediaPageShown ? 0 : 1
         scale: root.mediaPageShown ? root.hiddenScale : 1
@@ -338,11 +321,12 @@ Window {
                 easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
             }
         }
+        // Courbe standard : une carte qui grandit quand les paroles arrivent ne rebondit pas.
         Behavior on height {
             enabled: !root.reduced
             Anim {
                 duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                easing.bezierCurve: Appearance.anim.curves.standard
             }
         }
         Behavior on radius {
@@ -362,16 +346,7 @@ Window {
 
         HoverHandler {
             id: hover
-            enabled: root.mediaWanted
-            onHoveredChanged: {
-                if (hovered) {
-                    leaveTimer.stop();
-                    enterTimer.restart();
-                } else {
-                    enterTimer.stop();
-                    leaveTimer.restart();
-                }
-            }
+            enabled: root.stateName === "compact"
         }
         property real wheelAcc: 0
         WheelHandler {
@@ -388,80 +363,48 @@ Window {
         }
         MouseArea {
             anchors.fill: parent
-            enabled: root.stateName === "compact" || root.stateName === "flash"
+            enabled: root.stateName === "compact"
             cursorShape: Qt.PointingHandCursor
-            onClicked: {
-                leaveTimer.stop();
-                root.expandedWanted = true;
-            }
+            onClicked: root.expandedWanted = true
         }
 
-        // Média compact : pochette ronde, ligne de paroles en cours (repli titre · artiste) qui glisse, mini égaliseur.
+        // Média compact : un disque (pochette en rotation lente tant que la musique joue) et, dessous, un petit histogramme.
+        // Rien d'autre : ni texte ni carte. Le clic sur le disque ouvre la carte.
         Item {
-            width: pill.width
-            height: root.slimHeight
-            anchors.centerIn: parent
+            id: compactBox
+            width: root.compactWidthWanted
+            height: root.compactHeightWanted
+            anchors.top: parent.top
+            anchors.right: parent.right
             opacity: root.shown === "compact" ? root.contentOpacity : 0
             visible: opacity > 0
-            Cover {
-                id: compactCover
-                size: root.coverSmall
-                anchors.left: parent.left
-                anchors.leftMargin: (root.slimHeight - root.coverSmall) / 2
-                anchors.verticalCenter: parent.verticalCenter
-                circle: true
+            Disc {
+                id: disc
+                x: root.discBack
+                y: root.discBack
                 art: root.player?.trackArtUrl ?? ""
+                spinning: root.playing && root.shown === "compact" && root.visible && !root.reduced
+                scale: hover.hovered && !root.reduced ? root.hoverScale : 1
+                Behavior on scale {
+                    enabled: !root.reduced
+                    Anim {
+                        duration: Appearance.anim.durations.small
+                    }
+                }
             }
             Equaliser {
-                id: compactEq
-                anchors.right: parent.right
-                anchors.rightMargin: Appearance.padding.larger
-                anchors.verticalCenter: parent.verticalCenter
-                count: root.eqCompactBars
-                barWidth: root.eqBarWidth
+                x: root.discBack
+                anchors.top: disc.bottom
+                anchors.topMargin: root.histSpacing
+                width: root.discSize
+                height: root.histHeight
+                count: root.histBars
+                barGap: root.histGap
                 barMin: root.eqBarMin
                 animated: !root.reduced
-                height: root.eqCompactHeight
-                live: root.playing && root.shown === "compact"
-            }
-            LyricsView {
-                anchors.left: compactCover.right
-                anchors.leftMargin: Appearance.spacing.small
-                anchors.right: compactEq.left
-                anchors.rightMargin: Appearance.spacing.small
-                anchors.verticalCenter: parent.verticalCenter
-                compact: true
-                active: root.visible && root.shown === "compact"
-                fallbackText: root.fallbackLine
-            }
-        }
-
-        // Changement de piste : titre — artiste, élidé.
-        Item {
-            width: root.flashWidth
-            height: root.slimHeight
-            anchors.centerIn: parent
-            opacity: root.shown === "flash" ? root.contentOpacity : 0
-            visible: opacity > 0
-            Cover {
-                id: flashCover
-                size: root.coverSmall
-                anchors.left: parent.left
-                anchors.leftMargin: (root.slimHeight - root.coverSmall) / 2
-                anchors.verticalCenter: parent.verticalCenter
-                circle: true
-                art: root.player?.trackArtUrl ?? ""
-            }
-            StyledText {
-                anchors.left: flashCover.right
-                anchors.leftMargin: Appearance.spacing.small
-                anchors.right: parent.right
-                anchors.rightMargin: Appearance.padding.large
-                anchors.verticalCenter: parent.verticalCenter
-                elide: Text.ElideRight
-                text: ((root.player?.trackTitle ?? "") + ((root.player?.trackArtist ?? "") !== "" ? " — " + root.player.trackArtist : ""))
-                color: Colours.palette.m3onSurface
-                font.pointSize: Appearance.font.size.normal
+                live: root.playing && root.shown === "compact" && root.visible
+                fill: true
+                bottomAligned: true
             }
         }
 
@@ -469,7 +412,8 @@ Window {
         Item {
             width: root.levelWidth
             height: root.slimHeight
-            anchors.centerIn: parent
+            anchors.top: parent.top
+            anchors.right: parent.right
             opacity: root.shown === "level" ? root.contentOpacity : 0
             visible: opacity > 0
             MaterialIcon {
@@ -522,11 +466,13 @@ Window {
         Item {
             id: card
             width: root.expandedWidth
-            height: root.expandedHeight
+            // Suit la hauteur animée de la carte : le bord bas (spectre) grandit avec elle quand les paroles arrivent.
+            height: Math.max(pill.height, 1)
             anchors.top: parent.top
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.right: parent.right
             opacity: root.shown === "expanded" ? root.contentOpacity : 0
-            visible: opacity > 0
+            // Présente dès l'ouverture demandée (opacité nulle) : les paroles sont réclamées sans attendre la fin du fondu.
+            visible: opacity > 0 || root.expandedWanted
             readonly property real inner: width - Appearance.padding.large * 2
             readonly property real position: seek.dragging ? seek.dragFraction * (root.player?.length ?? 0) : (root.player?.position ?? 0)
 
@@ -567,12 +513,31 @@ Window {
                 circle: false
                 glow: true
                 art: root.player?.trackArtUrl ?? ""
+                // Cliquer la pochette referme la carte : elle devient de nouveau le disque.
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.expandedWanted = false
+                }
+            }
+            Control {
+                id: closeButton
+                anchors.top: parent.top
+                anchors.topMargin: Appearance.spacing.smaller
+                anchors.right: parent.right
+                anchors.rightMargin: Appearance.spacing.smaller
+                implicitWidth: root.closeSize
+                icon: "close"
+                canUse: true
+                function onClicked(): void {
+                    root.expandedWanted = false;
+                }
             }
             Column {
                 anchors.left: bigCover.right
                 anchors.leftMargin: Appearance.spacing.normal
-                anchors.right: parent.right
-                anchors.rightMargin: Appearance.padding.large
+                anchors.right: closeButton.left
+                anchors.rightMargin: Appearance.spacing.smaller
                 anchors.top: bigCover.top
                 spacing: 0
                 SwapText {
@@ -755,7 +720,7 @@ Window {
                 anchors.topMargin: Appearance.spacing.small
                 height: root.lyricsHeight
                 opacity: root.lyricsShown ? 1 : 0
-                active: root.visible && root.shown === "expanded"
+                active: root.visible && (root.shown === "expanded" || root.expandedWanted)
                 fontSize: Appearance.font.size.normal
                 Behavior on opacity {
                     enabled: !root.reduced
@@ -764,6 +729,73 @@ Window {
                     }
                 }
             }
+        }
+    }
+
+    // Disque façon vinyle : pochette ronde qui tourne, anneau fin et petit axe central. L'animation ne tourne que si `spinning` ;
+    // à l'arrêt, une courte inertie (même vitesse au départ) finit le mouvement, et la reprise repart de l'angle atteint.
+    component Disc: Item {
+        id: vinyl
+        property url art
+        property bool spinning: false
+        property real angle: 0
+        readonly property real inertiaDegrees: 180 * root.spinStopMs / root.spinPeriodMs
+        implicitWidth: root.discSize
+        implicitHeight: root.discSize
+        width: root.discSize
+        height: root.discSize
+        onSpinningChanged: {
+            if (spinning) {
+                stopAnim.stop();
+                angle = angle % 360;
+                spinAnim.from = angle;
+                spinAnim.to = angle + 360;
+                spinAnim.restart();
+            } else {
+                spinAnim.stop();
+                if (root.visible && !root.reduced) {
+                    stopAnim.to = angle + inertiaDegrees;
+                    stopAnim.restart();
+                }
+            }
+        }
+        NumberAnimation {
+            id: spinAnim
+            target: vinyl
+            property: "angle"
+            duration: root.spinPeriodMs
+            loops: Animation.Infinite
+            easing.type: Easing.Linear
+        }
+        NumberAnimation {
+            id: stopAnim
+            target: vinyl
+            property: "angle"
+            duration: root.spinStopMs
+            easing.type: Easing.OutQuad
+        }
+        Cover {
+            size: root.discSize
+            anchors.fill: parent
+            circle: true
+            art: vinyl.art
+            rotation: vinyl.angle
+        }
+        Rectangle {
+            anchors.fill: parent
+            radius: Appearance.rounding.full
+            color: "transparent"
+            border.width: root.discRing
+            border.color: Colours.palette.m3outlineVariant
+        }
+        Rectangle {
+            anchors.centerIn: parent
+            width: root.discHole
+            height: root.discHole
+            radius: Appearance.rounding.full
+            color: Colours.palette.m3surfaceContainer
+            border.width: 1
+            border.color: Colours.palette.m3outlineVariant
         }
     }
 
