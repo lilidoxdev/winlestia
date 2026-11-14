@@ -115,9 +115,9 @@ Window {
     property real fade: shown ? 1 : 0
     Behavior on fade {
         enabled: dock.reduced
-        NumberAnimation {
-            duration: 120
-            easing.type: Easing.OutCubic
+        Anim {
+            duration: Appearance.anim.durations.expressiveFastEffects
+            easing.bezierCurve: Appearance.anim.curves.expressiveFastEffects
         }
     }
     property real offset: reduced || shown ? 0 : height
@@ -174,11 +174,11 @@ Window {
             }
             RowLayout {
                 anchors.fill: parent
-                anchors.topMargin: 8
-                anchors.bottomMargin: 8
-                anchors.leftMargin: Bridge.frameEnabled && !Bridge.screenFullscreen ? 34 : 20
-                anchors.rightMargin: Bridge.frameEnabled && !Bridge.screenFullscreen ? 34 : 20
-                spacing: 5
+                anchors.topMargin: Appearance.padding.smaller
+                anchors.bottomMargin: Appearance.padding.smaller
+                anchors.leftMargin: Bridge.frameEnabled && !Bridge.screenFullscreen ? 34 : Appearance.spacing.large
+                anchors.rightMargin: Bridge.frameEnabled && !Bridge.screenFullscreen ? 34 : Appearance.spacing.large
+                spacing: Appearance.padding.small
                 Item {
                     objectName: "dockStart"
                     implicitWidth: 40
@@ -232,8 +232,8 @@ Window {
                     implicitWidth: 1
                     implicitHeight: 23
                     color: Colours.palette.m3outlineVariant
-                    Layout.leftMargin: 6
-                    Layout.rightMargin: 6
+                    Layout.leftMargin: Appearance.padding.smaller
+                    Layout.rightMargin: Appearance.padding.smaller
                 }
                 Flickable {
                     Layout.fillWidth: true
@@ -258,9 +258,9 @@ Window {
                                 x: dock.visualIndex(index) * 46 + (index >= dock.pinnedCount && dock.pinnedCount > 0 ? 14 : 0)
                                 z: dock.dragId === modelData.id ? 10 : 0
                                 Behavior on x {
-                                    NumberAnimation {
-                                        duration: 170
-                                        easing.type: Easing.OutCubic
+                                    Anim {
+                                        duration: Appearance.anim.durations.expressiveFastEffects
+                                        easing.bezierCurve: Appearance.anim.curves.standardDecel
                                     }
                                 }
                                 transform: Translate {
@@ -361,19 +361,20 @@ Window {
                                     }
                                 }
                                 SequentialAnimation on rotation {
-                                    running: dock.dragId === app.modelData.id
+                                    // Pas de tremblement en effets réduits : l'échelle des durées (0.1) en ferait une vibration à ~27 Hz.
+                                    running: dock.dragId === app.modelData.id && !(Bridge.reducedEffects || Bridge.quiet)
                                     loops: Animation.Infinite
                                     NumberAnimation {
                                         to: -3
-                                        duration: 75
+                                        duration: Appearance.anim.durations.expressiveFastEffects / 2
                                     }
                                     NumberAnimation {
                                         to: 3
-                                        duration: 110
+                                        duration: Appearance.anim.durations.expressiveFastEffects
                                     }
                                     NumberAnimation {
                                         to: 0
-                                        duration: 75
+                                        duration: Appearance.anim.durations.expressiveFastEffects / 2
                                     }
                                 }
                                 Image {
@@ -426,7 +427,7 @@ Window {
                         id: drawerRow
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 5
+                        spacing: Appearance.padding.small
                         visible: drawer.w > 0.5
                         enabled: drawer.open
                         opacity: drawer.full > 0 ? Math.min(1, drawer.w / drawer.full) : 0
@@ -511,8 +512,8 @@ Window {
                     onClicked: dock.showMenu("power", {}, powerButton)
                 }
                 Column {
-                    Layout.leftMargin: 8
-                    Layout.rightMargin: 7
+                    Layout.leftMargin: Appearance.padding.smaller
+                    Layout.rightMargin: Appearance.padding.smaller
                     StyledText {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: Time.format("hh:mm")

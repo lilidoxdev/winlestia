@@ -307,7 +307,7 @@ Item {
             Layout.fillHeight: true
             visible: nav.searching && nav.results.length > 0
             clip: true
-            spacing: 4
+            spacing: Appearance.padding.small
             model: nav.results
             boundsBehavior: Flickable.StopAtBounds
             currentIndex: 0

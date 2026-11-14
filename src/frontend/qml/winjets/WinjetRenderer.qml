@@ -43,7 +43,8 @@ Item {
     // Sources de contexte optionnelles : calculées seulement si une expression de la mise en page les nomme (`media.` / `system.`)
     // ou si un bloc média les lit lui-même ; sinon aucune liaison ne se réévalue pour elles.
     readonly property string layoutsText: JSON.stringify(inst && inst.layouts ? inst.layouts : [])
-    readonly property bool usesMedia: layoutsText.indexOf("media.") >= 0
+    // Un bloc `media` lit Players.active de lui-même : la détection couvre donc la source d'expression et le bloc.
+    readonly property bool usesMedia: layoutsText.indexOf("media.") >= 0 || layoutsText.indexOf('"type":"media"') >= 0
     readonly property bool usesSystem: layoutsText.indexOf("system.") >= 0
     readonly property var player: Players.active
     readonly property var mediaCtx: {
@@ -84,10 +85,27 @@ Item {
         usageHeld = holdsUsage;
         SystemUsage.refCount += holdsUsage ? 1 : -1;
     }
-    Component.onCompleted: syncUsage()
+    // Média : le backend ne sonde l'application de lecture que si un consommateur la demande (tableau de bord, centre de
+    // contrôle, ou un Winjet de bureau). Le bureau n'a pas de panneau ouvert : la carte prend sa propre référence, sans
+    // dépendre de `live` — une carte recouverte par une fenêtre reste à jour pour son retour, et la sonde est partagée.
+    readonly property bool holdsMedia: usesMedia
+    property bool mediaHeld: false
+    onHoldsMediaChanged: syncMedia()
+    function syncMedia(): void {
+        if (holdsMedia === mediaHeld)
+            return;
+        mediaHeld = holdsMedia;
+        Bridge.mediaRef(holdsMedia);
+    }
+    Component.onCompleted: {
+        syncUsage();
+        syncMedia();
+    }
     Component.onDestruction: {
         if (usageHeld)
             SystemUsage.refCount--;
+        if (mediaHeld)
+            Bridge.mediaRef(false);
     }
 
     // État visible des expressions : persisté + éphémère. La clé déclarée `hover` est masquée par `_hover`

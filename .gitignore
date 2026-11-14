@@ -43,3 +43,4 @@ clink_errorlevel_*.txt
 .freebuff/
 buildverify-fullscreen/
 TestResults/
+*.bak-*

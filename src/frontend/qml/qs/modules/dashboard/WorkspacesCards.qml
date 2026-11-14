@@ -135,7 +135,7 @@ RowLayout {
                         x: (space.info.top.length - 1 - index) * (space.hot ? 20 : 15)
                         width: 26
                         height: 26
-                        radius: 13
+                        radius: Appearance.rounding.full
                         color: Colours.palette.m3surfaceContainerHigh
                         border.width: 2
                         border.color: Colours.palette.m3surfaceContainer

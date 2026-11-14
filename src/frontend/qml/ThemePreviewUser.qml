@@ -37,7 +37,7 @@ Rectangle {
             anchors.margins: 8
             width: 30
             height: 30
-            radius: 15
+            radius: Appearance.rounding.full
             color: mock.p.m3primary
 
             MaterialIcon {

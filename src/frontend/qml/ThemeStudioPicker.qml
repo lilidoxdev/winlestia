@@ -83,7 +83,7 @@ SettingsSection {
                 y: (1 - studio.saturation) * square.height - height / 2
                 width: 16
                 height: 16
-                radius: 8
+                radius: Appearance.rounding.full
                 color: "transparent"
                 border.width: 2
                 border.color: "#ffffff"
@@ -91,7 +91,7 @@ SettingsSection {
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: -1
-                    radius: 9
+                    radius: Appearance.rounding.full
                     color: "transparent"
                     border.width: 1
                     border.color: "#80000000"

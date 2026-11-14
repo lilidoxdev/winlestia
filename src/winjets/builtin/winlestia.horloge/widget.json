@@ -1,0 +1,162 @@
+{
+  "size": {
+    "default": [
+      352,
+      168
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      720,
+      352
+    ]
+  },
+  "settings": [
+    {
+      "id": "hour12",
+      "type": "toggle",
+      "label": "Format 12 heures (AM/PM)",
+      "default": false
+    },
+    {
+      "id": "showSeconds",
+      "type": "toggle",
+      "label": "Afficher les secondes",
+      "default": false
+    },
+    {
+      "id": "showDate",
+      "type": "toggle",
+      "label": "Afficher la date",
+      "default": true
+    }
+  ],
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "gap": 4,
+        "children": [
+          {
+            "type": "stack",
+            "grow": 1,
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "!settings.hour12",
+                "children": [
+                  {
+                    "type": "clock",
+                    "variant": "digital",
+                    "seconds": "{{ settings.showSeconds }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.hour12 && !settings.showSeconds",
+                "children": [
+                  {
+                    "type": "clock",
+                    "variant": "digital",
+                    "format": "h:mm AP"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.hour12 && settings.showSeconds",
+                "children": [
+                  {
+                    "type": "clock",
+                    "variant": "digital",
+                    "format": "h:mm:ss AP"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "settings.showDate",
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ now | date:ddd d MMM }}",
+                "style": "caption",
+                "tone": "secondary",
+                "maxLines": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "root": {
+        "type": "column",
+        "padding": 20,
+        "gap": 8,
+        "children": [
+          {
+            "type": "stack",
+            "grow": 1,
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "!settings.hour12",
+                "children": [
+                  {
+                    "type": "clock",
+                    "variant": "digital",
+                    "seconds": "{{ settings.showSeconds }}"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.hour12 && !settings.showSeconds",
+                "children": [
+                  {
+                    "type": "clock",
+                    "variant": "digital",
+                    "format": "h:mm AP"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.hour12 && settings.showSeconds",
+                "children": [
+                  {
+                    "type": "clock",
+                    "variant": "digital",
+                    "format": "h:mm:ss AP"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "settings.showDate",
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ now | date:dddd d MMMM yyyy }}",
+                "style": "title",
+                "tone": "secondary",
+                "maxLines": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

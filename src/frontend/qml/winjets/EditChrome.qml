@@ -196,7 +196,7 @@ Item {
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.margins: 14
-        spacing: 6
+        spacing: Appearance.padding.smaller
 
         Repeater {
             model: chrome.allowSettings ? ["settings", "close"] : ["close"]
@@ -208,7 +208,7 @@ Item {
 
                 width: 28
                 height: 28
-                radius: 14
+                radius: Appearance.rounding.full
                 color: modelData === "close" ? Colours.palette.m3errorContainer : Colours.palette.m3secondaryContainer
 
                 MaterialIcon {

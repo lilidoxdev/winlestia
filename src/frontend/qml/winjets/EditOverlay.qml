@@ -56,9 +56,9 @@ QtObject {
             opacity: overlay.shown ? 1 : 0
 
             Behavior on opacity {
-                NumberAnimation {
-                    duration: 140
-                    easing.type: Easing.OutCubic
+                Anim {
+                    duration: Appearance.anim.durations.expressiveFastEffects
+                    easing.bezierCurve: Appearance.anim.curves.expressiveFastEffects
                 }
             }
 
@@ -87,7 +87,7 @@ QtObject {
                     y: cy
                     width: overlay.cell
                     height: overlay.cell
-                    radius: 12
+                    radius: Appearance.rounding.small
                     color: lit ? Qt.alpha(Colours.palette.m3primary, 0.14) : "transparent"
                     border.width: 1
                     border.color: lit ? Qt.alpha(Colours.palette.m3primary, 0.6) : Qt.alpha(Colours.palette.m3outlineVariant, 0.45)
@@ -111,7 +111,7 @@ QtObject {
                 anchors.centerIn: parent
                 width: 20
                 height: 20
-                radius: 10
+                radius: Appearance.rounding.full
                 color: Qt.alpha(Colours.palette.m3surface, 0.6)
                 border.width: 2
                 border.color: Qt.alpha(Colours.palette.m3primary, 0.8)
@@ -198,7 +198,7 @@ QtObject {
                 id: label
 
                 anchors.left: parent.left
-                anchors.leftMargin: 20
+                anchors.leftMargin: Appearance.spacing.large
                 anchors.verticalCenter: parent.verticalCenter
                 text: qsTr("Modification des Winjets · double-clic ou Échap pour finir · Alt : sans aimantation")
                 color: Colours.palette.m3onSurface
@@ -209,12 +209,12 @@ QtObject {
                 id: done
 
                 anchors.right: parent.right
-                anchors.rightMargin: 8
+                anchors.rightMargin: Appearance.spacing.small
                 anchors.verticalCenter: parent.verticalCenter
                 implicitWidth: doneLabel.implicitWidth + 32
                 width: implicitWidth
                 height: 32
-                radius: 16
+                radius: Appearance.rounding.full
                 color: Colours.palette.m3primary
 
                 StyledText {

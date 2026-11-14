@@ -58,7 +58,13 @@ internal sealed partial class QtShellBridge
         }
         else if (telemetry.Running)
             _ = telemetry.StopAsync();
-        pageMusic = active && page is 0 or 1 || controls;
+        // La sonde média suit trois consommateurs : le tableau de bord, le centre de contrôle, et un Winjet de bureau qui
+        // lit `media.` (sinon le lecteur resterait figé sur son dernier instantané panneau fermé).
+        bool wasMusic = pageMusic;
+        bool wasMedia = mediaVisible;
+        pageMusic = active && page is 0 or 1 || controls || mediaVisible;
+        if (pageMusic != wasMusic || mediaVisible != wasMedia)
+            Store.Log("Musique: pageMusic=" + pageMusic + " active=" + active + " media=" + mediaVisible + " page=" + page);
         if (pageMusic && !startingMedia)
         {
             startingMedia = true;
@@ -102,7 +108,8 @@ internal sealed partial class QtShellBridge
             StopSampling();
             dismissal.SetActive(false);
         }
-        if (!active)
+        // Le bureau peut demander la sonde média sans panneau ouvert : ne pas sortir avant elle.
+        if (!active && !mediaVisible)
             return;
         busy = true;
         try
@@ -115,6 +122,11 @@ internal sealed partial class QtShellBridge
                 if (snapshot != null)
                 {
                     player = snapshot;
+                    if (snapshot.Title != mediaTitleLog)
+                    {
+                        mediaTitleLog = snapshot.Title;
+                        Store.Log("Media: " + snapshot.App + " / " + snapshot.Title + " / playing=" + snapshot.Playing);
+                    }
                     mixer.MediaApp = snapshot.ExeStem;
                     mixer.MediaAumid = snapshot.Aumid;
                     // Technique : capture WASAPI process loopback (ProcessAudio.dll) sur le PID racine du lecteur choisi, avec

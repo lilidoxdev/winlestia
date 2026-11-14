@@ -14,6 +14,34 @@ import app_state
 from bridge import Bridge
 
 
+def install_exception_hooks(log_path=None):
+    """Journalise les exceptions non gérées (thread principal et threads) dans frontend.log, puis rend la main aux hooks précédents."""
+    import traceback
+    path = log_path or (CONFIG / 'frontend.log')
+    previous_sys, previous_thread = sys.excepthook, threading.excepthook
+
+    def write(label, exc_type, exc, tb):
+        try:
+            with open(path, 'a', encoding='utf-8') as stream:
+                stream.write(f'{time.strftime("%H:%M:%S")} {label}: ' + ''.join(traceback.format_exception(exc_type, exc, tb)))
+        except Exception:
+            pass
+
+    def sys_hook(exc_type, exc, tb):
+        if not issubclass(exc_type, KeyboardInterrupt):
+            write('unhandled', exc_type, exc, tb)
+        previous_sys(exc_type, exc, tb)
+
+    def thread_hook(args):
+        if not issubclass(args.exc_type, KeyboardInterrupt):
+            write(f'unhandled in thread {getattr(args.thread, "name", "?")}', args.exc_type, args.exc_value, args.exc_traceback)
+        previous_thread(args)
+
+    sys.excepthook = sys_hook
+    threading.excepthook = thread_hook
+    return previous_sys, previous_thread
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--pipe', default='PanneauxCaelestia')
@@ -33,6 +61,7 @@ def main():
     app.setApplicationName('Panneaux · Caelestia Windows')
     app.setQuitOnLastWindowClosed(False)
     qInstallMessageHandler(app_state.message_handler)
+    install_exception_hooks()
     if args.backend_pid:
 
         def watch_backend():

@@ -84,11 +84,16 @@ Item {
 
             placeholderText: qsTr("Type \"%1\" for commands").arg(Config.launcher.actionPrefix)
 
-            onAccepted: {
+            // Chemin d'activation commun à Entrée et à Ctrl+1…9 : lance l'élément courant de la liste affichée, quel que soit son type.
+            function activateCurrent(): bool {
                 const currentItem = list.currentList?.currentItem;
-                if (currentItem)
-                    Apps.launch(currentItem.modelData);
+                if (!currentItem)
+                    return false;
+                Apps.launch(currentItem.modelData);
+                return true;
             }
+
+            onAccepted: activateCurrent()
             Keys.onUpPressed: list.currentList?.decrementCurrentIndex()
             Keys.onDownPressed: list.currentList?.incrementCurrentIndex()
             Keys.onLeftPressed: event => {
@@ -107,6 +112,43 @@ Item {
             Keys.onEscapePressed: root.visibilities.launcher = false
 
             Keys.onPressed: event => {
+                // Ctrl+1…Ctrl+9 : active le n-ième élément actuellement visible de la liste courante (comme Entrée dessus).
+                // Les listes sans notion de rangée (carrousel de fonds d'écran : pas d'indexAt) ne réagissent pas.
+                if ((event.modifiers & Qt.ControlModifier) && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
+                    const cur = list.currentList;
+                    let done = false;
+                    if (cur && typeof cur.indexAt === "function") {
+                        const left = cur.contentX + 1, top = cur.contentY + 1;
+                        let first = cur.indexAt(left, top);
+                        if (first < 0)
+                            first = cur.indexAt(left, top + (cur.spacing ?? 0));  // le point tombait dans l'espacement entre deux rangées
+                        if (first < 0 && cur.contentY <= cur.originY)
+                            first = 0;
+                        const index = first < 0 ? -1 : first + (event.key - Qt.Key_1);
+                        const target = index >= 0 && index < cur.count ? cur.itemAtIndex(index) : null;
+                        if (target && target.y < cur.contentY + cur.height && target.y + target.height > cur.contentY) {
+                            cur.currentIndex = index;
+                            done = search.activateCurrent();
+                        }
+                    }
+                    event.accepted = done;
+                    return;
+                }
+
+                // Tab / Maj+Tab déplacent la sélection, même sans les raccourcis vim (Qt envoie Backtab pour Maj+Tab).
+                if (event.key === Qt.Key_Tab) {
+                    if (event.modifiers & Qt.ShiftModifier)
+                        list.currentList?.decrementCurrentIndex();
+                    else
+                        list.currentList?.incrementCurrentIndex();
+                    event.accepted = true;
+                    return;
+                } else if (event.key === Qt.Key_Backtab) {
+                    list.currentList?.decrementCurrentIndex();
+                    event.accepted = true;
+                    return;
+                }
+
                 if (!Config.launcher.vimKeybinds)
                     return;
 
@@ -118,12 +160,6 @@ Item {
                         list.currentList?.decrementCurrentIndex();
                         event.accepted = true;
                     }
-                } else if (event.key === Qt.Key_Tab) {
-                    list.currentList?.incrementCurrentIndex();
-                    event.accepted = true;
-                } else if (event.key === Qt.Key_Backtab || (event.key === Qt.Key_Tab && (event.modifiers & Qt.ShiftModifier))) {
-                    list.currentList?.decrementCurrentIndex();
-                    event.accepted = true;
                 }
             }
 

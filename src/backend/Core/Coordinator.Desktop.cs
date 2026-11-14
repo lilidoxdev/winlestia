@@ -26,10 +26,62 @@ internal sealed partial class Coordinator
                 Store.Log("La barre Windows reste active : secours indisponible.");
             }
         }
+        ReassertDesktop();
+    }
+    void ReassertDesktop()
+    {
         desktopIcons.OnExplorerCreated();
         // Les fenêtres des Winjets sont réaffirmées par le frontend (compteur d'état + évènement).
         winjets?.NotifyExplorerRestarted();
         QtShell?.Send("desktop.explorerRestarted");
+    }
+    // Reprise après veille ou hibernation : Explorer ne redémarre pas, mais la barre, les icônes et les calques du bureau peuvent
+    // avoir été réaffichés. PowerModeChanged arrive sur un autre thread et parfois deux fois : on rebascule sur l'UI et on temporise.
+    static readonly TimeSpan ResumeDelay = TimeSpan.FromSeconds(2);
+    System.Windows.Threading.DispatcherTimer? resumeDebounce;
+    void PowerModeChanged(object? sender, Microsoft.Win32.PowerModeChangedEventArgs e)
+    {
+        if (e.Mode != Microsoft.Win32.PowerModes.Resume)
+            return;
+        System.Windows.Application.Current?.Dispatcher.BeginInvoke((Action)(() =>
+        {
+            if (preview || disposed)
+                return;
+            if (resumeDebounce == null)
+            {
+                resumeDebounce = new System.Windows.Threading.DispatcherTimer { Interval = ResumeDelay };
+                resumeDebounce.Tick += (_, _) =>
+                {
+                    resumeDebounce.Stop();
+                    if (preview || disposed)
+                        return;
+                    Store.Log("Reprise après veille : barre et bureau réaffirmés.");
+                    if (taskbar?.Enabled == true)
+                        taskbar.Refresh();
+                    ReassertDesktop();
+                };
+            }
+            resumeDebounce.Stop();
+            resumeDebounce.Start();
+        }));
+    }
+    void StopPowerWatch()
+    {
+        Microsoft.Win32.SystemEvents.PowerModeChanged -= PowerModeChanged;
+        resumeDebounce?.Stop();
+    }
+    // Après une relance du frontend : même chemin que le démarrage, mais seulement si la barre n'est pas déjà remplacée.
+    internal void ResumeTaskbar()
+    {
+        if (!preview && !disposed && Store.State.ReplaceTaskbar && taskbar?.Enabled == false && TaskbarNative.ExplorerReady())
+            taskbar.Enable();
+    }
+    // Après une relance réussie du frontend : barre et icônes du Bureau reprennent le chemin du démarrage (Restore() a suspendu le masquage).
+    internal void ResumeShell()
+    {
+        ResumeTaskbar();
+        if (!preview && !disposed)
+            desktopIcons.Hide();
     }
     // Au lancement, la barre Windows n'est remplacée que si Explorer est prêt ; sinon TaskbarCreated reprendra la main.
     void StartTaskbar()

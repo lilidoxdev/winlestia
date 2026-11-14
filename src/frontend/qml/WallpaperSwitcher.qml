@@ -278,7 +278,7 @@ Window {
             Behavior on opacity {
                 enabled: !root.reduced
                 Anim {
-                    duration: 250
+                    duration: Appearance.anim.durations.small
                 }
             }
         }
@@ -295,7 +295,7 @@ Window {
             Behavior on opacity {
                 enabled: !root.reduced
                 Anim {
-                    duration: 250
+                    duration: Appearance.anim.durations.small
                 }
             }
         }
@@ -376,7 +376,7 @@ Window {
                     Behavior on width {
                         enabled: !root.reduced
                         Anim {
-                            duration: 250
+                            duration: Appearance.anim.durations.small
                         }
                     }
                     StyledClippingRect {
@@ -390,7 +390,7 @@ Window {
                         Behavior on height {
                             enabled: !root.reduced
                             Anim {
-                                duration: 250
+                                duration: Appearance.anim.durations.small
                             }
                         }
                         Image {

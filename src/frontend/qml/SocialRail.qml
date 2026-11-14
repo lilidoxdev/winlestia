@@ -77,7 +77,7 @@ EdgeRail {
                         y: -8
                         height: 22
                         width: Math.max(22, badgeText.implicitWidth + 10)
-                        radius: 11
+                        radius: Appearance.rounding.full
                         color: Colours.palette.m3error
                         scale: logo.connected && logo.count > 0 ? 1 : 0
                         visible: scale > .01
@@ -105,7 +105,7 @@ EdgeRail {
                         visible: logo.muted || !logo.connected
                         width: 20
                         height: 20
-                        radius: 10
+                        radius: Appearance.rounding.full
                         x: logo.width - width + 4
                         y: logo.height - height + 4
                         color: Colours.palette.m3surfaceContainerHighest
@@ -158,7 +158,7 @@ EdgeRail {
         MaterialIcon {
             anchors.centerIn: parent
             text: rail.expanded ? "chevron_right" : "chevron_left"
-            font.pointSize: 22
+            font.pointSize: Appearance.font.size.title
             color: Colours.palette.m3onSurfaceVariant
         }
     }

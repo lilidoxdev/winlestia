@@ -1,0 +1,12 @@
+{
+  "format": "winjet/1",
+  "id": "winlestia.batterie",
+  "name": "Batterie",
+  "version": "1.0.0",
+  "author": "Winlestia",
+  "description": "Niveau de batterie et état de charge ; message discret sur un PC sans batterie.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  }
+}

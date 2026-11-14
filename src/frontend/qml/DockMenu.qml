@@ -278,8 +278,8 @@ Window {
                         : menu.kind === "running" ? qsTr("Applications") : menu.entry.name ?? qsTr("Application")
                     font.pointSize: Appearance.font.size.normal
                     elide: Text.ElideRight
-                    topPadding: 5
-                    bottomPadding: 9
+                    topPadding: Appearance.padding.small
+                    bottomPadding: Appearance.padding.normal
                 }
                 IconTextButton {
                     visible: menu.fromRunning && menu.kind === "app"
@@ -300,13 +300,13 @@ Window {
                     font.pointSize: Appearance.font.size.small
                     wrapMode: Text.WrapAnywhere
                     color: Colours.palette.m3onSurfaceVariant
-                    bottomPadding: 8
+                    bottomPadding: Appearance.padding.smaller
                     maximumLineCount: 3
                     elide: Text.ElideRight
                 }
                 Row {
                     visible: menu.kind === "running"
-                    spacing: 4
+                    spacing: Appearance.padding.small
                     IconTextButton {
                         text: qsTr("En cours")
                         checked: !menu.backgroundTab
@@ -325,7 +325,7 @@ Window {
                     text: qsTr("%1 ?").arg(menu.powerLabel(menu.powerChoice))
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3onSurfaceVariant
-                    bottomPadding: 6
+                    bottomPadding: Appearance.padding.smaller
                 }
                 Repeater {
                     model: menu.kind === "power" ? (menu.powerChoice === "" ? [
@@ -408,7 +408,7 @@ Window {
                         RowLayout {
                             anchors.fill: parent
                             anchors.margins: 14
-                            spacing: 14
+                            spacing: Appearance.spacing.larger
                             MaterialIcon {
                                 text: parent.parent.modelData.icon
                                 font.pointSize: Appearance.font.size.title
@@ -437,9 +437,9 @@ Window {
                     }
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 10
-                        spacing: 12
+                        anchors.leftMargin: Appearance.spacing.normal
+                        anchors.rightMargin: Appearance.spacing.smaller
+                        spacing: Appearance.spacing.normal
                         opacity: menu.entry.canClose ? 1 : .4
                         MaterialIcon {
                             text: "close"
@@ -462,8 +462,8 @@ Window {
                     font.pointSize: Appearance.font.size.small
                     wrapMode: Text.WordWrap
                     color: Colours.palette.m3onSurfaceVariant
-                    topPadding: 4
-                    bottomPadding: 4
+                    topPadding: Appearance.padding.small
+                    bottomPadding: Appearance.padding.small
                 }
                 Repeater {
                     model: menu.kind === "system" ? menu.systemItems : menu.kind === "app" ? menu.appItems : []
@@ -494,9 +494,9 @@ Window {
                         }
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 9
-                            anchors.rightMargin: 8
-                            spacing: 10
+                            anchors.leftMargin: Appearance.spacing.smaller
+                            anchors.rightMargin: Appearance.padding.smaller
+                            spacing: Appearance.spacing.smaller
                             MaterialIcon {
                                 text: row.modelData.icon
                                 font.pointSize: Appearance.font.size.large
@@ -527,7 +527,7 @@ Window {
                         }
                         StyledText {
                             anchors.fill: parent
-                            anchors.leftMargin: 10
+                            anchors.leftMargin: Appearance.spacing.smaller
                             verticalAlignment: Text.AlignVCenter
                             text: windowRow.modelData.title
                             font.pointSize: Appearance.font.size.small
@@ -545,7 +545,7 @@ Window {
                     objectName: "runningGrid"
                     visible: menu.kind === "running"
                     columns: 5
-                    spacing: 8
+                    spacing: Appearance.spacing.small
                     width: body.width
                     Repeater {
                         model: menu.kind === "running" ? Bridge.runningApps.filter(a => !!a.background === menu.backgroundTab) : []

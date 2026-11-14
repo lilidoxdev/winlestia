@@ -228,7 +228,7 @@ Autres écritures de tête d'expression :
 - `a ?? b ?? 0` : première valeur non vide (absente ou chaîne vide comptent comme vides) ;
 - `fmt(valeur, 'currency')`, `fmt(valeur, 'percent')`, `fmt(valeur, 'number')` : `currency` donne un montant en `$` (0 décimale au-dessus de 1 000, 2 en dessous), `percent` attend une **proportion** (0.0241 donne « +2,4 % »), `number` un nombre groupé. Valeur illisible : texte vide. Exemple : `{{ fmt(state.hover ?? data.market.symbols[state.pair].price, 'currency') }}`.
 
-Aucun autre filtre ni fonction n'existe, et il n'y a **pas de calcul** (ni division, ni addition) : préparez les valeurs dans les données. `system.cpu`, `system.ram` et `system.battery` vont de 0 à 100 alors que `progress` attend 0 à 1 : ne les passez pas tels quels à `progress`.
+Aucun autre filtre ni fonction n'existe, et il n'y a **pas de calcul** (ni division, ni addition) : préparez les valeurs dans les données. `system.cpu`, `system.ram` et `system.battery` vont de 0 à 100 alors que `progress` attend 0 à 1 : ne les passez pas tels quels à `progress`. Pour convertir un pourcentage entier en proportion sans calcul, indexez un tableau de données local de 101 valeurs (0, 0.01 ... 1) : `{{ data.niveaux.ratio[system.battery] }}`. Le paquet inclus `winlestia.batterie` fait ainsi. Sans batterie, `system.battery` est vide : testez `system.battery == null` (ou `system.battery >= 0`) dans `visibleWhen`.
 
 ### Conditions
 

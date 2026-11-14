@@ -58,6 +58,9 @@ internal sealed partial class QtShellBridge : IDisposable
     CliServer? cli;
     readonly AudioBarsHost bars;
     bool barsVisible;
+    // Un Winjet de bureau lit `media.` : la sonde SMTC tourne alors même qu'aucun panneau n'est ouvert.
+    bool mediaVisible;
+    string mediaTitleLog = "";
     static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(500);
     readonly DispatcherTimer timer = new() { Interval = TickInterval };
 
@@ -71,6 +74,7 @@ internal sealed partial class QtShellBridge : IDisposable
     readonly OutsideDismiss dismissal;
     readonly string root, cache;
     Process? frontend;
+    readonly FrontendRestartPolicy restartPolicy = new();
     NamedPipeServerStream? pipe;
     // Version du protocole JSON lignes (docs/BRIDGE.md). Le client l'annonce dans args.protocol de chaque requête ;
     // une divergence est journalisée une fois par connexion, sans refuser la connexion.
@@ -195,55 +199,7 @@ internal sealed partial class QtShellBridge : IDisposable
         dictation.Apply(Store.State.DictationEnabled, Store.State.DictationKey);
         _ = Serve();
         cli = new CliServer(RunCli);
-        var launched = DateTime.UtcNow;
-        var start =
-            new ProcessStartInfo(Path.Combine(root, ".venv", "Scripts", "pythonw.exe"))
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = root,
-                RedirectStandardError = true
-            };
-        // Le PySide6 livré est le seul valable : un site-packages utilisateur ne doit pas s'intercaler.
-        start.Environment["PYTHONNOUSERSITE"] = "1";
-        start.ArgumentList.Add(Path.Combine(root, "frontend.py"));
-        start.ArgumentList.Add("--backend-pid");
-        start.ArgumentList.Add(Environment.ProcessId.ToString());
-        if (options.Mode == LaunchMode.Verify)
-            start.ArgumentList.Add("--verify");
-        else if (options.Mode == LaunchMode.Review)
-            start.ArgumentList.Add("--preview");
-        frontend = Process.Start(start) ?? throw new InvalidOperationException("Le moteur Qt n'a pas pu être lancé.");
-        AttachFrontendJob(frontend);
-        Store.Log("Frontend lancé · t+" + (int)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds + " ms");
-        // Sans console, une trace Python disparaîtrait : on la garde dans glass.log.
-        frontend.ErrorDataReceived += (_, line) =>
-        {
-            if (!disposed && !string.IsNullOrWhiteSpace(line.Data))
-                Store.Log("Qt · "
-            + line.Data);
-        };
-        frontend.BeginErrorReadLine();
-        frontend.EnableRaisingEvents = true;
-        frontend.Exited += (_, _) => _ = dispatcher.BeginInvoke((Action)(() =>
-        {
-            if (disposed)
-                return;
-            bool crashed = !active && (DateTime.UtcNow - launched).TotalSeconds < 10;
-            Store.Log((crashed ? "Le moteur Qt n'a pas démarré." : "Le moteur Qt s'est arrêté.") + " La barre Windows est rétablie.");
-            dockPreview.Close();
-            tiler.SetEnabled(false);
-            frame.Disable();
-            owner.SuspendTaskbar();
-            owner.RestoreDesktopIcons();
-            active = false;
-            CapturingShortcut = false;
-            dismissal.SetActive(false);
-            tiler.SetEnabled(false);
-            StopSampling();
-            if (crashed && !options.IsAutomated)
-                Fail();
-        }));
+        StartFrontend();
         timer.Tick += Tick;
         timer.Start();
         social = new SocialService(dispatcher, () => Send("social"));
@@ -277,20 +233,162 @@ internal sealed partial class QtShellBridge : IDisposable
 
     }
 
+    // Démarre (ou relance) le processus du frontend. Lève si le processus ne peut pas être créé.
+    void StartFrontend()
+    {
+        var launched = DateTime.UtcNow;
+        var start =
+            new ProcessStartInfo(Path.Combine(root, ".venv", "Scripts", "pythonw.exe"))
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = root,
+                RedirectStandardError = true
+            };
+        // Le PySide6 livré est le seul valable : un site-packages utilisateur ne doit pas s'intercaler.
+        start.Environment["PYTHONNOUSERSITE"] = "1";
+        start.ArgumentList.Add(Path.Combine(root, "frontend.py"));
+        start.ArgumentList.Add("--backend-pid");
+        start.ArgumentList.Add(Environment.ProcessId.ToString());
+        if (options.Mode == LaunchMode.Verify)
+            start.ArgumentList.Add("--verify");
+        else if (options.Mode == LaunchMode.Review)
+            start.ArgumentList.Add("--preview");
+        // Le nouveau frontend n'est « connecté » qu'à sa première réponse sur le tube.
+        Volatile.Write(ref firstReply, 0);
+        var process = Process.Start(start) ?? throw new InvalidOperationException("Le moteur Qt n'a pas pu être lancé.");
+        frontend = process;
+        try
+        {
+            AttachFrontendJob(process);
+            Store.Log("Frontend lancé · t+" + (int)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds + " ms");
+            // Sans console, une trace Python disparaîtrait : on la garde dans glass.log.
+            process.ErrorDataReceived += (_, line) =>
+            {
+                if (!disposed && !string.IsNullOrWhiteSpace(line.Data))
+                    Store.Log("Qt · "
+                + line.Data);
+            };
+            process.BeginErrorReadLine();
+            process.EnableRaisingEvents = true;
+            process.Exited += (_, _) => _ = dispatcher.BeginInvoke((Action)(() => FrontendExited(process, launched)));
+        }
+        catch
+        {
+            // Démarrage à moitié fait : jamais deux frontends à la fois, la relance éventuelle repart d'un champ vide.
+            frontend = null;
+            StopProcess(process);
+            throw;
+        }
+    }
+
+    // Arrête puis libère un processus du frontend ; sans effet (et sans exception) s'il est déjà libéré. L'appelant met son champ à null.
+    static void StopProcess(Process? process)
+    {
+        if (process == null)
+            return;
+        try
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+                process.WaitForExit(2000);
+            }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException)
+        { /* Déjà terminé ou déjà libéré : rien à arrêter. */
+        }
+        finally
+        {
+            Safe.Dispose(process);
+        }
+    }
+
+    // Arrêt inattendu du frontend : la barre Windows est rétablie aussitôt (bureau utilisable), puis le frontend est relancé avec un
+    // délai croissant. Après trop d'arrêts rapprochés, on abandonne : message d'échec et fin de Winlestia.
+    void FrontendExited(Process process, DateTime launched)
+    {
+        if (disposed || !ReferenceEquals(frontend, process))
+            return;
+        bool crashed = !active && (DateTime.UtcNow - launched).TotalSeconds < 10;
+        Store.Log((crashed ? "Le moteur Qt n'a pas démarré." : "Le moteur Qt s'est arrêté.") + " La barre Windows est rétablie.");
+        dockPreview.Close();
+        tiler.SetEnabled(false);
+        frame.Disable();
+        owner.SuspendTaskbar();
+        owner.RestoreDesktopIcons();
+        active = false;
+        CapturingShortcut = false;
+        dismissal.SetActive(false);
+        tiler.SetEnabled(false);
+        StopSampling();
+        if (options.IsAutomated)
+            return;
+        if (Volatile.Read(ref firstReply) == 1)
+            restartPolicy.MarkConnected();
+        ScheduleFrontendRestart();
+    }
+
+    void ScheduleFrontendRestart()
+    {
+        if (restartPolicy.RecordCrash(DateTime.UtcNow) is not { } delay)
+        {
+            Store.Log(restartPolicy.EverConnected ? "Le moteur Qt s'arrête trop souvent : abandon des relances."
+                : "Le moteur Qt ne s'est jamais connecté : pas de relance.");
+            Fail();
+            return;
+        }
+        Store.Log("Relance du moteur Qt dans " + (int)delay.TotalSeconds + " s.");
+        var wait = new DispatcherTimer { Interval = delay };
+        wait.Tick += (_, _) =>
+        {
+            wait.Stop();
+            if (disposed)
+                return;
+            try
+            {
+                var previous = frontend;
+                frontend = null;
+                StopProcess(previous);
+                StartFrontend();
+            }
+            catch (Exception ex)
+            {
+                Store.Log("Relance du moteur Qt impossible : " + ex.Message);
+                ScheduleFrontendRestart();
+                return;
+            }
+            // Barre et icônes ne sont masquées de nouveau que si le frontend a tenu 3 s ET répondu sur le tube : pas de scintillement
+            // en boucle, et jamais de bureau nu devant un frontend muet. Sans connexion au bout de 60 s, la barre reste visible.
+            var relaunched = frontend;
+            int ticks = 0;
+            var settle = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            settle.Tick += (_, _) =>
+            {
+                ticks++;
+                if (disposed || !ReferenceEquals(frontend, relaunched) || relaunched is not { HasExited: false } || ticks > 60)
+                {
+                    settle.Stop();
+                    return;
+                }
+                if (ticks < 3 || Volatile.Read(ref firstReply) == 0)
+                    return;
+                settle.Stop();
+                (owner as Coordinator)?.ResumeShell(); // hors IBridgeOwner : les doublures de test n'ont pas à le connaître
+            };
+            settle.Start();
+        };
+        wait.Start();
+    }
+
     public void Dispose()
     {
         if (disposed)
             return;
         disposed = true;
-        if (frontend is { HasExited: false })
-        {
-            Safe.Try(() =>
-            {
-                frontend.Kill();
-                frontend.WaitForExit(2000);
-
-            });
-        }
+        var running = frontend;
+        frontend = null;
+        StopProcess(running);
         timer.Stop();
         wifi.Dispose();
         bars.Dispose();
@@ -323,7 +421,6 @@ internal sealed partial class QtShellBridge : IDisposable
         FullscreenWatcher.Changed -= FullscreenChanged;
         FullscreenWatcher.Stop();
         audio.Dispose();
-        frontend?.Dispose();
         wake.Dispose();
         cancellation.Dispose();
     }

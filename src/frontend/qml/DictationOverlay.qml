@@ -33,9 +33,9 @@ Window {
     property real fade: open ? 1 : 0
     Behavior on fade {
         enabled: root.reduced
-        NumberAnimation {
-            duration: 120
-            easing.type: Easing.OutCubic
+        Anim {
+            duration: Appearance.anim.durations.expressiveFastEffects
+            easing.bezierCurve: Appearance.anim.curves.expressiveFastEffects
         }
     }
     property real offset: reduced || open ? 0 : height

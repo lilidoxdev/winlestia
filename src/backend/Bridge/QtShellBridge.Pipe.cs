@@ -150,6 +150,7 @@ internal sealed partial class QtShellBridge
                 mixerVisible = Flag(args, "mixer");
                 wifiVisible = Flag(args, "wifi");
                 barsVisible = Flag(args, "bars");
+                mediaVisible = Flag(args, "media");
                 if (active != shown || navigationChanged)
                 {
                     active = shown;

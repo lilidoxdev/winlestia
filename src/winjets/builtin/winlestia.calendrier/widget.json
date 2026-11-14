@@ -1,0 +1,93 @@
+{
+  "size": {
+    "default": [
+      352,
+      352
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      536,
+      536
+    ]
+  },
+  "settings": [
+    {
+      "id": "firstDay",
+      "type": "choice",
+      "label": "Premier jour de la semaine",
+      "default": "monday",
+      "options": [
+        {
+          "value": "monday",
+          "label": "Lundi"
+        },
+        {
+          "value": "sunday",
+          "label": "Dimanche"
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "children": [
+          {
+            "type": "stack",
+            "grow": 1,
+            "children": [
+              {
+                "type": "calendar",
+                "variant": "day"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "minHeight": 340,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "children": [
+          {
+            "type": "stack",
+            "grow": 1,
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "settings.firstDay != 'sunday'",
+                "children": [
+                  {
+                    "type": "calendar",
+                    "variant": "month",
+                    "firstDay": "monday"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.firstDay == 'sunday'",
+                "children": [
+                  {
+                    "type": "calendar",
+                    "variant": "month",
+                    "firstDay": "sunday"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

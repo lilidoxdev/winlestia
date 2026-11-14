@@ -184,6 +184,11 @@ internal static class Program
             e.Handled = true;
         };
         AppDomain.CurrentDomain.UnhandledException += (_, e) => Store.Log("FATAL: " + e.ExceptionObject);
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            Store.Log("Tâche: " + e.Exception);
+            e.SetObserved();
+        };
         app.Startup += (_, _) =>
         {
             try

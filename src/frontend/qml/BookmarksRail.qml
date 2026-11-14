@@ -139,12 +139,15 @@ EdgeRail {
         const s = (t || u || "?").replace(/^https?:\/\/(www\.)?/, "").trim();
         return s.length ? s[0].toUpperCase() : "?";
     }
+    // Couple [fond, lettre] : chaque conteneur est associé à son rôle « on » pour garder le contraste en clair comme en sombre.
     function tint(t, u) {
         let h = 0;
         const s = (t || u || "");
         for (let i = 0; i < s.length; i++)
             h = (h * 31 + s.charCodeAt(i)) & 0xffff;
-        return Qt.hsla((h % 360) / 360, .45, Colours.light ? .62 : .38, 1);
+        const p = Colours.palette;
+        return [[p.m3primaryContainer, p.m3onPrimaryContainer], [p.m3tertiary, p.m3onTertiary],
+            [p.m3secondaryContainer, p.m3onSecondaryContainer], [p.m3surfaceContainerHighest, p.m3onSurface]][h % 4];
     }
     function deletable(id) {
         return (bm.canDeleteInBrowser ?? false) && !id.endsWith(":other") && !id.endsWith(":synced");
@@ -198,7 +201,7 @@ EdgeRail {
                             height: entry.size
                             radius: width / 2
                             color: entry.folder ? Colours.palette.m3secondaryContainer : entry.icon === "" ? rail.tint(entry.title,
-                                entry.url) : Colours.palette.m3surfaceContainerHigh
+                                entry.url)[0] : Colours.palette.m3surfaceContainerHigh
                             Image {
                                 id: favicon
                                 objectName: "favicon-" + entry.index
@@ -223,7 +226,7 @@ EdgeRail {
                                 visible: !entry.folder && !favicon.visible
                                 anchors.centerIn: parent
                                 text: rail.initial(entry.title, entry.url)
-                                color: Colours.palette.m3onSurface
+                                color: entry.icon === "" ? rail.tint(entry.title, entry.url)[1] : Colours.palette.m3onSurface
                                 font.bold: true
                                 font.pointSize: entry.depth > 0 ? Appearance.font.size.normal : Appearance.font.size.large
                             }
@@ -265,7 +268,7 @@ EdgeRail {
                     anchors.centerIn: parent
                     width: 48
                     height: 48
-                    radius: 24
+                    radius: Appearance.rounding.full
                     color: Colours.palette.m3surfaceContainerHigh
                     readonly property string kind: rail.busy ? "busy" : rail.error !== "" && rail.error !== "sync" ? "error" : "empty"
                     property string label: kind === "busy" ? qsTr("Chargement des favoris…") : kind === "error"
@@ -293,7 +296,7 @@ EdgeRail {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 30
                 Layout.preferredHeight: 30
-                radius: 15
+                radius: Appearance.rounding.full
                 color: Colours.palette.m3error
                 MaterialIcon {
                     anchors.centerIn: parent
@@ -440,9 +443,9 @@ EdgeRail {
                     }
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 9
-                        anchors.rightMargin: 8
-                        spacing: 10
+                        anchors.leftMargin: Appearance.spacing.smaller
+                        anchors.rightMargin: Appearance.padding.smaller
+                        spacing: Appearance.spacing.smaller
                         MaterialIcon {
                             text: "visibility_off"
                             font.pointSize: Appearance.font.size.large
@@ -469,9 +472,9 @@ EdgeRail {
                     }
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 9
-                        anchors.rightMargin: 8
-                        spacing: 10
+                        anchors.leftMargin: Appearance.spacing.smaller
+                        anchors.rightMargin: Appearance.padding.smaller
+                        spacing: Appearance.spacing.smaller
                         MaterialIcon {
                             text: "delete"
                             font.pointSize: Appearance.font.size.large
@@ -499,7 +502,7 @@ EdgeRail {
                 }
                 Row {
                     visible: menu.mode !== "menu"
-                    spacing: 8
+                    spacing: Appearance.spacing.small
                     x: 6
                     TextButton {
                         objectName: "bookmarksMenuCancel"

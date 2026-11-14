@@ -27,6 +27,7 @@ internal sealed partial class QtShellBridge
         long total = reading?.Drives.Sum(d => d.Total) ?? 0, free = reading?.Drives.Sum(d => d.Free) ?? 0;
         var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
         var battery = BatteryStatus.Read();
+        var visibleApps = Store.Visible().ToList();
 
         return new
         {
@@ -186,9 +187,11 @@ internal sealed partial class QtShellBridge
                 bluetoothOn = connection?.Bluetooth.On ?? false,
                 network = connection?.Network ?? ""
             },
-            apps = Store.Visible().Select(EntryValue).ToArray(),
+            apps = visibleApps.Select(EntryValue).ToArray(),
             favorites = Store.HomeFavorites().Select(EntryValue).ToArray(),
             recent = Store.RecentEntries().Take(24).Select(EntryValue).ToArray(),
+            launchCounts = visibleApps.Select(e => e.Id).Distinct().Where(id => Store.State.LaunchCounts.ContainsKey(id))
+                .ToDictionary(id => id, id => Store.State.LaunchCounts[id]),
             websites = Store.State.Websites.Select(w => new { id = w.Id, name = w.Name, icon = w.IconPath }).ToArray(),
             profiles = Store.State.Workspaces.Select(w => new { id = w.Id, name = w.Name }).ToArray(),
             taskbarApps = tasks,

@@ -495,7 +495,7 @@ Window {
         anchors.horizontalCenter: parent.horizontalCenter
         width: Math.min(window.panelWidth - 80, 640)
         height: noticeLabel.implicitHeight + 22
-        radius: 18
+        radius: Appearance.rounding.normal
         color: Colours.palette.m3surfaceContainerHighest
         border.width: 1
         border.color: Colours.palette.m3outlineVariant
@@ -513,7 +513,7 @@ Window {
             width: parent.width - 26
             text: qsTr(Bridge.notice)
             wrapMode: Text.Wrap
-            font.pointSize: 11
+            font.pointSize: Appearance.font.size.small
         }
     }
     Loader {

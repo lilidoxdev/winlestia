@@ -216,12 +216,151 @@ CALC_WORDS = (
 TIME_LIKE = re.compile(r'^\d{1,2}:\d{2}(:\d{2})?\s*(am|pm)?$', re.I)
 
 
+# Conversion d'unités hors ligne : (catégorie, facteur vers l'unité de base). Les alias sont comparés après fold() et
+# suppression des espaces, des « ° » et des points. Pas de devises (réseau). Octets : « ko/mo/go » en base 10 (usage
+# français), « kio/mio/gio » en base 2. Gallon et once liquide : unités US.
+_UNIT_TABLE = {}
+
+
+def _units(category, base, *rows):
+    for factor, names in rows:
+        for name in names.split():
+            _UNIT_TABLE[name] = (category, factor)
+
+
+_units('length', 'm',
+       (1e-6, 'um micron microns micrometre micrometres micrometer micrometers'),
+       (1e-3, 'mm millimetre millimetres millimeter millimeters'),
+       (1e-2, 'cm centimetre centimetres centimeter centimeters'),
+       (0.1, 'dm decimetre decimetres'),
+       (1, 'm metre metres meter meters'),
+       (1000, 'km kilometre kilometres kilometer kilometers'),
+       (0.0254, 'in inch inches pouce pouces "'),
+       (0.3048, 'ft foot feet pied pieds'),
+       (0.9144, 'yd yard yards'),
+       (1609.344, 'mi mile miles'),
+       (1852, 'nmi'))
+_units('mass', 'kg',
+       (1e-6, 'mg milligramme milligrammes milligram milligrams'),
+       (1e-3, 'g gramme grammes gram grams'),
+       (1, 'kg kilo kilos kilogramme kilogrammes kilogram kilograms'),
+       (1000, 't tonne tonnes ton tons'),
+       (0.45359237, 'lb lbs livre livres pound pounds'),
+       (0.028349523125, 'oz once onces ounce ounces'))
+_units('time', 's',
+       (1e-3, 'ms milliseconde millisecondes millisecond milliseconds'),
+       (1, 's sec seconde secondes second seconds'),
+       (60, 'min mins minute minutes'),
+       (3600, 'h hr hrs heure heures hour hours'),
+       (86400, 'j d jour jours day days'),
+       (604800, 'sem semaine semaines week weeks'),
+       (31536000, 'an ans annee annees y yr yrs year years'))
+_units('data', 'o',
+       (0.125, 'bit bits'),
+       (1, 'o octet octets byte bytes'),
+       (1e3, 'ko kb'), (1e6, 'mo mb'), (1e9, 'go gb'), (1e12, 'to tb'), (1e15, 'po pb'),
+       (1024, 'kio kib'), (1024**2, 'mio mib'), (1024**3, 'gio gib'), (1024**4, 'tio tib'))
+_units('speed', 'm/s',
+       (1, 'm/s mps'),
+       (1 / 3.6, 'km/h kmh kph kmph'),
+       (0.44704, 'mph mi/h'),
+       (0.514444, 'kn kt kts noeud noeuds knot knots'),
+       (0.3048, 'ft/s fps'))
+_units('volume', 'l',
+       (1e-3, 'ml millilitre millilitres milliliter milliliters cm3 cc'),
+       (1e-2, 'cl centilitre centilitres centiliter centiliters'),
+       (0.1, 'dl decilitre decilitres deciliter deciliters'),
+       (1, 'l litre litres liter liters'),
+       (1000, 'm3'),
+       (3.785411784, 'gal gallon gallons'),
+       (0.0295735295625, 'floz'))
+_units('area', 'm2',
+       (1e-6, 'mm2'),
+       (1e-4, 'cm2'),
+       (1, 'm2'),
+       (1e6, 'km2'),
+       (1e4, 'ha hectare hectares'),
+       (0.00064516, 'in2 sqin'),
+       (0.09290304, 'ft2 sqft'),
+       (0.83612736, 'yd2 sqyd'),
+       (4046.8564224, 'acre acres'),
+       (2589988.110336, 'mi2 sqmi'))
+_TEMPERATURES = {
+    'c': 'c', 'celsius': 'c', 'degc': 'c', 'degreec': 'c', 'degrec': 'c', 'degres': 'c',
+    'f': 'f', 'fahrenheit': 'f', 'degf': 'f',
+    'k': 'k', 'kelvin': 'k', 'kelvins': 'k',
+}
+_CONVERT = re.compile(
+    r'^([+-]?\d+(?:[.,]\d+)*(?:e[+-]?\d+)?)\s*(.+?)\s*(?:\s(?:en|in|to)\s|\s*→\s*)\s*(.+)$', re.I
+)
+
+
+def _unit_key(token):
+    token = fold(token).replace('µ', 'u').replace('³', '3').replace('²', '2')
+    return re.sub(r'[\s°.]', '', token)
+
+
+_COMMA_DECIMAL = frozenset(('fr', 'es', 'de', 'it', 'pt', 'ru', 'nl', 'pl'))  # langues dont le séparateur décimal est la virgule
+_THOUSANDS = re.compile(r'^[+-]?\d{1,3}(?:,\d{3})+(?:\.\d+)?(?:e[+-]?\d+)?$', re.I)
+
+
+def _convert_shown(value):
+    if abs(value) >= 1e6:
+        if value.is_integer() and abs(value) < 2**53:
+            return str(int(value))  # entier exact (1 gio en o = 1073741824), sans passer par la notation scientifique
+        shown = format(value, '.12g')  # 12 chiffres significatifs : coupe le bruit flottant sans tronquer les grands nombres
+        if 'e' in shown and abs(value) < 1e15:
+            shown = format(float(shown), '.3f').rstrip('0').rstrip('.')
+        return shown
+    shown = format(value, '.6g')
+    if 'e' in shown and 1e-6 <= abs(value) < 1e15:
+        shown = format(float(shown), '.10f').rstrip('0').rstrip('.')
+    return '0' if shown in ('-0', '') else shown
+
+
+def convert_units(text, language='fr'):
+    # « 12 km en mi », « 100 f to c », « 5 kg in lb » : valeur convertie suivie de l'unité d'arrivée telle que saisie.
+    # None si la requête n'est pas une conversion valide (unité inconnue, catégories différentes, sous le zéro absolu).
+    match = _CONVERT.match(text.strip()) if len(text) <= 160 else None
+    if not match:
+        return None
+    try:
+        number = match.group(1)
+        if language not in _COMMA_DECIMAL and _THOUSANDS.match(number):
+            number = number.replace(',', '')  # « 1,000 km in m » en anglais : la virgule sépare les milliers
+        value = float(number.replace(',', '.'))
+    except ValueError:
+        return None
+    source, target = _unit_key(match.group(2)), _unit_key(match.group(3))
+    if not source or not target or not math.isfinite(value) or abs(value) > 1e100:
+        return None
+    if source in _TEMPERATURES and target in _TEMPERATURES:
+        source, target = _TEMPERATURES[source], _TEMPERATURES[target]
+        kelvin = {'c': lambda v: v + 273.15, 'f': lambda v: (v - 32) * 5 / 9 + 273.15, 'k': lambda v: v}[source](value)
+        if kelvin < 0:
+            return None
+        result = {'c': lambda v: v - 273.15, 'f': lambda v: (v - 273.15) * 9 / 5 + 32, 'k': lambda v: v}[target](kelvin)
+    else:
+        if source not in _UNIT_TABLE or target not in _UNIT_TABLE or _UNIT_TABLE[source][0] != _UNIT_TABLE[target][0]:
+            return None
+        result = value * _UNIT_TABLE[source][1] / _UNIT_TABLE[target][1]
+    if not math.isfinite(result) or abs(result) > 1e100:
+        return None
+    shown = _convert_shown(round(result, 9) if abs(result) < 1e6 else result)
+    if language in _COMMA_DECIMAL:
+        shown = shown.replace('.', ',')
+    return shown + ' ' + match.group(3).strip()
+
+
 def calculate(text, language='fr'):
     text = text.strip()
     if text.startswith('>calc '):
         text = text[6:].strip()
     if len(text) > 160 or TIME_LIKE.match(text):
         return None
+    converted = convert_units(text, language)
+    if converted is not None:
+        return converted
     for pattern, symbol in CALC_WORDS:
         text = pattern.sub(symbol, text)
     text = text.replace(':', '/')
@@ -259,9 +398,83 @@ def calculate(text, language='fr'):
             return value
 
         shown = format(run(tree.body), '.12g')
-        return shown.replace('.', ',') if language in ('fr', 'es') else shown
+        return shown.replace('.', ',') if language in _COMMA_DECIMAL else shown
     except (ValueError, SyntaxError, OverflowError, ZeroDivisionError, TypeError, KeyError):
         return None
+
+
+# Classement des applications : score de texte par paliers + bonus d'usage plafonné. L'écart entre paliers dépasse le
+# plafond du bonus, donc l'usage réordonne à l'intérieur d'un palier (et remonte un fuzzy fréquent au-dessus des fuzzy
+# rares) sans jamais faire passer un palier sous un autre : un sous-séquence ne dépasse jamais un nom exact.
+# Invariant (testé) : pour deux paliers voisins, plancher du palier haut (base - pénalité max) > base du bas + MAX_USAGE_BONUS.
+TIER_EXACT, TIER_PREFIX, TIER_WORD, TIER_ACRONYM, TIER_SUBSTRING, TIER_FUZZY, TIER_CATEGORY = 1100, 940, 800, 660, 520, 360, 100
+MAX_USAGE_BONUS = 120
+# Pénalité maximale que name_score/app_score retire à la base de chaque palier (longueur du nom, position, trous du fuzzy).
+TIER_MAX_PENALTY = {
+    TIER_EXACT: 0, TIER_PREFIX: 10, TIER_WORD: 10, TIER_ACRONYM: 10, TIER_SUBSTRING: 20, TIER_FUZZY: 115, TIER_CATEGORY: 10,
+}
+
+
+def fuzzy_span(needle, name):
+    # Plus petite fenêtre du nom contenant les lettres du motif dans l'ordre ; None sans sous-séquence.
+    best = None
+    start = name.find(needle[0])
+    while start != -1:
+        pos = start
+        for char in needle[1:]:
+            pos = name.find(char, pos + 1)
+            if pos == -1:
+                break
+        else:
+            if best is None or pos - start < best[1] - best[0]:
+                best = (start, pos)
+        start = name.find(needle[0], start + 1)
+    return best
+
+
+def name_score(needle, words, name):
+    # needle et name sont déjà passés par fold(). None si le nom ne correspond pas.
+    if not needle:
+        return None
+    tail = min(len(name) * 0.1, 10)  # à palier égal, le nom le plus court (donc le plus proche du motif) passe devant
+    if name == needle:
+        return TIER_EXACT
+    if name.startswith(needle):
+        return TIER_PREFIX - tail
+    name_words = [w for w in re.split(r'[^a-z0-9]+', name) if w]
+    if all(any(nw.startswith(w) for nw in name_words) for w in words):
+        return TIER_WORD - tail
+    if len(needle) >= 2 and ' ' not in needle and ''.join(w[0] for w in name_words).startswith(needle):
+        return TIER_ACRONYM - tail
+    if needle in name:
+        return TIER_SUBSTRING - tail - min(name.index(needle) * 0.2, 10)
+    if len(needle) >= 2 and ' ' not in needle:
+        span = fuzzy_span(needle, name)
+        if span is not None:
+            gaps = span[1] - span[0] + 1 - len(needle)
+            if gaps <= max(4, len(needle) * 2):
+                return TIER_FUZZY - min(gaps * 4, 100) - min(span[0], 10) * 0.5 - tail
+    return None
+
+
+def usage_bonus(count, recent):
+    # Fréquence logarithmique (0..80) + récence (0..40, rang 0 = dernier lancé), le tout plafonné à MAX_USAGE_BONUS.
+    try:
+        count, recent = max(int(count), 0), int(recent)
+    except (TypeError, ValueError):
+        return 0
+    bonus = min(20 * math.log2(1 + count), 80)
+    if 0 <= recent < 48:
+        bonus += 40 * (1 - recent / 48)
+    return min(bonus, MAX_USAGE_BONUS)
+
+
+def app_score(needle, words, entry, count=0):
+    name = fold(entry['name'])
+    score = name_score(needle, words, name)
+    if score is None and all(w in name + ' ' + fold(entry.get('category', '')) for w in words):
+        score = TIER_CATEGORY - min(len(name) * 0.1, 10)
+    return None if score is None else score + usage_bonus(count, entry.get('recent', -1))
 
 
 def palette_search(query, state, language='fr', windows=None):
@@ -296,12 +509,13 @@ def palette_search(query, state, language='fr', windows=None):
         if raw:
             results.extend(window_results(needle, windows, language=language))
         entries = state.get('apps', []) if raw else []
+        counts = state.get('launchCounts')
+        counts = counts if isinstance(counts, dict) else {}
         ranked = []
         for entry in entries:
-            name = fold(entry['name'])
-            haystack = name + ' ' + fold(entry.get('category', ''))
-            if all(w in haystack for w in words):
-                ranked.append((0 if name.startswith(needle) else 1, name, entry))
+            score = app_score(needle, words, entry, counts.get(entry['id'], 0))
+            if score is not None:
+                ranked.append((-score, fold(entry['name']), entry))
         for _, _, entry in sorted(ranked, key=lambda v: v[:2])[:8]:
             results.append(
                 {

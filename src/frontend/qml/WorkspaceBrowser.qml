@@ -436,7 +436,7 @@ Item {
         property: "reveal"
         from: 0
         to: 1
-        duration: 900
+        duration: Appearance.anim.durations.extraLarge
     }
     onVisibleChanged: {
         if (visible) {

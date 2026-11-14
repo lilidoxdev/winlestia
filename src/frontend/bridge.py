@@ -175,6 +175,7 @@ class Bridge(
         self.quiet_forced = 'auto'
         self._bars_want = False
         self._bars_refs = 0
+        self._media_refs = 0
         self._theme_revision = 0
         QApplication.instance().screenAdded.connect(self.screen_list_changed)
         QApplication.instance().screenRemoved.connect(self.screen_list_changed)

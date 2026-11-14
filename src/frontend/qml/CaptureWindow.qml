@@ -185,7 +185,7 @@ Window {
     StyledRect {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        anchors.topMargin: 20
+        anchors.topMargin: Appearance.spacing.large
         width: Math.min(toolbar.implicitWidth + 32, parent.width - 32)
         height: 64
         radius: Appearance.rounding.large
@@ -193,13 +193,13 @@ Window {
         RowLayout {
             id: toolbar
             anchors.centerIn: parent
-            spacing: 8
+            spacing: Appearance.spacing.small
             StyledText {
                 text: root.selected ? Math.round(root.selection.width) + " × " + Math.round(root.selection.height)
                     : qsTr("Glisse pour sélectionner")
                 font.pointSize: Appearance.font.size.small
-                Layout.leftMargin: 8
-                Layout.rightMargin: 8
+                Layout.leftMargin: Appearance.padding.smaller
+                Layout.rightMargin: Appearance.padding.smaller
             }
             CaptureAction {
                 hint: qsTr("Nouvelle sélection")
@@ -286,7 +286,7 @@ Window {
     }
     StyledRect {
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 20
+        anchors.bottomMargin: Appearance.spacing.large
         anchors.horizontalCenter: parent.horizontalCenter
         width: Math.min(600, parent.width - 40)
         height: errorLabel.implicitHeight + 24

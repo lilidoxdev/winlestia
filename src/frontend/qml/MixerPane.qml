@@ -109,10 +109,10 @@ Item {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: Appearance.padding.large
-                    spacing: 5
+                    spacing: Appearance.padding.small
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 10
+                        spacing: Appearance.spacing.smaller
                         Image {
                             Layout.preferredWidth: 28
                             Layout.preferredHeight: 28
@@ -145,7 +145,7 @@ Item {
                     }
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 14
+                        spacing: Appearance.spacing.larger
                         StyledSlider {
                             id: gain
                             Layout.fillWidth: true

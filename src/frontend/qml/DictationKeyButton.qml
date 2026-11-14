@@ -85,7 +85,7 @@ IconTextButton {
                     StyledText {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Appuyez sur une touche…")
-                        font.pointSize: 15
+                        font.pointSize: Appearance.font.size.larger
                     }
                     StyledText {
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -100,7 +100,7 @@ IconTextButton {
                     anchors.bottomMargin: 12
                     width: 90
                     height: 28
-                    radius: 14
+                    radius: Appearance.rounding.full
                     color: Qt.alpha(Colours.palette.m3primary, .18)
                     StyledText {
                         anchors.centerIn: parent

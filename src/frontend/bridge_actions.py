@@ -127,6 +127,17 @@ class ActionMixin:
             self.audioBarsChanged.emit()
         kernel32.SetEvent(self.client.wakeup)
 
+    # Média : même principe que les barres, pour la sonde SMTC du backend. Un Winjet de bureau lit `media.` sans qu'aucun
+    # panneau ne soit ouvert ; sans cette référence le lecteur resterait figé sur son dernier instantané.
+    @Slot(bool)
+    def mediaRef(self, take):
+        self._media_refs = max(0, getattr(self, '_media_refs', 0) + (1 if take else -1))
+        wanted = self._media_refs > 0
+        if wanted == bool(self.client.subscription.get('media')):
+            return
+        self.client.subscription = {**self.client.subscription, 'media': wanted}
+        kernel32.SetEvent(self.client.wakeup)
+
     @Slot(bool, int)
     def subscribe(self, visible, page):
         visible = visible or bool(self.recording_kind)
@@ -134,6 +145,7 @@ class ActionMixin:
             **self.client.subscription,
             'visible': visible,
             'page': page,
+            'media': bool(getattr(self, '_media_refs', 0) > 0),
             'controls': bool(self.top and self.top.property('controlsOpen')),
             'mixer': bool(self.top and self.top.property('audioSampling')),
             'wifi': bool(self.top and self.top.property('wifiSampling')),

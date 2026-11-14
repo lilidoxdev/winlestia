@@ -156,6 +156,7 @@ internal sealed partial class Coordinator : IDisposable
         taskbar = new ShellTaskbar(this);
         StartTaskbar();
         Microsoft.Win32.SystemEvents.DisplaySettingsChanged += DisplayChanged;
+        Microsoft.Win32.SystemEvents.PowerModeChanged += PowerModeChanged;
         if (preview)
         {
             Pinned = true;
@@ -239,6 +240,7 @@ internal sealed partial class Coordinator : IDisposable
         timer.Stop();
         debounce.Stop();
         Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= DisplayChanged;
+        StopPowerWatch();
         Keys.Dispose();
         source.RemoveHook(Hook);
         clipboard.Dispose();

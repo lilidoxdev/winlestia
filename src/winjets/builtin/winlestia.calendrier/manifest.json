@@ -1,0 +1,12 @@
+{
+  "format": "winjet/1",
+  "id": "winlestia.calendrier",
+  "name": "Calendrier",
+  "version": "1.0.0",
+  "author": "Winlestia",
+  "description": "Calendrier du mois avec le jour courant mis en valeur, ou la date du jour en petit format.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  }
+}
