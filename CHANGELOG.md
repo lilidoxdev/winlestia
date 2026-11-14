@@ -16,7 +16,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 - Rail social : les lignes « N nouveaux messages » consécutives d'un même réseau sont fusionnées (même jour, moins de 30 min d'écart) en une seule ligne remontée en tête ; une notification réelle reçue dans les 3 s retire un message de la ligne fusionnée et garde sa propre ligne.
 - Rail social : l'historique est séparé par jour (« Aujourd’hui », « Hier », puis date courte).
 - Rail social : une ligne de l'historique se retire seule, par une croix au survol (à la place de l'heure) ou par clic milieu ; nouvelle action de pont `socialHistoryRemove` (`seq`).
-- Fenêtre « Applications » du dock : liste de tâches vivante (icône, nom, processeur et mémoire en direct, tri par usage) à la place de la grille, avec arrêt rapide en deux clics (« Arrêter ? ») sans boîte de dialogue. Les processus élevés dont le chemin est lisible apparaissent désormais, les exécutables sans icône intégrée reçoivent une tuile lettre au lieu de l'icône générique, et une liste de refus empêche d'arrêter explorer.exe, les services système et les processus du shell.
+- Fenêtre « Applications » du dock : liste de tâches vivante (icône, nom, processeur et mémoire en direct comme le Gestionnaire des tâches, colonnes triables, jauge dans chaque ligne) à la place de la grille, avec arrêt rapide en deux clics (« Arrêter ? ») sans boîte de dialogue. Les processus élevés dont le chemin est lisible apparaissent désormais, les exécutables sans icône intégrée reçoivent une tuile lettre au lieu de l'icône générique, et une liste de refus empêche d'arrêter explorer.exe, les services système et les processus du shell.
 
 ### Modifications
 

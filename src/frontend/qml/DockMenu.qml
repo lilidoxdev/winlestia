@@ -14,8 +14,10 @@ Window {
     transientParent: null
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint
     color: "transparent"
-    width: kind === "desktop" ? 300 : 390
-    height: Math.min(620, Bridge.screenHeight - 120, body.implicitHeight + 28)
+    width: kind === "desktop" ? 300 : kind === "running" ? 440 : 390
+    height: Math.min(maxWindowHeight, body.implicitHeight + 28)
+    readonly property int maxWindowHeight: Math.min(620, Bridge.screenHeight - 120)
+    readonly property color panelColor: Qt.alpha(Colours.surfaceBase, .96)
     property string kind: "app"
     property var entry: ({})
     property bool fromRunning: false
@@ -36,9 +38,10 @@ Window {
         anchorX = px;
         anchorY = py;
         position();
-        rowsModel.clear();
+        clearRows();
         visible = true;
         syncRows(true);
+        settleTimer.restart();
         requestActivate();
     }
     function position() {
@@ -65,7 +68,8 @@ Window {
         powerChoice = "";
         disarm();
         rowsHeld = false;
-        rowsModel.clear();
+        settleTimer.stop();
+        clearRows();
     }
     onKindChanged: {
         disarm();
@@ -74,7 +78,20 @@ Window {
     }
     onBackgroundTabChanged: {
         disarm();
+        clearRows();
+        syncRows(true);
+        settleTimer.restart();
+    }
+    // Vide la liste sans transition (les glissements ne servent qu'aux changements d'un relevé à l'autre).
+    function clearRows() {
+        rowsAnimated = false;
         rowsModel.clear();
+    }
+    function setSort(key) {
+        if (sortKey === key)
+            return;
+        sortKey = key;
+        disarm();
         syncRows(true);
     }
     // Liste de tâches de la vue « running » : lignes mises à jour en place (jamais recréées) pour garder survol, bouton armé et icônes.
@@ -83,16 +100,20 @@ Window {
     // Tailles structurelles de la vue « running » (sans jeton Appearance équivalent).
     readonly property int taskRowHeight: 54
     readonly property int taskIconSize: 30
-    readonly property int taskFiguresWidth: 120
-    readonly property int taskCpuWidth: 48
+    readonly property int taskCpuWidth: 76
     readonly property int taskMemWidth: 64
+    readonly property int taskFiguresWidth: taskCpuWidth + Appearance.spacing.small + taskMemWidth
     readonly property int taskStopSize: 32
-    readonly property int taskListSpacing: 3
-    readonly property int taskBarHeight: 3
+    readonly property int taskListSpacing: 4
+    readonly property int taskHeaderHeight: 26
+    readonly property int taskFadeHeight: 24
     readonly property int taskEmptyHeight: 120
     property string armedId: ""
     property bool rowsHeld: false
+    property bool rowsAnimated: false
+    property string sortKey: "mem"
     property real maxMem: 0
+    property real maxCpu: 0
     property real sumCpu: 0
     property real sumMem: 0
     property int runningCount: 0
@@ -106,6 +127,13 @@ Window {
         repeat: true
         running: menu.visible && menu.kind === "running"
         onTriggered: Bridge.action("runningRefresh", {})
+    }
+    // Les transitions ne s'activent qu'une fois la liste initiale posée : rien ne glisse à l'ouverture ni au changement d'onglet.
+    Timer {
+        id: settleTimer
+        interval: 150
+        repeat: false
+        onTriggered: menu.rowsAnimated = true
     }
     Timer {
         id: armTimer
@@ -160,8 +188,9 @@ Window {
     }
     // Ordre par usage, sur des valeurs arrondies (CPU à l'entier, mémoire à 10 Mo) pour que le bruit d'un échantillon ne réordonne pas.
     function rowOrder(a, b) {
-        return Math.round(b.cpu ?? 0) - Math.round(a.cpu ?? 0) || Math.round((b.mem ?? 0) / 10) - Math.round((a.mem ?? 0) / 10)
-            || (a.name ?? "").localeCompare(b.name ?? "");
+        const cpu = Math.round(b.cpu ?? 0) - Math.round(a.cpu ?? 0);
+        const mem = Math.round((b.mem ?? 0) / 10) - Math.round((a.mem ?? 0) / 10);
+        return (sortKey === "cpu" ? cpu || mem : mem || cpu) || (a.name ?? "").localeCompare(b.name ?? "");
     }
     function syncRows(force) {
         if (!visible || kind !== "running")
@@ -180,9 +209,12 @@ Window {
             disarm();
         const known = {};
         for (let i = 0; i < rowsModel.count; i++) {
-            const id = rowsModel.get(i).rid;
-            known[id] = true;
-            rowsModel.set(i, rowData(byId[id]));
+            const current = rowsModel.get(i);
+            known[current.rid] = true;
+            const next = rowData(byId[current.rid]);
+            for (const key in next)
+                if (current[key] !== next[key])
+                    rowsModel.setProperty(i, key, next[key]);
         }
         const wanted = fresh.slice().sort(rowOrder);
         if (!force && (rowsHeld || armedId !== "")) {
@@ -203,15 +235,17 @@ Window {
                     rowsModel.move(at, i, 1);
             }
         }
-        let cpu = 0, mem = 0, most = 0;
+        let cpu = 0, mem = 0, mostMem = 0, mostCpu = 0;
         for (const app of fresh) {
             cpu += app.cpu ?? 0;
             mem += app.mem ?? 0;
-            most = Math.max(most, app.mem ?? 0);
+            mostMem = Math.max(mostMem, app.mem ?? 0);
+            mostCpu = Math.max(mostCpu, app.cpu ?? 0);
         }
         sumCpu = Math.min(100, cpu);
         sumMem = mem;
-        maxMem = most;
+        maxMem = mostMem;
+        maxCpu = mostCpu;
     }
     function powerLabel(id) {
         return id === "logout" ? qsTr("Se déconnecter") : id === "sleep" ? qsTr("Mettre en veille") : id === "hibernate"
@@ -409,7 +443,7 @@ Window {
     Rectangle {
         anchors.fill: parent
         radius: Appearance.rounding.large
-        color: Qt.alpha(Colours.surfaceBase, .96)
+        color: menu.panelColor
         border.width: 1
         border.color: Colours.palette.m3outlineVariant
         C.ScrollView {
@@ -417,6 +451,7 @@ Window {
             anchors.margins: 14
             clip: true
             contentWidth: availableWidth
+            C.ScrollBar.vertical.policy: menu.kind === "running" ? C.ScrollBar.AlwaysOff : C.ScrollBar.AsNeeded
             Column {
                 id: body
                 width: menu.width - 28
@@ -460,8 +495,8 @@ Window {
                     visible: menu.kind === "running"
                     width: parent.width - Appearance.padding.smaller * 2
                     x: Appearance.padding.smaller
-                    text: (rowsModel.count === 1 ? qsTr("%1 application") : qsTr("%1 applications")).arg(rowsModel.count) + " · " + Math.round(menu.sumCpu) + " % · "
-                        + (menu.sumMem / 1024).toFixed(1).replace(".", ",") + " Go"
+                    text: (rowsModel.count === 1 ? qsTr("%1 application") : qsTr("%1 applications")).arg(rowsModel.count) + " · " + qsTr("processeur") + " " + Math.round(menu.sumCpu) + " % · "
+                        + qsTr("mémoire") + " " + (menu.sumMem / 1024).toFixed(1).replace(".", ",") + " Go"
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3onSurfaceVariant
                     elide: Text.ElideRight
@@ -721,17 +756,136 @@ Window {
                         }
                     }
                 }
-                Column {
+                Item {
+                    objectName: "runningHeader"
+                    visible: menu.kind === "running" && rowsModel.count > 0
+                    width: body.width
+                    height: visible ? menu.taskHeaderHeight : 0
+                    StyledText {
+                        anchors.left: parent.left
+                        anchors.leftMargin: Appearance.padding.large
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: qsTr("Application")
+                        font.pointSize: Appearance.font.size.small
+                        color: Colours.palette.m3onSurfaceVariant
+                    }
+                    Repeater {
+                        model: [
+                            {
+                                key: "cpu",
+                                text: qsTr("Processeur"),
+                                inset: menu.taskMemWidth + Appearance.spacing.small
+                            },
+                            {
+                                key: "mem",
+                                text: qsTr("Mémoire"),
+                                inset: 0
+                            }
+                        ]
+                        delegate: MouseArea {
+                            id: sortHead
+                            required property var modelData
+                            readonly property bool active: menu.sortKey === modelData.key
+                            objectName: "sort-" + modelData.key
+                            anchors.right: parent.right
+                            anchors.rightMargin: Appearance.padding.large + modelData.inset
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: headRow.width
+                            height: parent.height
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: menu.setSort(modelData.key)
+                            Row {
+                                id: headRow
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                MaterialIcon {
+                                    visible: sortHead.active
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "arrow_drop_down"
+                                    font.pointSize: Appearance.font.size.larger
+                                    color: Colours.palette.m3primary
+                                }
+                                StyledText {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: sortHead.modelData.text
+                                    font.pointSize: Appearance.font.size.small
+                                    color: sortHead.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                                }
+                            }
+                        }
+                    }
+                }
+                Item {
+                    id: runningBox
                     objectName: "runningList"
                     visible: menu.kind === "running"
                     width: body.width
-                    spacing: menu.taskListSpacing
+                    height: visible ? Math.min(runningList.contentHeight, Math.max(menu.taskRowHeight, menu.maxWindowHeight - 28 - y)) : 0
                     HoverHandler {
                         onHoveredChanged: menu.rowsHeld = hovered
                     }
-                    Repeater {
+                    ListView {
+                        id: runningList
+                        anchors.fill: parent
+                        clip: true
+                        spacing: menu.taskListSpacing
                         model: rowsModel
-                        StyledRect {
+                        interactive: contentHeight > height
+                        boundsBehavior: Flickable.StopAtBounds
+                        add: Transition {
+                            enabled: menu.rowsAnimated && !Appearance.reducedEffects
+                            ParallelAnimation {
+                                Anim {
+                                    property: "opacity"
+                                    from: 0
+                                    to: 1
+                                    duration: Appearance.anim.durations.small
+                                }
+                                Anim {
+                                    property: "scale"
+                                    from: 0.96
+                                    to: 1
+                                    duration: Appearance.anim.durations.small
+                                }
+                            }
+                        }
+                        remove: Transition {
+                            enabled: menu.rowsAnimated && !Appearance.reducedEffects
+                            Anim {
+                                property: "opacity"
+                                to: 0
+                                duration: Appearance.anim.durations.small
+                            }
+                        }
+                        move: Transition {
+                            enabled: menu.rowsAnimated && !Appearance.reducedEffects
+                            ParallelAnimation {
+                                Anim {
+                                    property: "y"
+                                    duration: Appearance.anim.durations.normal
+                                }
+                                Anim {
+                                    properties: "opacity,scale"
+                                    to: 1
+                                    duration: Appearance.anim.durations.small
+                                }
+                            }
+                        }
+                        displaced: Transition {
+                            enabled: menu.rowsAnimated && !Appearance.reducedEffects
+                            ParallelAnimation {
+                                Anim {
+                                    property: "y"
+                                    duration: Appearance.anim.durations.normal
+                                }
+                                Anim {
+                                    properties: "opacity,scale"
+                                    to: 1
+                                    duration: Appearance.anim.durations.small
+                                }
+                            }
+                        }
+                        delegate: StyledRect {
                             id: taskRow
                             required property string rid
                             required property string name
@@ -743,13 +897,33 @@ Window {
                             readonly property bool armed: menu.armedId === rid
                             readonly property bool stoppable: !isBackground || canStop
                             readonly property bool showStop: stoppable && (rowHover.hovered || stopButton.activeFocus || armed)
+                            readonly property real share: {
+                                const most = menu.sortKey === "cpu" ? menu.maxCpu : menu.maxMem;
+                                return most > 0 ? Math.min(1, (menu.sortKey === "cpu" ? cpu : mem) / most) : 0;
+                            }
                             objectName: "running-row-" + rid
-                            width: body.width
+                            width: runningList.width
                             height: menu.taskRowHeight
                             radius: Appearance.rounding.normal
                             color: Colours.palette.m3surfaceContainer
                             HoverHandler {
                                 id: rowHover
+                            }
+                            // Jauge : part de la clé de tri active par rapport à la plus grande ligne de l'onglet.
+                            Rectangle {
+                                objectName: "meter"
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                radius: parent.radius
+                                width: parent.width * taskRow.share
+                                color: Qt.alpha(Colours.palette.m3primary, 0.14)
+                                Behavior on width {
+                                    enabled: !Appearance.reducedEffects
+                                    Anim {
+                                        duration: Appearance.anim.durations.normal
+                                    }
+                                }
                             }
                             StateLayer {
                                 disabled: taskRow.isBackground
@@ -764,7 +938,7 @@ Window {
                                 anchors.leftMargin: Appearance.padding.large
                                 anchors.rightMargin: Appearance.padding.large
                                 anchors.topMargin: Appearance.padding.small
-                                anchors.bottomMargin: Appearance.padding.larger
+                                anchors.bottomMargin: Appearance.padding.small
                                 spacing: Appearance.spacing.normal
                                 Item {
                                     Layout.preferredWidth: menu.taskIconSize
@@ -818,6 +992,8 @@ Window {
                                             text: menu.fmtCpu(taskRow.cpu)
                                             font.pointSize: Appearance.font.size.small
                                             font.family: Appearance.font.family.mono
+                                            color: taskRow.cpu >= 10 ? Colours.palette.m3primary : taskRow.cpu < 0.1
+                                                ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
                                         }
                                         StyledText {
                                             width: menu.taskMemWidth
@@ -825,6 +1001,7 @@ Window {
                                             text: menu.fmtMem(taskRow.mem)
                                             font.pointSize: Appearance.font.size.small
                                             font.family: Appearance.font.family.mono
+                                            color: taskRow.mem <= 0 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
                                         }
                                     }
                                     StyledRect {
@@ -879,25 +1056,52 @@ Window {
                                     }
                                 }
                             }
-                            Rectangle {
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.bottom: parent.bottom
-                                anchors.leftMargin: Appearance.padding.large
-                                anchors.rightMargin: Appearance.padding.large
-                                anchors.bottomMargin: Appearance.padding.small
-                                height: menu.taskBarHeight
-                                radius: Appearance.rounding.full
-                                color: Colours.palette.m3surfaceContainerHighest
-                                Rectangle {
-                                    height: parent.height
-                                    radius: parent.radius
-                                    color: Colours.palette.m3primary
-                                    width: menu.maxMem > 0 ? parent.width * Math.min(1, taskRow.mem / menu.maxMem) : 0
-                                    Behavior on width {
-                                        Anim {}
-                                    }
-                                }
+                        }
+                    }
+                    // Fondu doux aux bords : seulement s'il reste du contenu dans cette direction (aucune barre de défilement).
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        height: menu.taskFadeHeight
+                        opacity: runningList.atYBeginning ? 0 : 1
+                        visible: opacity > 0
+                        gradient: Gradient {
+                            GradientStop {
+                                position: 0
+                                color: menu.panelColor
+                            }
+                            GradientStop {
+                                position: 1
+                                color: Qt.alpha(menu.panelColor, 0)
+                            }
+                        }
+                        Behavior on opacity {
+                            Anim {
+                                duration: Appearance.anim.durations.small
+                            }
+                        }
+                    }
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        height: menu.taskFadeHeight
+                        opacity: runningList.atYEnd ? 0 : 1
+                        visible: opacity > 0
+                        gradient: Gradient {
+                            GradientStop {
+                                position: 0
+                                color: Qt.alpha(menu.panelColor, 0)
+                            }
+                            GradientStop {
+                                position: 1
+                                color: menu.panelColor
+                            }
+                        }
+                        Behavior on opacity {
+                            Anim {
+                                duration: Appearance.anim.durations.small
                             }
                         }
                     }

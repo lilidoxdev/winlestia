@@ -64,13 +64,90 @@ internal sealed class ProcessUsageSampler
         return result;
     }
 
+    // Une entrée SYSTEM_PROCESS_INFORMATION (x64) réduite aux champs utiles. Mémoire = jeu de travail privé, comme la colonne « Mémoire »
+    // du Gestionnaire des tâches.
+    internal readonly record struct Entry(int Pid, int Parent, int Session, long Created, long CpuTicks, long PrivateBytes);
+    internal const int EntryMinSize = 0x68;
+
+    // Lecture pure d'un tampon SYSTEM_PROCESS_INFORMATION : NextEntryOffset @0, WorkingSetPrivateSize @8, CreateTime @0x20, UserTime @0x28,
+    // KernelTime @0x30, UniqueProcessId @0x50, InheritedFromUniqueProcessId @0x58, SessionId @0x64. S'arrête sur un tampon tronqué.
+    internal static List<Entry> ParseEntries(ReadOnlySpan<byte> buffer)
+    {
+        var list = new List<Entry>();
+        long offset = 0;
+        while (offset >= 0 && offset + EntryMinSize <= buffer.Length)
+        {
+            var item = buffer.Slice((int)offset);
+            uint nextOffset = BitConverter.ToUInt32(item.Slice(0, 4));
+            long created = BitConverter.ToInt64(item.Slice(0x20, 8));
+            long user = BitConverter.ToInt64(item.Slice(0x28, 8));
+            long kernel = BitConverter.ToInt64(item.Slice(0x30, 8));
+            list.Add(new Entry((int)BitConverter.ToInt64(item.Slice(0x50, 8)), (int)BitConverter.ToInt64(item.Slice(0x58, 8)),
+                (int)BitConverter.ToUInt32(item.Slice(0x64, 4)), created, kernel + user, BitConverter.ToInt64(item.Slice(8, 8))));
+            if (nextOffset == 0)
+                break;
+            offset += nextOffset;
+        }
+        return list;
+    }
+
+    byte[] queryBuffer = new byte[1 << 20];
+    readonly Dictionary<(int Pid, long Created), string> pathCache = new();
+
+    // Un seul appel système pour tous les processus ; null si indisponible (le chemin par processus prend alors le relais).
+    List<Entry>? QueryEntries()
+    {
+        if (IntPtr.Size != 8)
+            return null;
+        try
+        {
+            for (int attempt = 0; attempt < 6; attempt++)
+            {
+                int status = NtQuerySystemInformation(5, queryBuffer, (uint)queryBuffer.Length, out uint needed);
+                if (status == unchecked((int)0xC0000004))
+                {
+                    queryBuffer = new byte[Math.Max(queryBuffer.Length * 2, (int)needed + (1 << 16))];
+                    continue;
+                }
+                return status >= 0 ? ParseEntries(queryBuffer) : null;
+            }
+        }
+        catch (Exception)
+        {
+            // ntdll indisponible : repli.
+        }
+        return null;
+    }
+
+    // Chemin de l'image, résolu une seule fois par processus (PID + heure de création). Chaîne vide : inaccessible.
+    string ResolvePath(int pid, long created)
+    {
+        if (pathCache.TryGetValue((pid, created), out string? known))
+            return known!;
+        string path = "";
+        IntPtr handle = OpenProcess(0x1000, false, (uint)pid);
+        if (handle != IntPtr.Zero)
+            try
+            {
+                var buffer = new StringBuilder(1024);
+                uint size = (uint)buffer.Capacity;
+                if (QueryFullProcessImageName(handle, 0, buffer, ref size))
+                    path = buffer.ToString(0, (int)size);
+            }
+            finally { CloseHandle(handle); }
+        pathCache[(pid, created)] = path;
+        return path;
+    }
+
     // À appeler depuis un thread de travail. Les PID de `excludedRoots` et leurs descendants sont ignorés.
     internal List<Usage> Sample(IEnumerable<int> excludedRoots)
     {
-        var snapshot = Snapshot();
+        var entries = QueryEntries();
+        // L'horodatage suit immédiatement la lecture : le temps écoulé réel sépare deux relevés, pas l'intervalle demandé.
+        long now = Stopwatch.GetTimestamp();
+        var snapshot = entries != null ? entries.Select(e => (e.Pid, e.Parent)).ToArray() : Snapshot();
         var excluded = Tree(excludedRoots, snapshot);
         int session = SessionId;
-        long now = Stopwatch.GetTimestamp();
         double elapsed = lastStamp == 0 ? 0 : (now - lastStamp) / (double)Stopwatch.Frequency;
         if (IsStale(elapsed))
         {
@@ -79,6 +156,33 @@ internal sealed class ProcessUsageSampler
             elapsed = 0;
         }
         var raws = new List<Raw>();
+        if (entries != null)
+        {
+            foreach (var e in entries)
+            {
+                if (excluded.Contains(e.Pid) || e.Pid == 0 || e.Session != session)
+                    continue;
+                string path = ResolvePath(e.Pid, e.Created);
+                if (path.Length > 0)
+                    raws.Add(new Raw(e.Pid, e.Created, path, e.CpuTicks, e.PrivateBytes));
+            }
+            var live = entries.Select(e => (e.Pid, e.Created)).ToHashSet();
+            foreach (var key in pathCache.Keys.Where(k => !live.Contains((k.Pid, k.Created))).ToArray())
+                pathCache.Remove(key);
+        }
+        else
+            SampleEach(snapshot, excluded, session, raws);
+        var usages = Aggregate(raws, previous, elapsed, Environment.ProcessorCount, out var next);
+        previous.Clear();
+        foreach (var item in next)
+            previous[item.Key] = item.Value;
+        lastStamp = now;
+        return usages;
+    }
+
+    // Repli : un handle par processus (heures, chemin, mémoire privée validée).
+    static void SampleEach((int Pid, int Parent)[] snapshot, HashSet<int> excluded, int session, List<Raw> raws)
+    {
         foreach (var (pid, _) in snapshot)
         {
             if (excluded.Contains(pid) || pid == 0 || !ProcessIdToSessionId((uint)pid, out uint s) || s != session)
@@ -111,12 +215,6 @@ internal sealed class ProcessUsageSampler
             }
             finally { CloseHandle(handle); }
         }
-        var usages = Aggregate(raws, previous, elapsed, Environment.ProcessorCount, out var next);
-        previous.Clear();
-        foreach (var item in next)
-            previous[item.Key] = item.Value;
-        lastStamp = now;
-        return usages;
     }
 
     // Tous les PID du protégé (racine + descendants), pour l'arrêt.
@@ -198,6 +296,7 @@ internal sealed class ProcessUsageSampler
     }
     [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
     [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
+    [DllImport("ntdll.dll")] static extern int NtQuerySystemInformation(int infoClass, byte[] buffer, uint length, out uint returned);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern bool QueryFullProcessImageName(IntPtr process, uint flags, StringBuilder buffer, ref uint size);
     [DllImport("kernel32.dll")]

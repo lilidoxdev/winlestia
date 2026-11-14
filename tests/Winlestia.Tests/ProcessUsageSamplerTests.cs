@@ -110,4 +110,54 @@ public class ProcessUsageSamplerTests
     [InlineData(@"C:\Python\python.exe")]
     [InlineData(@"C:\Program Files\App\app.exe")]
     public void StopPolicy_AllowsOrdinaryPrograms(string path) => Assert.False(StopPolicy.IsDenied(path));
+
+    static void Put(byte[] buffer, int entryOffset, int field, long value) => System.BitConverter.GetBytes(value).CopyTo(buffer, entryOffset + field);
+
+    [Fact]
+    public void ParseEntries_ReadsFieldsAtX64Offsets()
+    {
+        // Deux entrées de 0x100 octets, construites à la main ; la seconde (NextEntryOffset 0) termine la liste.
+        var buffer = new byte[0x200];
+        System.BitConverter.GetBytes(0x100u).CopyTo(buffer, 0);
+        Put(buffer, 0, 8, 52_428_800);
+        Put(buffer, 0, 0x20, 111);
+        Put(buffer, 0, 0x28, 30);
+        Put(buffer, 0, 0x30, 12);
+        Put(buffer, 0, 0x50, 4242);
+        Put(buffer, 0, 0x58, 7);
+        System.BitConverter.GetBytes(3u).CopyTo(buffer, 0x64);
+        Put(buffer, 0x100, 0x50, 99);
+        var entries = ProcessUsageSampler.ParseEntries(buffer);
+        Assert.Equal(2, entries.Count);
+        Assert.Equal(new ProcessUsageSampler.Entry(4242, 7, 3, 111, 42, 52_428_800), entries[0]);
+        Assert.Equal(99, entries[1].Pid);
+    }
+
+    [Fact]
+    public void ParseEntries_StopsOnTruncatedBuffer()
+    {
+        var buffer = new byte[0x150];
+        System.BitConverter.GetBytes(0x100u).CopyTo(buffer, 0);
+        Put(buffer, 0, 0x50, 5);
+        Assert.Single(ProcessUsageSampler.ParseEntries(buffer));
+        Assert.Empty(ProcessUsageSampler.ParseEntries(new byte[0x10]));
+    }
+
+    // Vérification manuelle contre Win32_PerfFormattedData_PerfProc_Process : exclue de la série normale.
+    [Fact]
+    [Trait("Category", "Desktop")]
+    public void Sample_RealProcesses_PrintsHeaviestForComparison()
+    {
+        var sampler = new ProcessUsageSampler();
+        sampler.Sample(System.Array.Empty<int>());
+        System.Threading.Thread.Sleep(1500);
+        var usages = sampler.Sample(System.Array.Empty<int>());
+        Assert.NotEmpty(usages);
+        Output?.WriteLine($"cores={System.Environment.ProcessorCount}");
+        foreach (var u in usages.OrderByDescending(u => u.MemoryBytes).Take(8))
+            Output?.WriteLine($"{System.IO.Path.GetFileName(u.Path),-28} n={u.Count,3} mem={u.MemoryBytes / 1048576.0,8:F1} MB cpu={u.Cpu,5:F1} %");
+    }
+
+    public Xunit.Abstractions.ITestOutputHelper? Output { get; }
+    public ProcessUsageSamplerTests(Xunit.Abstractions.ITestOutputHelper output) => Output = output;
 }
