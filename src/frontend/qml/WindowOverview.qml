@@ -15,7 +15,7 @@ Window {
     objectName: "windowOverview"
     title: "Panneaux · Vue d’ensemble"
     transientParent: null
-    color: Colours.palette.m3scrim
+    color: "transparent"
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint
     x: Bridge.screenX
     y: Bridge.screenY
@@ -31,7 +31,11 @@ Window {
     readonly property int iconSize: 20
     readonly property int ringWidth: 3
     readonly property int ringGap: 4
-    readonly property int fadeSteps: 3
+    readonly property int dockSize: 96
+    readonly property int startDelay: 250
+    readonly property int safetyMargin: 300
+    readonly property real labelStart: 0.6
+    readonly property real pickLabelFade: 0.4
     readonly property int afterCloseDelay: 400
     readonly property real maxWidthRatio: 0.42
     readonly property real maxHeightRatio: 0.5
@@ -43,8 +47,23 @@ Window {
     readonly property int areaWidth: width - edge * 2
     readonly property int areaHeight: height - headerHeight - footerHeight - edge
 
-    property real scrim: 0
-    readonly property int step: Math.round(scrim * fadeSteps)
+    // Mouvement : t (0 = fenêtres à leur place réelle, 1 = grille) à l'ouverture et à la fermeture simple, p (0..1) à l'activation,
+    // glide (0..1) quand la grille se réorganise. mode : "show" (ouverture et repos), "closing" ou "pick".
+    property real t: 0
+    property real p: 0
+    property real glide: 1
+    property string mode: "show"
+    property bool started: false
+    property bool done: false
+    property bool pendingLayout: false
+    property bool pendingForce: false
+    property string pickHwnd: ""
+    property var pickFrom: ({x: 0, y: 0, w: 1, h: 1})
+    property var realRects: ({})
+    property var prevRects: ({})
+    readonly property real shown: mode === "pick" ? 1 - p : t
+    readonly property real labelOpacity: mode === "pick" ? Math.min(Layout.ramp(t, labelStart, 1), 1 - Layout.ramp(p, 0, pickLabelFade)) : Layout.ramp(t, labelStart, 1)
+    readonly property bool animating: tAnim.running || pickAnim.running
     property bool ready: false
     property bool closing: false
     property bool seenActive: false
@@ -55,13 +74,37 @@ Window {
     property string signature: ""
     readonly property int shownCount: order.length
 
-    Behavior on scrim {
-        enabled: !Appearance.reducedEffects
-        Anim {
-            duration: Appearance.anim.durations.small
-        }
+    onTChanged: placeAll()
+    onPChanged: placeAll()
+    onGlideChanged: placeAll()
+
+    // Durées et courbe : celles du projet (déjà réduites par « Effets allégés »).
+    Anim {
+        id: tAnim
+        target: root
+        property: "t"
+        duration: Appearance.anim.durations.normal
+        easing.bezierCurve: Appearance.anim.curves.emphasized
+        onFinished: root.motionDone()
     }
-    onStepChanged: placeAll()
+    Anim {
+        id: pickAnim
+        target: root
+        property: "p"
+        from: 0
+        to: 1
+        duration: Appearance.anim.durations.normal
+        easing.bezierCurve: Appearance.anim.curves.emphasized
+        onFinished: root.finish()
+    }
+    Anim {
+        id: glideAnim
+        target: root
+        property: "glide"
+        from: 0
+        to: 1
+        duration: Appearance.anim.durations.small
+    }
 
     ListModel {
         id: windows
@@ -75,7 +118,7 @@ Window {
     }
     // Mise à jour sur place par hwnd : les fenêtres connues gardent leur ligne, les nouvelles s'ajoutent, les disparues partent.
     function sync(list) {
-        var seen = {}, i, keys = ["entryId", "title", "app", "iconId", "ww", "wh", "minimized"];
+        var seen = {}, i, keys = ["entryId", "title", "app", "iconId", "ww", "wh", "minimized"], bounds = {w: width, h: height};
         for (i = 0; i < list.length; i++) {
             var it = list[i], row = {
                 hwnd: String(it.hwnd),
@@ -89,6 +132,8 @@ Window {
                 preview: false
             };
             seen[row.hwnd] = true;
+            realRects[row.hwnd] = Layout.realRects({x: it.x || 0, y: it.y || 0, w: row.ww, h: row.wh, minimized: row.minimized},
+                Screen.devicePixelRatio, bounds, dockSize, {x: Bridge.screenX, y: Bridge.screenY});
             var at = indexOf(row.hwnd);
             if (at < 0)
                 windows.append(row);
@@ -100,15 +145,44 @@ Window {
         for (i = windows.count - 1; i >= 0; i--)
             if (!seen[windows.get(i).hwnd]) {
                 Bridge.overview.remove(windows.get(i).hwnd);
+                delete realRects[windows.get(i).hwnd];
                 windows.remove(i);
             }
         ready = true;
         relayout(false);
+        startOpen();
+    }
+    function startOpen() {
+        if (started || closing)
+            return;
+        started = true;
+        runT(1);
+    }
+    function runT(to) {
+        tAnim.stop();
+        tAnim.from = t;
+        tAnim.to = to;
+        tAnim.start();
+    }
+    function motionDone() {
+        if (mode === "closing") {
+            finish();
+        } else if (pendingLayout) {
+            var force = pendingForce;
+            pendingLayout = pendingForce = false;
+            relayout(force);
+        }
     }
     function aspectOf(row) {
         return Math.max(minAspect, Math.min(maxAspect, row.ww / row.wh));
     }
     function relayout(force) {
+        // Pas de nouvelle disposition pendant une animation : elle est rejouée à la fin.
+        if (animating && rectList.length > 0) {
+            pendingLayout = true;
+            pendingForce = pendingForce || force;
+            return;
+        }
         var shown = [], aspects = [], sig = filter + "|";
         for (var i = 0; i < windows.count; i++) {
             var row = windows.get(i);
@@ -129,27 +203,69 @@ Window {
             map[shown[j]] = r;
             list.push(r);
         }
+        var keep = {};
+        if (started && mode === "show")
+            for (var h in rects)
+                keep[h] = cellOf(h);
+        for (var w = 0; w < windows.count; w++)
+            if (!map[windows.get(w).hwnd])
+                Bridge.overview.remove(windows.get(w).hwnd);
+        glideAnim.stop();
+        prevRects = keep;
         order = shown;
         rects = map;
         rectList = list;
+        glide = 0;
+        if (started && mode === "show")
+            glideAnim.start();
+        else
+            glide = 1;
         if (shown.length > 0 && shown.indexOf(selected) < 0)
             selected = shown[0];
         placeAll();
     }
     property var rectList: []
+    // Case de la grille, en tenant compte du glissement en cours entre l'ancienne et la nouvelle disposition.
+    function cellOf(hwnd) {
+        var c = rects[hwnd];
+        if (!c)
+            return undefined;
+        var q = prevRects[hwnd];
+        return q && glide < 1 ? Layout.lerpRect(q, c, glide) : c;
+    }
+    // Rectangle (logique, local à la vue) et opacité d'une miniature à l'instant courant.
+    function frame(row) {
+        var cell = cellOf(row.hwnd);
+        if (!cell)
+            return null;
+        var info = realRects[row.hwnd], r, op;
+        if (mode === "pick" && row.hwnd === pickHwnd) {
+            r = Layout.lerpRect(pickFrom, info ? info.rest : cell, p);
+            op = row.minimized ? Layout.lerp(minimizedOpacity, 1, p) : 1;
+        } else {
+            r = Layout.lerpRect(info ? info.src : cell, cell, t);
+            op = row.minimized ? minimizedOpacity * t : 1;
+            if (mode === "pick")
+                op *= 1 - p;
+        }
+        return {r: r, op: op};
+    }
     function placeAll() {
-        if (!ready || closing)
+        if (!ready || done)
             return;
-        var level = Math.min(fadeSteps, step) / fadeSteps;
+        var items = [], at = [];
         for (var i = 0; i < windows.count; i++) {
-            var row = windows.get(i), r = rects[row.hwnd];
-            if (!r) {
-                Bridge.overview.remove(row.hwnd);
+            var row = windows.get(i), f = frame(row);
+            if (!f)
                 continue;
-            }
-            var ok = Bridge.overview.place(root, row.hwnd, r.x, r.y, r.w, r.h, level * (row.minimized ? minimizedOpacity : 1));
-            if (row.preview !== ok)
-                windows.setProperty(i, "preview", ok);
+            items.push([row.hwnd, f.r.x, f.r.y, f.r.w, f.r.h, f.op]);
+            at.push(i);
+        }
+        var ok = Bridge.overview.placeMany(root, items);
+        for (var k = 0; k < at.length; k++) {
+            var good = !!(ok && ok[k]);
+            if (windows.get(at[k]).preview !== good)
+                windows.setProperty(at[k], "preview", good);
         }
     }
     function move(dx, dy) {
@@ -162,12 +278,26 @@ Window {
         var at = indexOf(hwnd);
         return at < 0 ? null : windows.get(at);
     }
+    // La fenêtre passe devant dès le début de l'animation ; la miniature choisie grandit jusqu'à sa vraie place, les autres s'effacent.
     function activateWindow(hwnd) {
         var row = entryOf(hwnd);
-        if (!row)
+        if (!row || closing)
             return;
+        var f = frame(row);
         Bridge.overview.act(hwnd, "activate");
-        dismiss();
+        if (!f) {
+            dismiss();
+            return;
+        }
+        closing = true;
+        glideAnim.stop();
+        tAnim.stop();
+        pickHwnd = hwnd;
+        pickFrom = f.r;
+        mode = "pick";
+        p = 0;
+        pickAnim.start();
+        closeSafety.restart();
     }
     function closeWindow(hwnd) {
         var row = entryOf(hwnd);
@@ -180,15 +310,24 @@ Window {
         filter = text;
         relayout(true);
     }
-    // Les miniatures partent d'abord, puis le fond s'efface.
+    // Les miniatures reviennent à leur place réelle pendant que le fond s'efface, puis la vue se ferme.
     function dismiss() {
         if (closing)
             return;
         closing = true;
-        Bridge.overview.clear();
-        Bridge.overview.stop();
-        scrim = 0;
-        closeTimer.start();
+        glideAnim.stop();
+        mode = "closing";
+        runT(0);
+        closeSafety.restart();
+    }
+    // Fin de l'animation (ou filet de sécurité) : miniatures retirées, puis demande de fermeture. Idempotent.
+    function finish() {
+        if (done)
+            return;
+        done = true;
+        closeSafety.stop();
+        release();
+        closeRequested();
     }
     function release() {
         Bridge.overview.clear();
@@ -199,7 +338,7 @@ Window {
         requestActivate();
         keys.forceActiveFocus();
         Bridge.overview.request();
-        scrim = 1;
+        startDelayTimer.start();
     }
     Component.onDestruction: release()
     onVisibleChanged: {
@@ -207,6 +346,9 @@ Window {
             requestActivate();
             keys.forceActiveFocus();
         } else {
+            tAnim.stop();
+            pickAnim.stop();
+            glideAnim.stop();
             release();
         }
     }
@@ -238,7 +380,8 @@ Window {
         running: root.visible && root.ready && !root.closing
         onTriggered: {
             Bridge.overview.request();
-            root.placeAll();
+            if (!root.animating && !glideAnim.running)
+                root.placeAll();
         }
     }
     Timer {
@@ -247,16 +390,28 @@ Window {
         onTriggered: if (!root.closing)
             Bridge.overview.request()
     }
+    // Filet de sécurité : la vue ne reste jamais bloquée si une animation ne se termine pas.
     Timer {
-        id: closeTimer
-        interval: Appearance.anim.durations.small
-        onTriggered: root.closeRequested()
+        id: closeSafety
+        interval: Appearance.anim.durations.normal + root.safetyMargin
+        onTriggered: root.finish()
+    }
+    // Si le backend tarde à répondre, l'ouverture démarre quand même.
+    Timer {
+        id: startDelayTimer
+        interval: root.startDelay
+        onTriggered: root.startOpen()
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: Colours.palette.m3scrim
+        opacity: root.shown
     }
 
     Item {
         id: keys
         anchors.fill: parent
-        opacity: root.scrim
         focus: true
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Escape) {
@@ -290,6 +445,11 @@ Window {
             anchors.fill: parent
             onClicked: root.dismiss()
         }
+
+        // Seul ce conteneur s'estompe : keys et la zone de clic restent à pleine opacité pour que le clavier et la souris répondent dès la première image.
+        Item {
+        anchors.fill: parent
+        opacity: root.shown
 
         Row {
             id: header
@@ -354,9 +514,10 @@ Window {
                 required property string iconId
                 required property bool minimized
                 required property bool preview
-                readonly property var rect: root.rects[hwnd]
+                readonly property var rect: root.cellOf(hwnd)
                 readonly property bool current: root.selected === hwnd
                 visible: rect !== undefined
+                opacity: root.labelOpacity
                 x: rect ? rect.x : 0
                 y: rect ? rect.y : 0
                 width: rect ? rect.w : 0
@@ -487,6 +648,7 @@ Window {
             text: qsTr("Flèches choisir · Entrée ouvrir · Suppr fermer · Lettres filtrer · Échap quitter")
             font.pointSize: Appearance.font.size.small
             color: Colours.palette.m3outline
+        }
         }
     }
 }

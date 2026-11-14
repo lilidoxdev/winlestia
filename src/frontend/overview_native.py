@@ -5,10 +5,12 @@ contenu : on l'enregistre donc ici, sur la fenêtre QML de la vue, en pixels phy
 alors l'icône de l'application)."""
 from __future__ import annotations
 import ctypes
+import time
 from PySide6.QtCore import QCoreApplication, QObject, Property, Signal, Slot
 from win_native import ThumbnailProperties, dwmapi, user32
 
 RECT_DESTINATION, OPACITY, VISIBLE, SOURCE_CLIENT_ONLY = 0x1, 0x4, 0x8, 0x10
+RETRY_DELAY = 1.0  # secondes entre deux tentatives d'enregistrement d'une même fenêtre
 
 
 class OverviewController(QObject):
@@ -19,7 +21,8 @@ class OverviewController(QObject):
         self.bridge = bridge
         self._windows = []
         self._pending = 0
-        self._thumbs = {}  # fenêtre source -> (miniature, fenêtre de destination)
+        self._thumbs = {}  # fenêtre source -> [miniature, fenêtre de destination, propriétés, dernier état]
+        self._failed = {}  # fenêtre source -> instant du dernier échec d'enregistrement
         app = QCoreApplication.instance()
         if app:
             app.aboutToQuit.connect(self.clear)
@@ -71,44 +74,83 @@ class OverviewController(QObject):
 
     @Slot(str)
     def remove(self, source):
-        self.unregister(int(source))
+        try:
+            self.unregister(int(source))
+        except Exception:
+            pass
 
     @Slot()
     def clear(self):
         for source in list(self._thumbs):
             self.unregister(source)
+        self._failed.clear()
+
+    def _entry(self, source, dest):
+        """Entrée enregistrée de `source` pour la fenêtre `dest` (None si DWM refuse ; nouvel essai au plus une fois par seconde)."""
+        entry = self._thumbs.get(source)
+        if entry is not None and entry[1] != dest:
+            self.unregister(source)
+            entry = None
+        if entry is not None:
+            return entry
+        now = time.monotonic()
+        if now - self._failed.get(source, -RETRY_DELAY) < RETRY_DELAY:
+            return None
+        thumb = ctypes.c_void_p()
+        if dwmapi.DwmRegisterThumbnail(dest, source, ctypes.byref(thumb)) != 0 or not thumb.value:
+            self._failed[source] = now
+            return None
+        size = (ctypes.c_long * 2)()
+        if dwmapi.DwmQueryThumbnailSourceSize(thumb, ctypes.byref(size)) != 0 or size[0] <= 1 or size[1] <= 1:
+            dwmapi.DwmUnregisterThumbnail(thumb)
+            self._failed[source] = now
+            return None
+        self._failed.pop(source, None)
+        props = ThumbnailProperties()
+        props.flags = RECT_DESTINATION | OPACITY | VISIBLE | SOURCE_CLIENT_ONLY
+        props.visible = 1
+        props.client_only = 0
+        # [poignée, fenêtre de destination, structure réutilisée, dernier (rectangle, opacité) appliqué]
+        entry = self._thumbs[source] = [thumb.value, dest, props, None]
+        return entry
+
+    def _apply(self, dest, ratio, source, x, y, w, h, opacity):
+        entry = self._entry(source, dest)
+        if entry is None:
+            return False
+        left, top = round(x * ratio), round(y * ratio)
+        state = (left, top, round((x + w) * ratio), round((y + h) * ratio), max(0, min(255, round(opacity * 255))))
+        if entry[3] == state:
+            return True
+        props = entry[2]
+        props.destination[:] = state[:4]
+        props.opacity = state[4]
+        if dwmapi.DwmUpdateThumbnailProperties(entry[0], ctypes.byref(props)) != 0:
+            entry[3] = None
+            return False
+        entry[3] = state
+        return True
 
     @Slot(QObject, str, float, float, float, float, float, result=bool)
     def place(self, window, source, x, y, w, h, opacity):
         """Place la miniature de `source` dans le rectangle (x, y, w, h) logique de `window`. Faux si DWM refuse."""
         try:
-            source = int(source)
-            dest = int(window.winId())
-            ratio = float(window.devicePixelRatio())
-            entry = self._thumbs.get(source)
-            if entry and entry[1] != dest:
-                self.unregister(source)
-                entry = None
-            if entry is None:
-                thumb = ctypes.c_void_p()
-                if dwmapi.DwmRegisterThumbnail(dest, source, ctypes.byref(thumb)) != 0 or not thumb.value:
-                    return False
-                size = (ctypes.c_long * 2)()
-                if dwmapi.DwmQueryThumbnailSourceSize(thumb, ctypes.byref(size)) != 0 or size[0] <= 1 or size[1] <= 1:
-                    dwmapi.DwmUnregisterThumbnail(thumb)
-                    return False
-                entry = self._thumbs[source] = (thumb.value, dest)
-            props = ThumbnailProperties()
-            props.flags = RECT_DESTINATION | OPACITY | VISIBLE | SOURCE_CLIENT_ONLY
-            props.destination[:] = [
-                round(x * ratio),
-                round(y * ratio),
-                round((x + w) * ratio),
-                round((y + h) * ratio),
-            ]
-            props.opacity = max(0, min(255, round(opacity * 255)))
-            props.visible = 1
-            props.client_only = 0
-            return dwmapi.DwmUpdateThumbnailProperties(entry[0], ctypes.byref(props)) == 0
+            return self._apply(int(window.winId()), float(window.devicePixelRatio()), int(source), x, y, w, h, opacity)
         except Exception:
             return False
+
+    @Slot(QObject, 'QVariantList', result='QVariantList')
+    def placeMany(self, window, items):
+        """Un appel par image : `items` = [[source, x, y, w, h, opacité], ...]. Retourne un booléen par entrée (faux si DWM refuse)."""
+        out = [False] * len(items)
+        try:
+            dest = int(window.winId())
+            ratio = float(window.devicePixelRatio())
+        except Exception:
+            return out
+        for i, item in enumerate(items):
+            try:
+                out[i] = self._apply(dest, ratio, int(item[0]), item[1], item[2], item[3], item[4], item[5])
+            except Exception:
+                pass
+        return out

@@ -82,3 +82,50 @@ function matches(item, text) {
     return needle === "" || String(item.title || "").toLowerCase().indexOf(needle) >= 0
         || String(item.app || "").toLowerCase().indexOf(needle) >= 0;
 }
+
+// --- Mouvement (ouverture, fermeture, activation) : fonctions pures ---
+
+function clamp01(v) {
+    return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+// Progression de t dans la fenêtre [from, to], bornée à 0..1.
+function ramp(t, from, to) {
+    return to <= from ? (t >= to ? 1 : 0) : clamp01((t - from) / (to - from));
+}
+
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+
+function lerpRect(a, b, t) {
+    return {x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), w: lerp(a.w, b.w, t), h: lerp(a.h, b.h, t)};
+}
+
+// Intersection avec {w, h} (origine 0,0) ; rectangle centré de la taille d'origine si l'intersection est vide.
+function clampRect(r, bounds) {
+    var x0 = Math.max(0, r.x), y0 = Math.max(0, r.y), x1 = Math.min(bounds.w, r.x + r.w), y1 = Math.min(bounds.h, r.y + r.h);
+    if (x1 - x0 < 1 || y1 - y0 < 1) {
+        var w = Math.max(1, Math.min(r.w, bounds.w)), h = Math.max(1, Math.min(r.h, bounds.h));
+        return {x: (bounds.w - w) / 2, y: (bounds.h - h) / 2, w: w, h: h};
+    }
+    return {x: x0, y: y0, w: x1 - x0, h: y1 - y0};
+}
+
+// Rectangle d'une fenêtre du backend (x, y, w, h en pixels PHYSIQUES de l'écran principal, origine 0,0) converti en pixels logiques
+// locaux à la vue : on divise par ratio (devicePixelRatio de la fenêtre, comme overview_native.place qui le multiplie), puis on borne
+// à l'écran, après soustraction de origin ({x, y} logique de l'écran de la vue) (fenêtres agrandies : bordures négatives).
+function toLocal(item, ratio, bounds, origin) {
+    var k = ratio > 0 ? ratio : 1, ox = origin ? origin.x : 0, oy = origin ? origin.y : 0;
+    return clampRect({x: item.x / k - ox, y: item.y / k - oy, w: Math.max(1, item.w / k), h: Math.max(1, item.h / k)}, bounds);
+}
+
+// Rectangle de départ/arrivée d'un « survol » : la vraie place de la fenêtre (rest) et celle d'où elle part (src). Une fenêtre réduite
+// part d'une petite vignette en bas au centre de l'écran (le dock), à l'échelle du rectangle restauré, et revient vers rest.
+function realRects(item, ratio, bounds, dockSize, origin) {
+    var rest = toLocal(item, ratio, bounds, origin);
+    if (!item.minimized)
+        return {src: rest, rest: rest};
+    var s = Math.min(1, dockSize / Math.max(rest.w, rest.h)), w = Math.max(1, rest.w * s), h = Math.max(1, rest.h * s);
+    return {src: {x: (bounds.w - w) / 2, y: bounds.h - h, w: w, h: h}, rest: rest};
+}
