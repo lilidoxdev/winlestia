@@ -5,6 +5,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Shapes
 import QtQuick.Window
 import qs.components
 import qs.components.controls
@@ -23,8 +24,6 @@ Window {
 
     readonly property int slimHeight: 40
     readonly property int discSize: 44
-    readonly property int discBack: 4
-    readonly property real discBackAlpha: .5
     readonly property int discRing: 2
     readonly property int discHole: 6
     readonly property int spinPeriodMs: 9000
@@ -32,14 +31,20 @@ Window {
     readonly property real hoverScale: 1.06
     readonly property int histBars: 6
     readonly property int histGap: 3
-    readonly property int histHeight: 14
-    readonly property int histSpacing: 4
+    readonly property int histHeight: 13
+    // Bandes lues par l'histogramme compact : le bas et le milieu du spectre (le haut est presque muet), avec un gain doux.
+    readonly property int histSpan: 28
+    readonly property real histGain: 1.3
     readonly property int closeSize: 28
+    // Rayon des coins bas de la languette et rayon des raccords concaves avec le cadre (même rayon que le cadre).
+    readonly property real bodyRadius: Appearance.rounding.large
+    readonly property real fillet: Config.border.rounding
+    readonly property real tabVisibleMin: 0.5
     readonly property int levelWidth: 250
     readonly property int expandedWidth: 400
     readonly property int coverLarge: 88
     readonly property int lyricsHeight: 112
-    readonly property int eqBarMin: 2
+    readonly property int eqBarMin: 3
     readonly property int bandBars: 48
     readonly property int bandGap: 3
     readonly property int bandHeight: 64
@@ -59,12 +64,10 @@ Window {
     readonly property int contentDelayMs: 80
     readonly property int wheelNotch: 120
     readonly property int wheelStep: 5
-    readonly property real hiddenScale: .92
     readonly property real disabledAlpha: .38
     readonly property int mediaPageMinHeight: 95
     readonly property int levelBarHeight: 6
     readonly property int levelValueWidth: 40
-    readonly property real glassOpacity: .94
     readonly property int coverIconGrade: 200
     readonly property real coverIconScale: 0.4
     readonly property real controlIconNudge: 0.05
@@ -81,9 +84,9 @@ Window {
     // Bord droit réel du contenu du panneau (décalé vers la gauche par dashboardShift quand le rail est lié), comparé à la
     // position CIBLE de la pilule : le résultat ne bascule donc pas pendant l'animation de largeur.
     readonly property real panelRight: Bridge.screenX + Bridge.screenWidth / 2 + (panel?.panelWidth ?? 0) / 2 - (panel?.dashboardShift ?? 0)
-    readonly property real targetX: Bridge.screenX + Bridge.screenWidth - cornerInset - Math.round(targetWidth)
+    readonly property real targetX: Bridge.screenX + Bridge.screenWidth - cornerInset - Math.round(targetWidth + 2 * fillet)
+    // Sur un écran étroit, la languette se rétracte tant que le panneau du haut (collé au même bord) la gênerait.
     readonly property bool panelOverlaps: (panel?.visible ?? false) && panelRight + Appearance.spacing.normal > targetX
-    readonly property real panelBottom: panelOverlaps ? panel.y + panel.panelHeight : 0
     // La page Média du tableau de bord ouverte fait doublon avec la pilule : elle s'efface.
     readonly property bool mediaPageShown: (panel?.visible ?? false) && panel.pageMode === "dashboard" && panel.dashboardTab === 1
         && panel.panelHeight >= mediaPageMinHeight
@@ -105,17 +108,25 @@ Window {
     // Zone de paroles de la carte : repliée sans paroles (off, none, idle).
     readonly property bool lyricsShown: lyricsPhase === "synced" || lyricsPhase === "plain" || lyricsPhase === "loading"
         || lyricsPhase === "instrumental"
-    // Disque compact : le disque, un espace, puis l'histogramme, le tout sur un fond rond très discret.
-    readonly property real compactWidthWanted: discSize + discBack * 2
-    readonly property real compactHeightWanted: discBack * 2 + discSize + histSpacing + histHeight
+    // Languette compacte : le disque, un espace, puis l'histogramme, dans la silhouette collée au cadre.
+    readonly property real compactWidthWanted: discSize + Appearance.padding.normal * 2
+    readonly property real compactHeightWanted: Appearance.padding.small + discSize + Appearance.spacing.small + histHeight
+        + Appearance.padding.normal
     readonly property real expandedHeight: Appearance.padding.large + coverLarge + Appearance.spacing.small + seekHitHeight + timeMetrics.height
         + (lyricsShown ? Appearance.spacing.small + lyricsHeight : 0) + Appearance.padding.larger
-    readonly property real targetWidth: stateName === "expanded" ? expandedWidth : stateName === "level" ? levelWidth : stateName
-        === "compact" ? compactWidthWanted : slimHeight
-    readonly property real targetHeight: stateName === "expanded" ? expandedHeight : stateName === "compact" ? compactHeightWanted
-        : slimHeight
-    readonly property real targetRadius: stateName === "expanded" ? Appearance.rounding.large : stateName === "compact"
-        ? compactWidthWanted / 2 : targetHeight / 2
+    // Largeur voulue (0 au repos) ; au repos la languette garde sa dernière largeur pendant qu'elle se rétracte.
+    readonly property real wantedWidth: stateName === "expanded" ? expandedWidth : stateName === "level" ? levelWidth : stateName
+        === "compact" ? compactWidthWanted : 0
+    property real heldWidth: compactWidthWanted
+    onWantedWidthChanged: {
+        if (wantedWidth > 0)
+            heldWidth = wantedWidth;
+    }
+    readonly property real targetWidth: wantedWidth > 0 ? wantedWidth : heldWidth
+    // La languette sort du cadre (hauteur depuis 0) quand il y a quelque chose à montrer, et rentre sinon.
+    readonly property bool tabWanted: !suppressed && !mediaPageShown && !panelOverlaps && stateName !== "idle"
+    readonly property real targetHeight: !tabWanted ? 0 : stateName === "expanded" ? expandedHeight : stateName === "compact"
+        ? compactHeightWanted : slimHeight
     // Lu par le pointeur (bridge_pointer.py) : la Pilule déployée est celle qu'on est en train de viser.
     readonly property bool expanded: stateName === "expanded"
     property real inlineValue: 0
@@ -123,17 +134,15 @@ Window {
     readonly property bool wantsSpectrum: !suppressed && playing && (mediaPageShown || stateName === "compact" || stateName === "expanded")
 
     // La fenêtre épouse la taille animée de la capsule : aucune zone morte autour, aucun clic avalé.
-    width: Math.max(1, Math.round(pill.width))
+    width: Math.max(1, Math.round(pill.width + 2 * fillet))
     height: Math.max(1, pill.height)
-    // Coin haut droit, à l'intérieur du cadre d'écran s'il est actif, avec de quoi dégager son coin intérieur arrondi.
-    // Ancrée par son coin haut droit : toute variation de taille s'étend vers la gauche et vers le bas.
-    readonly property real cornerInset: ((Bridge.settings.screenFrame ?? true) ? Math.max(0, Bridge.frameThickness) : 0)
-        + Appearance.spacing.normal + Appearance.padding.small
+    // Languette collée au bord haut : à ras du bord intérieur du cadre (ou du bord de l'écran sans cadre), décalée du bord droit
+    // de quoi dégager le coin intérieur arrondi du cadre. Ancrée par son coin haut droit : elle s'étend vers la gauche et le bas.
+    readonly property real frameInset: (Bridge.settings.screenFrame ?? true) ? Math.max(0, Bridge.frameThickness) : 0
+    readonly property real cornerInset: frameInset + fillet + Appearance.spacing.normal
     x: Math.round(Bridge.screenX + Bridge.screenWidth - cornerInset - width)
-    readonly property real restY: Bridge.screenY + cornerInset
-    // Le panneau du haut descend : la pilule le suit, juste en dessous, dans le même mouvement (aucun minuteur propre).
-    y: Math.round(PillMath.followY(restY, panelBottom, Appearance.spacing.normal))
-    visible: !suppressed && ((stateName !== "idle" && !mediaPageShown) || pill.opacity > 0.01)
+    y: Math.round(Bridge.screenY + frameInset)
+    visible: !suppressed && (tabWanted || pill.height > tabVisibleMin)
 
     function levelIcon() {
         if (levelKind === "brightness")
@@ -292,28 +301,76 @@ Window {
         }
     }
 
-    StyledClippingRect {
+    // Fond : même silhouette « tiroir » que le tableau de bord et le dock (DockBackground, retournée : base en haut, raccords
+    // concaves avec le cadre), même matière que le cadre (Colours.surfaceColor, donc la même transparence).
+    Shape {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        width: root.width
+        height: pill.height
+        preferredRendererType: Shape.CurveRenderer
+        ShapePath {
+            id: tabPath
+            readonly property real f: root.fillet
+            readonly property real w: pill.width + 2 * f
+            readonly property real h: pill.height
+            readonly property real rf: Math.min(f, h / 2)
+            readonly property real rb: Math.min(root.bodyRadius, h / 2)
+            strokeWidth: -1
+            fillColor: Colours.surfaceColor
+            startX: 0
+            startY: 0
+            PathLine {
+                x: tabPath.w
+                y: 0
+            }
+            PathQuad {
+                x: tabPath.w - tabPath.f
+                y: tabPath.rf
+                controlX: tabPath.w - tabPath.f
+                controlY: 0
+            }
+            PathLine {
+                x: tabPath.w - tabPath.f
+                y: tabPath.h - tabPath.rb
+            }
+            PathQuad {
+                x: tabPath.w - tabPath.f - tabPath.rb
+                y: tabPath.h
+                controlX: tabPath.w - tabPath.f
+                controlY: tabPath.h
+            }
+            PathLine {
+                x: tabPath.f + tabPath.rb
+                y: tabPath.h
+            }
+            PathQuad {
+                x: tabPath.f
+                y: tabPath.h - tabPath.rb
+                controlX: tabPath.f
+                controlY: tabPath.h
+            }
+            PathLine {
+                x: tabPath.f
+                y: tabPath.rf
+            }
+            PathQuad {
+                x: 0
+                y: 0
+                controlX: tabPath.f
+                controlY: 0
+            }
+        }
+    }
+
+    Item {
         id: pill
         anchors.top: parent.top
         anchors.right: parent.right
+        anchors.rightMargin: root.fillet
         width: root.targetWidth
         height: root.targetHeight
-        radius: Math.max(0, root.targetRadius)
-        // Disque compact : fond rond à peine visible ; carte et niveau : fond plein.
-        color: Qt.alpha(Colours.palette.m3surfaceContainer, root.stateName === "compact" ? root.discBackAlpha : Bridge.glassEnabled
-            ? root.glassOpacity : 1)
-        border.width: root.stateName === "compact" ? 0 : 1
-        border.color: Colours.palette.m3outlineVariant
-        opacity: root.stateName === "idle" || root.mediaPageShown ? 0 : 1
-        scale: root.mediaPageShown ? root.hiddenScale : 1
 
-        Behavior on scale {
-            enabled: !root.reduced
-            Anim {
-                duration: Appearance.anim.durations.expressiveEffects
-                easing.bezierCurve: Appearance.anim.curves.expressiveEffects
-            }
-        }
         Behavior on width {
             enabled: !root.reduced
             Anim {
@@ -327,20 +384,6 @@ Window {
             Anim {
                 duration: Appearance.anim.durations.expressiveDefaultSpatial
                 easing.bezierCurve: Appearance.anim.curves.standard
-            }
-        }
-        Behavior on radius {
-            enabled: !root.reduced
-            Anim {
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
-            }
-        }
-        Behavior on opacity {
-            enabled: !root.reduced
-            Anim {
-                duration: Appearance.anim.durations.expressiveEffects
-                easing.bezierCurve: Appearance.anim.curves.expressiveEffects
             }
         }
 
@@ -368,6 +411,18 @@ Window {
             onClicked: root.expandedWanted = true
         }
 
+        // Contenu rogné par les coins bas arrondis de la languette (les coins hauts sont repoussés hors de la fenêtre).
+        StyledClippingRect {
+            y: -root.bodyRadius
+            width: pill.width
+            height: pill.height + root.bodyRadius
+            radius: root.bodyRadius
+        Item {
+            id: content
+            y: root.bodyRadius
+            width: parent.width
+            height: pill.height
+
         // Média compact : un disque (pochette en rotation lente tant que la musique joue) et, dessous, un petit histogramme.
         // Rien d'autre : ni texte ni carte. Le clic sur le disque ouvre la carte.
         Item {
@@ -375,13 +430,13 @@ Window {
             width: root.compactWidthWanted
             height: root.compactHeightWanted
             anchors.top: parent.top
-            anchors.right: parent.right
+            anchors.horizontalCenter: parent.horizontalCenter
             opacity: root.shown === "compact" ? root.contentOpacity : 0
             visible: opacity > 0
             Disc {
                 id: disc
-                x: root.discBack
-                y: root.discBack
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: Appearance.padding.small
                 art: root.player?.trackArtUrl ?? ""
                 spinning: root.playing && root.shown === "compact" && root.visible && !root.reduced
                 scale: hover.hovered && !root.reduced ? root.hoverScale : 1
@@ -393,15 +448,17 @@ Window {
                 }
             }
             Equaliser {
-                x: root.discBack
+                anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: disc.bottom
-                anchors.topMargin: root.histSpacing
+                anchors.topMargin: Appearance.spacing.small
                 width: root.discSize
                 height: root.histHeight
                 count: root.histBars
                 barGap: root.histGap
                 barMin: root.eqBarMin
-                animated: !root.reduced
+                span: root.histSpan
+                gain: root.histGain
+                animated: root.playing && !root.reduced
                 live: root.playing && root.shown === "compact" && root.visible
                 fill: true
                 bottomAligned: true
@@ -413,7 +470,7 @@ Window {
             width: root.levelWidth
             height: root.slimHeight
             anchors.top: parent.top
-            anchors.right: parent.right
+            anchors.horizontalCenter: parent.horizontalCenter
             opacity: root.shown === "level" ? root.contentOpacity : 0
             visible: opacity > 0
             MaterialIcon {
@@ -469,7 +526,7 @@ Window {
             // Suit la hauteur animée de la carte : le bord bas (spectre) grandit avec elle quand les paroles arrivent.
             height: Math.max(pill.height, 1)
             anchors.top: parent.top
-            anchors.right: parent.right
+            anchors.horizontalCenter: parent.horizontalCenter
             opacity: root.shown === "expanded" ? root.contentOpacity : 0
             // Présente dès l'ouverture demandée (opacité nulle) : les paroles sont réclamées sans attendre la fin du fondu.
             visible: opacity > 0 || root.expandedWanted
@@ -730,6 +787,8 @@ Window {
                 }
             }
         }
+        }
+        }
     }
 
     // Disque façon vinyle : pochette ronde qui tourne, anneau fin et petit axe central. L'animation ne tourne que si `spinning` ;
@@ -801,7 +860,9 @@ Window {
 
     // Pochette : cercle (compact) ou carré arrondi (déployé), icône de repli tant qu'aucune image n'est disponible.
     // Au changement de piste, la nouvelle image apparaît en fondu par-dessus l'ancienne.
-    component Cover: StyledClippingRect {
+    // Le rognage (ClippingRectangle) vit dans un enfant : la couche du halo ne remplace plus son masque (c'était ce qui
+    // laissait la pochette carrée).
+    component Cover: Item {
         id: cover
         required property int size
         property bool circle: true
@@ -810,8 +871,6 @@ Window {
         property bool glow: false
         implicitWidth: size
         implicitHeight: size
-        radius: circle ? Appearance.rounding.full : Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainerHigh
         layer.enabled: glow
         layer.effect: MultiEffect {
             shadowEnabled: true
@@ -825,33 +884,38 @@ Window {
             currentImage.source = art;
         }
         Component.onCompleted: currentImage.source = art
-        MaterialIcon {
-            anchors.centerIn: parent
-            grade: root.coverIconGrade
-            text: "art_track"
-            color: Colours.palette.m3onSurfaceVariant
-            font.pointSize: (parent.width * root.coverIconScale) || 1
-        }
-        Image {
-            id: previousImage
+        StyledClippingRect {
             anchors.fill: parent
-            asynchronous: true
-            fillMode: Image.PreserveAspectCrop
-            sourceSize.width: width
-            sourceSize.height: height
-        }
-        Image {
-            id: currentImage
-            anchors.fill: parent
-            asynchronous: true
-            fillMode: Image.PreserveAspectCrop
-            sourceSize.width: width
-            sourceSize.height: height
-            opacity: status === Image.Ready ? 1 : 0
-            Behavior on opacity {
-                enabled: !root.reduced
-                Anim {
-                    duration: Appearance.anim.durations.expressiveSlowEffects
+            radius: cover.circle ? cover.size / 2 : Appearance.rounding.normal
+            color: Colours.tPalette.m3surfaceContainerHigh
+            MaterialIcon {
+                anchors.centerIn: parent
+                grade: root.coverIconGrade
+                text: "art_track"
+                color: Colours.palette.m3onSurfaceVariant
+                font.pointSize: (parent.width * root.coverIconScale) || 1
+            }
+            Image {
+                id: previousImage
+                anchors.fill: parent
+                asynchronous: true
+                fillMode: Image.PreserveAspectCrop
+                sourceSize.width: width
+                sourceSize.height: height
+            }
+            Image {
+                id: currentImage
+                anchors.fill: parent
+                asynchronous: true
+                fillMode: Image.PreserveAspectCrop
+                sourceSize.width: width
+                sourceSize.height: height
+                opacity: status === Image.Ready ? 1 : 0
+                Behavior on opacity {
+                    enabled: !root.reduced
+                    Anim {
+                        duration: Appearance.anim.durations.expressiveSlowEffects
+                    }
                 }
             }
         }
@@ -870,7 +934,10 @@ Window {
         property int barMin: 2
         property bool animated: true
         property bool faded: false
-        readonly property var values: live ? Bridge.spectrum : []
+        // span : nombre de bandes lues depuis le bas du spectre ; gain : amplification douce du niveau.
+        property int span: 48
+        property real gain: 1
+        readonly property var values: live ? (Bridge.spectrum ?? []).slice(0, span) : []
         readonly property real cell: fill ? Math.max(1, (width - (count - 1) * barGap) / count) : barWidth
         readonly property real step: fill ? cell + barGap : barWidth * 2
         implicitWidth: count * barWidth + (count - 1) * barWidth
@@ -880,7 +947,7 @@ Window {
                 required property int index
                 x: index * eq.step
                 width: eq.cell
-                height: Math.max(eq.barMin, PillMath.level(eq.values, index, eq.count) * eq.height)
+                height: Math.max(eq.barMin, Math.min(1, PillMath.level(eq.values, index, eq.count) * eq.gain) * eq.height)
                 anchors.verticalCenter: eq.bottomAligned ? undefined : eq.verticalCenter
                 anchors.bottom: eq.bottomAligned ? eq.bottom : undefined
                 radius: Appearance.rounding.full
