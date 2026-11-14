@@ -36,7 +36,9 @@ Window {
         anchorX = px;
         anchorY = py;
         position();
+        rowsModel.clear();
         visible = true;
+        syncRows(true);
         requestActivate();
     }
     function position() {
@@ -61,6 +63,155 @@ Window {
     onVisibleChanged: if (!visible) {
         wasActive = false;
         powerChoice = "";
+        disarm();
+        rowsHeld = false;
+        rowsModel.clear();
+    }
+    onKindChanged: {
+        disarm();
+        if (kind === "running")
+            syncRows(true);
+    }
+    onBackgroundTabChanged: {
+        disarm();
+        rowsModel.clear();
+        syncRows(true);
+    }
+    // Liste de tâches de la vue « running » : lignes mises à jour en place (jamais recréées) pour garder survol, bouton armé et icônes.
+    readonly property var liveApps: Bridge.runningApps
+    onLiveAppsChanged: syncRows(false)
+    // Tailles structurelles de la vue « running » (sans jeton Appearance équivalent).
+    readonly property int taskRowHeight: 54
+    readonly property int taskIconSize: 30
+    readonly property int taskFiguresWidth: 120
+    readonly property int taskCpuWidth: 48
+    readonly property int taskMemWidth: 64
+    readonly property int taskStopSize: 32
+    readonly property int taskListSpacing: 3
+    readonly property int taskBarHeight: 3
+    readonly property int taskEmptyHeight: 120
+    property string armedId: ""
+    property bool rowsHeld: false
+    property real maxMem: 0
+    property real sumCpu: 0
+    property real sumMem: 0
+    property int runningCount: 0
+    property int backgroundCount: 0
+    ListModel {
+        id: rowsModel
+    }
+    Timer {
+        id: refreshTimer
+        interval: 2000
+        repeat: true
+        running: menu.visible && menu.kind === "running"
+        onTriggered: Bridge.action("runningRefresh", {})
+    }
+    Timer {
+        id: armTimer
+        interval: 3000
+        repeat: false
+        onTriggered: menu.armedId = ""
+    }
+    function arm(id) {
+        armedId = id;
+        armTimer.restart();
+    }
+    function disarm() {
+        armedId = "";
+        armTimer.stop();
+    }
+    function stopRow(id, isBackground) {
+        if (armedId !== id) {
+            arm(id);
+            return;
+        }
+        disarm();
+        const app = (Bridge.runningApps ?? []).find(a => a.id === id);
+        Bridge.action("dockApp", {
+            id: id,
+            hwnd: app?.hwnd ?? 0,
+            action: isBackground ? "stop" : "closeAll",
+            confirmed: true
+        });
+    }
+    function fmtCpu(value) {
+        return value < 0.1 ? "—" : (value >= 10 ? Math.round(value) : value.toFixed(1).replace(".", ",")) + " %";
+    }
+    function fmtMem(mb) {
+        return mb <= 0 ? "—" : mb >= 1024 ? (mb / 1024).toFixed(1).replace(".", ",") + " Go" : Math.round(mb) + " Mo";
+    }
+    function rowSub(app) {
+        if (app.background)
+            return (app.procs ?? 0) > 1 ? qsTr("%1 processus").arg(app.procs) : "";
+        const windows = app.windows ?? [];
+        return (app.count ?? 0) > 1 ? qsTr("%1 fenêtres").arg(app.count) : windows.length === 1 ? windows[0].title ?? "" : "";
+    }
+    function rowData(app) {
+        return {
+            rid: app.id,
+            name: app.name ?? "",
+            sub: rowSub(app),
+            canStop: !!app.canStop,
+            isBackground: !!app.background,
+            cpu: app.cpu ?? 0,
+            mem: app.mem ?? 0
+        };
+    }
+    // Ordre par usage, sur des valeurs arrondies (CPU à l'entier, mémoire à 10 Mo) pour que le bruit d'un échantillon ne réordonne pas.
+    function rowOrder(a, b) {
+        return Math.round(b.cpu ?? 0) - Math.round(a.cpu ?? 0) || Math.round((b.mem ?? 0) / 10) - Math.round((a.mem ?? 0) / 10)
+            || (a.name ?? "").localeCompare(b.name ?? "");
+    }
+    function syncRows(force) {
+        if (!visible || kind !== "running")
+            return;
+        const all = liveApps ?? [];
+        runningCount = all.filter(a => !a.background).length;
+        backgroundCount = all.length - runningCount;
+        const fresh = all.filter(a => !!a.background === backgroundTab);
+        const byId = {};
+        for (const app of fresh)
+            byId[app.id] = app;
+        for (let i = rowsModel.count - 1; i >= 0; i--)
+            if (!byId[rowsModel.get(i).rid])
+                rowsModel.remove(i);
+        if (armedId !== "" && !byId[armedId])
+            disarm();
+        const known = {};
+        for (let i = 0; i < rowsModel.count; i++) {
+            const id = rowsModel.get(i).rid;
+            known[id] = true;
+            rowsModel.set(i, rowData(byId[id]));
+        }
+        const wanted = fresh.slice().sort(rowOrder);
+        if (!force && (rowsHeld || armedId !== "")) {
+            for (const app of wanted)
+                if (!known[app.id])
+                    rowsModel.append(rowData(app));
+        } else {
+            for (let i = 0; i < wanted.length; i++) {
+                let at = -1;
+                for (let j = i; j < rowsModel.count; j++)
+                    if (rowsModel.get(j).rid === wanted[i].id) {
+                        at = j;
+                        break;
+                    }
+                if (at < 0)
+                    rowsModel.insert(i, rowData(wanted[i]));
+                else if (at !== i)
+                    rowsModel.move(at, i, 1);
+            }
+        }
+        let cpu = 0, mem = 0, most = 0;
+        for (const app of fresh) {
+            cpu += app.cpu ?? 0;
+            mem += app.mem ?? 0;
+            most = Math.max(most, app.mem ?? 0);
+        }
+        sumCpu = Math.min(100, cpu);
+        sumMem = mem;
+        maxMem = most;
     }
     function powerLabel(id) {
         return id === "logout" ? qsTr("Se déconnecter") : id === "sleep" ? qsTr("Mettre en veille") : id === "hibernate"
@@ -304,16 +455,28 @@ Window {
                     maximumLineCount: 3
                     elide: Text.ElideRight
                 }
+                StyledText {
+                    objectName: "runningSummary"
+                    visible: menu.kind === "running"
+                    width: parent.width - Appearance.padding.smaller * 2
+                    x: Appearance.padding.smaller
+                    text: (rowsModel.count === 1 ? qsTr("%1 application") : qsTr("%1 applications")).arg(rowsModel.count) + " · " + Math.round(menu.sumCpu) + " % · "
+                        + (menu.sumMem / 1024).toFixed(1).replace(".", ",") + " Go"
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3onSurfaceVariant
+                    elide: Text.ElideRight
+                    bottomPadding: Appearance.padding.smaller
+                }
                 Row {
                     visible: menu.kind === "running"
                     spacing: Appearance.padding.small
                     IconTextButton {
-                        text: qsTr("En cours")
+                        text: qsTr("En cours") + " " + menu.runningCount
                         checked: !menu.backgroundTab
                         onClicked: menu.backgroundTab = false
                     }
                     IconTextButton {
-                        text: qsTr("Arrière-plan")
+                        text: qsTr("Arrière-plan") + " " + menu.backgroundCount
                         checked: menu.backgroundTab
                         onClicked: menu.backgroundTab = true
                     }
@@ -536,55 +699,205 @@ Window {
                         }
                     }
                 }
-                StyledText {
-                    visible: menu.kind === "running" && Bridge.runningApps.length === 0
-                    text: qsTr("Aucune application détectée")
-                    font.pointSize: Appearance.font.size.small
-                }
-                Grid {
-                    objectName: "runningGrid"
-                    visible: menu.kind === "running"
-                    columns: 5
-                    spacing: Appearance.spacing.small
+                Item {
+                    objectName: "runningEmpty"
+                    visible: menu.kind === "running" && rowsModel.count === 0
                     width: body.width
+                    height: visible ? menu.taskEmptyHeight : 0
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: Appearance.spacing.small
+                        MaterialIcon {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "apps"
+                            font.pointSize: Appearance.font.size.extraLarge
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+                        StyledText {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: menu.backgroundTab ? qsTr("Aucune application en arrière-plan") : qsTr("Aucune application ouverte")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+                    }
+                }
+                Column {
+                    objectName: "runningList"
+                    visible: menu.kind === "running"
+                    width: body.width
+                    spacing: menu.taskListSpacing
+                    HoverHandler {
+                        onHoveredChanged: menu.rowsHeld = hovered
+                    }
                     Repeater {
-                        model: menu.kind === "running" ? Bridge.runningApps.filter(a => !!a.background === menu.backgroundTab) : []
+                        model: rowsModel
                         StyledRect {
-                            id: runningCell
-                            required property var modelData
-                            objectName: "running-cell-" + modelData.id
-                            width: (body.width - 32) / 5
-                            height: 62
+                            id: taskRow
+                            required property string rid
+                            required property string name
+                            required property string sub
+                            required property bool canStop
+                            required property bool isBackground
+                            required property real cpu
+                            required property real mem
+                            readonly property bool armed: menu.armedId === rid
+                            readonly property bool stoppable: !isBackground || canStop
+                            readonly property bool showStop: stoppable && (rowHover.hovered || stopButton.activeFocus || armed)
+                            objectName: "running-row-" + rid
+                            width: body.width
+                            height: menu.taskRowHeight
                             radius: Appearance.rounding.normal
-                            color: hover.containsMouse ? Colours.palette.m3secondaryContainer : Colours.palette.m3surfaceContainer
-                            Image {
-                                id: appLogo
-                                anchors.centerIn: parent
-                                width: 32
-                                height: 32
-                                sourceSize.width: Math.ceil(32 * Screen.devicePixelRatio)
-                                sourceSize.height: Math.ceil(32 * Screen.devicePixelRatio)
-                                source: Bridge.iconUrl(runningCell.modelData.id, Bridge.iconRevision)
-                                asynchronous: true
-                                fillMode: Image.PreserveAspectFit
+                            color: Colours.palette.m3surfaceContainer
+                            HoverHandler {
+                                id: rowHover
                             }
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: "apps"
-                                visible: appLogo.status !== Image.Ready
-                                color: Colours.palette.m3primary
+                            StateLayer {
+                                disabled: taskRow.isBackground
+                                function onClicked() {
+                                    const app = (Bridge.runningApps ?? []).find(a => a.id === parent.rid);
+                                    if (app)
+                                        menu.selectEntry(app);
+                                }
                             }
-                            MouseArea {
-                                id: hover
+                            RowLayout {
                                 anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                                onClicked: menu.selectEntry(runningCell.modelData)
+                                anchors.leftMargin: Appearance.padding.large
+                                anchors.rightMargin: Appearance.padding.large
+                                anchors.topMargin: Appearance.padding.small
+                                anchors.bottomMargin: Appearance.padding.larger
+                                spacing: Appearance.spacing.normal
+                                Item {
+                                    Layout.preferredWidth: menu.taskIconSize
+                                    Layout.preferredHeight: menu.taskIconSize
+                                    Layout.alignment: Qt.AlignVCenter
+                                    Image {
+                                        id: appLogo
+                                        anchors.fill: parent
+                                        sourceSize.width: Math.ceil(menu.taskIconSize * Screen.devicePixelRatio)
+                                        sourceSize.height: Math.ceil(menu.taskIconSize * Screen.devicePixelRatio)
+                                        source: Bridge.iconUrl(taskRow.rid, Bridge.iconRevision)
+                                        asynchronous: true
+                                        fillMode: Image.PreserveAspectFit
+                                    }
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "apps"
+                                        visible: appLogo.status !== Image.Ready
+                                        color: Colours.palette.m3primary
+                                    }
+                                }
+                                Column {
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                    StyledText {
+                                        width: parent.width
+                                        text: taskRow.name
+                                        font.pointSize: Appearance.font.size.normal
+                                        elide: Text.ElideRight
+                                    }
+                                    StyledText {
+                                        visible: text !== ""
+                                        width: parent.width
+                                        text: taskRow.sub
+                                        font.pointSize: Appearance.font.size.small
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                                Item {
+                                    Layout.preferredWidth: menu.taskFiguresWidth
+                                    Layout.fillHeight: true
+                                    Row {
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: Appearance.spacing.small
+                                        opacity: taskRow.showStop ? 0 : 1
+                                        StyledText {
+                                            width: menu.taskCpuWidth
+                                            horizontalAlignment: Text.AlignRight
+                                            text: menu.fmtCpu(taskRow.cpu)
+                                            font.pointSize: Appearance.font.size.small
+                                            font.family: Appearance.font.family.mono
+                                        }
+                                        StyledText {
+                                            width: menu.taskMemWidth
+                                            horizontalAlignment: Text.AlignRight
+                                            text: menu.fmtMem(taskRow.mem)
+                                            font.pointSize: Appearance.font.size.small
+                                            font.family: Appearance.font.family.mono
+                                        }
+                                    }
+                                    StyledRect {
+                                        id: stopButton
+                                        objectName: "stop-" + taskRow.rid
+                                        visible: taskRow.stoppable
+                                        opacity: taskRow.showStop ? 1 : 0
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        height: menu.taskStopSize
+                                        width: taskRow.armed ? armedLabel.implicitWidth + Appearance.padding.larger * 2 : menu.taskStopSize
+                                        radius: Appearance.rounding.full
+                                        color: taskRow.armed ? Colours.palette.m3error : "transparent"
+                                        border.width: activeFocus ? 1 : 0
+                                        border.color: Colours.palette.m3primary
+                                        activeFocusOnTab: true
+                                        Keys.onReturnPressed: menu.stopRow(taskRow.rid, taskRow.isBackground)
+                                        Keys.onSpacePressed: menu.stopRow(taskRow.rid, taskRow.isBackground)
+                                        Behavior on width {
+                                            Anim {
+                                                duration: Appearance.anim.durations.small
+                                            }
+                                        }
+                                        Behavior on opacity {
+                                            Anim {
+                                                duration: Appearance.anim.durations.small
+                                            }
+                                        }
+                                        StateLayer {
+                                            disabled: !taskRow.showStop
+                                            radius: parent.radius
+                                            color: taskRow.armed ? Colours.palette.m3onError : Colours.palette.m3onSurface
+                                            function onClicked() {
+                                                menu.stopRow(taskRow.rid, taskRow.isBackground);
+                                            }
+                                        }
+                                        MaterialIcon {
+                                            anchors.centerIn: parent
+                                            visible: !taskRow.armed
+                                            text: "close"
+                                            font.pointSize: Appearance.font.size.large
+                                            color: Colours.palette.m3onSurfaceVariant
+                                        }
+                                        StyledText {
+                                            id: armedLabel
+                                            anchors.centerIn: parent
+                                            visible: taskRow.armed
+                                            text: qsTr("Arrêter ?")
+                                            font.pointSize: Appearance.font.size.small
+                                            color: Colours.palette.m3onError
+                                        }
+                                    }
+                                }
                             }
-                            ShellToolTip {
-                                visible: hover.containsMouse
-                                text: runningCell.modelData.name
-                                delay: 350
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.leftMargin: Appearance.padding.large
+                                anchors.rightMargin: Appearance.padding.large
+                                anchors.bottomMargin: Appearance.padding.small
+                                height: menu.taskBarHeight
+                                radius: Appearance.rounding.full
+                                color: Colours.palette.m3surfaceContainerHighest
+                                Rectangle {
+                                    height: parent.height
+                                    radius: parent.radius
+                                    color: Colours.palette.m3primary
+                                    width: menu.maxMem > 0 ? parent.width * Math.min(1, taskRow.mem / menu.maxMem) : 0
+                                    Behavior on width {
+                                        Anim {}
+                                    }
+                                }
                             }
                         }
                     }

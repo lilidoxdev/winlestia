@@ -49,7 +49,15 @@ internal sealed partial class QtShellBridge
     [DllImport("user32.dll", SetLastError = true)] static extern bool PostMessageW(IntPtr window, uint message, IntPtr wp, IntPtr lp);
     static bool SamePath(string a, string b) => !string.IsNullOrWhiteSpace(a) && string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
     static bool CanStop(string path) => File.Exists(path) && !path.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.Windows)
-        + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) && !SamePath(path, Environment.ProcessPath ?? "");
+        + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) && !SamePath(path, Environment.ProcessPath ?? "")
+        && !StopPolicy.IsDenied(path);
+    // Processus propres au shell (backend, frontend et leurs descendants) : jamais comptés ni arrêtés.
+    int[] ShellRoots() => new[] { Environment.ProcessId, System.Threading.Volatile.Read(ref frontend)?.Id ?? 0, (int)System.Threading.Volatile.Read(ref frontendWindowPid) };
+    // Dernières mesures par exécutable ; renouvelées seulement par runningRefresh (la fenêtre « Applications » ouverte).
+    Dictionary<string, ProcessUsageSampler.Usage> usageByPath = new(StringComparer.OrdinalIgnoreCase);
+    readonly ProcessUsageSampler sampler = new(); readonly Dictionary<string, string> backgroundNames = new(StringComparer.OrdinalIgnoreCase);
+    (double Cpu, int Memory, int Count) UsageOf(string path) => usageByPath.TryGetValue(path, out var u)
+        ? (Math.Round(u.Cpu, 1), (int)Math.Round(u.MemoryBytes / 1048576.0), u.Count) : (0, 0, 0);
     void RefreshDockApps()
     {
         // Nom historique conservé pour compatibilité (préfixe de titre des fenêtres Qt, défini dans les fichiers QML).
@@ -77,6 +85,7 @@ internal sealed partial class QtShellBridge
             else
                 LoadIcon(entry);
             dockWindows[entry.Id] = matches.Select(w => new PreviewWindow(w.Handle.ToInt64(), w.Title)).ToArray();
+            var usage = UsageOf(path);
             return new
             {
                 id = entry.Id,
@@ -89,7 +98,10 @@ internal sealed partial class QtShellBridge
                 canStop = CanStop(path),
                 count = matches.Length,
                 active = matches.Any(w => w.Handle == Native.GetForegroundWindow()),
-                windows = matches.Select(w => new { hwnd = w.Handle.ToInt64(), title = w.Title }).ToArray()
+                windows = matches.Select(w => new { hwnd = w.Handle.ToInt64(), title = w.Title }).ToArray(),
+                cpu = usage.Cpu,
+                mem = usage.Memory,
+                procs = usage.Count
             };
         }
         bool pinsChanged = false;
@@ -171,45 +183,64 @@ internal sealed partial class QtShellBridge
         SyncDockPreview();
     }
     Entry[] backgroundEntries = Array.Empty<Entry>(); bool scanningBackground; DateTime backgroundAt;
+    // Un seul balayage à la fois : le cache de noms n'est touché que par ce thread de travail.
+    string BackgroundName(string path)
+    {
+        if (!backgroundNames.TryGetValue(path, out string? name))
+        {
+            name = FileVersionInfo.GetVersionInfo(path).FileDescription;
+            if (string.IsNullOrWhiteSpace(name))
+                name = Path.GetFileNameWithoutExtension(path);
+            backgroundNames[path] = name;
+        }
+        return name;
+    }
     void RefreshBackgroundApps()
     {
         if (scanningBackground || DateTime.UtcNow < backgroundAt)
             return;
         scanningBackground = true;
-        backgroundAt = DateTime.UtcNow.AddSeconds(5);
+        // Plancher d'une seconde : le frontend relance toutes les 2 s tant que la fenêtre est ouverte.
+        backgroundAt = DateTime.UtcNow.AddSeconds(1);
         var known = Store.Entries.ToArray();
+        var roots = ShellRoots();
         _ = System.Threading.Tasks.Task.Run(() =>
         {
             var result = new List<Entry>();
-            var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            int session = Process.GetCurrentProcess().SessionId;
-            foreach (var process in Process.GetProcesses())
-                using (process)
-                    try
+            List<ProcessUsageSampler.Usage> usages;
+            try
+            {
+                usages = sampler.Sample(roots);
+            }
+            catch (Exception)
+            {
+                usages = new();
+            }
+            foreach (var usage in usages)
+                try
+                {
+                    string path = usage.Path;
+                    if (!CanStop(path))
+                        continue;
+                    result.Add(known.FirstOrDefault(e => SamePath(e.Target, path)) ?? new Entry
                     {
-                        if (process.Id == Environment.ProcessId || process.SessionId != session)
-                            continue;
-                        string path = process.MainModule?.FileName ?? "";
-                        if (!CanStop(path) || !paths.Add(path))
-                            continue;
-                        result.Add(known.FirstOrDefault(e => SamePath(e.Target, path)) ?? new Entry
-                        {
-                            Id = "background:" + path,
-                            Name = FileVersionInfo.GetVersionInfo(path).FileDescription ?? process.ProcessName,
-                            Target = path,
-                            IconPath = path
-                        });
-                    }
-                    catch (Exception)
-                    {
-                        // Processus fermé ou inaccessible : ignoré.
-                    }
+                        Id = "background:" + path,
+                        Name = BackgroundName(path),
+                        Target = path,
+                        IconPath = path
+                    });
+                }
+                catch (Exception)
+                {
+                    // Fichier inaccessible : ignoré.
+                }
             dispatcher.BeginInvoke((Action)(() =>
             {
                 scanningBackground = false;
                 if (!disposed)
                 {
                     backgroundEntries = result.ToArray();
+                    usageByPath = usages.ToDictionary(u => u.Path, u => u, StringComparer.OrdinalIgnoreCase);
                     nextTasks = DateTime.MinValue;
                 }
             }));
@@ -389,12 +420,14 @@ internal sealed partial class QtShellBridge
                 if (!Flag(args, "confirmed") || !CanStop(path))
                     return "Arrêt refusé pour ce processus.";
                 int session = Process.GetCurrentProcess().SessionId;
+                // Backend, frontend, descendants et ancêtres (terminal, lanceur) du shell survivent même si leur chemin correspond.
+                var shellPids = ProcessUsageSampler.ProtectedPids(ShellRoots());
                 foreach (var p in Process.GetProcesses())
                     using (p)
                     {
                         Safe.Try(() =>
                         {
-                            if (p.Id != Environment.ProcessId && p.SessionId == session && SamePath(p.MainModule?.FileName ?? "", path))
+                            if (!shellPids.Contains(p.Id) && p.SessionId == session && SamePath(TaskbarNative.ProcessImagePath((uint)p.Id), path))
                                 p.Kill();
 
                         });

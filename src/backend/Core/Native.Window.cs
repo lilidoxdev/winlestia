@@ -97,6 +97,58 @@ internal sealed class IconLoader : IIconSource, IDisposable
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
     static extern int SHCreateItemFromParsingName(string path,
         IntPtr bind, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out IImageFactory factory);
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    struct ShFileInfo
+    {
+        public IntPtr Icon; public int IconIndex; public uint Attributes;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string DisplayName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)] public string TypeName;
+    }
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    static extern IntPtr SHGetFileInfoW(string path, uint attributes, ref ShFileInfo info, uint size, uint flags);
+    // Index d'icône système de l'icône « exécutable » par défaut du shell, calculé une fois (SYSICONINDEX | USEFILEATTRIBUTES sur un
+    // « .exe » fictif). Un exécutable sans icône intégrée reçoit exactement cet index.
+    static readonly Lazy<int> GenericExeIconIndex = new(() => SystemIconIndex("generic.exe", true));
+    static int SystemIconIndex(string path, bool attributesOnly)
+    {
+        var info = new ShFileInfo();
+        IntPtr ok = SHGetFileInfoW(path, 0x80, ref info, (uint)Marshal.SizeOf<ShFileInfo>(), 0x4000 | (attributesOnly ? 0x10u : 0u));
+        return ok == IntPtr.Zero ? -1 : info.IconIndex;
+    }
+    static bool IsGenericExeIcon(string path)
+    {
+        try
+        {
+            if (!path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || !File.Exists(path))
+                return false;
+            int generic = GenericExeIconIndex.Value;
+            return generic >= 0 && SystemIconIndex(path, false) == generic && LacksIconResource(path);
+        }
+        catch (Exception) { return false; }
+    }
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern IntPtr LoadLibraryExW(string path, IntPtr file, uint flags);
+    [DllImport("kernel32.dll")] static extern bool FreeLibrary(IntPtr module);
+    delegate bool EnumResNameProc(IntPtr module, IntPtr type, IntPtr name, IntPtr param);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool EnumResourceNamesW(IntPtr module, IntPtr type, EnumResNameProc callback, IntPtr param);
+    // Vrai seulement si le fichier se charge et ne contient aucune ressource RT_GROUP_ICON (type 14). Échec de chargement : faux.
+    static bool LacksIconResource(string path)
+    {
+        // LOAD_LIBRARY_AS_DATAFILE (0x2) | LOAD_LIBRARY_AS_IMAGE_RESOURCE (0x20)
+        IntPtr module = LoadLibraryExW(path, IntPtr.Zero, 0x2 | 0x20);
+        if (module == IntPtr.Zero)
+            return false;
+        try
+        {
+            bool found = false;
+            EnumResNameProc callback = (_, _, _, _) => { found = true; return false; };
+            EnumResourceNamesW(module, new IntPtr(14), callback, IntPtr.Zero);
+            GC.KeepAlive(callback);
+            return !found;
+        }
+        finally { FreeLibrary(module); }
+    }
     readonly BlockingCollection<(Entry entry, Action<ImageSource> callback)> jobs = new(); readonly ConcurrentDictionary<string,
         ImageSource> images = new();
     sealed record Request(Action<ImageSource> Callback, string Scope);
@@ -266,6 +318,9 @@ internal sealed class IconLoader : IIconSource, IDisposable
                     bi.Freeze();
                     return bi;
                 }
+                // Icône par défaut du shell pour un exécutable sans ressource d'icône : la tuile lettre est plus lisible.
+                if (IsGenericExeIcon(path))
+                    return InitialPlate(entry);
                 Guid iid = typeof(IImageFactory).GUID;
                 int hr = SHCreateItemFromParsingName(path, IntPtr.Zero, ref iid, out var factory);
                 if (hr != 0)
