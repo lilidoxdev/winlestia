@@ -26,6 +26,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 - Dépendances Python verrouillées par hachage (`src/frontend/requirements.lock.txt`), installées avec `--require-hashes` par `installer/build.ps1`.
 - Historique du portage Caelestia condensé dans `docs/history/caelestia-windows.md`.
 
+### Corrections
+
+- Winlestia Fichiers : plantage au démarrage (`System.IO.Pipelines 10.0` introuvable) car le dossier `Glass-v5` partagé avec le backend contient `System.Text.Json` 10 alors que le `deps.json` de Fichiers n'en listait que la version 8. Fichiers référence désormais `System.Text.Json` 10.0.2, comme le backend.
+- Winlestia Fichiers : un plantage ne rouvre plus d'Explorateur vide. Le démarrage `--background` ou sans chemin journalise et quitte ; avec un chemin, le repli vers l'Explorateur n'a lieu qu'une fois.
+- Gestionnaire de dossiers : le verbe n'est plus ré-enregistré au démarrage tant qu'un plantage de Fichiers n'a pas été effacé par un démarrage sain.
+
 ## [0.9.2] - 2026-11-06
 
 ### Ajouts

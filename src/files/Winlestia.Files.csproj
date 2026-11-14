@@ -16,6 +16,11 @@
     <Resource Include="Assets\winlestia-files.ico" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Le dossier Glass-v5 est partagé avec le backend, dont System.Text.Json est en 10.x (via Microsoft.Extensions.AI.Abstractions) : le deps.json de
+         Files doit lister la même version et ses dépendances (System.IO.Pipelines 10), sinon la liaison échoue au premier usage de JSON. -->
+    <PackageReference Include="System.Text.Json" Version="10.0.2" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Shared tokens, linked not copied. Theme/Store/UI/Motion are satisfied by BackendShim.cs (Visuals.cs and Themes.cs drag in GlassWindow, Native, Motion, Store...). -->
     <Compile Include="../backend/Core/Safe.cs" Link="Shared\Safe.cs" />
     <Compile Include="../backend/Core/AtomicFile.cs" Link="Shared\AtomicFile.cs" />

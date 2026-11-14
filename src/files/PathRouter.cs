@@ -68,12 +68,26 @@ internal static class PathRouter
     internal static void LaunchExplorer(string arg)
     {
         arg = Clean(arg);
+        if (string.IsNullOrWhiteSpace(arg))
+            return;   // jamais d'explorer.exe nu : il ouvrirait une fenêtre non demandée
         var info = new ProcessStartInfo(Path.Combine(Environment.GetEnvironmentVariable("WINDIR") ?? @"C:\Windows", "explorer.exe"))
         {
             UseShellExecute = false
         };
-        if (!string.IsNullOrWhiteSpace(arg))
-            info.ArgumentList.Add(arg);
+        info.ArgumentList.Add(arg);
         Process.Start(info)?.Dispose();
+    }
+
+    static int fallbackClaimed;
+
+    // Repli vers l'Explorateur : seulement pour un vrai chemin demandé, hors démarrage --background, et une seule fois par processus
+    // (le catch d'OnStartup et EarlyDeath peuvent tous deux passer ici). `claimed` : 0 = libre.
+    internal static bool TryClaimFallback(string? arg, bool background, ref int claimed) =>
+        !background && !string.IsNullOrWhiteSpace(Clean(arg)) && System.Threading.Interlocked.Exchange(ref claimed, 1) == 0;
+
+    internal static void FallbackToExplorer(string? arg, bool background)
+    {
+        if (TryClaimFallback(arg, background, ref fallbackClaimed))
+            LaunchExplorer(arg ?? "");
     }
 }

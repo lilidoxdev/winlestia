@@ -42,7 +42,10 @@ internal static class FilesPreload
         if (!policy.MayLaunch(recycle, Store.State.FilesPreload, quitting))
             return;
         if (FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "ping"), 150))
+        {
+            FilesHandlerGuard.ClearCrashes(FilesHandler.DataDir);
             return;   // already resident
+        }
         try
         {
             if (child != null && !child.HasExited)
@@ -80,7 +83,10 @@ internal static class FilesPreload
             try
             {
                 if (!p.HasExited)
+                {
                     p.PriorityClass = ProcessPriorityClass.Normal;
+                    FilesHandlerGuard.ClearCrashes(FilesHandler.DataDir);   // vivant après 8 s : démarrage sain
+                }
             }
             catch (InvalidOperationException)
             {

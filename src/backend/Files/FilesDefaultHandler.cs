@@ -68,7 +68,7 @@ internal static class FilesDefaultHandler
             bool tripped = FilesHandlerGuard.ConsumeFlag(FilesHandler.DataDir);
             var o = HandlerOptions.FromEnvironment();
             bool pref = Store.State.FilesDefaultHandler;
-            switch (FilesHandlerGuard.DecideStartup(pref, File.Exists(ExePath), tripped))
+            switch (FilesHandlerGuard.DecideStartup(pref, File.Exists(ExePath), tripped, FilesHandlerGuard.HasPendingCrash(FilesHandler.DataDir)))
             {
                 case HandlerStartup.Ensure:
                     if (!FilesHandler.IsRegistered(o, ExePath))

@@ -49,12 +49,13 @@ public partial class App : Application
                 }     // another instance already owns the pipe
                 hidden.Preload();
                 Perf.Mark("preloaded (hidden)");
+                ArmHealthyStart();
                 return;
             }
             var route = PathRouter.Route(arg);
             if (!route.IsOwn)
             {
-                PathRouter.LaunchExplorer(route.Value);
+                PathRouter.FallbackToExplorer(route.Value, background);
                 Shutdown(0);
                 return;
             }
@@ -63,6 +64,7 @@ public partial class App : Application
             Perf.Mark("ctor done, Show()");
             window.Show();
             Perf.Mark("Show() returned");
+            ArmHealthyStart();
             // Après le travail de la première image : la première instance avec une fenêtre héberge aussi le serveur, les lancements
             // suivants lui transmettent leur demande.
             Dispatcher.BeginInvoke(() => { server = SingleInstance.TryStart(OnRequest); },
@@ -75,7 +77,7 @@ public partial class App : Application
                 RecordStartupCrash();      // access denied / missing path: explorer fallback below, not a crash
             try
             {
-                PathRouter.LaunchExplorer(arg);
+                PathRouter.FallbackToExplorer(arg, background);   // --background / sans chemin : journal et sortie, jamais d'Explorateur
             }
             catch (Exception inner) { CrashLog(inner); }
             Shutdown(1);
@@ -253,6 +255,23 @@ public partial class App : Application
         }
     }
 
+    // Démarrage sain : fenêtre principale construite et processus vivant au-delà de la fenêtre EarlyDeath (15 s) -> on efface le
+    // marqueur startup-crashes.txt (une seule fois, minuteur à déclenchement unique).
+    static System.Threading.Timer? healthyTimer;
+    internal static void ArmHealthyStart()
+    {
+        try
+        {
+            int ms = (int)Math.Max(0, 15000 - Program.Uptime.TotalMilliseconds) + 250;
+            healthyTimer = new System.Threading.Timer(_ => Winlestia.Shared.FilesHandlerGuard.ClearCrashes(
+                Winlestia.Shared.FilesHandler.DataDir), null, ms, System.Threading.Timeout.Infinite);
+        }
+        catch (Exception err)
+        {
+            App.LogLine("App.ArmHealthyStart : " + err.GetType().Name + ": " + err.Message);
+        }
+    }
+
     // Pendant les 15 premières secondes du processus, exception non gérée : on la compte (vrais plantages seulement) et on confie le
     // dossier demandé à explorer.exe avant de mourir. Au mieux.
     internal static string RequestedArg = "";
@@ -264,8 +283,7 @@ public partial class App : Application
                 return;
             if (ex == null || Winlestia.Shared.FilesHandlerGuard.CountsAsCrash(ex))
                 RecordStartupCrash();
-            if (RequestedArg.Length > 0)
-                PathRouter.LaunchExplorer(RequestedArg);
+            PathRouter.FallbackToExplorer(RequestedArg, Resident && RequestedArg.Length == 0);
         }
         catch (Exception err)
         {

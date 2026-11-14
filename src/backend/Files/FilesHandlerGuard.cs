@@ -28,11 +28,38 @@ internal static class FilesHandlerGuard
         && nowMs - s <= WindowMs).OrderBy(s => s).TakeLast(16).ToList();
 
     // Décision pure au démarrage du backend. tripped = le fichier drapeau a été trouvé.
-    internal static HandlerStartup DecideStartup(bool prefOn, bool exeExists, bool tripped) =>
+    // crashPending = un plantage au démarrage de Files n'a pas été effacé par un démarrage sain : on ne ré-enregistre pas le verbe.
+    internal static HandlerStartup DecideStartup(bool prefOn, bool exeExists, bool tripped, bool crashPending = false) =>
         !prefOn ? HandlerStartup.Nothing
         : tripped ? HandlerStartup.TrippedDisable
         : !exeExists ? HandlerStartup.RestoreAndDisable
+        : crashPending ? HandlerStartup.Nothing
         : HandlerStartup.Ensure;
+
+    // Marqueur persistant : startup-crashes.txt existe et n'est pas vide tant qu'aucun démarrage sain ne l'a effacé.
+    internal static bool HasPendingCrash(string dir)
+    {
+        try
+        {
+            return Read(dir).Count > 0;
+        }
+        catch { return false; }
+    }
+
+    // Démarrage sain constaté (résident vivant ou répondant au ping) : efface le marqueur.
+    internal static void ClearCrashes(string dir)
+    {
+        try
+        {
+            string f = Path.Combine(dir, StampsFile);
+            if (File.Exists(f))
+                File.Delete(f);
+        }
+        catch (Exception)
+        {
+            // Au mieux : fichier verrouillé, on réessaiera au prochain démarrage sain.
+        }
+    }
 
     // Décision pure de la migration unique « Winlestia Fichiers par défaut » (gestionnaire activé, préchargement activé, épingle
     // du dock). Déjà faite : rien. Garde de plantage déclenchée : on ne force jamais l'activation, mais on enregistre la migration

@@ -488,7 +488,10 @@
         }
       },
       "winlestia.files": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "System.Text.Json": "[10.0.2, )"
+        }
       }
     },
     "net8.0-windows10.0.19041/win-x64": {
