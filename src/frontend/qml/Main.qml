@@ -567,10 +567,17 @@ Window {
                 windowOverview.active = !windowOverview.active;
         }
     }
+    // Un seul retour visuel : la Pilule quand elle est réglée et pas en silence, sinon l'indicateur du bord droit.
+    readonly property bool pillShown: (Bridge.settings.pill ?? true) && !Bridge.quiet
     Loader {
         id: osdLoader
-        active: Bridge.settings.osd ?? true
+        active: (Bridge.settings.osd ?? true) && !window.pillShown
         sourceComponent: Osd {}
+    }
+    Loader {
+        id: livePillLoader
+        active: window.pillShown
+        sourceComponent: LivePill {}
     }
     // Cartes Winjets du bureau (fenêtres natives sous les autres fenêtres) ; rien tant qu'il n'y a pas d'instance.
     WinjetLayer {

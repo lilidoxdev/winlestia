@@ -21,6 +21,11 @@ internal sealed partial class QtShellBridge
     // Mode silencieux plein écran : l'état forcé (CLI seulement, jamais enregistré) prime sur la détection
     // (préférence active et un moniteur en plein écran, n'importe lequel).
     volatile QuietForce quietForce = QuietForce.Auto;
+    // La Pilule (capsule en haut de l'écran) demande le spectre tant qu'elle est visible et que le lecteur joue.
+    bool pillSpectrum;
+    // Événement SMTC reçu depuis la dernière lecture (vrai au départ pour la première), et dernier état de lecture connu.
+    volatile bool mediaEvent = true;
+    bool mediaPlaying, mediaSubscribed;
     bool QuietDetected => QuietPolicy.Detected(Store.State.QuietFullscreen, FullscreenWatcher.Current.Length);
     bool Quiet => QuietPolicy.Effective(quietForce, QuietDetected);
     void FullscreenChanged()
@@ -46,8 +51,8 @@ internal sealed partial class QtShellBridge
     void UpdateSampling()
     {
         bars.SetActive(barsVisible && Store.State.ReducedEffects != true && !Quiet);
-        mixer.SetActive(active && (page == 1 || page == 7 || mixerVisible));
-        if (!active || page != 1)
+        mixer.SetActive(active && (page == 1 || page == 7 || mixerVisible) || pillSpectrum);
+        if (!SpectrumPolicy.Surface(active, page, pillSpectrum))
             spectrum.Stop();
         bool need = active && page is 0 or 2;
         if (need)
@@ -60,11 +65,7 @@ internal sealed partial class QtShellBridge
             _ = telemetry.StopAsync();
         // La sonde média suit trois consommateurs : le tableau de bord, le centre de contrôle, et un Winjet de bureau qui
         // lit `media.` (sinon le lecteur resterait figé sur son dernier instantané panneau fermé).
-        bool wasMusic = pageMusic;
-        bool wasMedia = mediaVisible;
         pageMusic = active && page is 0 or 1 || controls || mediaVisible;
-        if (pageMusic != wasMusic || mediaVisible != wasMedia)
-            Store.Log("Musique: pageMusic=" + pageMusic + " active=" + active + " media=" + mediaVisible + " page=" + page);
         if (pageMusic && !startingMedia)
         {
             startingMedia = true;
@@ -81,6 +82,11 @@ internal sealed partial class QtShellBridge
     {
         try
         {
+            if (!mediaSubscribed)
+            {
+                mediaSubscribed = true;
+                media.Changed += () => mediaEvent = true;
+            }
             await media.StartAsync();
         }
         catch (Exception ex) { Store.Log("Musique Qt: " + ex.Message); }
@@ -96,17 +102,24 @@ internal sealed partial class QtShellBridge
         _ = telemetry.StopAsync();
         media.Stop();
         startingMedia = false;
+        // Sans frontend, ni la Pilule ni la sonde média ne demandent plus rien : le prochain Tick doit sortir tout de suite.
+        pillSpectrum = false;
+        mediaVisible = false;
+        pageMusic = false;
     }
 
     async void Tick(object? sender, EventArgs e)
     {
         if (disposed || busy)
             return;
-        if (active && (DateTime.UtcNow - lastReply).TotalSeconds > 5)
+        // Frontend muet depuis plus de 5 s : plus personne pour consommer, y compris la Pilule (sans panneau ouvert).
+        if ((active || pillSpectrum || mediaVisible) && (DateTime.UtcNow - lastReply).TotalSeconds > 5)
         {
+            bool wasActive = active;
             active = false;
             StopSampling();
-            dismissal.SetActive(false);
+            if (wasActive)
+                dismissal.SetActive(false);
         }
         // Le bureau peut demander la sonde média sans panneau ouvert : ne pas sortir avant elle.
         if (!active && !mediaVisible)
@@ -116,24 +129,26 @@ internal sealed partial class QtShellBridge
         {
             if (mixer.Running)
                 RefreshMixer();
-            if (pageMusic)
+            // Seule la Pilule veut le média (ni tableau de bord, ni centre de contrôle) : sans lecture en cours, on ne relit que sur
+            // un événement SMTC (session apparue ou disparue, lecture, métadonnées), jamais en boucle.
+            bool pillOnly = !(active && page is 0 or 1) && !controls;
+            if (pageMusic && (!pillOnly || mediaEvent || mediaPlaying))
             {
+                mediaEvent = false;
                 var snapshot = await media.ReadAsync();
-                if (snapshot != null)
+                if (snapshot == null)
+                    mediaEvent = true;
+                else
                 {
                     player = snapshot;
-                    if (snapshot.Title != mediaTitleLog)
-                    {
-                        mediaTitleLog = snapshot.Title;
-                        Store.Log("Media: " + snapshot.App + " / " + snapshot.Title + " / playing=" + snapshot.Playing);
-                    }
+                    mediaPlaying = snapshot.Playing;
                     mixer.MediaApp = snapshot.ExeStem;
                     mixer.MediaAumid = snapshot.Aumid;
                     // Technique : capture WASAPI process loopback (ProcessAudio.dll) sur le PID racine du lecteur choisi, avec
                     // INCLUDE_TARGET_PROCESS_TREE, puis FFT de 2048 points fenêtrée de Hann dans WindowsSpectrum (48 bandes log).
                     // Ni un vu-mètre, ni la sortie par défaut : le son d'une autre application (un appel) n'est pas capturé.
                     // Au repos : un lecteur en pause ou terminé donne la cible 0, la capture est détruite et les barres retombent à zéro.
-                    spectrum.SetTarget(active && page == 1 && snapshot.Playing ? mixer.MediaPid : 0);
+                    spectrum.SetTarget(SpectrumPolicy.Wanted(active, page, pillSpectrum, snapshot.Playing) ? mixer.MediaPid : 0);
                     string key = snapshot.Title + snapshot.Artist;
                     if (snapshot.Artwork != null && key != artworkKey)
                     {

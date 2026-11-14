@@ -34,6 +34,22 @@ ColumnLayout {
                 })
             }
         }
+
+        SettingsRow {
+            rowId: "pill"
+            target: pill
+
+            SettingsSwitch {
+                id: pill
+
+                objectName: "pillToggle"
+                value: Bridge.settings.pill ?? true
+                onToggled: Bridge.action("preference", {
+                    key: "pill",
+                    enabled: checked
+                })
+            }
+        }
     }
 
     SettingsSection {

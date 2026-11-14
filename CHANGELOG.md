@@ -6,7 +6,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 
 ### Ajouts
 
+- Pilule : capsule en haut de l'écran qui n'apparaît que lorsqu'il se passe quelque chose (musique avec égaliseur en direct, changement de piste, volume, luminosité, micro) et change de forme en douceur ; réglage « Pilule » (activé par défaut), qui remplace l'indicateur du bord droit.
+- Fonds d'écran : le fond choisi se déploie en cercle depuis la vignette, puis les couleurs de tout le shell glissent vers la nouvelle palette au lieu de changer d'un coup (instantané avec les effets allégés).
 - Vue d'ensemble (Win+Alt+Tab, ou Win+Alt+V si Windows refuse la première) : plein écran, vignettes en direct de toutes les fenêtres ouvertes sur le bureau virtuel courant, disposées en grille. Clic ou Entrée pour basculer, Suppr ou clic milieu pour fermer, flèches pour naviguer, lettres pour filtrer, Échap pour quitter.
+- Vue d'ensemble : les vignettes partent de la vraie position des fenêtres pour rejoindre la grille (et reviennent à la fermeture), la fenêtre choisie grandit jusqu'à sa place pendant que les autres s'effacent, et la grille glisse quand une fenêtre se ferme.
 - Winjets : widgets de bureau décrits par un paquet JSON (format `winjet/1`), placés derrière les fenêtres. Trois paquets inclus (horloge, calendrier, graphique Bitcoin) et import de paquets créés par l'utilisateur depuis Réglages > Winjets. Aucun code de paquet n'est exécuté ; le réseau passe uniquement par Winlestia, vers les hôtes déclarés.
 - Winjets : trois nouveaux paquets inclus, qui remplacent horloge, calendrier et graphique Bitcoin : Lecteur (lecture en cours et visualiseur), Système (heure, uptime, processeur, mémoire, batterie, police mono) et Marchés (BTC, ETH et SOL en direct, bougies de 1h à 1m).
 - Winjets, format `winjet/1` : blocs `media` et `visualizer`, graphique en bougies avec survol (`hover`, `valueFormat`), source `market` (Binance), actions `media.playPause`, `media.next` et `media.prev`, racines `media`, `system` et `time`, indexation de chemins, `??` et `fmt()` dans les expressions, mise à l'échelle automatique du contenu.

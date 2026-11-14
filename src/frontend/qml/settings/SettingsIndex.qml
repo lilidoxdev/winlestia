@@ -265,6 +265,14 @@ QtObject {
             kw: "volume luminosite micro osd on screen"
         },
         {
+            id: "pill",
+            page: 4,
+            section: qsTr("Affichage à l’écran"),
+            label: qsTr("Pilule"),
+            desc: qsTr("Musique, volume et luminosité dans une capsule en haut de l’écran"),
+            kw: "pilule capsule musique volume luminosite ile dynamique pill"
+        },
+        {
             id: "dictationEnabled",
             page: 4,
             section: qsTr("Dictée vocale"),

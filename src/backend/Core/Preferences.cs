@@ -41,6 +41,7 @@ public sealed class Preferences
     public bool AutoTile { get; set; } = false;
     public bool DesktopLogo { get; set; } = false;
     public bool Osd { get; set; } = true;
+    public bool Pill { get; set; } = true;
     public bool QuietFullscreen { get; set; } = true;
     public bool DesktopIndicator { get; set; } = true;
     public bool DockDrawerOpen { get; set; } = false;

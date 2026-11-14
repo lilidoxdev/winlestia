@@ -41,8 +41,10 @@ class PipeClient(QThread):
                                 request = self.updates.pop(next(iter(self.updates)), None) if self.updates else None
                             if request is None:
                                 visual = (
-                                    self.subscription.get('visible')
-                                    and self.subscription.get('page') == 1
+                                    (
+                                        (self.subscription.get('visible') and self.subscription.get('page') == 1)
+                                        or self.subscription.get('pill')
+                                    )
                                     and time.monotonic() - self.last_state < 0.6
                                 )
                                 bars = (
@@ -75,7 +77,8 @@ class PipeClient(QThread):
                             kernel32.WaitForSingleObject(
                                 self.wakeup,
                                 55
-                                if self.subscription.get('visible') and self.subscription.get('page') == 1
+                                if (self.subscription.get('visible') and self.subscription.get('page') == 1)
+                                or self.subscription.get('pill')
                                 else 33
                                 if request['command'] == 'audioBars' and not self.bars_idle
                                 else 180

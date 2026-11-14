@@ -284,6 +284,7 @@ public class BridgeHandlerTests
     [InlineData("accentBorders", nameof(Preferences.AccentBorders))]
     [InlineData("desktopLogo", nameof(Preferences.DesktopLogo))]
     [InlineData("osd", nameof(Preferences.Osd))]
+    [InlineData("pill", nameof(Preferences.Pill))]
     [InlineData("quietFullscreen", nameof(Preferences.QuietFullscreen))]
     [InlineData("desktopIndicator", nameof(Preferences.DesktopIndicator))]
     [InlineData("dockDrawerOpen", nameof(Preferences.DockDrawerOpen))]

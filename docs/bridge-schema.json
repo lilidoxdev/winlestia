@@ -842,6 +842,9 @@
     "osd": {
       "enabled": "boolean"
     },
+    "pill": {
+      "enabled": "boolean"
+    },
     "quietFullscreen": {
       "enabled": "boolean"
     },

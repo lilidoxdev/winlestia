@@ -63,6 +63,7 @@ internal sealed partial class QtShellBridge
                 tileExclusions = tiler.Exclusions,
                 desktopLogo = Store.State.DesktopLogo,
                 osd = Store.State.Osd,
+                pill = Store.State.Pill,
                 quietFullscreen = Store.State.QuietFullscreen,
                 desktopIndicator = Store.State.DesktopIndicator,
                 dockDrawerOpen = Store.State.DockDrawerOpen,

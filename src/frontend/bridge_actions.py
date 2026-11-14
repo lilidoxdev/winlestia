@@ -127,6 +127,15 @@ class ActionMixin:
             self.audioBarsChanged.emit()
         kernel32.SetEvent(self.client.wakeup)
 
+    # Pilule : demande le spectre (commande `visualizer`) tant qu'elle est visible et que le lecteur joue, sans panneau ouvert.
+    @Slot(bool)
+    def setPillSpectrum(self, wanted):
+        wanted = bool(wanted) and not self.quiet_on
+        if wanted == bool(self.client.subscription.get('pill')):
+            return
+        self.client.subscription = {**self.client.subscription, 'pill': wanted}
+        kernel32.SetEvent(self.client.wakeup)
+
     # Média : même principe que les barres, pour la sonde SMTC du backend. Un Winjet de bureau lit `media.` sans qu'aucun
     # panneau ne soit ouvert ; sans cette référence le lecteur resterait figé sur son dernier instantané.
     @Slot(bool)
