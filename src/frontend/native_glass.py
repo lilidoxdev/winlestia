@@ -178,6 +178,7 @@ class NativeGlass(QObject):
             getattr(self.bridge, 'social_win', None),
             getattr(self.bridge, 'bookmarks_win', None),
             getattr(self.bridge, 'dictation_win', None),
+            getattr(self.bridge, 'pill_win', None),
         ):
             if window and window.isVisible():
                 self.user.SetWindowPos(int(window.winId()), ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
