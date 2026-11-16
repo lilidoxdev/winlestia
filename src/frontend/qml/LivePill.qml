@@ -45,17 +45,16 @@ Window {
     readonly property real tabVisibleMin: 0.5
     readonly property int levelWidth: 250
     readonly property int expandedWidth: 400
-    readonly property int coverLarge: 88
+    readonly property int coverLarge: 104
     readonly property int lyricsHeight: 112
     readonly property int eqBarMin: 3
     readonly property int bandBars: 48
     readonly property int bandGap: 3
     readonly property int bandHeight: 64
     readonly property int bandBaseline: 3
+    readonly property int bandBottomPad: 16
     readonly property real bandTipAlpha: .55
     readonly property real bandFootAlpha: .04
-    readonly property real tintAlpha: .16
-    readonly property real tintReach: .62
     readonly property real glowOpacity: .4
     readonly property int controlSize: 36
     readonly property int playSize: 44
@@ -117,7 +116,7 @@ Window {
     readonly property real compactHeightWanted: Appearance.padding.normal + discSize + Appearance.spacing.small + histHeight
         + Appearance.padding.normal
     readonly property real expandedHeight: Appearance.padding.large + coverLarge + Appearance.spacing.small + seekHitHeight + timeMetrics.height
-        + (lyricsShown ? Appearance.spacing.small + lyricsHeight : 0) + Appearance.padding.larger
+        + (lyricsShown ? Appearance.spacing.small + lyricsHeight : 0) + Appearance.spacing.normal + bandHeight + bandBottomPad
     // Largeur voulue (0 au repos) ; au repos la languette garde sa dernière largeur pendant qu'elle se rétracte.
     readonly property real wantedWidth: stateName === "expanded" ? expandedWidth : stateName === "level" ? levelWidth : stateName
         === "compact" ? compactWidthWanted : 0
@@ -475,7 +474,7 @@ Window {
             }
         }
 
-        // Média déployé : voile de couleur en tête, pochette et son halo, titre, artiste, commandes, progression, paroles ;
+        // Média déployé : pochette et son halo, titre, artiste, commandes, progression, paroles ;
         // le spectre court le long du bord bas, découpé par les coins arrondis de la carte.
         Item {
             id: card
@@ -490,25 +489,11 @@ Window {
             readonly property real inner: width - Appearance.padding.large * 2
             readonly property real position: seek.dragging ? seek.dragFraction * (root.player?.length ?? 0) : (root.player?.position ?? 0)
 
-            Rectangle {
-                width: parent.width
-                height: parent.height * root.tintReach
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop {
-                        position: 0
-                        color: Qt.alpha(Colours.palette.m3primary, root.tintAlpha)
-                    }
-                    GradientStop {
-                        position: 1
-                        color: Qt.alpha(Colours.palette.m3primary, 0)
-                    }
-                }
-            }
             Equaliser {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
+                anchors.bottomMargin: root.bandBottomPad
                 height: root.bandHeight
                 count: root.bandBars
                 barGap: root.bandGap
