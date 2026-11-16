@@ -215,6 +215,13 @@
       },
       "required": []
     },
+    "dockLayout": {
+      "args": {
+        "bar": "array<string>",
+        "drawer": "array<string>"
+      },
+      "required": []
+    },
     "dockPreview": {
       "args": {
         "cx": "number",
@@ -388,6 +395,15 @@
     "quit": {
       "args": {},
       "required": []
+    },
+    "quickToggle": {
+      "args": {
+        "enabled": "boolean",
+        "id": "string"
+      },
+      "required": [
+        "id"
+      ]
     },
     "radio": {
       "args": {
@@ -923,6 +939,7 @@
     "sysInfo",
     "media",
     "controls",
+    "quick",
     "apps",
     "favorites",
     "recent",
@@ -960,6 +977,7 @@
     "social",
     "files",
     "lyrics",
+    "quick",
     "dock",
     "dictation:start",
     "dictation:stop",

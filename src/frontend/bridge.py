@@ -341,6 +341,8 @@ class Bridge(
 
     controls = Property('QVariantMap', lambda s: s._state.get('controls', {}), notify=changed)
 
+    quick = Property('QVariantMap', lambda s: s._state.get('quick') or {}, notify=changed)
+
     apps = Property('QVariantList', lambda s: s._state.get('apps', []), notify=catalogChanged)
 
     favorites = Property('QVariantList', lambda s: s._state.get('favorites', []), notify=catalogChanged)

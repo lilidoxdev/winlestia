@@ -45,8 +45,11 @@ internal sealed partial class QtShellBridge
             quickTabs = Store.State.QuickTabs.Select(t => new { id = t.Id, name = t.Name }).ToArray(),
             social = social.Snapshot(),
             bookmarks = bookmarks.Snapshot(),
+            quick = QuickSnapshot(),
             settings = new
             {
+                dockBar = Store.State.DockBar.ToArray(),
+                dockDrawer = Store.State.DockDrawer.ToArray(),
                 dataFolder = Store.DataDir,
                 version = (System.Reflection
                     .Assembly

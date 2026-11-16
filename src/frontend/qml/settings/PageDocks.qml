@@ -5,6 +5,7 @@ import qs.components.controls
 import qs.services
 import qs.config
 import "."
+import "../DockItems.js" as DockItems
 
 // Visibilité du dock et des panneaux de bord, barre des tâches, tuilage automatique.
 ColumnLayout {
@@ -13,6 +14,30 @@ ColumnLayout {
     property var host
     readonly property bool tiling: Bridge.settings.autoTile ?? false
     readonly property var exclusions: Bridge.settings.tileExclusions ?? []
+
+    // Listes barre/tiroir courantes ; la clé texte évite de reconstruire les lignes quand d’autres réglages changent.
+    readonly property string layoutKey: JSON.stringify(DockItems.normalize(Bridge.settings.dockBar, Bridge.settings.dockDrawer))
+    readonly property var layout: JSON.parse(layoutKey)
+    readonly property var layoutRows: DockItems.rows(layout.bar, layout.drawer)
+    readonly property var chipBar: ({
+            label: qsTr("Barre"),
+            value: "bar"
+        })
+    readonly property var chipDrawer: ({
+            label: qsTr("Tiroir"),
+            value: "drawer"
+        })
+    readonly property var chipHidden: ({
+            label: qsTr("Masqué"),
+            value: "hidden"
+        })
+
+    function apply(lists) {
+        Bridge.action("dockLayout", {
+            bar: lists.bar,
+            drawer: lists.drawer
+        });
+    }
 
     spacing: Appearance.spacing.larger
 
@@ -224,6 +249,87 @@ ColumnLayout {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    SettingsSection {
+        sectionId: "dockLayout"
+        label: qsTr("Barre d’icônes")
+
+        SettingsRow {
+            rowId: "dockLayout"
+            below: true
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.small
+
+                Repeater {
+                    model: page.layoutRows
+
+                    RowLayout {
+                        id: layoutRow
+
+                        required property string modelData
+                        readonly property bool launcher: DockItems.isLauncher(modelData)
+                        readonly property string where: DockItems.placement(page.layout.bar, page.layout.drawer, modelData)
+
+                        Layout.fillWidth: true
+                        spacing: Appearance.spacing.normal
+
+                        MaterialIcon {
+                            text: DockItems.icon(layoutRow.modelData)
+                            font.pointSize: Appearance.font.size.large
+                            color: layoutRow.where === "hidden" ? Colours.palette.m3outline : Colours.palette.m3onSurface
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            text: qsTr(DockItems.label(layoutRow.modelData))
+                        }
+
+                        SettingsChips {
+                            namePrefix: "dockPlace-" + layoutRow.modelData + "-"
+                            model: layoutRow.launcher ? [page.chipBar, page.chipHidden] : layoutRow.modelData === "settings" ? [page.chipBar, page.chipDrawer] : [page.chipBar, page.chipDrawer, page.chipHidden]
+                            current: layoutRow.where
+                            onChosen: value => page.apply(DockItems.setPlacement(page.layout.bar, page.layout.drawer, layoutRow.modelData, value))
+                        }
+
+                        IconButton {
+                            objectName: "dockUp-" + layoutRow.modelData
+                            icon: "arrow_upward"
+                            type: IconButton.Text
+                            disabled: !DockItems.canMove(page.layout.bar, page.layout.drawer, layoutRow.modelData, -1)
+                            opacity: disabled ? 0.38 : 1
+                            Accessible.name: qsTr("Monter")
+                            onClicked: page.apply(DockItems.move(page.layout.bar, page.layout.drawer, layoutRow.modelData, -1))
+                        }
+
+                        IconButton {
+                            objectName: "dockDown-" + layoutRow.modelData
+                            icon: "arrow_downward"
+                            type: IconButton.Text
+                            disabled: !DockItems.canMove(page.layout.bar, page.layout.drawer, layoutRow.modelData, 1)
+                            opacity: disabled ? 0.38 : 1
+                            Accessible.name: qsTr("Descendre")
+                            onClicked: page.apply(DockItems.move(page.layout.bar, page.layout.drawer, layoutRow.modelData, 1))
+                        }
+                    }
+                }
+            }
+        }
+
+        SettingsRow {
+            rowId: "dockLayoutReset"
+
+            IconTextButton {
+                objectName: "dockLayoutResetButton"
+                text: qsTr("Réinitialiser")
+                icon: "restart_alt"
+                type: IconTextButton.Tonal
+                onClicked: page.apply(DockItems.defaults())
             }
         }
     }

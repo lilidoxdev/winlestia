@@ -46,6 +46,8 @@ public sealed class Preferences
     public bool QuietFullscreen { get; set; } = true;
     public bool DesktopIndicator { get; set; } = true;
     public bool DockDrawerOpen { get; set; } = false;
+    public List<string> DockBar { get; set; } = DockItems.DefaultBar.ToList();
+    public List<string> DockDrawer { get; set; } = DockItems.DefaultDrawer.ToList();
     public bool ActiveBorderOnly { get; set; } = false;
     public bool? ReducedEffects
     {
@@ -172,6 +174,7 @@ public sealed class Preferences
         Motion = Math.Clamp(Motion, 0, 1.5);
         RailWidth = Math.Clamp(RailWidth, 40, 90);
         RailHeight = Math.Clamp(RailHeight, .45, .94);
+        (DockBar, DockDrawer) = DockItems.Normalise(DockBar, DockDrawer);
         Controls ??= new();
         Controls.Normalize();
         Shortcut ??= new();

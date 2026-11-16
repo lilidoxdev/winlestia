@@ -177,6 +177,9 @@ class StateMixin:
             if event == 'files':
                 self.action('fileResults', {})
                 continue
+            if event == 'quick':
+                self.action('state', {})  # radios, micro, éveil : rafraîchit Bridge.quick sans attendre le prochain sondage
+                continue
             if event == 'lyrics':
                 self.lyrics_event()
                 continue

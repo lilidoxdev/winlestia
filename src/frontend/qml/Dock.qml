@@ -7,6 +7,7 @@ import qs.components
 import qs.components.controls
 import qs.config
 import qs.services
+import "DockItems.js" as DockItems
 
 Window {
     id: dock
@@ -22,6 +23,13 @@ Window {
     property int dropIndex: -1
     property real dragDelta: 0
     property int pinnedCount: dockItems.filter(a => a.pinned).length
+    // Listes barre/tiroir : la clé texte évite de reconstruire les Repeater quand Bridge.settings change sans toucher au dock.
+    readonly property string layoutKey: JSON.stringify(DockItems.normalize(Bridge.settings.dockBar, Bridge.settings.dockDrawer))
+    readonly property var layoutLists: JSON.parse(layoutKey)
+    readonly property var barTools: layoutLists.bar.filter(id => !DockItems.isLauncher(id))
+    function launcherShown(id) {
+        return layoutLists.bar.indexOf(id) >= 0;
+    }
     function visualIndex(i) {
         if (dragIndex < 0)
             return i;
@@ -181,6 +189,7 @@ Window {
                 spacing: Appearance.padding.small
                 Item {
                     objectName: "dockStart"
+                    visible: dock.launcherShown("start")
                     implicitWidth: 40
                     implicitHeight: 40
                     StateLayer {
@@ -211,12 +220,14 @@ Window {
                 }
                 IconButton {
                     objectName: "dockRecycle"
+                    visible: dock.launcherShown("recycle")
                     icon: "delete"
                     type: IconButton.Text
                     onClicked: Bridge.action("emptyRecycleBin", {})
                 }
                 IconButton {
                     objectName: "dockFiles"
+                    visible: dock.launcherShown("files")
                     icon: "folder"
                     type: IconButton.Text
                     Accessible.name: qsTr("Files")
@@ -224,11 +235,13 @@ Window {
                 }
                 IconButton {
                     objectName: "dockSearch"
+                    visible: dock.launcherShown("search")
                     icon: "search"
                     type: IconButton.Text
                     onClicked: Bridge.action("palette", {})
                 }
                 Rectangle {
+                    visible: dock.launcherShown("start") || dock.launcherShown("recycle") || dock.launcherShown("files") || dock.launcherShown("search")
                     implicitWidth: 1
                     implicitHeight: 23
                     color: Colours.palette.m3outlineVariant
@@ -431,43 +444,21 @@ Window {
                         visible: drawer.w > 0.5
                         enabled: drawer.open
                         opacity: drawer.full > 0 ? Math.min(1, drawer.w / drawer.full) : 0
-                        IconButton {
-                            id: tileButton
-                            objectName: "dockAutoTile"
-                            readonly property bool on: Bridge.settings.autoTile ?? false
-                            icon: "grid_view"
-                            type: IconButton.Text
-                            checked: on
-                            color: on ? Colours.palette.m3secondaryContainer : "transparent"
-                            Accessible.name: qsTr("Organisation automatique")
-                            Accessible.checked: on
-                            onClicked: Bridge.action("preference", {
-                                key: "autoTile",
-                                enabled: !on
-                            })
-                            HoverHandler {
-                                id: tileHover
+                        Repeater {
+                            model: dock.layoutLists.drawer
+                            DockSlot {
+                                id: drawerSlot
+                                required property var modelData
+                                itemId: modelData
+                                onMenuRequested: name => dock.showMenu(name, {}, drawerSlot)
                             }
-                            ShellToolTip {
-                                visible: tileHover.hovered
-                                delay: 400
-                                text: (tileButton.on
-                                    ? qsTr("Organisation automatique : activée") + "\n" + qsTr("Ctrl+Alt+flèches : changer de fenêtre")
-                                    : qsTr("Organisation automatique : désactivée"))
-                            }
-                        }
-                        IconButton {
-                            id: runningButton
-                            objectName: "dockRunning"
-                            icon: "apps"
-                            type: IconButton.Text
-                            onClicked: dock.showMenu("running", {}, runningButton)
                         }
                     }
                 }
                 IconButton {
                     id: drawerToggle
                     objectName: "dockDrawer"
+                    visible: dock.layoutLists.drawer.length > 0
                     implicitWidth: 24
                     icon: drawer.open ? "chevron_right" : "chevron_left"
                     type: IconButton.Text
@@ -489,27 +480,14 @@ Window {
                         text: drawer.open ? qsTr("Ranger") : qsTr("Afficher plus")
                     }
                 }
-                IconButton {
-                    icon: "volume_up"
-                    type: IconButton.Text
-                    onClicked: Bridge.navigate("controls")
-                }
-                IconButton {
-                    objectName: "dockNetwork"
-                    icon: Bridge.networkKind === "ethernet" ? "lan" : Bridge.networkKind === "none" ? "wifi_off" : "wifi"
-                    type: IconButton.Text
-                    onClicked: Bridge.navigate("controls")
-                }
-                IconButton {
-                    icon: "settings"
-                    type: IconButton.Text
-                    onClicked: Bridge.action("settings", {})
-                }
-                IconButton {
-                    id: powerButton
-                    icon: "power_settings_new"
-                    type: IconButton.Text
-                    onClicked: dock.showMenu("power", {}, powerButton)
+                Repeater {
+                    model: dock.barTools
+                    DockSlot {
+                        id: barSlot
+                        required property var modelData
+                        itemId: modelData
+                        onMenuRequested: name => dock.showMenu(name, {}, barSlot)
+                    }
                 }
                 Column {
                     Layout.leftMargin: Appearance.padding.smaller

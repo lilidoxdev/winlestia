@@ -200,6 +200,22 @@ QtObject {
             kw: "dock barre taskbar applications epingle"
         },
         {
+            id: "dockLayout",
+            page: 2,
+            section: qsTr("Barre d’icônes"),
+            label: qsTr("Boutons du dock"),
+            desc: qsTr("Choisis les boutons de la barre, ceux du tiroir (la flèche de la barre l’ouvre) et leur ordre."),
+            kw: "dock barre tiroir icones boutons wifi bluetooth micro avion reveil ordre masquer drawer"
+        },
+        {
+            id: "dockLayoutReset",
+            page: 2,
+            section: qsTr("Barre d’icônes"),
+            label: qsTr("Rétablir les boutons par défaut"),
+            desc: "",
+            kw: "reinitialiser reset defaut dock tiroir barre"
+        },
+        {
             id: "bookmarksRail",
             page: 2,
             section: qsTr("Visibilité"),
@@ -270,7 +286,7 @@ QtObject {
             section: qsTr("Affichage à l’écran"),
             label: qsTr("Pilule"),
             desc: qsTr("Musique, volume et luminosité dans une capsule en haut de l’écran"),
-            kw: "pilule capsule musique volume luminosite ile dynamique pill"
+            kw: "pilule capsule musique volume luminosite ile dynamique pill bulle son popup notification desactiver"
         },
         {
             id: "lyrics",

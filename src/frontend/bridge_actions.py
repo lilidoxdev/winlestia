@@ -34,6 +34,12 @@ class ActionMixin:
                 else name
             )
             return
+        if name == 'dockLayout':
+            # Les listes sont affichées tout de suite ; le prochain état du backend les confirme.
+            self._state.setdefault('settings', {}).update(
+                dockBar=list(args.get('bar') or []), dockDrawer=list(args.get('drawer') or [])
+            )
+            self.changed.emit()
         if name == 'customTheme':
             self._state.setdefault('settings', {}).update(
                 themeMode='custom',

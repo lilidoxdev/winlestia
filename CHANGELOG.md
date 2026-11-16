@@ -6,6 +6,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 
 ### Ajouts
 
+- Dock configurable : disposition barre / tiroir (`dockLayout`) et bascules rapides Wi-Fi, Bluetooth, mode avion, micro et maintien éveillé (`quickToggle`) côté Winlestia.
 - Paroles synchronisées du morceau en cours, cherchées sur lrclib.net (le titre et l'artiste y sont envoyés), avec cache local ; réglage « Paroles » (activé par défaut).
 - Surfaces média redessinées : la pilule et la page Média du tableau de bord partagent la même présentation de la lecture en cours.
 - Pilule : capsule en haut de l'écran qui n'apparaît que lorsqu'il se passe quelque chose (musique avec égaliseur en direct, changement de piste, volume, luminosité, micro) et change de forme en douceur ; réglage « Pilule » (activé par défaut), qui remplace l'indicateur du bord droit.
