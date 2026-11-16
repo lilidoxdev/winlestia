@@ -8,6 +8,7 @@ LockMessage LockMessage.qml
 LockCard LockCard.qml
 LockWeather LockWeather.qml
 LockFetch LockFetch.qml
+LockMark LockMark.qml
 LockMedia LockMedia.qml
 LockGauge LockGauge.qml
 LockResources LockResources.qml

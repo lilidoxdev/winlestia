@@ -306,6 +306,7 @@ class WinjetsBridge(QObject):
         self._pcwidgets = PcWidgetsOriginal(self)
         self._pcwidgets.active_changed.connect(self._originals_changed)
         self._pcwidgets.remove_requested.connect(self.remove)
+        self._pcwidgets.edit_requested.connect(self._edit_original)
         self._winjets = {}
         self._screens = []
         self._ids = []
@@ -516,6 +517,10 @@ class WinjetsBridge(QObject):
     def _originals_changed(self, instance_ids):
         for instance_id in instance_ids:
             self.instanceChanged.emit(instance_id)
+
+    def _edit_original(self, instance_id):
+        if not self._edit and instance_id in self._ids:
+            self.setEditMode(True)
 
     @staticmethod
     def _differs(a, b):

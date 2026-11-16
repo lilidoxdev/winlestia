@@ -7,9 +7,40 @@ import sys
 from pathlib import Path
 from threading import Thread
 
+from PySide6.QtCore import QEvent, QObject, Qt
+
 
 def send(message):
     print(json.dumps(message, ensure_ascii=True), flush=True)
+
+
+class EditOnDoubleClick(QObject):
+    def __init__(self, card, kind, request):
+        super().__init__(card)
+        self.kind = kind
+        self.request = request
+
+    def eventFilter(self, card, event):
+        if event.type() != QEvent.MouseButtonDblClick or event.button() != Qt.LeftButton:
+            return False
+        pos = event.position()
+        if not card.card_rect().contains(pos):
+            return False
+        if self.kind == "weather" and card.town_button_at(pos):
+            return False
+        if self.kind == "media" and card._hit(pos):
+            return False
+        if self.kind == "files" and (card._hit(pos)[1] or card._in_grip(pos)):
+            return False
+        self.request()
+        return True
+
+
+def resize_card(card, width, height):
+    rect = card.card_rect()
+    chrome_w = card.width() - round(rect.width())
+    chrome_h = card.height() - round(rect.height())
+    card.resize(width + chrome_w, height + chrome_h)
 
 
 def main(runtime):
@@ -18,7 +49,7 @@ def main(runtime):
     os.chdir(source)
     # The original entry point sets Qt's DPI policy before the application starts.
     import main as original_main  # noqa: F401
-    from PySide6.QtCore import QObject, QTimer, Signal
+    from PySide6.QtCore import QTimer, Signal
     from PySide6.QtWidgets import QApplication
     from widgets.core import palette, typography, winapi
     from widgets.core.board import REGISTRY, load_builtin_tiles
@@ -81,6 +112,8 @@ def main(runtime):
             card = cls(self.look, size, config)
             card.glass = self.glass
             card.locked = True
+            card._winlestia_edit_filter = EditOnDoubleClick(card, kind, lambda: send({"edit": instance}))
+            card.installEventFilter(card._winlestia_edit_filter)
             card.changed.connect(lambda: self.save(instance))
             card.removed.connect(lambda *_: send({"remove": instance}))
             self.cards[instance] = card
@@ -128,9 +161,13 @@ def main(runtime):
                 return False
             if is_new:
                 card = self.make(instance, kind, cls, size)
+            size_changed = card.size_class != size
             card.set_size_class(size)
-            geom = next((screen.availableGeometry() for screen in app.screens()
-                         if screen.name() == target["screen"]), app.primaryScreen().availableGeometry())
+            screen = next((item for item in app.screens() if item.name() == target["screen"]), app.primaryScreen())
+            if screen is None:
+                return False
+            geom = screen.availableGeometry()
+            resize_card(card, min(width, geom.width()), min(height, geom.height()))
             rect = card.card_rect()
             left = max(0, min(round(geom.width() * target["nx"]), geom.width() - round(rect.width())))
             top = max(0, min(round(geom.height() * target["ny"]), geom.height() - round(rect.height())))
@@ -141,6 +178,8 @@ def main(runtime):
                 card.start()
             else:
                 card.show()
+                if size_changed:
+                    card._tick()
             winapi.send_to_bottom(int(card.winId()))
             card.update()
             return card.isVisible()

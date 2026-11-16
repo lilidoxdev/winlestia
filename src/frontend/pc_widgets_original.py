@@ -30,6 +30,7 @@ def runtime_path():
 class PcWidgetsOriginal(QObject):
     active_changed = Signal(object)
     remove_requested = Signal(str)
+    edit_requested = Signal(str)
 
     def __init__(self, parent=None, *, root=None):
         super().__init__(parent)
@@ -92,6 +93,9 @@ class PcWidgetsOriginal(QObject):
             instance = message.get("remove")
             if isinstance(instance, str) and instance in self.desired:
                 self.remove_requested.emit(instance)
+            instance = message.get("edit")
+            if isinstance(instance, str) and instance in self.active and self.desired[instance]["visible"]:
+                self.edit_requested.emit(instance)
 
     def _set_active(self, value):
         changed = self.active ^ value
