@@ -10,7 +10,7 @@ StyledRect {
 
     implicitHeight: holder.childrenRect.height + inset * 2
     radius: Appearance.rounding.large
-    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+    color: Colours.layer(Colours.solid(Colours.palette.m3surfaceContainer), 2)
 
     Item {
         id: holder

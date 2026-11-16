@@ -19,7 +19,7 @@ Item {
     StyledClippingRect {
         anchors.fill: parent
         radius: root.side * root.shapeRadius
-        color: Colours.palette.m3primaryContainer
+        color: Colours.solid(Colours.palette.m3primaryContainer)
 
         MaterialIcon {
             anchors.centerIn: parent

@@ -29,7 +29,7 @@ StyledRect {
 
     implicitHeight: buttonSize + Appearance.padding.small * 2
     radius: Appearance.rounding.full
-    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+    color: Colours.layer(Colours.solid(Colours.palette.m3surfaceContainer), 2)
 
     TextInput {
         id: input
@@ -108,7 +108,7 @@ StyledRect {
         implicitWidth: root.buttonSize
         implicitHeight: root.buttonSize
         radius: Appearance.rounding.full
-        color: root.hasText ? Colours.palette.m3primary : Colours.palette.m3surfaceContainerHigh
+        color: root.hasText ? Colours.palette.m3primary : Colours.solid(Colours.palette.m3surfaceContainerHigh)
 
         StateLayer {
             color: root.hasText ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface

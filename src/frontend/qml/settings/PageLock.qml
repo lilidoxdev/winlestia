@@ -5,6 +5,7 @@ import qs.components.controls
 import qs.services
 import qs.config
 import "."
+import "IdleTime.js" as IdleTime
 
 // Écran de verrouillage du shell : mot de passe, activation, verrouillage automatique, raccourci.
 ColumnLayout {
@@ -16,17 +17,28 @@ ColumnLayout {
     readonly property bool hasPassword: cfg.hasPassword ?? false
     readonly property bool lockEnabled: cfg.enabled ?? false
     readonly property int idleSeconds: cfg.idleSeconds ?? 0
-    readonly property int minIdle: 30
     readonly property int minPasswordLength: 4
     readonly property var shortcut: (Bridge.settings.shortcuts ?? []).find(s => s.id === "lock")
-    // Entrée de l'utilisateur pas encore enregistrée (minutes/secondes), prioritaire sur la valeur du backend.
-    property bool idleDirty: false
-    property int minutesInput: Math.floor(idleSeconds / 60)
-    property int secondsInput: idleSeconds % 60
+    // Dernier délai connu : réaffiché quand on réactive l'option après l'avoir coupée.
+    property int lastIdle: IdleTime.DEFAULT_SECONDS
+    readonly property int shownIdle: idleSeconds > 0 ? idleSeconds : lastIdle
+    readonly property bool lockReady: hasPassword && lockEnabled
+    readonly property int maxMinutes: 1440
+    readonly property int maxSeconds: 59
+    property bool firstPasswordPending: false
     property string localError: ""
     property int shownSeq: -1
 
-    readonly property int totalIdle: minutesInput * 60 + secondsInput
+    readonly property string idleWords: {
+        const m = Math.floor(shownIdle / 60);
+        const sec = shownIdle % 60;
+        const parts = [];
+        if (m > 0)
+            parts.push(qsTr("%1 min").arg(m));
+        if (sec > 0 || m === 0)
+            parts.push(qsTr("%1 s").arg(sec));
+        return qsTr("Verrouillage après %1 d'inactivité").arg(parts.join(" "));
+    }
     readonly property string resultText: {
         const r = state.passwordResult ?? "";
         if (localError !== "")
@@ -51,6 +63,7 @@ ColumnLayout {
             localError = qsTr("4 caractères minimum");
             return;
         }
+        firstPasswordPending = !hasPassword;
         Bridge.action("lockSetPassword", {
             current: currentField.text,
             password: newField.text
@@ -60,16 +73,30 @@ ColumnLayout {
         confirmField.text = "";
     }
 
-    function applyIdle(): void {
-        idleDirty = false;
-        const total = totalIdle;
-        const clamped = total <= 0 ? minIdle : Math.max(minIdle, total);
-        minutesInput = Math.floor(clamped / 60);
-        secondsInput = clamped % 60;
+    // Validation d'un champ (Entrée, perte de focus, boutons) : on normalise puis on réaffiche la valeur bornée.
+    function commitIdle(): void {
+        const n = IdleTime.normalize(minutesSpin.value, secondsSpin.value);
+        lastIdle = n.total;
+        minutesSpin.show(n.minutes);
+        secondsSpin.show(n.seconds);
         Bridge.action("lockSettings", {
-            idleSeconds: clamped
+            idleSeconds: n.total
         });
     }
+
+    function focusPassword(): void {
+        newField.focusInput();
+        for (let p = newField; p; p = p.parent) {
+            if (p.contentY !== undefined && p.contentItem) {
+                const y = newField.mapToItem(p.contentItem, 0, 0).y;
+                p.contentY = Math.max(0, Math.min(y - Appearance.padding.large * 3, p.contentHeight - p.height));
+                break;
+            }
+        }
+    }
+
+    onIdleSecondsChanged: if (idleSeconds > 0)
+        lastIdle = idleSeconds
 
     spacing: Appearance.spacing.larger
 
@@ -82,6 +109,12 @@ ColumnLayout {
             if (seq !== page.shownSeq) {
                 page.shownSeq = seq;
                 page.localError = "";
+                // Premier mot de passe enregistré : on active le verrouillage pour ne pas laisser l'utilisateur dans le doute.
+                if (page.firstPasswordPending && (page.state.passwordResult ?? "") === "ok")
+                    Bridge.action("lockSettings", {
+                        enabled: true
+                    });
+                page.firstPasswordPending = false;
             }
         }
     }
@@ -101,6 +134,10 @@ ColumnLayout {
         property alias text: input.text
         property string placeholder
 
+        function focusInput(): void {
+            input.forceActiveFocus();
+        }
+
         Layout.preferredWidth: 220
         implicitHeight: input.implicitHeight + Appearance.padding.small * 2
         color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
@@ -116,6 +153,51 @@ ColumnLayout {
             echoMode: TextInput.Password
             placeholderText: box.placeholder
             onAccepted: page.submitPassword()
+        }
+    }
+
+    // Champ numérique avec boutons −/+ (CustomSpinBox) : la valeur affichée ne suit la source que hors édition.
+    component IdleSpin: CustomSpinBox {
+        id: spin
+
+        property int source
+
+        function show(v: int): void {
+            value = v;
+            displayText = String(v);
+        }
+
+        onSourceChanged: if (!isEditing)
+            show(source)
+        Component.onCompleted: show(source)
+    }
+
+    StyledRect {
+        Layout.fillWidth: true
+        visible: !page.hasPassword
+        implicitHeight: notice.implicitHeight + Appearance.padding.large * 2
+        radius: Appearance.rounding.normal
+        color: Colours.palette.m3secondaryContainer
+
+        RowLayout {
+            id: notice
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.margins: Appearance.padding.large
+            spacing: Appearance.spacing.normal
+
+            MaterialIcon {
+                text: "info"
+                color: Colours.palette.m3onSecondaryContainer
+            }
+            StyledText {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: qsTr("Définissez d'abord un mot de passe pour activer le verrouillage")
+                color: Colours.palette.m3onSecondaryContainer
+            }
         }
     }
 
@@ -176,7 +258,8 @@ ColumnLayout {
         SettingsRow {
             rowId: "lockEnabled"
             target: enabledSwitch
-            hint: page.hasPassword ? SettingsIndex.desc("lockEnabled") : qsTr("Définis d'abord un mot de passe.")
+            hint: page.hasPassword ? SettingsIndex.desc("lockEnabled") : qsTr("Mot de passe requis")
+            onBlockedTapped: page.focusPassword()
 
             SettingsSwitch {
                 id: enabledSwitch
@@ -193,64 +276,53 @@ ColumnLayout {
         SettingsRow {
             rowId: "lockIdle"
             target: idleSwitch
-            hint: page.idleSeconds > 0 || page.idleDirty ? qsTr("30 secondes minimum") : SettingsIndex.desc("lockIdle")
+            hint: page.lockReady ? SettingsIndex.desc("lockIdle") : page.hasPassword ? qsTr("Activez d'abord le verrouillage") : qsTr("Mot de passe requis")
+            onBlockedTapped: if (!page.hasPassword)
+                page.focusPassword()
 
             SettingsSwitch {
                 id: idleSwitch
 
                 objectName: "lockIdleToggle"
+                enabled: page.lockReady
                 value: page.idleSeconds > 0
-                onToggled: {
-                    if (checked) {
-                        page.applyIdle();
-                    } else {
-                        page.idleDirty = false;
-                        Bridge.action("lockSettings", {
-                            idleSeconds: 0
-                        });
-                    }
-                }
+                onToggled: Bridge.action("lockSettings", {
+                    idleSeconds: checked ? Math.max(IdleTime.MIN_SECONDS, page.lastIdle) : 0
+                })
             }
         }
 
         SettingsRow {
             rowId: "lockIdleTime"
             title: qsTr("Délai d'inactivité")
-            hint: ""
+            hint: page.idleWords
             sub: true
             shown: page.idleSeconds > 0
 
-            StyledInputField {
+            IdleSpin {
+                id: minutesSpin
+
                 objectName: "lockMinutes"
-                text: String(page.minutesInput)
-                validator: IntValidator {
-                    bottom: 0
-                    top: 1440
-                }
-                onTextEdited: t => {
-                    page.idleDirty = true;
-                    page.minutesInput = parseInt(t) || 0;
-                }
-                onEditingFinished: page.applyIdle()
+                min: 0
+                max: page.maxMinutes
+                source: Math.floor(page.shownIdle / 60)
+                onValueModified: page.commitIdle()
             }
 
             StyledText {
+                Layout.rightMargin: Appearance.spacing.large
                 text: qsTr("min")
                 color: Colours.palette.m3outline
             }
 
-            StyledInputField {
+            IdleSpin {
+                id: secondsSpin
+
                 objectName: "lockSeconds"
-                text: String(page.secondsInput)
-                validator: IntValidator {
-                    bottom: 0
-                    top: 59
-                }
-                onTextEdited: t => {
-                    page.idleDirty = true;
-                    page.secondsInput = parseInt(t) || 0;
-                }
-                onEditingFinished: page.applyIdle()
+                min: 0
+                max: page.maxSeconds
+                source: page.shownIdle % 60
+                onValueModified: page.commitIdle()
             }
 
             StyledText {
@@ -283,12 +355,12 @@ ColumnLayout {
         SettingsRow {
             rowId: "lockNow"
             title: qsTr("Verrouiller maintenant")
-            hint: ""
+            hint: page.lockReady ? "" : page.hasPassword ? qsTr("Activez d'abord le verrouillage") : qsTr("Mot de passe requis")
 
             TextButton {
                 objectName: "lockNowButton"
                 text: qsTr("Verrouiller maintenant")
-                enabled: page.lockEnabled && page.hasPassword
+                enabled: page.lockReady
                 onClicked: Bridge.action("lockNow", {})
             }
         }

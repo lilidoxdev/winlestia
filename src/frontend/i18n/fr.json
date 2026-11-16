@@ -1062,7 +1062,6 @@
  "Mot de passe actuel incorrect": "Mot de passe actuel incorrect",
  "4 caractères minimum": "4 caractères minimum",
  "Les deux mots de passe ne correspondent pas": "Les deux mots de passe ne correspondent pas",
- "Définis d'abord un mot de passe.": "Définis d'abord un mot de passe.",
  "30 secondes minimum": "30 secondes minimum",
  "Délai d'inactivité": "Délai d'inactivité",
  "min": "min",
@@ -1072,12 +1071,16 @@
  "Verrouille le shell Winlestia (écran, panneaux). Ne remplace pas le verrouillage de session Windows.": "Verrouille le shell Winlestia (écran, panneaux). Ne remplace pas le verrouillage de session Windows.",
  "Mot de passe incorrect": "Mot de passe incorrect",
  "Réessayez dans %1 s": "Réessayez dans %1 s",
- "Trop d'essais. Réessayez dans %1 s": "Trop d'essais. Réessayez dans %1 s",
- "Mot de passe incorrect (%1)": "Mot de passe incorrect (%1)",
  "Mot de passe invalide": "Mot de passe invalide",
  "Titre inconnu": "Titre inconnu",
  "Rien en lecture": "Rien en lecture",
  "Artiste inconnu": "Artiste inconnu",
  "Lancez un peu de musique !": "Lancez un peu de musique !",
- "Aucune notification": "Aucune notification"
+ "Aucune notification": "Aucune notification",
+ "Définissez d'abord un mot de passe pour activer le verrouillage": "Définissez d'abord un mot de passe pour activer le verrouillage",
+ "Mot de passe requis": "Mot de passe requis",
+ "Activez d'abord le verrouillage": "Activez d'abord le verrouillage",
+ "Verrouillage après %1 d'inactivité": "Verrouillage après %1 d'inactivité",
+ "%1 min": "%1 min",
+ "%1 s": "%1 s"
 }

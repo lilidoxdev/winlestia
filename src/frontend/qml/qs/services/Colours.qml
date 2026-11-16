@@ -89,6 +89,10 @@ QtObject {
     function glassLayer(color, strength) {
         return Bridge.glassEnabled ? Qt.alpha(color, Math.min(.06, Bridge.glassOpacity * .2 * strength)) : color;
     }
+    // Écran de verrouillage : la teinte verre ne fait varier que l’alpha, on retrouve la couleur pleine.
+    function solid(color) {
+        return Qt.alpha(color, 1);
+    }
     function layer(color, level) {
         return Qt.tint(color, Qt.alpha(palette.m3primary, Math.min(.18, level * .025)));
     }

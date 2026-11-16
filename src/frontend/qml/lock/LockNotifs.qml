@@ -35,7 +35,7 @@ LockCard {
             width: ListView.view.width
             implicitHeight: col.implicitHeight + Appearance.padding.normal * 2
             radius: Appearance.rounding.small
-            color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+            color: Colours.layer(Colours.solid(Colours.palette.m3surfaceContainerHigh), 2)
 
             Column {
                 id: col

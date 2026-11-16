@@ -1062,7 +1062,6 @@
  "Mot de passe actuel incorrect": "Current password is incorrect",
  "4 caractères minimum": "4 characters minimum",
  "Les deux mots de passe ne correspondent pas": "The two passwords do not match",
- "Définis d'abord un mot de passe.": "Set a password first.",
  "30 secondes minimum": "30 seconds minimum",
  "Délai d'inactivité": "Inactivity delay",
  "min": "min",
@@ -1072,12 +1071,16 @@
  "Verrouille le shell Winlestia (écran, panneaux). Ne remplace pas le verrouillage de session Windows.": "Locks the Winlestia shell (screen, panels). Does not replace the Windows session lock.",
  "Mot de passe incorrect": "Incorrect password",
  "Réessayez dans %1 s": "Try again in %1 s",
- "Trop d'essais. Réessayez dans %1 s": "Too many attempts. Try again in %1 s",
- "Mot de passe incorrect (%1)": "Wrong password (%1)",
  "Mot de passe invalide": "Invalid password",
  "Titre inconnu": "Unknown title",
  "Rien en lecture": "Nothing playing",
  "Artiste inconnu": "Unknown artist",
  "Lancez un peu de musique !": "Play some music!",
- "Aucune notification": "No notifications"
+ "Aucune notification": "No notifications",
+ "Définissez d'abord un mot de passe pour activer le verrouillage": "Set a password first to enable the lock",
+ "Mot de passe requis": "Password required",
+ "Activez d'abord le verrouillage": "Enable the lock first",
+ "Verrouillage après %1 d'inactivité": "Locks after %1 of inactivity",
+ "%1 min": "%1 min",
+ "%1 s": "%1 s"
 }

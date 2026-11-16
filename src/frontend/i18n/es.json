@@ -1062,7 +1062,6 @@
  "Mot de passe actuel incorrect": "La contraseña actual es incorrecta",
  "4 caractères minimum": "Mínimo 4 caracteres",
  "Les deux mots de passe ne correspondent pas": "Las dos contraseñas no coinciden",
- "Définis d'abord un mot de passe.": "Define primero una contraseña.",
  "30 secondes minimum": "30 segundos como mínimo",
  "Délai d'inactivité": "Tiempo de inactividad",
  "min": "min",
@@ -1072,12 +1071,16 @@
  "Verrouille le shell Winlestia (écran, panneaux). Ne remplace pas le verrouillage de session Windows.": "Bloquea el shell Winlestia (pantalla, paneles). No sustituye el bloqueo de sesión de Windows.",
  "Mot de passe incorrect": "Contraseña incorrecta",
  "Réessayez dans %1 s": "Vuelve a intentarlo en %1 s",
- "Trop d'essais. Réessayez dans %1 s": "Demasiados intentos. Reintenta en %1 s",
- "Mot de passe incorrect (%1)": "Contraseña incorrecta (%1)",
  "Mot de passe invalide": "Contraseña no válida",
  "Titre inconnu": "Título desconocido",
  "Rien en lecture": "Nada en reproducción",
  "Artiste inconnu": "Artista desconocido",
  "Lancez un peu de musique !": "¡Pon algo de música!",
- "Aucune notification": "Sin notificaciones"
+ "Aucune notification": "Sin notificaciones",
+ "Définissez d'abord un mot de passe pour activer le verrouillage": "Define primero una contraseña para activar el bloqueo",
+ "Mot de passe requis": "Contraseña obligatoria",
+ "Activez d'abord le verrouillage": "Activa primero el bloqueo",
+ "Verrouillage après %1 d'inactivité": "Bloqueo tras %1 de inactividad",
+ "%1 min": "%1 min",
+ "%1 s": "%1 s"
 }

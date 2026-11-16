@@ -32,7 +32,12 @@ FocusScope {
     property real shownAmount: shown ? 1 : 0
     readonly property real indent: sub ? Appearance.padding.large * 2 : 0
 
+    // Clic sur une ligne dont le contrôle est désactivé (ex. mot de passe manquant).
+    signal blockedTapped
+
     function activate(): void {
+        if (!dim && target && !target.enabled)
+            blockedTapped();
         if (dim || !target || !target.enabled)
             return;
         target.forceActiveFocus();

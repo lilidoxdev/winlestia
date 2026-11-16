@@ -44,7 +44,7 @@ Item {
         visible: root.twelve
         anchors.left: minutes.left
         anchors.bottom: parent.bottom
-        color: Colours.palette.m3surfaceContainerHigh
+        color: Colours.solid(Colours.palette.m3surfaceContainerHigh)
         radius: Appearance.rounding.large
         implicitWidth: minutes.implicitWidth
         implicitHeight: amPm.implicitHeight + Appearance.padding.large * 2

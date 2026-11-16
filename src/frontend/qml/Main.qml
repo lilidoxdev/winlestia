@@ -554,6 +554,7 @@ Window {
             sourceComponent: LockScreen {
                 modelData: lockLoader.modelData
                 primary: lockLoader.index === 0
+                screenIndex: lockLoader.index
                 onClosed: lockLoader.lingering = false
             }
         }

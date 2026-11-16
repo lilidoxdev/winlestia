@@ -85,6 +85,7 @@ def main():
     bridge.engine = engine
     engine.addImportPath(str(ROOT / 'qml'))
     engine.addImageProvider('capture', bridge.capture.provider)
+    engine.addImageProvider('lockshot', bridge.lockshots)
     engine.rootContext().setContextProperty('Bridge', bridge)
     bridge.changed.connect(bridge.theme_inputs_changed)
     QTimer.singleShot(0, bridge.theme_inputs_changed)

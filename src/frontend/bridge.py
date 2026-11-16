@@ -26,6 +26,7 @@ from bridge_wallpaper import WallpaperMixin
 from bridge_weather import WeatherMixin
 from bridge_winjets import WinjetsBridge
 from capture_native import CaptureController
+from lock_shot import LockShotProvider
 from overview_native import OverviewController
 from custom_palette import make_palette
 from interaction import EdgePolicy
@@ -121,6 +122,7 @@ class Bridge(
         super().__init__()
         self.surface_scene = None
         self.lock_windows = []
+        self.lockshots = LockShotProvider()
         self.args = args
         self._window = None
         self._state = {}
@@ -305,6 +307,8 @@ class Bridge(
         ),
         notify=changed,
     )
+
+    lockShotSeq = Property(int, lambda s: s.lockshots.seq, notify=changed)
 
     surfaceRevision = Property(int, lambda s: s.surface_scene.revision if s.surface_scene else 0, notify=surfaceChanged)
 

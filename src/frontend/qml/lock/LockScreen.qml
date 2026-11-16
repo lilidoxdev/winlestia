@@ -14,12 +14,9 @@ Window {
     readonly property bool wantLocked: Bridge.lock.locked ?? false
     readonly property real heightMult: 0.7
     readonly property real ratio: 16 / 9
-    readonly property real dimAmount: 0.45
+    readonly property real dimAmount: 0.35
     readonly property int focusRetryMs: 700
-    readonly property string wallpaper: {
-        const src = Bridge.wallpaperInfo.source ?? "";
-        return /[\\/]/.test(src) ? Bridge.localUrl(src) : "";
-    }
+    property int screenIndex: 0
     readonly property real cardRadius: Appearance.rounding.large * 1.5
     readonly property int tileSize: lockIcon.implicitHeight + Appearance.padding.large * 4
 
@@ -32,7 +29,8 @@ Window {
     y: modelData?.y ?? 0
     width: modelData?.width ?? 1
     height: modelData?.height ?? 1
-    color: "transparent"
+    // Opaque tant que verrouillé : rien du bureau en direct ne doit transparaître.
+    color: wantLocked ? Colours.solid(Colours.palette.m3surface) : "transparent"
     visible: true
 
     property bool acknowledged: false
@@ -198,7 +196,8 @@ Window {
         }
     }
 
-    // Image fixe floutée : aucune capture en direct.
+    // Capture du bureau prise à l'engagement du verrou, floutée une fois (image fixe, aucun coût ensuite).
+    // Sans capture : fond plein opaque.
     Item {
         id: background
 
@@ -215,16 +214,15 @@ Window {
 
         Rectangle {
             anchors.fill: parent
-            color: Colours.palette.m3surfaceContainer
+            color: Colours.solid(Colours.palette.m3surface)
         }
         Image {
             anchors.fill: parent
-            source: root.wallpaper
+            source: "image://lockshot/" + root.screenIndex + "?" + Bridge.lockShotSeq
+            visible: status === Image.Ready
             fillMode: Image.PreserveAspectCrop
-            asynchronous: true
             cache: false
-            sourceSize.width: root.width
-            sourceSize.height: root.height
+            smooth: true
         }
         Rectangle {
             anchors.fill: parent
@@ -246,7 +244,7 @@ Window {
             id: lockBg
 
             anchors.fill: parent
-            color: Colours.palette.m3surface
+            color: Colours.solid(Colours.palette.m3surface)
             radius: root.tileSize / 4
         }
 

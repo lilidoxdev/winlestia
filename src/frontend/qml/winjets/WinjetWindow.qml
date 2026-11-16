@@ -23,7 +23,7 @@ Window {
 
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus | Qt.NoDropShadowWindowHint
     color: "transparent"
-    visible: !!inst && inst.valid === true && inst.hidden !== true
+    visible: !!inst && inst.valid === true && inst.hidden !== true && (inst.originalActive !== true || editing)
     transientParent: null
     title: inst && inst.packageName ? inst.packageName : "Winjet"
 

@@ -19,7 +19,7 @@ Item {
     StyledClippingRect {
         anchors.fill: parent
         radius: root.width * root.shapeRadius
-        color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+        color: Colours.layer(Colours.solid(Colours.palette.m3surfaceContainerHigh), 2)
 
         Rectangle {
             anchors.left: parent.left
@@ -61,7 +61,7 @@ Item {
         implicitWidth: badgeText.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: badgeText.implicitHeight + Appearance.padding.small
         radius: Appearance.rounding.full
-        color: Colours.palette.m3secondaryContainer
+        color: Colours.solid(Colours.palette.m3secondaryContainer)
 
         StyledText {
             id: badgeText
