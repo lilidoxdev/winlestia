@@ -100,6 +100,18 @@ def main():
     bridge.bookmarks_win = root.findChild(QObject, 'bookmarksRail')
     bridge.dictation_win = root.findChild(QObject, 'dictationOverlay')
     bridge.windowChanged.emit()
+    bridge.pill_win = None
+    pill_loader = root.findChild(QObject, 'livePillLoader')
+    if pill_loader:
+
+        def pill_changed():
+            bridge.pill_win = pill_loader.property('item')
+            scene = getattr(bridge, 'surface_scene', None)
+            if scene:
+                scene.request()
+
+        pill_loader.itemChanged.connect(pill_changed)
+        bridge.pill_win = pill_loader.property('item')
     bridge.surface_scene = SurfaceScene(bridge)
     bridge.changed.connect(bridge.apply_surface_visibility)
     bridge.apply_surface_visibility()

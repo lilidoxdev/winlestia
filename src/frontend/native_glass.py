@@ -137,11 +137,13 @@ class NativeGlass(QObject):
                     ]
                     if boxes:
                         scale = window.devicePixelRatio()
+                        # Les raccords concaves de la Pilule débordent de sa fenêtre (jusqu'à 26 px) : marge à leur mesure.
+                        margin = 28
                         dirty = (
-                            (min(b[0] for b in boxes) - 2) * scale,
-                            (min(b[1] for b in boxes) - 2) * scale,
-                            (max(b[0] + b[2] for b in boxes) + 2) * scale,
-                            (max(b[1] + b[3] for b in boxes) + 2) * scale,
+                            (min(b[0] for b in boxes) - margin) * scale,
+                            (min(b[1] for b in boxes) - margin) * scale,
+                            (max(b[0] + b[2] for b in boxes) + margin) * scale,
+                            (max(b[1] + b[3] for b in boxes) + margin) * scale,
                         )
                 if dirty and hasattr(self.dll, 'BackdropSurfaceDirty'):
                     status = self.dll.BackdropSurfaceDirty(handle, array, len(commands), *dirty)

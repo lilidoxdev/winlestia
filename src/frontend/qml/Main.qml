@@ -576,6 +576,7 @@ Window {
     }
     Loader {
         id: livePillLoader
+        objectName: "livePillLoader"
         active: window.pillShown
         sourceComponent: LivePill {}
     }

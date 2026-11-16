@@ -5,7 +5,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Effects
-import QtQuick.Shapes
 import QtQuick.Window
 import qs.components
 import qs.components.controls
@@ -29,14 +28,18 @@ Window {
     readonly property int spinPeriodMs: 9000
     readonly property int spinStopMs: 900
     readonly property real hoverScale: 1.06
-    readonly property int histBars: 6
-    readonly property int histGap: 3
-    readonly property int histHeight: 13
-    // Bandes lues par l'histogramme compact : le bas et le milieu du spectre (le haut est presque muet), avec un gain doux.
+    readonly property int histBars: 7
+    readonly property int histBarWidth: 3
+    readonly property int histGap: 2
+    readonly property int histHeight: 14
+    // Bandes lues par l'histogramme compact : le bas et le milieu du spectre (le haut est presque muet), réparties en gammes
+    // logarithmiques, avec un gain puis la courbe pow(v, histCurve) qui relève les niveaux faibles.
     readonly property int histSpan: 28
-    readonly property real histGain: 1.3
+    readonly property real histGain: 1.6
+    readonly property real histCurve: 0.6
     readonly property int closeSize: 28
-    // Rayon des coins bas de la languette et rayon des raccords concaves avec le cadre (même rayon que le cadre).
+    // Rayon du seul coin libre du bloc (bas gauche) ; les raccords concaves (Config.border.rounding) sont tracés par le cadre
+    // (surface_geometry.py, pill_path) : la fenêtre est exactement le bloc, sans fond propre.
     readonly property real bodyRadius: Appearance.rounding.large
     readonly property real fillet: Config.border.rounding
     readonly property real tabVisibleMin: 0.5
@@ -71,7 +74,7 @@ Window {
     readonly property int coverIconGrade: 200
     readonly property real coverIconScale: 0.4
     readonly property real controlIconNudge: 0.05
-    readonly property int pausedHoldMs: 5000
+    readonly property int pausedHoldMs: 4000
     readonly property int levelMs: 1500
 
     readonly property bool reduced: Appearance.reducedEffects
@@ -84,7 +87,8 @@ Window {
     // Bord droit réel du contenu du panneau (décalé vers la gauche par dashboardShift quand le rail est lié), comparé à la
     // position CIBLE de la pilule : le résultat ne bascule donc pas pendant l'animation de largeur.
     readonly property real panelRight: Bridge.screenX + Bridge.screenWidth / 2 + (panel?.panelWidth ?? 0) / 2 - (panel?.dashboardShift ?? 0)
-    readonly property real targetX: Bridge.screenX + Bridge.screenWidth - cornerInset - Math.round(targetWidth + 2 * fillet)
+    // Bord gauche cible du bloc, raccord concave compris.
+    readonly property real targetX: Bridge.screenX + Bridge.screenWidth - frameInset - Math.round(targetWidth) - fillet
     // Sur un écran étroit, la languette se rétracte tant que le panneau du haut (collé au même bord) la gênerait.
     readonly property bool panelOverlaps: (panel?.visible ?? false) && panelRight + Appearance.spacing.normal > targetX
     // La page Média du tableau de bord ouverte fait doublon avec la pilule : elle s'efface.
@@ -110,7 +114,7 @@ Window {
         || lyricsPhase === "instrumental"
     // Languette compacte : le disque, un espace, puis l'histogramme, dans la silhouette collée au cadre.
     readonly property real compactWidthWanted: discSize + Appearance.padding.normal * 2
-    readonly property real compactHeightWanted: Appearance.padding.small + discSize + Appearance.spacing.small + histHeight
+    readonly property real compactHeightWanted: Appearance.padding.normal + discSize + Appearance.spacing.small + histHeight
         + Appearance.padding.normal
     readonly property real expandedHeight: Appearance.padding.large + coverLarge + Appearance.spacing.small + seekHitHeight + timeMetrics.height
         + (lyricsShown ? Appearance.spacing.small + lyricsHeight : 0) + Appearance.padding.larger
@@ -133,14 +137,13 @@ Window {
     // Le spectre est aussi demandé tant que la page Média est ouverte : la couronne autour de sa pochette lit le même flux.
     readonly property bool wantsSpectrum: !suppressed && playing && (mediaPageShown || stateName === "compact" || stateName === "expanded")
 
-    // La fenêtre épouse la taille animée de la capsule : aucune zone morte autour, aucun clic avalé.
-    width: Math.max(1, Math.round(pill.width + 2 * fillet))
-    height: Math.max(1, pill.height)
-    // Languette collée au bord haut : à ras du bord intérieur du cadre (ou du bord de l'écran sans cadre), décalée du bord droit
-    // de quoi dégager le coin intérieur arrondi du cadre. Ancrée par son coin haut droit : elle s'étend vers la gauche et le bas.
+    // La fenêtre épouse la taille animée du bloc : aucune zone morte autour, aucun clic avalé.
+    width: Math.max(1, Math.round(pill.width))
+    height: Math.max(1, Math.round(pill.height))
+    // Bloc dans le coin haut droit : collé au bord intérieur haut ET au bord intérieur droit du cadre (ou de l'écran sans cadre),
+    // il couvre le coin intérieur arrondi du cadre. Ancré par son coin haut droit : il s'étend vers la gauche et le bas.
     readonly property real frameInset: (Bridge.settings.screenFrame ?? true) ? Math.max(0, Bridge.frameThickness) : 0
-    readonly property real cornerInset: frameInset + fillet + Appearance.spacing.normal
-    x: Math.round(Bridge.screenX + Bridge.screenWidth - cornerInset - width)
+    x: Math.round(Bridge.screenX + Bridge.screenWidth - frameInset - width)
     y: Math.round(Bridge.screenY + frameInset)
     visible: !suppressed && (tabWanted || pill.height > tabVisibleMin)
 
@@ -167,8 +170,20 @@ Window {
             resetHover();
     }
     onPlayerChanged: {
-        if (!(player?.available ?? false))
+        if (!(player?.available ?? false)) {
             resetHover();
+            lingering = false;
+            holdTimer.stop();
+        } else if (!playing && lingering) {
+            holdTimer.restart();
+        }
+    }
+    // Carte refermée sur une lecture en pause : la languette reste pausedHoldMs puis rentre dans le cadre.
+    onExpandedWantedChanged: {
+        if (!expandedWanted && !playing && (player?.available ?? false)) {
+            lingering = true;
+            holdTimer.restart();
+        }
     }
     // Molette sur la pilule : volume du lecteur, affiché par le même retour de niveau que les touches de volume.
     function nudgeVolume(notches) {
@@ -301,73 +316,12 @@ Window {
         }
     }
 
-    // Fond : même silhouette « tiroir » que le tableau de bord et le dock (DockBackground, retournée : base en haut, raccords
-    // concaves avec le cadre), même matière que le cadre (Colours.surfaceColor, donc la même transparence).
-    Shape {
-        anchors.top: parent.top
-        anchors.left: parent.left
-        width: root.width
-        height: pill.height
-        preferredRendererType: Shape.CurveRenderer
-        ShapePath {
-            id: tabPath
-            readonly property real f: root.fillet
-            readonly property real w: pill.width + 2 * f
-            readonly property real h: pill.height
-            readonly property real rf: Math.min(f, h / 2)
-            readonly property real rb: Math.min(root.bodyRadius, h / 2)
-            strokeWidth: -1
-            fillColor: Colours.surfaceColor
-            startX: 0
-            startY: 0
-            PathLine {
-                x: tabPath.w
-                y: 0
-            }
-            PathQuad {
-                x: tabPath.w - tabPath.f
-                y: tabPath.rf
-                controlX: tabPath.w - tabPath.f
-                controlY: 0
-            }
-            PathLine {
-                x: tabPath.w - tabPath.f
-                y: tabPath.h - tabPath.rb
-            }
-            PathQuad {
-                x: tabPath.w - tabPath.f - tabPath.rb
-                y: tabPath.h
-                controlX: tabPath.w - tabPath.f
-                controlY: tabPath.h
-            }
-            PathLine {
-                x: tabPath.f + tabPath.rb
-                y: tabPath.h
-            }
-            PathQuad {
-                x: tabPath.f
-                y: tabPath.h - tabPath.rb
-                controlX: tabPath.f
-                controlY: tabPath.h
-            }
-            PathLine {
-                x: tabPath.f
-                y: tabPath.rf
-            }
-            PathQuad {
-                x: 0
-                y: 0
-                controlX: tabPath.f
-                controlY: 0
-            }
-        }
-    }
-
+    // Pas de fond ici : ScreenFrame trace le bloc dans la même silhouette que le cadre (surface_geometry.py, pill_path),
+    // donc un seul remplissage et un seul contour, sans couture.
     Item {
         id: pill
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.rightMargin: root.fillet
         width: root.targetWidth
         height: root.targetHeight
 
@@ -411,16 +365,17 @@ Window {
             onClicked: root.expandedWanted = true
         }
 
-        // Contenu rogné par les coins bas arrondis de la languette (les coins hauts sont repoussés hors de la fenêtre).
+        // Contenu rogné par le seul coin libre du bloc, en bas à gauche (les autres coins sont repoussés hors de la fenêtre).
         StyledClippingRect {
+            x: 0
             y: -root.bodyRadius
-            width: pill.width
+            width: pill.width + root.bodyRadius
             height: pill.height + root.bodyRadius
             radius: root.bodyRadius
         Item {
             id: content
             y: root.bodyRadius
-            width: parent.width
+            width: pill.width
             height: pill.height
 
         // Média compact : un disque (pochette en rotation lente tant que la musique joue) et, dessous, un petit histogramme.
@@ -436,7 +391,7 @@ Window {
             Disc {
                 id: disc
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: Appearance.padding.small
+                y: Appearance.padding.normal
                 art: root.player?.trackArtUrl ?? ""
                 spinning: root.playing && root.shown === "compact" && root.visible && !root.reduced
                 scale: hover.hovered && !root.reduced ? root.hoverScale : 1
@@ -451,14 +406,16 @@ Window {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: disc.bottom
                 anchors.topMargin: Appearance.spacing.small
-                width: root.discSize
+                width: root.histBars * root.histBarWidth + (root.histBars - 1) * root.histGap
                 height: root.histHeight
                 count: root.histBars
                 barGap: root.histGap
                 barMin: root.eqBarMin
                 span: root.histSpan
                 gain: root.histGain
-                animated: root.playing && !root.reduced
+                curve: root.histCurve
+                spread: true
+                animated: !root.reduced
                 live: root.playing && root.shown === "compact" && root.visible
                 fill: true
                 bottomAligned: true
@@ -937,6 +894,9 @@ Window {
         // span : nombre de bandes lues depuis le bas du spectre ; gain : amplification douce du niveau.
         property int span: 48
         property real gain: 1
+        // spread : gammes logarithmiques, gain puis pow(v, curve) (PillMath.spread) au lieu de la moyenne simple.
+        property bool spread: false
+        property real curve: 0.5
         readonly property var values: live ? (Bridge.spectrum ?? []).slice(0, span) : []
         readonly property real cell: fill ? Math.max(1, (width - (count - 1) * barGap) / count) : barWidth
         readonly property real step: fill ? cell + barGap : barWidth * 2
@@ -947,7 +907,8 @@ Window {
                 required property int index
                 x: index * eq.step
                 width: eq.cell
-                height: Math.max(eq.barMin, Math.min(1, PillMath.level(eq.values, index, eq.count) * eq.gain) * eq.height)
+                height: Math.max(eq.barMin, eq.spread ? PillMath.spread(eq.values, index, eq.count, eq.span, eq.gain, eq.curve) * eq.height
+                    : Math.min(1, PillMath.level(eq.values, index, eq.count) * eq.gain) * eq.height)
                 anchors.verticalCenter: eq.bottomAligned ? undefined : eq.verticalCenter
                 anchors.bottom: eq.bottomAligned ? eq.bottom : undefined
                 radius: Appearance.rounding.full

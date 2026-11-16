@@ -13,6 +13,21 @@ function level(values, i, count) {
     return Math.min(1, Math.sqrt(Math.max(0, t / (b - a))));
 }
 
+// Niveau 0-1 de la barre i parmi count sur les `span` premières bandes, réparties en gammes (bornes logarithmiques : les
+// graves restent étroits, les médiums larges), gain puis courbe pow(v, curve) pour relever les niveaux faibles.
+function spread(values, i, count, span, gain, curve) {
+    if (!values || values.length === 0 || count <= 0 || span <= 0)
+        return 0;
+    var n = Math.min(span, values.length);
+    var a = i === 0 ? 0 : Math.round(Math.pow(n, i / count));
+    var b = Math.max(a + 1, Math.round(Math.pow(n, (i + 1) / count)));
+    var t = 0;
+    for (var k = a; k < b && k < n; k++)
+        t += Number(values[k]) || 0;
+    var v = Math.min(1, Math.max(0, t / (b - a)) * gain);
+    return Math.pow(v, curve);
+}
+
 // 83 -> "1:23", 3725 -> "1:02:05" ; durée inconnue ou négative -> "--:--".
 function clock(seconds) {
     var s = Number(seconds);

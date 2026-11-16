@@ -47,6 +47,38 @@ def dock_path(width, height, attached=True):
     return p
 
 
+PILL_FILLET = 26
+PILL_RADIUS = 24
+PILL_OVERLAP = 2
+
+
+def pill_path(width, height, attached=True):
+    # Bloc du coin haut droit (fenêtre de la Pilule = le bloc). Attaché : il déborde de 2 px dans les bandes haute et droite
+    # du cadre (aucune couture), raccord concave à gauche avec la bande haute et en dessous avec la bande droite ; seul son
+    # coin bas gauche est convexe. Les raccords sortent de la fenêtre : seul ce tracé les porte.
+    p = QPainterPath()
+    if width < 1 or height < 1:
+        return p
+    if not attached:
+        p.addRoundedRect(QRectF(0, 0, width, height), PILL_RADIUS, PILL_RADIUS)
+        return p
+    rf = min(PILL_FILLET, height / 2)
+    rb = min(PILL_RADIUS, height / 2, width / 2)
+    fb = min(PILL_FILLET, height)
+    o = PILL_OVERLAP
+    p.moveTo(-PILL_FILLET, -o)
+    p.lineTo(width + o, -o)
+    p.lineTo(width + o, height + fb)
+    p.lineTo(width, height + fb)
+    p.quadTo(width, height, width - fb, height)
+    p.lineTo(rb, height)
+    p.quadTo(0, height, 0, height - rb)
+    p.lineTo(0, rf)
+    p.quadTo(0, 0, -PILL_FILLET, 0)
+    p.closeSubpath()
+    return p
+
+
 def rail_path(width, height, attached=True, side='right'):
     # Panneau du bord droit : la silhouette du dock transposée ((X,Y)->(Y,X)) pour que sa base repose sur la bande de
     # cadre droite, coins convexes à gauche (largeur x hauteur = taille de la fenêtre).
@@ -70,7 +102,7 @@ def frame_path(width, height, thickness):
     return outer
 
 
-def shell_path(width, height, thickness, panel=None, dock=None, rail=None, left=None, dictation=None):
+def shell_path(width, height, thickness, panel=None, dock=None, rail=None, left=None, dictation=None, pill=None):
     path = QPainterPath(frame_path(width, height, thickness)) if thickness else QPainterPath()
     path.setFillRule(Qt.WindingFill)
     for spec, builder in (
@@ -79,6 +111,7 @@ def shell_path(width, height, thickness, panel=None, dock=None, rail=None, left=
         (rail, rail_path),
         (left, lambda w, h, a: rail_path(w, h, a, 'left')),
         (dictation, dock_path),
+        (pill, pill_path),
     ):
         if spec:
             x, y, w, h, attached = spec
@@ -125,6 +158,7 @@ class SurfaceScene(QObject):
         self.revision = 0
         self.stopped = False
         self.input_masks = {}
+        self.pill_watched = None
         bridge.changed.connect(self.request)
         bridge.geometryChanged.connect(self.request)
         bridge.screensChanged.connect(self.request)
@@ -157,11 +191,29 @@ class SurfaceScene(QObject):
             self.queued = True
             QTimer.singleShot(0, self.refresh)
 
+    def watch_pill(self):
+        # La Pilule vit dans un Loader : sa fenêtre apparaît et disparaît, on s'abonne à sa géométrie à chaque nouvelle instance.
+        window = getattr(self.bridge, 'pill_win', None)
+        if window is self.pill_watched:
+            return window
+        self.pill_watched = window
+        if window:
+            for signal in (
+                window.xChanged,
+                window.yChanged,
+                window.widthChanged,
+                window.heightChanged,
+                window.visibleChanged,
+            ):
+                signal.connect(self.request)
+        return window
+
     def refresh(self):
         self.queued = False
         if self.stopped:
             return
         bridge = self.bridge
+        pill_window = self.watch_pill()
 
         def view(window, dock=False):
             if not window or not window.isVisible():
@@ -213,6 +265,19 @@ class SurfaceScene(QObject):
                 else None
             )
 
+        def pill_view(window):
+            # Pilule : sa fenêtre est exactement le bloc du coin haut droit (taille animée), le fond est tracé ici.
+            if not window or not window.isVisible() or window.width() < 1 or window.height() < 1:
+                return None
+            return (
+                window.x(),
+                window.y(),
+                window.width(),
+                window.height(),
+                bridge.frameEnabled and not bridge.screenFullscreen,
+            )
+
+        pill = pill_view(pill_window)
         top = view(bridge.top)
         dock = view(bridge.dock, True)
         rail = rail_view(getattr(bridge, 'social_win', None))
@@ -277,6 +342,7 @@ class SurfaceScene(QObject):
             rail,
             left,
             dictation,
+            pill,
             bridge.frameEnabled,
             bridge.frameThickness,
             bridge.capture.busy,
@@ -309,6 +375,7 @@ class SurfaceScene(QObject):
                     None if full else local(rail),
                     None if full else local(left),
                     local(dictation),
+                    local(pill),
                 )
             )
             # Le rendu de courbes de Qt exige une silhouette normalisée pour les contours qui se chevauchent.
@@ -319,7 +386,7 @@ class SurfaceScene(QObject):
                 'path': outline,
                 'outline': outline,
                 'visible': not path.isEmpty(),
-                'components': (thickness, local(top), local(dock), local(rail), local(left), local(dictation)),
+                'components': (thickness, local(top), local(dock), local(rail), local(left), local(dictation), local(pill)),
             }
         self.paths = paths
         self.data = data
