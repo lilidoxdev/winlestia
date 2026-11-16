@@ -78,6 +78,11 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 | `fileSearch` | gen:number, term:string | term |
 | `icon` | id:string | - |
 | `launch` | id:string | - |
+| `lockNow` | - | - |
+| `lockSetPassword` | current:string, password:string | - |
+| `lockSettings` | enabled:boolean, idleSeconds:number | - |
+| `lockShown` | - | - |
+| `lockUnlock` | password:string | - |
 | `lyrics` | album:string, artist:string, duration:number, key:string, title:string | title |
 | `masterMute` | muted:boolean | - |
 | `media` | action:string, value:number | - |
@@ -158,7 +163,7 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 
 `{"state", "events", "notice", "wallpaperCapture", "bookmarksItems", "windows", "fileResults", "lyrics", "wallpaperPicker"}` ; les clés `null` sont émises telles quelles.
 
-- `state` : objet instantané, clés de premier niveau : `systemRecent`, `wallpapers`, `wallpaperRevision`, `audioReadMs`, `audioMixer`, `quickTabs`, `social`, `bookmarks`, `settings`, `clipboard`, `diagnostics`, `dark`, `taskbarEnabled`, `networkKind`, `virtualDesktops`, `fullscreenMonitors`, `quiet`, `quietForced`, `performance`, `sysInfo`, `media`, `controls`, `quick`, `apps`, `favorites`, `recent`, `launchCounts`, `websites`, `profiles`, `taskbarApps`, `runningApps`, `icons`, `iconRevision`, `winjets`, `desktop`. `quick` : `{wifi, bluetooth, airplane, micMute, keepAwake}`, chacun `{available, on}` (cache alimenté par évènements, jamais d'appel système dans l'instantané) ; `settings.dockBar` et `settings.dockDrawer` : identifiants ordonnés des éléments du dock (barre / tiroir), écrits par `dockLayout`. Le contenu des sous-objets est libre (lu avec `.get` côté Python, donc tolérant aux champs manquants) et n'est pas figé par ce contrat.
+- `state` : objet instantané, clés de premier niveau : `systemRecent`, `wallpapers`, `wallpaperRevision`, `audioReadMs`, `audioMixer`, `quickTabs`, `social`, `bookmarks`, `settings`, `clipboard`, `diagnostics`, `dark`, `taskbarEnabled`, `networkKind`, `virtualDesktops`, `fullscreenMonitors`, `quiet`, `quietForced`, `performance`, `sysInfo`, `media`, `controls`, `quick`, `lock`, `apps`, `favorites`, `recent`, `launchCounts`, `websites`, `profiles`, `taskbarApps`, `runningApps`, `icons`, `iconRevision`, `winjets`, `desktop`. `lock` : `{locked, failures, retryAfter, passwordResult, passwordSeq}` (`passwordResult` : `""`, `"ok"`, `"wrong"`, `"invalid"` ; `settings.lock` : `{enabled, hasPassword, idleSeconds}` ; ni mot de passe ni empreinte ne sortent jamais ; `retryAfter` = secondes restantes ; le client envoie `lockShown` dès sa fenêtre visible, sinon le verrou est levé après 8 s ; le raccourci de secours lève le verrou, c'est un verrou de shell et non une frontière de sécurité). `quick` : `{wifi, bluetooth, airplane, micMute, keepAwake}`, chacun `{available, on}` (cache alimenté par évènements, jamais d'appel système dans l'instantané) ; `settings.dockBar` et `settings.dockDrawer` : identifiants ordonnés des éléments du dock (barre / tiroir), écrits par `dockLayout`. Le contenu des sous-objets est libre (lu avec `.get` côté Python, donc tolérant aux champs manquants) et n'est pas figé par ce contrat.
 - Éléments de `runningApps` : en plus de `id`, `name`, `path`, `hwnd`, `pinned`, `favorite`, `background`, `canStop`, `count`, `active` et `windows`, chaque élément porte `cpu` (nombre, un chiffre après la virgule, % de la machine entière), `mem` (entier, Mo de jeu de travail privé, comme la colonne « Mémoire » du Gestionnaire des tâches ; repli sur la mémoire privée validée si la lecture globale est indisponible) et `procs` (entier, nombre de processus regroupés sous ce chemin). Ces trois champs ne sont mesurés que sur l’action `runningRefresh` ; hors de la fenêtre « Applications », ils gardent leur dernière valeur. Un élément à pseudo-chemin (application empaquetée) a `0`, `0`, `0`.
 - `events` : tableau de chaînes, vidé à chaque réponse (32 maximum en file).
 - `notice` : texte à afficher une fois (erreur ou confirmation).
@@ -166,7 +171,7 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 
 ### Évènements (`events`)
 
-Exacts : `toggle`, `access`, `media`, `performance`, `controls`, `palette`, `settings`, `settings:social`, `settings:bookmarks`, `clipboard`, `audio`, `microphone`, `tools`, `capture`, `capture-ocr`, `capture-select`, `wallpaper-switcher`, `overview`, `close`, `bookmarks`, `social`, `files`, `lyrics`, `quick`, `dock`, `desktop.explorerRestarted`, `dictation:start`, `dictation:stop`, `dictation:keycancel`.
+Exacts : `toggle`, `access`, `media`, `performance`, `controls`, `palette`, `settings`, `settings:social`, `settings:bookmarks`, `clipboard`, `audio`, `microphone`, `tools`, `capture`, `capture-ocr`, `capture-select`, `wallpaper-switcher`, `overview`, `close`, `bookmarks`, `social`, `files`, `lyrics`, `quick`, `lock`, `dock`, `desktop.explorerRestarted`, `dictation:start`, `dictation:stop`, `dictation:keycancel`.
 Préfixes (suffixe variable) : `workspace:`, `osd:volume:`, `osd:brightness:`, `shortcut-key:`, `shortcut-saved:`, `osd:mic:`, `dictation:key:` — `workspace:<id>`, `osd:volume:<n>:<muet>`, `osd:brightness:<n>`, `osd:mic:<n>:<muet>`, `shortcut-key:<mods>:<vk>`, `shortcut-saved:<kind>`, `dictation:key:<vk>`.
 Évènements gérés côté client seulement (jamais émis par le serveur actuel) : `mixer`.
 

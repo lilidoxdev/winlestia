@@ -13,6 +13,34 @@ def default_library():
     return local if local.exists() or not built.exists() else built
 
 
+def focus_native_window(hwnd):
+    """Force le focus clavier sur une fenêtre (AttachThreadInput contourne le refus de SetForegroundWindow). Ne lève jamais."""
+    try:
+        hwnd = ctypes.c_void_p(int(hwnd))
+        if not hwnd.value:
+            return False
+        user = ctypes.WinDLL('user32')  # instance privée : ne touche pas aux prototypes partagés
+        user.GetForegroundWindow.restype = ctypes.c_void_p
+        user.GetWindowThreadProcessId.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+        user.AttachThreadInput.argtypes = [ctypes.c_uint32, ctypes.c_uint32, ctypes.c_int]
+        for name in ('BringWindowToTop', 'SetForegroundWindow', 'SetFocus'):
+            getattr(user, name).argtypes = [ctypes.c_void_p]
+        ours = ctypes.windll.kernel32.GetCurrentThreadId()
+        foreground = user.GetForegroundWindow()
+        theirs = user.GetWindowThreadProcessId(foreground, None) if foreground else 0
+        attached = bool(theirs) and theirs != ours and bool(user.AttachThreadInput(ours, theirs, True))
+        try:
+            user.BringWindowToTop(hwnd)
+            user.SetForegroundWindow(hwnd)
+            user.SetFocus(hwnd)
+        finally:
+            if attached:
+                user.AttachThreadInput(ours, theirs, False)
+        return True
+    except Exception:
+        return False
+
+
 class SurfaceCommand(ctypes.Structure):
     _fields_ = [('kind', ctypes.c_uint32), ('points', ctypes.c_float * 6)]
 
@@ -172,7 +200,9 @@ class NativeGlass(QObject):
             self.dll.BackdropDetach(handle)
             self.windows.pop(handle, None)
         # Les fenêtres de contenu seules restent au-dessus du fond partagé et ne teintent jamais leur texte deux fois.
-        for window in (
+        # Verrouillé : elles ne se ré-affirment plus, ce sont les fenêtres de verrouillage qui passent en dernier.
+        locking = self.bridge.live_lock_windows()
+        for window in () if locking else (
             self.bridge.top,
             self.bridge.dock,
             getattr(self.bridge, 'social_win', None),
@@ -183,6 +213,9 @@ class NativeGlass(QObject):
             if window and window.isVisible():
                 self.user.SetWindowPos(int(window.winId()), ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
                 busy = True
+        for window in locking:
+            self.user.SetWindowPos(int(window.winId()), ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
+            busy = True
         # Repli : rien de natif à garder au premier plan ou à jour -> tick de sécurité à 500 ms
         # (changed/surfaceChanged synchronisent toujours aussitôt) ; 250 ms sinon.
         interval = 250 if busy or any(r.get('key') for r in self.windows.values()) else 500

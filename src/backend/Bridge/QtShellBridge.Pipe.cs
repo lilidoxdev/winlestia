@@ -25,7 +25,7 @@ internal sealed partial class QtShellBridge
         if (frontendWindowPid > 0
             && (value is "toggle" or "access" or "media" or "performance" or "controls" or "palette" or "settings"
                     or "settings:social" or "settings:bookmarks" or "clipboard" or "audio" or "microphone" or "tools"
-                    or "capture" or "wallpaper-switcher" or "overview"
+                    or "capture" or "wallpaper-switcher" or "overview" or "lock"
                 || value.StartsWith("workspace:")))
             AllowSetForegroundWindow(frontendWindowPid);
         if (events.Count < 32)
@@ -85,6 +85,7 @@ internal sealed partial class QtShellBridge
                 if (!disposed)
                     _ = dispatcher.BeginInvoke((Action)(() =>
                     {
+                        lockService?.Release(true);
                         dockPreview.Close();
                         active = false;
                         CapturingShortcut = false;

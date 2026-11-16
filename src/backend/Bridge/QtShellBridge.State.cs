@@ -46,8 +46,10 @@ internal sealed partial class QtShellBridge
             social = social.Snapshot(),
             bookmarks = bookmarks.Snapshot(),
             quick = QuickSnapshot(),
+            @lock = Lock.Snapshot(),
             settings = new
             {
+                @lock = Lock.SettingsSnapshot(),
                 dockBar = Store.State.DockBar.ToArray(),
                 dockDrawer = Store.State.DockDrawer.ToArray(),
                 dataFolder = Store.DataDir,

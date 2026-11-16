@@ -71,7 +71,7 @@ internal sealed class GlobalShortcut : IDisposable
     }
     internal GlobalShortcut(IntPtr hwnd, ShortcutPreferences preferences, ShortcutPreferences? palette = null,
         ShortcutPreferences? pin = null, ShortcutPreferences? capture = null, ShortcutPreferences? wallpaper = null,
-        ShortcutPreferences? settings = null)
+        ShortcutPreferences? settings = null, ShortcutPreferences? lockKeys = null)
     {
         window = hwnd;
         legacy = Reg(window, 1, 0x4003, 0x20);
@@ -85,6 +85,8 @@ internal sealed class GlobalShortcut : IDisposable
             TrySetCapture(capture.Modifiers, capture.Key, out _);
         if (settings != null && !TrySetSettings(settings.Modifiers, settings.Key, out var settingsFailure))
             Store.Log("Raccourci des paramètres · " + Label(settings.Modifiers, settings.Key) + " refusé : " + settingsFailure);
+        if (lockKeys != null && !TrySetLock(lockKeys.Modifiers, lockKeys.Key, out var lockFailure))
+            Store.Log("Raccourci de verrouillage · " + Label(lockKeys.Modifiers, lockKeys.Key) + " refusé : " + lockFailure);
         if (wallpaper != null && !TrySetWallpaper(wallpaper.Modifiers, wallpaper.Key, out var failure))
         {
             Store.Log("Sélecteur de fonds d’écran · " + Label(wallpaper.Modifiers, wallpaper.Key) + " refusé : " + failure
@@ -129,6 +131,7 @@ internal sealed class GlobalShortcut : IDisposable
         "settings"
         => settingsId != 0,
         "overview" => overviewId != 0,
+        "lock" => lockId != 0,
         _ => true
     }; internal bool WallpaperRegistered => wallpaperId != 0;
     internal uint WallpaperModifiers => wallpaperModifiers; internal uint WallpaperKey => wallpaperKey; internal bool WallpaperActive
@@ -169,6 +172,34 @@ internal sealed class GlobalShortcut : IDisposable
         wallpaperModifiers = nextModifiers;
         wallpaperKey = nextKey;
         WallpaperError = "";
+        return true;
+    }
+    // Verrouillage de l'écran : liaisons 16/17, même mécanique que les réglages.
+    int lockId; uint lockModifiers, lockKey;
+    internal bool MatchesLock(int id) => id == lockId && lockId != 0;
+    internal bool TrySetLock(uint nextModifiers, uint nextKey, out string error)
+    {
+        error = "";
+        if (!ValidWallpaper(nextModifiers, nextKey))
+        {
+            error = "Choisis Ctrl, Alt ou Windows et une touche.";
+            return false;
+        }
+        if (lockId != 0 && nextModifiers == lockModifiers && nextKey == lockKey)
+            return true;
+        int candidate = lockId == 16 ? 17 : 16;
+        if (!Reg(window, candidate, nextModifiers | 0x4000, nextKey))
+        {
+            int code = LastCode;
+            error = code == 1409 ? "Cette combinaison est déjà utilisée par une autre application."
+                : "Windows refuse cette combinaison (" + code + ").";
+            return false;
+        }
+        if (lockId != 0)
+            Unreg(window, lockId);
+        lockId = candidate;
+        lockModifiers = nextModifiers;
+        lockKey = nextKey;
         return true;
     }
     internal bool TrySetSettings(uint nextModifiers, uint nextKey, out string error)
@@ -222,6 +253,8 @@ internal sealed class GlobalShortcut : IDisposable
                 return TrySetPin(nextModifiers, nextKey, out error);
             case "settings":
                 return TrySetSettings(nextModifiers, nextKey, out error);
+            case "lock":
+                return TrySetLock(nextModifiers, nextKey, out error);
             default:
                 error = "Ce raccourci n’est pas modifiable.";
                 return false;
@@ -413,6 +446,8 @@ internal sealed class GlobalShortcut : IDisposable
             Unreg(window, settingsId);
         if (overviewId != 0)
             Unreg(window, overviewId);
+        if (lockId != 0)
+            Unreg(window, lockId);
         if (legacy)
             Unreg(window, 1);
         if (rescue)

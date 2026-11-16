@@ -5,6 +5,7 @@ PageDocks PageDocks.qml
 PageFiles PageFiles.qml
 PageGeneral PageGeneral.qml
 PageInterface PageInterface.qml
+PageLock PageLock.qml
 PageMedia PageMedia.qml
 PageShortcuts PageShortcuts.qml
 PageWinjets PageWinjets.qml

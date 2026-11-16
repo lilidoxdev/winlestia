@@ -9,6 +9,7 @@ import qs.services
 import qs.components
 import qs.modules.dashboard as Dashboard
 import "winjets"
+import "lock"
 
 Window {
     id: window
@@ -537,6 +538,23 @@ Window {
                 delegate: DesktopLogo {
                     modelData: frameHolder.modelData
                 }
+            }
+        }
+    }
+    // Écran de verrouillage : n'existe que verrouillé (et le temps de l'animation de sortie).
+    Repeater {
+        model: Bridge.frameScreens
+        delegate: Loader {
+            id: lockLoader
+            required property var modelData
+            required property int index
+            property bool lingering: false
+            active: (Bridge.lock.locked ?? false) || lingering
+            onLoaded: lingering = true
+            sourceComponent: LockScreen {
+                modelData: lockLoader.modelData
+                primary: lockLoader.index === 0
+                onClosed: lockLoader.lingering = false
             }
         }
     }

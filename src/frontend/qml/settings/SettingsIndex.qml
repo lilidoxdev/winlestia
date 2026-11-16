@@ -70,6 +70,13 @@ QtObject {
             group: 3,
             title: qsTr("Winjets"),
             subtitle: qsTr("Cartes sur le bureau, galerie, import")
+        },
+        {
+            id: "lock",
+            icon: "lock",
+            group: 3,
+            title: qsTr("Verrouillage"),
+            subtitle: qsTr("Mot de passe, verrouillage automatique, raccourci")
         }
     ]
 
@@ -499,6 +506,38 @@ QtObject {
             label: qsTr("Galerie de Winjets"),
             desc: qsTr("Ajouter une carte au bureau"),
             kw: "widgets ajouter importer zip galerie"
+        },
+        {
+            id: "lockPassword",
+            page: 9,
+            section: qsTr("Mot de passe"),
+            label: qsTr("Mot de passe de verrouillage"),
+            desc: qsTr("Le mot de passe demandé pour déverrouiller le shell"),
+            kw: "verrouillage ecran lock password securite"
+        },
+        {
+            id: "lockEnabled",
+            page: 9,
+            section: qsTr("Verrouillage"),
+            label: qsTr("Activer l'écran de verrouillage"),
+            desc: qsTr("Autorise le raccourci et le verrouillage automatique"),
+            kw: "verrouiller ecran lock enable"
+        },
+        {
+            id: "lockIdle",
+            page: 9,
+            section: qsTr("Verrouillage"),
+            label: qsTr("Verrouiller après inactivité"),
+            desc: qsTr("Verrouille le shell après un temps sans activité"),
+            kw: "inactivite minuterie auto idle timeout"
+        },
+        {
+            id: "lockShortcut",
+            page: 9,
+            section: qsTr("Verrouillage"),
+            label: qsTr("Raccourci de verrouillage"),
+            desc: qsTr("Combinaison qui verrouille le shell"),
+            kw: "raccourci clavier lock shortcut"
         }
     ]
 

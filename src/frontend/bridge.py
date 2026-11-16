@@ -120,6 +120,7 @@ class Bridge(
     def __init__(self, args):
         super().__init__()
         self.surface_scene = None
+        self.lock_windows = []
         self.args = args
         self._window = None
         self._state = {}
@@ -196,6 +197,36 @@ class Bridge(
     languageMode = Property(str, lambda s: app_state.TRANSLATOR.mode, notify=changed)
 
     language = Property(str, lambda s: app_state.TRANSLATOR.language, notify=changed)
+
+    @Slot(QObject)
+    def registerLockWindow(self, window):
+        if window is not None and window not in self.lock_windows:
+            self.lock_windows.append(window)
+
+    @Slot(QObject)
+    def unregisterLockWindow(self, window):
+        if window in self.lock_windows:
+            self.lock_windows.remove(window)
+
+    def live_lock_windows(self):
+        """Fenêtres de verrouillage encore visibles (le verrou est engagé tant qu'il en existe)."""
+        live = []
+        for window in self.lock_windows:
+            try:
+                if window.isVisible():
+                    live.append(window)
+            except RuntimeError:
+                pass
+        return live
+
+    @Slot(QObject)
+    def focusLockWindow(self, window):
+        try:
+            from native_glass import focus_native_window
+
+            focus_native_window(int(window.winId()))
+        except Exception:
+            pass
 
     @Slot(str)
     def setLanguage(self, mode):
@@ -342,6 +373,7 @@ class Bridge(
     controls = Property('QVariantMap', lambda s: s._state.get('controls', {}), notify=changed)
 
     quick = Property('QVariantMap', lambda s: s._state.get('quick') or {}, notify=changed)
+    lock = Property('QVariantMap', lambda s: s._state.get('lock') or {}, notify=changed)
 
     apps = Property('QVariantList', lambda s: s._state.get('apps', []), notify=catalogChanged)
 

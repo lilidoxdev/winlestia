@@ -70,6 +70,13 @@ public sealed class Preferences
     public bool SocialRailVisible { get; set; } = true;
     // Win+Alt+S : ouvre la page de réglages
     public ShortcutPreferences SettingsShortcut { get; set; } = new() { Modifiers = 9, Key = 0x53 };
+    // Écran de verrouillage : jamais de mot de passe en clair, seulement sel + empreinte PBKDF2 (voir LockSecret).
+    public bool LockEnabled { get; set; } = false;
+    public int LockIdleSeconds { get; set; } = 0;
+    public string LockHash { get; set; } = "";
+    public string LockSalt { get; set; } = "";
+    public int LockIterations { get; set; } = 0;
+    public ShortcutPreferences LockShortcut { get; set; } = new() { Modifiers = 3, Key = 0x4C };
     public string RailSide { get; set; } = "left";
     public string PreviousTheme { get; set; } = "";
     public int FrameThickness { get; set; } = 16;
@@ -267,6 +274,19 @@ public sealed class Preferences
                     break;
                 }
             }
+        }
+        LockIdleSeconds = LockRules.ClampIdle(LockIdleSeconds);
+        LockHash ??= "";
+        LockSalt ??= "";
+        LockShortcut ??= new()
+        {
+            Modifiers = 3,
+            Key = 0x4C
+        };
+        if (!GlobalShortcut.ValidWallpaper(LockShortcut.Modifiers, LockShortcut.Key))
+        {
+            LockShortcut.Modifiers = 3;
+            LockShortcut.Key = 0x4C;
         }
         WallpaperShortcut ??= new()
         {

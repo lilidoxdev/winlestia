@@ -5,7 +5,7 @@ namespace PanneauxGlass;
 
 internal enum HotkeyAction
 {
-    None, Rescue, Palette, Settings, Wallpaper, Pin, Capture, Toggle, Overview
+    None, Rescue, Palette, Settings, Wallpaper, Pin, Capture, Toggle, Overview, Lock
 }
 
 // Règle pure : quand les réglages sont ouverts, Palette, Capture et Toggle sont ignorés ; les autres actions passent toujours.
@@ -162,6 +162,7 @@ internal sealed class ShortcutBindings : IShortcutBindings
     public HotkeyAction Resolve(int id)
         => id == RescueId ? HotkeyAction.Rescue
             : Global.MatchesPalette(id) ? HotkeyAction.Palette
+            : Global.MatchesLock(id) ? HotkeyAction.Lock
             : Global.MatchesSettings(id) ? HotkeyAction.Settings
             : Global.MatchesWallpaper(id) ? HotkeyAction.Wallpaper
             : Global.MatchesOverview(id) ? HotkeyAction.Overview

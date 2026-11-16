@@ -6,6 +6,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 
 ### Ajouts
 
+- Écran de verrouillage de Winlestia (côté serveur) : mot de passe PBKDF2, raccourci Ctrl+Alt+L, verrouillage après inactivité, touches système bloquées pendant le verrouillage, levée automatique si l'interface disparaît.
 - Dock configurable : disposition barre / tiroir (`dockLayout`) et bascules rapides Wi-Fi, Bluetooth, mode avion, micro et maintien éveillé (`quickToggle`) côté Winlestia.
 - Paroles synchronisées du morceau en cours, cherchées sur lrclib.net (le titre et l'artiste y sont envoyés), avec cache local ; réglage « Paroles » (activé par défaut).
 - Surfaces média redessinées : la pilule et la page Média du tableau de bord partagent la même présentation de la lecture en cours.

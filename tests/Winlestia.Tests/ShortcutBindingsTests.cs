@@ -32,7 +32,7 @@ public class ShortcutBindingsTests
             GlobalShortcut.TestUnregister = (w, id) => Registered.Remove(id);
             var p = Store.State;
             var global = new GlobalShortcut(IntPtr.Zero, p.Shortcut, p.PaletteShortcut, p.PinShortcut, p.CaptureShortcut,
-                p.WallpaperShortcut, p.SettingsShortcut);
+                p.WallpaperShortcut, p.SettingsShortcut, p.LockShortcut);
             Bindings = new ShortcutBindings(global, () => RailRebuilds++, () => LabelRefreshes++);
         }
 
@@ -118,7 +118,7 @@ public class ShortcutBindingsTests
     public void CaptureAndHomeShortcutsRefreshTheRightUi()
     {
         using var rig = new Rig();
-        Assert.True(rig.Bindings.SetCaptureShortcut(3, 0x4C, out string error), error);
+        Assert.True(rig.Bindings.SetCaptureShortcut(3, 0x4E, out string error), error);
         Assert.Equal(1, rig.LabelRefreshes);
         Assert.Equal(0, rig.RailRebuilds);
         Assert.True(rig.Bindings.SetShortcut(3, 0x4D, "home", out error), error);

@@ -332,6 +332,34 @@
       },
       "required": []
     },
+    "lockNow": {
+      "args": {},
+      "required": []
+    },
+    "lockSetPassword": {
+      "args": {
+        "current": "string",
+        "password": "string"
+      },
+      "required": []
+    },
+    "lockSettings": {
+      "args": {
+        "enabled": "boolean",
+        "idleSeconds": "number"
+      },
+      "required": []
+    },
+    "lockShown": {
+      "args": {},
+      "required": []
+    },
+    "lockUnlock": {
+      "args": {
+        "password": "string"
+      },
+      "required": []
+    },
     "masterMute": {
       "args": {
         "muted": "boolean"
@@ -940,6 +968,7 @@
     "media",
     "controls",
     "quick",
+    "lock",
     "apps",
     "favorites",
     "recent",
@@ -978,6 +1007,7 @@
     "files",
     "lyrics",
     "quick",
+    "lock",
     "dock",
     "dictation:start",
     "dictation:stop",

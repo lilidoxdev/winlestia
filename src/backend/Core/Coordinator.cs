@@ -103,8 +103,9 @@ internal sealed partial class Coordinator : IDisposable
         hwnd = new WindowInteropHelper(controller).EnsureHandle();
         source = HwndSource.FromHwnd(hwnd);
         var global = new GlobalShortcut(hwnd, Store.State.Shortcut, Store.State.PaletteShortcut, Store.State.PinShortcut,
-            Store.State.CaptureShortcut, Store.State.WallpaperShortcut, Store.State.SettingsShortcut);
-        Keys = new ShortcutBindings(global, BuildRail, RefreshPaletteLabels);
+            Store.State.CaptureShortcut, Store.State.WallpaperShortcut, Store.State.SettingsShortcut,
+            Store.State.LockShortcut);
+        Keys =new ShortcutBindings(global, BuildRail, RefreshPaletteLabels);
         foreach (var model in Store.State.Boards)
             Boards.Add(new BoardWindow(this, model));
         home = new HomeWindow(this);
@@ -152,6 +153,7 @@ internal sealed partial class Coordinator : IDisposable
                 catch (Exception ex) { Store.Log("Winjets indisponibles : " + ex.GetType().Name + ": " + ex.Message); }
             }
             QtShell = new QtShellBridge(this, options ?? RunOptions.Default);
+            QtShell.StartLock();
         }
         taskbar = new ShellTaskbar(this);
         StartTaskbar();
@@ -192,8 +194,18 @@ internal sealed partial class Coordinator : IDisposable
         }
         var action = Keys.Resolve(wp.ToInt32());
         handled = action != HotkeyAction.None;
+        // Écran verrouillé : seul le raccourci de secours agit (il lève le verrou), tout le reste est ignoré.
+        if (QtShell?.IsLocked == true)
+        {
+            if (action == HotkeyAction.Rescue)
+                QtShell.RescueLock();
+            return IntPtr.Zero;
+        }
         switch (action)
         {
+            case HotkeyAction.Lock:
+                QtShell?.LockNow();
+                break;
             case HotkeyAction.Rescue:
                 Rescue();
                 break;
@@ -234,6 +246,7 @@ internal sealed partial class Coordinator : IDisposable
         disposed = true;
         catalogue.Dispose();
         taskbar?.Dispose();
+        QtShell?.ReleaseLock();
         QtShell?.Dispose();
         winjets?.Dispose();
         RestoreDesktopIcons();

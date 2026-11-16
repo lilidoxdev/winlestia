@@ -137,6 +137,7 @@ internal static class ShortcutCatalog
         new("dashboardFixed","Shell","Tableau de bord (secours)","global",false,"Raccourci de secours fixe : il ouvre toujours le " +
             "tableau de bord, même si l’autre raccourci est réassigné.",3,0x20,"Ctrl+Alt+Espace",Keys(3,0x20)),
         new("settings","Shell","Ouvrir les paramètres","global",true,"",9,0x53,"",Array.Empty<(uint,uint)>()),
+        new("lock","Shell","Verrouiller l’écran","global",true,"",3,0x4C,"",Array.Empty<(uint,uint)>()),
         new("palette","Shell","Commande rapide","global",true,"",2,0x71,"",Array.Empty<(uint,uint)>()),
         new("wallpaper","Apparence","Changer de fond d’écran","global",true,"",9,0x57,"",Array.Empty<(uint,uint)>()),
         new("overview","Shell","Vue d’ensemble des fenêtres","global",false,"Fixe : Win+Alt+Tab, ou Win+Alt+V si Windows refuse " +
@@ -209,6 +210,7 @@ internal sealed class ShortcutManager
             "capture" => p.CaptureShortcut,
             "pin" => p.PinShortcut,
             "settings" => p.SettingsShortcut,
+            "lock" => p.LockShortcut,
             _ => null
         };
     }
@@ -293,7 +295,7 @@ internal sealed class ShortcutManager
             return Done(id, new(false, "Combinaison non reconnue. Maintenez un ou plusieurs modificateurs puis une touche.", ""));
         if (ShortcutCombo.IsWindowsReserved(m, k))
             return Done(id, new(false, "Combinaison réservée par Windows.", ""));
-        bool win = id is "wallpaper" or "settings";
+        bool win = id is "wallpaper" or "settings" or "lock";
         if (!(win ? GlobalShortcut.ValidWallpaper(m, k) : GlobalShortcut.Valid(m, k)))
             return Done(id, new(false, win
                 ? "Choisissez Ctrl, Alt ou Windows avec une touche (F1 à F24 sauf F12, lettre, chiffre ou Espace)."
@@ -351,6 +353,13 @@ internal sealed class ShortcutManager
                 break;
             case "settings":
                 p.SettingsShortcut = new()
+                {
+                    Modifiers = m,
+                    Key = k
+                };
+                break;
+            case "lock":
+                p.LockShortcut = new()
                 {
                     Modifiers = m,
                     Key = k

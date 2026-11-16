@@ -179,7 +179,7 @@ public class SettingsMigrationAndShortcutsTests
         var (g, m, p, saves) = Rig();
         var ids = m.List().Select(o => (string)((dynamic)o).id).ToArray();
         Check(string.Join(",",
-                          ids) == "dashboard,dashboardFixed,settings,palette,wallpaper,overview,capture,pin,dictation,rescue,"
+                          ids) == "dashboard,dashboardFixed,settings,lock,palette,wallpaper,overview,capture,pin,dictation,rescue,"
                           + "tileFocus,tileSwap,tileFloat,tileGrow,tileShrink,tileExclude",
               "(s) catalogue ids and order");
         Check(Combo(m, "dashboard") == "Ctrl+F1"
@@ -280,8 +280,8 @@ public class SettingsMigrationAndShortcutsTests
         dynamic st = m.Status();
         Check((int)st.nonce == nonceBefore + 1 && (string)st.id == "pin" && !(bool)st.ok,
             "(s) shortcutStatus nonce increments, carries id/ok");
-        GlobalShortcut.TestRegister = (w, id, mm, k) => (mm & ~0x4000u) == 3 && k == 0x4C ? 5 : 0;
-        var denied = m.Apply("capture", "Ctrl+Alt+L");
+        GlobalShortcut.TestRegister = (w, id, mm, k) => (mm & ~0x4000u) == 3 && k == 0x4E ? 5 : 0;
+        var denied = m.Apply("capture", "Ctrl+Alt+N");
         Check(!denied.Ok && denied.Message.Contains("(5)") && Combo(m, "capture") == "Ctrl+F3",
             "(s) other Win32 error reported, previous binding kept");
         Inactive();
