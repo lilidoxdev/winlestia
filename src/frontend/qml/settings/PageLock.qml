@@ -23,8 +23,8 @@ ColumnLayout {
     property int lastIdle: IdleTime.DEFAULT_SECONDS
     readonly property int shownIdle: idleSeconds > 0 ? idleSeconds : lastIdle
     readonly property bool lockReady: hasPassword && lockEnabled
-    readonly property int maxMinutes: 1440
-    readonly property int maxSeconds: 59
+    property bool unitMinutes: true
+    readonly property int idleFieldWidth: 64
     property bool firstPasswordPending: false
     property string localError: ""
     property int shownSeq: -1
@@ -73,12 +73,19 @@ ColumnLayout {
         confirmField.text = "";
     }
 
-    // Validation d'un champ (Entrée, perte de focus, boutons) : on normalise puis on réaffiche la valeur bornée.
+    // Affiche un total en secondes : en minutes s'il en est un multiple entier, sinon en secondes.
+    function showIdle(total: int): void {
+        unitMinutes = total % 60 === 0;
+        idleField.text = String(unitMinutes ? total / 60 : total);
+    }
+
+    // Validation (Entrée, perte de focus, changement d'unité) : on borne puis on réaffiche dans l'unité courante.
     function commitIdle(): void {
-        const n = IdleTime.normalize(minutesSpin.value, secondsSpin.value);
+        const n = IdleTime.normalize(0, (parseInt(idleField.text) || 0) * (unitMinutes ? 60 : 1));
         lastIdle = n.total;
-        minutesSpin.show(n.minutes);
-        secondsSpin.show(n.seconds);
+        if (unitMinutes && n.total % 60 !== 0)
+            unitMinutes = false;
+        idleField.text = String(unitMinutes ? n.total / 60 : n.total);
         Bridge.action("lockSettings", {
             idleSeconds: n.total
         });
@@ -95,8 +102,13 @@ ColumnLayout {
         }
     }
 
-    onIdleSecondsChanged: if (idleSeconds > 0)
-        lastIdle = idleSeconds
+    onIdleSecondsChanged: {
+        if (idleSeconds > 0)
+            lastIdle = idleSeconds;
+        if (!idleField.editing)
+            showIdle(shownIdle);
+    }
+    Component.onCompleted: showIdle(shownIdle)
 
     spacing: Appearance.spacing.larger
 
@@ -156,20 +168,38 @@ ColumnLayout {
         }
     }
 
-    // Champ numérique avec boutons −/+ (CustomSpinBox) : la valeur affichée ne suit la source que hors édition.
-    component IdleSpin: CustomSpinBox {
-        id: spin
+    // Champ numérique (chiffres seuls) : le texte est posé par showIdle(), jamais lié, car le champ le réécrit à la frappe.
+    component IdleField: StyledRect {
+        id: box
 
-        property int source
+        property alias text: input.text
+        readonly property bool editing: input.activeFocus
 
-        function show(v: int): void {
-            value = v;
-            displayText = String(v);
+        signal commit
+
+        implicitWidth: page.idleFieldWidth
+        implicitHeight: input.implicitHeight + Appearance.padding.small * 2
+        color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+        radius: Appearance.rounding.small
+        border.width: 1
+        border.color: input.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
+
+        StyledTextField {
+            id: input
+
+            anchors.centerIn: parent
+            width: parent.width - Appearance.padding.normal
+            horizontalAlignment: TextInput.AlignRight
+            inputMethodHints: Qt.ImhDigitsOnly
+            validator: IntValidator {
+                bottom: 0
+                top: IdleTime.MAX_SECONDS
+            }
+            onActiveFocusChanged: if (activeFocus)
+                selectAll()
+            onAccepted: box.commit()
+            onEditingFinished: box.commit()
         }
-
-        onSourceChanged: if (!isEditing)
-            show(source)
-        Component.onCompleted: show(source)
     }
 
     StyledRect {
@@ -299,35 +329,30 @@ ColumnLayout {
             sub: true
             shown: page.idleSeconds > 0
 
-            IdleSpin {
-                id: minutesSpin
+            IdleField {
+                id: idleField
 
-                objectName: "lockMinutes"
-                min: 0
-                max: page.maxMinutes
-                source: Math.floor(page.shownIdle / 60)
-                onValueModified: page.commitIdle()
+                objectName: "lockIdleValue"
+                onCommit: page.commitIdle()
             }
 
-            StyledText {
-                Layout.rightMargin: Appearance.spacing.large
-                text: qsTr("min")
-                color: Colours.palette.m3outline
-            }
-
-            IdleSpin {
-                id: secondsSpin
-
-                objectName: "lockSeconds"
-                min: 0
-                max: page.maxSeconds
-                source: page.shownIdle % 60
-                onValueModified: page.commitIdle()
-            }
-
-            StyledText {
-                text: qsTr("s")
-                color: Colours.palette.m3outline
+            SettingsChips {
+                namePrefix: "lockIdleUnit-"
+                model: [
+                    {
+                        label: qsTr("min"),
+                        value: "min"
+                    },
+                    {
+                        label: qsTr("s"),
+                        value: "s"
+                    }
+                ]
+                current: page.unitMinutes ? "min" : "s"
+                onChosen: value => {
+                    page.unitMinutes = value === "min";
+                    page.commitIdle();
+                }
             }
         }
 

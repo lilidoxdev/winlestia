@@ -13,6 +13,10 @@ LockCard {
 
     implicitHeight: gaugeSize + inset * 2
 
+    // Le backend n'échantillonne le processeur que sur demande : une référence tant que l'écran de verrouillage existe.
+    Component.onCompleted: Bridge.usageRef(true)
+    Component.onDestruction: Bridge.usageRef(false)
+
     Row {
         anchors.fill: parent
         spacing: Appearance.spacing.normal
@@ -21,19 +25,26 @@ LockCard {
             implicitWidth: root.gaugeSize
             icon: "memory"
             value: SystemUsage.cpuPerc
-            badge: root.hasTemp ? `${Math.round(SystemUsage.cpuTemp)}°` : ""
+            badge: root.hasTemp ? `${Math.round(SystemUsage.cpuTemp)}°C` : ""
+            shapePreset: "pentagon"
         }
         LockGauge {
             implicitWidth: root.gaugeSize
             icon: "memory_alt"
             value: SystemUsage.memPerc
-            fillColour: Colours.palette.m3secondary
+            shapePreset: "slanted"
+            shapeColour: Colours.palette.m3onTertiary
+            fillColour: Qt.alpha(Colours.palette.m3tertiary, 0.3)
+            textColour: Colours.palette.m3tertiary
         }
         LockGauge {
             implicitWidth: root.gaugeSize
             icon: "hard_disk"
             value: SystemUsage.storagePerc
-            fillColour: Colours.palette.m3tertiary
+            shapePreset: "gem"
+            shapeColour: Colours.palette.m3secondaryContainer
+            fillColour: Qt.alpha(Colours.palette.m3secondary, 0.4)
+            textColour: Colours.palette.m3secondary
         }
     }
 }

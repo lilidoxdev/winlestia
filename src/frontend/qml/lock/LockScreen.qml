@@ -29,8 +29,8 @@ Window {
     y: modelData?.y ?? 0
     width: modelData?.width ?? 1
     height: modelData?.height ?? 1
-    // Opaque tant que verrouillé : rien du bureau en direct ne doit transparaître.
-    color: wantLocked ? Colours.solid(Colours.palette.m3surface) : "transparent"
+    // Toujours transparente : l'opacité est portée par le fond (opaque à 1), qui se fond vers le bureau réel au déverrouillage.
+    color: "transparent"
     visible: true
 
     property bool acknowledged: false
@@ -103,25 +103,41 @@ Window {
                 to: 1
                 duration: Appearance.anim.durations.large
             }
+        }
+        // Inverse de l'engagement : la tuile tourne et rétrécit pendant que le fond flouté se fond vers le bureau réel.
+        ParallelAnimation {
+            Anim {
+                target: lockContent
+                property: "scale"
+                to: 0
+                duration: Appearance.anim.durations.expressiveFastSpatial
+                easing.bezierCurve: Appearance.anim.curves.standardAccel
+            }
+            Anim {
+                target: lockContent
+                property: "rotation"
+                to: 180
+                duration: Appearance.anim.durations.expressiveFastSpatial
+                easing.bezierCurve: Appearance.anim.curves.standardAccel
+            }
+            Anim {
+                target: lockContent
+                property: "opacity"
+                to: 0
+                duration: Appearance.anim.durations.expressiveFastSpatial
+            }
             Anim {
                 target: background
                 property: "opacity"
                 to: 0
                 duration: Appearance.anim.durations.large
             }
-            SequentialAnimation {
-                PauseAnimation {
-                    duration: Appearance.anim.durations.small
-                }
-                Anim {
-                    target: lockContent
-                    property: "opacity"
-                    to: 0
-                }
-            }
         }
         ScriptAction {
-            script: root.closed()
+            script: {
+                Bridge.releaseLockShots();
+                root.closed();
+            }
         }
     }
 
@@ -132,7 +148,7 @@ Window {
             target: background
             property: "opacity"
             to: 1
-            duration: Appearance.anim.durations.large
+            duration: Appearance.anim.durations.small
         }
         SequentialAnimation {
             ParallelAnimation {

@@ -13,6 +13,12 @@ StyledRect {
     readonly property bool hasText: input.text.length > 0
     readonly property real buttonSize: 56 * centerScale
     readonly property real dotSize: 14 * centerScale
+    readonly property real shakeDistance: 14 * centerScale
+    readonly property int failures: Bridge.lock.failures ?? 0
+    property bool flash: false
+
+    onFailuresChanged: if (failures > 0 && !Appearance.reducedEffects)
+        shake.restart()
 
     function focusInput(): void {
         input.forceActiveFocus();
@@ -29,7 +35,46 @@ StyledRect {
 
     implicitHeight: buttonSize + Appearance.padding.small * 2
     radius: Appearance.rounding.full
-    color: Colours.layer(Colours.solid(Colours.palette.m3surfaceContainer), 2)
+    color: flash ? Qt.tint(Colours.solid(Colours.palette.m3surfaceContainer), Qt.alpha(Colours.palette.m3error, 0.35)) : Colours.layer(Colours.solid(Colours.palette.m3surfaceContainer), 2)
+
+    transform: Translate {
+        id: shakeOffset
+    }
+
+    SequentialAnimation {
+        id: shake
+
+        ScriptAction {
+            script: root.flash = true
+        }
+        NumberAnimation {
+            target: shakeOffset
+            property: "x"
+            to: -root.shakeDistance
+            duration: Appearance.anim.durations.small / 2
+        }
+        NumberAnimation {
+            target: shakeOffset
+            property: "x"
+            to: root.shakeDistance
+            duration: Appearance.anim.durations.small
+        }
+        NumberAnimation {
+            target: shakeOffset
+            property: "x"
+            to: -root.shakeDistance / 2
+            duration: Appearance.anim.durations.small
+        }
+        NumberAnimation {
+            target: shakeOffset
+            property: "x"
+            to: 0
+            duration: Appearance.anim.durations.small / 2
+        }
+        ScriptAction {
+            script: root.flash = false
+        }
+    }
 
     TextInput {
         id: input

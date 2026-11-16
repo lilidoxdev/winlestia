@@ -131,8 +131,7 @@ class StateMixin:
             now_locked = bool((message['state'].get('lock') or {}).get('locked'))
             if now_locked and not was_locked:
                 self.lockshots.capture(QApplication.screens())  # avant que les fenêtres de verrou n'existent
-            elif was_locked and not now_locked:
-                self.lockshots.clear()
+            # À la sortie du verrou, la capture reste servie jusqu'à la fin de l'animation de sortie (releaseLockShots).
             self._state = message['state']
             self._dark = bool(self._state.get('dark'))
             self._player.data = self._state.get('media', {})

@@ -23,6 +23,8 @@ internal sealed partial class QtShellBridge
     volatile QuietForce quietForce = QuietForce.Auto;
     // La Pilule (capsule en haut de l'écran) demande le spectre tant qu'elle est visible et que le lecteur joue.
     bool pillSpectrum;
+    // L'écran de verrouillage lit les jauges (processeur, mémoire, disque) sans qu'aucun panneau ne soit ouvert.
+    bool usageVisible;
     // Événement SMTC reçu depuis la dernière lecture (vrai au départ pour la première), et dernier état de lecture connu.
     volatile bool mediaEvent = true;
     bool mediaPlaying, mediaSubscribed;
@@ -54,7 +56,7 @@ internal sealed partial class QtShellBridge
         mixer.SetActive(active && (page == 1 || page == 7 || mixerVisible) || pillSpectrum);
         if (!SpectrumPolicy.Surface(active, page, pillSpectrum))
             spectrum.Stop();
-        bool need = active && page is 0 or 2;
+        bool need = active && page is 0 or 2 || usageVisible;
         if (need)
         {
             if (!telemetry.Running)
@@ -105,6 +107,7 @@ internal sealed partial class QtShellBridge
         // Sans frontend, ni la Pilule ni la sonde média ne demandent plus rien : le prochain Tick doit sortir tout de suite.
         pillSpectrum = false;
         mediaVisible = false;
+        usageVisible = false;
         pageMusic = false;
     }
 
@@ -113,7 +116,7 @@ internal sealed partial class QtShellBridge
         if (disposed || busy)
             return;
         // Frontend muet depuis plus de 5 s : plus personne pour consommer, y compris la Pilule (sans panneau ouvert).
-        if ((active || pillSpectrum || mediaVisible) && (DateTime.UtcNow - lastReply).TotalSeconds > 5)
+        if ((active || pillSpectrum || mediaVisible || usageVisible) && (DateTime.UtcNow - lastReply).TotalSeconds > 5)
         {
             bool wasActive = active;
             active = false;
@@ -122,7 +125,7 @@ internal sealed partial class QtShellBridge
                 dismissal.SetActive(false);
         }
         // Le bureau peut demander la sonde média sans panneau ouvert : ne pas sortir avant elle.
-        if (!active && !mediaVisible)
+        if (!active && !mediaVisible && !usageVisible)
             return;
         busy = true;
         try

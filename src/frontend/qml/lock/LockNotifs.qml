@@ -12,8 +12,9 @@ LockCard {
     StyledText {
         id: head
 
-        text: qsTr("Notifications")
-        font.pointSize: Appearance.font.size.large
+        text: `${root.model.length} ${root.model.length === 1 ? qsTr("notification") : qsTr("notifications")}`
+        font.family: Appearance.font.family.mono
+        font.pointSize: Appearance.font.size.normal
         font.weight: Font.DemiBold
     }
 

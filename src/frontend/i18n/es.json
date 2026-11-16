@@ -1082,5 +1082,7 @@
  "Activez d'abord le verrouillage": "Activa primero el bloqueo",
  "Verrouillage après %1 d'inactivité": "Bloqueo tras %1 de inactividad",
  "%1 min": "%1 min",
- "%1 s": "%1 s"
+ "%1 s": "%1 s",
+ "notification": "notificación",
+ "notifications": "notificaciones"
 }

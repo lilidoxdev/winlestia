@@ -1082,5 +1082,7 @@
  "Activez d'abord le verrouillage": "Enable the lock first",
  "Verrouillage après %1 d'inactivité": "Locks after %1 of inactivity",
  "%1 min": "%1 min",
- "%1 s": "%1 s"
+ "%1 s": "%1 s",
+ "notification": "notification",
+ "notifications": "notifications"
 }

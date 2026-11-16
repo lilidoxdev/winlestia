@@ -154,6 +154,7 @@ internal sealed partial class QtShellBridge
                 barsVisible = Flag(args, "bars");
                 mediaVisible = Flag(args, "media");
                 pillSpectrum = Flag(args, "pill");
+                usageVisible = Flag(args, "usage");
                 if (active != shown || navigationChanged)
                 {
                     active = shown;

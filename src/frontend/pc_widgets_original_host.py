@@ -91,8 +91,10 @@ def main(runtime):
                 return
             for instance in set(self.cards) - desired.keys():
                 card = self.cards.pop(instance)
+                card._timer.stop()
                 card.close()
-                card.deleteLater()
+                # The original HTTP tiles still emit their Qt signal from in-flight requests.
+                QTimer.singleShot(200, lambda card=card: self.dispose(card))
             active = []
             for instance, target in desired.items():
                 try:
@@ -101,6 +103,12 @@ def main(runtime):
                 except (ValueError, TypeError, KeyError, RuntimeError) as exc:
                     print(f"PC Widgets: card {instance}: {exc}", file=sys.stderr)
             send({"active": active})
+
+        def dispose(self, card):
+            if getattr(card, "_busy", False) or getattr(card, "_fetching", False):
+                QTimer.singleShot(500, lambda: self.dispose(card))
+            else:
+                card.deleteLater()
 
         def apply_card(self, instance, target):
             kind = target["kind"]

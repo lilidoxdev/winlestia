@@ -153,6 +153,22 @@ class ActionMixin:
         self.client.subscription = {**self.client.subscription, 'media': wanted}
         kernel32.SetEvent(self.client.wakeup)
 
+    # Appelé par QML une fois l'animation de déverrouillage terminée : la capture floutée n'est plus utile.
+    @Slot()
+    def releaseLockShots(self):
+        if not (self._state.get('lock') or {}).get('locked'):
+            self.lockshots.clear()
+
+    # Jauges de l'écran de verrouillage : le backend n'échantillonne le processeur que sur demande.
+    @Slot(bool)
+    def usageRef(self, take):
+        self._usage_refs = max(0, getattr(self, '_usage_refs', 0) + (1 if take else -1))
+        wanted = self._usage_refs > 0
+        if wanted == bool(self.client.subscription.get('usage')):
+            return
+        self.client.subscription = {**self.client.subscription, 'usage': wanted}
+        kernel32.SetEvent(self.client.wakeup)
+
     @Slot(bool, int)
     def subscribe(self, visible, page):
         visible = visible or bool(self.recording_kind)
@@ -161,6 +177,7 @@ class ActionMixin:
             'visible': visible,
             'page': page,
             'media': bool(getattr(self, '_media_refs', 0) > 0),
+            'usage': bool(getattr(self, '_usage_refs', 0) > 0),
             'controls': bool(self.top and self.top.property('controlsOpen')),
             'mixer': bool(self.top and self.top.property('audioSampling')),
             'wifi': bool(self.top and self.top.property('wifiSampling')),

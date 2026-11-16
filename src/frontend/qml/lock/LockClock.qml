@@ -12,9 +12,11 @@ Item {
     readonly property var parts: Time.format(twelve ? "hh:mm:AP" : "hh:mm").split(":")
     readonly property real hourSize: Appearance.font.size.extraLarge * 6.5 * centerScale
     readonly property real minuteSize: hourSize * (twelve ? 0.54 : 1)
+    // Seule Rubik est embarquée : l'aspect condensé vient d'une mise à l'échelle horizontale.
+    readonly property real condensed: 0.72
     readonly property real amPmSize: Appearance.font.size.extraLarge * 1.2 * centerScale
 
-    implicitWidth: hours.implicitWidth + minutes.implicitWidth + Appearance.spacing.small
+    implicitWidth: (hours.implicitWidth + minutes.implicitWidth) * condensed + Appearance.spacing.small
     implicitHeight: hours.implicitHeight * 0.82
 
     StyledText {
@@ -25,19 +27,27 @@ Item {
         color: Colours.palette.m3primary
         font.pointSize: root.hourSize
         font.family: Appearance.font.family.clock
-        font.weight: Font.Bold
+        font.weight: Font.Black
+        transform: Scale {
+            origin.x: 0
+            xScale: root.condensed
+        }
     }
 
     StyledText {
         id: minutes
 
-        anchors.right: parent.right
+        x: hours.implicitWidth * root.condensed + Appearance.spacing.small
         y: -minutes.implicitHeight * 0.1 + (hours.implicitHeight - minutes.implicitHeight) * 0.5
         text: root.parts[1]
         color: Colours.palette.m3secondary
         font.pointSize: root.minuteSize
         font.family: Appearance.font.family.clock
-        font.weight: Font.Bold
+        font.weight: Font.Black
+        transform: Scale {
+            origin.x: 0
+            xScale: root.condensed
+        }
     }
 
     StyledRect {
@@ -46,7 +56,7 @@ Item {
         anchors.bottom: parent.bottom
         color: Colours.solid(Colours.palette.m3surfaceContainerHigh)
         radius: Appearance.rounding.large
-        implicitWidth: minutes.implicitWidth
+        implicitWidth: minutes.implicitWidth * root.condensed
         implicitHeight: amPm.implicitHeight + Appearance.padding.large * 2
 
         StyledText {

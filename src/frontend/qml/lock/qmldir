@@ -12,3 +12,4 @@ LockMedia LockMedia.qml
 LockGauge LockGauge.qml
 LockResources LockResources.qml
 LockNotifs LockNotifs.qml
+LockShape LockShape.qml

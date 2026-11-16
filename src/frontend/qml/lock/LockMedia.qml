@@ -14,6 +14,8 @@ LockCard {
         id: title
 
         width: parent.width
+        horizontalAlignment: Text.AlignHCenter
+        color: Colours.palette.m3primary
         elide: Text.ElideRight
         text: root.player ? (root.player.trackTitle || qsTr("Titre inconnu")) : qsTr("Rien en lecture")
         font.pointSize: Appearance.font.size.large
@@ -25,6 +27,7 @@ LockCard {
 
         anchors.top: title.bottom
         width: parent.width
+        horizontalAlignment: Text.AlignHCenter
         elide: Text.ElideRight
         text: root.player ? (root.player.trackArtist || qsTr("Artiste inconnu")) : qsTr("Lancez un peu de musique !")
         color: Colours.palette.m3onSurfaceVariant
