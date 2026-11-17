@@ -50,6 +50,7 @@ internal sealed partial class QtShellBridge
             settings = new
             {
                 @lock = Lock.SettingsSnapshot(),
+                sensors = SensorsSnapshot(),
                 dockBar = Store.State.DockBar.ToArray(),
                 dockDrawer = Store.State.DockDrawer.ToArray(),
                 dataFolder = Store.DataDir,

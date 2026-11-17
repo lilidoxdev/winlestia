@@ -1084,5 +1084,22 @@
  "%1 min": "%1 min",
  "%1 s": "%1 s",
  "notification": "notification",
- "notifications": "notifications"
+ "notifications": "notifications",
+ "Capteur de température": "Temperature sensor",
+ "Température du processeur": "CPU temperature",
+ "Service optionnel pour lire la température du processeur": "Optional service to read the CPU temperature",
+ "Installer": "Install",
+ "Mettre à jour": "Update",
+ "Réparer": "Repair",
+ "Retirer": "Remove",
+ "Actif": "Active",
+ "Autorisation requise": "Permission required",
+ "Installation en cours…": "Installing…",
+ "Autorisation refusée": "Permission denied",
+ "Échec de l'installation": "Installation failed",
+ "Redémarrage de Windows requis pour terminer": "Windows restart required to finish",
+ "Pilote PawnIO manquant": "PawnIO driver missing",
+ "Installé, en attente de démarrage": "Installed, waiting to start",
+ "Non installé : Windows ne donne pas la température sans droits administrateur": "Not installed: Windows gives no temperature without administrator rights",
+ "Winlestia va installer un petit service qui s'exécute avec les droits administrateur, ainsi que le pilote PawnIO (pilote noyau tiers, téléchargé depuis sa page officielle) s'il est absent. Windows vous demandera une autorisation. Ce pilote peut être refusé par certains anti-triche de jeux. Vous pouvez retirer le service à tout moment ; le pilote PawnIO se désinstalle depuis les applications Windows.": "Winlestia will install a small service that runs with administrator rights, along with the PawnIO driver (a third-party kernel driver, downloaded from its official page) if it is missing. Windows will ask for your permission. This driver may be rejected by some game anti-cheat systems. You can remove the service at any time; the PawnIO driver is uninstalled from Windows apps."
 }

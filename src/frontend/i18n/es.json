@@ -1084,5 +1084,22 @@
  "%1 min": "%1 min",
  "%1 s": "%1 s",
  "notification": "notificación",
- "notifications": "notificaciones"
+ "notifications": "notificaciones",
+ "Capteur de température": "Sensor de temperatura",
+ "Température du processeur": "Temperatura del procesador",
+ "Service optionnel pour lire la température du processeur": "Servicio opcional para leer la temperatura del procesador",
+ "Installer": "Instalar",
+ "Mettre à jour": "Actualizar",
+ "Réparer": "Reparar",
+ "Retirer": "Quitar",
+ "Actif": "Activo",
+ "Autorisation requise": "Autorización necesaria",
+ "Installation en cours…": "Instalando…",
+ "Autorisation refusée": "Autorización denegada",
+ "Échec de l'installation": "Error en la instalación",
+ "Redémarrage de Windows requis pour terminer": "Se requiere reiniciar Windows para terminar",
+ "Pilote PawnIO manquant": "Falta el controlador PawnIO",
+ "Installé, en attente de démarrage": "Instalado, esperando el inicio",
+ "Non installé : Windows ne donne pas la température sans droits administrateur": "No instalado: Windows no da la temperatura sin derechos de administrador",
+ "Winlestia va installer un petit service qui s'exécute avec les droits administrateur, ainsi que le pilote PawnIO (pilote noyau tiers, téléchargé depuis sa page officielle) s'il est absent. Windows vous demandera une autorisation. Ce pilote peut être refusé par certains anti-triche de jeux. Vous pouvez retirer le service à tout moment ; le pilote PawnIO se désinstalle depuis les applications Windows.": "Winlestia instalará un pequeño servicio que se ejecuta con derechos de administrador, junto con el controlador PawnIO (controlador de kernel de terceros, descargado desde su página oficial) si falta. Windows te pedirá autorización. Algunos sistemas anticheat de juegos pueden rechazar este controlador. Puedes quitar el servicio en cualquier momento; el controlador PawnIO se desinstala desde las aplicaciones de Windows."
 }

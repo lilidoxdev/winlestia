@@ -460,6 +460,14 @@ QtObject {
             kw: "meteo weather ville city localisation"
         },
         {
+            id: "sensorsStatus",
+            page: 7,
+            section: qsTr("Capteur de température"),
+            label: qsTr("Température du processeur"),
+            desc: qsTr("Service optionnel pour lire la température du processeur"),
+            kw: "temperature cpu capteur pawnio service administrateur thermique"
+        },
+        {
             id: "refreshCatalogue",
             page: 7,
             section: qsTr("Services"),

@@ -1084,5 +1084,22 @@
  "%1 min": "%1 min",
  "%1 s": "%1 s",
  "notification": "notification",
- "notifications": "notifications"
+ "notifications": "notifications",
+ "Capteur de température": "Capteur de température",
+ "Température du processeur": "Température du processeur",
+ "Service optionnel pour lire la température du processeur": "Service optionnel pour lire la température du processeur",
+ "Installer": "Installer",
+ "Mettre à jour": "Mettre à jour",
+ "Réparer": "Réparer",
+ "Retirer": "Retirer",
+ "Actif": "Actif",
+ "Autorisation requise": "Autorisation requise",
+ "Installation en cours…": "Installation en cours…",
+ "Autorisation refusée": "Autorisation refusée",
+ "Échec de l'installation": "Échec de l'installation",
+ "Redémarrage de Windows requis pour terminer": "Redémarrage de Windows requis pour terminer",
+ "Pilote PawnIO manquant": "Pilote PawnIO manquant",
+ "Installé, en attente de démarrage": "Installé, en attente de démarrage",
+ "Non installé : Windows ne donne pas la température sans droits administrateur": "Non installé : Windows ne donne pas la température sans droits administrateur",
+ "Winlestia va installer un petit service qui s'exécute avec les droits administrateur, ainsi que le pilote PawnIO (pilote noyau tiers, téléchargé depuis sa page officielle) s'il est absent. Windows vous demandera une autorisation. Ce pilote peut être refusé par certains anti-triche de jeux. Vous pouvez retirer le service à tout moment ; le pilote PawnIO se désinstalle depuis les applications Windows.": "Winlestia va installer un petit service qui s'exécute avec les droits administrateur, ainsi que le pilote PawnIO (pilote noyau tiers, téléchargé depuis sa page officielle) s'il est absent. Windows vous demandera une autorisation. Ce pilote peut être refusé par certains anti-triche de jeux. Vous pouvez retirer le service à tout moment ; le pilote PawnIO se désinstalle depuis les applications Windows."
 }

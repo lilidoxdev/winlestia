@@ -205,6 +205,9 @@ Filename: "{sys}\schtasks.exe"; Parameters: "/delete /tn WinlestiaShell /f"; Fla
 
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoLogo -NoProfile -ExecutionPolicy Bypass -File ""{app}\Close-Winlestia.ps1"" -AppRoot ""{app}"""; Flags: runhidden waituntilterminated; RunOnceId: "CloseWinlestia"
 
+; Assistant de capteurs élevé (installé dans Program Files à la demande de l'utilisateur) : tâche et dossier retirés, PawnIO conservé.
+Filename: "{app}\Glass-v5\Sensors\Winlestia.Sensors.exe"; Parameters: "uninstall"; Verb: runas; Flags: shellexec waituntilterminated runhidden skipifdoesntexist; Check: SensorsInstalled(); RunOnceId: "RemoveSensors"
+
 Filename: "{app}\Glass-v5\Winlestia.Files.exe"; Parameters: "--restore"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "RestoreFolderHandler"
 
 Filename: "{app}\Caelestia-Windows\.venv\Scripts\python.exe"; Parameters: """{app}\Winlestia-Terminal\install.py"" --restore"; Flags: runhidden waituntilterminated; RunOnceId: "RestoreTerminal"
@@ -465,6 +468,12 @@ begin
         MsgBox(CustomMessage('TerminalRestoreFailed'), mbError, MB_OK);
     end;
   end;
+end;
+
+// Vrai si l'assistant de capteurs a été installé dans Program Files (jamais d'élévation sinon).
+function SensorsInstalled(): Boolean;
+begin
+  Result := FileExists(ExpandConstant('{commonpf}\Winlestia\Sensors\Winlestia.Sensors.exe'));
 end;
 
 function PathIsEmpty(): Boolean;

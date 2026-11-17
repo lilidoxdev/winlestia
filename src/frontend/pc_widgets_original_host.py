@@ -7,7 +7,8 @@ import sys
 from pathlib import Path
 from threading import Thread
 
-from PySide6.QtCore import QEvent, QObject, Qt
+from PySide6.QtCore import QEvent, QObject, QPointF, QRectF, Qt
+from PySide6.QtGui import QTransform
 
 
 def send(message):
@@ -43,6 +44,160 @@ def resize_card(card, width, height):
     card.resize(width + chrome_w, height + chrome_h)
 
 
+def content_layout(width, height, sizes, card_size):
+    small_w, small_h = card_size("small")
+    medium_w, medium_h = card_size("medium")
+    if "medium" not in sizes:
+        return sizes[0], min(width / small_w, height / small_h)
+
+    # Grow the layout from a compact face to a wide one before increasing density.
+    # Choosing a taller face must never reduce the scale of an already large card.
+    reference_w = medium_w if "small" not in sizes else min(medium_w, max(small_w, width))
+    scale = min(width / reference_w, height / medium_h)
+    if "small" in sizes and width < 330:
+        return "small", scale
+    if "large" in sizes and height / scale >= card_size("large")[1] - 8:
+        return "large", scale
+    return "medium", scale
+
+
+class ScaledContent:
+    """Draw at the original density and scale the design to the available space."""
+
+    content_scale = 1.0
+    _logical_frame = None
+
+    def resize_content(self, width, height, scale):
+        previous = self.content_scale
+        self.content_scale = scale
+        self.extra_bottom = self.content_overhang()
+        resize_card(self, width, height)
+        if previous != self.content_scale:
+            self.scale_changed()
+
+    def content_overhang(self):
+        return round(type(self).extra_bottom * self.content_scale)
+
+    def scale_changed(self):
+        pass
+
+    def card_rect(self):
+        if self._logical_frame is not None:
+            return self._logical_frame
+        return super().card_rect()
+
+    def paint_content(self, painter, rect):
+        scale = self.content_scale
+        if scale == 1.0:
+            return super().paint_content(painter, rect)
+
+        frame = super().card_rect()
+        logical = QRectF(frame.x(), frame.y(), frame.width() / scale, frame.height() / scale)
+        transform = QTransform(scale, 0, 0, scale, frame.x() * (1 - scale), frame.y() * (1 - scale))
+        inner = logical.adjusted(rect.left() - frame.left(), rect.top() - frame.top(),
+                                 rect.right() - frame.right(), rect.bottom() - frame.bottom())
+        self._logical_frame = logical
+        self._physical_frame = frame
+        self._frame_transform = painter.worldTransform()
+        painter.save()
+        painter.setWorldTransform(transform, True)
+        try:
+            super().paint_content(painter, inner)
+        finally:
+            painter.restore()
+            self._logical_frame = None
+        self.map_controls(transform)
+
+    def map_controls(self, transform):
+        pass
+
+    def paint_in_frame(self, painter, paint, *args):
+        logical = self._logical_frame
+        if logical is None:
+            return paint(painter, *args)
+        self._logical_frame = None
+        painter.save()
+        painter.setWorldTransform(self._frame_transform)
+        try:
+            return paint(painter, *args)
+        finally:
+            painter.restore()
+            self._logical_frame = logical
+
+
+class ScaledWeather(ScaledContent):
+    def _backdrop(self, painter, shape):
+        return self.paint_in_frame(painter, super()._backdrop, shape)
+
+    def map_controls(self, transform):
+        if self._town_btn is not None:
+            self._town_btn = transform.mapRect(self._town_btn)
+
+
+class ScaledFiles(ScaledContent):
+    def map_controls(self, transform):
+        self._chrome = [(transform.mapRect(box), tag) for box, tag in self._chrome]
+        self._rows = [(transform.mapRect(box), path, is_dir) for box, path, is_dir in self._rows]
+
+
+class ScaledMedia(ScaledContent):
+    def content_overhang(self):
+        return super().content_overhang() + round(max(0, self.content_scale - 1) * 10)
+
+    def scale_changed(self):
+        self._dirty = True
+
+    def map_controls(self, transform):
+        scale = self.content_scale
+        self._discs = [(name, transform.map(center), radius * scale, hit * scale)
+                       for name, center, radius, hit in self._discs]
+        self._buttons = [(name, center, hit) for name, center, _, hit in self._discs]
+        if self._viz_rect is not None:
+            self._viz_rect = transform.mapRect(self._viz_rect)
+
+    def _paint_artwork(self, painter, card, track):
+        # Preserve the frame's radius and crop the album cover at native resolution.
+        if self._logical_frame is not None:
+            card = self._physical_frame
+        self.paint_in_frame(painter, super()._paint_artwork, card, track)
+
+    def _draw_heart(self, painter, center, filled):
+        painter.save()
+        painter.translate(center)
+        painter.scale(self.content_scale, self.content_scale)
+        try:
+            super()._draw_heart(painter, QPointF(), filled)
+        finally:
+            painter.restore()
+
+
+class ScaledNotes(ScaledContent):
+    def scale_changed(self):
+        self._restyle()
+        self._relayout()
+
+    def _restyle(self):
+        super()._restyle()
+        font = self.edit.font()
+        font.setPointSizeF(font.pointSizeF() * self.content_scale)
+        self.edit.setFont(font)
+
+    def _relayout(self):
+        super()._relayout()
+        frame = self.card_rect()
+        original = QRectF(self.edit.geometry())
+        scale = self.content_scale
+        insets = (original.left() - frame.left(), original.top() - frame.top(),
+                  original.right() - frame.right(), original.bottom() - frame.bottom())
+        self.edit.setGeometry(frame.adjusted(*(inset * scale for inset in insets)).toAlignedRect())
+
+
+def scaled_card_types(registry):
+    adapters = {"weather": ScaledWeather, "media": ScaledMedia, "notes": ScaledNotes, "files": ScaledFiles}
+    return {kind: type("Winlestia" + cls.__name__, (adapters.get(kind, ScaledContent), cls), {})
+            for kind, cls in registry.items()}
+
+
 def main(runtime):
     source = runtime / "PC-Widgets-1.1.0"
     sys.path.insert(0, str(source))
@@ -53,6 +208,7 @@ def main(runtime):
     from PySide6.QtWidgets import QApplication
     from widgets.core import palette, typography, winapi
     from widgets.core.board import REGISTRY, load_builtin_tiles
+    from widgets.core.card import card_size
     from widgets.core.glass import GlassBackdrop
 
     winapi.set_app_id("Winlestia.PCWidgetsWinjets")
@@ -60,6 +216,7 @@ def main(runtime):
     app.setQuitOnLastWindowClosed(False)
     load_builtin_tiles()
     typography.load_bundled()
+    card_types = scaled_card_types(REGISTRY)
 
     class Host(QObject):
         incoming = Signal(object)
@@ -145,29 +302,28 @@ def main(runtime):
 
         def apply_card(self, instance, target):
             kind = target["kind"]
-            cls = REGISTRY.get(kind)
+            cls = card_types.get(kind)
             if cls is None:
                 return False
-            width, height = target["w"], target["h"]
-            sizes = cls.supported_sizes
-            size = "large" if width >= 330 and height >= 330 and "large" in sizes else (
-                "medium" if width >= 330 and "medium" in sizes else sizes[0]
-            )
             card = self.cards.get(instance)
-            is_new = card is None
             if not target["visible"]:
                 if card:
                     card.hide()
                 return False
-            if is_new:
-                card = self.make(instance, kind, cls, size)
-            size_changed = card.size_class != size
-            card.set_size_class(size)
             screen = next((item for item in app.screens() if item.name() == target["screen"]), app.primaryScreen())
             if screen is None:
                 return False
             geom = screen.availableGeometry()
-            resize_card(card, min(width, geom.width()), min(height, geom.height()))
+            width, height = min(target["w"], geom.width()), min(target["h"], geom.height())
+            if min(width, height) <= 0:
+                return False
+            size, scale = content_layout(width, height, cls.supported_sizes, card_size)
+            is_new = card is None
+            if is_new:
+                card = self.make(instance, kind, cls, size)
+            size_changed = card.size_class != size
+            card.set_size_class(size)
+            card.resize_content(width, height, scale)
             rect = card.card_rect()
             left = max(0, min(round(geom.width() * target["nx"]), geom.width() - round(rect.width())))
             top = max(0, min(round(geom.height() * target["ny"]), geom.height() - round(rect.height())))

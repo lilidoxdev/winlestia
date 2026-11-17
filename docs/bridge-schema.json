@@ -481,6 +481,16 @@
       },
       "required": []
     },
+    "sensorsInstall": {
+      "args": {
+        "driver": "boolean"
+      },
+      "required": []
+    },
+    "sensorsRemove": {
+      "args": {},
+      "required": []
+    },
     "settings": {
       "args": {
         "section": "string"
@@ -1008,6 +1018,7 @@
     "lyrics",
     "quick",
     "lock",
+    "sensors",
     "dock",
     "dictation:start",
     "dictation:stop",

@@ -67,6 +67,11 @@ dotnet publish (Join-Path $root 'src\cli\winlestia.csproj') `
     -p:EnableCompressionInSingleFile=true -p:DebugType=none `
     -o $stage --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Compilation de winlestia.exe echouee.' }
+Write-Host '-> Publish assistant de capteurs' -ForegroundColor Cyan
+dotnet publish (Join-Path $root 'src\sensors\Winlestia.Sensors.csproj') `
+    -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false `
+    -o (Join-Path $stage 'Sensors') --nologo
+if ($LASTEXITCODE -ne 0) { throw 'Compilation de l assistant de capteurs echouee.' }
 Copy-Item (Join-Path $root 'src\backend\Inventory.ps1') $stage -Force
 Copy-Item (Join-Path $root 'src\backend\native\*.dll') $stage -Force
 Copy-Item (Join-Path $root 'src\backend\native\*.exe') $stage -Force

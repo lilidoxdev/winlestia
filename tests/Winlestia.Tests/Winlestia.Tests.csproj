@@ -38,6 +38,9 @@
     <Using Include="Xunit" />
     <Compile Include="../../src/backend/**/*.cs" Exclude="../../src/backend/checkpoint-*/**;../../src/backend/obj/**;../../src/backend/bin/**" LinkBase="Backend" />
     <Compile Include="../../src/files/PathRouter.cs" Link="Files/PathRouter.cs" />
+    <Compile Include="../../src/sensors/SensorPick.cs" Link="Sensors/SensorPick.cs" />
+    <Compile Include="../../src/sensors/Installer.cs" Link="Sensors/Installer.cs" />
+    <Compile Include="../../src/sensors/Log.cs" Link="Sensors/Log.cs" />
   </ItemGroup>
   <!-- Application Files (WPF) : son XAML de styles est charge par reflexion (Styles est internal) dans FilesStylesXamlTests. -->
   <ItemGroup>

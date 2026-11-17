@@ -94,7 +94,7 @@ class PcWidgetsOriginal(QObject):
             if isinstance(instance, str) and instance in self.desired:
                 self.remove_requested.emit(instance)
             instance = message.get("edit")
-            if isinstance(instance, str) and instance in self.active and self.desired[instance]["visible"]:
+            if isinstance(instance, str) and instance in self.active and self.desired.get(instance, {}).get("visible"):
                 self.edit_requested.emit(instance)
 
     def _set_active(self, value):
