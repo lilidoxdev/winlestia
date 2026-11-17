@@ -51,7 +51,9 @@ Window {
         }
     }
     property bool controlsOpen: pageMode === "controls" && extraOpen
-    property real extraHeight: extraOpen ? extraBody.implicitHeight + 36 : 0
+    // Hauteur cible de la palette figée le temps de son ouverture (0 = aucune ouverture en cours) ; levée à la fin de l'animation.
+    property real paletteOpenTarget: 0
+    property real extraHeight: extraOpen ? (paletteOpenTarget > 0 && pageMode === "palette" ? paletteOpenTarget : extraBody.implicitHeight) + 36 : 0
     property real contentWidth: pageMode === "workspace" ? Math.min(1220, Bridge.screenWidth - 80) :
         pageMode === "palette" ?
             (palette.item && palette.item.wide ? Math.min(1320, Bridge.screenWidth - 80) : 660) :
@@ -93,15 +95,31 @@ Window {
         Anim {
             duration: Math.round(window.heightDuration * (Bridge.settings.motionScale ?? 1))
             easing.bezierCurve: window.heightCurve
-            onRunningChanged: if (!running && window.tracing)
-                Bridge.trace("anim-done")
+            onRunningChanged: {
+                if (running) {
+                    if (window.tracing)
+                        Bridge.trace("anim-start");
+                    return;
+                }
+                window.paletteOpenTarget = 0;
+                if (window.tracing)
+                    Bridge.trace("anim-done");
+            }
         }
     }
+    // Filet : si aucune animation ne tourne à l'ouverture (hauteur déjà à la cible), la hauteur figée est levée ; arrêté au repos.
+    Timer {
+        interval: window.heightDuration + window.paletteOpenGuardMs
+        running: window.paletteOpenTarget > 0
+        repeat: false
+        onTriggered: window.paletteOpenTarget = 0
+    }
+    readonly property int paletteOpenGuardMs: 400
     // Palette : ouverture courte à décélération franche (le contenu répond dès la première image), fermeture plus brève
     // encore ; les autres panneaux gardent la durée d'origine.
     readonly property int panelHeightDuration: 260
-    // Préchargement du navigateur d'espaces et de la palette après le démarrage : la première ouverture ne paie plus la création.
-    readonly property int warmDelay: 2000
+    // Préchargement du navigateur d'espaces, de la palette et de l'onde de choc dès la fin du démarrage : la première ouverture ne paie plus la création.
+    readonly property int warmDelay: 300
     readonly property int heightDuration: pageMode === "palette" ? (extraOpen ? Appearance.anim.durations.small : Appearance.anim.durations.expressiveFastEffects) : panelHeightDuration
     readonly property var heightCurve: pageMode === "palette" ? (extraOpen ? Appearance.anim.curves.standardDecel : Appearance.anim.curves.emphasizedAccel) : Appearance.anim.curves.emphasizedDecel
     // Trace d'ouverture opt-in (WINLESTIA_TRACE_OPEN=1, voir open_trace.py) : aucune connexion active sinon.
@@ -147,8 +165,11 @@ Window {
         return false;
     }
     function fireShockwave() {
-        if (lockWindowsExist())
+        if (lockWindowsExist()) {
+            if (tracing)
+                Bridge.trace("shock skipped reason=locked");
             return;
+        }
         const wide = palette.item && palette.item.wide;
         const panelW = Math.ceil((wide ? Math.min(1320, Bridge.screenWidth - paletteMargin) : paletteWidth) + 40);
         const paletteH = palette.item ? palette.item.implicitHeight : paletteHeightEstimate;
@@ -164,8 +185,17 @@ Window {
         enabled: Bridge.settings.shockwave ?? true
     }
     function openMode(mode) {
+        // Un second événement palette sur la palette déjà ouverte la ferme (même chemin que Échap).
+        if (mode === "palette" && extraOpen && pageMode === "palette" && visible) {
+            if (tracing) {
+                traceFrame = false;
+                Bridge.trace("close");
+            }
+            Bridge.closePanel();
+            return;
+        }
         if (tracing) {
-            traceFrame = true;
+            traceFrame = mode !== "close";
             Bridge.trace("openMode " + mode);
         }
         if (mode === "close") {
@@ -204,6 +234,9 @@ Window {
             // Onde de choc : capture AVANT que le panneau n'apparaisse (jamais pendant la fermeture), puis la palette s'ouvre.
             if (mode.split(":")[0] === "palette" && !(extraOpen && pageMode === "palette") && !visible)
                 fireShockwave();
+            // Hauteur cible figée pendant l'ouverture de la palette : l'animation ne repart pas quand le chargement ou les résultats changent la hauteur.
+            if (mode.split(":")[0] === "palette" && !(extraOpen && pageMode === "palette"))
+                paletteOpenTarget = palette.item ? palette.item.implicitHeight : paletteHeightEstimate;
             pageMode = mode.split(":")[0];
             extraOpen = true;
             if (pageMode === "palette")
@@ -243,6 +276,7 @@ Window {
         subscribe();
     }
     onExtraOpenChanged: if (!extraOpen) {
+        paletteOpenTarget = 0;
         sessionDialog.open = false;
         if (shockwave.active)
             shockwave.stop();
@@ -422,6 +456,7 @@ Window {
             onTriggered: {
                 browser.warm = true;
                 palette.warm = true;
+                shockwave.warm();
             }
         }
         PaneLoader {
@@ -460,8 +495,12 @@ Window {
             want: window.pageMode === "palette"
             asynchronous: true
             sourceComponent: PalettePane {}
-            onLoaded: if (want)
-                item.reset()
+            onLoaded: {
+                if (window.tracing)
+                    Bridge.trace("palette-loaded");
+                if (want)
+                    item.reset();
+            }
         }
         PaneLoader {
             id: preferences

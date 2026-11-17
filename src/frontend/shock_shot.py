@@ -1,4 +1,7 @@
 # Python 3.12 / shock_shot.py / Qt 6. Capture d'écran pour l'onde de choc : mémoire seulement, jamais sur disque, jamais journalisée.
+import time
+
+import open_trace
 from PySide6.QtCore import Property, QObject, Qt, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QImage
 from PySide6.QtQuick import QQuickImageProvider
@@ -12,7 +15,16 @@ def shrink(image, factor=DOWNSCALE):
         return QImage()
     width = max(1, image.width() // factor)
     height = max(1, image.height() // factor)
-    return image.scaled(width, height, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+    return image.scaled(width, height, Qt.IgnoreAspectRatio, Qt.FastTransformation)
+
+
+def clamp_region(screen_w, screen_h, x, y, w, h):
+    """Rectangle borné à l'écran (x, y, w, h), ou None s'il est vide."""
+    left, top = max(0, x), max(0, y)
+    right, bottom = min(screen_w, x + w), min(screen_h, y + h)
+    if right <= left or bottom <= top:
+        return None
+    return left, top, right - left, bottom - top
 
 
 class ShockShotProvider(QQuickImageProvider):
@@ -22,11 +34,13 @@ class ShockShotProvider(QQuickImageProvider):
         super().__init__(QQuickImageProvider.Image)
         self.image = QImage()
 
-    def grab(self, screen):
+    def grab(self, screen, x, y, w, h):
+        started = time.perf_counter()
         try:
-            self.image = shrink(screen.grabWindow(0).toImage())
+            self.image = shrink(screen.grabWindow(0, x, y, w, h).toImage())
         except Exception:
             self.image = QImage()
+        open_trace.mark(f'shock-grab ms={(time.perf_counter() - started) * 1000:.1f} w={w} h={h}')
         return not self.image.isNull()
 
     def clear(self):
@@ -40,7 +54,7 @@ class ShockShotProvider(QQuickImageProvider):
 
 
 class ShockShot(QObject):
-    """Exposé à QML sous le nom ShockShot : capture(nomEcran) -> bool, release()."""
+    """Exposé à QML sous le nom ShockShot : capture(nomEcran, x, y, w, h) -> bool, release()."""
 
     seqChanged = Signal()
 
@@ -54,10 +68,12 @@ class ShockShot(QObject):
 
     seq = Property(int, _seq_get, notify=seqChanged)
 
-    @Slot(str, result=bool)
-    def capture(self, screen_name):
+    @Slot(str, int, int, int, int, result=bool)
+    def capture(self, screen_name, x, y, w, h):
+        """Capture la région (x, y, w, h), en pixels logiques locaux à l'écran, bornée à l'écran."""
         screen = next((s for s in QGuiApplication.screens() if s.name() == screen_name), None)
-        if screen is None or not self.provider.grab(screen):
+        region = clamp_region(screen.size().width(), screen.size().height(), x, y, w, h) if screen is not None else None
+        if region is None or not self.provider.grab(screen, *region):
             self.provider.clear()
             return False
         self._seq += 1

@@ -3,7 +3,7 @@ import QtQuick.Window
 import qs.services
 import qs.config
 
-// Onde de choc unique, déclenchée par fire(screen, x, y). Fenêtre créée à la première utilisation, masquée au repos (aucun rendu, aucun minuteur).
+// Onde de choc unique, déclenchée par fire(screen, x, y). Fenêtre créée une fois au préchauffage (warm()), masquée au repos (aucun rendu, aucun minuteur), puis réutilisée.
 // Le shader (shaders/shockwave.frag.qsb) ne montre des pixels capturés que sur l'anneau en mouvement ; le reste laisse voir le bureau réel.
 Item {
     id: root
@@ -12,7 +12,15 @@ Item {
     // Fenêtre du shell : l'onde se place juste en dessous (jamais au-dessus du panneau).
     property var shell: null
     // Capture synchrone sur le fil graphique : au-delà de ce budget (ms), l'onde est coupée pour le reste de la session.
-    readonly property int captureBudgetMs: 45
+    readonly property int captureBudgetMs: 60
+    // Rayon maximal de l'onde (px logiques) : seul le carré de côté 2 * reach autour du point de départ est capturé.
+    readonly property int reach: 520
+    // Trace d'ouverture opt-in (open_trace.py) : sans elle, note() ne fait rien.
+    readonly property bool tracing: Bridge.traceEnabled()
+    function note(step: string): void {
+        if (tracing)
+            Bridge.trace(step);
+    }
     readonly property int maxOverruns: 3
     // Marge de la minuterie de sécurité au-delà de la vie maximale de l'onde (ms).
     readonly property int safetyMarginMs: 300
@@ -30,6 +38,11 @@ Item {
     readonly property int refireGuardMs: 150
 
     property var shotScreen: null
+    // Région capturée, en pixels logiques locaux à l'écran ; centre de l'onde normalisé dans cette région.
+    property int regionX: 0
+    property int regionY: 0
+    property int regionW: 1
+    property int regionH: 1
     property real centerX: 0
     property real centerY: 0
     property real farDistance: 1
@@ -39,13 +52,29 @@ Item {
     property double startedAt: 0
 
     function fire(screen, x, y): void {
-        if (!allowed || !screen)
+        if (!allowed || !screen) {
+            note("shock skipped reason=" + (!enabled || !screen ? "disabled" : overBudget ? "overBudget" : "reduced"));
             return;
-        if (active && Date.now() - startedAt < refireGuardMs)
+        }
+        if (active && Date.now() - startedAt < refireGuardMs) {
+            note("shock skipped reason=refire");
             return;
+        }
+        // Fenêtre non préchauffée : jamais créée de façon synchrone pendant l'ouverture, l'onde est omise pour cette fois.
+        if (!loader.item) {
+            note("shock skipped reason=cold");
+            return;
+        }
         stop();
+        const w = screen.width;
+        const h = screen.height;
+        const side = 2 * reach;
+        const rw = Math.min(side, w);
+        const rh = Math.min(side, h);
+        const rx = Math.max(0, Math.min(w - rw, Math.round(x - reach)));
+        const ry = Math.max(0, Math.min(h - rh, Math.round(y - reach)));
         const t0 = Date.now();
-        const captured = ShockShot.capture(screen.name);
+        const captured = ShockShot.capture(screen.name, rx, ry, rw, rh);
         // La première capture (échauffement du pilote) n'est pas comptée ; ensuite, des dépassements consécutifs seulement.
         if (!warmedUp)
             warmedUp = true;
@@ -53,33 +82,46 @@ Item {
             overruns++;
         else
             overruns = 0;
-        if (overruns >= maxOverruns)
+        if (overruns >= maxOverruns && !overBudget) {
             overBudget = true;
+            note("shock overBudget tripped ms=" + (Date.now() - t0));
+        }
         if (!captured || overBudget) {
+            note("shock skipped reason=" + (!captured ? "capture-failed" : "overBudget"));
             ShockShot.release();
             return;
         }
-        const w = screen.width;
-        const h = screen.height;
         shotScreen = screen;
-        centerX = Math.max(0, Math.min(1, x / w));
-        centerY = Math.max(0, Math.min(1, y / h));
-        farDistance = Math.max(1, Math.hypot(Math.max(x, w - x), Math.max(y, h - y)));
+        regionX = rx;
+        regionY = ry;
+        regionW = rw;
+        regionH = rh;
+        centerX = Math.max(0, Math.min(1, (x - rx) / rw));
+        centerY = Math.max(0, Math.min(1, (y - ry) / rh));
+        farDistance = reach;
         lifeSeconds = Math.min(maxLifeSeconds, farDistance / waveSpeed + decaySeconds);
         startedAt = Date.now();
         active = true;
         safety.restart();
-        loader.active = true;
+        loader.item.begin();
+        note("shock fired");
+    }
+
+    // Crée la fenêtre de l'onde (masquée) et compile le shader à l'avance ; appelée une fois par Main.qml au préchauffage.
+    function warm(): void {
+        if (enabled)
+            loader.active = true;
     }
 
     function stop(): void {
+        if (active)
+            note("shock end");
         safety.stop();
         anim.stop();
         active = false;
         wave = 0;
         if (loader.item)
             loader.item.end();
-        loader.active = false;
         ShockShot.release();
     }
     onAllowedChanged: if (!allowed && active)
@@ -107,8 +149,6 @@ Item {
     Loader {
         id: loader
         active: false
-        onLoaded: if (root.active)
-            item.begin()
 
         sourceComponent: Window {
             id: win
@@ -125,6 +165,7 @@ Item {
             function launch(): void {
                 if (visible && image.status === Image.Ready && root.active && !anim.running) {
                     root.wave = 0;
+                    root.note("shock shown");
                     anim.start();
                 }
             }
@@ -133,11 +174,14 @@ Item {
                 image.source = "";
             }
 
+            // Sans parent transitoire : le shell est masqué au déclenchement et Qt différerait sinon l'affichage de l'onde.
+            transientParent: null
+            onVisibleChanged: launch()
             screen: root.shotScreen
-            x: root.shotScreen ? root.shotScreen.virtualX : 0
-            y: root.shotScreen ? root.shotScreen.virtualY : 0
-            width: root.shotScreen ? root.shotScreen.width : 1
-            height: root.shotScreen ? root.shotScreen.height : 1
+            x: (root.shotScreen ? root.shotScreen.virtualX : 0) + root.regionX
+            y: (root.shotScreen ? root.shotScreen.virtualY : 0) + root.regionY
+            width: root.regionW
+            height: root.regionH
             title: "Panneaux · Onde de choc"
             color: "transparent"
             visible: false
@@ -172,6 +216,7 @@ Item {
                 property real boost: root.brightness
                 property real tintMix: root.tintAmount
                 property real fade: Math.max(0, Math.min(1, (root.lifeSeconds - root.wave) / root.fadeSeconds))
+                property real reach: root.reach
                 fragmentShader: Qt.resolvedUrl("../../shaders/shockwave.frag.qsb")
             }
         }

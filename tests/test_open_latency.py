@@ -23,9 +23,11 @@ def test_topmost_skipped_while_animating():
 
 def test_trace_off_by_default(tmp_path, monkeypatch):
     monkeypatch.delenv('WINLESTIA_TRACE_OPEN', raising=False)
+    monkeypatch.delenv('LOCALAPPDATA', raising=False)
     monkeypatch.setattr('tempfile.tempdir', str(tmp_path))
     sys.modules.pop('open_trace', None)
     trace = load('open_trace')
+    monkeypatch.setattr(trace, '_flag_file', lambda: False)
     trace.begin('event palette')
     trace.mark('openMode palette')
     assert not trace.ENABLED
@@ -34,6 +36,7 @@ def test_trace_off_by_default(tmp_path, monkeypatch):
 
 def test_trace_writes_when_enabled(tmp_path, monkeypatch):
     monkeypatch.setenv('WINLESTIA_TRACE_OPEN', '1')
+    monkeypatch.delenv('LOCALAPPDATA', raising=False)
     monkeypatch.setattr('tempfile.tempdir', str(tmp_path))
     sys.modules.pop('open_trace', None)
     trace = load('open_trace')

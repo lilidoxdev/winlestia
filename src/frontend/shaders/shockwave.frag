@@ -16,6 +16,7 @@ layout(std140, binding = 0) uniform buf {
     float boost;      // gain de luminosité
     float tintMix;    // part de teinte
     float fade;       // 1 -> 0 en fin de vie
+    float reach;      // rayon maximal de l'onde, px logiques : tout s'éteint avant le bord de la région capturée
 };
 
 layout(binding = 1) uniform sampler2D source;
@@ -26,7 +27,7 @@ void main() {
     vec2 dir = dist > 0.0001 ? delta / dist : vec2(0.0);
     float tl = max(0.0, time - dist / speed);
     float reached = step(0.0, time - dist / speed);
-    float envelope = exp(-7.0 * tl) * (1.0 - 0.45 * dist / far) * reached;
+    float envelope = exp(-7.0 * tl) * (1.0 - 0.45 * dist / far) * reached * (1.0 - smoothstep(0.6 * reach, reach, dist));
     float disp = amplitude * sin(15.0 * tl) * envelope;
 
     vec2 uv = clamp(qt_TexCoord0 + dir * disp / size, vec2(0.0), vec2(1.0));

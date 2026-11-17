@@ -44,3 +44,4 @@ clink_errorlevel_*.txt
 buildverify-fullscreen/
 TestResults/
 *.bak-*
+src/frontend/trace-open
