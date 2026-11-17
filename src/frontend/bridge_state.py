@@ -3,12 +3,22 @@ from __future__ import annotations
 import ctypes
 import ctypes.wintypes
 import time
+import open_trace
+from PySide6.QtCore import Slot
 from win_native import MonitorInfo, user32
 from PySide6.QtWidgets import QApplication
 
 
 class StateMixin:
     """Réception des réponses du backend : fusion de l’état et dispatch des événements."""
+
+    @Slot(result=bool)
+    def traceEnabled(self):
+        return open_trace.ENABLED
+
+    @Slot(str)
+    def trace(self, label):
+        open_trace.mark(label)
 
     def screen_names(self, devices):
         # Le backend nomme les moniteurs par périphérique Win32 (\\.\DISPLAY1) alors que QScreen.name() est le nom du
@@ -211,6 +221,7 @@ class StateMixin:
                 'settings:social',
                 'settings:bookmarks',
             ) or event.startswith('workspace:'):
+                open_trace.begin('event ' + event)
                 self.navigate(event)
             else:
                 self.shellEvent.emit(event)

@@ -12,6 +12,7 @@ from win_native import user32
 from app_state import ROOT, CONFIG, QML_ISSUES
 import app_state
 from bridge import Bridge
+from shock_shot import ShockShot
 
 
 def install_exception_hooks(log_path=None):
@@ -86,6 +87,9 @@ def main():
     engine.addImportPath(str(ROOT / 'qml'))
     engine.addImageProvider('capture', bridge.capture.provider)
     engine.addImageProvider('lockshot', bridge.lockshots)
+    shock = ShockShot()
+    engine.addImageProvider('shockshot', shock.provider)
+    engine.rootContext().setContextProperty('ShockShot', shock)
     engine.rootContext().setContextProperty('Bridge', bridge)
     bridge.changed.connect(bridge.theme_inputs_changed)
     QTimer.singleShot(0, bridge.theme_inputs_changed)

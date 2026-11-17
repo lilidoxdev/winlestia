@@ -10,6 +10,7 @@ import qs.components
 import qs.modules.dashboard as Dashboard
 import "winjets"
 import "lock"
+import "fx"
 
 Window {
     id: window
@@ -90,8 +91,28 @@ Window {
     Behavior on panelHeight {
         enabled: !Appearance.reducedEffects
         Anim {
-            duration: Math.round(260 * (Bridge.settings.motionScale ?? 1))
-            easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
+            duration: Math.round(window.heightDuration * (Bridge.settings.motionScale ?? 1))
+            easing.bezierCurve: window.heightCurve
+            onRunningChanged: if (!running && window.tracing)
+                Bridge.trace("anim-done")
+        }
+    }
+    // Palette : ouverture courte à décélération franche (le contenu répond dès la première image), fermeture plus brève
+    // encore ; les autres panneaux gardent la durée d'origine.
+    readonly property int panelHeightDuration: 260
+    // Préchargement du navigateur d'espaces et de la palette après le démarrage : la première ouverture ne paie plus la création.
+    readonly property int warmDelay: 2000
+    readonly property int heightDuration: pageMode === "palette" ? (extraOpen ? Appearance.anim.durations.small : Appearance.anim.durations.expressiveFastEffects) : panelHeightDuration
+    readonly property var heightCurve: pageMode === "palette" ? (extraOpen ? Appearance.anim.curves.standardDecel : Appearance.anim.curves.emphasizedAccel) : Appearance.anim.curves.emphasizedDecel
+    // Trace d'ouverture opt-in (WINLESTIA_TRACE_OPEN=1, voir open_trace.py) : aucune connexion active sinon.
+    readonly property bool tracing: Bridge.traceEnabled()
+    property bool traceFrame: false
+    Connections {
+        target: window
+        enabled: window.tracing && window.traceFrame
+        function onFrameSwapped() {
+            window.traceFrame = false;
+            Bridge.trace("first-frame");
         }
     }
     onPanelWidthChanged: Bridge.updateSurfaces()
@@ -108,7 +129,45 @@ Window {
     function subscribe() {
         Bridge.subscribe(pageMode === "dashboard" ? vis.dashboard : extraOpen, servicePage);
     }
+    // Centre de la palette une fois ouverte, en pixels logiques depuis le coin haut-gauche de l'écran du shell : la fenêtre est centrée
+    // sur l'écran (largeur stable, ou celle de la palette si elle est plus large), le panneau en occupe le haut sur extraHeight.
+    readonly property int paletteWidth: 660
+    readonly property real paletteMargin: 80
+    readonly property real paletteBodyPadding: 36
+    // Hauteur estimée de la palette tant que son chargement asynchrone n'a pas fourni l'élément (titre + liste + pied).
+    readonly property real paletteHeightEstimate: 520
+    function lockWindowsExist() {
+        if (Bridge.lock.locked ?? false)
+            return true;
+        for (let i = 0; i < lockRepeater.count; i++) {
+            const entry = lockRepeater.itemAt(i);
+            if (entry && (entry.lingering || entry.item))
+                return true;
+        }
+        return false;
+    }
+    function fireShockwave() {
+        if (lockWindowsExist())
+            return;
+        const wide = palette.item && palette.item.wide;
+        const panelW = Math.ceil((wide ? Math.min(1320, Bridge.screenWidth - paletteMargin) : paletteWidth) + 40);
+        const paletteH = palette.item ? palette.item.implicitHeight : paletteHeightEstimate;
+        const panelH = Math.ceil(paletteH + paletteBodyPadding);
+        const winW = Math.max(Math.min(1600, Bridge.screenWidth - 16), panelW);
+        const cx = (Bridge.screenWidth - winW) / 2 + winW / 2;
+        const cy = Math.max(0, Config.border.thickness) + panelH / 2;
+        shockwave.fire(window.screen, cx, cy);
+    }
+    Shockwave {
+        id: shockwave
+        shell: window
+        enabled: Bridge.settings.shockwave ?? true
+    }
     function openMode(mode) {
+        if (tracing) {
+            traceFrame = true;
+            Bridge.trace("openMode " + mode);
+        }
         if (mode === "close") {
             vis.dashboard = false;
             peek = false;
@@ -142,6 +201,9 @@ Window {
             wifiOpen = false;
             vis.dashboard = false;
             peek = false;
+            // Onde de choc : capture AVANT que le panneau n'apparaisse (jamais pendant la fermeture), puis la palette s'ouvre.
+            if (mode.split(":")[0] === "palette" && !(extraOpen && pageMode === "palette") && !visible)
+                fireShockwave();
             pageMode = mode.split(":")[0];
             extraOpen = true;
             if (pageMode === "palette")
@@ -172,12 +234,19 @@ Window {
         Bridge.activate();
     }
     onVisibleChanged: {
+        if (tracing) {
+            traceFrame = true;
+            Bridge.trace(visible ? "visible" : "hidden");
+        }
         if (!visible)
             sessionDialog.open = false;
         subscribe();
     }
-    onExtraOpenChanged: if (!extraOpen)
-        sessionDialog.open = false
+    onExtraOpenChanged: if (!extraOpen) {
+        sessionDialog.open = false;
+        if (shockwave.active)
+            shockwave.stop();
+    }
     onPageModeChanged: sessionDialog.open = false
     onControlsOpenChanged: subscribe()
     Shortcut {
@@ -347,7 +416,7 @@ Window {
         }
         Timer {
             id: warmTimer
-            interval: 5000
+            interval: window.warmDelay
             running: true
             repeat: false
             onTriggered: {
@@ -543,6 +612,7 @@ Window {
     }
     // Écran de verrouillage : n'existe que verrouillé (et le temps de l'animation de sortie).
     Repeater {
+        id: lockRepeater
         model: Bridge.frameScreens
         delegate: Loader {
             id: lockLoader

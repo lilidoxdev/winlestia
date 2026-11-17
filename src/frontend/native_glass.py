@@ -45,10 +45,17 @@ class SurfaceCommand(ctypes.Structure):
     _fields_ = [('kind', ctypes.c_uint32), ('points', ctypes.c_float * 6)]
 
 
+def topmost_due(previous, current, moved):
+    """Vrai si les fenêtres de contenu doivent être ré-affirmées au premier plan : jeu de fenêtres modifié, ou fond
+    stable (aucune géométrie envoyée pendant cette synchronisation)."""
+    return bool(current) and (current != previous or not moved)
+
+
 class NativeGlass(QObject):
     def __init__(self, bridge, library=None):
         super().__init__(bridge)
         self.bridge = bridge
+        self.topmost_handles = ()
         self.windows = {}
         self.errors = []
         self.dll = None
@@ -110,6 +117,7 @@ class NativeGlass(QObject):
         live = set()
         native_bump = {3: -1, 4: -1}
         busy = False
+        moved = False
         # Sans la DLL native, la partie fond est ignorée, mais les fenêtres de contenu doivent rester au-dessus de la
         # fenêtre de cadre ci-dessous.
         for window in QApplication.allWindows() if self.dll else ():
@@ -183,6 +191,7 @@ class NativeGlass(QObject):
                     continue
                 record['key'] = key
                 record['components'] = components
+                moved = True
             status = self.dll.BackdropUpdate(handle, 0, True, True)
             if status < 0:
                 self.error('Update', status)
@@ -202,17 +211,23 @@ class NativeGlass(QObject):
         # Les fenêtres de contenu seules restent au-dessus du fond partagé et ne teintent jamais leur texte deux fois.
         # Verrouillé : elles ne se ré-affirment plus, ce sont les fenêtres de verrouillage qui passent en dernier.
         locking = self.bridge.live_lock_windows()
-        for window in () if locking else (
+        content = () if locking else (
             self.bridge.top,
             self.bridge.dock,
             getattr(self.bridge, 'social_win', None),
             getattr(self.bridge, 'bookmarks_win', None),
             getattr(self.bridge, 'dictation_win', None),
             getattr(self.bridge, 'pill_win', None),
-        ):
-            if window and window.isVisible():
-                self.user.SetWindowPos(int(window.winId()), ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
-                busy = True
+        )
+        visible = [window for window in content if window and window.isVisible()]
+        handles = tuple(int(window.winId()) for window in visible)
+        busy = bool(visible)
+        # Pendant une animation (la géométrie change à chaque image) l'ordre Z ne change pas : la passe n'a lieu qu'à
+        # l'apparition d'une fenêtre, puis à la première synchronisation sans mouvement (fin d'animation, tick de 250 ms).
+        if topmost_due(self.topmost_handles, handles, moved):
+            for handle in handles:
+                self.user.SetWindowPos(handle, ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
+        self.topmost_handles = handles
         for window in locking:
             self.user.SetWindowPos(int(window.winId()), ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
             busy = True

@@ -6,6 +6,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 
 ### Ajouts
 
+- Ouverture plus rapide des panneaux, et onde de choc à l'ouverture de la palette de commandes (désactivée avec les effets réduits ; réglage `shockwave`).
 - Température du processeur via un service de capteurs administrateur facultatif, qui s'appuie sur le pilote PawnIO (installation et retrait à la demande, le shell reste non élevé).
 - Écran de verrouillage de Winlestia (côté serveur) : mot de passe PBKDF2, raccourci Ctrl+Alt+L, verrouillage après inactivité, touches système bloquées pendant le verrouillage, levée automatique si l'interface disparaît.
 - Dock configurable : disposition barre / tiroir (`dockLayout`) et bascules rapides Wi-Fi, Bluetooth, mode avion, micro et maintien éveillé (`quickToggle`) côté Winlestia.

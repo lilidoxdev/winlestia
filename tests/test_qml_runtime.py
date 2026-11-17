@@ -89,10 +89,16 @@ def fautes(messages, depuis=0):
 
 @pytest.fixture(scope='session')
 def shell(qapp, bridge, messages):
+    from shock_shot import ShockShot
+
+    shock = ShockShot()
     engine = QQmlApplicationEngine()
+    engine.shock = shock  # garde la référence vivante
     bridge.engine = engine
     engine.addImportPath(str(FRONT / 'qml'))
     engine.addImageProvider('capture', bridge.capture.provider)
+    engine.addImageProvider('shockshot', shock.provider)
+    engine.rootContext().setContextProperty('ShockShot', shock)
     engine.rootContext().setContextProperty('Bridge', bridge)
     debut = len(messages)
     engine.load(QUrl.fromLocalFile(str(FRONT / 'qml' / 'Main.qml')))
@@ -150,7 +156,7 @@ def test_wallpaper_switcher_and_dashboard(qapp, shell, bridge):
 
 
 @pytest.mark.parametrize(
-    'fichier', ('qs/modules/dashboard/Workspaces.qml', 'WorkspaceBrowser.qml', 'ThemePreviewMock.qml', 'CustomThemeEditor.qml')
+    'fichier', ('qs/modules/dashboard/Workspaces.qml', 'WorkspaceBrowser.qml', 'ThemePreviewMock.qml', 'CustomThemeEditor.qml', 'fx/Shockwave.qml')
 )
 def test_module_roots_instantiate(qapp, shell, bridge, fichier):
     _, messages = shell
