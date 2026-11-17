@@ -14,6 +14,8 @@ import app_state
 from bridge import Bridge
 from shock_shot import ShockShot
 
+WARM_WINDOW_DELAY_MS = 250
+
 
 def install_exception_hooks(log_path=None):
     """Journalise les exceptions non gérées (thread principal et threads) dans frontend.log, puis rend la main aux hooks précédents."""
@@ -100,6 +102,8 @@ def main():
     root = engine.rootObjects()[0]
     bridge.top = root
     bridge._window = root
+    # Fenêtre native du shell créée (sans être affichée) pendant le préchargement : la première ouverture ne paie plus la création du HWND.
+    QTimer.singleShot(WARM_WINDOW_DELAY_MS, lambda: root.create() if not root.isVisible() else None)
     bridge.dock = root.findChild(QObject, 'bottomDock')
     bridge.social_win = root.findChild(QObject, 'socialRail')
     bridge.bookmarks_win = root.findChild(QObject, 'bookmarksRail')

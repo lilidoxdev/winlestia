@@ -500,6 +500,9 @@ Window {
                     Bridge.trace("palette-loaded");
                 if (want)
                     item.reset();
+                else
+                    // Préchargement : mêmes résultats vides que l'ouverture (sans le focus), la hauteur est définitive avant la première ouverture.
+                    Bridge.searchPalette("");
             }
         }
         PaneLoader {
