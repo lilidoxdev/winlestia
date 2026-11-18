@@ -354,6 +354,7 @@
         "past": { "$ref": "#/$defs/boolOrExpr" },
         "accent": { "$ref": "#/$defs/boolOrExpr" },
         "tiles": { "type": "integer", "minimum": 1, "maximum": 6 },
+        "grow": { "type": "number", "minimum": 0 },
         "action": { "$ref": "#/$defs/action" }
       }
     },

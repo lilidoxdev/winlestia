@@ -45,3 +45,4 @@ buildverify-fullscreen/
 TestResults/
 *.bak-*
 src/frontend/trace-open
+!docs/winjets/examples/*.zip

@@ -47,7 +47,7 @@ internal static class WinjetLayoutValidator
         ["clock"] = new[] { "type", "variant", "showSeconds", "seconds", "format", "timezone" },
         ["calendar"] = new[] { "type", "variant", "firstDay", "nav" },
         ["list"] = new[] { "type", "items", "title", "subtitle", "trailing", "max", "bar", "action", "group", "icon", "relative", "past",
-            "accent", "tiles" },
+            "accent", "tiles", "grow" },
         ["chart"] = new[] { "type", "series", "variant", "axes", "period", "color", "hover", "valueFormat" },
         ["stat"] = new[] { "type", "value", "label", "delta", "action" },
         ["progress"] = new[] { "type", "value", "variant", "label", "from", "thickness", "big" },
