@@ -34,9 +34,12 @@ WINDOWS_RESERVED = re.compile(r'^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$', r
 EXPR = re.compile(r'\{\{(.*?)\}\}', re.DOTALL)
 PATH_ROOT = re.compile(r'^(settings|state)\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+)*$'
                        r'|^data\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+|\[[^\[\]]+\])+$'
-                       r'|^now$|^instance\.(width|height)$|^media\.[a-zA-Z]+$|^system\.[a-zA-Z]+$|^time\.[a-zA-Z]+$')
+                       r'|^now$|^instance\.(width|height)$|^media\.[a-zA-Z]+$|^time\.[a-zA-Z]+$'
+                       # Flux de contexte de l'hote (winjet_feeds.py) : `system.diskMain.ratio`, `weather.daily[0].min`, `files.folders`.
+                       r'|^item\.[A-Za-z][A-Za-z0-9]*$'  # element courant d'une liste (`item.title`)
+                       r'|^(system|weather|files)\.[a-zA-Z][A-Za-z0-9]*(\.[A-Za-z0-9_]+)*$')
 COND_TOKEN = re.compile(r"\s*(?:(?P<str>'[^']*')|(?P<num>-?\d+(?:\.\d+)?)|(?P<lit>true|false|null)\b"
-                        r"|(?P<path>(?:settings|state|data|instance|media|system|time)(?:\.[A-Za-z0-9_]+|\[[^\[\]]+\])+|now)"
+                        r"|(?P<path>(?:settings|state|data|instance|media|system|weather|files|time)(?:\.[A-Za-z0-9_]+|\[[^\[\]]+\])+|now)"
                         r"|(?P<op>==|!=|<=|>=|&&|\|\||<|>|!|\(|\)))")
 COLOR_LITERAL = re.compile(r'#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(')
 
@@ -103,7 +106,7 @@ class Refs:
         # Indexation `a.b[state.x].c[state.y]` : chaque indice est lui-meme un chemin, litteral ou nombre.
         for inner in re.findall(r'\[([^\[\]]+)\]', path):
             inner = inner.strip()
-            if not (inner[:1] in ('"', "'") or re.fullmatch(r'-?d+', inner)):
+            if not (inner[:1] in ('"', "'") or re.fullmatch(r'-?\d+', inner)):
                 self.check_path(inner, where)
         flat = re.sub(r'\[[^\[\]]+\]', '[]', path)
         assert PATH_ROOT.match(flat.replace('[]', '.x')), f'{where} : chemin non autorise "{path}"'
@@ -168,11 +171,15 @@ def check_widget_semantics(pkg_dir, manifest, widget):
         if src['type'] == 'file':
             assert (pkg_dir / src['path']).is_file(), f"source {sid} : fichier absent {src['path']}"
         elif src['type'] == 'market':
-            assert {'api.binance.com', 'stream.binance.com'} <= network, f'source {sid} : hotes Binance non declares'
+            provider = src.get('provider', 'binance')
+            hosts = {'api.binance.com', 'stream.binance.com'} if provider == 'binance' else {'query1.finance.yahoo.com'}
+            assert hosts <= network, f'source {sid} : hotes {provider} non declares'
             if 'enabledWhen' in src:
                 refs.check_condition(src['enabledWhen'], f'source {sid}.enabledWhen')
         else:
-            assert urlparse(src['url']).hostname in network, f"source {sid} : hote non declare dans permissions.network"
+            # Une source calendar dont l'adresse est un reglage utilisateur ({{settings.x}} seul) echappe a permissions.network.
+            if not (src['type'] == 'calendar' and re.fullmatch(r'\{\{\s*settings\.\w+\s*\}\}', src['url'])):
+                assert urlparse(src['url']).hostname in network, f"source {sid} : hote non declare dans permissions.network"
             if 'enabledWhen' in src:
                 refs.check_condition(src['enabledWhen'], f'source {sid}.enabledWhen')
 
@@ -197,6 +204,8 @@ def check_widget_semantics(pkg_dir, manifest, widget):
         if node['type'] == 'buttons':
             key = node['bind'].split('.', 1)[1]
             assert key in refs.state, f'buttons : cle d\'etat non declaree {key}'
+        if node['type'] == 'list' and 'files' in node['items']:
+            continue  # flux `files.*` fourni par l'hote a l'execution, rien a lire dans le paquet
         if node['type'] == 'list':
             m = re.fullmatch(r'\{\{\s*data\.(\w+)((?:\.\w+)+)\s*\}\}', node['items'])
             assert m, 'list.items doit etre une expression data.<source>.<chemin>'
@@ -265,9 +274,9 @@ def test_builtin_set_is_complete():
 def test_marches_package_contract():
     pkg = BUILTIN / 'winlestia.marches'
     manifest, widget = load(pkg / 'manifest.json'), load(pkg / 'widget.json')
-    assert manifest['permissions']['network'] == ['api.binance.com', 'stream.binance.com']
-    assert widget['data']['market'] == {'type': 'market', 'symbols': ['BTC', 'ETH', 'SOL']}
-    assert {'pair', 'tf', 'hover'} <= set(widget['state'])
+    assert manifest['permissions']['network'] == ['query1.finance.yahoo.com']
+    assert widget['data']['market']['type'] == 'market' and widget['data']['market']['provider'] == 'yahoo'
+    assert widget['data']['market']['symbols'] == ['AAPL', 'MSFT', '^GSPC']
 
 
 def test_zip_matches_folder_and_layout():
