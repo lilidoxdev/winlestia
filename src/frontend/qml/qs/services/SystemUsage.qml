@@ -3,6 +3,15 @@ import QtQuick
 
 QtObject {
     property int refCount: 0
+    // Le backend n'échantillonne que sur demande : un seul usageRef(true) par transition 0 -> 1, un seul (false) en 1 -> 0.
+    property bool sampling: false
+    onRefCountChanged: {
+        const wanted = refCount > 0;
+        if (wanted === sampling)
+            return;
+        sampling = wanted;
+        Bridge.usageRef(wanted);
+    }
     readonly property real gpuTemp: Bridge.performance.gpuTemp ?? NaN
     readonly property real gpuPerc: (Bridge.performance.gpu ?? 0) / 100
     readonly property real cpuTemp: Bridge.performance.cpuTemp ?? NaN

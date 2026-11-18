@@ -1,4 +1,5 @@
-// language: C# 12, file: WindowOverview.cs, target: Windows 11 / .NET 8, liste des fenêtres de la Vue d'ensemble : lecture Win32 et projection pure
+// language: C# 12, file: WindowOverview.cs, target: Windows 11 / .NET 8, liste des fenêtres de la Vue d'ensemble : lecture Win32 et
+// projection pure
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,7 +32,8 @@ internal static class WindowOverview
 
     // Filtrage, ordre et projection purs. L'entrée est déjà en ordre Z (le plus récent d'abord, comme EnumWindows) : l'ordre est
     // conservé. Écartées : fenêtres masquées (autre bureau virtuel), processus du shell, titres « Panneaux · » / Caelestia,
-    // autres écrans (le fond ne couvre que le principal), rectangles dégénérés, doublons de poignée. `resolve` donne (nom d'application, id d'entrée du dock, id d'icône).
+    // autres écrans (le fond ne couvre que le principal), rectangles dégénérés, doublons de poignée. `resolve` donne (nom d'application, id
+    // d'entrée du dock, id d'icône).
     internal static OverviewItem[] Project(IEnumerable<OverviewRaw> windows, ISet<uint> shellPids,
         Func<OverviewRaw, (string App, string Id, string IconId)> resolve)
     {

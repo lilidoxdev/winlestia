@@ -75,7 +75,7 @@ internal sealed partial class Sidebar
         catch (Exception ex) { App.CrashLog(ex); }
     }
 
-    // At most once every 3 s (window activation).
+    // Au plus une fois toutes les 3 s (activation de la fenêtre).
     internal void RecheckThrottled()
     {
         if (Stopwatch.GetTimestamp() - lastCheck > 3 * Stopwatch.Frequency)

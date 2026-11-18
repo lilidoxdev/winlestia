@@ -1,21 +1,21 @@
 // language: C# 12, file: MediaTimeline.cs, target: Windows 11 / .NET 8
-// Pure position/duration maths for media sessions, kept free of WinRT types so it can be unit tested.
+// Calculs purs de position/durée pour les sessions média, sans types WinRT afin de rester testables en unitaire.
 using System;
 
 namespace PanneauxGlass;
 
 internal static class MediaTimeline
 {
-    /// <summary>A duration is known only when EndTime is strictly after StartTime.</summary>
+    /// <summary>Une durée n'est connue que lorsque EndTime est strictement postérieur à StartTime.</summary>
     internal static bool IsDurationKnown(TimeSpan startTime, TimeSpan endTime)
     {
         return endTime > startTime;
     }
 
     /// <summary>
-    /// Position in seconds now. While playing, the reported position is advanced by the time elapsed since
-    /// LastUpdatedTime multiplied by the playback rate. The result is clamped to [0, duration] when the duration
-    /// is known, and only floored at 0 otherwise.
+    /// Position en secondes à l'instant présent. En lecture, la position rapportée est avancée du temps écoulé depuis
+    /// LastUpdatedTime multiplié par la vitesse de lecture. Le résultat est borné à [0, durée] quand la durée
+    /// est connue, et seulement minoré à 0 sinon.
     /// </summary>
     internal static double ExtrapolatePosition(
         double reportedPosition,
@@ -41,7 +41,7 @@ internal static class MediaTimeline
         return duration > 0 ? Math.Min(position, duration) : position;
     }
 
-    /// <summary>True when a session must be (re)subscribed: any change of object identity, not of AUMID.</summary>
+    /// <summary>Vrai quand une session doit être (ré)abonnée : tout changement d'identité d'objet, pas d'AUMID.</summary>
     internal static bool NeedsResubscribe(object? current, object? next)
     {
         return !ReferenceEquals(current, next);

@@ -1,4 +1,4 @@
-<#
+﻿<#
   Capped launcher for Winlestia Fichiers tests. EVERY launch of the app in tests goes through this script.
   Safety: the process lives in a Job Object (ProcessMemoryLimit 800 MB, ActiveProcessLimit 4, KILL_ON_JOB_CLOSE), hard timeout <= 120 s,
   free RAM >= 4 GB required, <= 60 pipe requests spaced >= 20 ms, fixtures only under %TEMP%\WinlestiaFilesOps (removed with Remove-Item,
@@ -83,8 +83,8 @@ if ($Mode -eq 'dnd') {
 if ($Mode -eq 'tabs') { 1..60 | ForEach-Object { New-Item -ItemType Directory -Path (Join-Path $fx ("d{0:00}" -f $_)) | Out-Null } }
 
 if ($Mode -eq 'handler') {
-  # --register / --restore CLI of the exe against a SANDBOX root (WINLESTIA_FILES_HANDLER_ROOT under Software\WinlestiaTest\, no shell
-  # effect, own backup file in the fixture). Never the real HKCU\Software\Classes.
+  # CLI --register / --restore de l'exe contre une racine SANDBOX (WINLESTIA_FILES_HANDLER_ROOT sous Software\WinlestiaTest\, aucun effet
+  # shell, fichier de sauvegarde propre dans la fixture). Jamais le vrai HKCU\Software\Classes.
   $rel = 'Software\WinlestiaTest\Sandbox\files-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
   $bk = Join-Path $fx 'backup.json'
   $fake = Join-Path $fx 'file001.txt'
@@ -131,7 +131,7 @@ if ($Mode -eq 'handler') {
   }
   return
 }
-# WINLESTIA_FILES_DATA_DIR: settings.json + logs of the test run never touch the real profile
+# WINLESTIA_FILES_DATA_DIR : settings.json + journaux de l'exécution de test ne touchent jamais le vrai profil
 $logDir = Join-Path $root ('data-' + (Split-Path $fx -Leaf))
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 $selfLog = Join-Path $logDir 'selftest.log'
@@ -197,7 +197,7 @@ try {
   }
 } finally {
   Sample
-  [void][Job]::CloseHandle($job)                      # KILL_ON_JOB_CLOSE: nothing survives the harness
+  [void][Job]::CloseHandle($job)                      # KILL_ON_JOB_CLOSE : rien ne survit au harnais
   Start-Sleep -Milliseconds 300
   Remove-Item -LiteralPath $fx -Recurse -Force -ErrorAction SilentlyContinue
   Remove-Item -LiteralPath $tabLog -Force -ErrorAction SilentlyContinue

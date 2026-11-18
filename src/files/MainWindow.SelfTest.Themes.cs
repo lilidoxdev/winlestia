@@ -139,7 +139,7 @@ public sealed partial class MainWindow
             }
             if (list.SelectedItems.Count > 0
                 && list.ItemContainerGenerator.ContainerFromItem(list.SelectedItems[0]) is System.Windows.Controls.ListBoxItem row)
-                row.Focus();   // keyboard focus ring on a row
+                row.Focus();   // anneau de focus clavier sur une ligne
             await Task.Delay(PauseAnimationMs);
             ShotScaled(Path.Combine(dir, t.Name + ".png"), 1);
         }

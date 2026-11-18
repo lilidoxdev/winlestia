@@ -20,40 +20,25 @@ Window {
     property bool peek: Bridge.preview
     property string pageMode: "dashboard"
     property bool extraOpen: false
-    property bool mixerOpen: false
-    property bool wifiOpen: false
-    property real wifiExtent: wifiOpen ? Math.min(430, Bridge.screenWidth - 520) : 0
-    property bool wifiSampling: extraOpen && pageMode === "controls" && wifiOpen
-    onMixerOpenChanged: if (mixerOpen)
-        wifiOpen = false
-    onWifiOpenChanged: if (wifiOpen)
-        mixerOpen = false
+    // Page affichée dans le Centre de contrôle : "main", "wifi", "bluetooth" ou "sound".
+    property string controlsPage: "main"
+    property bool wifiSampling: extraOpen && pageMode === "controls" && controlsPage === "wifi"
     onWifiSamplingChanged: subscribe()
-    Behavior on wifiExtent {
-        enabled: !Appearance.reducedEffects
-        Anim {
-            duration: window.menuDuration
-            easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
-        }
-    }
     property int menuDuration: Math.round(
         Appearance.anim.durations.expressiveFastSpatial
         * (["audio", "microphone", "mixer", "controls"].includes(pageMode) ? .6 : 1))
-    property real mixerExtent: mixerOpen ? Math.min(430, Bridge.screenWidth - 520) : 0
     property bool audioSampling: extraOpen && (pageMode === "audio" || pageMode === "microphone" || pageMode === "mixer" ||
-        (pageMode === "controls" && mixerOpen))
+        (pageMode === "controls" && controlsPage === "sound"))
     onAudioSamplingChanged: subscribe()
-    Behavior on mixerExtent {
-        enabled: !Appearance.reducedEffects
-        Anim {
-            duration: window.menuDuration
-            easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
-        }
-    }
     property bool controlsOpen: pageMode === "controls" && extraOpen
     // Hauteur cible de la palette figée le temps de son ouverture (0 = aucune ouverture en cours) ; levée à la fin de l'animation.
     property real paletteOpenTarget: 0
-    property real extraHeight: extraOpen ? (paletteOpenTarget > 0 && pageMode === "palette" ? paletteOpenTarget : extraBody.implicitHeight) + 36 : 0
+    property real extraHeight: {
+        if (!extraOpen)
+            return 0;
+        const paletteBody = paletteOpenTarget > 0 && pageMode === "palette";
+        return (paletteBody ? paletteOpenTarget : extraBody.implicitHeight) + 36;
+    }
     property real contentWidth: pageMode === "workspace" ? Math.min(1220, Bridge.screenWidth - 80) :
         pageMode === "palette" ?
             (palette.item && palette.item.wide ? Math.min(1320, Bridge.screenWidth - 80) : 660) :
@@ -63,7 +48,7 @@ Window {
         pageMode === "audio" || pageMode === "microphone" ? 650 :
         pageMode === "mixer" ? 490 :
         pageMode === "capture" ? 620 :
-        450 + (pageMode === "controls" ? mixerExtent + wifiExtent : 0)
+        450
 
     // Réserve du rail social. Le rail est sa propre fenêtre collée au bord droit du même écran (Bridge.screenX/Width).
     // Seul le recouvrement réel entre le tableau de bord centré et le rail est réservé : rien ne bouge tant qu'ils ne se touchent pas ;
@@ -118,10 +103,19 @@ Window {
     // Palette : ouverture courte à décélération franche (le contenu répond dès la première image), fermeture plus brève
     // encore ; les autres panneaux gardent la durée d'origine.
     readonly property int panelHeightDuration: 260
-    // Préchargement du navigateur d'espaces, de la palette et de l'onde de choc dès la fin du démarrage : la première ouverture ne paie plus la création.
+    // Préchargement du navigateur d'espaces, de la palette et de l'onde de choc dès la fin du démarrage : la première ouverture ne paie
+    // plus la création.
     readonly property int warmDelay: 300
-    readonly property int heightDuration: pageMode === "palette" ? (extraOpen ? Appearance.anim.durations.small : Appearance.anim.durations.expressiveFastEffects) : panelHeightDuration
-    readonly property var heightCurve: pageMode === "palette" ? (extraOpen ? Appearance.anim.curves.standardDecel : Appearance.anim.curves.emphasizedAccel) : Appearance.anim.curves.emphasizedDecel
+    readonly property int heightDuration: {
+        if (pageMode !== "palette")
+            return panelHeightDuration;
+        return extraOpen ? Appearance.anim.durations.small : Appearance.anim.durations.expressiveFastEffects;
+    }
+    readonly property var heightCurve: {
+        if (pageMode !== "palette")
+            return Appearance.anim.curves.emphasizedDecel;
+        return extraOpen ? Appearance.anim.curves.standardDecel : Appearance.anim.curves.emphasizedAccel;
+    }
     // Trace d'ouverture opt-in (WINLESTIA_TRACE_OPEN=1, voir open_trace.py) : aucune connexion active sinon.
     readonly property bool tracing: Bridge.traceEnabled()
     property bool traceFrame: false
@@ -202,8 +196,7 @@ Window {
             vis.dashboard = false;
             peek = false;
             extraOpen = false;
-            mixerOpen = false;
-            wifiOpen = false;
+            controlsPage = "main";
             subscribe();
             return;
         }
@@ -227,14 +220,14 @@ Window {
             vis.dashboard = true;
             peek = true;
         } else {
-            mixerOpen = false;
-            wifiOpen = false;
+            controlsPage = "main";
             vis.dashboard = false;
             peek = false;
             // Onde de choc : capture AVANT que le panneau n'apparaisse (jamais pendant la fermeture), puis la palette s'ouvre.
             if (mode.split(":")[0] === "palette" && !(extraOpen && pageMode === "palette") && !visible)
                 fireShockwave();
-            // Hauteur cible figée pendant l'ouverture de la palette : l'animation ne repart pas quand le chargement ou les résultats changent la hauteur.
+            // Hauteur cible figée pendant l'ouverture de la palette : l'animation ne repart pas quand le chargement ou les résultats
+            // changent la hauteur.
             if (mode.split(":")[0] === "palette" && !(extraOpen && pageMode === "palette"))
                 paletteOpenTarget = palette.item ? palette.item.implicitHeight : paletteHeightEstimate;
             pageMode = mode.split(":")[0];
@@ -287,8 +280,8 @@ Window {
         sequence: "Escape"
         enabled: window.visible && !sessionDialog.open && !(browser.item && browser.item.dialogOpen)
         onActivated: {
-            if (window.pageMode === "controls" && window.wifiOpen)
-                window.wifiOpen = false;
+            if (window.pageMode === "controls" && window.controlsPage !== "main")
+                window.controlsPage = "main";
             else
                 Bridge.closePanel();
         }
@@ -362,8 +355,7 @@ Window {
             window.pageMode === "audio" || window.pageMode === "microphone" ? audio.implicitHeight :
             window.pageMode === "mixer" ? fullMixer.implicitHeight :
             window.pageMode === "capture" ? capturePane.implicitHeight :
-            Math.max(controls.implicitHeight, window.mixerOpen ? sideMixer.implicitHeight : 0,
-                window.wifiOpen ? sideWifi.implicitHeight : 0))
+            controls.implicitHeight)
         visible: window.pageMode !== "dashboard"
         clip: true
         opacity: window.extraOpen ? 1 : 0
@@ -377,76 +369,8 @@ Window {
             id: controls
             width: 410
             visible: window.pageMode === "controls"
-            mixerOpen: window.mixerOpen
-            wifiOpen: window.wifiOpen
-            onToggleMixer: window.mixerOpen = !window.mixerOpen
-            onToggleWifi: window.wifiOpen = !window.wifiOpen
-        }
-        Item {
-            x: 430
-            width: Math.max(0, window.mixerExtent - 20)
-            height: sideMixer.implicitHeight
-            visible: window.pageMode === "controls" && window.mixerExtent > 1
-            clip: true
-            Loader {
-                id: sideMixer
-                width: Math.max(320, window.mixerExtent - 20)
-                opacity: window.mixerOpen ? 1 : 0
-                x: window.mixerOpen ? 0 : 24
-                property bool once: false
-                property bool want: window.pageMode === "controls" && (window.mixerOpen || window.mixerExtent > 1)
-                onWantChanged: if (want)
-                    once = true
-                active: want || once
-                sourceComponent: MixerPane {
-                    onDismiss: window.mixerOpen = false
-                }
-                Behavior on opacity {
-                    enabled: !Appearance.reducedEffects
-                    Anim {
-                        duration: Appearance.anim.durations.small
-                    }
-                }
-                Behavior on x {
-                    enabled: !Appearance.reducedEffects
-                    Anim {
-                        duration: Appearance.anim.durations.expressiveFastSpatial
-                    }
-                }
-            }
-        }
-        Item {
-            x: 430
-            width: Math.max(0, window.wifiExtent - 20)
-            height: sideWifi.implicitHeight
-            visible: window.pageMode === "controls" && window.wifiExtent > 1
-            clip: true
-            Loader {
-                id: sideWifi
-                width: Math.max(320, window.wifiExtent - 20)
-                opacity: window.wifiOpen ? 1 : 0
-                x: window.wifiOpen ? 0 : 24
-                property bool once: false
-                property bool want: window.pageMode === "controls" && (window.wifiOpen || window.wifiExtent > 1)
-                onWantChanged: if (want)
-                    once = true
-                active: want || once
-                sourceComponent: WifiPane {
-                    onDismiss: window.wifiOpen = false
-                }
-                Behavior on opacity {
-                    enabled: !Appearance.reducedEffects
-                    Anim {
-                        duration: Appearance.anim.durations.small
-                    }
-                }
-                Behavior on x {
-                    enabled: !Appearance.reducedEffects
-                    Anim {
-                        duration: Appearance.anim.durations.expressiveFastSpatial
-                    }
-                }
-            }
+            page: window.controlsPage
+            onRequestPage: name => window.controlsPage = name
         }
         Timer {
             id: warmTimer
@@ -501,7 +425,8 @@ Window {
                 if (want)
                     item.reset();
                 else
-                    // Préchargement : mêmes résultats vides que l'ouverture (sans le focus), la hauteur est définitive avant la première ouverture.
+                    // Préchargement : mêmes résultats vides que l'ouverture (sans le focus), la hauteur est définitive avant la première
+                    // ouverture.
                     Bridge.searchPalette("");
             }
         }

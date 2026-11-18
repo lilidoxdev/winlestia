@@ -1,4 +1,4 @@
-// C#12 / FilesRouter fixture / only freshly created temporary files and folders are touched.
+// C#12 / fixture FilesRouter / seuls des fichiers et dossiers temporaires fraîchement créés sont touchés.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,7 +49,7 @@ public class FilesRouterTests
             Assert.True(IsOwn("", profile), "emptyIsUserProfile");
             Assert.True(IsOwn(null, profile), "nullIsUserProfile");
             Assert.True(IsExplorer("\"shell:Downloads\""), "originalArgIsKeptForExplorer");
-            // Drive / share roots arrive with a dangling quote ("<exe>" "%1" with %1 = C:\)
+            // Les racines de lecteur / partage arrivent avec un guillemet pendant ("<exe>" "%1" avec %1 = C:\)
             Assert.True(IsOwn("C:\"", @"C:\"), "rootCQuote");
             Assert.True(PathRouter.Clean("D:\"") == @"D:\", "rootDQuoteCleaned");
             Assert.True(Directory.Exists(@"Q:\") || IsExplorer("Q:\"", @"Q:\"), "rootUnusedDriveGoesToExplorerNormalised");

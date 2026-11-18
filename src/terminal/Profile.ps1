@@ -1,4 +1,4 @@
-﻿# PowerShell 5.1+ / Winlestia interactive theme. No output in scripts or automation.
+﻿# PowerShell 5.1+ / thème interactif Winlestia. Aucune sortie dans les scripts ou l'automatisation.
 if($env:WINLESTIA_NO_THEME -eq '1'){return}
 $argsText=[Environment]::GetCommandLineArgs() -join ' '
 $batch=$argsText -match '(?i)(?:^|\s)-(?:NonInteractive|NonI|Command|C|EncodedCommand|Enc|File|F)(?:\s|$)'

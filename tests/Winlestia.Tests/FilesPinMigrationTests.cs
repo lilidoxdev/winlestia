@@ -1,10 +1,10 @@
-// C#12 / FilesPinMigration: pin removal on an in-memory Preferences (never the user's state file).
+// C#12 / FilesPinMigration : retrait d'épingle sur des Preferences en mémoire (jamais le fichier d'état de l'utilisateur).
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using PanneauxGlass;
 namespace Winlestia.Tests;
-internal class State // in-memory stand-in for the three Preferences members the migration touches
+internal class State // substitut en mémoire des trois membres de Preferences que touche la migration
 {
     public bool FilesPinRemoved; public List<string> TaskbarPins = new(); public List<Entry> Custom = new(); public bool Run(string exe,
         List<string> ids) => FilesPinMigration.Apply(ref FilesPinRemoved, TaskbarPins, Custom, exe, ids);

@@ -18,7 +18,10 @@ Item {
         const v = spec ? Number(Bridge.winjets.resolve(spec.bars, ctx)) : NaN;
         return isFinite(v) ? Math.max(8, Math.min(64, Math.round(v))) : 24;
     }
-    readonly property bool wanted: visible && (!host || (host.live && !host.editing)) && !Appearance.reducedEffects && (Players.active?.isPlaying ?? false)
+    readonly property bool wanted: visible
+        && (!host || (host.live && !host.editing))
+        && !Appearance.reducedEffects
+        && (Players.active?.isPlaying ?? false)
     // Vrai tant que ce bloc détient une référence sur le flux audio.
     property bool subscribed: false
     readonly property real rest: Math.max(2, 3 * sc)

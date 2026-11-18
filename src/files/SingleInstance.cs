@@ -151,7 +151,7 @@ internal sealed class SingleInstance : IDisposable
                 // Client parti ou requête annulée : rien à reporter.
             }
             catch (System.Text.Json.JsonException)
-            {        // garbage from a foreign client
+            {        // données parasites d'un client étranger
             }
             catch (Exception ex) { App.CrashLog(ex); }
             finally { try { slots.Release(); } catch (ObjectDisposedException) { /* Sémaphore déjà libéré à l'arrêt. */ } }

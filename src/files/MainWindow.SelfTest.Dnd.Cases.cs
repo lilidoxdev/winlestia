@@ -190,7 +190,7 @@ public sealed partial class MainWindow
             Check("back on the fixture tab", Norm(Active.Location) == Norm(F) && tabs.Count == 1);
         }
 
-        // 4. context menu: verbs, intercepts, properties
+        // 4. menu contextuel : verbes, interceptions, propriétés
         list.Select(new[] { It("ctxtest.txt") });
         string[] expected = { "open", "copy", "cut", "delete", "rename", "properties" };
         using (var s = BuildMenu(Selection(), false, false))
@@ -304,7 +304,7 @@ public sealed partial class MainWindow
         await DragByMouse(new[] { "file009.txt", "file010.txt" }, "Third", P);
         await Task.Delay(PauseStabilisationMs);
 
-        // 6. leak cycles: 20 menu build/destroy + 20 drag enter/leave
+        // 6. cycles de fuite : 20 constructions/destructions de menu + 20 entrées/sorties de glisser
         void Cycle()
         {
             foreach (var s in new[] { ShellItems.Of(new[] { P("ctxtest.txt") }), ShellItems.OfFolder(F), ShellItems.Of(new[] { P("Cible")

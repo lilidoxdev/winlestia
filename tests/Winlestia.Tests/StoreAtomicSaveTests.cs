@@ -1,4 +1,4 @@
-// Store.Save (atomic write + rolling .bak) and Store.MigrateLegacyData, in temp directories only.
+// Store.Save (écriture atomique + .bak tournant) et Store.MigrateLegacyData, uniquement dans des répertoires temporaires.
 using System;
 using System.IO;
 using System.Linq;
@@ -97,7 +97,7 @@ public class StoreAtomicSaveTests : IDisposable
         Assert.Equal("C", File.ReadAllText(Path.Combine(data, "clipboard", "c.txt")));
         Assert.Contains("old", File.ReadAllText(Path.Combine(data, "preferences-glass.json")));
         Assert.True(File.Exists(Path.Combine(data, "preferences-glass.json.bak")));
-        // second run never overwrites existing data
+        // la seconde exécution n'écrase jamais les données existantes
         File.WriteAllText(Path.Combine(data, "preferences-glass.json"), "{\"PreviousTheme\":\"new\"}");
         Store.MigrateLegacyData(legacy, data);
         Assert.Contains("new", File.ReadAllText(Path.Combine(data, "preferences-glass.json")));

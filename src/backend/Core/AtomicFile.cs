@@ -1,4 +1,5 @@
-// AtomicFile: crash-safe replacement of durable user data (write a unique <path>.<guid>.tmp, flush to disk, then swap it in).
+// AtomicFile : remplacement à l'épreuve des plantages de données utilisateur durables (écriture d'un <path>.<guid>.tmp unique, flush sur
+// disque, puis permutation).
 
 using System;
 using System.IO;
@@ -8,8 +9,8 @@ namespace Winlestia.Shared;
 
 public static class AtomicFile
 {
-    // Text is written with the encoding's own preamble, so Encoding.UTF8 keeps its BOM and null means UTF-8 without BOM
-    // (File.WriteAllText default).
+    // Le texte est écrit avec le préambule propre à l'encodage : Encoding.UTF8 conserve donc son BOM et null signifie UTF-8 sans BOM
+    // (comportement par défaut de File.WriteAllText).
     public static void WriteAllText(string path, string content, Encoding? encoding = null, string? backupPath = null)
     {
         var enc = encoding ?? new UTF8Encoding(false);
@@ -29,8 +30,8 @@ public static class AtomicFile
     public static void WriteAllBytes(string path, byte[] bytes, string? backupPath = null) =>
         Write(path, s => s.Write(bytes, 0, bytes.Length), backupPath);
 
-    // The previous content stays untouched until the new content is fully on disk; on any failure the tmp file is removed and the
-    // exception rethrown.
+    // Le contenu précédent reste intact tant que le nouveau n'est pas entièrement sur disque ; en cas d'échec, le fichier tmp est supprimé
+    // et l'exception est relancée.
     public static void Write(string path, Action<Stream> writer, string? backupPath = null)
     {
         string tmp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";

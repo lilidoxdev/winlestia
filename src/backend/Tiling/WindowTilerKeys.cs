@@ -21,7 +21,7 @@ internal sealed partial class WindowTiler
     readonly Dictionary<string, Dictionary<string, double>> ratios = new();
     readonly Dictionary<uint, string> processNames = new();
     HashSet<string>? excluded; HwndSource? keySink; readonly List<int> keyIds = new();
-    // Ids 41-44 focus, 45-48 swap (Left,Right,Up,Down), 49 float, 50-51 grow, 52-54 shrink, 55 exclude application.
+    // Ids 41-44 focus, 45-48 échange (Gauche, Droite, Haut, Bas), 49 flottant, 50-51 agrandir, 52-54 réduire, 55 exclure l'application.
     static readonly (int id, uint mods, uint vk, string label)[] Bindings ={
   (41,3,0x25,"Ctrl + Alt + ←"),(42,3,0x27,"Ctrl + Alt + →"),(43,3,0x26,"Ctrl + Alt + ↑"),(44,3,0x28,"Ctrl + Alt + ↓"),
   (45,7,0x25,"Ctrl + Alt + Maj + ←"),(46,7,0x27,"Ctrl + Alt + Maj + →"),(47,7,0x26,"Ctrl + Alt + Maj + ↑"),(

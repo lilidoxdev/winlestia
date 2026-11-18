@@ -1,4 +1,5 @@
-// C#12 / Outils de test Winjets : paquets minimaux fabriqués en code (dossier ou ZIP), dossier temporaire, variable d'environnement restaurée.
+// C#12 / Outils de test Winjets : paquets minimaux fabriqués en code (dossier ou ZIP), dossier temporaire, variable d'environnement
+// restaurée.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -77,7 +78,8 @@ internal sealed class Pkg
           "state": { "mode": "face", "count": 1, "flag": false },
           "data": {
             "demo": { "type": "file", "path": "assets/demo.json" },
-            "live": { "type": "http", "url": "https://api.example.com/v1/price", "refresh": 120, "enabledWhen": "settings.source == 'live'" }
+            "live": { "type": "http", "url": "https://api.example.com/v1/price", "refresh": 120,
+                "enabledWhen": "settings.source == 'live'" }
           },
           "layouts": [
             { "minWidth": 0, "root": { "type": "column", "gap": 8, "padding": 8, "children": [
@@ -85,7 +87,8 @@ internal sealed class Pkg
               { "type": "clock", "variant": "{{settings.range}}", "showSeconds": "{{ settings.showSeconds }}" },
               { "type": "image", "src": "assets/logo.png", "fit": "cover" },
               { "type": "chart", "series": "data.live.prices", "color": "positive" },
-              { "type": "buttons", "bind": "state.mode", "options": [ { "value": "face", "label": "Face" }, { "value": "pile", "label": "Pile" } ] },
+              { "type": "buttons", "bind": "state.mode", "options": [ { "value": "face", "label": "Face" }, {
+                  "value": "pile", "label": "Pile" } ] },
               { "type": "stat", "value": "1", "action": { "type": "setState", "key": "mode", "value": "pile" } }
             ] } }
           ]

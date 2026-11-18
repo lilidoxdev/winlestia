@@ -16,12 +16,41 @@ IconButton {
     readonly property string kind: DockItems.kind(itemId)
     readonly property var quick: (Bridge.quick ?? {})[itemId]
     readonly property bool available: kind !== "toggle" || (quick?.available ?? false)
-    readonly property bool on: itemId === "autoTile" ? (Bridge.settings.autoTile ?? false) : kind === "toggle" ? (quick?.on ?? false) : false
+    readonly property bool on: {
+        if (itemId === "autoTile")
+            return Bridge.settings.autoTile ?? false;
+        return kind === "toggle" ? (quick?.on ?? false) : false;
+    }
     readonly property string title: qsTr(DockItems.label(itemId))
-    readonly property string hint: itemId === "autoTile" ? (on ? qsTr("Organisation automatique : activée") + "\n" + qsTr("Ctrl+Alt+flèches : changer de fenêtre") : qsTr("Organisation automatique : désactivée")) : kind === "toggle" ? title + " : " + (!available ? qsTr("indisponible") : on ? qsTr("activé") : qsTr("désactivé")) : kind === "shortcut" ? title : ""
+    readonly property string hint: {
+        if (itemId === "autoTile") {
+            if (!on)
+                return qsTr("Organisation automatique : désactivée");
+            return qsTr("Organisation automatique : activée") + "
+" + qsTr("Ctrl+Alt+flèches : changer de fenêtre");
+        }
+        if (kind === "toggle") {
+            if (!available)
+                return title + " : " + qsTr("indisponible");
+            return title + " : " + (on ? qsTr("activé") : qsTr("désactivé"));
+        }
+        return kind === "shortcut" ? title : "";
+    }
 
-    objectName: itemId === "autoTile" ? "dockAutoTile" : itemId === "running" ? "dockRunning" : itemId === "network" ? "dockNetwork" : "dock-" + itemId
-    icon: itemId === "network" ? (Bridge.networkKind === "ethernet" ? "lan" : Bridge.networkKind === "none" ? "wifi_off" : "wifi") : DockItems.icon(itemId)
+    objectName: {
+        if (itemId === "autoTile")
+            return "dockAutoTile";
+        if (itemId === "running")
+            return "dockRunning";
+        return itemId === "network" ? "dockNetwork" : "dock-" + itemId;
+    }
+    icon: {
+        if (itemId !== "network")
+            return DockItems.icon(itemId);
+        if (Bridge.networkKind === "ethernet")
+            return "lan";
+        return Bridge.networkKind === "none" ? "wifi_off" : "wifi";
+    }
     type: IconButton.Text
     checked: on
     color: on ? Colours.palette.m3secondaryContainer : "transparent"

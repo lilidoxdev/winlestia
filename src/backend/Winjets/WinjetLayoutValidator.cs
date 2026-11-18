@@ -19,14 +19,14 @@ internal static class WinjetLayoutValidator
     static readonly Dictionary<string, string[]> Enums = new(StringComparer.Ordinal)
     {
         ["*.align"] = Align,
-        ["text.style"] = new[] { "title", "label", "body", "caption", "display", "mono" },
+        ["text.style"] = new[] { "title", "label", "body", "caption", "display", "mono", "icon", "eyebrow", "glyph" },
         ["text.align"] = Text,
-        ["text.tone"] = new[] { "primary", "secondary", "accent" },
+        ["text.tone"] = new[] { "primary", "secondary", "accent", "signed", "faint" },
         ["image.fit"] = new[] { "contain", "cover" },
         ["clock.variant"] = new[] { "analog", "digital" },
         ["calendar.variant"] = new[] { "month", "day" },
         ["calendar.firstDay"] = new[] { "monday", "sunday" },
-        ["chart.variant"] = new[] { "line", "area", "bars", "candles" },
+        ["chart.variant"] = new[] { "line", "area", "bars", "candles", "spark" },
         ["visualizer.source"] = new[] { "spectrum" },
         ["progress.variant"] = new[] { "ring", "bar" },
         ["dots.pattern"] = new[] { "pulse", "ripple", "torus" },
@@ -45,15 +45,17 @@ internal static class WinjetLayoutValidator
         ["text"] = new[] { "type", "text", "style", "align", "maxLines", "tone", "action" },
         ["image"] = new[] { "type", "src", "fit", "radius", "action" },
         ["clock"] = new[] { "type", "variant", "showSeconds", "seconds", "format", "timezone" },
-        ["calendar"] = new[] { "type", "variant", "firstDay" },
-        ["list"] = new[] { "type", "items", "title", "subtitle", "trailing", "max" },
+        ["calendar"] = new[] { "type", "variant", "firstDay", "nav" },
+        ["list"] = new[] { "type", "items", "title", "subtitle", "trailing", "max", "bar", "action", "group", "icon", "relative", "past",
+            "accent", "tiles" },
         ["chart"] = new[] { "type", "series", "variant", "axes", "period", "color", "hover", "valueFormat" },
         ["stat"] = new[] { "type", "value", "label", "delta", "action" },
-        ["progress"] = new[] { "type", "value", "variant", "label" },
+        ["progress"] = new[] { "type", "value", "variant", "label", "from", "thickness", "big" },
         ["dots"] = new[] { "type", "matrix", "pattern", "shape" },
         ["buttons"] = new[] { "type", "options", "bind" },
         ["visualizer"] = new[] { "type", "bars", "source" },
-        ["media"] = new[] { "type", "showArt", "showProgress", "showControls" },
+        ["media"] = new[] { "type", "showArt", "showProgress", "showControls", "backdrop", "pill" },
+        ["note"] = new[] { "type", "key", "placeholder", "grow", "visibleWhen" },
         ["spacer"] = new[] { "type" },
         ["divider"] = new[] { "type" }
     };
@@ -62,14 +64,17 @@ internal static class WinjetLayoutValidator
     {
         ["text"] = new[] { "text" }, ["image"] = new[] { "src" }, ["clock"] = new[] { "variant" }, ["calendar"] = new[] { "variant" },
         ["list"] = new[] { "items", "title" }, ["chart"] = new[] { "series" }, ["stat"] = new[] { "value" },
-        ["progress"] = new[] { "value" }, ["buttons"] = new[] { "options", "bind" },
-        ["column"] = new[] { "children" }, ["row"] = new[] { "children" }, ["stack"] = new[] { "children" }, ["grid"] = new[] { "children" },
-        ["dots"] = Array.Empty<string>(), ["visualizer"] = Array.Empty<string>(), ["media"] = Array.Empty<string>(), ["spacer"] = Array.Empty<string>(), ["divider"] = Array.Empty<string>()
+        ["progress"] = new[] { "value" }, ["note"] = new[] { "key" }, ["buttons"] = new[] { "options", "bind" },
+        ["column"] = new[] { "children" }, ["row"] = new[] { "children" }, ["stack"] = new[] { "children" }, ["grid"] = new[] {
+            "children" },
+        ["dots"] = Array.Empty<string>(), ["visualizer"] = Array.Empty<string>(), ["media"] = Array.Empty<string>(),
+            ["spacer"] = Array.Empty<string>(), ["divider"] = Array.Empty<string>()
     };
 
     static readonly string[] ColorProperties = { "color", "background", "fill", "stroke", "border", "tint" };
     static readonly Regex LiteralColor = new(@"^\s*(#[0-9a-fA-F]{3,8}|(rgb|hsl)a?\s*\()", RegexOptions.Compiled);
-    static readonly string[] ActionTypes = { "setState", "refresh", "openUrl", "openSettings", "media.playPause", "media.next", "media.prev" };
+    static readonly string[] ActionTypes = { "setState", "refresh", "openUrl", "open", "openDrive", "openSettings", "media.playPause",
+        "media.next", "media.prev" };
 
     sealed class Walk
     {
@@ -80,9 +85,16 @@ internal static class WinjetLayoutValidator
         internal WinjetIssues Issues = null!;
     }
 
+    static readonly Regex FilesReference = new(@"\{\{[^}]*\bfiles\.", RegexOptions.Compiled);
+
+    static bool IsBuiltin(WinjetManifest manifest) => manifest.Id.StartsWith("winlestia.", StringComparison.Ordinal);
+
     internal static void Validate(JsonElement widget, WinjetManifest manifest, string? dir, HashSet<string> stateKeys, WinjetIssues issues)
     {
         var ctx = new Walk { Manifest = manifest, Dir = dir, StateKeys = stateKeys, Issues = issues };
+        // Flux `files.*` (fichiers récents) : réservé aux paquets intégrés (id « winlestia.* »).
+        if (!IsBuiltin(manifest) && FilesReference.IsMatch(widget.GetRawText()))
+            issues.Add("$.layouts", "les références files.* sont réservées aux paquets intégrés (id « winlestia.* »).");
         if (issues.Arr(widget, "layouts", "$", true, 16) is not { } layouts)
             return;
         if (layouts.GetArrayLength() == 0)
@@ -142,8 +154,10 @@ internal static class WinjetLayoutValidator
         {
             // Une énumération peut être pilotée par un réglage : la valeur entière « {{ ... }} » est acceptée (le renderer retombe
             // sur la première valeur permise si le résultat n'en fait pas partie).
-            if (p.Name != "type" && (Enums.TryGetValue(type + "." + p.Name, out var allowed) || Enums.TryGetValue("*." + p.Name, out allowed)))
-                if (p.Value.ValueKind != JsonValueKind.String || (!allowed.Contains(p.Value.GetString()) && !IsExpression(p.Value.GetString())))
+            if (p.Name != "type" && (Enums.TryGetValue(type + "." + p.Name, out var allowed)
+                || Enums.TryGetValue("*." + p.Name, out allowed)))
+                if (p.Value.ValueKind != JsonValueKind.String || (!allowed.Contains(p.Value.GetString())
+                    && !IsExpression(p.Value.GetString())))
                     issues.Add(at + "." + p.Name, "valeur permise : " + string.Join(", ", allowed) + " (ou une expression {{ ... }}).");
             if (ColorProperties.Contains(p.Name) && (p.Value.ValueKind != JsonValueKind.String
                 || !WinjetLimits.PaletteRoles.Contains(p.Value.GetString()!)))
@@ -176,10 +190,14 @@ internal static class WinjetLayoutValidator
         Int(node, "maxLines", at, 1, 20, false, issues);
         Int(node, "max", at, 1, 50, false, issues);
         Int(node, "bars", at, 8, 64, false, issues);
+        Int(node, "tiles", at, 1, 6, false, issues);
+        Int(node, "thickness", at, 1, 16, false, issues);
         if (issues.Num(node, "grow", at, false) is { } g && g < 0)
             issues.Add(at + ".grow", "doit être positif ou nul.");
-        foreach (string key in new[] { "showSeconds", "seconds", "axes", "hover", "showArt", "showProgress", "showControls" })
-            if (node.TryGetProperty(key, out var b) && b.ValueKind is not (JsonValueKind.True or JsonValueKind.False or JsonValueKind.String))
+        foreach (string key in new[] { "showSeconds", "seconds", "axes", "hover", "showArt", "showProgress", "showControls", "backdrop",
+            "pill", "nav", "past", "accent", "big" })
+            if (node.TryGetProperty(key, out var b)
+                && b.ValueKind is not (JsonValueKind.True or JsonValueKind.False or JsonValueKind.String))
                 issues.Add(at + "." + key, "doit être vrai/faux ou une expression.");
         if (node.TryGetProperty("action", out var action) && action.ValueKind != JsonValueKind.Null)
             Action(action, at + ".action", ctx);
@@ -211,10 +229,23 @@ internal static class WinjetLayoutValidator
             case "chart":
                 issues.Str(node, "valueFormat", at, false, 20);
                 break;
+            case "list":
+                // Noms de champs de l'élément (ou gabarits) : groupe, glyphe d'icône, date relative.
+                foreach (string field in new[] { "group", "icon", "relative" })
+                    issues.Str(node, field, at, false, 200);
+                break;
             case "image":
                 if (issues.Str(node, "src", at, true, 200) is { } src)
                     WinjetDefinition.CheckAsset(src, ctx.Dir, at + ".src", issues);
                 break;
+            case "note":
+                {
+                    string? key = issues.Str(node, "key", at, true, 40);
+                    if (key != null && !ctx.StateKeys.Contains(key))
+                        issues.Add(at + ".key", "clé d'état « " + key + " » non déclarée dans « state ».");
+                    issues.Str(node, "placeholder", at, false, 100);
+                    break;
+                }
             case "buttons":
                 {
                     if (issues.Arr(node, "options", at, true, 16) is { } options)
@@ -256,6 +287,8 @@ internal static class WinjetLayoutValidator
         {
             "setState" => new[] { "type", "key", "value" },
             "openUrl" => new[] { "type", "url" },
+            "open" => new[] { "type", "path" },
+            "openDrive" => new[] { "type", "drive" },
             _ => new[] { "type" }
         });
         switch (type)
@@ -278,9 +311,19 @@ internal static class WinjetLayoutValidator
                     if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps || uri.UserInfo.Length > 0)
                         issues.Add(at + ".url", "doit être une adresse https:// valide.");
                     else if (!ctx.Manifest.AllowsHost(uri.IdnHost))
-                        issues.Add(at + ".url", "l'hôte « " + uri.IdnHost + " » n'est déclaré ni dans permissions.network ni comme homepage.");
+                        issues.Add(at + ".url", "l'hôte « " + uri.IdnHost
+                            + " » n'est déclaré ni dans permissions.network ni comme homepage.");
                     break;
                 }
+            case "open":
+                // Chemin (ou expression) résolu à l'exécution par l'hôte, qui n'ouvre que les chemins issus des flux files.*.
+                issues.Str(action, "path", at, true, 500);
+                if (!IsBuiltin(ctx.Manifest))
+                    issues.Add(at + ".type", "l'action open est réservée aux paquets intégrés (id « winlestia.* »).");
+                break;
+            case "openDrive":
+                issues.Str(action, "drive", at, true, 40);
+                break;
             case "refresh":
             case "openSettings":
             case "media.playPause":

@@ -2,46 +2,58 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les notes de chaque version sont aussi publiées sur la page GitHub Releases. Les entrées 0.9.0 et antérieures sont conservées dans la langue où elles ont été écrites.
 
-## [Non publié]
+## 1.0.0 — 2026-11-18
 
-### Ajouts
+Première version stable, après la 0.9.2. L'installateur n'est pas signé : SmartScreen affiche un avertissement. Choisir « Informations complémentaires » puis « Exécuter quand même » (vérifier le SHA-256 publié avec la version).
 
-- Ouverture plus rapide des panneaux, et onde de choc à l'ouverture de la palette de commandes (désactivée avec les effets réduits ; réglage `shockwave`).
-- Température du processeur via un service de capteurs administrateur facultatif, qui s'appuie sur le pilote PawnIO (installation et retrait à la demande, le shell reste non élevé).
-- Écran de verrouillage de Winlestia (côté serveur) : mot de passe PBKDF2, raccourci Ctrl+Alt+L, verrouillage après inactivité, touches système bloquées pendant le verrouillage, levée automatique si l'interface disparaît.
-- Dock configurable : disposition barre / tiroir (`dockLayout`) et bascules rapides Wi-Fi, Bluetooth, mode avion, micro et maintien éveillé (`quickToggle`) côté Winlestia.
-- Paroles synchronisées du morceau en cours, cherchées sur lrclib.net (le titre et l'artiste y sont envoyés), avec cache local ; réglage « Paroles » (activé par défaut).
-- Surfaces média redessinées : la pilule et la page Média du tableau de bord partagent la même présentation de la lecture en cours.
-- Pilule : capsule en haut de l'écran qui n'apparaît que lorsqu'il se passe quelque chose (musique avec égaliseur en direct, changement de piste, volume, luminosité, micro) et change de forme en douceur ; réglage « Pilule » (activé par défaut), qui remplace l'indicateur du bord droit.
-- Pilule déployée : spectre en barres arrondies en fond, piste de progression visible avec temps écoulé et total (clic ou glissé pour se déplacer), pochette en fondu, molette pour le volume du lecteur. Elle descend avec le panneau du haut au lieu d'être recouverte, le bord haut ne l'ouvre plus à son aplomb, et elle s'efface quand la page Média du tableau de bord est affichée.
-- Fonds d'écran : le fond choisi se déploie en cercle depuis la vignette, puis les couleurs de tout le shell glissent vers la nouvelle palette au lieu de changer d'un coup (instantané avec les effets allégés).
-- Vue d'ensemble (Win+Alt+Tab, ou Win+Alt+V si Windows refuse la première) : plein écran, vignettes en direct de toutes les fenêtres ouvertes sur le bureau virtuel courant, disposées en grille. Clic ou Entrée pour basculer, Suppr ou clic milieu pour fermer, flèches pour naviguer, lettres pour filtrer, Échap pour quitter.
-- Vue d'ensemble : les vignettes partent de la vraie position des fenêtres pour rejoindre la grille (et reviennent à la fermeture), la fenêtre choisie grandit jusqu'à sa place pendant que les autres s'effacent, et la grille glisse quand une fenêtre se ferme.
-- Winjets : widgets de bureau décrits par un paquet JSON (format `winjet/1`), placés derrière les fenêtres. Trois paquets inclus (horloge, calendrier, graphique Bitcoin) et import de paquets créés par l'utilisateur depuis Réglages > Winjets. Aucun code de paquet n'est exécuté ; le réseau passe uniquement par Winlestia, vers les hôtes déclarés.
-- Winjets : trois nouveaux paquets inclus, qui remplacent horloge, calendrier et graphique Bitcoin : Lecteur (lecture en cours et visualiseur), Système (heure, uptime, processeur, mémoire, batterie, police mono) et Marchés (BTC, ETH et SOL en direct, bougies de 1h à 1m).
-- Winjets, format `winjet/1` : blocs `media` et `visualizer`, graphique en bougies avec survol (`hover`, `valueFormat`), source `market` (Binance), actions `media.playPause`, `media.next` et `media.prev`, racines `media`, `system` et `time`, indexation de chemins, `??` et `fmt()` dans les expressions, mise à l'échelle automatique du contenu.
-- Winjets : curseur Transparence par widget (0 à 100 %, « Par défaut » pour suivre le verre global) dans Réglages > Winjets, sous le bouton de réglages de chaque ligne. Il s'applique au fond de la carte seulement ; le texte reste opaque. La valeur est enregistrée au relâchement du curseur.
-- Winjets : le double-clic sur un widget entre en édition (et en sort ; Échap ou un clic dans le vide aussi), sans passer par un bouton. Pendant l'édition, une grille de cellules (168 px, gouttière 16 px) s'affiche sous les cartes avec les axes du centre de l'écran ; les cartes s'aimantent à la grille, au centre de l'écran et aux autres cartes avec un repère d'alignement, Alt désactive l'aimantation. Une pastille indique la taille en cellules.
-- Winjets : trois paquets inclus de plus. Horloge (24 h ou 12 h, secondes et date en option), Calendrier (mois avec le jour courant en accent, semaine commençant le lundi ou le dimanche ; date du jour en petit format) et Batterie (niveau, état de charge, anneau ou barre ; message discret sur un PC sans batterie).
-- Documentation créateur : `docs/winjets/FORMAT-v1.md`, guide `docs/winjets/MON-PREMIER-WINJET.md`, schémas JSON, gabarit et exemple.
-- Rail social : les lignes « N nouveaux messages » consécutives d'un même réseau sont fusionnées (même jour, moins de 30 min d'écart) en une seule ligne remontée en tête ; une notification réelle reçue dans les 3 s retire un message de la ligne fusionnée et garde sa propre ligne.
-- Rail social : l'historique est séparé par jour (« Aujourd’hui », « Hier », puis date courte).
-- Rail social : une ligne de l'historique se retire seule, par une croix au survol (à la place de l'heure) ou par clic milieu ; nouvelle action de pont `socialHistoryRemove` (`seq`).
-- Fenêtre « Applications » du dock : liste de tâches vivante (icône, nom, processeur et mémoire en direct comme le Gestionnaire des tâches, colonnes triables, jauge dans chaque ligne) à la place de la grille, avec arrêt rapide en deux clics (« Arrêter ? ») sans boîte de dialogue. Les processus élevés dont le chemin est lisible apparaissent désormais, les exécutables sans icône intégrée reçoivent une tuile lettre au lieu de l'icône générique, et une liste de refus empêche d'arrêter explorer.exe, les services système et les processus du shell.
+### Nouveautés
 
-### Modifications
+- Winjets : widgets de bureau décrits par un paquet JSON (format `winjet/1`), placés derrière les fenêtres, sans exécution de code de paquet ; import depuis Réglages > Winjets.
+- Dix Winjets inclus, qui remplacent le pack PC Widgets : Calendrier, Horloge, Lecteur, Système, Marchés (Yahoo Finance), Stockage, Fichiers, Notes, Agenda (lien ICS) et Météo ; la Batterie reste incluse.
+- Winjets : verre « liquid glass v2 » (remplissage fumé, reflet, liseré diagonal, flou selon la taille de la carte).
+- Winjets : curseur de transparence par widget, édition par double-clic avec grille et aimantation (Alt pour désactiver).
+- Format `winjet/1` étendu : blocs `media`, `visualizer` et `note`, sources `market` et `calendar`, flux `system.*`, `weather.*` et `files.*`, actions `media.*`, `open`, `openDrive` et `locate`.
+- Documentation créateur : `docs/winjets/FORMAT-v1.md`, `docs/winjets/MON-PREMIER-WINJET.md`, schémas JSON, gabarit et exemple.
+- Centre de contrôle redessiné : pages Wi-Fi, Bluetooth, sortie audio et microphones dans le panneau, mélangeur par application, connexion et déconnexion d'un appareil Bluetooth appairé.
+- Dock : largeur qui suit le nombre d'icônes, avec défilement à la molette au-delà de l'écran.
+- Dock : indicateur de batterie des périphériques (Bluetooth et XInput), désactivé par défaut (`peripheralBattery`).
+- Dock : disposition barre ou tiroir (`dockLayout`) et bascules rapides Wi-Fi, Bluetooth, mode avion, micro et maintien éveillé (`quickToggle`).
+- Vue d'ensemble (Win+Alt+Tab, ou Win+Alt+V) : vignettes en direct des fenêtres ouvertes, navigation au clavier, filtre par lettres.
+- Pilule en haut de l'écran : lecture en cours avec spectre, changement de piste, volume, luminosité et micro ; réglage « Pilule ».
+- Paroles synchronisées du morceau en cours (lrclib.net, cache local), réglage « Paroles ».
+- Écran de verrouillage (Ctrl+Alt+L) : mot de passe PBKDF2, verrouillage après inactivité, touches système bloquées.
+- Dictée vocale par appui (maintenir AltGr), désactivée par défaut.
+- Fenêtre « Applications » du dock : liste en direct avec processeur et mémoire, arrêt en deux clics.
+- Rail social (bord droit) : notifications de Discord, Instagram, Snapchat, WhatsApp et Telegram ; historique séparé par jour, ligne retirable, fusion des lignes « N nouveaux messages ».
+- Température du processeur via un service de capteurs administrateur facultatif (pilote PawnIO).
+- Menu d'alimentation : entrée « Désinstaller Winlestia », avec choix de garder ou d'envoyer à la Corbeille les réglages ; script de repli `installer/Uninstall-Winlestia.ps1`.
 
-- Winjets : déplacement et redimensionnement plus fluides. Le geste suit le curseur global (et non la fenêtre qui bouge), la fenêtre est placée en un seul appel natif par image, le verre n'est recalculé qu'au relâchement, les voisines sont lues une fois par geste, et la position n'est écrite qu'une fois, au relâchement (aucune écriture sur un simple clic).
-- Winjets : les couleurs de la barre d'édition, de la grille et des poignées viennent bien de la palette (import manquant).
-- Intégration continue : contrôle de longueur de ligne (140), `dotnet format whitespace`, test de fumee de l'installateur, plancher de couverture documenté (règle du cliquet).
-- Dépendances Python verrouillées par hachage (`src/frontend/requirements.lock.txt`), installées avec `--require-hashes` par `installer/build.ps1`.
-- Historique du portage Caelestia condensé dans `docs/history/caelestia-windows.md`.
+### Améliorations
+
+- Palette de commandes : ouverture plus rapide (y compris la première après le démarrage), onde de choc à l'ouverture (réglage `shockwave`), Ctrl+F2 la referme.
+- Ouverture des panneaux plus rapide ; première ouverture du Centre de contrôle moins saccadée.
+- Fonds d'écran : révélation en cercle, puis glissement des couleurs du shell vers la nouvelle palette.
+- Winjets : déplacement et redimensionnement plus fluides, position écrite une seule fois au relâchement.
+- Winlestia Fichiers : gestionnaire de fichiers redessiné.
+- « Effets allégés » devient « Mode léger » ; « Barre Windows » et « Quitter Winlestia » passent dans le menu d'alimentation.
+- Le panneau « Commandes rapides » devient « Centre de contrôle ».
+- Dépendances Python verrouillées par hachage (`--require-hashes`) ; intégration continue complétée (longueur de ligne, `dotnet format`, test de fumée de l'installateur).
+- Hôte PC Widgets externe retiré ; Espace de travail (Workspace) retiré ; historique du portage condensé dans `docs/history/caelestia-windows.md`.
 
 ### Corrections
 
-- Winlestia Fichiers : plantage au démarrage (`System.IO.Pipelines 10.0` introuvable) car le dossier `Glass-v5` partagé avec le backend contient `System.Text.Json` 10 alors que le `deps.json` de Fichiers n'en listait que la version 8. Fichiers référence désormais `System.Text.Json` 10.0.2, comme le backend.
-- Winlestia Fichiers : un plantage ne rouvre plus d'Explorateur vide. Le démarrage `--background` ou sans chemin journalise et quitte ; avec un chemin, le repli vers l'Explorateur n'a lieu qu'une fois.
-- Gestionnaire de dossiers : le verbe n'est plus ré-enregistré au démarrage tant qu'un plantage de Fichiers n'a pas été effacé par un démarrage sain.
+- Docks : une fenêtre « toujours visible » d'une autre application ne reste plus coincée entre le fond en verre du dock et ses icônes ; outil de diagnostic `tools/zorder_probe.py`.
+- Dock : les épingles des applications du Microsoft Store (MSIX) sont enregistrées par AUMID et survivent aux mises à jour et aux redémarrages ; les épingles existantes sont migrées.
+- Météo : la ville n'est plus Londres par défaut ; sans ville, la position Windows est utilisée.
+- Winlestia Fichiers : plantage au démarrage corrigé (`System.IO.Pipelines 10.0` introuvable) ; un plantage ne rouvre plus d'Explorateur vide.
+- Gestionnaire de dossiers : le verbe n'est plus ré-enregistré au démarrage tant qu'un plantage de Fichiers n'a pas été effacé.
+- Winjets : couleurs de la barre d'édition, de la grille et des poignées issues de la palette.
+
+### Installation
+
+- Nouvel installeur WPF `WinlestiaSetup.exe` (fr, en, es, de) : choix des fonctions, mise à jour, modification et désinstallation ; modes `--dry-run` et `--screenshots`. Construction : `installer/build-setup.ps1`. `Winlestia.iss` est conservé.
+- Désinstallation propre : la barre des tâches est rétablie avant tout, les réglages et données sont gardés ou envoyés à la Corbeille au choix.
+- Binaires non signés : SmartScreen avertit. « Informations complémentaires » puis « Exécuter quand même ».
 
 ## [0.9.2] - 2026-11-06
 

@@ -156,3 +156,9 @@ function rows(bar, drawer) {
 function barTools(bar, drawer) {
     return normalize(bar, drawer).bar.filter(function (id) { return !isLauncher(id); });
 }
+
+// Glyphe Material Symbols du type d'un périphérique (pastille de batterie du dock et réglages).
+function peripheralIcon(kind) {
+    var icons = {headset: "headphones", gamepad: "sports_esports", mouse: "mouse", keyboard: "keyboard", laptop: "laptop_windows"};
+    return icons[kind] || "devices_other";
+}

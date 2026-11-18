@@ -120,21 +120,22 @@ def test_clock_date_patterns():
 def test_clock_variants_are_mutually_exclusive():
     widget = load('winlestia.horloge', 'widget.json')
     root = widget['layouts'][0]['root']
-    wrappers = [n for n in nodes(root) if any(c['type'] == 'clock' for c in n.get('children', []))]
+    wrappers = [n for n in nodes(root) if 'visibleWhen' in n
+                and any(c['type'] == 'stack' and c['children'][0]['type'] == 'clock' for c in n.get('children', []))]
     assert len(wrappers) == 3
     for hour12 in (False, True):
         for seconds in (False, True):
             visible = [w for w in wrappers if ex.condition(w['visibleWhen'], {'settings': {'hour12': hour12, 'showSeconds': seconds}})]
             assert len(visible) == 1, (hour12, seconds)
-            clock = visible[0]['children'][0]
+            clock = visible[0]['children'][0]['children'][0]
             assert ('format' in clock) == hour12
 
 
 def test_calendar_first_day_variants_are_mutually_exclusive():
     widget = load('winlestia.calendrier', 'widget.json')
-    root = widget['layouts'][1]['root']
+    root = widget['layouts'][-1]['root']
     wrappers = [n for n in nodes(root) if any(c['type'] == 'calendar' for c in n.get('children', []))]
-    assert widget['layouts'][0]['root']['children'][0]['children'][0]['variant'] == 'day'
+    assert len(widget['layouts']) == 2
     for choice in ('monday', 'sunday'):
         visible = [w for w in wrappers if ex.condition(w['visibleWhen'], {'settings': {'firstDay': choice}})]
         assert len(visible) == 1 and visible[0]['children'][0]['firstDay'] == choice

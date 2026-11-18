@@ -14,7 +14,7 @@ from PySide6.QtCore import Property, QObject, QPointF, QTimer, QUrl, Signal, Slo
 from PySide6.QtGui import QCursor, QGuiApplication
 
 import winjet_expr
-from pc_widgets_original import PcWidgetsOriginal, kind_for
+from winjet_feeds import WinjetFeeds
 
 GRID = 8  # pas d'aimantage
 CELL = 168  # côté d'une cellule : 4 × 2 cellules = 720 × 352 px
@@ -267,6 +267,27 @@ def default_settings(definition, stored):
     return values
 
 
+RETIRED_PREFIX = 'io.github.walidmpcwidgets.original.'  # coquilles de l'ancien hôte PC Widgets (retiré), jamais supprimées sur disque
+
+
+def drop_retired(raw):
+    """Retire de l'état publié les paquets et instances de l'hôte PC Widgets retiré (données utilisateur intactes)."""
+    if not isinstance(raw, dict):
+        return raw
+    packages = raw.get('packages') or []
+    instances = raw.get('instances') or []
+    gone = {p.get('id') for p in packages if str(p.get('id') or '').startswith(RETIRED_PREFIX)}
+    gone |= {i.get('packageId') for i in instances if str(i.get('packageId') or '').startswith(RETIRED_PREFIX)}
+    if not gone:
+        return raw
+    dead = {i.get('id') for i in instances if i.get('packageId') in gone}
+    out = {**raw, 'packages': [p for p in packages if p.get('id') not in gone],
+           'instances': [i for i in instances if i.get('packageId') not in gone]}
+    if isinstance(raw.get('data'), dict):
+        out['data'] = {k: v for k, v in raw['data'].items() if k not in dead}
+    return out
+
+
 def diff_snapshots(old, new):
     """Identifiants dont l'empreinte (instance, paquet, données, géométrie) est ajoutée, retirée ou modifiée."""
     return sorted(i for i in set(old) | set(new) if old.get(i) != new.get(i))
@@ -303,10 +324,7 @@ class WinjetsBridge(QObject):
     def __init__(self, bridge, layer=None):
         super().__init__(bridge)
         self.bridge = bridge
-        self._pcwidgets = PcWidgetsOriginal(self)
-        self._pcwidgets.active_changed.connect(self._originals_changed)
-        self._pcwidgets.remove_requested.connect(self.remove)
-        self._pcwidgets.edit_requested.connect(self._edit_original)
+        self._feeds = WinjetFeeds(bridge)
         self._winjets = {}
         self._screens = []
         self._ids = []
@@ -387,7 +405,7 @@ class WinjetsBridge(QObject):
 
     def _raw(self):
         raw = (getattr(self.bridge, '_state', None) or {}).get('winjets')
-        return raw if isinstance(raw, dict) else {}
+        return drop_retired(raw) if isinstance(raw, dict) else {}
 
     def shell_event(self, event):
         # Explorer redémarré : le backend relaie TaskbarCreated (événement `desktop.explorerRestarted`).
@@ -460,7 +478,6 @@ class WinjetsBridge(QObject):
                 self._local[ident] = geometry
                 self.bridge.action('winjets.setGeometry', {'instanceId': ident, 'geometry': geometry})
         ids = [i['id'] for i in raw.get('instances') or [] if i.get('id') and not i.get('hidden')]
-        self._sync_originals(raw)
         data = raw.get('data') or {}
         fps = {}
         for inst in raw.get('instances') or []:
@@ -496,32 +513,6 @@ class WinjetsBridge(QObject):
             self.instancesChanged.emit()
         self.changed.emit()
 
-    def _sync_originals(self, raw):
-        cards = {}
-        for inst in raw.get('instances') or []:
-            package_id = inst.get('packageId')
-            kind = kind_for(package_id)
-            if not kind or inst.get('hidden') or not self._package(package_id):
-                continue
-            resolved = self._geometry_of(inst)
-            if resolved is None or not inst.get('id'):
-                continue
-            screen, rect = resolved
-            cards[inst['id']] = {
-                'kind': kind, 'screen': screen['name'], 'nx': rect['nx'], 'ny': rect['ny'],
-                'w': rect['w'], 'h': rect['h'], 'visible': not self._edit,
-                'opacity': opacity_of(inst.get('opacity')),
-            }
-        self._pcwidgets.sync(cards)
-
-    def _originals_changed(self, instance_ids):
-        for instance_id in instance_ids:
-            self.instanceChanged.emit(instance_id)
-
-    def _edit_original(self, instance_id):
-        if not self._edit and instance_id in self._ids:
-            self.setEditMode(True)
-
     @staticmethod
     def _differs(a, b):
         keys = ('screen', 'x', 'y', 'w', 'h')
@@ -550,6 +541,7 @@ class WinjetsBridge(QObject):
     cellGap = Property(int, lambda s: GUTTER, constant=True)
     gridMargin = Property(int, lambda s: MARGIN, constant=True)
     desktopLayer = Property(QObject, lambda s: s.layer, constant=True)
+    feeds = Property(QObject, lambda s: s._feeds, constant=True)  # system.disk, weather.*, files.* (voir winjet_feeds)
 
     @Slot(str, result='QVariantMap')
     def workArea(self, screen_name):
@@ -593,7 +585,6 @@ class WinjetsBridge(QObject):
             'packageName': package.get('name', inst.get('packageId', '')),
             'packageOk': bool(package),
             'hidden': bool(inst.get('hidden')),
-            'originalActive': instance_id in self._pcwidgets.active,
             'opacity': opacity_of(inst.get('opacity')),
             'definition': definition,
             'layouts': definition.get('layouts') or [],
@@ -834,7 +825,6 @@ class WinjetsBridge(QObject):
         self._edit_asked = bool(enabled)
         self._edit = bool(enabled)
         self.layer.set_editing(self._edit)
-        self._sync_originals(self._winjets)
         if not enabled:
             self.endGesture()
         self.bridge.action('winjets.setEditMode', {'enabled': bool(enabled)})

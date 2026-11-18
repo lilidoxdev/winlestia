@@ -186,7 +186,8 @@ public class WinjetInstancesTests
         var pkg = Package(t);
         var a = new WinjetInstances(t.Combine("i.json"));
         var id = a.Add(pkg, "", null, null)!.Id;
-        a.SetSettings(id, J("{\"city\":\"abcdefghijklmnopqrstuvwxyz\",\"decimals\":99,\"range\":\"nope\",\"showSeconds\":true,\"zzz\":1}"), pkg.Definition);
+        a.SetSettings(id, J("{\"city\":\"abcdefghijklmnopqrstuvwxyz\",\"decimals\":99,\"range\":\"nope\",\"showSeconds\":true,\"zzz\":1}"),
+            pkg.Definition);
         var s = a.Find(id)!.Settings;
         Assert.Equal(10, ((string)s["city"]!).Length);
         Assert.Equal(6.0, Convert.ToDouble(s["decimals"]));

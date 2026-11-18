@@ -15,22 +15,33 @@ Item {
 
     readonly property bool analog: !!spec && Bridge.winjets.resolve(spec.variant, ctx) === "analog"
     readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
-    readonly property bool seconds: !!spec && (Bridge.winjets.resolve(spec.seconds, ctx) === true || Bridge.winjets.resolve(spec.showSeconds, ctx) === true)
+    readonly property bool seconds: !!spec
+        && (Bridge.winjets.resolve(spec.seconds, ctx) === true || Bridge.winjets.resolve(spec.showSeconds, ctx) === true)
     // Secondes séparées (rôle secondaire) seulement sans `format` personnalisé.
-    readonly property bool split: seconds && !analog && !(spec && spec.format)
-    readonly property string pattern: spec && spec.format ? spec.format : (seconds && !split ? "HH:mm:ss" : "HH:mm")
+    readonly property bool secSplit: seconds && !analog && !(spec && spec.format)
+    // Suffixe AM/PM (formats en 12 h) : rendu petit, à part, en rôle secondaire.
+    readonly property bool hasAp: !analog && !!spec && /\s*(AP|ap)\s*$/.test(String(spec.format ?? ""))
+    readonly property bool split: secSplit || hasAp
+    readonly property string pattern: {
+        if (spec && spec.format)
+            return hasAp ? String(spec.format).replace(/\s*(AP|ap)\s*$/, "") : spec.format;
+        return seconds && !split ? "HH:mm:ss" : "HH:mm";
+    }
     readonly property bool ticking: seconds && visible && (!host || host.live)
     property double stamp: Time.date.getTime()
     readonly property string zone: spec && spec.timezone ? Bridge.winjets.renderText(spec.timezone, ctx) : ""
     readonly property var parts: Bridge.winjets.clockInfo(zone, pattern, stamp)
     readonly property var secParts: Bridge.winjets.clockInfo(zone, "ss", stamp)
-    readonly property real maxPt: Math.max(Appearance.font.size.normal, Appearance.font.size.extraLarge + 12) * sc
-    readonly property real fitPt: Math.max(Appearance.font.size.normal * sc, Math.min(maxPt, block.height * 0.375))
+    readonly property var apParts: Bridge.winjets.clockInfo(zone, "AP", stamp)
+    readonly property string trail: secSplit ? ":" + secParts.text : hasAp ? " " + apParts.text : ""
+    // Chiffres d'affichage : 72 à 96 px selon la hauteur disponible, graisse légère, interlettrage serré.
+    readonly property real fitPx: Math.max(16 * sc, Math.min(96 * sc, block.height * 0.74))
+    readonly property bool motionOk: !Bridge.reducedEffects && !seconds && visible && (!host || host.live)
     readonly property real size: Math.min(width, height)
 
     // Indépendant de la hauteur réelle (la taille de police en dépend) : évite la boucle de liaison.
-    implicitWidth: analog ? 96 * sc : Appearance.font.size.normal * sc * (split ? 8 : 5)
-    implicitHeight: analog ? 96 * sc : Appearance.font.size.normal * sc * 2
+    implicitWidth: analog ? 96 * sc : 20 * sc * (split ? 8 : 5)
+    implicitHeight: analog ? 96 * sc : 40 * sc
 
     Connections {
         target: Time
@@ -70,27 +81,11 @@ Item {
         }
     }
 
-    StyledText {
-        id: label
-
-        visible: !block.analog && !block.split
-        anchors.fill: parent
-        text: block.parts.text
-        color: WinjetTheme.textPrimary
-        font.pointSize: block.fitPt
-        font.weight: Font.Medium
-        horizontalAlignment: block.spec && block.spec.align === "center" ? Text.AlignHCenter : Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
-        fontSizeMode: Text.HorizontalFit
-        minimumPixelSize: 12 * block.sc
-        elide: Text.ElideNone
-    }
-
     // HH:MM en rôle principal, :SS en rôle secondaire ; réduit d'un bloc si la largeur manque (même effet que HorizontalFit).
     Item {
         id: splitRow
 
-        visible: block.split
+        visible: !block.analog
         implicitWidth: mainText.implicitWidth + secText.implicitWidth
         implicitHeight: mainText.implicitHeight
         width: implicitWidth
@@ -101,23 +96,58 @@ Item {
         transformOrigin: Item.TopLeft
         scale: fit
 
+        // Changement de minute : fondu et glissement de 4 px (jamais à la seconde).
+        Connections {
+            target: block
+
+            function onPartsChanged(): void {
+                if (block.motionOk && mainText.text !== "")
+                    minuteSwap.restart();
+            }
+        }
+        ParallelAnimation {
+            id: minuteSwap
+
+            NumberAnimation {
+                target: splitRow
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: Bridge.reducedEffects ? 0 : (WinjetTheme.motionMedium || 220)
+                easing.type: Easing.OutCubic
+            }
+            NumberAnimation {
+                target: mainShift
+                property: "y"
+                from: 4 * block.sc
+                to: 0
+                duration: Bridge.reducedEffects ? 0 : (WinjetTheme.motionMedium || 220)
+                easing.type: Easing.OutCubic
+            }
+        }
+        transform: Translate {
+            id: mainShift
+        }
+
         StyledText {
             id: mainText
 
             text: block.parts.text
             color: WinjetTheme.textPrimary
-            font.pointSize: block.fitPt
-            font.weight: Font.Medium
+            font.pointSize: (Math.round(block.fitPx)) * 0.75
+            font.weight: Font.Light
+            font.letterSpacing: -0.025 * block.fitPx
         }
         StyledText {
             id: secText
 
             anchors.left: mainText.right
             anchors.baseline: mainText.baseline
-            text: ":" + block.secParts.text
-            color: WinjetTheme.textSecondary
-            font.pointSize: block.fitPt * 0.6
-            font.weight: Font.Medium
+            visible: block.trail !== ""
+            text: block.trail
+            color: Qt.alpha(WinjetTheme.textPrimary, 0.6)
+            font.pointSize: (Math.round(block.fitPx * (block.hasAp ? 0.26 : 0.6))) * 0.75
+            font.weight: block.hasAp ? Font.DemiBold : Font.Light
         }
     }
 

@@ -111,7 +111,7 @@ Lecture dans les expressions : `settings.<id>`.
 
 ### 3.3 État d'instance (`state`)
 
-`state` déclare des clés avec leur valeur initiale (texte, nombre ou vrai/faux). Seules les actions `setState` et le bloc `buttons` peuvent les modifier, et seulement pour une clé déclarée. L'état est propre à chaque instance posée sur le bureau. Lecture : `state.<clé>`.
+`state` déclare des clés avec leur valeur initiale (texte, nombre ou vrai/faux). Seules les actions `setState` et le bloc `buttons` peuvent les modifier, et seulement pour une clé déclarée. L'état est propre à chaque instance posée sur le bureau. Lecture : `state.<clé>`. Le bloc `note` écrit lui aussi dans une clé déclarée (texte de 4 000 caractères au plus à l'exécution, retours à la ligne compris ; la valeur initiale reste limitée à 100 caractères).
 
 ### 3.4 Sources de données (`data`)
 
@@ -129,6 +129,9 @@ Le nom de la source (une lettre puis lettres, chiffres ou `_`) devient `data.<no
 - `http` : un JSON distant. `url` en `https://` seulement, dont l'hôte figure dans `permissions.network` ; sans cela l'import échoue. `refresh` : intervalle en secondes, 300 par défaut, **minimum 60** (une valeur plus petite est relevée à 60), 86 400 au plus. `enabledWhen` : condition ; tant qu'elle est fausse, la source n'est jamais appelée.
 
 - `market` : cours en direct de cryptomonnaies via Binance. Obligatoire : `symbols` (1 à 4 symboles en majuscules, ex. `["BTC", "ETH", "SOL"]`) ; facultatif : `enabledWhen`. Le manifeste doit déclarer `api.binance.com` et `stream.binance.com` dans `permissions.network`. Valeur : `{ "live", "updated", "symbols": { "BTC": { "price", "change24h", "candles": { "1h": [...], "1j": [...], "1s": [...], "1m": [...] } } } }`. `change24h` est en pourcents (2.41 pour +2,41 %). Chaque bougie est `[t, o, h, l, c]`. Les mises à jour arrivent en direct, au plus une fois par seconde ; `live` vaut `false` quand le flux est coupé.
+
+  `provider` (facultatif) : `"binance"` (défaut) ou `"yahoo"` (actions, indices, devises). Avec `"yahoo"`, le manifeste doit déclarer `query1.finance.yahoo.com` dans `permissions.network` (et non les hôtes Binance) ; chaque symbole respecte `^[A-Z0-9^.=-]{1,15}$` (`AAPL`, `^GSPC`, `EURUSD=X`). Valeur : `{ "live": false, "symbols": { "AAPL": { "status", "name", "price", "change24h", "history", "candles" } } }` : `status` vaut `ok` ou `error` (un titre en échec n'empêche pas les autres), `history` est la liste des dernières clôtures (60 valeurs au plus), `candles` les bougies `[t, o, h, l, c]`. `live` vaut toujours `false` : les cours sont relus à l'intervalle `refresh`, sans flux.
+- `calendar` : agenda ICS en lecture seule. Obligatoire : `url`, soit une expression seule `"{{settings.agenda}}"` (adresse saisie par l'utilisateur dans un réglage `text`), soit une adresse `https://` littérale dont l'hôte figure dans `permissions.network` ; facultatifs : `refresh` (secondes, de 300 à 86 400, 900 par défaut) et `enabledWhen`. Seuls `https://` et `webcal://` (lu comme `https://`) sont acceptés, port 443 uniquement, sans identifiants dans l'adresse, réponse de 2 Mio au plus ; une adresse non publique est refusée à la connexion. Valeur : `{ "status", "count", "events": [{ "title", "location", "start", "end", "allDay", "timeLabel", "dayLabel" }] }`. `status` vaut `ok`, `unconfigured` (réglage vide) ou `error`. La fenêtre couvre aujourd'hui et les 6 jours suivants, 12 événements au plus, triés par début. Les règles de récurrence `RRULE` prises en charge sont `DAILY`, `WEEKLY` et `MONTHLY` avec `INTERVAL`, `COUNT`, `UNTIL`, `BYDAY` (hebdomadaire seulement) et `EXDATE` ; toute autre règle (`YEARLY`, `BYMONTHDAY`, `BYSETPOS`...) n'est pas développée.
 
 ```json
 "data": { "market": { "type": "market", "symbols": ["BTC", "ETH", "SOL"] } }
@@ -167,18 +170,19 @@ Les blocs n'ont pas d'enfants. Une valeur de type texte accepte des expressions 
 
 | Bloc | Propriétés (obligatoires en gras) |
 |---|---|
-| `text` | **`text`**, `style` (`title`, `label`, `body`, `caption`, `display`, `mono`), `align` (`start`, `center`, `end`), `maxLines`, `tone` (`primary`, `secondary`, `accent`), `action` |
+| `text` | **`text`**, `style` (`title`, `label`, `body`, `caption`, `display`, `mono`, `icon`, `eyebrow`, `glyph`), `align` (`start`, `center`, `end`), `maxLines`, `tone` (`primary`, `secondary`, `accent`, `signed`, `faint`), `action`. `glyph` : nom de Material Symbols en petite taille (20 px), pour les lignes denses ; `eyebrow` : majuscules, petite taille, graisse 600, interlettrage large, couleur d'accent par défaut ; `display` : chiffres légers (300) à interlettrage serré ; `title` : gras. `faint` : texte principal à 0,45 d'opacité. Un texte qui change se fond en 220 ms avec un glissement de 4 px |
 | `image` | **`src`** (chemin sous `assets/`, image `.png .jpg .jpeg .webp .gif`), `fit` (`contain`, `cover`), `radius`, `action` |
 | `clock` | **`variant`** (`analog`, `digital`), `showSeconds` ou `seconds` (vrai/faux ou expression), `format` (`HH:mm`, `HH:mm:ss`...), `timezone` (nom IANA, ex. `Europe/Paris` ; vide = fuseau local) |
-| `calendar` | **`variant`** (`month`, `day`), `firstDay` (`monday`, `sunday`, valeur littérale) |
-| `list` | **`items`** (expression vers un tableau), **`title`**, `subtitle`, `trailing` (**noms de champs** de chaque élément, sans accolades), `max` |
-| `chart` | **`series`** (expression vers un tableau de nombres ou de paires `[t, v]`), `variant` (`line`, `area`, `bars`, `candles`), `axes` (vrai/faux), `period` (texte), `color` (rôle de palette), `hover` (vrai/faux : réticule au survol ; la valeur survolée est écrite dans `state.hover`, à déclarer dans `state`), `valueFormat` (`currency`, `percent`, `number`). Avec `candles`, la série est un tableau de `[t, o, h, l, c]` |
+| `calendar` | **`variant`** (`month`, `day`), `firstDay` (`monday`, `sunday`, valeur littérale), `nav` (vrai/faux ou expression, mois : chevrons précédent/suivant visibles au survol, glissement de 24 px au changement de mois ; le mois courant revient quand la carte est réaffichée) |
+| `list` | **`items`** (expression vers un tableau), **`title`**, `subtitle`, `trailing` (**noms de champs** de chaque élément, sans accolades), `max`, `bar`, `group` (champ dont la valeur donne un en-tête de groupe, affiché à chaque changement de valeur), `icon` (champ contenant un nom de Material Symbols : pastille d'icône), `relative` (champ contenant une date ISO ou des secondes epoch : affiche « dans 1 h » pour un événement à venir le jour même ; avec `past` vrai, « il y a 2 j » pour une date passée), `accent` (vrai/faux : barre d'accent de 3 px à gauche de chaque ligne, d'opacité variable selon la ligne), `tiles` (1 à 6 : disposition en tuiles d'icône sur ce nombre de colonnes). Les lignes apparaissent en fondu, décalées de 30 ms, uniquement quand le contenu change réellement |
+| `chart` | **`series`** (expression vers un tableau de nombres ou de paires `[t, v]`), `variant` (`line`, `area`, `bars`, `candles`, `spark` : courbe fine, aire en dégradé d'accent et point final, sans axes), `axes` (vrai/faux), `period` (texte), `color` (rôle de palette), `hover` (vrai/faux : réticule au survol ; la valeur survolée est écrite dans `state.hover`, à déclarer dans `state`), `valueFormat` (`currency`, `percent`, `number`). Avec `candles`, la série est un tableau de `[t, o, h, l, c]` |
 | `stat` | **`value`**, `label`, `delta` (nombre signé, coloré selon le signe), `action` |
-| `progress` | **`value`** (0 à 1), `variant` (`ring`, `bar`), `label` |
+| `progress` | **`value`** (0 à 1), `variant` (`ring`, `bar`), `label`, `from` (0 à 1 : avec `bar`, la barre couvre l'intervalle de `from` à `value`, pour une plage de températures), `thickness` (épaisseur de l'anneau, 1 à 16 px), `big` (vrai/faux : grand nombre centré dans l'anneau). Les valeurs s'animent en 450 ms |
 | `dots` | **`matrix`** (expression vers un tableau 2D de nombres de 0 à 1) ou **`pattern`** (`pulse`, `ripple`, `torus`, animé seulement quand la carte est visible), `shape` (`circle`, `square`) |
 | `buttons` | **`options`** (`[{ "value": "a", "label": "A" }]`, 16 au plus), **`bind`** (`state.<clé>`, clé déclarée dans `state`) |
-| `media` | `showArt`, `showProgress`, `showControls` (vrai/faux ou expression) : carte de lecture en cours avec pochette, titre, artiste, progression et commandes |
+| `media` | `showArt`, `showProgress`, `showControls`, `backdrop` (pochette floutée et assombrie en fond de carte), `pill` (commandes précédent/lecture/suivant dans une pastille flottante) (vrai/faux ou expression) : carte de lecture en cours avec pochette, titre, artiste, progression et commandes ; un clic sur la barre de progression déplace la lecture si le lecteur le permet |
 | `visualizer` | `bars` (8 à 64) : barres animées pendant la lecture |
+| `note` | **`key`** (clé déclarée dans `state`, valeur texte de 4 000 caractères au plus, retours à la ligne compris), `placeholder` (100 caractères au plus), `grow`, `visibleWhen` : zone de texte multiligne modifiable, enregistrée dans l'état de l'instance. Un clic dans la zone donne le clavier à la carte le temps de la saisie ; la carte reste au fond du bureau. |
 | `spacer` | aucune : espace flexible |
 | `divider` | aucune : filet de séparation |
 
@@ -204,11 +208,24 @@ Chemins permis :
 | `media.playing`, `media.canNext`, `media.canPrev` | lecture en cours (vrai/faux) |
 | `media.position`, `media.length` | position et durée de la piste |
 | `system.cpu`, `system.ram` | usage en pourcents, entier de 0 à 100 |
+| `system.disk[]` | disques fixes : `{ drive, label, usedGb, totalGb, freeGb, percent, ratio }` (`drive` vaut `C:`, `percent` est un entier, `ratio` la proportion 0 à 1 pour `progress`) |
+| `system.diskMain` | le disque système (sinon le premier) : mêmes champs ; vide sans disque |
+| `system.cpuHistory` | 40 entiers au plus (usage CPU en pourcents), échantillonnés seulement tant qu'une carte visible lit ce chemin |
+| `weather.status` | `ok`, `locating`, `error` ou `unconfigured` |
+| `weather.source`, `weather.city` | origine (`city` ou `location`) et ville affichée |
+| `weather.temp`, `weather.feelsLike`, `weather.high`, `weather.low` | températures arrondies (`high` et `low` : aujourd'hui) |
+| `weather.weekLow`, `weather.weekHigh` | minimum et maximum de la semaine (échelle des barres de plage) |
+| `weather.condition`, `weather.icon` | libellé et pictogramme |
+| `weather.daily[]` | 7 jours au plus : `{ day, icon, max, min, rangeFrom, rangeTo }` ; `rangeFrom` et `rangeTo` (0 à 1) placent min et max sur l'échelle de la semaine |
+| `files.recent[]` | 8 fichiers récents au plus : `{ name, path, kind, icon, modified }`, `kind` valant `folder`, `app` ou `file`, `icon` un glyphe de type de fichier, `modified` la date de modification en secondes epoch |
+| `files.folders[]` | `{ name, path, icon }` pour Desktop, Downloads, Documents et Pictures |
 | `system.uptime` | durée depuis le démarrage, déjà mise en forme |
 | `system.battery`, `system.charging` | niveau en pourcents (vide sans batterie) ; en charge ou non |
 | `time.hours`, `time.minutes`, `time.seconds` | heure locale |
 | `now` | date et heure actuelles |
 | `instance.width`, `instance.height` | taille réelle de la carte |
+
+La météo suit le réglage `city` de l'instance (déclarez un réglage `text` d'identifiant `city`) : vide, la carte utilise la position de Windows (demande `locate` au backend), puis à défaut la ville globale de Winlestia ; sans ville, `weather.status` vaut `unconfigured`.
 
 Filtres (liste fermée) :
 
@@ -251,6 +268,8 @@ Le champ `action` d'un `text`, `image`, `stat` ou d'un conteneur le rend cliquab
 | `{ "type": "setState", "key": "mode", "value": "auteur" }` | modifie une clé d'état déclarée |
 | `{ "type": "refresh" }` | rafraîchit les sources réseau, en respectant l'intervalle minimal |
 | `{ "type": "openUrl", "url": "https://exemple.com/page" }` | ouvre l'adresse dans le navigateur ; l'hôte doit être dans `permissions.network` ou être celui de `homepage` |
+| `{ "type": "open", "path": "{{ ... }}" }` | ouvre un fichier, un dossier ou une application avec le programme associé. L'hôte n'ouvre que les chemins publiés par `files.recent` et `files.folders` ; toute adresse (`https://`, `file:`...) et tout chemin réseau UNC (`\\serveur\partage`) est refusé. `open` et les références `files.*` sont réservées aux paquets intégrés (id commençant par `winlestia.`) : le validateur les refuse dans les autres paquets |
+| `{ "type": "openDrive", "drive": "C:" }` | ouvre un disque dans l'Explorateur ; seuls les disques fixes présents dans `system.disk` sont acceptés (lettre suivie de `:`) |
 | `{ "type": "openSettings" }` | ouvre les réglages du Winjet |
 | `{ "type": "media.playPause" }`, `media.next`, `media.prev` | commande le lecteur multimédia en cours |
 

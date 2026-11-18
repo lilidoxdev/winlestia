@@ -8,7 +8,8 @@ import ".."
 // Variante `candles` du bloc chart : séries de [t, o, h, l, c]. Les bougies (mèches comprises) sont tracées une seule fois par
 // changement de données, dans deux ShapePath (haussières m3primary, baissières m3error). Le réticule du survol n'est qu'un
 // couple d'Items déplacés en QML (aucun retracé du graphique) et ne bouge que lorsque la bougie la plus proche change.
-// Survol (`hover: true`) : la clôture de la bougie survolée est écrite dans l'état éphémère du moteur (`state._hover`, jamais envoyé au backend ; null à la sortie).
+// Survol (`hover: true`) : la clôture de la bougie survolée est écrite dans l'état éphémère du moteur (`state._hover`, jamais envoyé au
+// backend ; null à la sortie).
 Item {
     id: block
 

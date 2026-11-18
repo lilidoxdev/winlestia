@@ -35,7 +35,10 @@ StyledRect {
 
     implicitHeight: buttonSize + Appearance.padding.small * 2
     radius: Appearance.rounding.full
-    color: flash ? Qt.tint(Colours.solid(Colours.palette.m3surfaceContainer), Qt.alpha(Colours.palette.m3error, 0.35)) : Colours.layer(Colours.solid(Colours.palette.m3surfaceContainer), 2)
+    color: {
+        const base = Colours.solid(Colours.palette.m3surfaceContainer);
+        return flash ? Qt.tint(base, Qt.alpha(Colours.palette.m3error, 0.35)) : Colours.layer(base, 2);
+    }
 
     transform: Translate {
         id: shakeOffset

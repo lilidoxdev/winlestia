@@ -68,11 +68,12 @@ internal static class FilesDefaultHandler
             bool tripped = FilesHandlerGuard.ConsumeFlag(FilesHandler.DataDir);
             var o = HandlerOptions.FromEnvironment();
             bool pref = Store.State.FilesDefaultHandler;
-            switch (FilesHandlerGuard.DecideStartup(pref, File.Exists(ExePath), tripped, FilesHandlerGuard.HasPendingCrash(FilesHandler.DataDir)))
+            switch (FilesHandlerGuard.DecideStartup(pref, File.Exists(ExePath), tripped,
+                FilesHandlerGuard.HasPendingCrash(FilesHandler.DataDir)))
             {
                 case HandlerStartup.Ensure:
                     if (!FilesHandler.IsRegistered(o, ExePath))
-                        FilesHandler.Register(o, ExePath);      // idempotent; follows a moved install
+                        FilesHandler.Register(o, ExePath);      // idempotent ; suit une installation déplacée
                     break;
                 case HandlerStartup.RestoreAndDisable:
                     Disable(FilesHandler.Restore(o), "Winlestia Fichiers est introuvable : Explorer rouvre à nouveau les dossiers.");

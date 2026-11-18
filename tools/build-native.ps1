@@ -1,4 +1,4 @@
-# Compile les composants natifs (MSVC) dans src\backend\native. Source unique pour build.ps1 et la CI.
+﻿# Compile les composants natifs (MSVC) dans src\backend\native. Source unique pour build.ps1 et la CI.
 # Reutilise src\backend\build-*.cmd. Sans cl.exe dans le PATH, charge l'environnement via vswhere.
 $ErrorActionPreference = 'Stop'
 $backend = Join-Path (Split-Path $PSScriptRoot -Parent) 'src\backend'
@@ -11,7 +11,7 @@ if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue)) {
         -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath }
     if ($vs) {
         $vcvars = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
-        # A temporary .cmd avoids quoting differences between Windows PowerShell and pwsh 7.
+        # Un .cmd temporaire évite les différences de guillemets entre Windows PowerShell et pwsh 7.
         $probe = Join-Path ([IO.Path]::GetTempPath()) "vcvars-$PID.cmd"
         Set-Content -Path $probe -Encoding ascii -Value "@call `"$vcvars`" >nul`r`n@set"
         try {

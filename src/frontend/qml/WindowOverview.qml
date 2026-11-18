@@ -62,7 +62,10 @@ Window {
     property var realRects: ({})
     property var prevRects: ({})
     readonly property real shown: mode === "pick" ? 1 - p : t
-    readonly property real labelOpacity: mode === "pick" ? Math.min(Layout.ramp(t, labelStart, 1), 1 - Layout.ramp(p, 0, pickLabelFade)) : Layout.ramp(t, labelStart, 1)
+    readonly property real labelOpacity: {
+        const base = Layout.ramp(t, labelStart, 1);
+        return mode === "pick" ? Math.min(base, 1 - Layout.ramp(p, 0, pickLabelFade)) : base;
+    }
     readonly property bool animating: tAnim.running || pickAnim.running
     property bool ready: false
     property bool closing: false
@@ -446,7 +449,8 @@ Window {
             onClicked: root.dismiss()
         }
 
-        // Seul ce conteneur s'estompe : keys et la zone de clic restent à pleine opacité pour que le clavier et la souris répondent dès la première image.
+        // Seul ce conteneur s'estompe : keys et la zone de clic restent à pleine opacité pour que le clavier et la souris répondent dès la
+        // première image.
         Item {
         anchors.fill: parent
         opacity: root.shown
@@ -589,7 +593,10 @@ Window {
                     }
                     StyledText {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.max(0, label.width - root.iconSize - root.closeSize - hint.width - label.spacing * (hint.visible ? 3 : 2))
+                        width: {
+                            const gaps = hint.visible ? 3 : 2;
+                            return Math.max(0, label.width - root.iconSize - root.closeSize - hint.width - label.spacing * gaps);
+                        }
                         text: card.title
                         font.pointSize: Appearance.font.size.normal
                         color: card.current ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant

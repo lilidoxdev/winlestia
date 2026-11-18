@@ -101,7 +101,7 @@ public sealed partial class MainWindow
         }
         Check("selection preserved (300)", SelKept());
 
-        // rename, delete, subfolder, size change
+        // renommer, supprimer, sous-dossier, changement de taille
         string a = Path.Combine(F, "new-001.txt"), b = Path.Combine(F, "renamed-001.txt");
         await Task.Run(() => File.Move(a, b));
         ms = await WaitMatch(() => Active.Find(b) != null && Active.Find(a) == null);

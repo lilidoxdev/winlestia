@@ -290,6 +290,17 @@ public static class Store
             if (!Entries.Any(x => x.Id == e.Id))
                 Entries.Add(e);
         bool healed = false;
+        // Avant la boucle : les noms, catégories et icônes déplacés vers le nouvel id sont ainsi appliqués dès ce chargement.
+        try
+        {
+            var merged = new List<string>();
+            if (PackagedApps.MigratePins(State.TaskbarPins, State.Custom, State.Favorites, Entries, merged, prefs: State))
+            {
+                Entries.RemoveAll(x => merged.Contains(x.Id) && !State.Custom.Contains(x));
+                healed = true;
+            }
+        }
+        catch (Exception ex) { Log("PackagedApps.MigratePins : " + ex.GetType().Name + ": " + ex.Message); }
         foreach (var e in Entries)
         {
             if (HealDockTarget(e))

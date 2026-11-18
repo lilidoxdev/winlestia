@@ -44,7 +44,7 @@ internal static class FilesPreload
         if (FilesPipe.TrySend(FilesPipe.Build(Array.Empty<string>(), "", "ping"), 150))
         {
             FilesHandlerGuard.ClearCrashes(FilesHandler.DataDir);
-            return;   // already resident
+            return;   // déjà résident
         }
         try
         {

@@ -1,5 +1,5 @@
-// C#12 / FolderIcons tests: stable icon scheme, migration, cleanup. Fixtures live only under %TEMP%\WinlestiaFilesOps\icons-test and are
-// deleted at the end.
+// C#12 / tests FolderIcons : schéma d'icônes stable, migration, nettoyage. Les fixtures vivent uniquement sous
+// %TEMP%\WinlestiaFilesOps\icons-test et sont supprimées à la fin.
 using System;
 using System.IO;
 using System.Linq;
@@ -40,7 +40,7 @@ public class FolderIconsIntegrationTests
             var notes = new List<(uint kind, uint flags, string? path)>();
             svc.NotifySink = (k, f, p) => { lock (notes) notes.Add((k, f, p)); };
             string icons = Path.Combine(state, "icons");
-            // 1. palette change regenerates the stable icons (atomic, skipped when unchanged)
+            // 1. un changement de palette régénère les icônes stables (atomique, ignoré si inchangé)
             bool first = svc.RegenerateIcons("#fa3c5b");
             string folderIcon = svc.StableIcon("folder");
             byte[] redBytes = File.ReadAllBytes(folderIcon);
@@ -51,7 +51,7 @@ public class FolderIconsIntegrationTests
             bool same = svc.RegenerateIcons("#fa3c5b");
             Assert.True(!same && File.GetLastWriteTimeUtc(folderIcon) == stamp && File.ReadAllBytes(folderIcon).SequenceEqual(redBytes),
                 "unchangedAccentSkipsRegeneration");
-            // a themed folder pointing at the stable path
+            // un dossier thémé pointant vers le chemin stable
             string themed = Path.Combine(dir, "themed");
             Directory.CreateDirectory(themed);
             svc.ApplyFolder(themed, folderIcon);
@@ -67,7 +67,7 @@ public class FolderIconsIntegrationTests
             var data = new List<ExplorerAppearance.Backup> { new() { Folder = themed,
                 AppliedHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Ini(themed)))) } };
             Assert.True(svc.AlreadyThemed(themed, folderIcon, data), "alreadyThemedWithStablePathAfterPaletteChange");
-            // 2. migration of legacy inis + 3. cleanup
+            // 2. migration des anciens inis + 3. nettoyage
             string Legacy(string hex, string kind)
             {
                 string p = Path.Combine(icons, hex + "-" + kind + "-v2.ico");
@@ -106,7 +106,7 @@ public class FolderIconsIntegrationTests
                 "cleanupKeepsIconReferencedByEditedIni");
             Assert.True(File.ReadAllText(Path.Combine(icons, "state.json")).Contains("\"Migrated\":true"),
                 "migrationRunsOnceFlagPersisted");
-            // 4. shell refresh: one ASSOCCHANGED, then bounded per-folder batches
+            // 4. rafraîchissement du shell : un ASSOCCHANGED, puis des lots bornés par dossier
             lock (notes)
                 notes.Clear();
             int gen = 0;
@@ -117,7 +117,7 @@ public class FolderIconsIntegrationTests
             Assert.True(notes.Count(n => n.kind == 0x08000000) == 1 && notes[0].kind == 0x08000000
                 && notes.Count(n => n.kind == 0x2000) == folders && folders >= 6, "shellRefreshAssocChangedOnceThenFolders");
             Assert.True(sw.ElapsedMilliseconds >= (folders / 2 - 1) * 35, "shellRefreshIsThrottled");
-            // 5. ColourVisibleFolder: callable from many threads, budgeted, no exception
+            // 5. ColourVisibleFolder : appelable depuis de nombreux threads, budgété, sans exception
             bool ok = true;
             var tasks = Enumerable.Range(0, 4).Select(t =>
                 Task.Run(() => { try { for (int i = 0; i < 30; i++) svc.ColourVisibleFolder(Path.Combine(dir,
@@ -126,7 +126,7 @@ public class FolderIconsIntegrationTests
             Assert.True(ok && (int)typeof(ExplorerAppearance).GetField("budgetUsed",
                 BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(svc)! <= 12, "colourVisibleFolderThreadSafeAndBudgeted");
             svc.Dispose();
-            // 6. real shell: fresh process, stable path rewritten atomically
+            // 6. vrai shell : processus neuf, chemin stable réécrit atomiquement
             string shell = ShellProbe.Run(Path.Combine(dir, "shell"));
             Console.WriteLine(shell);
             Assert.True(shell.Split('\n').First(l => l.StartsWith("(a1)")).Contains("turned blue: 0 ms")

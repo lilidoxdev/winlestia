@@ -1,4 +1,5 @@
-// C#12 / BrightnessPolicy: DDC/CI range conversion, write rate limit, read failure budget, display id (pure functions).
+// C#12 / BrightnessPolicy : conversion de plage DDC/CI, limite de débit d'écriture, budget d'échecs de lecture, identifiant d'écran
+// (fonctions pures).
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;

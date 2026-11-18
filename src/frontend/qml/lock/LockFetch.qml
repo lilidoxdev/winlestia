@@ -17,14 +17,17 @@ LockCard {
     readonly property real battery: Number(perf.batteryPerc ?? -1)
     readonly property real memTotalKib: SystemUsage.memPerc > 0 ? SystemUsage.memUsed / SystemUsage.memPerc : 0
     readonly property var lines: {
-        const rows = [["OS", SysInfo.osPrettyName], ["USER", SysInfo.userName || "—"], ["UP", SysInfo.uptime], ["CPU", `${Math.round(SystemUsage.cpuPerc * 100)}%`]];
+        const rows = [["OS", SysInfo.osPrettyName], ["USER", SysInfo.userName || "—"], ["UP", SysInfo.uptime],
+            ["CPU", `${Math.round(SystemUsage.cpuPerc * 100)}%`]];
         if (memTotalKib > 0)
             rows.push(["RAM", `${(SystemUsage.memUsed / 1048576).toFixed(1)} / ${SystemUsage.fmtKib(memTotalKib, 0)}`]);
         if (isFinite(battery) && battery >= 0)
             rows.push(["BATT", `${perf.batteryCharging === true ? "(+) " : ""}${Math.round(battery)}%`]);
         return rows;
     }
-    readonly property var swatches: [Colours.palette.m3surfaceContainerHighest, Colours.palette.m3primary, Colours.palette.m3secondary, Colours.palette.m3tertiary, Colours.palette.m3primaryContainer, Colours.palette.m3secondaryContainer, Colours.palette.m3inversePrimary]
+    readonly property var swatches: [Colours.palette.m3surfaceContainerHighest, Colours.palette.m3primary, Colours.palette.m3secondary,
+        Colours.palette.m3tertiary, Colours.palette.m3primaryContainer, Colours.palette.m3secondaryContainer,
+        Colours.palette.m3inversePrimary]
     // Frappe : nombre de caractères révélés sur l'ensemble des lignes ; `typed` fige l'affichage complet.
     readonly property int totalChars: lines.reduce((sum, row) => sum + keyWidth + 1 + String(row[1]).length, 0)
     property real revealed: 0
@@ -151,8 +154,12 @@ LockCard {
 
                     readonly property string keyFull: modelData[0].padEnd(root.keyWidth, " ") + ":"
                     readonly property string valueFull: String(modelData[1])
-                    readonly property int offset: root.lines.slice(0, index).reduce((sum, row) => sum + root.keyWidth + 1 + String(row[1]).length, 0)
-                    readonly property int shown: root.typed ? keyFull.length + valueFull.length : Math.max(0, Math.min(keyFull.length + valueFull.length, Math.floor(root.revealed) - offset))
+                    readonly property int offset: root.lines.slice(0, index).reduce(
+                        (sum, row) => sum + root.keyWidth + 1 + String(row[1]).length, 0)
+                    readonly property int shown: {
+                        const full = keyFull.length + valueFull.length;
+                        return root.typed ? full : Math.max(0, Math.min(full, Math.floor(root.revealed) - offset));
+                    }
 
                     width: linesColumn.width
                     spacing: Appearance.spacing.small

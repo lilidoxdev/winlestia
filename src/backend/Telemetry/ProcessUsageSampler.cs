@@ -194,7 +194,8 @@ internal sealed class ProcessUsageSampler
             {
                 var buffer = new StringBuilder(1024);
                 uint size = (uint)buffer.Capacity;
-                if (!QueryFullProcessImageName(handle, 0, buffer, ref size) || !GetProcessTimes(handle, out long created, out _, out long kernel,
+                if (!QueryFullProcessImageName(handle, 0, buffer, ref size)
+                    || !GetProcessTimes(handle, out long created, out _, out long kernel,
                     out long user))
                     continue;
                 long memory = 0;
@@ -230,7 +231,8 @@ internal sealed class ProcessUsageSampler
 
     // Remonte les liens parent depuis chaque racine. S'arrête sur un cycle, une profondeur excessive, un parent absent ou un parent
     // créé après son enfant (PID réutilisé). startTimeOf renvoie 0 si l'heure de création est inconnue.
-    internal static HashSet<int> Ancestors(IEnumerable<int> roots, IEnumerable<(int Pid, int Parent)> processes, Func<int, long> startTimeOf)
+    internal static HashSet<int> Ancestors(IEnumerable<int> roots, IEnumerable<(int Pid, int Parent)> processes, Func<int,
+        long> startTimeOf)
     {
         var parents = new Dictionary<int, int>();
         foreach (var (pid, parent) in processes)

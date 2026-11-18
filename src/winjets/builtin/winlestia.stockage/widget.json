@@ -1,0 +1,309 @@
+{
+  "size": {
+    "default": [
+      352,
+      168
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      536,
+      536
+    ]
+  },
+  "data": {
+    "niveaux": {
+      "type": "file",
+      "path": "assets/niveaux.json"
+    }
+  },
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 4,
+        "children": [
+          {
+            "type": "row",
+            "grow": 2,
+            "gap": 16,
+            "children": [
+              {
+                "type": "stack",
+                "grow": 2,
+                "children": [
+                  {
+                    "type": "progress",
+                    "variant": "ring",
+                    "value": "{{ system.diskMain.ratio }}",
+                    "label": "{{ system.diskMain.percent }} %",
+                    "thickness": 8,
+                    "big": true
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 2,
+                "align": "center",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Stockage",
+                    "style": "eyebrow"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.diskMain.drive }}",
+                    "style": "title"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.diskMain.freeGb }} Go libres",
+                    "style": "body",
+                    "tone": "accent"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.diskMain.usedGb }} sur {{ system.diskMain.totalGb }} Go",
+                    "style": "caption",
+                    "tone": "secondary"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "minHeight": 340,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 8,
+        "children": [
+          {
+            "type": "row",
+            "grow": 2,
+            "gap": 16,
+            "children": [
+              {
+                "type": "stack",
+                "grow": 2,
+                "children": [
+                  {
+                    "type": "progress",
+                    "variant": "ring",
+                    "value": "{{ system.diskMain.ratio }}",
+                    "label": "{{ system.diskMain.percent }} %",
+                    "thickness": 8,
+                    "big": true
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 2,
+                "align": "center",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Stockage",
+                    "style": "eyebrow"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.diskMain.drive }}",
+                    "style": "title"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.diskMain.freeGb }} Go libres",
+                    "style": "body",
+                    "tone": "accent"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.diskMain.usedGb }} sur {{ system.diskMain.totalGb }} Go",
+                    "style": "caption",
+                    "tone": "secondary"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "row",
+            "grow": 2,
+            "gap": 8,
+            "children": [
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 2,
+                "visibleWhen": "system.disk.0.drive != null",
+                "action": {
+                  "type": "openDrive",
+                  "drive": "{{ system.disk[0].drive }}"
+                },
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "ring",
+                        "value": "{{ system.disk[0].ratio }}",
+                        "label": "{{ system.disk[0].percent }} %",
+                        "thickness": 4
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.disk[0].drive }}",
+                    "style": "body",
+                    "align": "center"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.disk[0].freeGb }} Go libres",
+                    "style": "caption",
+                    "tone": "secondary",
+                    "align": "center"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 2,
+                "visibleWhen": "system.disk.1.drive != null",
+                "action": {
+                  "type": "openDrive",
+                  "drive": "{{ system.disk[1].drive }}"
+                },
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "ring",
+                        "value": "{{ system.disk[1].ratio }}",
+                        "label": "{{ system.disk[1].percent }} %",
+                        "thickness": 4
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.disk[1].drive }}",
+                    "style": "body",
+                    "align": "center"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.disk[1].freeGb }} Go libres",
+                    "style": "caption",
+                    "tone": "secondary",
+                    "align": "center"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 2,
+                "visibleWhen": "system.disk.2.drive != null",
+                "action": {
+                  "type": "openDrive",
+                  "drive": "{{ system.disk[2].drive }}"
+                },
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "ring",
+                        "value": "{{ system.disk[2].ratio }}",
+                        "label": "{{ system.disk[2].percent }} %",
+                        "thickness": 4
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.disk[2].drive }}",
+                    "style": "body",
+                    "align": "center"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.disk[2].freeGb }} Go libres",
+                    "style": "caption",
+                    "tone": "secondary",
+                    "align": "center"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 2,
+                "visibleWhen": "system.disk.3.drive != null",
+                "action": {
+                  "type": "openDrive",
+                  "drive": "{{ system.disk[3].drive }}"
+                },
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "ring",
+                        "value": "{{ system.disk[3].ratio }}",
+                        "label": "{{ system.disk[3].percent }} %",
+                        "thickness": 4
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.disk[3].drive }}",
+                    "style": "body",
+                    "align": "center"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.disk[3].freeGb }} Go libres",
+                    "style": "caption",
+                    "tone": "secondary",
+                    "align": "center"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

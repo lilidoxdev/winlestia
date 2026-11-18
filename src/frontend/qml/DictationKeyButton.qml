@@ -59,7 +59,7 @@ IconTextButton {
         id: capComp
         Window {
             objectName: "dictationCapture"
-            title: "Winlestia · Touche de dictée"
+            title: "Winlestia · " + qsTr("Touche de dictée")
             transientParent: null
             color: "transparent"
             flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint

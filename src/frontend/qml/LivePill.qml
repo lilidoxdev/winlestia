@@ -115,8 +115,10 @@ Window {
     readonly property real compactWidthWanted: discSize + Appearance.padding.normal * 2
     readonly property real compactHeightWanted: Appearance.padding.normal + discSize + Appearance.spacing.small + histHeight
         + Appearance.padding.normal
-    readonly property real expandedHeight: Appearance.padding.large + coverLarge + Appearance.spacing.small + seekHitHeight + timeMetrics.height
-        + (lyricsShown ? Appearance.spacing.small + lyricsHeight : 0) + Appearance.spacing.normal + bandHeight + bandBottomPad
+    readonly property real expandedHeight: Appearance.padding.large + coverLarge + Appearance.spacing.small + seekHitHeight
+        + timeMetrics.height
+        + (lyricsShown ? Appearance.spacing.small + lyricsHeight : 0)
+        + Appearance.spacing.normal + bandHeight + bandBottomPad
     // Largeur voulue (0 au repos) ; au repos la languette garde sa dernière largeur pendant qu'elle se rétracte.
     readonly property real wantedWidth: stateName === "expanded" ? expandedWidth : stateName === "level" ? levelWidth : stateName
         === "compact" ? compactWidthWanted : 0

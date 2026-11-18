@@ -143,7 +143,7 @@ internal static class WallpaperApply
         if (code == 3)
             return (1, "Windows n’a pas répondu.");
         if (display <= 0 && SystemParametersInfo(0x14, 0, path, 3))
-            return (0, "ok");   // COM unavailable: keep the former behaviour
+            return (0, "ok");   // COM indisponible : on garde l'ancien comportement
         return (1, "Windows refused the wallpaper.");
     }
 

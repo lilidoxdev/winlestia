@@ -12,12 +12,17 @@ internal sealed record WinjetSize(int W, int H);
 internal sealed record WinjetSetting(string Id, string Type, string Label, object Default, IReadOnlyList<string> Options, double Min,
     double Max, int MaxLength);
 
-// Source de données : « file » (JSON local sous assets/), « http » (HTTPS, hôte déclaré) ou « market » (cours crypto en direct).
+// Source de données : « file » (JSON local sous assets/), « http » (HTTPS, hôte déclaré), « market » (cours en direct : Binance par
+// défaut, Yahoo Finance avec provider « yahoo ») ou « calendar » (agenda ICS ; `Url` peut être une expression {{settings.x}}).
 internal sealed record WinjetSource(string Id, string Type, string Path, string Url, int Refresh, string EnabledWhen,
-    IReadOnlyList<string>? Symbols = null)
+    IReadOnlyList<string>? Symbols = null, string Provider = "binance")
 {
     internal bool IsHttp => Type == "http";
-    internal bool IsMarket => Type == "market";
+    // Flux Binance (websocket partagé) ; les cours Yahoo sont interrogés par scrutation, comme les sources http.
+    internal bool IsMarket => Type == "market" && Provider != "yahoo";
+    internal bool IsYahoo => Type == "market" && Provider == "yahoo";
+    internal bool IsCalendar => Type == "calendar";
+    internal bool IsPolled => IsHttp || IsYahoo || IsCalendar;
     internal bool IsFile => Type == "file";
 }
 
@@ -269,7 +274,8 @@ internal sealed class WinjetDefinition
                 continue;
             }
             string? type = issues.Str(p.Value, "type", at, true, 10);
-            issues.Only(p.Value, at, type == "file" ? new[] { "type", "path" } : type == "market" ? new[] { "type", "symbols", "enabledWhen" }
+            issues.Only(p.Value, at, type == "file" ? new[] { "type", "path" } : type == "market" ? new[] {
+                "type", "provider", "symbols", "refresh", "enabledWhen" }
                 : new[] { "type", "url", "refresh", "enabledWhen" });
             string? when = issues.Str(p.Value, "enabledWhen", at, false, 400);
             if (when != null && !WinjetCondition.TryParse(when, out _, out string why))
@@ -297,21 +303,53 @@ internal sealed class WinjetDefinition
             }
             else if (type == "market")
             {
-                var symbols = ParseMarketSymbols(p.Value, at, manifest, issues);
-                if (symbols != null)
-                    result.Add(new WinjetSource(p.Name, type, "", "", 0, when ?? "", symbols));
+                string provider = issues.Str(p.Value, "provider", at, false, 20) ?? "binance";
+                if (provider != "binance" && provider != "yahoo")
+                    issues.Add(at + ".provider", "fournisseur « " + provider + " » inconnu (binance ou yahoo).");
+                else
+                {
+                    var symbols = ParseMarketSymbols(p.Value, at, manifest, issues, provider);
+                    double refresh = issues.Num(p.Value, "refresh", at, false) ?? 120;
+                    if (symbols != null)
+                        result.Add(new WinjetSource(p.Name, type, "", "", (int)Math.Clamp(refresh, WinjetLimits.MinRefreshSeconds, 86400),
+                            when ?? "", symbols, provider));
+                }
+            }
+            else if (type == "calendar")
+            {
+                string? url = issues.Str(p.Value, "url", at, true, 500);
+                double refresh = issues.Num(p.Value, "refresh", at, false) ?? 900;
+                if (url != null)
+                {
+                    // L'adresse ICS est un réglage de l'utilisateur : une expression {{settings.x}} est la seule forme qui échappe à
+                    // permissions.network (https obligatoire, adresses non publiques refusées à la connexion). Une adresse littérale
+                    // suit les règles des sources http.
+                    string? bad = SettingsExpression.IsMatch(url) ? null : HttpsProblem(url, manifest);
+                    if (bad != null)
+                        issues.Add(at + ".url", bad + " (ou une expression {{settings.<réglage>}} seule).");
+                    else
+                        result.Add(new WinjetSource(p.Name, type, "", url, (int)Math.Clamp(refresh, WinjetLimits.MinCalendarRefreshSeconds,
+                            86400),
+                            when ?? ""));
+                }
             }
             else if (type != null)
-                issues.Add(at + ".type", "type de source « " + type + " » inconnu (file, http ou market).");
+                issues.Add(at + ".type", "type de source « " + type + " » inconnu (file, http, market ou calendar).");
         }
         return result;
     }
 
     // « symbols » d'une source market (1 à 4 tickers) et hôtes Binance déclarés dans permissions.network ; null si invalide.
-    static IReadOnlyList<string>? ParseMarketSymbols(JsonElement source, string at, WinjetManifest manifest, WinjetIssues issues)
+    internal static readonly System.Text.RegularExpressions.Regex SettingsExpression =
+        new(@"^\{\{\s*settings\.[A-Za-z][A-Za-z0-9_]{0,31}\s*\}\}$",
+        System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    static IReadOnlyList<string>? ParseMarketSymbols(JsonElement source, string at, WinjetManifest manifest, WinjetIssues issues,
+        string provider = "binance")
     {
         int before = issues.Count;
-        foreach (string host in WinjetMarket.Hosts)
+        bool yahoo = provider == "yahoo";
+        foreach (string host in yahoo ? WinjetMarket.YahooHosts : WinjetMarket.Hosts)
             if (!manifest.Network.Contains(host, StringComparer.OrdinalIgnoreCase))
                 issues.Add(at + ".type", "l'hôte « " + host + " » n'est pas déclaré dans permissions.network du manifeste.");
         var list = new List<string>();
@@ -322,8 +360,9 @@ internal sealed class WinjetDefinition
             {
                 string sat = at + ".symbols[" + i++ + "]";
                 string? sym = item.ValueKind == JsonValueKind.String ? item.GetString() : null;
-                if (sym == null || !WinjetMarket.IsValidSymbol(sym))
-                    issues.Add(sat, "doit être un ticker en majuscules (2 à 10 lettres ou chiffres, ex. BTC).");
+                if (sym == null || !(yahoo ? WinjetMarket.IsValidYahooSymbol(sym) : WinjetMarket.IsValidSymbol(sym)))
+                    issues.Add(sat, yahoo ? "doit être un symbole Yahoo Finance (1 à 15 caractères : A-Z, 0-9, ^ . = -, ex. AAPL, ^GSPC)."
+                        : "doit être un ticker en majuscules (2 à 10 lettres ou chiffres, ex. BTC).");
                 else if (list.Contains(sym))
                     issues.Add(sat, "ticker en double « " + sym + " ».");
                 else
@@ -361,7 +400,8 @@ internal sealed class WinjetDefinition
             return false;
         }
         string ext = System.IO.Path.GetExtension(path);
-        if (!(extensions.Length == 0 ? WinjetLimits.ImageExtensions.Contains(ext) : extensions.Contains(ext, StringComparer.OrdinalIgnoreCase)))
+        if (!(extensions.Length == 0 ? WinjetLimits.ImageExtensions.Contains(ext)
+            : extensions.Contains(ext, StringComparer.OrdinalIgnoreCase)))
         {
             issues.Add(at, "extension « " + ext + " » non acceptée ici.");
             return false;

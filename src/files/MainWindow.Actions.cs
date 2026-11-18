@@ -45,7 +45,7 @@ public sealed partial class MainWindow : Window
         StopWatch();
         saved.Clear();
         foreach (var view in tabs)
-            view.Tab.Dispose();      // cancels enumerations, clears items
+            view.Tab.Dispose();      // annule les énumérations, vide les éléments
         tabs.Clear();
         tabStrip.Children.Clear();
         tabStrip.Children.Add(plus);

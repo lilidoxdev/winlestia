@@ -128,7 +128,7 @@ internal sealed partial class FolderTab
         Sort = spec;
         Changed?.Invoke(this);
         if (State == LoadState.Loading)
-            return;               // Complete() applies the final sort once
+            return;               // Complete() applique le tri final une seule fois
         StartSort();
     }
 

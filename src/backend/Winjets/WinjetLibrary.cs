@@ -1,4 +1,5 @@
-// language: C# 12, file: WinjetLibrary.cs, target: Windows 11 / .NET 8, paquets inclus (lecture seule) et installés (import, mise à jour, retrait)
+// language: C# 12, file: WinjetLibrary.cs, target: Windows 11 / .NET 8, paquets inclus (lecture seule) et installés (import, mise à jour,
+// retrait)
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -153,7 +154,8 @@ internal sealed class WinjetLibrary
         lock (mutate)
         {
             // On garde les aperçus récents (un autre appel peut encore en lire un) et on supprime les plus anciens.
-            foreach (string old in Directory.EnumerateDirectories(tempDir, "inspect-*").OrderByDescending(Directory.GetCreationTimeUtc).Skip(3))
+            foreach (string old in Directory.EnumerateDirectories(tempDir, "inspect-*").OrderByDescending(Directory.GetCreationTimeUtc)
+                .Skip(3))
                 TryDelete(old);
             Directory.Move(v.Release(), dest);
         }
@@ -242,6 +244,7 @@ internal sealed class WinjetLibrary
             if (Directory.Exists(dir))
                 Directory.Delete(dir, true);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Store.Log("Winjets : nettoyage impossible : " + ex.Message); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
+            Store.Log("Winjets : nettoyage impossible : " + ex.Message); }
     }
 }

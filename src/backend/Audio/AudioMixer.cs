@@ -1,4 +1,4 @@
-// C# 12 / AudioMixer.cs / Windows .NET 8. Shared NAudio Core Audio ownership avoids duplicate COM coclass identities.
+// C# 12 / AudioMixer.cs / Windows .NET 8. La propriété partagée de NAudio Core Audio évite les identités de coclasses COM dupliquées.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

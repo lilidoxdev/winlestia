@@ -1,4 +1,4 @@
-// Step 4a: open, clipboard (CF_HDROP + Preferred DropEffect), rename (inline), delete, new folder, select all.
+// Étape 4a : ouvrir, presse-papiers (CF_HDROP + Preferred DropEffect), renommer (en place), supprimer, nouveau dossier, tout sélectionner.
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -67,7 +67,7 @@ public sealed partial class MainWindow
         return result;
     }
 
-    // ---- delete / new folder ---------------------------------------------------------------------------------
+    // ---- suppression / nouveau dossier ----
 
     internal async Task<OpResult?> DeleteAsync(IReadOnlyList<FileItem> items, bool permanent)
     {
@@ -247,7 +247,7 @@ public sealed partial class MainWindow
                 return;
             EndRename();
             return;
-        }   // invalid + focus lost: drop the edit
+        }   // invalide + focus perdu : on abandonne l'édition
         EndRename();
         var result = await FileOps.Rename(Hwnd, item.FullPath, name, WatchSet());
         journal.Record(result);
@@ -313,7 +313,7 @@ public sealed partial class MainWindow
         return new ControlTemplate(typeof(TextBox)) { VisualTree = border };
     }
 
-    // Hide / tab drop: nothing may stay armed.
+    // Masquage / dépôt d'onglet : rien ne doit rester armé.
     void EndOpsState()
     {
         CancelRename();

@@ -1,4 +1,4 @@
-﻿# PowerShell 5.1+ / Restore pre-Winlestia Terminal settings.
+﻿# PowerShell 5.1+ / Restaure les paramètres de Terminal d'avant Winlestia.
 [CmdletBinding(SupportsShouldProcess=$true,ConfirmImpact='High')]
 param()
 $root=$PSScriptRoot

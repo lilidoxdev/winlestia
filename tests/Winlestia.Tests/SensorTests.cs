@@ -1,4 +1,5 @@
-// C# 12 / Assistant de capteurs : choix du capteur, lecture de la réponse, codes de sortie, état et temporisation (sans élévation ni tube réel)
+// C# 12 / Assistant de capteurs : choix du capteur, lecture de la réponse, codes de sortie, état et temporisation (sans élévation ni tube
+// réel)
 using System;
 using PanneauxGlass;
 using WinlestiaSensors;

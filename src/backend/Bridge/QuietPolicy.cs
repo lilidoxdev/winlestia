@@ -20,7 +20,7 @@ internal static class QuietPolicy
     // La détection ne compte que si la préférence est active et si au moins un moniteur affiche une fenêtre en plein écran.
     internal static bool Detected(bool enabled, int fullscreenMonitors) => enabled && fullscreenMonitors > 0;
 
-    // A forced state wins over detection; auto follows detection.
+    // Un état forcé l'emporte sur la détection ; auto suit la détection.
     internal static bool Effective(QuietForce forced, bool detected) => forced switch
     {
         QuietForce.On => true,

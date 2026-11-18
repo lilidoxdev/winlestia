@@ -111,15 +111,34 @@ internal sealed partial class SocialService
         n.Win = w;
     }
 
+    [DllImport("user32.dll")] static extern bool GetClientRect(IntPtr h, out Native.Rect rect);
+    [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out Native.Rect rect);
+    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
+
+    // Garde la fenêtre entière dans la zone utile de son écran (hors barre des tâches et cadre Winlestia).
+    static void FitToWorkArea(System.Windows.Window w)
+    {
+        var h = new WindowInteropHelper(w).Handle;
+        if (h == IntPtr.Zero || !GetWindowRect(h, out var r))
+            return;
+        var wa = System.Windows.Forms.Screen.FromHandle(h).WorkingArea;
+        int cw = Math.Min(r.Right - r.Left, wa.Width), ch = Math.Min(r.Bottom - r.Top, wa.Height);
+        int x = Math.Max(wa.Left, Math.Min(r.Left, wa.Right - cw)), y = Math.Max(wa.Top, Math.Min(r.Top, wa.Bottom - ch));
+        if (x != r.Left || y != r.Top || cw != r.Right - r.Left || ch != r.Bottom - r.Top)
+            SetWindowPos(h, IntPtr.Zero, x, y, cw, ch, 0x0014); // SWP_NOZORDER | SWP_NOACTIVATE
+    }
+
     void SyncBounds(Net n)
     {
         if (n.Ctl == null || n.Win == null || !n.Win.IsVisible)
             return;
         try
         {
-            var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(n.Win);
-            n.Ctl.Bounds = new System.Drawing.Rectangle(0, 0, Math.Max(1, (int)Math.Round(n.Win.ActualWidth * dpi.DpiScaleX)), Math.Max(1,
-                (int)Math.Round(n.Win.ActualHeight * dpi.DpiScaleY)));
+            // Zone cliente réelle (pixels physiques) : ActualWidth/Height incluent barre de titre et bordures.
+            var h = new WindowInteropHelper(n.Win).Handle;
+            if (h == IntPtr.Zero || !GetClientRect(h, out var r))
+                return;
+            n.Ctl.Bounds = new System.Drawing.Rectangle(0, 0, Math.Max(1, r.Right - r.Left), Math.Max(1, r.Bottom - r.Top));
         }
         catch (Exception)
         {
@@ -155,6 +174,8 @@ internal sealed partial class SocialService
         n.Win.Show();
         if (n.Win.WindowState == System.Windows.WindowState.Minimized)
             n.Win.WindowState = System.Windows.WindowState.Normal;
+        if (n.Win.WindowState == System.Windows.WindowState.Normal)
+            FitToWorkArea(n.Win);
         n.HiddenSince = DateTime.MinValue;
         n.Ctl.IsVisible = true;
         SyncBounds(n);

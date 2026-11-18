@@ -1,4 +1,5 @@
-// language: C# 12, file: QtShellBridge.Actions.Quick.cs, target: Windows 11 / .NET 8, actions du pont : disposition du dock et réglages rapides
+// language: C# 12, file: QtShellBridge.Actions.Quick.cs, target: Windows 11 / .NET 8, actions du pont : disposition du dock et réglages
+// rapides
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,8 @@ internal sealed partial class QtShellBridge
 
     Action? quickPush;
 
-    // Premier instantané : abonne le pont aux changements du cache (radios, micro) ; l'évènement « quick » invite le client à relire l'état.
+    // Premier instantané : abonne le pont aux changements du cache (radios, micro) ; l'évènement « quick » invite le client à relire
+    // l'état.
     object QuickSnapshot()
     {
         if (quickPush == null)

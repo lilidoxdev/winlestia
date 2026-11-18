@@ -1,4 +1,4 @@
-// Measures whether the shell icon cache returns new colours after an .ico is rewritten (same path vs alternate path).
+// Mesure si le cache d'icônes du shell renvoie de nouvelles couleurs après réécriture d'un .ico (même chemin vs chemin alternatif).
 using System;
 using System.Linq;
 using System.IO;
@@ -77,7 +77,7 @@ internal static class ShellProbe
         return ok(last) ? ((int)(DateTime.UtcNow - t0).TotalMilliseconds) + " ms" : "never (" + ms + " ms)";
     }
 
-    // Long-lived "Explorer proxy": warm in-process icon cache, pumps messages, reports when the colour changes.
+    // Proxy Explorer durable : cache d'icônes en processus chaud, pompe les messages, signale quand la couleur change.
     internal static string Watch(string folder, int ms)
     {
         var end = DateTime.UtcNow.AddMilliseconds(ms);
@@ -138,7 +138,7 @@ internal static class ShellProbe
         var o = new System.Text.StringBuilder();
         Directory.CreateDirectory(dir);
         Func<D.Color, bool> red = c => c.R > c.B + 60, blue = c => c.B > c.R + 60;
-        // (a) same path, content rewritten, no notification
+        // (a) même chemin, contenu réécrit, sans notification
         string a = Path.Combine(dir, "a.ico"), fa = Path.Combine(dir, "fa");
         Draw(a, "#fa3c5b");
         Fixture(fa, a);
@@ -146,7 +146,7 @@ internal static class ShellProbe
         Draw(a, "#3c9cfa");
         string r = Wait(fa, blue, 4000, out var c2);
         o.AppendLine("(a1) same path, no notify: before=" + c1 + " after=" + c2 + " turned blue: " + r);
-        // (a2) same path, ASSOCCHANGED
+        // (a2) même chemin, ASSOCCHANGED
         string a2 = Path.Combine(dir, "a2.ico"), fa2 = Path.Combine(dir, "fa2");
         Draw(a2, "#fa3c5b");
         Fixture(fa2, a2);
@@ -155,7 +155,7 @@ internal static class ShellProbe
         SHChangeNotify(0x08000000, 0x1000 | 0x2000, null, IntPtr.Zero);
         r = Wait(fa2, blue, 4000, out c2);
         o.AppendLine("(a2) same path + ASSOCCHANGED(FLUSHNOWAIT): before=" + c1 + " after=" + c2 + " blue: " + r);
-        // (a3) same path, ASSOCCHANGED + UPDATEDIR on folder
+        // (a3) même chemin, ASSOCCHANGED + UPDATEDIR sur le dossier
         string a3 = Path.Combine(dir, "a3.ico"), fa3 = Path.Combine(dir, "fa3");
         Draw(a3, "#fa3c5b");
         Fixture(fa3, a3);
@@ -166,7 +166,7 @@ internal static class ShellProbe
         SHChangeNotify(0x2000, 0x5 | 0x3000, fa3, IntPtr.Zero);
         r = Wait(fa3, blue, 4000, out c2);
         o.AppendLine("(a3) same path + ASSOCCHANGED + UPDATEDIR/ITEM: before=" + c1 + " after=" + c2 + " blue: " + r);
-        // (a4) same path, UPDATEIMAGE-less: touch ini only
+        // (a4) même chemin, sans UPDATEIMAGE : toucher uniquement l'ini
         string a4 = Path.Combine(dir, "a4.ico"), fa4 = Path.Combine(dir, "fa4");
         Draw(a4, "#fa3c5b");
         Fixture(fa4, a4);
@@ -176,7 +176,7 @@ internal static class ShellProbe
         SHChangeNotify(0x2000, 0x5 | 0x3000, fa4, IntPtr.Zero);
         r = Wait(fa4, blue, 4000, out c2);
         o.AppendLine("(a4) same path + ini rewritten (same text) + UPDATEDIR: before=" + c1 + " after=" + c2 + " blue: " + r);
-        // (b) alternate path, ini rewritten
+        // (b) chemin alternatif, ini réécrit
         string b1 = Path.Combine(dir, "b-a.ico"), b2 = Path.Combine(dir, "b-b.ico"), fb = Path.Combine(dir, "fb");
         Draw(b1, "#fa3c5b");
         Draw(b2, "#3c9cfa");

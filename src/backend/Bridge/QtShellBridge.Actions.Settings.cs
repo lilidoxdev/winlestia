@@ -204,6 +204,10 @@ internal sealed partial class QtShellBridge
             case "desktopIndicator":
                 Store.State.DesktopIndicator = Flag(c.Args, "enabled");
                 break;
+            case "peripheralBattery":
+                Store.State.PeripheralBatteryEnabled = Flag(c.Args, "enabled");
+                UpdatePeripherals();
+                break;
             case "dockDrawerOpen":
                 Store.State.DockDrawerOpen = Flag(c.Args, "enabled");
                 break;

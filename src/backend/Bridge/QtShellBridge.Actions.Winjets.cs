@@ -1,4 +1,5 @@
-// language: C# 12, file: QtShellBridge.Actions.Winjets.cs, target: Windows 11 / .NET 8, actions du pont : Winjets (docs/WINJETS-DESIGN.md §4)
+// language: C# 12, file: QtShellBridge.Actions.Winjets.cs, target: Windows 11 / .NET 8, actions du pont : Winjets (docs/WINJETS-DESIGN.md
+// §4)
 using System;
 using System.Text.Json;
 namespace PanneauxGlass;

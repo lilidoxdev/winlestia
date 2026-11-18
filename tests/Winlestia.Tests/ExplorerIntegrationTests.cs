@@ -1,4 +1,4 @@
-// C#12 / Explorer077 fixture / only freshly created temporary folders are customized.
+// C#12 / fixture Explorer077 / seuls des dossiers temporaires fraîchement créés sont personnalisés.
 using System;
 using System.IO;
 using System.Linq;

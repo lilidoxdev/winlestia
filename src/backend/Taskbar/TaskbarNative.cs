@@ -1,4 +1,4 @@
-// language: C# 12, file: TaskbarNative.cs, target: Windows 11 / .NET 8, reversible shell appbar
+// language: C# 12, file: TaskbarNative.cs, target: Windows 11 / .NET 8, appbar du shell réversible
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

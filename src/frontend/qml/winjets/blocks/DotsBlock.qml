@@ -23,7 +23,12 @@ Item {
     readonly property int rows: matrix ? matrix.length : Math.max(1, Math.min(40, Math.floor(height / cell)))
     readonly property real pitch: Math.min(width / cols, height / rows)
     property real phase: 0
-    readonly property bool animated: !matrix && !Appearance.reducedEffects && !!Window.window && Window.window.visible && (!host || host.live) && !(host && host.editing)
+    readonly property bool animated: !matrix
+        && !Appearance.reducedEffects
+        && !!Window.window
+        && Window.window.visible
+        && (!host || host.live)
+        && !(host && host.editing)
 
     implicitWidth: 96 * sc
     implicitHeight: 96 * sc

@@ -69,7 +69,7 @@ public sealed partial class MainWindow
     static int SettleMs
         => int.TryParse(Environment.GetEnvironmentVariable("WINLESTIA_FILES_SETTLE"), out var s) && s is >= 1 and <= 120
             ? s * 1000
-            : 30000;   // leak settle, seconds (default 30)
+            : 30000;   // attente de stabilisation des fuites, en secondes (30 par défaut)
     async Task WaitLoaded()
     {
         for (int i = 0; i < 400 && Active.State == LoadState.Loading; i++)
@@ -125,7 +125,7 @@ public sealed partial class MainWindow
         string F = fixture;
         Check("initial load", Active.Items.Count == 62 && DiskMatches() && OrderOk(), $"{Active.Items.Count} items");
 
-        // 1. new folder (+ auto-unique name + inline rename)
+        // 1. nouveau dossier (+ nom unique automatique + renommage en place)
         var n1 = await NewFolderAsync();
         Check("new folder created",
               n1 != null && n1.Name == "Nouveau dossier" && Directory.Exists(Path.Combine(F, "Nouveau dossier")) && DiskMatches()
@@ -185,7 +185,7 @@ public sealed partial class MainWindow
             && File.Exists(Path.Combine(F, "file055.txt")),
             Active.Items.FirstOrDefault(i => i.Name.StartsWith("file055 - "))?.Name ?? "none");
 
-        // 3. cut state + cut/paste 10 files into Sub
+        // 3. état couper + couper/coller de 10 fichiers dans Sub
         SelectNames(Files(31, 40));
         await CopySelectedAsync(true);
         Check("cut dims the items (0.5)", Files(31, 40).All(n => Active.Find(Path.Combine(F, n))?.CutOpacity == 0.5));
@@ -249,7 +249,7 @@ public sealed partial class MainWindow
             await Ps("Add-Type -AssemblyName System.Windows.Forms; $s=[Windows.Forms.Clipboard]::GetData('Preferred DropEffect'); " +
                 "$b=New-Object byte[] 4; $null=$s.Read($b,0,4); \"effect=$([BitConverter]::ToInt32($b,0))\"");
         Check("interop out: cut has DropEffect=2", outCut == "effect=2", outCut);
-        await CopySelectedAsync(false);   // drop the cut state again
+        await CopySelectedAsync(false);   // on abandonne à nouveau l'état « couper »
         string ext = Path.Combine(F, "ext");
         string setIn(int effect, string[] names)
             => "Add-Type -AssemblyName System.Windows.Forms; $sc=New-Object Collections.Specialized.StringCollection; "

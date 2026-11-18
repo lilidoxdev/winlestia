@@ -37,6 +37,11 @@ public class BuiltinPackagesTests
     [InlineData("winlestia.horloge")]
     [InlineData("winlestia.calendrier")]
     [InlineData("winlestia.batterie")]
+    [InlineData("winlestia.stockage")]
+    [InlineData("winlestia.fichiers")]
+    [InlineData("winlestia.notes")]
+    [InlineData("winlestia.agenda")]
+    [InlineData("winlestia.meteo")]
     public void ExpectedBuiltinIsShipped(string id)
         => Assert.Contains(id, Directory.GetDirectories(BuiltinDir()).Select(Path.GetFileName));
 }

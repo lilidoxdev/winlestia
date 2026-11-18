@@ -31,7 +31,8 @@ internal sealed class CpuTempChain : IDisposable
         this.clock = clock ?? (() => Environment.TickCount64);
         this.log = log ?? Store.Log;
         // Assistant élevé en tête (sa propre temporisation gère l'absence ; hardware=false pour ne jamais l'exclure pour de bon).
-        sources = new[] { new Source("Capteur Winlestia", SensorPipe.Read), new Source("LHM-WMI", () => WmiSensor(@"root\LibreHardwareMonitor")), new Source("OHM-WMI", ()
+        sources = new[] { new Source("Capteur Winlestia", SensorPipe.Read),
+            new Source("LHM-WMI", () => WmiSensor(@"root\LibreHardwareMonitor")), new Source("OHM-WMI", ()
             => WmiSensor(@"root\OpenHardwareMonitor")), new Source("ACPI", ReadAcpi, true), new Source("PDH", ReadPdh, true) };
     }
     internal static double? Plausible(double? v) => v is > 10 and <= 125 && double.IsFinite(v.Value) ? v : null;

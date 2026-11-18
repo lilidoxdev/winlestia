@@ -1,6 +1,6 @@
 // language: C# 12, file: ProcessSnapshot.cs, target: Windows 11 / .NET 8
-// Toolhelp32 snapshot of parent PIDs and executable names. Works even when Process.MainModule is not readable,
-// and also hosts the registry lookups used to resolve media sources.
+// Instantané Toolhelp32 des PID parents et des noms d'exécutables. Fonctionne même quand Process.MainModule est illisible,
+// et héberge aussi les recherches de registre servant à résoudre les sources média.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -95,7 +95,7 @@ internal sealed class ProcessSnapshot
         return false;
     }
 
-    /// <summary>DisplayName registered for an AUMID under HKCU then HKLM, or null.</summary>
+    /// <summary>DisplayName enregistré pour un AUMID sous HKCU puis HKLM, ou null.</summary>
     internal static string? RegistryDisplayName(string aumid)
     {
         string keyPath = @"Software\Classes\AppUserModelId\" + aumid;
@@ -112,14 +112,14 @@ internal sealed class ProcessSnapshot
             catch (Exception ex)
                 when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
             {
-                // An unreadable key is the same as a missing one.
+                // Une clé illisible équivaut à une clé absente.
             }
         }
 
         return null;
     }
 
-    /// <summary>Resolver wired to the real registry and process list.</summary>
+    /// <summary>Résolveur branché sur le vrai registre et la vraie liste de processus.</summary>
     internal static MediaSourceIdentity CreateIdentity()
     {
         var processes = Capture();

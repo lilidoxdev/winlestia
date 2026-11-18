@@ -52,6 +52,7 @@ internal sealed partial class QtShellBridge
     static bool LightRendering => Store.State.ReducedEffects ?? GC.GetGCMemoryInfo().TotalAvailableMemoryBytes <= 8L * 1024 * 1024 * 1024;
     void UpdateSampling()
     {
+        UpdatePeripherals();
         bars.SetActive(barsVisible && Store.State.ReducedEffects != true && !Quiet);
         mixer.SetActive(active && (page == 1 || page == 7 || mixerVisible) || pillSpectrum);
         if (!SpectrumPolicy.Surface(active, page, pillSpectrum))

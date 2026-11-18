@@ -1,4 +1,4 @@
-// C#12 / FilesPreloadPolicy: pure restart decisions of the resident Winlestia Fichiers (no process, no backend).
+// C#12 / FilesPreloadPolicy : décisions pures de redémarrage du Winlestia Fichiers résident (ni processus, ni backend).
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;

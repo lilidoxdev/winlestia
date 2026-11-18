@@ -1,6 +1,6 @@
 #if WINLESTIA_SELFTEST
-// WINLESTIA_FILES_SELFTEST=lot1 : address bar (breadcrumb / edit mode), copy path, quick access (pin, order, label, broken targets,
-// persistence), sort (default, folders first, persistence),
+// WINLESTIA_FILES_SELFTEST=lot1 : barre d'adresse (fil d'Ariane / mode édition), copie du chemin, accès rapide (épingle, ordre, libellé,
+// cibles cassées, persistance), tri (défaut, dossiers d'abord, persistance),
 // settings.json corrompu. Exige WINLESTIA_FILES_DATA_DIR = un dossier neuf sous %TEMP% (le harnais le fixe) et un dossier de fixtures
 // (premier argument) sous %TEMP%\WinlestiaFilesOps.
 // Résultats : lignes PASS/FAIL dans <data dir>\selftest.log.
@@ -136,7 +136,7 @@ public sealed partial class MainWindow
                   && !SettingsText().Contains("\"sort\""));
         FilesSettings.Reload();
         Check("(a) after the reset a fresh start is the default again", FilesSettings.InitialSort() == SortSpec.Default);
-        Active.SetSort(SortColumn.Modified);   // header click: same column inverts
+        Active.SetSort(SortColumn.Modified);   // clic sur l'en-tête : la même colonne s'inverse
         Check("(a) second click on the same column reverses the order", await WaitFor(() => !Active.Sort.Ascending == false
             && Idx(vieux) < Idx(recent)));
         ResetSort();
@@ -221,7 +221,7 @@ public sealed partial class MainWindow
         Check("(c) empty label = default name again", sidebar.QuickView().First(v => v.Path == pinDir).Label == "Épinglé 𝄞 dossier");
         QuickAccess.SetLabel(QuickAccess.IndexOf(pinDir), "Mon dossier 𝄞");
 
-        // broken targets
+        // cibles cassées
         Directory.Delete(pinDir);
         File.Delete(pinFile);
         await sidebar.Recheck();
@@ -254,7 +254,7 @@ public sealed partial class MainWindow
         Check("(c) unpin a file leaves it on disk", File.Exists(keepFile) && !QuickAccess.IsPinned(keepFile));
         Check("(c) Directory.Exists on a dead server cannot freeze the check (timeout)", await ProbeUnreachable());
 
-        // ---- (d) breadcrumb + edit mode -----------------------------------------------------------------------------------------------
+        // ---- (d) fil d'Ariane + mode édition ----
         string deep = Path.Combine(F, "Café été 𝄞", "sous dossier");
         Directory.CreateDirectory(deep);
         Active.Go(deep);
@@ -294,7 +294,7 @@ public sealed partial class MainWindow
         }
         else
             EndEdit();
-        // invalid path: message, still editing
+        // chemin invalide : message, édition toujours en cours
         BeginEdit();
         addressBox.Text = Path.Combine(F, "n'existe pas é");
         SubmitAddress(addressBox.Text);
@@ -331,7 +331,7 @@ public sealed partial class MainWindow
         Active.Go(F);
         await WaitLoaded();
 
-        // ---- (e) corrupt settings.json -----------------------------------------------------------------------------------------------
+        // ---- (e) settings.json corrompu ----
         File.WriteAllText(FilesSettings.FilePath, "{ \"quickAccess\": [ { \"path\": ");
         FilesSettings.Reload();
         bool noThrow = true;
@@ -379,7 +379,7 @@ public sealed partial class MainWindow
         FilesSettings.Save();
         Check("(e) unknown keys survive a save", SettingsText().Contains("futur"));
 
-        // ---- (f) locked settings.json: untouched, no save ; two instances merge ----
+        // ---- (f) settings.json verrouillé : intact, pas de sauvegarde ; fusion de deux instances ----
         File.WriteAllText(FilesSettings.FilePath, "{ \"view\": \"list\" }");
         string lockedText = SettingsText();
         var lockedTime = File.GetLastWriteTimeUtc(FilesSettings.FilePath);
@@ -399,8 +399,8 @@ public sealed partial class MainWindow
         FilesSettings.Reload();
         _ = FilesSettings.Data;
         Check("(f) after unlock a reload is writable again", !FilesSettings.ReadOnly);
-        FilesSettings.SaveSort(new SortSpec(SortColumn.Size, true, false));                 // instance A changes "sort"
-        // instance B wrote "view" meanwhile
+        FilesSettings.SaveSort(new SortSpec(SortColumn.Size, true, false));                 // l'instance A modifie "sort"
+        // l'instance B a écrit "view" entre-temps
         File.WriteAllText(FilesSettings.FilePath, "{ \"view\": \"large\", \"sort\": { \"key\": \"name\" } }");
         FilesSettings.Data.Sort = new SortData { Key = "type", Descending = false };
         // A enregistre : seule sa clé modifiée (tri) écrase

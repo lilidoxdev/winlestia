@@ -1,4 +1,4 @@
-// C#12 / AudioBars: silence, sine in the right band, no NaN, bounds 0-1, smoothing (pure functions).
+// C#12 / AudioBars : silence, sinusoïde dans la bonne bande, pas de NaN, bornes 0-1, lissage (fonctions pures).
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;

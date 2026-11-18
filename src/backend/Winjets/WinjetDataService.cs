@@ -1,4 +1,5 @@
-// language: C# 12, file: WinjetDataService.cs, target: Windows 11 / .NET 8, seul accès réseau des Winjets (HTTPS, hôtes déclarés, cache disque)
+// language: C# 12, file: WinjetDataService.cs, target: Windows 11 / .NET 8, seul accès réseau des Winjets (HTTPS, hôtes déclarés, cache
+// disque)
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,6 +32,8 @@ internal sealed class WinjetDataService : IDisposable
     readonly Dictionary<(string, string), WinjetDataValue> values = new();
     readonly Dictionary<(string, string), DateTimeOffset> lastAttempt = new();
     readonly Dictionary<(string, string), Task<WinjetDataValue?>> inFlight = new();
+    // Dernière adresse ICS résolue par (instance, source) : un changement de réglage force une relecture immédiate.
+    readonly Dictionary<(string, string), string> calendarUrls = new();
     // Une source d'annulation par instance : Forget l'annule, les requêtes en vol n'écrivent alors plus rien.
     readonly Dictionary<string, CancellationTokenSource> cancels = new();
     List<WinjetPollTarget> targets = new();
@@ -39,6 +42,9 @@ internal sealed class WinjetDataService : IDisposable
 
     // Délai maximal d'une requête ; réglable pour les tests seulement.
     internal TimeSpan Timeout { get; set; } = WinjetLimits.HttpTimeout;
+
+    // Fuseau local pour la source calendar ; réglable pour les tests seulement.
+    internal TimeZoneInfo LocalZone { get; set; } = TimeZoneInfo.Local;
 
     // `handler` et `clock` sont injectables (tests). Sans handler : pas de redirection (elle contournerait la liste d'hôtes),
     // pas de cookies.
@@ -57,7 +63,7 @@ internal sealed class WinjetDataService : IDisposable
         })
         { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
         http.DefaultRequestHeaders.UserAgent.ParseAdd("Winlestia-Winjets/1");
-        market = new WinjetMarketFeed(GetJsonAsync, PublishMarket, this.clock);
+        market = new WinjetMarketFeed((url, ct) => GetJsonAsync(url, ct), PublishMarket, this.clock);
     }
 
     internal event Action? Changed;
@@ -67,7 +73,8 @@ internal sealed class WinjetDataService : IDisposable
     {
         if (address.IsIPv4MappedToIPv6)
             address = address.MapToIPv4();
-        if (IPAddress.IsLoopback(address) || address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any) || address.Equals(IPAddress.None))
+        if (IPAddress.IsLoopback(address) || address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any)
+            || address.Equals(IPAddress.None))
             return false;
         var b = address.GetAddressBytes();
         if (b.Length == 4)
@@ -151,6 +158,8 @@ internal sealed class WinjetDataService : IDisposable
         market.Forget(instanceId);
         lock (gate)
         {
+            foreach (var k in calendarUrls.Keys.Where(k => k.Item1 == instanceId).ToList())
+                calendarUrls.Remove(k);
             if (cancels.Remove(instanceId, out var cts))
                 cts.Cancel();
             foreach (var k in inFlight.Keys.Where(k => k.Item1 == instanceId).ToList())
@@ -196,7 +205,7 @@ internal sealed class WinjetDataService : IDisposable
         {
             if (!IsEnabled(s, t))
                 continue;
-            if (s.IsHttp)
+            if (s.IsPolled)
                 await FetchAsync(t, s, force);
             else if (s.IsMarket)
                 market.RefreshNow();
@@ -215,7 +224,7 @@ internal sealed class WinjetDataService : IDisposable
     }
 
     // GET JSON borné (délai et taille comme les sources http) ; null au moindre échec. Hôtes fixés par le code appelant.
-    async Task<JsonElement?> GetJsonAsync(string url, CancellationToken ct)
+    async Task<JsonElement?> GetJsonAsync(string url, CancellationToken ct, string? userAgent = null)
     {
         try
         {
@@ -223,6 +232,11 @@ internal sealed class WinjetDataService : IDisposable
             cts.CancelAfter(Timeout);
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Accept.ParseAdd("application/json");
+            if (userAgent != null)
+            {
+                request.Headers.UserAgent.Clear();
+                request.Headers.UserAgent.ParseAdd(userAgent);
+            }
             using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
             if (!response.IsSuccessStatusCode || response.Content.Headers.ContentLength > WinjetLimits.MaxResponseBytes)
                 return null;
@@ -239,7 +253,8 @@ internal sealed class WinjetDataService : IDisposable
             using var doc = JsonDocument.Parse(buffer.ToArray(), new JsonDocumentOptions { MaxDepth = WinjetLimits.MaxJsonDepth });
             return doc.RootElement.Clone();
         }
-        catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException or JsonException or IOException or InvalidOperationException)
+        catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException or JsonException or IOException
+            or InvalidOperationException)
         {
             if (ct.IsCancellationRequested)
                 throw;
@@ -257,7 +272,7 @@ internal sealed class WinjetDataService : IDisposable
         {
             var now = clock();
             foreach (var t in snapshot)
-                foreach (var s in t.Package.Definition.Sources.Where(s => s.IsHttp && IsEnabled(s, t)))
+                foreach (var s in t.Package.Definition.Sources.Where(s => s.IsPolled && IsEnabled(s, t)))
                     if (DueAt(t, s) <= now)
                         await FetchAsync(t, s, false);
         }
@@ -281,9 +296,10 @@ internal sealed class WinjetDataService : IDisposable
                 return;
             DateTimeOffset? next = null;
             foreach (var t in targets)
-                foreach (var s in t.Package.Definition.Sources.Where(s => s.IsHttp && IsEnabled(s, t)))
+                foreach (var s in t.Package.Definition.Sources.Where(s => s.IsPolled && IsEnabled(s, t)))
                 {
-                    var due = lastAttempt.TryGetValue((t.InstanceId, s.Id), out var last) ? last.AddSeconds(s.Refresh) : DateTimeOffset.MinValue;
+                    var due = lastAttempt.TryGetValue((t.InstanceId, s.Id), out var last) ? last.AddSeconds(s.Refresh)
+                        : DateTimeOffset.MinValue;
                     if (next == null || due < next)
                         next = due;
                 }
@@ -360,8 +376,10 @@ internal sealed class WinjetDataService : IDisposable
                 return Task.FromResult<WinjetDataValue?>(null);
             if (inFlight.TryGetValue(key, out var running))
                 return running;
-            int interval = force ? WinjetLimits.MinRefreshSeconds : Math.Max(s.Refresh, WinjetLimits.MinRefreshSeconds);
-            if (lastAttempt.TryGetValue(key, out var last) && (clock() - last).TotalSeconds < interval)
+            int floor = s.IsCalendar ? WinjetLimits.MinCalendarRefreshSeconds : WinjetLimits.MinRefreshSeconds;
+            int interval = force ? floor : Math.Max(s.Refresh, floor);
+            bool urlChanged = s.IsCalendar && (!calendarUrls.TryGetValue(key, out var seen) || seen != ResolveCalendarUrl(t, s));
+            if (!urlChanged && lastAttempt.TryGetValue(key, out var last) && (clock() - last).TotalSeconds < interval)
                 return Task.FromResult(values.TryGetValue(key, out var cur) ? cur : null);
             lastAttempt[key] = clock();
             if (!cancels.TryGetValue(t.InstanceId, out var cts))
@@ -378,8 +396,15 @@ internal sealed class WinjetDataService : IDisposable
         WinjetDataValue result;
         try
         {
-            string? bad = WinjetDefinition.HttpsProblem(s.Url, t.Package.Manifest);
-            result = bad != null ? Failure(s, "Adresse refusée : " + bad) : await Download(s, owner.Token);
+            if (s.IsYahoo)
+                result = await FetchYahoo(s, owner.Token);
+            else if (s.IsCalendar)
+                result = await FetchCalendar(t, s, key, owner.Token);
+            else
+            {
+                string? bad = WinjetDefinition.HttpsProblem(s.Url, t.Package.Manifest);
+                result = bad != null ? Failure(s, "Adresse refusée : " + bad) : await Download(s, owner.Token);
+            }
         }
         catch (Exception ex)
         {
@@ -395,6 +420,102 @@ internal sealed class WinjetDataService : IDisposable
         }
         Set(key, result);
         return result;
+    }
+
+    // Cours Yahoo Finance : une requête par symbole, un titre en échec devient un élément status « error » (jamais d'exception).
+    async Task<WinjetDataValue> FetchYahoo(WinjetSource s, CancellationToken forget)
+    {
+        var quotes = new List<WinjetMarket.YahooQuote>();
+        foreach (string sym in s.Symbols ?? Array.Empty<string>())
+        {
+            JsonElement? json = null;
+            try
+            {
+                json = await GetJsonAsync(WinjetMarket.YahooUrl(sym), forget, "Mozilla/5.0 (compatible; Winlestia-Winjets/1)");
+            }
+            catch (OperationCanceledException) when (!forget.IsCancellationRequested) { }
+            quotes.Add(json is { } j ? WinjetMarket.ParseYahoo(sym, j) : WinjetMarket.YahooError(sym));
+        }
+        var payload = WinjetMarket.BuildYahooPayload(clock().ToUnixTimeMilliseconds(), quotes);
+        return new WinjetDataValue(payload, Now(), quotes.Count > 0 && quotes.All(q => q.Status != "ok") ? "Source indisponible."
+            : null, false);
+    }
+
+    // Adresse ICS résolue : réglage {{settings.x}} de l'instance ou adresse littérale. Vide si absente.
+    static string ResolveCalendarUrl(WinjetPollTarget t, WinjetSource s)
+    {
+        string? key = WinjetCalendar.SettingKey(s.Url);
+        object? raw = key == null ? s.Url : t.Settings.TryGetValue(key, out var v) ? v : null;
+        return (raw as string ?? "").Trim();
+    }
+
+    // Agenda ICS : https seulement (webcal:// accepté, réécrit en https://), 2 Mo au plus, délai borné. L'adresse d'un réglage n'est
+    // pas limitée à permissions.network ; les adresses non publiques restent refusées à la connexion.
+    async Task<WinjetDataValue> FetchCalendar(WinjetPollTarget t, WinjetSource s, (string, string) key, CancellationToken forget)
+    {
+        var tz = LocalZone;
+        var nowLocal = TimeZoneInfo.ConvertTime(clock(), tz).DateTime;
+        string raw = ResolveCalendarUrl(t, s);
+        lock (gate)
+            calendarUrls[key] = raw;
+        JsonElement Payload(string status, IReadOnlyList<CalendarEvent> ev) => WinjetCalendar.BuildPayload(status, ev, nowLocal.Date, tz);
+        WinjetDataValue Fail(string why) => new(Payload("error", Array.Empty<CalendarEvent>()), Now(), why, false);
+        if (raw.Length == 0)
+            return new WinjetDataValue(Payload("unconfigured", Array.Empty<CalendarEvent>()), Now(), null, false);
+        string? url = WinjetCalendar.NormalizeUrl(raw);
+        if (url == null)
+            return Fail("Adresse refusée : seul https:// (ou webcal://) est autorisé.");
+        try
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(forget);
+            cts.CancelAfter(Timeout);
+            // Au plus 3 redirections ; chaque cible est revalidée (https, port 443, sans identifiants) et l'IP publique est
+            // contrôlée par le filtre de connexion (ConnectPublicAsync) à chaque saut.
+            HttpResponseMessage response;
+            for (int hop = 0; ; hop++)
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Accept.ParseAdd("text/calendar, text/plain");
+                response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+                int code = (int)response.StatusCode;
+                if (code is not (301 or 302 or 303 or 307 or 308))
+                    break;
+                var location = response.Headers.Location;
+                response.Dispose();
+                if (location == null || hop >= 3)
+                    return Fail("Trop de redirections.");
+                string? next = WinjetCalendar.NormalizeUrl((location.IsAbsoluteUri ? location : new Uri(new Uri(url), location))
+                    .AbsoluteUri);
+                if (next == null)
+                    return Fail("Redirection refusée : seul https:// (port 443) est autorisé.");
+                url = next;
+            }
+            using var _ = response;
+            if (!response.IsSuccessStatusCode)
+                return Fail("Le serveur a répondu " + (int)response.StatusCode + ".");
+            if (response.Content.Headers.ContentLength > WinjetLimits.MaxIcsBytes)
+                return Fail("Réponse trop volumineuse.");
+            await using var stream = await response.Content.ReadAsStreamAsync(cts.Token);
+            using var buffer = new MemoryStream();
+            var chunk = new byte[16 * 1024];
+            int read;
+            while ((read = await stream.ReadAsync(chunk, cts.Token)) > 0)
+            {
+                if (buffer.Length + read > WinjetLimits.MaxIcsBytes)
+                    return Fail("Réponse trop volumineuse.");
+                buffer.Write(chunk, 0, read);
+            }
+            var events = WinjetCalendar.Parse(Encoding.UTF8.GetString(buffer.GetBuffer(), 0, (int)buffer.Length), nowLocal, tz);
+            return new WinjetDataValue(Payload("ok", events), Now(), null, false);
+        }
+        catch (OperationCanceledException) when (!forget.IsCancellationRequested)
+        {
+            return Fail("Délai dépassé.");
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidOperationException)
+        {
+            return Fail("Réseau indisponible.");
+        }
     }
 
     async Task<WinjetDataValue> Download(WinjetSource s, CancellationToken forget)
@@ -448,7 +569,8 @@ internal sealed class WinjetDataService : IDisposable
             : new WinjetDataValue(null, Now(), error, false);
     }
 
-    string CachePath(string url) => Path.Combine(cacheDir, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(url))).ToLowerInvariant() + ".json");
+    string CachePath(string url) => Path.Combine(cacheDir, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(url)))
+        .ToLowerInvariant() + ".json");
 
     void WriteCache(string url, JsonElement value, string fetched)
     {
@@ -477,7 +599,8 @@ internal sealed class WinjetDataService : IDisposable
             string file = CachePath(url);
             if (!File.Exists(file) || new FileInfo(file).Length > WinjetLimits.MaxResponseBytes + 4096)
                 return null;
-            using var doc = JsonDocument.Parse(File.ReadAllBytes(file), new JsonDocumentOptions { MaxDepth = WinjetLimits.MaxJsonDepth + 2 });
+            using var doc = JsonDocument.Parse(File.ReadAllBytes(file), new JsonDocumentOptions {
+                MaxDepth = WinjetLimits.MaxJsonDepth + 2 });
             var root = doc.RootElement;
             if (root.GetProperty("url").GetString() != url)
                 return null;

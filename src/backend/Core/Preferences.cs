@@ -46,6 +46,10 @@ public sealed class Preferences
     public bool QuietFullscreen { get; set; } = true;
     public bool DesktopIndicator { get; set; } = true;
     public bool DockDrawerOpen { get; set; } = false;
+    // Batterie des périphériques Bluetooth / manettes dans le dock (sondage lent, voir PeripheralBatteryService)
+    public bool PeripheralBatteryEnabled { get; set; } = true;
+    public List<string> PeripheralHidden { get; set; } = new();
+    public Dictionary<string, string> PeripheralKindOverrides { get; set; } = new();
     public List<string> DockBar { get; set; } = DockItems.DefaultBar.ToList();
     public List<string> DockDrawer { get; set; } = DockItems.DefaultDrawer.ToList();
     public bool ActiveBorderOnly { get; set; } = false;

@@ -1,4 +1,4 @@
-// C#12 / Tiler075 tests / only the dedicated fixture windows can be moved.
+// C#12 / tests Tiler075 / seules les fenêtres de fixture dédiées peuvent être déplacées.
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -121,7 +121,7 @@ public class TilerIntegrationTests
             Forms.Application.DoEvents();
             Assert.True(windows.Where(w => !w.IsDisposed).All(w =>
                 { GetWindowRect(w.Handle, out var r); return r.Rect == original[w.Handle]; }), "disableRestoresOriginalGeometry");
-            // Pure partition properties on a physical monitor with negative coordinates.
+            // Propriétés de partition pures sur un moniteur physique à coordonnées négatives.
             var nativeRect = asm.GetType("PanneauxGlass.Native+Rect");
             var box = Activator.CreateInstance(nativeRect);
             foreach (var pair in new[] { ("Left", -1920), ("Top", -1080), ("Right", 0), ("Bottom", 0) })

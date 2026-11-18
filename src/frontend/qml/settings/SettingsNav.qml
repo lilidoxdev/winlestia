@@ -195,7 +195,7 @@ Item {
             }
         }
 
-        // ---- page list ----
+        // ---- liste des pages ----
         Flickable {
             id: navFlick
 
@@ -298,7 +298,7 @@ Item {
             }
         }
 
-        // ---- search results (replace the page list) ----
+        // ---- résultats de recherche (remplacent la liste des pages) ----
         ListView {
             id: resultList
 

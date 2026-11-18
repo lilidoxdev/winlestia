@@ -70,7 +70,11 @@ Item {
         return phase === "instrumental" ? "music_note" : "lyrics";
     }
     function messageText(): string {
-        return phase === "loading" ? qsTr("Recherche des paroles…") : phase === "instrumental" ? qsTr("Morceau instrumental") : qsTr("Paroles introuvables");
+        if (phase === "loading")
+            return qsTr("Recherche des paroles…");
+        if (phase === "instrumental")
+            return qsTr("Morceau instrumental");
+        return qsTr("Paroles introuvables");
     }
 
     onLinesChanged: sample()
@@ -253,7 +257,9 @@ Item {
                 readonly property bool isCurrent: index === root.current
                 readonly property int distance: Math.abs(index - Math.max(0, root.current))
                 readonly property bool interlude: String(modelData.text ?? "") === ""
-                readonly property real baseOpacity: isCurrent ? 1 : Math.max(root.minOpacity, root.neighbourOpacity - (distance - 1) * root.falloffStep)
+                readonly property real baseOpacity: isCurrent
+                    ? 1
+                    : Math.max(root.minOpacity, root.neighbourOpacity - (distance - 1) * root.falloffStep)
 
                 width: ListView.view.width
                 height: label.implicitHeight + root.lineGap
@@ -269,7 +275,9 @@ Item {
                     font.weight: Font.Bold
                     transformOrigin: Item.Left
                     scale: line.isCurrent ? 1 : root.dimScale
-                    opacity: tap.containsMouse && tap.enabled ? Math.max(line.baseOpacity, root.hoverOpacity) : line.baseOpacity * line.breath
+                    opacity: tap.containsMouse && tap.enabled
+                        ? Math.max(line.baseOpacity, root.hoverOpacity)
+                        : line.baseOpacity * line.breath
                     Behavior on scale {
                         enabled: !root.reduced
                         Anim {

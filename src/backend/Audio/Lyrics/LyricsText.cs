@@ -32,7 +32,9 @@ internal static class LyricsText
     static readonly Regex FeaturingTail = new(@"\s+(?:feat\.?|ft\.?|featuring)\s.*$",
                                               RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, Timeout);
     // Bruit d'édition qui ne change pas les paroles : remasterisation, mono/stéréo, version single.
-    const string Noise = @"(?:\d{4}\s+)?(?:remaster(?:ed)?(?:\s+\d{4})?|digital remaster|mono|stereo|single version|album version|radio edit|deluxe(?:\s+edition)?)";
+    const string Noise =
+        @"(?:\d{4}\s+)?(?:remaster(?:ed)?(?:\s+\d{4})?|digital remaster|mono|stereo|single version|album version|radio edit|"
+        + @"deluxe(?:\s+edition)?)";
     static readonly Regex NoiseSuffix = new(@"\s+[-–—]\s+[^-–—]*?\b" + Noise + @"\b[^-–—]*$",
                                             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, Timeout);
     static readonly Regex NoiseBracket = new(@"\s*[\(\[][^\)\]]*?\b" + Noise + @"\b[^\)\]]*[\)\]]",

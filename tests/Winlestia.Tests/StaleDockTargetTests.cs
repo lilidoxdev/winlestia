@@ -1,4 +1,5 @@
-// Self-heal of stale dock: exe paths: Squirrel app-* only. Fixtures live under %TEMP%\WinlestiaStaleDock and are deleted at the end.
+// Auto-réparation des chemins exe périmés du dock : Squirrel app-* uniquement. Les fixtures vivent sous %TEMP%\WinlestiaStaleDock et sont
+// supprimées à la fin.
 using System;
 using System.IO;
 using System.Linq;
@@ -23,7 +24,7 @@ public class StaleDockTargetTests
             string app = Path.Combine(d, "Discord");
             foreach (string v in new[] { "app-1.0.9003", "app-1.0.9266", "app-1.0.10" })
                 Exe(Path.Combine(app, v));
-            Directory.CreateDirectory(Path.Combine(app, "app-1.0.9267"));// newest folder without the exe must be skipped
+            Directory.CreateDirectory(Path.Combine(app, "app-1.0.9267"));// le dossier le plus récent sans l'exe doit être ignoré
             Check(Store.HealStaleExe(Path.Combine(app, "app-1.0.9265", "Discord.exe")) == Path.Combine(app, "app-1.0.9266", "Discord.exe"),
                 "Squirrel: newest sibling app-* with the exe (numeric order)");
             string sfx = Path.Combine(d, "Sfx");

@@ -424,6 +424,13 @@ class Bridge(
         notify=changed,
     )
 
+    # Batterie des périphériques (pastille du dock + réglages) : {enabled, devices, paired}, vide tant que le backend n'envoie rien.
+    peripherals = Property(
+        'QVariantMap',
+        lambda s: s._state.get('peripherals') if isinstance(s._state.get('peripherals'), dict) else {},
+        notify=changed,
+    )
+
     taskbarEnabled = Property(bool, lambda s: bool(s._state.get('taskbarEnabled', s.args.preview)), notify=changed)
 
     # Visibilité des surfaces : un dock ou un rail masqué n'est ni sondé, ni affiché, et ne garde aucun masque de

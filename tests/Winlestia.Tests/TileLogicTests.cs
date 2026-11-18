@@ -1,4 +1,4 @@
-// C#12 / TileLogicTests / Pure tiling logic only: no window is created, moved or focused.
+// C#12 / TileLogicTests / Logique de tuilage pure uniquement : aucune fenêtre n'est créée, déplacée ou focalisée.
 using System;
 using System.Linq;
 using PanneauxGlass;
@@ -11,7 +11,7 @@ public class TileLogicTests
     public void AllChecks()
     {
         var area = R(0, 0, 1000, 600);
-        // Layout: default identical to the previous binary split; partition without overlap for 1..16.
+        // Disposition : défaut identique à la division binaire précédente ; partition sans chevauchement pour 1..16.
         bool part = true;
         for (int n = 1; n <= 16; n++)
         {
@@ -30,7 +30,7 @@ public class TileLogicTests
             && TileLogic.Layout(area, 2, 8, _ => .99)[0].Right == TileLogic.Layout(area, 2, 8, _ => .8)[0].Right, "ratio borne a 20-80 %");
         var three = TileLogic.Layout(area, 3, 8, p => p == "1" ? .5 : .5);
         Check(three.Length == 3 && three[1].Top < three[2].Top, "3 tuiles : droite coupee en deux");
-        // Deepest split + Grow.
+        // Division la plus profonde + Grow.
         Check(TileLogic.DeepestSplit(1, 0) == null, "une seule tuile : pas de decoupe");
         var s = TileLogic.DeepestSplit(3, 2);
         Check(s != null && s.Value.path == "1" && !s.Value.inFirst, "3 tuiles, derniere : decoupe droite, 2e cote");
@@ -45,8 +45,8 @@ public class TileLogicTests
         for (int i = 0; i < 40; i++)
             r = TileLogic.Grow(r, true, -.05);
         Check(r == .2, "plancher 20 %");
-        // Neighbour.
-        var grid = TileLogic.Layout(area, 4, 8);  // 2x2: 0 top-left,1 bottom-left,2 top-right,3 bottom-right (split order)
+        // Voisin.
+        var grid = TileLogic.Layout(area, 4, 8);  // 2x2 : 0 haut-gauche, 1 bas-gauche, 2 haut-droite, 3 bas-droite (ordre de division)
         int tl = Array.FindIndex(grid, g => g.Left == 0 && g.Top == 0), tr = Array.FindIndex(grid, g => g.Left > 0 && g.Top == 0),
             bl = Array.FindIndex(grid, g => g.Left == 0 && g.Top > 0), br = Array.FindIndex(grid, g => g.Left > 0 && g.Top > 0);
         Check(TileLogic.Neighbor(grid, tl, TileDir.Right) == tr && TileLogic.Neighbor(grid, tl, TileDir.Down) == bl
@@ -62,7 +62,7 @@ public class TileLogicTests
             "voisine sur l'ecran adjacent");
         Check(TileLogic.TileAt(grid, 10, 10) == tl && TileLogic.TileAt(grid, 10, 10, tl) == -1 && TileLogic.TileAt(grid, 500, 10) == -1,
             "TileAt");
-        // Order.
+        // Ordre.
         var o = new TileOrder();
         IntPtr A = (IntPtr)1, B = (IntPtr)2, C = (IntPtr)3, D = (IntPtr)4;
         o.Sync(new[] { A, B, C });
@@ -74,7 +74,7 @@ public class TileLogicTests
         Check(o.Items.SequenceEqual(new[] { A, C, D }), "fermeture : les autres gardent leur ordre");
         Check(o.Swap(A, D) && o.Items.SequenceEqual(new[] { D, C, A }) && !o.Swap(A, B) && !o.Swap(A, A), "echange");
         Check(o.Filter(new[] { A, D }).SequenceEqual(new[] { D, A }), "filtre par ecran garde l'ordre global");
-        // Exclusions parsing.
+        // Analyse des exclusions.
         var ex = TileLogic.ParseExclusions("Notepad.EXE\r\n  code \n\nnotepad\n");
         Check(ex.SequenceEqual(new[] { "code", "notepad" }), "exclusions : normalisees, dedoublonnees, triees");
     }

@@ -1,4 +1,4 @@
-// C#12 / FileSearch: normalisation and escaping of the index query (pure functions, no index needed).
+// C#12 / FileSearch : normalisation et échappement de la requête d'index (fonctions pures, aucun index requis).
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;

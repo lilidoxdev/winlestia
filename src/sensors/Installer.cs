@@ -352,7 +352,8 @@ internal static class Installer
                 CopyTree(sub, Path.Combine(to, sub.Name));
     }
 
-    // Destination : jamais un point d'analyse (remplacé), ACL protégée explicite : SYSTEM et Administrateurs tout, Utilisateurs lecture/exécution.
+    // Destination : jamais un point d'analyse (remplacé), ACL protégée explicite : SYSTEM et Administrateurs tout, Utilisateurs
+    // lecture/exécution.
     static void ProtectTarget(string target)
     {
         var dir = new DirectoryInfo(target);

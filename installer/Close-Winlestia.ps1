@@ -1,4 +1,4 @@
-﻿# PowerShell 5.1 / Close-Winlestia.ps1 / Scoped installer cleanup, never other Python applications.
+﻿# PowerShell 5.1 / Close-Winlestia.ps1 / Nettoyage ciblé de l'installeur, jamais d'autres applications Python.
 param([Parameter(Mandatory=$true)][string]$AppRoot,[switch]$ListOnly)
 $ErrorActionPreference='Stop'
 $installRoot=[IO.Path]::GetFullPath($AppRoot).TrimEnd('\')+'\'

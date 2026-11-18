@@ -53,7 +53,7 @@ public sealed partial class MainWindow : Window
     readonly bool reduced = M3.ReducedEffects;
 
     internal MainWindow(string? path)
-    {   // null: hidden preload, no tab yet
+    {   // null : préchargement masqué, pas encore d'onglet
         Perf.Mark("ctor begin");
         Title = "Winlestia Fichiers" + (path == null ? "" : " - " + path);
         WindowStyle = WindowStyle.None;

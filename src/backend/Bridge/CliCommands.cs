@@ -16,7 +16,7 @@ internal sealed record CliCommand(CliKind Kind, string Arg = "", int Number = 0,
 
 internal static class CliCommands
 {
-    // Explicit allow-list. Nothing here shuts down, restarts, signs out or deletes anything.
+    // Liste blanche explicite. Rien ici n'arrête, ne redémarre, ne déconnecte ni ne supprime quoi que ce soit.
     internal static readonly string[] Panels = { "settings", "clipboard", "tools", "audio", "mixer", "capture", "palette", "dashboard" };
     internal static readonly string[] ImageExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp" };
     internal const int MaxArgs = 4;

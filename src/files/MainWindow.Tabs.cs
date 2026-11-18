@@ -148,7 +148,7 @@ public sealed partial class MainWindow
             Refresh(tab);
     }
 
-    // ---- active tab view -------------------------------------------------------------------------------------
+    // ---- vue de l'onglet actif ----
 
     void Refresh(FolderTab tab)
     {

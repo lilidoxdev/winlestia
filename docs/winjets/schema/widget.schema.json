@@ -140,13 +140,26 @@
           "required": ["type", "symbols"],
           "properties": {
             "type": { "const": "market" },
+            "provider": { "enum": ["binance", "yahoo"] },
             "symbols": {
               "type": "array",
               "minItems": 1,
               "maxItems": 4,
               "uniqueItems": true,
-              "items": { "type": "string", "pattern": "^[A-Z0-9]{2,10}$" }
+              "items": { "type": "string", "pattern": "^([A-Z0-9]{2,10}|[A-Za-z0-9^.=-]{1,15})$" }
             },
+            "refresh": { "type": "integer", "minimum": 60, "maximum": 86400 },
+            "enabledWhen": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "url"],
+          "properties": {
+            "type": { "const": "calendar" },
+            "url": { "type": "string", "minLength": 1, "maxLength": 500 },
+            "refresh": { "type": "integer", "minimum": 60, "maximum": 86400 },
             "enabledWhen": { "type": "string", "minLength": 1 }
           }
         }
@@ -195,6 +208,24 @@
           "additionalProperties": false,
           "required": ["type"],
           "properties": { "type": { "enum": ["media.playPause", "media.next", "media.prev"] } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path"],
+          "properties": {
+            "type": { "const": "open" },
+            "path": { "type": "string", "minLength": 1, "maxLength": 500 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "drive"],
+          "properties": {
+            "type": { "const": "openDrive" },
+            "drive": { "type": "string", "minLength": 1, "maxLength": 40 }
+          }
         }
       ]
     },
@@ -221,6 +252,7 @@
         { "$ref": "#/$defs/clock" },
         { "$ref": "#/$defs/calendar" },
         { "$ref": "#/$defs/list" },
+        { "$ref": "#/$defs/note" },
         { "$ref": "#/$defs/chart" },
         { "$ref": "#/$defs/stat" },
         { "$ref": "#/$defs/progress" },
@@ -261,10 +293,10 @@
       "properties": {
         "type": { "const": "text" },
         "text": { "type": "string" },
-        "style": { "enum": ["title", "label", "body", "caption", "display", "mono"] },
+        "style": { "enum": ["title", "label", "body", "caption", "display", "mono", "icon", "eyebrow", "glyph"] },
         "align": { "enum": ["start", "center", "end"] },
         "maxLines": { "type": "integer", "minimum": 1, "maximum": 20 },
-        "tone": { "enum": ["primary", "secondary", "accent"] },
+        "tone": { "enum": ["primary", "secondary", "accent", "signed", "faint"] },
         "action": { "$ref": "#/$defs/action" }
       }
     },
@@ -300,7 +332,8 @@
       "properties": {
         "type": { "const": "calendar" },
         "variant": { "enum": ["month", "day"] },
-        "firstDay": { "enum": ["monday", "sunday"] }
+        "firstDay": { "enum": ["monday", "sunday"] },
+        "nav": { "$ref": "#/$defs/boolOrExpr" }
       }
     },
     "list": {
@@ -313,7 +346,27 @@
         "title": { "type": "string", "minLength": 1 },
         "subtitle": { "type": "string", "minLength": 1 },
         "trailing": { "type": "string", "minLength": 1 },
-        "max": { "type": "integer", "minimum": 1, "maximum": 50 }
+        "max": { "type": "integer", "minimum": 1, "maximum": 50 },
+        "bar": { "type": "string", "minLength": 1 },
+        "group": { "type": "string", "minLength": 1 },
+        "icon": { "type": "string", "minLength": 1 },
+        "relative": { "type": "string", "minLength": 1 },
+        "past": { "$ref": "#/$defs/boolOrExpr" },
+        "accent": { "$ref": "#/$defs/boolOrExpr" },
+        "tiles": { "type": "integer", "minimum": 1, "maximum": 6 },
+        "action": { "$ref": "#/$defs/action" }
+      }
+    },
+    "note": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "key"],
+      "properties": {
+        "type": { "const": "note" },
+        "key": { "$ref": "#/$defs/identifier" },
+        "placeholder": { "type": "string", "maxLength": 100 },
+        "grow": { "type": "number", "minimum": 0 },
+        "visibleWhen": { "type": "string", "minLength": 1 }
       }
     },
     "chart": {
@@ -323,7 +376,7 @@
       "properties": {
         "type": { "const": "chart" },
         "series": { "type": "string", "minLength": 1 },
-        "variant": { "enum": ["line", "area", "bars", "candles"] },
+        "variant": { "enum": ["line", "area", "bars", "candles", "spark"] },
         "axes": { "$ref": "#/$defs/boolOrExpr" },
         "period": { "type": "string" },
         "color": { "$ref": "#/$defs/paletteRole" },
@@ -351,7 +404,10 @@
         "type": { "const": "progress" },
         "value": { "type": ["string", "number"] },
         "variant": { "enum": ["ring", "bar"] },
-        "label": { "type": "string" }
+        "label": { "type": "string" },
+        "from": { "type": ["string", "number"] },
+        "thickness": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "big": { "$ref": "#/$defs/boolOrExpr" }
       }
     },
     "dots": {
@@ -412,7 +468,9 @@
         "type": { "const": "media" },
         "showArt": { "$ref": "#/$defs/boolOrExpr" },
         "showProgress": { "$ref": "#/$defs/boolOrExpr" },
-        "showControls": { "$ref": "#/$defs/boolOrExpr" }
+        "showControls": { "$ref": "#/$defs/boolOrExpr" },
+        "backdrop": { "$ref": "#/$defs/boolOrExpr" },
+        "pill": { "$ref": "#/$defs/boolOrExpr" }
       }
     },
     "divider": {

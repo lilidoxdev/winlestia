@@ -1,5 +1,5 @@
-// C#12 / AppCatalogueWatchPolicy: shortcut filter, debounce, refresh gate, palette staleness, window grouping, icon retry, inventory naming
-// rules.
+// C#12 / AppCatalogueWatchPolicy : filtre de raccourcis, anti-rebond, barrière de rafraîchissement, péremption de palette, regroupement de
+// fenêtres, nouvelle tentative d'icône, règles de nommage de l'inventaire.
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;

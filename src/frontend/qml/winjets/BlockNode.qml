@@ -31,7 +31,8 @@ Loader {
             spacer: "blocks/SpacerBlock.qml",
             divider: "blocks/DividerBlock.qml",
             media: "blocks/MediaBlock.qml",
-            visualizer: "blocks/VisualizerBlock.qml"
+            visualizer: "blocks/VisualizerBlock.qml",
+            note: "blocks/NoteBlock.qml"
         })
     readonly property string kind: spec && typeof spec.type === "string" ? spec.type : ""
     readonly property bool shown: !!spec && (!spec.visibleWhen || Bridge.winjets.condition(spec.visibleWhen, ctx))
@@ -44,11 +45,16 @@ Loader {
 
     // Axe principal : vertical dans une colonne, horizontal dans une ligne ; l'autre axe suit `align` (étirement par défaut).
     Layout.fillWidth: parentKind === "row" ? weight > 0 : (parentKind === "column" || parentKind === "grid" ? stretch : false)
-    Layout.fillHeight: parentKind === "column" ? weight > 0 : (parentKind === "row" || parentKind === "grid" ? (parentKind === "row" ? stretch : weight > 0) : false)
+    Layout.fillHeight: {
+        if (parentKind === "column" || parentKind === "grid")
+            return weight > 0;
+        return parentKind === "row" ? stretch : false;
+    }
     // Un enfant `grow` d'une colonne a une base proportionnelle à son poids (1 px par unité) : l'espace se partage selon `grow`.
     Layout.preferredHeight: parentKind === "column" && weight > 0 ? weight : -1
-    Layout.horizontalStretchFactor: weight > 0 ? weight : 1
-    Layout.verticalStretchFactor: weight > 0 ? weight : 1
+    Layout.preferredWidth: parentKind === "row" && weight > 0 ? weight : -1
+    Layout.horizontalStretchFactor: Layout.fillWidth ? (weight > 0 ? weight : 1) : -1
+    Layout.verticalStretchFactor: Layout.fillHeight ? (weight > 0 ? weight : 1) : -1
     Layout.alignment: {
         if (stretch)
             return 0;

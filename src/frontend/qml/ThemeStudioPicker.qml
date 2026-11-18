@@ -18,7 +18,7 @@ SettingsSection {
         Layout.margins: Appearance.padding.smaller
         spacing: Appearance.spacing.small
 
-        // Hue across, intensity (saturation) down, both at the current clarity.
+        // Teinte en abscisse, intensité (saturation) en ordonnée, toutes deux à la clarté courante.
         Item {
             id: square
 

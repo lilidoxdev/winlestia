@@ -223,6 +223,14 @@ QtObject {
             kw: "reinitialiser reset defaut dock tiroir barre"
         },
         {
+            id: "peripheralBattery",
+            page: 2,
+            section: qsTr("Barre d’icônes"),
+            label: qsTr("Batterie des périphériques"),
+            desc: qsTr("Affiche dans le dock le niveau de batterie des appareils connectés"),
+            kw: "batterie casque manette souris clavier bluetooth peripheriques niveau pile"
+        },
+        {
             id: "bookmarksRail",
             page: 2,
             section: qsTr("Visibilité"),

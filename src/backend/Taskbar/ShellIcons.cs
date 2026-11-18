@@ -1,4 +1,4 @@
-// language: C# 12, file: ShellIcons.cs, target: Windows 11 / .NET 8 WPF, original rounded vector interface icons
+// language: C# 12, file: ShellIcons.cs, target: Windows 11 / .NET 8 WPF, icônes vectorielles d'interface originales aux angles arrondis
 using System;
 using System.Collections.Generic;
 using System.Windows;

@@ -146,14 +146,14 @@ internal static partial class FullscreenWatcher
     {
         bool full;
         if (DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, out RECT d, Marshal.SizeOf<RECT>()) == 0)
-            full = Covers(d, m);   // DWM bounds are authoritative: a maximized window's outer rect overhangs
+            full = Covers(d, m);   // les bornes DWM font foi : le rect externe d'une fenêtre maximisée déborde
         else
             full = GetWindowRect(hwnd, out RECT r) && Covers(r, m);
         if (!full)
             return false;
         uint style = unchecked((uint)GetWindowLongPtr(hwnd, GWL_STYLE).ToInt64());
         if ((style & WS_CAPTION) == WS_CAPTION)
-            return false;   // maximized, not fullscreen
+            return false;   // maximisée, pas en plein écran
         // Fenêtre maximisée sans cadre (p. ex. Electron) à côté d'une barre des tâches masquée automatiquement : zoomée, sauf si
         // c'est un vrai WS_POPUP (jeu sans bordure).
         if (IsZoomed(hwnd) && !((style & WS_POPUP) != 0 && (style & WS_THICKFRAME) == 0))

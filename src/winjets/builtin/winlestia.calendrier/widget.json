@@ -36,7 +36,8 @@
       "minWidth": 0,
       "root": {
         "type": "column",
-        "padding": 16,
+        "padding": 0,
+        "gap": 0,
         "children": [
           {
             "type": "stack",
@@ -52,11 +53,12 @@
       }
     },
     {
-      "minWidth": 340,
-      "minHeight": 340,
+      "minWidth": 240,
+      "minHeight": 240,
       "root": {
         "type": "column",
-        "padding": 16,
+        "padding": 0,
+        "gap": 0,
         "children": [
           {
             "type": "stack",
@@ -69,7 +71,8 @@
                   {
                     "type": "calendar",
                     "variant": "month",
-                    "firstDay": "monday"
+                    "firstDay": "monday",
+                    "nav": true
                   }
                 ]
               },
@@ -80,7 +83,8 @@
                   {
                     "type": "calendar",
                     "variant": "month",
-                    "firstDay": "sunday"
+                    "firstDay": "sunday",
+                    "nav": true
                   }
                 ]
               }

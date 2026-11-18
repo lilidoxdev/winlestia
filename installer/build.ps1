@@ -89,7 +89,7 @@ Write-Host '→ Assistant de capteurs (Sensors, sous-dossier de Glass-v5)' -Fore
 dotnet publish (Join-Path $root 'src\sensors\Winlestia.Sensors.csproj') `
     -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:DebugType=none -p:DebugSymbols=false `
     -o (Join-Path $payload 'Glass-v5\Sensors') --nologo
-if ($LASTEXITCODE -ne 0) { throw 'Compilation de l’assistant de capteurs échouée.' }
+if ($LASTEXITCODE -ne 0) { throw "Compilation de l'assistant de capteurs échouée." }
 
 # Composants natifs précompilés (ignorés par git) : sans eux le setup serait livré sans outil de restauration.
 $nativeDir = Join-Path $root 'src\backend\native'

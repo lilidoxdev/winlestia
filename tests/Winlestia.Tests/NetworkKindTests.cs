@@ -1,4 +1,4 @@
-// C#12 / NetworkKindWatcher: Start/Stop (event subscription) are idempotent, Changed fires only on a real change.
+// C#12 / NetworkKindWatcher : Start/Stop (abonnement aux événements) sont idempotents, Changed ne se déclenche que sur un vrai changement.
 using System;
 using System.Threading;
 using PanneauxGlass;

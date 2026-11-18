@@ -42,7 +42,8 @@ internal static class DockItems
 
     // Quels radios rallumer en quittant le mode avion : ceux (clé = type + nom) qui étaient allumés avant et existent encore ;
     // à défaut, Wi-Fi et Bluetooth.
-    internal static IReadOnlyList<T> RadiosToRestore<T>(IReadOnlyCollection<string>? remembered, IEnumerable<T> all, Func<T, string> key, Func<T, bool> isFallback)
+    internal static IReadOnlyList<T> RadiosToRestore<T>(IReadOnlyCollection<string>? remembered, IEnumerable<T> all, Func<T, string> key,
+        Func<T, bool> isFallback)
     {
         var list = all.ToList();
         var matched = remembered != null && remembered.Count > 0 ? list.Where(r => remembered.Contains(key(r))).ToList() : new List<T>();

@@ -11,7 +11,8 @@ public class LyricsTests
     [Fact]
     public void ParsesTagsOffsetAndKeepsGaps()
     {
-        var lines = LyricsText.ParseLrc("[ar:Artiste]\n[ti:Titre]\n[offset:500]\n[00:10.00]Bonjour\n[00:05.50][01:00.25]Refrain\n[00:20.00]\n[bad]x");
+        var lines = LyricsText.ParseLrc("[ar:Artiste]\n[ti:Titre]\n[offset:500]\n[00:10.00]Bonjour\n[00:05.50][01:00.25]Refrain\n"
+        + "[00:20.00]\n[bad]x");
         Assert.Equal(new[] { 5.0, 9.5, 19.5, 59.75 }, lines.Select(l => Math.Round(l.Time, 2)));
         Assert.Equal(new[] { "Refrain", "Bonjour", "", "Refrain" }, lines.Select(l => l.Text));
     }
@@ -58,9 +59,11 @@ public class LyricsTests
 
     [Fact]
     public void TrackKeyIgnoresNoiseCaseAndSubSecondDuration()
-        => Assert.Equal(LyricsText.TrackKey("Daft Punk", "Get Lucky (feat. X)", 248.4), LyricsText.TrackKey("daft punk", "get lucky - 2013 remaster", 248.2));
+        => Assert.Equal(LyricsText.TrackKey("Daft Punk", "Get Lucky (feat. X)", 248.4),
+            LyricsText.TrackKey("daft punk", "get lucky - 2013 remaster", 248.2));
 
-    static LyricCandidate C(string? synced, string? plain, double duration, bool instrumental = false) => new(synced, plain, instrumental, duration);
+    static LyricCandidate C(string? synced, string? plain, double duration, bool instrumental = false) => new(synced, plain, instrumental,
+        duration);
 
     [Fact]
     public void SelectionPrefersSyncedWithinTolerance()
@@ -129,7 +132,8 @@ public class LyricsTests
             for (int i = 0; i < 5; i++)
             {
                 cache.Put("k" + i, LyricsResult.Instrumental);
-                File.SetLastWriteTimeUtc(Directory.GetFiles(dir, "*.json").OrderByDescending(File.GetLastWriteTimeUtc).First(), DateTime.UtcNow.AddMinutes(i));
+                File.SetLastWriteTimeUtc(Directory.GetFiles(dir, "*.json").OrderByDescending(File.GetLastWriteTimeUtc).First(),
+                    DateTime.UtcNow.AddMinutes(i));
             }
             Assert.Equal(3, Directory.GetFiles(dir, "*.json").Length);
             Assert.NotNull(cache.Get("k4"));

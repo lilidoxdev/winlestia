@@ -21,7 +21,8 @@ internal sealed class SensorServer : IDisposable
 
     internal static NamedPipeServerStream Create(bool first)
     {
-        // Rien n'est lié à l'utilisateur courant (le service tourne en SYSTEM) : SYSTEM et Administrateurs, session interactive en lecture/écriture.
+        // Rien n'est lié à l'utilisateur courant (le service tourne en SYSTEM) : SYSTEM et Administrateurs, session interactive en
+        // lecture/écriture.
         var security = new PipeSecurity();
         security.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.NetworkSid, null),
             PipeAccessRights.FullControl, AccessControlType.Deny));

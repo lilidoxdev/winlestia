@@ -1,4 +1,4 @@
-﻿# PowerShell 5.1+ / Winlestia session banner / Windows 11.
+﻿# PowerShell 5.1+ / bannière de session Winlestia / Windows 11.
 param([string]$Shell = '', [switch]$Force)
 . (Join-Path $PSScriptRoot 'Colors.ps1')
 Update-WinlestiaPalette -SkipReadLine

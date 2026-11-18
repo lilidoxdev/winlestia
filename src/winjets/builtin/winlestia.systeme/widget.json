@@ -1,160 +1,270 @@
 {
   "size": {
     "default": [
-      536,
-      536
-    ],
-    "min": [
       352,
       352
     ],
+    "min": [
+      168,
+      168
+    ],
     "max": [
-      720,
-      720
+      536,
+      536
     ]
   },
-  "settings": [
-    {
-      "id": "prompt",
-      "type": "text",
-      "label": "Invite",
-      "default": "winlestia",
-      "maxLength": 24
-    },
-    {
-      "id": "showSeconds",
-      "type": "toggle",
-      "label": "Afficher les secondes",
-      "default": true
-    },
-    {
-      "id": "showBattery",
-      "type": "toggle",
-      "label": "Afficher la batterie",
-      "default": true
-    },
-    {
-      "id": "showMedia",
-      "type": "toggle",
-      "label": "Afficher la lecture en cours",
-      "default": true
+  "data": {
+    "niveaux": {
+      "type": "file",
+      "path": "assets/niveaux.json"
     }
-  ],
+  },
   "layouts": [
     {
       "minWidth": 0,
       "root": {
         "type": "column",
-        "padding": 20,
-        "gap": 8,
+        "padding": 0,
+        "gap": 2,
         "children": [
           {
             "type": "text",
-            "text": "{{ settings.prompt }} ~ $ état",
-            "style": "mono",
-            "tone": "secondary"
+            "text": "Processeur",
+            "style": "eyebrow"
+          },
+          {
+            "type": "text",
+            "text": "{{ system.cpu }} %",
+            "style": "display"
           },
           {
             "type": "stack",
             "grow": 1,
             "children": [
               {
-                "type": "clock",
-                "variant": "digital",
-                "seconds": "{{ settings.showSeconds }}"
+                "type": "chart",
+                "variant": "spark",
+                "series": "{{ system.cpuHistory }}",
+                "color": "primary"
               }
             ]
-          },
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 6,
+        "children": [
           {
-            "type": "divider"
-          },
+            "type": "row",
+            "grow": 1,
+            "gap": 16,
+            "children": [
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 2,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Processeur",
+                    "style": "eyebrow"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ system.cpu }} %",
+                    "style": "display"
+                  },
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "chart",
+                        "variant": "spark",
+                        "series": "{{ system.cpuHistory }}",
+                        "color": "primary"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "row",
+                "grow": 2,
+                "gap": 8,
+                "children": [
+                  {
+                    "type": "column",
+                    "grow": 1,
+                    "gap": 4,
+                    "children": [
+                      {
+                        "type": "stack",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "ring",
+                            "value": "{{ data.niveaux.ratio[system.ram] }}",
+                            "label": "{{ system.ram }} %",
+                            "thickness": 5,
+                            "big": true
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": "RAM",
+                        "style": "caption",
+                        "tone": "secondary",
+                        "align": "center"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "grow": 1,
+                    "gap": 4,
+                    "children": [
+                      {
+                        "type": "stack",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "ring",
+                            "value": "{{ system.diskMain.ratio }}",
+                            "label": "{{ system.diskMain.percent }} %",
+                            "thickness": 5,
+                            "big": true
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": "Disque {{ system.diskMain.drive }}",
+                        "style": "caption",
+                        "tone": "secondary",
+                        "align": "center"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "minHeight": 340,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 6,
+        "children": [
           {
             "type": "row",
             "children": [
               {
                 "type": "text",
-                "text": "uptime",
-                "style": "mono",
-                "tone": "secondary"
+                "text": "Processeur",
+                "style": "eyebrow"
               },
               {
                 "type": "spacer"
               },
               {
                 "type": "text",
-                "text": "{{ system.uptime }}",
-                "style": "mono"
+                "text": "Actif depuis {{ system.uptime }}",
+                "style": "caption",
+                "tone": "secondary"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "{{ system.cpu }} %",
+            "style": "display"
+          },
+          {
+            "type": "stack",
+            "grow": 2,
+            "children": [
+              {
+                "type": "chart",
+                "variant": "spark",
+                "series": "{{ system.cpuHistory }}",
+                "color": "primary"
               }
             ]
           },
           {
             "type": "row",
+            "grow": 3,
+            "gap": 16,
             "children": [
               {
-                "type": "text",
-                "text": "cpu",
-                "style": "mono",
-                "tone": "secondary"
+                "type": "column",
+                "grow": 1,
+                "gap": 4,
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "ring",
+                        "value": "{{ data.niveaux.ratio[system.ram] }}",
+                        "label": "{{ system.ram }} %",
+                        "thickness": 5,
+                        "big": true
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "RAM",
+                    "style": "caption",
+                    "tone": "secondary",
+                    "align": "center"
+                  }
+                ]
               },
               {
-                "type": "spacer"
-              },
-              {
-                "type": "text",
-                "text": "{{ system.cpu }} %",
-                "style": "mono"
-              }
-            ]
-          },
-          {
-            "type": "row",
-            "children": [
-              {
-                "type": "text",
-                "text": "ram",
-                "style": "mono",
-                "tone": "secondary"
-              },
-              {
-                "type": "spacer"
-              },
-              {
-                "type": "text",
-                "text": "{{ system.ram }} %",
-                "style": "mono"
-              }
-            ]
-          },
-          {
-            "type": "row",
-            "visibleWhen": "settings.showBattery && system.battery >= 0",
-            "children": [
-              {
-                "type": "text",
-                "text": "batterie",
-                "style": "mono",
-                "tone": "secondary"
-              },
-              {
-                "type": "spacer"
-              },
-              {
-                "type": "text",
-                "text": "{{ system.battery }} %",
-                "style": "mono"
-              }
-            ]
-          },
-          {
-            "type": "column",
-            "visibleWhen": "settings.showMedia && media.playing",
-            "children": [
-              {
-                "type": "text",
-                "text": "{{ media.artist }} — {{ media.title }}",
-                "style": "mono",
-                "tone": "accent",
-                "maxLines": 1
+                "type": "column",
+                "grow": 1,
+                "gap": 4,
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "ring",
+                        "value": "{{ system.diskMain.ratio }}",
+                        "label": "{{ system.diskMain.percent }} %",
+                        "thickness": 5,
+                        "big": true
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "Disque {{ system.diskMain.drive }}",
+                    "style": "caption",
+                    "tone": "secondary",
+                    "align": "center"
+                  }
+                ]
               }
             ]
           }

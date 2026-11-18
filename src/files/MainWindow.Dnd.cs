@@ -197,7 +197,7 @@ public sealed partial class MainWindow
         };
     }
 
-    // ---- drop target registration ----------------------------------------------------------------------------
+    // ---- enregistrement de la cible de dépôt ----
 
     internal bool OwnsDropTarget()
     {
@@ -224,7 +224,7 @@ public sealed partial class MainWindow
         {
             RevokeDragDrop(hwnd);
             hr = RegisterDragDrop(hwnd, dropTarget);
-        }   // DRAGDROP_E_ALREADYREGISTERED: WPF's own
+        }   // DRAGDROP_E_ALREADYREGISTERED : celui propre à WPF
         if (hr != 0)
             Perf.Log("RegisterDragDrop failed: 0x" + hr.ToString("X8"));
     }

@@ -35,7 +35,7 @@ internal sealed class OpResult
 
 internal static class FileOps
 {
-    // Test hook: no native progress / confirmation / error UI.
+    // Crochet de test : aucune interface native de progression / confirmation / erreur.
     internal static bool Quiet;
     internal static string OddHr = "";      // diagnostic : HRESULT non nuls vus par le collecteur
 

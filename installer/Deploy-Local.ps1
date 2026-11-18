@@ -1,4 +1,4 @@
-# Winlestia - deploiement local du build vers une copie installee (sans release, sans commit).
+﻿# Winlestia - deploiement local du build vers une copie installee (sans release, sans commit).
 # Sauvegarde, ferme l'app, publie le backend, copie backend + frontend, relance.
 param(
     [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'Programs\Winlestia'),
@@ -107,6 +107,6 @@ Copy-Item -LiteralPath $qtGlass -Destination $front -Force
 
 if (-not $NoStart) {
     Write-Host '-> Demarrage' -ForegroundColor Cyan
-    schtasks /run /tn WinlestiaShell | Out-Null  # same entry point as login autostart (--qt-shell)
+    schtasks /run /tn WinlestiaShell | Out-Null  # meme point d'entree que l'autostart a l'ouverture de session (--qt-shell)
 }
 Write-Host "Termine. Sauvegarde: $backup"

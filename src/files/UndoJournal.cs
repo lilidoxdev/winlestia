@@ -195,7 +195,7 @@ internal sealed class UndoJournal
         return (e, r);
     }
 
-    // ---- Recycle Bin restore ------------------------------------------------------------------------------------
+    // ---- restauration de la Corbeille ----
 
     // Shell.Application sur le dossier de la corbeille (CSIDL_BITBUCKET = 10) : correspondance par chemin dans la corbeille, sinon par nom
     // + dossier d'origine, puis le verbe
@@ -229,7 +229,7 @@ internal sealed class UndoJournal
                         {
                             App.LogLine("UndoJournal.RestoreAsync : " + ex.GetType().Name + ": " + ex.Message);
                         }
-                        // GetDetailsOf may prefix invisible direction marks
+                        // GetDetailsOf peut préfixer des marques de direction invisibles
                         where = where.Trim('‎', '‏', '‪', '‬');
                         bool byBin = bin != null && string.Equals(p, bin, StringComparison.OrdinalIgnoreCase);
                         bool byName = (string.Equals(nm, name, StringComparison.OrdinalIgnoreCase) || string.Equals(nm, bare,

@@ -193,7 +193,11 @@ ColumnLayout {
         SettingsRow {
             rowId: "sensorsConsent"
             title: qsTr("Autorisation requise")
-            hint: qsTr("Winlestia va installer un petit service qui s'exécute avec les droits administrateur, ainsi que le pilote PawnIO (pilote noyau tiers, téléchargé depuis sa page officielle) s'il est absent. Windows vous demandera une autorisation. Ce pilote peut être refusé par certains anti-triche de jeux. Vous pouvez retirer le service à tout moment ; le pilote PawnIO se désinstalle depuis les applications Windows.")
+            hint: qsTr(
+                "Winlestia va installer un petit service qui s'exécute avec les droits administrateur, ainsi que le pilote PawnIO "
+                + "(pilote noyau tiers, téléchargé depuis sa page officielle) s'il est absent. Windows vous demandera une autorisation. "
+                + "Ce pilote peut être refusé par certains anti-triche de jeux. Vous pouvez retirer le service à tout moment ; le pilote "
+                + "PawnIO se désinstalle depuis les applications Windows.")
             below: true
             shown: page.sensorsConsenting && !page.sensorsBusy
 

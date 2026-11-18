@@ -132,19 +132,37 @@ public sealed partial class MainWindow
         inner.Children.Add(crumbScroll);
         inner.Children.Add(addressBox);
         pill.Child = inner;
-        pill.MouseLeftButtonDown += (_, e) =>
+        crumbScroll.Focusable = false;
+        // Un simple clic hors des segments (ou sur le segment du dossier courant) passe la barre en saisie : on peut coller un chemin.
+        pill.PreviewMouseLeftButtonDown += (_, e) =>
         {
-            if (e.ClickCount == 2)
+            if (addressBox.IsVisible)
+                return;
+            var button = FindAncestor<Button>(e.OriginalSource as DependencyObject, pill);
+            if (button == null || button == crumbs.Children.OfType<Button>().LastOrDefault())
             {
                 BeginEdit();
                 e.Handled = true;
             }
-        };   // double clic sur la zone libre à droite des segments (les boutons marquent leurs propres clics comme traités)
+        };
         Grid.SetColumn(pill, 1);
         grid.Children.Add(nav);
         grid.Children.Add(pill);
         grid.Children.Add(right);
         return grid;
+    }
+
+    static T? FindAncestor<T>(DependencyObject? node, DependencyObject stop) where T : DependencyObject
+    {
+        while (node != null && node != stop)
+        {
+            if (node is T hit)
+                return hit;
+            node = node is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D
+                ? System.Windows.Media.VisualTreeHelper.GetParent(node)
+                : LogicalTreeHelper.GetParent(node);
+        }
+        return null;
     }
 
     Button NavButton(string glyph, string tip, Action action)
@@ -278,7 +296,7 @@ public sealed partial class MainWindow
     }
 
     // DWM : mode sombre immersif selon la palette (20), coins arrondis (33=2), fond Mica (38=2) sauf effets réduits.
-    internal void RepaintChrome() => ApplyDwm();     // after a live palette swap (dark/light title bar attribute)
+    internal void RepaintChrome() => ApplyDwm();     // après un changement de palette à chaud (attribut de barre de titre sombre/clair)
 
     void ApplyDwm()
     {

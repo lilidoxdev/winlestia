@@ -1,4 +1,4 @@
-﻿# language: PowerShell, file: Install.ps1, target: Windows 11, reversible Glass integration
+﻿# language: PowerShell, file: Install.ps1, target: Windows 11, intégration Glass réversible
 $ErrorActionPreference='Stop'
 $taskRoot=$PSScriptRoot
 $taskExecutable=Join-Path $taskRoot 'Panneaux.Glass.exe'

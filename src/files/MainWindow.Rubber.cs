@@ -16,7 +16,7 @@ public sealed partial class MainWindow
 {
     Border? rubberBox;
     bool rubbing, rubberMoved, rubberAdd;
-    Point rubberFrom;                        // content coordinates (x, y + scrolled pixels)
+    Point rubberFrom;                        // coordonnées du contenu (x, y + pixels défilés)
     HashSet<FileItem> rubberBase = new();
     List<FileItem> rubberSet = new();
 
@@ -124,7 +124,7 @@ public sealed partial class MainWindow
         if (rubberBox != null)
             rubberBox.Visibility = Visibility.Collapsed;
         if (!rubberMoved && !rubberAdd)
-            list.UnselectAll();      // a plain click on empty space deselects
+            list.UnselectAll();      // un simple clic sur un espace vide désélectionne
         UpdateStatus();
     }
 

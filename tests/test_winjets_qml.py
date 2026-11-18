@@ -29,6 +29,11 @@ PAQUETS = (
     ROOT / 'src' / 'winjets' / 'builtin' / 'winlestia.lecteur',
     ROOT / 'src' / 'winjets' / 'builtin' / 'winlestia.systeme',
     ROOT / 'src' / 'winjets' / 'builtin' / 'winlestia.marches',
+    ROOT / 'src' / 'winjets' / 'builtin' / 'winlestia.stockage',
+    ROOT / 'src' / 'winjets' / 'builtin' / 'winlestia.fichiers',
+    ROOT / 'src' / 'winjets' / 'builtin' / 'winlestia.notes',
+    ROOT / 'src' / 'winjets' / 'builtin' / 'winlestia.agenda',
+    ROOT / 'src' / 'winjets' / 'builtin' / 'winlestia.meteo',
     ROOT / 'docs' / 'winjets' / 'examples' / 'com.exemple.citation',
 )
 TAILLES = ((168, 168), (352, 168), (340, 340), (520, 340), (720, 352))
@@ -159,8 +164,8 @@ def test_real_packages_render_without_warnings(qapp, bridge, moteur, journal, do
     'pid,taille,attendu',
     [
         ('winlestia.lecteur', (352, 168), 0),
-        ('winlestia.systeme', (536, 536), 0),
-        ('winlestia.marches', (720, 536), 0),
+        ('winlestia.systeme', (536, 536), 2),
+        ('winlestia.marches', (720, 536), 1),
         ('com.exemple.citation', (340, 340), 1),
     ],
 )
@@ -440,7 +445,9 @@ def test_clock_seconds_timer_follows_visibility_and_pause(qapp, bridge, moteur, 
     pump(qapp, 10)
 
     def minuteurs():
-        return [o for o in _trouver(obj, lambda o: o.metaObject().className().startswith('QQmlTimer'))]  # l'intervalle est recalé sur la seconde
+        # L'intervalle est recalé sur la seconde.
+        return [o for o in _trouver(obj,
+            lambda o: o.metaObject().className().startswith('QQmlTimer'))]
 
     assert minuteurs(), 'minuteur des secondes introuvable'
     assert all(m.property('running') for m in minuteurs())
@@ -485,7 +492,8 @@ def _aucun_lecteur(bridge):
 
 
 def _bloc(obj, nom_propriete):
-    trouves = _trouver(obj, lambda o: o.property(nom_propriete) is not None and o.metaObject().className().startswith(('Chart', 'Media', 'Visualizer')))
+    trouves = _trouver(obj, lambda o: o.property(nom_propriete) is not None and o.metaObject().className().startswith(('Chart', 'Media',
+        'Visualizer')))
     assert trouves, nom_propriete
     return trouves[0]
 
@@ -590,7 +598,8 @@ def test_media_block_shows_track_and_ctx_media(qapp, bridge, moteur, journal):
     pump(qapp, 20)
     assert _trouver(obj, lambda o: o.property('text') == 'Titre')
     assert not _trouver(obj, lambda o: o.property('objectName') == 'mediaEmpty' and o.property('visible'))
-    assert _trouver(obj, lambda o: o.property('text') == 'Artiste/Spotify'), ' | '.join(o.property('text') for o in _trouver(obj, lambda o: isinstance(o.property('text'), str)))
+    assert _trouver(obj, lambda o: o.property('text') == 'Artiste/Spotify'), ' | '.join(o.property('text') for o in _trouver(obj,
+        lambda o: isinstance(o.property('text'), str)))
     assert not journal.alertes(), journal.alertes()
     obj.deleteLater()
     pump(qapp)

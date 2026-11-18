@@ -88,7 +88,7 @@ internal static class FilesHandler
         public bool DefaultExisted
         {
             get; set;
-        }     // (Default) of <T>\shell
+        }     // valeur (Default) de <T>\shell
         public string? Default
         {
             get; set;

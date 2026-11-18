@@ -25,7 +25,8 @@ internal sealed class LyricsCache
         this.maxEntries = maxEntries;
     }
 
-    string PathFor(string key) => Path.Combine(directory, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))[..24] + ".json");
+    string PathFor(string key) => Path.Combine(directory, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))[..24]
+        + ".json");
 
     // Résultat mémorisé, ou null (absent, illisible, ou négatif périmé après 7 jours).
     internal LyricsResult? Get(string key)

@@ -2,7 +2,8 @@ import QtQuick
 import qs.services
 import qs.config
 
-// Marque Winlestia : trois facettes en « W » qui se chevauchent + trois satellites. Apparition échelonnée, puis respiration et flottement lents.
+// Marque Winlestia : trois facettes en « W » qui se chevauchent + trois satellites. Apparition échelonnée, puis respiration et flottement
+// lents.
 Item {
     id: root
 

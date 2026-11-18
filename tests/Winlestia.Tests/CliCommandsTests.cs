@@ -1,4 +1,4 @@
-// C#12 / CliCommands: parsing and allow-list of the `winlestia` command line (pure functions).
+// C#12 / CliCommands : analyse et liste blanche de la ligne de commande `winlestia` (fonctions pures).
 using System;
 using System.Collections.Generic;
 using System.Linq;

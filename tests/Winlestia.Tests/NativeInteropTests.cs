@@ -1,4 +1,4 @@
-// C# 12 / Program.cs / Windows 11. Only the dedicated fixture window is modified.
+// C# 12 / Program.cs / Windows 11. Seule la fenêtre de fixture dédiée est modifiée.
 using System;
 using System.IO;
 using System.Reflection;

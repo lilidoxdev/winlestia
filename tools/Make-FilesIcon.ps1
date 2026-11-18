@@ -1,4 +1,4 @@
-# Generates src/files/Assets/winlestia-files.ico (16..256, PNG-compressed) and optionally a 256 px PNG preview.
+﻿# Génère src/files/Assets/winlestia-files.ico (16..256, compressé en PNG) et éventuellement un aperçu PNG de 256 px.
 param([string]$Out = (Join-Path $PSScriptRoot '..\src\files\Assets\winlestia-files.ico'), [string]$Png = '')
 Add-Type -AssemblyName System.Drawing
 function Round([System.Drawing.RectangleF]$r, [float]$rad) {
@@ -10,7 +10,7 @@ function Draw([int]$s) {
   $bmp = New-Object System.Drawing.Bitmap $s, $s, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
   $g = [System.Drawing.Graphics]::FromImage($bmp); $g.SmoothingMode = 'AntiAlias'; $g.Clear([System.Drawing.Color]::Transparent)
   $u = $s / 256.0
-  # back panel + tab (deep tone), front panel (light gradient), thin highlight
+  # panneau arrière + onglet (ton foncé), panneau avant (dégradé clair), fin reflet
   $backBr = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 196, 92, 96))
   $tab = Round ([System.Drawing.RectangleF]::new(24*$u, 44*$u, 100*$u, 56*$u)) (16*$u); $g.FillPath($backBr, $tab)
   $back = Round ([System.Drawing.RectangleF]::new(24*$u, 68*$u, 208*$u, 152*$u)) (24*$u); $g.FillPath($backBr, $back)

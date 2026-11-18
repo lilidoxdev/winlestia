@@ -40,13 +40,18 @@ internal sealed class LaunchService : ILaunchService
                 Done(entry);
                 return;
             }
-            if (LaunchRules.IsShellTarget(entry.Target))
+            string? packaged = !LaunchRules.IsShellTarget(entry.Target) && !File.Exists(entry.Target)
+                ? PackagedApps.ResolveAumid(entry.Target, Store.Entries) : null;
+            if (packaged != null)
+                Process.Start(new ProcessStartInfo("explorer.exe", PackagedApps.ShellPrefix + packaged) { UseShellExecute = true });
+            else if (LaunchRules.IsShellTarget(entry.Target))
                 Process.Start(new ProcessStartInfo("explorer.exe", entry.Target) { UseShellExecute = true });
             else
             {
                 var start = new ProcessStartInfo(entry.Target) { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Normal };
-                if (File.Exists(entry.Target))
-                    start.WorkingDirectory = Path.GetDirectoryName(entry.Target);
+                string? directory = File.Exists(entry.Target) ? Path.GetDirectoryName(entry.Target) : null;
+                if (directory != null && Directory.Exists(directory))
+                    start.WorkingDirectory = directory;
                 Process.Start(start);
             }
             Done(entry);

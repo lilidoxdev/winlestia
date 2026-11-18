@@ -66,13 +66,100 @@ def calendar():
     return img
 
 
-def btc():
+def title(d, text):
+    d.text((18 * SCALE, 14 * SCALE), text, font=font(22), fill=DIM)
+
+
+def bar(d, x, y, w, ratio):
+    d.rounded_rectangle((x * SCALE, y * SCALE, (x + w) * SCALE, (y + 5) * SCALE), radius=5, fill=EDGE)
+    d.rounded_rectangle((x * SCALE, y * SCALE, (x + w * ratio) * SCALE, (y + 5) * SCALE), radius=5, fill=ACCENT)
+
+
+def lines(d, rows, y0=44, step=34, x=18):
+    for i, (txt, col) in enumerate(rows):
+        d.text((x * SCALE, (y0 + i * step) * SCALE), txt, font=font(28), fill=col)
+
+
+def player():
     img, d = card(352, 168)
-    d.text((24 * SCALE, 20 * SCALE), 'Bitcoin', font=font(26), fill=DIM)
-    d.text((24 * SCALE, 44 * SCALE), '71 380 €', font=font(54, True), fill=TEXT)
-    d.text((24 * SCALE, 112 * SCALE), '+0,34 %', font=font(30), fill=ACCENT)
-    values = [3, 4, 3.6, 5, 6.2, 5.8, 7, 8.4, 8, 9.5]
-    sparkline(d, (190 * SCALE, 36 * SCALE, 330 * SCALE, 140 * SCALE), values)
+    d.rounded_rectangle((18 * SCALE, 18 * SCALE, 96 * SCALE, 96 * SCALE), radius=16, fill=EDGE)
+    d.text((112 * SCALE, 26 * SCALE), 'Titre du morceau', font=font(34, True), fill=TEXT)
+    d.text((112 * SCALE, 56 * SCALE), 'Artiste', font=font(26), fill=DIM)
+    bar(d, 18, 118, 316, 0.4)
+    d.ellipse((190 * SCALE, 134 * SCALE, 206 * SCALE, 150 * SCALE), fill=ACCENT)
+    return img
+
+
+def system():
+    img, d = card(352, 352)
+    title(d, 'Processeur')
+    d.text((18 * SCALE, 40 * SCALE), '27 %', font=font(80, True), fill=TEXT)
+    sparkline(d, (18 * SCALE, 170 * SCALE, 334 * SCALE, 260 * SCALE), [3, 5, 4, 7, 6, 9, 5, 6, 8, 4])
+    d.text((18 * SCALE, 290 * SCALE), 'RAM', font=font(24), fill=DIM)
+    bar(d, 18, 322, 316, 0.58)
+    return img
+
+
+def markets():
+    img, d = card(352, 352)
+    title(d, 'Marches')
+    for i, (n, p, c) in enumerate((('AAPL', '231,40', '+1,2 %'), ('MSFT', '418,10', '-0,4 %'), ('GSPC', '5 820', '+0,7 %'))):
+        y = (52 + i * 96) * SCALE
+        d.text((18 * SCALE, y), n, font=font(32, True), fill=TEXT)
+        d.text((230 * SCALE, y), p, font=font(32, True), fill=TEXT)
+        d.rounded_rectangle((246 * SCALE, y + 44 * SCALE, 334 * SCALE, y + 70 * SCALE), radius=14, outline=ACCENT, width=2)
+        d.text((258 * SCALE, y + 44 * SCALE), c, font=font(22), fill=ACCENT)
+    return img
+
+
+def storage():
+    img, d = card(352, 168)
+    title(d, 'Stockage')
+    cx, cy, r = 88 * SCALE, 98 * SCALE, 48 * SCALE
+    d.arc((cx - r, cy - r, cx + r, cy + r), 0, 360, fill=EDGE, width=10)
+    d.arc((cx - r, cy - r, cx + r, cy + r), -90, 140, fill=ACCENT, width=10)
+    d.text((cx - 28 * SCALE, cy - 16 * SCALE), '64 %', font=font(34, True), fill=TEXT)
+    lines(d, [('C: Windows', TEXT), ('412 sur 953 Go', DIM), ('541 Go libres', ACCENT)], 50, 32, 170)
+    return img
+
+
+def files():
+    img, d = card(352, 352)
+    title(d, 'Dossiers')
+    lines(d, [('Documents', TEXT), ('Telechargements', TEXT), ('Images', TEXT), ('Bureau', TEXT)], 48, 40)
+    d.line((18 * SCALE, 218 * SCALE, 334 * SCALE, 218 * SCALE), fill=EDGE, width=2)
+    d.text((18 * SCALE, 228 * SCALE), 'Recents', font=font(22), fill=DIM)
+    lines(d, [('rapport.docx', TEXT), ('budget.xlsx', TEXT)], 262, 36)
+    return img
+
+
+def notes():
+    img, d = card(352, 352)
+    title(d, 'Notes')
+    lines(d, [('Courses du week-end', TEXT), ('- pain, lait, cafe', DIM), ('- appeler Marie', DIM)], 52, 38)
+    return img
+
+
+def agenda():
+    img, d = card(352, 352)
+    d.text((18 * SCALE, 14 * SCALE), 'Lundi', font=font(24, True), fill=ACCENT)
+    d.text((18 * SCALE, 40 * SCALE), '9 novembre 2026', font=font(34, True), fill=TEXT)
+    for i, (a, b) in enumerate((('Reunion equipe', "Aujourd'hui, 09:30"), ('Dentiste', 'Mardi, 14:00'),
+        ('Anniversaire', 'Jeudi, journee'))):
+        y = (100 + i * 64) * SCALE
+        d.text((18 * SCALE, y), a, font=font(28), fill=TEXT)
+        d.text((18 * SCALE, y + 30 * SCALE), b, font=font(22), fill=DIM)
+    return img
+
+
+def weather():
+    img, d = card(352, 168)
+    title(d, 'Paris')
+    d.ellipse((22 * SCALE, 56 * SCALE, 66 * SCALE, 100 * SCALE), outline=ACCENT, width=6)
+    d.text((80 * SCALE, 44 * SCALE), '18°', font=font(70, True), fill=TEXT)
+    d.text((18 * SCALE, 116 * SCALE), 'Ensoleille', font=font(28), fill=TEXT)
+    d.text((190 * SCALE, 60 * SCALE), 'Ressenti 17°', font=font(24), fill=DIM)
+    d.text((190 * SCALE, 92 * SCALE), 'Max 21°  Min 11°', font=font(24), fill=DIM)
     return img
 
 
@@ -96,7 +183,14 @@ def main():
     jobs = {
         BUILTIN / 'winlestia.horloge': clock,
         BUILTIN / 'winlestia.calendrier': calendar,
-        BUILTIN / 'winlestia.graphique-btc': btc,
+        BUILTIN / 'winlestia.lecteur': player,
+        BUILTIN / 'winlestia.systeme': system,
+        BUILTIN / 'winlestia.marches': markets,
+        BUILTIN / 'winlestia.stockage': storage,
+        BUILTIN / 'winlestia.fichiers': files,
+        BUILTIN / 'winlestia.notes': notes,
+        BUILTIN / 'winlestia.agenda': agenda,
+        BUILTIN / 'winlestia.meteo': weather,
         EXAMPLE: citation,
     }
     for folder, make in jobs.items():

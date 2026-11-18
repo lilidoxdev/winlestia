@@ -1,4 +1,5 @@
-// language: C# 12, file: WinjetMarket.cs, target: Windows 11 / .NET 8, source de données « market » : cours crypto Binance (historique REST + flux websocket)
+// language: C# 12, file: WinjetMarket.cs, target: Windows 11 / .NET 8, source de données « market » : cours crypto Binance (historique REST
+// + flux websocket)
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -95,12 +96,14 @@ internal static class WinjetMarket
         d = 0;
         if (e.ValueKind == JsonValueKind.Number)
             return e.TryGetDouble(out d) && double.IsFinite(d);
-        return e.ValueKind == JsonValueKind.String && double.TryParse(e.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out d)
+        return e.ValueKind == JsonValueKind.String && double.TryParse(e.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture,
+            out d)
             && double.IsFinite(d);
     }
 
     // Message du flux combiné : {"stream":"btcusdt@kline_1m","data":{"s":"BTCUSDT","k":{"t":..,"o":"..","h":"..","l":"..","c":".."}}}.
-    internal static bool ParseKlineMessage(string json, out string symbol, out long t, out double o, out double h, out double l, out double c)
+    internal static bool ParseKlineMessage(string json, out string symbol, out long t, out double o, out double h, out double l,
+        out double c)
     {
         symbol = "";
         t = 0;
@@ -108,7 +111,8 @@ internal static class WinjetMarket
         try
         {
             using var doc = JsonDocument.Parse(json);
-            var data = doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var d) ? d : doc.RootElement;
+            var data = doc.RootElement.ValueKind == JsonValueKind.Object && doc.RootElement.TryGetProperty("data", out var d) ? d
+                : doc.RootElement;
             if (data.ValueKind != JsonValueKind.Object || !data.TryGetProperty("k", out var k) || k.ValueKind != JsonValueKind.Object)
                 return false;
             string pair = (k.TryGetProperty("s", out var ks) && ks.ValueKind == JsonValueKind.String ? ks.GetString()
@@ -132,6 +136,141 @@ internal static class WinjetMarket
         if (day.Count == 0 || day[0][1] <= 0 || price <= 0)
             return 0;
         return Math.Round((price - day[0][1]) / day[0][1] * 100, 2);
+    }
+
+    // ---- Fournisseur Yahoo Finance (scrutation HTTPS, sans websocket) ----
+    internal static readonly string[] YahooHosts = { "query1.finance.yahoo.com" };
+    internal const int YahooHistoryPoints = 60;
+    static readonly Regex YahooSymbolPattern = new(@"^[A-Z0-9^.=\-]{1,15}$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    internal static bool IsValidYahooSymbol(string? s) => s != null && !s.Contains('\n') && YahooSymbolPattern.IsMatch(s);
+
+    internal static string YahooUrl(string symbol)
+        => "https://query1.finance.yahoo.com/v8/finance/chart/" + Uri.EscapeDataString(symbol) + "?range=1d&interval=5m";
+
+    // Un titre Yahoo : même forme que les éléments Binance (price, change24h, candles) plus status, name, history.
+    internal sealed record YahooQuote(string Symbol, string Status, string Name, double Price, double Change, IReadOnlyList<double> History,
+        IReadOnlyList<double[]> Candles);
+
+    internal static YahooQuote YahooError(string symbol) => new(symbol, "error", symbol, 0, 0, Array.Empty<double>(),
+        Array.Empty<double[]>());
+
+    // Réponse /v8/finance/chart : prix, variation vs clôture précédente, nom, clôtures (nuls écartés, 60 points au plus).
+    internal static YahooQuote ParseYahoo(string symbol, JsonElement root)
+    {
+        try
+        {
+            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("chart", out var chart) || chart.ValueKind
+                != JsonValueKind.Object
+                || !chart.TryGetProperty("result", out var results) || results.ValueKind != JsonValueKind.Array || results.GetArrayLength()
+                    == 0)
+                return YahooError(symbol);
+            var r = results[0];
+            var meta = r.TryGetProperty("meta", out var m) && m.ValueKind == JsonValueKind.Object ? m : default;
+            var candles = new List<double[]>();
+            if (r.TryGetProperty("indicators", out var ind) && ind.ValueKind == JsonValueKind.Object
+                && ind.TryGetProperty("quote", out var qs)
+                && qs.ValueKind == JsonValueKind.Array && qs.GetArrayLength() > 0 && qs[0].ValueKind == JsonValueKind.Object)
+            {
+                var q = qs[0];
+                var ts = r.TryGetProperty("timestamp", out var t) && t.ValueKind == JsonValueKind.Array ? t : default;
+                JsonElement Arr(string n) => q.TryGetProperty(n, out var a) && a.ValueKind == JsonValueKind.Array ? a : default;
+                var close = Arr("close");
+                var open = Arr("open");
+                var high = Arr("high");
+                var low = Arr("low");
+                if (close.ValueKind == JsonValueKind.Array)
+                    for (int i = 0; i < close.GetArrayLength(); i++)
+                    {
+                        if (!Num(close[i], out double c))
+                            continue;
+                        double Pick(JsonElement a) => a.ValueKind == JsonValueKind.Array && i < a.GetArrayLength()
+                            && Num(a[i], out double v) ? v : c;
+                        double stamp = ts.ValueKind == JsonValueKind.Array && i < ts.GetArrayLength() && ts[i].TryGetInt64(out long sec)
+                            ? sec * 1000d : 0;
+                        candles.Add(new[] { stamp, Pick(open), Pick(high), Pick(low), c });
+                    }
+            }
+            if (candles.Count > YahooHistoryPoints)
+                candles = candles.GetRange(candles.Count - YahooHistoryPoints, YahooHistoryPoints);
+            var history = candles.Select(c => c[4]).ToList();
+            double price = 0;
+            if (meta.ValueKind == JsonValueKind.Object && meta.TryGetProperty("regularMarketPrice", out var rp) && Num(rp, out double p0))
+                price = p0;
+            else if (history.Count > 0)
+                price = history[^1];
+            double prev = 0;
+            if (meta.ValueKind == JsonValueKind.Object)
+            {
+                if (meta.TryGetProperty("previousClose", out var pc) && Num(pc, out double v1) && v1 > 0)
+                    prev = v1;
+                else if (meta.TryGetProperty("chartPreviousClose", out var cpc) && Num(cpc, out double v2) && v2 > 0)
+                    prev = v2;
+            }
+            if (price <= 0)
+                return YahooError(symbol);
+            string name = symbol;
+            if (meta.ValueKind == JsonValueKind.Object)
+                foreach (string key in new[] { "shortName", "longName" })
+                    if (meta.TryGetProperty(key, out var n) && n.ValueKind == JsonValueKind.String
+                        && !string.IsNullOrWhiteSpace(n.GetString()))
+                    {
+                        name = n.GetString()!.Trim();
+                        break;
+                    }
+            if (name.Length > 60)
+                name = name[..60];
+            double change = prev > 0 ? Math.Round((price - prev) / prev * 100, 2) : 0;
+            return new YahooQuote(symbol, "ok", name, price, change, history, candles);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or FormatException or KeyNotFoundException)
+        {
+            return YahooError(symbol);
+        }
+    }
+
+    internal static JsonElement BuildYahooPayload(long updatedMs, IEnumerable<YahooQuote> quotes)
+    {
+        using var ms = new MemoryStream();
+        using (var w = new Utf8JsonWriter(ms))
+        {
+            w.WriteStartObject();
+            w.WriteBoolean("live", false);
+            w.WriteNumber("updated", updatedMs);
+            w.WriteStartObject("symbols");
+            foreach (var s in quotes)
+            {
+                w.WriteStartObject(s.Symbol);
+                w.WriteString("status", s.Status);
+                w.WriteString("name", s.Name);
+                w.WriteNumber("price", s.Price);
+                w.WriteNumber("change24h", s.Change);
+                w.WriteStartArray("history");
+                foreach (double h in s.History)
+                    w.WriteNumberValue(h);
+                w.WriteEndArray();
+                w.WriteStartObject("candles");
+                foreach (var tf in Timeframes)
+                {
+                    w.WriteStartArray(tf.Key);
+                    if (tf.Key == "1j")
+                        foreach (var c in s.Candles)
+                        {
+                            w.WriteStartArray();
+                            foreach (double x in c)
+                                w.WriteNumberValue(x);
+                            w.WriteEndArray();
+                        }
+                    w.WriteEndArray();
+                }
+                w.WriteEndObject();
+                w.WriteEndObject();
+            }
+            w.WriteEndObject();
+            w.WriteEndObject();
+        }
+        using var doc = JsonDocument.Parse(ms.ToArray());
+        return doc.RootElement.Clone();
     }
 
     internal sealed record SymbolView(string Symbol, double Price, double Change24h, IReadOnlyDictionary<string, List<double[]>> Candles);

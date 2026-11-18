@@ -3,7 +3,8 @@ import QtQuick.Window
 import qs.services
 import qs.config
 
-// Onde de choc unique, déclenchée par fire(screen, x, y). Fenêtre créée une fois au préchauffage (warm()), masquée au repos (aucun rendu, aucun minuteur), puis réutilisée.
+// Onde de choc unique, déclenchée par fire(screen, x, y). Fenêtre créée une fois au préchauffage (warm()), masquée au repos (aucun rendu,
+// aucun minuteur), puis réutilisée.
 // Le shader (shaders/shockwave.frag.qsb) ne montre des pixels capturés que sur l'anneau en mouvement ; le reste laisse voir le bureau réel.
 Item {
     id: root
@@ -185,7 +186,8 @@ Item {
             title: "Panneaux · Onde de choc"
             color: "transparent"
             visible: false
-            flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowTransparentForInput | Qt.WindowDoesNotAcceptFocus
+            flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint |
+                Qt.WindowTransparentForInput | Qt.WindowDoesNotAcceptFocus
 
             Image {
                 id: image
@@ -206,7 +208,8 @@ Item {
                 anchors.fill: parent
                 visible: win.visible
                 property variant source: image
-                property vector4d tint: Qt.vector4d(Colours.palette.m3primary.r, Colours.palette.m3primary.g, Colours.palette.m3primary.b, 1)
+                property vector4d tint: Qt.vector4d(
+                    Colours.palette.m3primary.r, Colours.palette.m3primary.g, Colours.palette.m3primary.b, 1)
                 property vector2d size: Qt.vector2d(width, height)
                 property vector2d center: Qt.vector2d(root.centerX, root.centerY)
                 property real time: root.wave

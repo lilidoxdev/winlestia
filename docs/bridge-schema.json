@@ -56,6 +56,13 @@
       },
       "required": []
     },
+    "bluetoothDevice": {
+      "args": {
+        "connect": "boolean",
+        "id": "string"
+      },
+      "required": []
+    },
     "bookmarksBrowser": {
       "args": {
         "id": "string"
@@ -332,6 +339,10 @@
       },
       "required": []
     },
+    "locate": {
+      "args": {},
+      "required": []
+    },
     "lockNow": {
       "args": {},
       "required": []
@@ -390,6 +401,10 @@
       },
       "required": []
     },
+    "openBluetooth": {
+      "args": {},
+      "required": []
+    },
     "openFiles": {
       "args": {},
       "required": []
@@ -404,6 +419,24 @@
         "kind": "string",
         "query": "string"
       },
+      "required": []
+    },
+    "peripheralKind": {
+      "args": {
+        "id": "string",
+        "kind": "string"
+      },
+      "required": []
+    },
+    "peripheralVisibility": {
+      "args": {
+        "id": "string",
+        "visible": "boolean"
+      },
+      "required": []
+    },
+    "peripheralsRefresh": {
+      "args": {},
       "required": []
     },
     "preference": {
@@ -605,6 +638,12 @@
     },
     "tools": {
       "args": {},
+      "required": []
+    },
+    "uninstall": {
+      "args": {
+        "keepData": "boolean"
+      },
       "required": []
     },
     "visualizer": {
@@ -911,6 +950,9 @@
     "lyrics": {
       "enabled": "boolean"
     },
+    "peripheralBattery": {
+      "enabled": "boolean"
+    },
     "pill": {
       "enabled": "boolean"
     },
@@ -990,7 +1032,9 @@
     "icons",
     "iconRevision",
     "winjets",
-    "desktop"
+    "desktop",
+    "peripherals",
+    "location"
   ],
   "events": [
     "toggle",

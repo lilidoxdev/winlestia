@@ -8,7 +8,7 @@ import qs.config
 Window {
     id: root
     objectName: "dictationOverlay"
-    title: "Panneaux · Dictée"
+    title: "Panneaux · " + qsTr("Dictée")
     transientParent: null
     color: "transparent"
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus
@@ -170,7 +170,7 @@ Window {
             transform: Translate {
                 y: root.offset
             }
-            // Mic circle + level halo
+            // Cercle du micro + halo de niveau
             Rectangle {
                 id: halo
                 visible: !root.reduced && root.st === "listening"
@@ -240,7 +240,7 @@ Window {
                     }
                 }
             }
-            // Transcribing label + dots
+            // Libellé de transcription + points
             StyledText {
                 id: transLabel
                 x: root.contentX + 96 + 10
@@ -315,7 +315,7 @@ Window {
                     }
                 }
             }
-            // Done / typing: language chip + preview
+            // Terminé / saisie : pastille de langue + aperçu
             Rectangle {
                 id: chip
                 visible: (root.st === "done" || root.st === "typing") && Bridge.dictationLang !== ""

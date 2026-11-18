@@ -1,7 +1,7 @@
-﻿# PowerShell 5.1+ / Cached live Winlestia colours shared with CMD and Windows Terminal.
+﻿# PowerShell 5.1+ / Couleurs Winlestia en direct, mises en cache, partagées avec CMD et Windows Terminal.
 function global:Get-WinlestiaAnsi {
     param([string]$Name)
-    # Indexed ANSI colours let Windows Terminal recolour existing cells on a palette change.
+    # Les couleurs ANSI indexées permettent à Windows Terminal de recolorer les cellules existantes lors d'un changement de palette.
     $index=@{accent=34;secondary=36;muted=90;foreground=37}[$Name]
     if($index -and $env:WT_SESSION){return "$([char]27)[${index}m"}
     $hex=$global:WinlestiaPalette.$Name

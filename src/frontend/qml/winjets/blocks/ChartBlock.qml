@@ -4,7 +4,8 @@ import qs.components
 import qs.config
 import ".."
 
-// Bloc `chart` : series (nombres ou paires [t, v]), variant line|area|bars|candles, axes, period, color (rôle de palette),
+// Bloc `chart` : series (nombres ou paires [t, v]), variant line|area|bars|candles|spark (aire en dégradé d'accent + point final), axes,
+// period, color (rôle de palette),
 // valueFormat (currency|percent|number : étiquettes d'axe). `candles` (séries [t,o,h,l,c], hover) est délégué à ChartCandles.
 Item {
     id: block
@@ -17,6 +18,7 @@ Item {
     readonly property string variant: spec ? String(Bridge.winjets.resolve(spec.variant, ctx) ?? "line") : "line"
     readonly property bool axes: spec ? Bridge.winjets.resolve(spec.axes, ctx) === true : false
     readonly property bool candles: variant === "candles"
+    readonly property bool filled: variant === "area" || variant === "spark"
     readonly property string valueFormat: spec && spec.valueFormat ? String(Bridge.winjets.resolve(spec.valueFormat, ctx)) : ""
     readonly property color tint: WinjetTheme.role(spec && spec.color ? String(Bridge.winjets.resolve(spec.color, ctx)) : "accent")
     readonly property var values: {
@@ -44,7 +46,9 @@ Item {
             out.push(Qt.point(gutter + (n > 1 ? i / (n - 1) : 0.5) * plotW, 2 + (1 - (values[i] - lo) / span) * (plotH - 4)));
         return out;
     }
-    readonly property var areaPoints: points.length ? [Qt.point(points[0].x, plotH)].concat(points, [Qt.point(points[points.length - 1].x, plotH)]) : []
+    readonly property var areaPoints: points.length
+        ? [Qt.point(points[0].x, plotH)].concat(points, [Qt.point(points[points.length - 1].x, plotH)])
+        : []
 
     implicitWidth: 200 * sc
     implicitHeight: 80 * sc
@@ -55,22 +59,48 @@ Item {
         preferredRendererType: Shape.CurveRenderer
 
         ShapePath {
-            fillColor: block.variant === "area" ? Qt.alpha(block.tint, 0.22) : "transparent"
+            fillColor: "transparent"
             strokeWidth: -1
+            fillGradient: LinearGradient {
+                x1: 0
+                y1: 0
+                x2: 0
+                y2: block.plotH
+                GradientStop {
+                    position: 0
+                    color: Qt.alpha(block.tint, block.variant === "spark" ? 0.42 : 0.30)
+                }
+                GradientStop {
+                    position: 1
+                    color: Qt.alpha(block.tint, 0)
+                }
+            }
             PathPolyline {
-                path: block.variant === "area" ? block.areaPoints : []
+                path: block.filled ? block.areaPoints : []
             }
         }
         ShapePath {
             fillColor: "transparent"
             strokeColor: block.tint
-            strokeWidth: 2 * block.sc
+            strokeWidth: (block.variant === "spark" ? 1.5 : 2) * block.sc
             capStyle: ShapePath.RoundCap
             joinStyle: ShapePath.RoundJoin
             PathPolyline {
                 path: block.points
             }
         }
+    }
+
+    Rectangle {
+        visible: block.variant === "spark" && block.points.length > 1
+        width: 7 * block.sc
+        height: width
+        radius: width / 2
+        x: (block.points.length ? block.points[block.points.length - 1].x : 0) - width / 2
+        y: (block.points.length ? block.points[block.points.length - 1].y : 0) - height / 2
+        color: block.tint
+        border.width: 2 * block.sc
+        border.color: Qt.alpha(WinjetTheme.textPrimary, 0.25)
     }
 
     Repeater {

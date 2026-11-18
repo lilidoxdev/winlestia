@@ -1,0 +1,252 @@
+{
+  "size": {
+    "default": [
+      352,
+      352
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      536,
+      536
+    ]
+  },
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 6,
+        "children": [
+          {
+            "type": "text",
+            "text": "Dossiers",
+            "style": "eyebrow"
+          },
+          {
+            "type": "column",
+            "grow": 1,
+            "children": [
+              {
+                "type": "list",
+                "items": "{{ files.folders }}",
+                "title": "name",
+                "icon": "icon",
+                "tiles": 2,
+                "max": 4,
+                "action": {
+                  "type": "open",
+                  "path": "{{ item.path }}"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 6,
+        "children": [
+          {
+            "type": "row",
+            "grow": 1,
+            "gap": 16,
+            "children": [
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 6,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Dossiers",
+                    "style": "eyebrow"
+                  },
+                  {
+                    "type": "column",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "list",
+                        "items": "{{ files.folders }}",
+                        "title": "name",
+                        "icon": "icon",
+                        "tiles": 2,
+                        "max": 4,
+                        "action": {
+                          "type": "open",
+                          "path": "{{ item.path }}"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 6,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Récents",
+                    "style": "eyebrow"
+                  },
+                  {
+                    "type": "column",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "list",
+                        "grow": 1,
+                        "items": "{{ files.recent }}",
+                        "title": "name",
+                        "icon": "icon",
+                        "relative": "modified",
+                        "past": true,
+                        "max": 4,
+                        "action": {
+                          "type": "open",
+                          "path": "{{ item.path }}"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "minHeight": 340,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 6,
+        "children": [
+          {
+            "type": "text",
+            "text": "Dossiers",
+            "style": "eyebrow"
+          },
+          {
+            "type": "column",
+            "children": [
+              {
+                "type": "list",
+                "items": "{{ files.folders }}",
+                "title": "name",
+                "icon": "icon",
+                "tiles": 4,
+                "max": 4,
+                "action": {
+                  "type": "open",
+                  "path": "{{ item.path }}"
+                }
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "text",
+            "text": "Récents",
+            "style": "eyebrow"
+          },
+          {
+            "type": "column",
+            "grow": 1,
+            "children": [
+              {
+                "type": "list",
+                "grow": 1,
+                "items": "{{ files.recent }}",
+                "title": "name",
+                "icon": "icon",
+                "relative": "modified",
+                "past": true,
+                "max": 4,
+                "action": {
+                  "type": "open",
+                  "path": "{{ item.path }}"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "minHeight": 460,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 6,
+        "children": [
+          {
+            "type": "text",
+            "text": "Dossiers",
+            "style": "eyebrow"
+          },
+          {
+            "type": "column",
+            "children": [
+              {
+                "type": "list",
+                "items": "{{ files.folders }}",
+                "title": "name",
+                "icon": "icon",
+                "tiles": 4,
+                "max": 4,
+                "action": {
+                  "type": "open",
+                  "path": "{{ item.path }}"
+                }
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "text",
+            "text": "Récents",
+            "style": "eyebrow"
+          },
+          {
+            "type": "column",
+            "grow": 1,
+            "children": [
+              {
+                "type": "list",
+                "grow": 1,
+                "items": "{{ files.recent }}",
+                "title": "name",
+                "icon": "icon",
+                "relative": "modified",
+                "past": true,
+                "max": 5,
+                "action": {
+                  "type": "open",
+                  "path": "{{ item.path }}"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

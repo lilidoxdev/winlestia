@@ -1,0 +1,12 @@
+{
+  "format": "winjet/1",
+  "id": "winlestia.fichiers",
+  "name": "Fichiers",
+  "version": "2.0.0",
+  "author": "Winlestia",
+  "description": "Accès rapide à vos dossiers et fichiers récents. Disposition inspirée de PC Widgets par Walid Mahmud.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  }
+}

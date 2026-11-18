@@ -1,4 +1,4 @@
-// language: C# 12, file: MediaController.cs, target: Windows 11 / .NET 8, Windows SMTC sessions
+// C# 12, fichier MediaController.cs, cible Windows 11 / .NET 8, sessions SMTC de Windows
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -40,7 +40,6 @@ internal sealed class MediaController : IDisposable
         dirty = true,
         reading;
     int generation;
-    int resubscribeCount;
     int rereadsLeft;
     DispatcherTimer? rereadTimer;
     string artKey = "",
@@ -51,13 +50,14 @@ internal sealed class MediaController : IDisposable
     internal event Action? Changed;
     static readonly ConcurrentDictionary<string, MediaSource> resolvedSources = new(StringComparer.Ordinal);
 
-    // Guesses (unresolved hash, ambiguous browsers) are kept briefly so a tick does not rebuild a process snapshot.
+    // Les suppositions (hash non résolu, navigateurs ambigus) sont gardées brièvement pour qu'un tick ne reconstruise pas un instantané de
+    // processus.
     static readonly ConcurrentDictionary<string, (MediaSource Source, long Expires)> guessedSources = new(
         StringComparer.Ordinal
     );
     const long GuessTtlMs = 5000;
 
-    // Resolves an AUMID to a display name and executable stem. Stable results are cached forever.
+    // Résout un AUMID en nom d'affichage et en radical d'exécutable. Les résultats stables sont mis en cache indéfiniment.
     internal static MediaSource Resolve(string aumid)
     {
         if (resolvedSources.TryGetValue(aumid, out var cached))
@@ -103,10 +103,15 @@ internal sealed class MediaController : IDisposable
             )
             .ToArray();
         var current = manager.GetCurrentSession();
+        // Une session qui joue réellement passe avant un Spotify en pause : sinon un lecteur arrêté masquerait une vidéo
+        // en cours, et la carte afficherait « aucun signal » alors que du son sort.
+        const GlobalSystemMediaTransportControlsSessionPlaybackStatus Playing =
+            GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
         return music.FirstOrDefault(s =>
                 s.SourceAppUserModelId.Contains("spotify", StringComparison.OrdinalIgnoreCase)
-                && s.GetPlaybackInfo().PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing
+                && s.GetPlaybackInfo().PlaybackStatus == Playing
             )
+            ?? music.FirstOrDefault(s => s.GetPlaybackInfo().PlaybackStatus == Playing)
             ?? music.FirstOrDefault(s => s.SourceAppUserModelId.Contains("spotify", StringComparison.OrdinalIgnoreCase))
             ?? music.FirstOrDefault(s => s.SourceAppUserModelId == current?.SourceAppUserModelId)
             ?? music.FirstOrDefault();
@@ -137,7 +142,7 @@ internal sealed class MediaController : IDisposable
     {
         dirty = true;
         Notify();
-        // Firefox fires this event before it has published the new metadata: schedule delayed re-reads.
+        // Firefox déclenche cet événement avant d'avoir publié les nouvelles métadonnées : planifie des relectures différées.
         dispatcher.BeginInvoke(
             (Action)(
                 () =>
@@ -179,7 +184,7 @@ internal sealed class MediaController : IDisposable
         }
     }
 
-    // Called after each metadata read: retry once more when the title did not change, stop when it did.
+    // Appelé après chaque lecture des métadonnées : réessaie une fois de plus si le titre n'a pas changé, s'arrête s'il a changé.
     void AfterPropertiesRead(bool titleChanged)
     {
         if (titleChanged)
@@ -212,8 +217,8 @@ internal sealed class MediaController : IDisposable
             );
     }
 
-    // Sessions are compared by object identity: Firefox recreates session objects that keep the same AUMID, and
-    // handlers attached to the dead object would never fire again.
+    // Les sessions sont comparées par identité d'objet : Firefox recrée des objets de session qui gardent le même AUMID, et
+    // les gestionnaires attachés à l'objet mort ne se déclencheraient plus jamais.
     void SetSession(GlobalSystemMediaTransportControlsSession? next)
     {
         if (!MediaTimeline.NeedsResubscribe(session, next))
@@ -222,9 +227,6 @@ internal sealed class MediaController : IDisposable
         }
         string previousAumid = session?.SourceAppUserModelId ?? "";
         bool sameApplicationObject = next != null && session != null && previousAumid == next.SourceAppUserModelId;
-        System.Diagnostics.Debug.WriteLine(
-            $"Media: resubscribe #{++resubscribeCount} ({(sameApplicationObject ? "same AUMID, new object" : "new source")})"
-        );
         if (session != null)
         {
             session.MediaPropertiesChanged -= PropertiesChanged;
@@ -232,8 +234,9 @@ internal sealed class MediaController : IDisposable
             session.TimelinePropertiesChanged -= TimelineChanged;
         }
         session = next;
-        // Same AUMID behind another reference (possibly the same native session wrapped twice): resubscribe only,
-        // no forced re-read; the metadata events of the new handlers and the timer ticks keep the data fresh.
+        // Même AUMID derrière une autre référence (peut-être la même session native enveloppée deux fois) : on se réabonne seulement,
+        // sans relecture forcée ; les événements de métadonnées des nouveaux gestionnaires et les ticks du minuteur gardent les données à
+        // jour.
         bool sameApplication = next != null && previousAumid == next.SourceAppUserModelId;
         if (!sameApplicationObject)
         {

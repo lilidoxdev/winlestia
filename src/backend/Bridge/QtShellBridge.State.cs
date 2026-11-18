@@ -46,6 +46,7 @@ internal sealed partial class QtShellBridge
             social = social.Snapshot(),
             bookmarks = bookmarks.Snapshot(),
             quick = QuickSnapshot(),
+            peripherals = PeripheralsState(),
             @lock = Lock.Snapshot(),
             settings = new
             {
@@ -74,6 +75,7 @@ internal sealed partial class QtShellBridge
                 quietFullscreen = Store.State.QuietFullscreen,
                 desktopIndicator = Store.State.DesktopIndicator,
                 dockDrawerOpen = Store.State.DockDrawerOpen,
+                peripheralBattery = Store.State.PeripheralBatteryEnabled,
                 activeBorderOnly = Store.State.ActiveBorderOnly,
                 reducedEffects = LightRendering,
                 customPalette = Store.State.CustomPalette,
@@ -136,6 +138,7 @@ internal sealed partial class QtShellBridge
             },
             fullscreenMonitors = FullscreenWatcher.Current,
             winjets = winjets?.Snapshot(),
+            location = LocationSnapshot(),
             desktop = new { explorerEpoch = winjets?.ExplorerEpoch ?? 0 },
             quiet = Quiet,
             quietForced = QuietPolicy.Label(quietForce),

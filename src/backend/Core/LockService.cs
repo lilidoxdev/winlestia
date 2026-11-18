@@ -1,4 +1,5 @@
-// language: C# 12, file: LockService.cs, target: Windows 11 / .NET 8, état de l'écran de verrouillage : verrou, essais, hook clavier, minuteur d'inactivité
+// language: C# 12, file: LockService.cs, target: Windows 11 / .NET 8, état de l'écran de verrouillage : verrou, essais, hook clavier,
+// minuteur d'inactivité
 using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;

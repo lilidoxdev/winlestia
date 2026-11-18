@@ -1,4 +1,4 @@
-// Store.MigrateLegacyData + WINLESTIA_DATA_DIR. Fixtures live under %TEMP%\WinlestiaDataDir and are deleted at the end.
+// Store.MigrateLegacyData + WINLESTIA_DATA_DIR. Les fixtures vivent sous %TEMP%\WinlestiaDataDir et sont supprimées à la fin.
 using System;
 using System.IO;
 using PanneauxGlass;

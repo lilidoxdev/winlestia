@@ -11,7 +11,7 @@ EdgeRail {
     id: rail
     side: "right"
     allowed: Bridge.settings.socialRailVisible ?? true
-    title: "Panneaux · Réseaux sociaux"
+    title: "Panneaux · " + qsTr("Réseaux sociaux")
     objectName: "socialRail"
     contentW: 54
     chevronW: 28
@@ -19,7 +19,7 @@ EdgeRail {
     contentHeight: column.implicitHeight
     readonly property var networks: (Bridge.social.networks ?? []).filter(n => n.enabled)
     readonly property bool globalMuted: Bridge.social.muted ?? false
-    // Left to right: logos | history drawer | chevron | frame band.
+    // De gauche à droite : logos | tiroir d'historique | chevron | bande du cadre.
     Item {
         anchors.fill: parent
         transform: Translate {
@@ -69,7 +69,7 @@ EdgeRail {
                         text: logo.modelData.name
                         delay: 500
                     }
-                    // Unread counter: top-left, hidden at 0, scale-in.
+                    // Compteur de non lus : en haut à gauche, masqué à 0, apparition en zoom.
                     Rectangle {
                         objectName: "badge-" + logo.modelData.id
                         property string label: logo.count > 99 ? "99+" : String(logo.count)
@@ -99,7 +99,7 @@ EdgeRail {
                             font.bold: true
                         }
                     }
-                    // Muted indicator: small crossed bell, bottom-right.
+                    // Indicateur de sourdine : petite cloche barrée, en bas à droite.
                     Rectangle {
                         objectName: "muted-" + logo.modelData.id
                         visible: logo.muted || !logo.connected

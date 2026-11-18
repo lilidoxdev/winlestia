@@ -306,7 +306,11 @@ ColumnLayout {
         SettingsRow {
             rowId: "lockIdle"
             target: idleSwitch
-            hint: page.lockReady ? SettingsIndex.desc("lockIdle") : page.hasPassword ? qsTr("Activez d'abord le verrouillage") : qsTr("Mot de passe requis")
+            hint: {
+                if (page.lockReady)
+                    return SettingsIndex.desc("lockIdle");
+                return page.hasPassword ? qsTr("Activez d'abord le verrouillage") : qsTr("Mot de passe requis");
+            }
             onBlockedTapped: if (!page.hasPassword)
                 page.focusPassword()
 

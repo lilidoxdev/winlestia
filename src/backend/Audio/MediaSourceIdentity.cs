@@ -1,6 +1,6 @@
 // language: C# 12, file: MediaSourceIdentity.cs, target: Windows 11 / .NET 8
-// Pure resolution of a Windows media-session AppUserModelID (AUMID) to a display name and an executable stem.
-// The raw AUMID stays the stable identifier everywhere; the display name never shows a bare hash.
+// Résolution pure d'un AppUserModelID (AUMID) de session média Windows en nom d'affichage et radical d'exécutable.
+// L'AUMID brut reste partout l'identifiant stable ; le nom d'affichage n'est jamais un simple hash.
 using System;
 using System.IO;
 using System.Linq;
@@ -8,18 +8,18 @@ using System.Text;
 
 namespace PanneauxGlass;
 
-/// <summary>A resolved media source. <see cref="Aumid"/> is the raw, stable identifier.</summary>
+/// <summary>Une source média résolue. <see cref="Aumid"/> est l'identifiant brut et stable.</summary>
 internal sealed record MediaSource(string Aumid, string DisplayName, string ExeStem);
 
 internal sealed class MediaSourceIdentity
 {
-    // Source text is French; the frontend translates it through localization.py.
+    // Le texte source est en français ; le frontend le traduit via localization.py.
     internal const string UnknownBrowserName = "Navigateur";
     internal const string UnknownSourceName = "Lecteur Windows";
 
     sealed record KnownApp(string Needle, string DisplayName, string ExeStem);
 
-    // Order matters: the first needle contained in the AUMID wins.
+    // L'ordre compte : la première sous-chaîne contenue dans l'AUMID l'emporte.
     static readonly KnownApp[] KnownApps =
     {
         new("spotify", "Spotify", "spotify"),
@@ -34,7 +34,7 @@ internal sealed class MediaSourceIdentity
         new("firefox", "Firefox", "firefox"),
     };
 
-    // Gecko browsers whose AUMID can be an opaque 16-hex-digit hash (Firefox installer scheme).
+    // Navigateurs Gecko dont l'AUMID peut être un hash opaque de 16 chiffres hexadécimaux (schéma de l'installeur Firefox).
     static readonly KnownApp[] HashStyleBrowsers =
     {
         new("firefox", "Firefox", "firefox"),
@@ -47,9 +47,9 @@ internal sealed class MediaSourceIdentity
     readonly Func<string, bool> isProcessRunning;
     readonly Func<string, string?> packagedDisplayName;
 
-    /// <param name="registryDisplayName">AUMID to registered DisplayName (HKCU or HKLM AppUserModelId key), or null.</param>
-    /// <param name="isProcessRunning">Executable stem (no extension) to "a process with this name is running".</param>
-    /// <param name="packagedDisplayName">Packaged AUMID to shell display name, or null.</param>
+    /// <param name="registryDisplayName">AUMID vers DisplayName enregistré (clé AppUserModelId de HKCU ou HKLM), ou null.</param>
+    /// <param name="isProcessRunning">Radical d'exécutable (sans extension) vers « un processus de ce nom tourne ».</param>
+    /// <param name="packagedDisplayName">AUMID empaqueté vers nom d'affichage du shell, ou null.</param>
     internal MediaSourceIdentity(
         Func<string, string?> registryDisplayName,
         Func<string, bool> isProcessRunning,
@@ -66,7 +66,7 @@ internal sealed class MediaSourceIdentity
         return Resolve(aumid, out _);
     }
 
-    /// <param name="stable">False when the result is a guess that must be re-evaluated soon (short TTL only).</param>
+    /// <param name="stable">False quand le résultat est une supposition à réévaluer bientôt (TTL court uniquement).</param>
     internal MediaSource Resolve(string? aumid, out bool stable)
     {
         stable = true;
@@ -119,7 +119,7 @@ internal sealed class MediaSourceIdentity
                 }
             }
 
-            // A registered name that is not a known browser is still better than a hash.
+            // Un nom enregistré qui n'est pas un navigateur connu vaut quand même mieux qu'un hash.
             stable = true;
             return new MediaSource(id, SafeName(registered, UnknownBrowserName), "");
         }
@@ -129,8 +129,8 @@ internal sealed class MediaSourceIdentity
     }
 
     /// <summary>
-    /// Process-based guess: only a single running candidate browser is trusted (and cacheable). Zero or several
-    /// candidates give the generic label, which is better than a wrong name, and must be re-evaluated soon.
+    /// Supposition fondée sur les processus : seul un unique navigateur candidat en cours d'exécution est cru (et mis en cache). Zéro ou
+    /// plusieurs candidats donnent le libellé générique, préférable à un mauvais nom, et doivent être réévalués bientôt.
     /// </summary>
     internal static MediaSource ChooseHeuristicBrowser(string id, string[] runningStems, out bool stable)
     {
@@ -145,13 +145,13 @@ internal sealed class MediaSourceIdentity
         return new MediaSource(id, UnknownBrowserName, "");
     }
 
-    /// <summary>True for opaque identifiers such as 308046B0AF4A39CB (16 hexadecimal characters).</summary>
+    /// <summary>Vrai pour les identifiants opaques comme 308046B0AF4A39CB (16 caractères hexadécimaux).</summary>
     internal static bool IsHashStyle(string value)
     {
         return value.Length == 16 && value.All(Uri.IsHexDigit);
     }
 
-    // Never let a bare hash reach the UI.
+    // Ne jamais laisser un simple hash atteindre l'UI.
     static string SafeName(string name, string fallback)
     {
         string trimmed = name.Trim();
@@ -164,7 +164,7 @@ internal sealed class MediaSourceIdentity
         return value.Length == 0 ? value : char.ToUpperInvariant(value[0]) + value[1..];
     }
 
-    /// <summary>"SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify" becomes "Spotify Music".</summary>
+    /// <summary>"SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify" devient "Spotify Music".</summary>
     internal static string CleanPackageName(string aumid)
     {
         string family = aumid.Split('!')[0];

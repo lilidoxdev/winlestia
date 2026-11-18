@@ -12,7 +12,7 @@ import qs.config
 Window {
     id: root
     objectName: "wallpaperSwitcher"
-    title: "Panneaux · Fonds d’écran"
+    title: "Panneaux · " + qsTr("Fonds d’écran")
     transientParent: null
     color: Colours.palette.m3scrim
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint
@@ -50,7 +50,9 @@ Window {
     readonly property int revealDuration: Appearance.anim.durations.large
     readonly property int holdDuration: 400   // laisse à Windows le temps de poser le vrai fond avant de découvrir l’écran
     readonly property int safetyDuration: revealDuration + holdDuration + 1500
-    readonly property real revealRadius: Math.sqrt(Math.pow(Math.max(revealX, width - revealX), 2) + Math.pow(Math.max(revealY, height - revealY), 2))
+    readonly property real revealRadius: Math.sqrt(
+        Math.pow(Math.max(revealX, width - revealX), 2)
+        + Math.pow(Math.max(revealY, height - revealY), 2))
     readonly property string currentPath: current >= 0 && current < items.count ? items.get(current).path : ""
     readonly property string currentUrl: current >= 0 && current < items.count ? items.get(current).url : ""
     readonly property string currentName: current >= 0 && current < items.count ? items.get(current).name : ""

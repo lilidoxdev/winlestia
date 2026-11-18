@@ -94,7 +94,7 @@ internal sealed class AudioBars
             double peak = 0;
             for (int k = lo; k < hi; k++)
                 peak = Math.Max(peak, Math.Sqrt(re[k] * re[k] + im[k] * im[k]));
-            double amplitude = peak / (FftSize / 4.0); // a full-scale sine reads about 1.0
+            double amplitude = peak / (FftSize / 4.0); // une sinusoïde pleine échelle vaut environ 1,0
             double db = 20 * Math.Log10(Math.Max(1e-9, amplitude));
             raw[b] = Math.Clamp((db - FloorDb) / -FloorDb, 0, 1);
         }

@@ -85,6 +85,14 @@ class StateMixin:
             self.spectrumChanged.emit()
         if 'state' in message:
             self.last_reply = time.monotonic()
+            # Le backend n'échantillonne volume / écrans / SSID qu'une fois la page des contrôles abonnée : les dernières valeurs
+            # connues complètent les clés absentes, pour que la première image du Centre de contrôle ne soit pas vide.
+            previous = self._state.get('controls')
+            fresh = message['state'].get('controls')
+            if isinstance(previous, dict) and previous and isinstance(fresh, dict):
+                missing = {key: value for key, value in previous.items() if key not in fresh}
+                if missing:
+                    message['state']['controls'] = {**missing, **fresh}
         if self._theme_pending and message.get('state', {}).get('settings', {}).get('themeMode') == self._theme_pending:
             self._theme_pending = None
         if 'state' in message and any(

@@ -1,4 +1,4 @@
-// C#12 / SocialPolicy: pure preload and idle-release decisions of messaging views (no WebView2).
+// C#12 / SocialPolicy : décisions pures de préchargement et de libération sur inactivité des vues de messagerie (sans WebView2).
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;

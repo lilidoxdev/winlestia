@@ -76,7 +76,8 @@ internal sealed partial class Coordinator
         if (!preview && !disposed && Store.State.ReplaceTaskbar && taskbar?.Enabled == false && TaskbarNative.ExplorerReady())
             taskbar.Enable();
     }
-    // Après une relance réussie du frontend : barre et icônes du Bureau reprennent le chemin du démarrage (Restore() a suspendu le masquage).
+    // Après une relance réussie du frontend : barre et icônes du Bureau reprennent le chemin du démarrage (Restore() a suspendu le
+    // masquage).
     internal void ResumeShell()
     {
         ResumeTaskbar();

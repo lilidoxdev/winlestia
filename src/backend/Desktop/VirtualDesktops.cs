@@ -105,7 +105,7 @@ internal static class VirtualDesktops
                 if (worker == null)
                     return;
                 workerId = GetCurrentThreadId();
-            }   // Stop already ran: leave
+            }   // Stop déjà exécuté : on part
             proc = OnEvent;
             hFg = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, proc, 0, 0,
                 WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
@@ -166,7 +166,7 @@ internal static class VirtualDesktops
         {
             step = 0;
             Disarm();
-        }   // idle again: nothing armed
+        }   // de nouveau inactif : rien d'armé
     }
 
     static void Refresh()
@@ -258,7 +258,7 @@ internal static class VirtualDesktops
         return keys;
     }
 
-    // User gesture entry point. relative != 0 means wheel (next/previous), otherwise absolute target index.
+    // Point d'entrée du geste utilisateur. relative != 0 signifie molette (suivant/précédent), sinon index cible absolu.
     internal static bool SwitchTo(int target, int relative = 0)
     {
         lock (actionGate)

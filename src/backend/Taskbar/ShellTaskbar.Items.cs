@@ -1,4 +1,4 @@
-// language: C# 12, file: ShellTaskbar.Items.cs, target: Windows 11 / .NET 8 WPF, native bottom taskbar
+// language: C# 12, file: ShellTaskbar.Items.cs, target: Windows 11 / .NET 8 WPF, barre des tâches native en bas
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

@@ -1,4 +1,4 @@
-﻿# PowerShell 5.1+ / Configure-Policy.ps1 / Per-user interactive profile support with policy restoration.
+﻿# PowerShell 5.1+ / Configure-Policy.ps1 / Prise en charge du profil interactif par utilisateur avec restauration de la politique.
 param([Parameter(Mandatory=$true)][string]$StatePath,[switch]$Restore,[switch]$InspectOnly)
 $ErrorActionPreference='Stop'
 $current=[string](Get-ExecutionPolicy -Scope CurrentUser)

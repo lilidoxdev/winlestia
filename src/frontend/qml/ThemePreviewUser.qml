@@ -24,7 +24,7 @@ Rectangle {
         color: mock.p.m3surfaceContainerHigh
 
         MaterialIcon {
-            renderType: Text.QtRendering // scaled preview: vector glyphs stay sharp
+            renderType: Text.QtRendering // aperçu mis à l'échelle : les glyphes vectoriels restent nets
             anchors.centerIn: parent
             text: "person"
             color: mock.p.m3onSurfaceVariant
@@ -41,7 +41,7 @@ Rectangle {
             color: mock.p.m3primary
 
             MaterialIcon {
-                renderType: Text.QtRendering // scaled preview: vector glyphs stay sharp
+                renderType: Text.QtRendering // aperçu mis à l'échelle : les glyphes vectoriels restent nets
                 anchors.centerIn: parent
                 text: "frame_person"
                 color: mock.p.m3onPrimary
@@ -87,7 +87,7 @@ Rectangle {
                 spacing: 8
 
                 MaterialIcon {
-                    renderType: Text.QtRendering // scaled preview: vector glyphs stay sharp
+                    renderType: Text.QtRendering // aperçu mis à l'échelle : les glyphes vectoriels restent nets
                     anchors.verticalCenter: parent.verticalCenter
                     text: info.modelData.icon
                     color: info.modelData.tone
@@ -95,7 +95,7 @@ Rectangle {
                 }
 
                 StyledText {
-                    renderType: Text.QtRendering // scaled preview: vector glyphs stay sharp
+                    renderType: Text.QtRendering // aperçu mis à l'échelle : les glyphes vectoriels restent nets
                     anchors.verticalCenter: parent.verticalCenter
                     text: info.modelData.text
                     color: mock.p.m3onSurface

@@ -127,16 +127,16 @@ def test_each_pane_loads(qapp, shell, mode):
     pump(qapp)
 
 
-@pytest.mark.parametrize('prop', ('mixerOpen', 'wifiOpen'))
-def test_controls_side_panes(qapp, shell, prop):
+@pytest.mark.parametrize('page', ('wifi', 'bluetooth', 'sound'))
+def test_controls_sub_pages(qapp, shell, page):
     root, messages = shell
     debut = len(messages)
     open_mode(root, 'controls')
-    root.setProperty(prop, True)
+    root.setProperty('controlsPage', page)
     pump(qapp, 30)
-    assert root.property(prop) is True
+    assert root.property('controlsPage') == page
     assert not fautes(messages, debut), fautes(messages, debut)
-    root.setProperty(prop, False)
+    root.setProperty('controlsPage', 'main')
     open_mode(root, 'close')
     pump(qapp)
 
@@ -156,7 +156,8 @@ def test_wallpaper_switcher_and_dashboard(qapp, shell, bridge):
 
 
 @pytest.mark.parametrize(
-    'fichier', ('qs/modules/dashboard/Workspaces.qml', 'WorkspaceBrowser.qml', 'ThemePreviewMock.qml', 'CustomThemeEditor.qml', 'fx/Shockwave.qml')
+    'fichier', ('qs/modules/dashboard/Workspaces.qml', 'WorkspaceBrowser.qml', 'ThemePreviewMock.qml', 'CustomThemeEditor.qml',
+        'fx/Shockwave.qml')
 )
 def test_module_roots_instantiate(qapp, shell, bridge, fichier):
     _, messages = shell

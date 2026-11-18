@@ -1,7 +1,7 @@
-// C#12 / FilesHandler: register / restore round-trips on a SANDBOX registry root (HKCU\Software\WinlestiaTest\Sandbox\<run>\Classes, no
-// shell effect), plus the crash-guard decisions.
-// The real HKCU\Software\Classes is never written; its Directory\shell and Drive\shell defaults are only read before/after to prove they
-// did not move. The sandbox is deleted at the end.
+// C#12 / FilesHandler : allers-retours register / restore sur une racine de registre SANDBOX
+// (HKCU\Software\WinlestiaTest\Sandbox\<run>\Classes, aucun effet shell), plus les décisions du garde-fou de plantage.
+// Le vrai HKCU\Software\Classes n'est jamais écrit ; ses valeurs par défaut Directory\shell et Drive\shell sont seulement lues avant/après
+// pour prouver qu'elles n'ont pas bougé. Le bac à sable est supprimé à la fin.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -88,7 +88,7 @@ public class FilesHandlerTests
                 Assert.True(!File.Exists(o.BackupPath), "noPrior_backupDeleted");
                 Assert.True(!FilesHandler.IsRegistered(o, exe) && !FilesHandler.IsActive(o), "noPrior_notRegisteredAfter");
             }
-            // 2. prior values + other verbs
+            // 2. valeurs préexistantes + autres verbes
             {
                 var o = Fresh();
                 Seed(o, @"Directory\shell", "none");
@@ -107,7 +107,7 @@ public class FilesHandlerTests
                     && Def(o, @"Drive\shell\bar\command") == "bar.exe" && Def(o, @"Directory\Background\shell\baz\command") == "baz.exe",
                     "prior_otherVerbsIntact");
             }
-            // 3. ExpandString default kept unexpanded
+            // 3. valeur par défaut ExpandString conservée non développée
             {
                 var o = Fresh();
                 Seed(o, @"Directory\shell", @"%SystemRoot%\x", RegistryValueKind.ExpandString);
@@ -118,7 +118,7 @@ public class FilesHandlerTests
                     && (k.GetValue("", null, RegistryValueOptions.DoNotExpandEnvironmentNames) as string) == @"%SystemRoot%\x",
                     "expand_kindAndTextKept");
             }
-            // 4. double register idempotent (the second one, with another exe, keeps the TRUE originals)
+            // 4. double register idempotent (le second, avec un autre exe, garde les VRAIS originaux)
             {
                 var o = Fresh();
                 Seed(o, @"Directory\shell", "none");
@@ -134,7 +134,7 @@ public class FilesHandlerTests
                     "double_restoreGivesOriginal");
                 Assert.True(FilesHandler.Restore(o).Ok && Def(o, @"Directory\shell") == "none", "double_restoreTwiceOk");
             }
-            // 5. restore without backup
+            // 5. restore sans sauvegarde
             {
                 var o = Fresh();
                 Seed(o, @"Directory\shell\foo\command", "foo.exe");
@@ -159,7 +159,7 @@ public class FilesHandlerTests
                 var res = FilesHandler.Restore(o);
                 Assert.True(res.Ok && !Exists(o, "Directory") && !Exists(o, "Drive"), "nothing_restoreOk");
             }
-            // 6. unreadable backup behaves like a missing one
+            // 6. une sauvegarde illisible se comporte comme une sauvegarde absente
             {
                 var o = Fresh();
                 FilesHandler.Register(o, exe);
@@ -167,13 +167,13 @@ public class FilesHandlerTests
                 Assert.True(FilesHandler.Restore(o).Ok && !Exists(o, @"Directory\shell\winlestia") && !HasDef(o, @"Directory\shell")
                     && !File.Exists(o.BackupPath), "corruptBackup_restoreOk");
             }
-            // 7. register refuses a missing exe and writes nothing
+            // 7. register refuse un exe manquant et n'écrit rien
             {
                 var o = Fresh();
                 var res = FilesHandler.Register(o, Path.Combine(tmp, "nope.exe"));
                 Assert.True(!res.Ok && !Exists(o, "Directory") && !File.Exists(o.BackupPath), "missingExe_refused");
             }
-            // 8. environment override: only under Software\WinlestiaTest\, never notifies, own backup
+            // 8. surcharge d'environnement : uniquement sous Software\WinlestiaTest\, ne notifie jamais, sauvegarde propre
             {
                 string? old = Environment.GetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT");
                 try
@@ -197,7 +197,7 @@ public class FilesHandlerTests
                 }
                 finally { Environment.SetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT", old); }
             }
-            // 9. crash guard, pure decisions
+            // 9. garde-fou de plantage, décisions pures
             {
                 long t = 1_000_000;
                 Assert.True(!FilesHandlerGuard.ShouldTrip(new long[] { t - 20000, t }, t), "guard_twoNotEnough");
@@ -217,7 +217,7 @@ public class FilesHandlerTests
                 Assert.True(FilesHandlerGuard.DecideStartup(true, true, true) == HandlerStartup.TrippedDisable, "decide_trippedDisables");
                 Assert.True(FilesHandlerGuard.DecideStartup(true, true, false) == HandlerStartup.Ensure, "decide_okEnsures");
             }
-            // 10. crash guard with files + sandbox registry
+            // 10. garde-fou de plantage avec fichiers + registre bac à sable
             {
                 var o = Fresh();
                 Seed(o, @"Directory\shell", "none");
@@ -251,15 +251,15 @@ public class FilesHandlerTests
                     any |= FilesHandlerGuard.RecordStartupCrash(dir, t + i * 40000, o);
                 Assert.True(!any && FilesHandler.IsRegistered(o, exe), "guardIO_spreadCrashesDoNotTrip");
             }
-            // 11. (review 2) our own value is never backed up: Default already "winlestia" + missing backup -> restore leaves Default
-            // absent
+            // 11. (revue 2) notre propre valeur n'est jamais sauvegardée : Default déjà "winlestia" + sauvegarde manquante -> restore
+            // laisse Default absent
             {
                 var o = Fresh();
                 Seed(o, @"Directory\shell", "winlestia");
                 Seed(o, @"Directory\shell\winlestia\command", "old.exe");
                 Seed(o, @"Directory\shell\foo\command", "foo.exe");
                 FilesHandler.Register(o, exe);
-                File.Delete(o.BackupPath);   // backup captured at the 2nd register would have been wrong; here: lose it, restore without
+                File.Delete(o.BackupPath);   // la sauvegarde capturée au 2e register aurait été fausse ; ici : on la perd, restore sans
                 FilesHandler.Restore(o);
                 Assert.True(!HasDef(o, @"Directory\shell") && !Exists(o, @"Directory\shell\winlestia")
                     && Def(o, @"Directory\shell\foo\command") == "foo.exe", "ownValue_restoreLeavesDefaultAbsent");
@@ -272,7 +272,7 @@ public class FilesHandlerTests
                 FilesHandler.Restore(o);
                 Assert.True(!HasDef(o, @"Directory\shell") && !Exists(o, @"Directory\shell\winlestia"), "ownValue_withBackupAlsoAbsent");
             }
-            // 12. (review 3) a failure while writing Drive rolls Directory back
+            // 12. (revue 3) un échec pendant l'écriture de Drive annule Directory
             {
                 var o = Fresh();
                 Seed(o, @"Directory\shell", "none");
@@ -287,7 +287,7 @@ public class FilesHandlerTests
                 Assert.True(Def(o, @"Directory\shell") == "none" && !Exists(o, @"Directory\shell\winlestia") && !Exists(o, "Drive")
                     && !File.Exists(o.BackupPath), "rollback_directoryRestored");
             }
-            // 13. (review 4) a foreign Default set after register is kept, our verb key still goes
+            // 13. (revue 4) un Default étranger posé après register est conservé, notre clé de verbe part quand même
             {
                 var o = Fresh();
                 Seed(o, @"Drive\shell");
@@ -306,7 +306,7 @@ public class FilesHandlerTests
                 FilesHandler.Restore(o);
                 Assert.True(Def(o, @"Directory\shell") == "foreign", "foreignDefault_keptEvenWithPriorValue");
             }
-            // 14. (review 6) only real crashes count
+            // 14. (revue 6) seuls les vrais plantages comptent
             Assert.True(FilesHandlerGuard.CountsAsCrash(new NullReferenceException())
                 && FilesHandlerGuard.CountsAsCrash(new InvalidOperationException())
                 && FilesHandlerGuard.CountsAsCrash(new OutOfMemoryException()), "counts_nullRefCounts");
@@ -315,7 +315,7 @@ public class FilesHandlerTests
                 && !FilesHandlerGuard.CountsAsCrash(new DirectoryNotFoundException())
                 && !FilesHandlerGuard.CountsAsCrash(new PathTooLongException()) && !FilesHandlerGuard.CountsAsCrash(new ArgumentException())
                 && !FilesHandlerGuard.CountsAsCrash(new NotSupportedException()), "counts_pathProblemsDoNot");
-            // 15. (review 8) backup override only under %TEMP%
+            // 15. (revue 8) surcharge de sauvegarde uniquement sous %TEMP%
             {
                 string? oldRoot = Environment.GetEnvironmentVariable("WINLESTIA_FILES_HANDLER_ROOT"),
                     oldB = Environment.GetEnvironmentVariable("WINLESTIA_FILES_HANDLER_BACKUP");

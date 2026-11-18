@@ -47,7 +47,8 @@ internal static class Program
         // Mutex protégé (SYSTEM et Administrateurs) : un utilisateur sans droits ne peut ni le créer d'avance ni le retenir.
         var security = new MutexSecurity();
         foreach (var sid in new[] { WellKnownSidType.LocalSystemSid, WellKnownSidType.BuiltinAdministratorsSid })
-            security.AddAccessRule(new MutexAccessRule(new SecurityIdentifier(sid, null), MutexRights.FullControl, AccessControlType.Allow));
+            security.AddAccessRule(new MutexAccessRule(new SecurityIdentifier(sid, null), MutexRights.FullControl,
+                AccessControlType.Allow));
         Mutex single;
         bool created;
         try { single = MutexAcl.Create(true, "Global\\Winlestia.Sensors.Single", out created, security); }

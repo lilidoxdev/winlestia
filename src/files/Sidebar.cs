@@ -48,7 +48,7 @@ internal sealed partial class Sidebar
     readonly StackPanel host = new() { Margin = new Thickness(M3.Sp2) };
     readonly StackPanel quickHost = new();
     readonly StackPanel drivesHost = new();
-    // Test hook: replaces DriveInfo.GetDrives() (Root, Label, Free, Total).
+    // Crochet de test : remplace DriveInfo.GetDrives() (Root, Label, Free, Total).
     internal static Func<List<(string Root, string Label, long Free, long Total)>>? DriveSource;
     // Clic droit sur un lecteur / l'entrée Ce PC, et "la liste des lecteurs a été reconstruite" (la page Ce PC se redessine).
     internal Action<string>? DriveMenu;

@@ -3,7 +3,7 @@
 // et qui les possède (adresse de départ -> module+décalage, description du thread).
 // Variantes a (SHBindToParent) b (+GetUIObjectOf) c (+QueryContextMenu) d (+remplissage des sous-menus), chacune sur le STA de l'interface
 // et sur un thread MTA du pool, même dossier vs dossier neuf. Jeu d'essai sous %TEMP%\WinlestiaFilesOps uniquement.
-// WINLESTIA_FILES_CYCLES (default 20), WINLESTIA_FILES_SETTLE (seconds per variant, default 8).
+// WINLESTIA_FILES_CYCLES (20 par défaut), WINLESTIA_FILES_SETTLE (secondes par variante, 8 par défaut).
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

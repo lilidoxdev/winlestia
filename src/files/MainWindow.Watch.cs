@@ -24,7 +24,7 @@ public sealed partial class MainWindow
     const int BurstFlushMs = 100;
     // Regroupe les frappes du filtre avant de recalculer la liste.
     const int FilterDebounceMs = 120;
-    // ---- shell change notifications ---------------------------------------------------------------------------
+    // ---- notifications de changement du shell ----
 
     const int WmChange = 0x8000 + 0x57;                                   // WM_APP + n
     const int RfInterrupt = 0x1, RfShell = 0x2, RfNewDelivery = 0x8000;
@@ -143,7 +143,7 @@ public sealed partial class MainWindow
             if (a != null && Under(a))
                 changed.Add(a);
             else if (a != null && string.Equals(a.TrimEnd('\\'), watchPath.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
-                changedFull = true;   // the folder itself changed
+                changedFull = true;   // le dossier lui-même a changé
             if ((ev & (EvRenameItem | EvRenameFolder)) != 0 && b != null && Under(b))
                 changed.Add(b);
             if (changed.Count > MaxPendingEvents)
@@ -184,7 +184,7 @@ public sealed partial class MainWindow
         Active.Sync(paths, full || paths.Count == 0);
     }
 
-    // ---- selection / scroll preservation --------------------------------------------------------------------------
+    // ---- préservation de la sélection / du défilement ----
 
     sealed class ViewState
     {

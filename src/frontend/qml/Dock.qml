@@ -156,8 +156,17 @@ Window {
     }
     Component.onCompleted: syncShown()
     property real customWidth: Bridge.settings.dockWidth ?? 0
-    width: Math.min(Bridge.screenWidth - 24, customWidth > 0 ? Math.max(560, customWidth) : Math.max(756,
-        520 + Bridge.taskbarApps.length * 47 + desktops.implicitWidth + drawer.full + drawerToggle.implicitWidth + 10))
+    // Largeur voulue = contenu réel (icônes épinglées + en cours incluses) ; plafonnée à l'écran, la liste d'applis défile alors.
+    readonly property real sideMargins: 2 * (Bridge.frameEnabled && !Bridge.screenFullscreen ? 34 : Appearance.spacing.large)
+    readonly property real wantedWidth: Math.max(customWidth > 0 ? Math.max(560, customWidth) : 560, dockRow.implicitWidth + sideMargins)
+    width: Math.min(Bridge.screenWidth - 24, wantedWidth)
+    Behavior on width {
+        enabled: dock.visible && !Appearance.reducedEffects
+        Anim {
+            duration: Appearance.anim.durations.expressiveFastSpatial
+            easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
+        }
+    }
     height: 68
     x: Bridge.screenX + (Bridge.screenWidth - width) / 2
     y: Bridge.screenY + Bridge.screenHeight - height - (Bridge.screenFullscreen ? 12 : Math.max(0, Config.border.thickness))
@@ -181,6 +190,7 @@ Window {
                 y: dock.offset
             }
             RowLayout {
+                id: dockRow
                 anchors.fill: parent
                 anchors.topMargin: Appearance.padding.smaller
                 anchors.bottomMargin: Appearance.padding.smaller
@@ -241,7 +251,10 @@ Window {
                     onClicked: Bridge.action("palette", {})
                 }
                 Rectangle {
-                    visible: dock.launcherShown("start") || dock.launcherShown("recycle") || dock.launcherShown("files") || dock.launcherShown("search")
+                    visible: dock.launcherShown("start")
+                        || dock.launcherShown("recycle")
+                        || dock.launcherShown("files")
+                        || dock.launcherShown("search")
                     implicitWidth: 1
                     implicitHeight: 23
                     color: Colours.palette.m3outlineVariant
@@ -250,10 +263,21 @@ Window {
                 }
                 Flickable {
                     Layout.fillWidth: true
+                    implicitWidth: appsRow.width
                     implicitHeight: 44
                     contentWidth: appsRow.width
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
+                    // Molette : défilement horizontal quand la liste dépasse l'écran.
+                    WheelHandler {
+                        enabled: parent.contentWidth > parent.width
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onWheel: event => {
+                            const f = parent;
+                            const d = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+                            f.contentX = Math.max(0, Math.min(f.contentWidth - f.width, f.contentX - d));
+                        }
+                    }
                     Item {
                         id: appsRow
                         width: dock.dockItems.length * 46 + (dock.pinnedCount > 0 ? 14 : 0)
@@ -489,6 +513,7 @@ Window {
                         onMenuRequested: name => dock.showMenu(name, {}, barSlot)
                     }
                 }
+                PeripheralBatteryPill {}
                 Column {
                     Layout.leftMargin: Appearance.padding.smaller
                     Layout.rightMargin: Appearance.padding.smaller

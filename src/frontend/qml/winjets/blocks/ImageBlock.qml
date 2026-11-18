@@ -10,7 +10,9 @@ Item {
     property var host: null
     readonly property real sc: ctx && ctx.scale > 0 ? ctx.scale : 1
 
-    readonly property string url: spec && host ? Bridge.winjets.assetUrl(host.packageId, Bridge.winjets.renderText(spec.src ?? "", ctx)) : ""
+    readonly property string url: spec && host
+        ? Bridge.winjets.assetUrl(host.packageId, Bridge.winjets.renderText(spec.src ?? "", ctx))
+        : ""
 
     implicitWidth: 64 * sc
     implicitHeight: 64 * sc

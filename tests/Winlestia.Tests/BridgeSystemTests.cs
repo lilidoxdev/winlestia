@@ -24,7 +24,9 @@ public class BridgeSystemTests
     public void RegisteredActionCountIsPinned()
     {
         // Ajouter ou retirer une action impose de mettre ce nombre à jour avec docs/bridge-schema.json.
-        Assert.Equal(128,QtShellBridge.ActionNames.Count);
+        // 128 -> 135 : bluetoothDevice, openBluetooth, peripheralKind, peripheralVisibility, peripheralsRefresh (périphériques),
+        // locate (position à la demande), uninstall (désinstallation depuis le shell).
+        Assert.Equal(135,QtShellBridge.ActionNames.Count);
         Assert.Equal(QtShellBridge.ActionNames.Count, QtShellBridge.ActionNames.Distinct().Count());
     }
 

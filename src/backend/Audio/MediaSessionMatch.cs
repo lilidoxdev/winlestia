@@ -1,14 +1,14 @@
 // language: C# 12, file: MediaSessionMatch.cs, target: Windows 11 / .NET 8
-// Pure matching between WASAPI audio sessions and the media source selected in the dashboard.
-// Per-tab volume is impossible: Windows audio sessions are per process (a browser tab is not a session), so the
-// volume and the visualizer always act on every audio session of the selected browser or application.
+// Correspondance pure entre les sessions audio WASAPI et la source média sélectionnée dans le tableau de bord.
+// Le volume par onglet est impossible : les sessions audio Windows sont par processus (un onglet de navigateur n'est pas une session), donc
+// le volume et le visualiseur agissent toujours sur toutes les sessions audio du navigateur ou de l'application sélectionné.
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace PanneauxGlass;
 
-/// <summary>An audio session as seen by the mixer. ExeStem may be empty when the image path is unreadable.</summary>
+/// <summary>Une session audio telle que la voit le mélangeur. ExeStem peut être vide quand le chemin de l'image est illisible.</summary>
 internal sealed record AudioSessionInfo(
     int Pid,
     string ExeStem,
@@ -16,14 +16,15 @@ internal sealed record AudioSessionInfo(
     string SessionIdentifier
 );
 
-/// <summary>The resolved media source: executable stem (may be empty) and the raw AUMID.</summary>
+/// <summary>La source média résolue : radical de l'exécutable (peut être vide) et AUMID brut.</summary>
 internal sealed record MediaTarget(string ExeStem, string Aumid);
 
 internal static class MediaSessionMatch
 {
     const int MaxAncestorDepth = 12;
 
-    // Generic shell/host processes parent many unrelated apps: they never identify a media source via ancestors.
+    // Les processus génériques shell/hôte parentent de nombreuses applications sans rapport : ils n'identifient jamais une source média via
+    // leurs ancêtres.
     static readonly HashSet<string> GenericAncestorStems = new(StringComparer.OrdinalIgnoreCase)
     {
         "explorer",
@@ -54,7 +55,7 @@ internal static class MediaSessionMatch
                 return true;
             }
 
-            // Firefox and Chromium play audio from a child process: walk the parent chain.
+            // Firefox et Chromium jouent l'audio depuis un processus enfant : on remonte la chaîne des parents.
             bool ancestorMatches =
                 !GenericAncestorStems.Contains(target.ExeStem)
                 && session.AncestorExeStems.Any(ancestor =>
@@ -75,7 +76,7 @@ internal static class MediaSessionMatch
         return family.Length >= 6 && session.SessionIdentifier.Contains(family, StringComparison.OrdinalIgnoreCase);
     }
 
-    // Hash-style AUMIDs never appear in session identifiers: only package families are useful here.
+    // Les AUMID de type hash n'apparaissent jamais dans les identifiants de session : seules les familles de paquets sont utiles ici.
     static string PackageFamily(string aumid)
     {
         bool unusable =
@@ -85,7 +86,7 @@ internal static class MediaSessionMatch
         return unusable ? "" : aumid.Split('!')[0];
     }
 
-    /// <summary>Executable stems of the parent chain of a process, nearest parent first.</summary>
+    /// <summary>Radicaux d'exécutable de la chaîne de parents d'un processus, le parent le plus proche en premier.</summary>
     internal static IReadOnlyList<string> AncestorStems(int pid, Func<int, int> parentOf, Func<int, string> stemOf)
     {
         var stems = new List<string>();
@@ -101,8 +102,8 @@ internal static class MediaSessionMatch
     }
 
     /// <summary>
-    /// Root of the matched process tree: climbs while the parent has the same executable stem as the target.
-    /// Capturing this PID with INCLUDE_TARGET_PROCESS_TREE covers all the browser child processes.
+    /// Racine de l'arbre de processus correspondant : on remonte tant que le parent a le même radical d'exécutable que la cible.
+    /// Capturer ce PID avec INCLUDE_TARGET_PROCESS_TREE couvre tous les processus enfants du navigateur.
     /// </summary>
     internal static int RootPid(int pid, string exeStem, Func<int, int> parentOf, Func<int, string> stemOf)
     {

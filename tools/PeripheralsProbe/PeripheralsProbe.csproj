@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Sonde diagnostique en lecture seule : liste les périphériques Bluetooth / BLE / XInput et leur batterie. Hors solution. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/backend/Peripherals/*.cs" Link="Peripherals/%(Filename)%(Extension)" />
+    <Compile Include="../../src/backend/BatteryStatus.cs" Link="BatteryStatus.cs" />
+  </ItemGroup>
+</Project>

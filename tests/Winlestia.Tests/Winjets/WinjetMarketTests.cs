@@ -104,7 +104,7 @@ public class WinjetMarketTests
         Assert.Single(list);
         Assert.Equal(new double[] { 1000, 1.5, 2, 1, 1.8 }, list[0]);
         Assert.True(WinjetMarket.ParseKlineMessage(
-            "{\"stream\":\"btcusdt@kline_1m\",\"data\":{\"e\":\"kline\",\"s\":\"BTCUSDT\",\"k\":{\"t\":120000,\"o\":\"1\",\"h\":\"3\",\"l\":\"0.5\",\"c\":\"2\"}}}",
+            """{"stream":"btcusdt@kline_1m","data":{"e":"kline","s":"BTCUSDT","k":{"t":120000,"o":"1","h":"3","l":"0.5","c":"2"}}}""",
             out string sym, out long t, out double o, out double h, out double l, out double c));
         Assert.Equal(("BTC", 120000L, 1.0, 3.0, 0.5, 2.0), (sym, t, o, h, l, c));
         Assert.False(WinjetMarket.ParseKlineMessage("{\"data\":{}}", out _, out _, out _, out _, out _, out _));
@@ -148,7 +148,8 @@ public class WinjetMarketTests
         feed.Update(new[] { new MarketSub("i1", "market", new[] { "BTC" }), new MarketSub("i2", "market", new[] { "BTC", "ETH" }) });
         Assert.True(feed.Running);
         for (int k = 0; k < 20; k++)
-            feed.OnMessage("{\"data\":{\"s\":\"BTCUSDT\",\"k\":{\"t\":60000,\"o\":\"1\",\"h\":\"" + (2 + k) + "\",\"l\":\"1\",\"c\":\"" + (2 + k) + "\"}}}");
+            feed.OnMessage("{\"data\":{\"s\":\"BTCUSDT\",\"k\":{\"t\":60000,\"o\":\"1\",\"h\":\"" + (2 + k) + "\",\"l\":\"1\",\"c\":\""
+                + (2 + k) + "\"}}}");
         System.Threading.Thread.Sleep(1800);
         lock (published)
         {
@@ -198,7 +199,8 @@ public class WinjetMarketTests
         Assert.NotEqual("", Run(WithMarket(new JsonArray())));
         Assert.NotEqual("", Run(WithMarket(new JsonArray("BTC", "BTC"))));
         Assert.NotEqual("", Run(WithMarket(null)));
-        Assert.NotEqual("", Run(WithMarket(new JsonArray("BTC")).Edit("widget.json", o => o["data"]!["market"]!["url"] = "https://x.example.com")));
+        Assert.NotEqual("", Run(WithMarket(new JsonArray("BTC"))
+            .Edit("widget.json", o => o["data"]!["market"]!["url"] = "https://x.example.com")));
     }
 
     // ---- validateur : nouveaux blocs, actions, propriétés ----
@@ -208,8 +210,11 @@ public class WinjetMarketTests
     {
         Assert.Equal("", Run(WithBlock(new JsonObject { ["type"] = "visualizer", ["bars"] = 32, ["source"] = "spectrum" })));
         Assert.Equal("", Run(WithBlock(new JsonObject { ["type"] = "visualizer" })));
-        Assert.Equal("", Run(WithBlock(new JsonObject { ["type"] = "media", ["showArt"] = true, ["showProgress"] = "{{ settings.showSeconds }}", ["showControls"] = false })));
-        Assert.Equal("", Run(WithBlock(new JsonObject { ["type"] = "chart", ["series"] = "data.live.prices", ["variant"] = "candles", ["hover"] = true, ["valueFormat"] = "currency" })));
+        Assert.Equal("", Run(WithBlock(new JsonObject {
+            ["type"] = "media", ["showArt"] = true, ["showProgress"] = "{{ settings.showSeconds }}", ["showControls"] = false })));
+        Assert.Equal("", Run(WithBlock(new JsonObject {
+            ["type"] = "chart", ["series"] = "data.live.prices", ["variant"] = "candles", ["hover"] = true,
+            ["valueFormat"] = "currency" })));
         Assert.Equal("", Run(WithBlock(new JsonObject { ["type"] = "clock", ["variant"] = "digital", ["seconds"] = true })));
     }
 
@@ -233,7 +238,8 @@ public class WinjetMarketTests
     [InlineData("media.stop", false)]
     public void MediaActions(string type, bool ok)
     {
-        string errors = Run(WithBlock(new JsonObject { ["type"] = "stat", ["value"] = "1", ["action"] = new JsonObject { ["type"] = type } }));
+        string errors = Run(WithBlock(new JsonObject {
+            ["type"] = "stat", ["value"] = "1", ["action"] = new JsonObject { ["type"] = type } }));
         Assert.Equal(ok, errors == "");
     }
 
@@ -244,7 +250,8 @@ public class WinjetMarketTests
 
     [Fact]
     public void ContextPathsAreNotRootRestricted()
-        => Assert.Equal("", Run(WithBlock(new JsonObject { ["type"] = "text", ["text"] = "{{ media.title }} {{ system.cpu }} {{ time.hours }}" })));
+        => Assert.Equal("", Run(WithBlock(new JsonObject {
+            ["type"] = "text", ["text"] = "{{ media.title }} {{ system.cpu }} {{ time.hours }}" })));
 
     [Fact]
     public void MultiSymbolChoiceListWorks()

@@ -18,6 +18,7 @@ ColumnLayout {
     // Listes barre/tiroir courantes ; la clé texte évite de reconstruire les lignes quand d’autres réglages changent.
     readonly property string layoutKey: JSON.stringify(DockItems.normalize(Bridge.settings.dockBar, Bridge.settings.dockDrawer))
     readonly property var layout: JSON.parse(layoutKey)
+    readonly property bool peripheralsOn: Bridge.settings.peripheralBattery ?? false
     readonly property var layoutRows: DockItems.rows(layout.bar, layout.drawer)
     readonly property var chipBar: ({
             label: qsTr("Barre"),
@@ -292,9 +293,16 @@ ColumnLayout {
 
                         SettingsChips {
                             namePrefix: "dockPlace-" + layoutRow.modelData + "-"
-                            model: layoutRow.launcher ? [page.chipBar, page.chipHidden] : layoutRow.modelData === "settings" ? [page.chipBar, page.chipDrawer] : [page.chipBar, page.chipDrawer, page.chipHidden]
+                            model: {
+                                if (layoutRow.launcher)
+                                    return [page.chipBar, page.chipHidden];
+                                if (layoutRow.modelData === "settings")
+                                    return [page.chipBar, page.chipDrawer];
+                                return [page.chipBar, page.chipDrawer, page.chipHidden];
+                            }
                             current: layoutRow.where
-                            onChosen: value => page.apply(DockItems.setPlacement(page.layout.bar, page.layout.drawer, layoutRow.modelData, value))
+                            onChosen: value => page.apply(
+                                DockItems.setPlacement(page.layout.bar, page.layout.drawer, layoutRow.modelData, value))
                         }
 
                         IconButton {
@@ -330,6 +338,159 @@ ColumnLayout {
                 icon: "restart_alt"
                 type: IconTextButton.Tonal
                 onClicked: page.apply(DockItems.defaults())
+            }
+        }
+
+        SettingsRow {
+            rowId: "peripheralBattery"
+            target: peripheralSwitch
+
+            SettingsSwitch {
+                id: peripheralSwitch
+
+                objectName: "peripheralBatteryToggle"
+                value: Bridge.settings.peripheralBattery ?? false
+                onToggled: Bridge.action("preference", {
+                    key: "peripheralBattery",
+                    enabled: checked
+                })
+            }
+        }
+
+        SettingsRow {
+            rowId: "peripheralList"
+            below: true
+            shown: page.peripheralsOn
+
+            ColumnLayout {
+                id: peripheralList
+
+                readonly property bool active: page.visible && page.peripheralsOn
+                readonly property var paired: Bridge.peripherals?.paired ? Array.from(Bridge.peripherals.paired) : []
+                readonly property var shownDevices: Bridge.peripherals?.devices ? Array.from(Bridge.peripherals.devices) : []
+
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.normal
+
+                // Relit les appareils appairés dès que la section devient visible.
+                onActiveChanged: {
+                    if (active)
+                        Bridge.action("peripheralsRefresh", {});
+                }
+                Component.onCompleted: {
+                    if (active)
+                        Bridge.action("peripheralsRefresh", {});
+                }
+
+                StyledText {
+                    objectName: "peripheralEmpty"
+                    Layout.fillWidth: true
+                    visible: peripheralList.paired.length === 0
+                    text: qsTr("Aucun appareil appairé détecté")
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3outline
+                }
+
+                Repeater {
+                    model: peripheralList.paired
+
+                    ColumnLayout {
+                        id: device
+
+                        required property var modelData
+                        readonly property var live: peripheralList.shownDevices.find(d => d.id === modelData.id)
+                        readonly property bool connected: modelData.connected ?? false
+
+                        objectName: "peripheralDevice-" + modelData.id
+                        Layout.fillWidth: true
+                        spacing: Appearance.spacing.small
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.normal
+
+                            MaterialIcon {
+                                text: DockItems.peripheralIcon(device.modelData.kind)
+                                font.pointSize: Appearance.font.size.large
+                                color: device.connected ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 0
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    text: device.modelData.kind === "laptop"
+                                        ? qsTr("Batterie de l'ordinateur")
+                                        : (device.modelData.name ?? "")
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: device.connected && typeof device.modelData.percent === "number"
+                                        ? Math.round(device.modelData.percent) + " %"
+                                        : qsTr("non connecté")
+                                    font.pointSize: Appearance.font.size.small
+                                    color: Colours.palette.m3outline
+                                }
+                            }
+
+                            StyledText {
+                                text: qsTr("Afficher dans le dock")
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3onSurfaceVariant
+                            }
+
+                            SettingsSwitch {
+                                objectName: "peripheralVisible-" + device.modelData.id
+                                value: !(device.live?.hidden ?? false)
+                                Accessible.name: qsTr("Afficher dans le dock")
+                                onToggled: Bridge.action("peripheralVisibility", {
+                                    id: device.modelData.id,
+                                    visible: checked
+                                })
+                            }
+                        }
+
+                        SettingsChips {
+                            visible: device.modelData.kind !== "laptop"
+                            namePrefix: "peripheralKind-" + device.modelData.id + "-"
+                            model: [
+                                {
+                                    label: qsTr("Auto"),
+                                    value: "auto"
+                                },
+                                {
+                                    label: qsTr("Casque"),
+                                    value: "headset"
+                                },
+                                {
+                                    label: qsTr("Manette"),
+                                    value: "gamepad"
+                                },
+                                {
+                                    label: qsTr("Souris"),
+                                    value: "mouse"
+                                },
+                                {
+                                    label: qsTr("Clavier"),
+                                    value: "keyboard"
+                                },
+                                {
+                                    label: qsTr("Autre"),
+                                    value: "other"
+                                }
+                            ]
+                            current: device.modelData.overridden ? device.modelData.kind : "auto"
+                            onChosen: value => Bridge.action("peripheralKind", {
+                                id: device.modelData.id,
+                                kind: value
+                            })
+                        }
+                    }
+                }
             }
         }
     }

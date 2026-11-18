@@ -156,7 +156,7 @@ internal static class DockPreviewVerification
             host.Close();
             Check("Close() hides and destroys the window", !host.IsOpen && last != null && last.IsDisposed
                 && last.RegisteredThumbnails == 0);
-            // Cap: 2 tiles per row x 3 rows = 6 shown, 8 windows (3 above + 5 tiny extra) -> "+2" indicator.
+            // Plafond : 2 tuiles par ligne x 3 lignes = 6 affichées, 8 fenêtres (3 au-dessus + 5 minuscules en plus) -> indicateur "+2".
             for (int i = 0; i < 5; i++)
             {
                 var extra = new Form

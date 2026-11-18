@@ -1,4 +1,4 @@
-// C# 12 / .NET 8 / Windows 11. Verify native Windows-key policy without injecting desktop input.
+// C# 12 / .NET 8 / Windows 11. Vérifie la politique de la touche Windows native sans injecter d'entrée bureau.
 using System;
 using System.Collections.Generic;
 using System.IO;

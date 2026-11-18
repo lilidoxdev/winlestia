@@ -23,6 +23,7 @@ Window {
     property bool fromRunning: false
     property bool backgroundTab: false
     property string powerChoice: ""
+    property bool uninstallKeepData: true
     property bool confirmStop: false
     property real anchorX: 0
     property real anchorY: 0
@@ -32,6 +33,7 @@ Window {
         fromRunning = type === "running";
         kind = type;
         powerChoice = "";
+        uninstallKeepData = true;
         backgroundTab = false;
         entry = data ?? ({});
         confirmStop = false;
@@ -495,8 +497,12 @@ Window {
                     visible: menu.kind === "running"
                     width: parent.width - Appearance.padding.smaller * 2
                     x: Appearance.padding.smaller
-                    text: (rowsModel.count === 1 ? qsTr("%1 application") : qsTr("%1 applications")).arg(rowsModel.count) + " · " + qsTr("processeur") + " " + Math.round(menu.sumCpu) + " % · "
-                        + qsTr("mémoire") + " " + (menu.sumMem / 1024).toFixed(1).replace(".", ",") + " Go"
+                    text: {
+                        const apps = (rowsModel.count === 1 ? qsTr("%1 application") : qsTr("%1 applications")).arg(rowsModel.count);
+                        const mem = (menu.sumMem / 1024).toFixed(1).replace(".", ",");
+                        return apps + " · " + qsTr("processeur") + " " + Math.round(menu.sumCpu) + " % · "
+                            + qsTr("mémoire") + " " + mem + " Go";
+                    }
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3onSurfaceVariant
                     elide: Text.ElideRight
@@ -517,7 +523,7 @@ Window {
                     }
                 }
                 StyledText {
-                    visible: menu.kind === "power" && menu.powerChoice !== ""
+                    visible: menu.kind === "power" && menu.powerChoice !== "" && menu.powerChoice !== "uninstall"
                     width: parent.width - 12
                     x: 6
                     text: qsTr("%1 ?").arg(menu.powerLabel(menu.powerChoice))
@@ -526,7 +532,7 @@ Window {
                     bottomPadding: Appearance.padding.smaller
                 }
                 Repeater {
-                    model: menu.kind === "power" ? (menu.powerChoice === "" ? [
+                    model: menu.kind === "power" ? (menu.powerChoice === "uninstall" ? [] : menu.powerChoice === "" ? [
                             {
                                 id: "lock",
                                 text: qsTr("Verrouiller"),
@@ -616,6 +622,112 @@ Window {
                                 Layout.fillWidth: true
                                 text: parent.parent.modelData.text
                                 font.pointSize: Appearance.font.size.normal
+                            }
+                        }
+                    }
+                }
+                // Entrée secondaire, séparée des actions de session courantes ; la confirmation se déplie ici.
+                StyledRect {
+                    visible: menu.kind === "power" && menu.powerChoice === ""
+                    objectName: "power-uninstall"
+                    width: body.width
+                    height: visible ? 40 : 0
+                    radius: Appearance.rounding.small
+                    color: "transparent"
+                    StateLayer {
+                        function onClicked() {
+                            menu.uninstallKeepData = true;
+                            menu.powerChoice = "uninstall";
+                        }
+                    }
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Appearance.spacing.normal
+                        anchors.rightMargin: Appearance.spacing.smaller
+                        spacing: Appearance.spacing.normal
+                        MaterialIcon {
+                            text: "delete_forever"
+                            font.pointSize: Appearance.font.size.normal
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Désinstaller Winlestia")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+                    }
+                }
+                Item {
+                    id: uninstallPanel
+                    objectName: "uninstallPanel"
+                    visible: menu.kind === "power" && menu.powerChoice === "uninstall"
+                    width: body.width
+                    height: visible ? uninstallColumn.implicitHeight : 0
+                    // Entrée = Annuler (choix par défaut) ; Échap ferme le menu sans rien faire.
+                    focus: visible
+                    onVisibleChanged: if (visible)
+                        forceActiveFocus()
+                    Keys.onReturnPressed: menu.powerChoice = ""
+                    Keys.onEnterPressed: menu.powerChoice = ""
+                    Column {
+                        id: uninstallColumn
+                        width: parent.width
+                        spacing: Appearance.spacing.normal
+                        StyledText {
+                            width: parent.width - 12
+                            x: 6
+                            text: qsTr("Désinstaller Winlestia ?")
+                            font.pointSize: Appearance.font.size.normal
+                        }
+                        StyledText {
+                            width: parent.width - 12
+                            x: 6
+                            text: qsTr(
+                                "La barre des tâches et l’explorateur Windows sont d’abord restaurés, puis le shell se ferme. La "
+                                + "désinstallation se termine dans une fenêtre dédiée.")
+                            wrapMode: Text.WordWrap
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+                        StyledRadioButton {
+                            objectName: "uninstall-keep"
+                            x: 6
+                            text: qsTr("Garder mes réglages et données")
+                            checked: menu.uninstallKeepData
+                            onClicked: menu.uninstallKeepData = true
+                        }
+                        StyledRadioButton {
+                            objectName: "uninstall-remove"
+                            x: 6
+                            text: qsTr("Supprimer aussi mes données (envoyées à la Corbeille)")
+                            checked: !menu.uninstallKeepData
+                            onClicked: menu.uninstallKeepData = false
+                        }
+                        Row {
+                            x: parent.width - width
+                            spacing: Appearance.spacing.small
+                            TextButton {
+                                id: uninstallCancel
+                                objectName: "uninstall-cancel"
+                                type: TextButton.Tonal
+                                text: qsTr("Annuler")
+                                // Focus par défaut : anneau visible tant que le clavier n'a pas bougé.
+                                border.width: uninstallPanel.visible ? 2 : 0
+                                border.color: Colours.palette.m3primary
+                                onClicked: menu.powerChoice = ""
+                            }
+                            TextButton {
+                                objectName: "uninstall-confirm"
+                                type: TextButton.Text
+                                text: qsTr("Désinstaller")
+                                inactiveOnColour: Colours.palette.m3error
+                                onClicked: {
+                                    Bridge.action("uninstall", {
+                                        keepData: menu.uninstallKeepData
+                                    });
+                                    menu.visible = false;
+                                }
                             }
                         }
                     }

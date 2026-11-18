@@ -209,7 +209,7 @@ internal static class WgcCapture
             n++;
         }
         if (n == 0 || (sum / n < 4 && max < 16))
-            return false;   // black / empty frame
+            return false;   // image noire / vide
         uint cw = crop?.Width ?? (uint)bgra.PixelWidth, ch = crop?.Height ?? (uint)bgra.PixelHeight;
         double scale = Math.Min(1.0, (double)size / Math.Max(cw, ch));
         using var stream = new InMemoryRandomAccessStream();

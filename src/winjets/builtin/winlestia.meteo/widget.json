@@ -1,0 +1,1768 @@
+{
+  "size": {
+    "default": [
+      352,
+      168
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      536,
+      352
+    ]
+  },
+  "settings": [
+    {
+      "id": "city",
+      "type": "text",
+      "label": "Ville (vide = position actuelle)",
+      "default": "",
+      "maxLength": 60
+    }
+  ],
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 4,
+        "children": [
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'ok'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "row",
+                "gap": 8,
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "column",
+                    "grow": 1,
+                    "gap": 0,
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "{{ weather.city }}",
+                        "style": "eyebrow"
+                      },
+                      {
+                        "type": "text",
+                        "text": "{{ weather.temp }}°",
+                        "style": "display"
+                      },
+                      {
+                        "type": "text",
+                        "text": "{{ weather.condition }}",
+                        "style": "body"
+                      },
+                      {
+                        "type": "text",
+                        "text": "Max {{ weather.high }}° · Min {{ weather.low }}°",
+                        "style": "caption",
+                        "tone": "secondary",
+                        "maxLines": 2
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "align": "end",
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "{{ weather.icon }}",
+                        "style": "icon",
+                        "align": "end"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'locating'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "location_searching",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Localisation en cours…",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'unconfigured'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "location_off",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Indiquez une ville dans les réglages, ou activez la localisation Windows.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              },
+              {
+                "type": "text",
+                "text": "Configurer",
+                "style": "eyebrow",
+                "align": "center",
+                "action": {
+                  "type": "openSettings"
+                }
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'error'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "cloud_off",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Météo indisponible pour le moment.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 0,
+      "minHeight": 300,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 4,
+        "children": [
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'ok'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "row",
+                "gap": 8,
+                "children": [
+                  {
+                    "type": "column",
+                    "grow": 1,
+                    "gap": 0,
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "{{ weather.city }}",
+                        "style": "eyebrow"
+                      },
+                      {
+                        "type": "text",
+                        "text": "{{ weather.temp }}°",
+                        "style": "display"
+                      },
+                      {
+                        "type": "text",
+                        "text": "{{ weather.condition }}",
+                        "style": "body"
+                      },
+                      {
+                        "type": "text",
+                        "text": "Max {{ weather.high }}° · Min {{ weather.low }}° · Ressenti {{ weather.feelsLike }}°",
+                        "style": "caption",
+                        "tone": "secondary",
+                        "maxLines": 2
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "align": "end",
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "{{ weather.icon }}",
+                        "style": "icon",
+                        "align": "end"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "divider"
+              },
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[0].rangeFrom }}",
+                            "value": "{{ weather.daily[0].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[1].rangeFrom }}",
+                            "value": "{{ weather.daily[1].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[2].rangeFrom }}",
+                            "value": "{{ weather.daily[2].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'locating'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "location_searching",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Localisation en cours…",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'unconfigured'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "location_off",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Indiquez une ville dans les réglages, ou activez la localisation Windows.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              },
+              {
+                "type": "text",
+                "text": "Configurer",
+                "style": "eyebrow",
+                "align": "center",
+                "action": {
+                  "type": "openSettings"
+                }
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'error'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "cloud_off",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Météo indisponible pour le moment.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 0,
+      "minHeight": 440,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 4,
+        "children": [
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'ok'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "row",
+                "gap": 8,
+                "children": [
+                  {
+                    "type": "column",
+                    "grow": 1,
+                    "gap": 0,
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "{{ weather.city }}",
+                        "style": "eyebrow"
+                      },
+                      {
+                        "type": "text",
+                        "text": "{{ weather.temp }}°",
+                        "style": "display"
+                      },
+                      {
+                        "type": "text",
+                        "text": "{{ weather.condition }}",
+                        "style": "body"
+                      },
+                      {
+                        "type": "text",
+                        "text": "Max {{ weather.high }}° · Min {{ weather.low }}° · Ressenti {{ weather.feelsLike }}°",
+                        "style": "caption",
+                        "tone": "secondary",
+                        "maxLines": 2
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "align": "end",
+                    "children": [
+                      {
+                        "type": "text",
+                        "text": "{{ weather.icon }}",
+                        "style": "icon",
+                        "align": "end"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "divider"
+              },
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[0].rangeFrom }}",
+                            "value": "{{ weather.daily[0].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[1].rangeFrom }}",
+                            "value": "{{ weather.daily[1].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[2].rangeFrom }}",
+                            "value": "{{ weather.daily[2].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[3].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[3].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[3].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[3].rangeFrom }}",
+                            "value": "{{ weather.daily[3].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[3].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[4].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[4].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[4].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[4].rangeFrom }}",
+                            "value": "{{ weather.daily[4].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[4].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[5].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[5].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[5].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[5].rangeFrom }}",
+                            "value": "{{ weather.daily[5].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[5].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 8,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[6].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[6].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[6].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 5,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[6].rangeFrom }}",
+                            "value": "{{ weather.daily[6].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 1,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[6].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'locating'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "location_searching",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Localisation en cours…",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'unconfigured'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "location_off",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Indiquez une ville dans les réglages, ou activez la localisation Windows.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              },
+              {
+                "type": "text",
+                "text": "Configurer",
+                "style": "eyebrow",
+                "align": "center",
+                "action": {
+                  "type": "openSettings"
+                }
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'error'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "cloud_off",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Météo indisponible pour le moment.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 480,
+      "minHeight": 300,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 4,
+        "children": [
+          {
+            "type": "row",
+            "visibleWhen": "weather.status == 'ok'",
+            "grow": 1,
+            "gap": 16,
+            "children": [
+              {
+                "type": "column",
+                "grow": 2,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ weather.city }}",
+                    "style": "eyebrow"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ weather.temp }}°",
+                    "style": "display"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ weather.condition }}",
+                    "style": "body"
+                  },
+                  {
+                    "type": "text",
+                    "text": "Max {{ weather.high }}° · Min {{ weather.low }}°",
+                    "style": "caption",
+                    "tone": "secondary",
+                    "maxLines": 2
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 4,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 3,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 4,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[0].rangeFrom }}",
+                            "value": "{{ weather.daily[0].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[0].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 4,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 3,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 4,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[1].rangeFrom }}",
+                            "value": "{{ weather.daily[1].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[1].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 4,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 3,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 4,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[2].rangeFrom }}",
+                            "value": "{{ weather.daily[2].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[2].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 4,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 3,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[3].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[3].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[3].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 4,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[3].rangeFrom }}",
+                            "value": "{{ weather.daily[3].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[3].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 4,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 3,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[4].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[4].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[4].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 4,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[4].rangeFrom }}",
+                            "value": "{{ weather.daily[4].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[4].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 4,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 3,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[5].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[5].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[5].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 4,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[5].rangeFrom }}",
+                            "value": "{{ weather.daily[5].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[5].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "grow": 1,
+                    "gap": 4,
+                    "children": [
+                      {
+                        "type": "column",
+                        "grow": 3,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[6].day }}",
+                            "style": "body"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[6].icon }}",
+                            "style": "glyph",
+                            "align": "center"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[6].min }}°",
+                            "style": "caption",
+                            "tone": "faint",
+                            "align": "end"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 4,
+                        "align": "center",
+                        "children": [
+                          {
+                            "type": "progress",
+                            "variant": "bar",
+                            "from": "{{ weather.daily[6].rangeFrom }}",
+                            "value": "{{ weather.daily[6].rangeTo }}"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "column",
+                        "grow": 2,
+                        "children": [
+                          {
+                            "type": "text",
+                            "text": "{{ weather.daily[6].max }}°",
+                            "style": "body",
+                            "align": "end"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'locating'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "location_searching",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Localisation en cours…",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'unconfigured'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "location_off",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Indiquez une ville dans les réglages, ou activez la localisation Windows.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              },
+              {
+                "type": "text",
+                "text": "Configurer",
+                "style": "eyebrow",
+                "align": "center",
+                "action": {
+                  "type": "openSettings"
+                }
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "weather.status == 'error'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "cloud_off",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Météo indisponible pour le moment.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

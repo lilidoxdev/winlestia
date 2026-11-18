@@ -1,4 +1,5 @@
-// language: C# 12, file: BatteryStatus.cs, target: Windows 11 / .NET 8, niveau de batterie via GetSystemPowerStatus (lu sur le tick de performance)
+// language: C# 12, file: BatteryStatus.cs, target: Windows 11 / .NET 8, niveau de batterie via GetSystemPowerStatus (lu sur le tick de
+// performance)
 using System;
 using System.Runtime.InteropServices;
 namespace PanneauxGlass;

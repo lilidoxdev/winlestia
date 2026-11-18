@@ -38,7 +38,8 @@ internal sealed class WinjetValidation : IDisposable
         {
             Directory.Delete(StagingDir, true);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Store.Log("Winjets : nettoyage impossible : " + ex.Message); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
+            Store.Log("Winjets : nettoyage impossible : " + ex.Message); }
         StagingDir = null;
     }
 }
@@ -50,7 +51,7 @@ internal static class WinjetValidator
     {
         string text = (typeof(WinjetValidator).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
             ?? "").Split('+')[0];
-        return WinjetSemVer.TryParseCore(text, out var v) ? v : new Version(0, 9, 2);
+        return WinjetSemVer.TryParseCore(text, out var v) ? v : new Version(1, 0, 0);
     }
 
     // Valide un ZIP ou un dossier source : copie contrôlée dans `tempRoot` (créé au besoin), puis validation de la copie.
@@ -58,7 +59,8 @@ internal static class WinjetValidator
     {
         var list = new List<string>();
         var issues = new WinjetIssues(list);
-        string stage = Path.Combine(tempRoot ?? Path.Combine(Path.GetTempPath(), "winlestia-winjets"), "stage-" + Guid.NewGuid().ToString("N"));
+        string stage = Path.Combine(tempRoot ?? Path.Combine(Path.GetTempPath(), "winlestia-winjets"), "stage-"
+            + Guid.NewGuid().ToString("N"));
         try
         {
             Directory.CreateDirectory(stage);
@@ -109,7 +111,8 @@ internal static class WinjetValidator
             if (Directory.Exists(dir))
                 Directory.Delete(dir, true);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Store.Log("Winjets : nettoyage impossible : " + ex.Message); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
+            Store.Log("Winjets : nettoyage impossible : " + ex.Message); }
     }
 
     // Contenu réel des fichiers : un « .png » doit être un PNG, un « .json » doit être du JSON, preview.png ≤ 1600×1000.
@@ -132,7 +135,8 @@ internal static class WinjetValidator
                     if (length > WinjetLimits.MaxJsonBytes)
                         issues.Add("", rel + " : JSON trop gros (maximum " + WinjetLimits.MaxJsonBytes / 1024 + " Kio).");
                     else
-                        JsonDocument.Parse(File.ReadAllBytes(file), new JsonDocumentOptions { MaxDepth = WinjetLimits.MaxJsonDepth }).Dispose();
+                        JsonDocument.Parse(File.ReadAllBytes(file), new JsonDocumentOptions { MaxDepth = WinjetLimits.MaxJsonDepth })
+                            .Dispose();
                 }
                 else if (WinjetLimits.ImageExtensions.Contains(ext))
                     CheckImage(file, rel, ext, issues);

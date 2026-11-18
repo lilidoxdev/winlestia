@@ -1,4 +1,5 @@
-// C#12 / DesktopReassertPolicy: debounce, rate cap, follow-up, mute after own run, class filter (no WinEvent).
+// C#12 / DesktopReassertPolicy : anti-rebond, plafond de débit, relance, silence après son propre passage, filtre de classe (sans
+// WinEvent).
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;

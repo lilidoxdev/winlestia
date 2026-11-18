@@ -2,7 +2,8 @@ using System;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 namespace Winlestia.Tests;
-// xUnit 2 runs on MTA threads; the desktop tests (WinForms/WPF, shell COM) need an STA thread, as the old [STAThread] Main did.
+// xUnit 2 s'exécute sur des threads MTA ; les tests de bureau (WinForms/WPF, COM du shell) exigent un thread STA, comme l'ancien
+// [STAThread] Main.
 internal static class Sta
 {
     internal static void Run(Action body)

@@ -81,6 +81,8 @@ class NativeGlass(QObject):
                     ctypes.POINTER(SurfaceCommand),
                     ctypes.c_uint32,
                 ] + [ctypes.c_float] * 4
+            if hasattr(self.dll, 'BackdropRaise'):  # absent d'une ancienne DLL : repli sur SetWindowPos
+                self.dll.BackdropRaise.argtypes = [ctypes.c_void_p]
         except (OSError, AttributeError) as error:
             self.errors.append(str(error))
             self.dll = None
@@ -225,8 +227,7 @@ class NativeGlass(QObject):
         # Pendant une animation (la géométrie change à chaque image) l'ordre Z ne change pas : la passe n'a lieu qu'à
         # l'apparition d'une fenêtre, puis à la première synchronisation sans mouvement (fin d'animation, tick de 250 ms).
         if topmost_due(self.topmost_handles, handles, moved):
-            for handle in handles:
-                self.user.SetWindowPos(handle, ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
+            self.raise_content(handles)
         self.topmost_handles = handles
         for window in locking:
             self.user.SetWindowPos(int(window.winId()), ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
@@ -236,6 +237,15 @@ class NativeGlass(QObject):
         interval = 250 if busy or any(r.get('key') for r in self.windows.values()) else 500
         if self.timer.interval() != interval:
             self.timer.setInterval(interval)
+
+    def raise_content(self, handles):
+        """Remet les fenêtres de contenu au premier plan, dans l'ordre : les dernières finissent au-dessus. Celles qui ont
+        un fond natif passent par BackdropRaise (contenu puis hôtes chaînés dessous) ; les autres par SetWindowPos."""
+        native = self.dll and hasattr(self.dll, 'BackdropRaise')
+        for handle in handles:
+            if native and handle in self.windows and self.dll.BackdropRaise(handle) >= 0:
+                continue
+            self.user.SetWindowPos(handle, ctypes.c_void_p(-1), 0, 0, 0, 0, 0x13)
 
     def error(self, phase, status):
         message = f'{phase}: {status:#x}'

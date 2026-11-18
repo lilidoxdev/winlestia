@@ -1,7 +1,7 @@
-// Settings redesign backend checks: schema migration against a real legacy preferences file, and the shortcut pipeline (catalogue,
-// reserved, conflicts, rebind, rollback, reset).
-// RegisterHotKey is replaced by an in-memory fake (GlobalShortcut.TestRegister), so no real hotkey of the running shell is touched. Data
-// lives under %TEMP%\WinlestiaSettingsRefonte.
+// Vérifications backend de la refonte des réglages : migration du schéma sur un vrai fichier de préférences hérité, et pipeline des
+// raccourcis (catalogue, réservés, conflits, réassignation, retour arrière, réinitialisation).
+// RegisterHotKey est remplacé par un faux en mémoire (GlobalShortcut.TestRegister) : aucun vrai raccourci du shell en cours n'est touché.
+// Les données vivent sous %TEMP%\WinlestiaSettingsRefonte.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -102,13 +102,6 @@ public class SettingsMigrationAndShortcutsTests
             if (!Same(p.Value, now))
                 changed.Add(p.Name);
         }
-        Console.WriteLine("  info: "
-            + before.RootElement.EnumerateObject().Count()
-            + " legacy keys, changed=["
-            + string.Join(",", changed)
-            + "] dropped=["
-            + string.Join(",", dropped)
-            + "]");
         Check(changed.Count == 0, "(m) every pre-existing key keeps its value after load+save");
         Check(dropped.Count == 0, "(m) no pre-existing key dropped from the JSON");
         Check(after.RootElement.GetProperty("SettingsSchema").GetInt32() == 2
@@ -141,7 +134,7 @@ public class SettingsMigrationAndShortcutsTests
         Check(p4.SettingsShortcut.Modifiers == 9 && p4.SettingsShortcut.Key == 0x53,
             "(m) invalid SettingsShortcut repaired to the default");
     }
-    // ---- shortcuts, with an in-memory RegisterHotKey ----
+    // ---- raccourcis, avec un RegisterHotKey en mémoire
     static readonly Dictionary<int, (uint m, uint k)> reg = new();
     static readonly HashSet<(uint, uint)> foreign = new();
     static (GlobalShortcut g, ShortcutManager m, Preferences p, int[] saves) Rig()
@@ -290,15 +283,16 @@ public class SettingsMigrationAndShortcutsTests
         GlobalShortcut.TestRegister = null;
         GlobalShortcut.TestUnregister = null;
     }
-    // (a) a shortcut whose startup registration failed is reported inactive, and re-applying the same combo retries instead of saying
-    // "unchanged".
+    // (a) un raccourci dont l'enregistrement au démarrage a échoué est signalé inactif, et réappliquer la même combinaison réessaie au lieu
+    // de
+    // dire « inchangé ».
     static void Inactive()
     {
         var (g0, m0, p0, s0) = Rig();
         g0.Dispose();
         reg.Clear();
         foreign.Clear();
-        foreign.Add((2u, 0x77u));   // another app owns Ctrl+F8 at startup
+        foreign.Add((2u, 0x77u));   // une autre appli possède Ctrl+F8 au démarrage
         var p = new Preferences();
         var g = new GlobalShortcut(IntPtr.Zero, p.Shortcut, p.PaletteShortcut, p.PinShortcut, p.CaptureShortcut, p.WallpaperShortcut,
             p.SettingsShortcut);
@@ -317,7 +311,7 @@ public class SettingsMigrationAndShortcutsTests
               "(a) retry succeeds once the combo is free and the shortcut becomes active");
         Check(m.Apply("pin", "Ctrl+F8").Message == "Raccourci inchangé.", "(a) active shortcut with same combo is 'inchangé'");
     }
-    // (b) Normalize: Settings shortcut equal to another configured combo is moved to the first free default.
+    // (b) Normalize : un raccourci de Réglages égal à une autre combinaison configurée est déplacé vers le premier défaut libre.
     static void Collision()
     {
         var p = new Preferences();
@@ -347,7 +341,7 @@ public class SettingsMigrationAndShortcutsTests
     }
     static void Dock()
     {
-        // Source layout is not part of the contract: compare with all whitespace removed.
+        // La mise en page du source ne fait pas partie du contrat : comparer sans aucun espace blanc.
         string src = System.Text.RegularExpressions.Regex.Replace(
             File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Bridge", "QtShellBridge.Actions.Settings.cs")),
             @"\s+",

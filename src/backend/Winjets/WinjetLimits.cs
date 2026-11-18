@@ -1,4 +1,5 @@
-// language: C# 12, file: WinjetLimits.cs, target: Windows 11 / .NET 8, limites normatives du format Winjet v1 (docs/WINJETS-DESIGN.md §3 et §5)
+// language: C# 12, file: WinjetLimits.cs, target: Windows 11 / .NET 8, limites normatives du format Winjet v1 (docs/WINJETS-DESIGN.md §3 et
+// §5)
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -19,6 +20,11 @@ internal static class WinjetLimits
     internal const int MinSide = 120, MaxWidth = 1600, MaxHeight = 1000;
 
     internal const int MinRefreshSeconds = 60;
+    // Source « calendar » (ICS) : intervalle minimal et taille maximale de la réponse.
+    internal const int MinCalendarRefreshSeconds = 300;
+    internal const long MaxIcsBytes = 2L * 1024 * 1024;
+    // Texte d'un bloc « note » (valeur d'une clé d'état de type texte).
+    internal const int MaxStateTextLength = 4000;
     internal const long MaxResponseBytes = 512L * 1024;
     internal static readonly TimeSpan HttpTimeout = TimeSpan.FromSeconds(10);
 
@@ -42,7 +48,8 @@ internal static class WinjetLimits
 
     internal static readonly HashSet<string> Blocks = new(StringComparer.Ordinal)
     {
-        "text", "image", "clock", "calendar", "list", "chart", "stat", "progress", "dots", "buttons", "spacer", "divider", "visualizer", "media"
+        "text", "image", "clock", "calendar", "list", "chart", "stat", "progress", "dots", "buttons", "spacer", "divider", "visualizer",
+            "media", "note"
     };
 
     // Noms réservés de Windows (avec ou sans extension).

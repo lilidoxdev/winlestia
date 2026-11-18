@@ -30,7 +30,7 @@ public sealed partial class MainWindow
         Active.Go(F);
         await WaitLoaded();
         Activate();
-        await Task.Delay(PauseScanMs);          // palette resolves off-thread (wallpaper scan)
+        await Task.Delay(PauseScanMs);          // la palette se résout hors thread (balayage du fond d'écran)
         list.SelectedIndex = 1;
         list.Focus();
         await Task.Delay(PauseStabilisationMs);

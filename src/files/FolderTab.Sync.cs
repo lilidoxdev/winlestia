@@ -11,7 +11,7 @@ namespace WinlestiaFiles;
 
 internal sealed partial class FolderTab
 {
-    // ---- auto refresh (folder change notifications) -----------------------------------------------------------------
+    // ---- rafraîchissement auto (notifications de changement de dossier) ----
 
     bool syncRunning, syncFull, dirty;
     readonly HashSet<string> syncPaths = new(StringComparer.OrdinalIgnoreCase);
@@ -28,7 +28,7 @@ internal sealed partial class FolderTab
         {
             dirty = true;
             return;
-        }       // applied by one rescan right after the load
+        }       // appliqué par un seul rescan juste après le chargement
         if (State is LoadState.Denied or LoadState.NotFound or LoadState.Failed && !full)
             return;
         foreach (var p in paths)

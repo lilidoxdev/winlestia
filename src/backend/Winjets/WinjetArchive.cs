@@ -69,7 +69,8 @@ internal static class WinjetArchive
         {
             if (!RootFiles.Contains(parts[0], StringComparer.OrdinalIgnoreCase))
             {
-                issues.Add("", label + " : fichier non prévu à la racine (seuls manifest.json, widget.json, preview.png et assets/ sont permis).");
+                issues.Add("", label
+                    + " : fichier non prévu à la racine (seuls manifest.json, widget.json, preview.png et assets/ sont permis).");
                 return null;
             }
         }

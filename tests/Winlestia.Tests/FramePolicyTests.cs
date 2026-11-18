@@ -1,4 +1,4 @@
-// C#12 / FramePolicy: which window carries the accent border, per the AccentBorders and ActiveBorderOnly preferences (pure functions).
+// C#12 / FramePolicy : quelle fenêtre porte la bordure d'accent, selon les préférences AccentBorders et ActiveBorderOnly (fonctions pures).
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;

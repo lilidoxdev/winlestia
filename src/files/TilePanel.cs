@@ -34,7 +34,7 @@ public sealed class TilePanel : VirtualizingPanel, IScrollInfo
 
     protected override Size MeasureOverride(Size available)
     {
-        _ = InternalChildren;                                   // creates the generator
+        _ = InternalChildren;                                   // crée le générateur
         double w = double.IsInfinity(available.Width) ? CellW : available.Width;
         double h = double.IsInfinity(available.Height) ? CellH * 4 : available.Height;
         var owner = Owner;

@@ -1,4 +1,4 @@
-// Store.Read recovery: corrupt main + good .bak -> bak values; both corrupt -> defaults, .corrupt.bak kept.
+// Récupération de Store.Read : principal corrompu + bon .bak -> valeurs du bak ; les deux corrompus -> défauts, .corrupt.bak conservé.
 using System;
 using System.IO;
 using PanneauxGlass;
@@ -57,7 +57,7 @@ public class StoreRecoveryTests
             File.WriteAllText(f, "{\"PreviousTheme\":\"main\"}");
             File.WriteAllText(f + ".bak", "{\"PreviousTheme\":\"old\"}");
             Check(Store.Read<Preferences>(f).PreviousTheme == "main", "good main wins over bak");
-            // locked main (transient IO error): defaults, nothing on disk touched, no .corrupt.bak
+            // principal verrouillé (erreur d'E/S transitoire) : valeurs par défaut, rien touché sur disque, pas de .corrupt.bak
             File.Delete(f + ".corrupt.bak");
             string mainBefore = File.ReadAllText(f),
                 bakBefore = File.ReadAllText(f + ".bak");

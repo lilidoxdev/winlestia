@@ -1,4 +1,4 @@
-﻿# language: PowerShell 5.1, file: Inventory.ps1, target: Windows 11, local catalogue
+﻿# language: PowerShell 5.1, file: Inventory.ps1, target: Windows 11, catalogue local
 param([string]$OutputPath = (Join-Path $PSScriptRoot 'catalog.json'))
 $ErrorActionPreference = 'Stop'
 $catalog = New-Object 'System.Collections.Generic.List[object]'
@@ -14,7 +14,7 @@ function Add-Entry([string]$Name,[string]$Target,[string]$Section,[string]$Categ
     if(-not $Name -or -not $Target) { return }
     if(-not $Key) {
         $Key = $Target.ToLowerInvariant()
-        # Keep identifiers stable when an existing organised folder changes location.
+        # Garder des identifiants stables quand un dossier organisé existant change d'emplacement.
         foreach($folder in @('02_Logiciels_et_Outils','04_Documents_Administratifs')) {
             $currentPrefix=Join-Path $desktopRoot $folder
             if($Target.Equals($currentPrefix,[StringComparison]::OrdinalIgnoreCase) -or $Target.StartsWith($currentPrefix+'\',
@@ -84,7 +84,7 @@ function Classify-App([string]$Name,[string]$Target) {
     if($text -match '(?i)Paint|Wink') {return @('Applications','Image et graphisme')}
     return @('Applications','Autres logiciels')
 }
-# Installed Steam games: manifests, libraryfolders and real installation directories.
+# Jeux Steam installés : manifestes, libraryfolders et vrais répertoires d'installation.
 $steamRoots = New-Object 'System.Collections.Generic.List[string]'
 foreach($steamKey in @('HKCU:\Software\Valve\Steam','HKLM:\SOFTWARE\WOW6432Node\Valve\Steam')) {
     $steamInfo=Get-ItemProperty -LiteralPath $steamKey -ErrorAction SilentlyContinue
@@ -152,7 +152,7 @@ foreach($shortcutRoot in $shortcutRoots) {
                 $iconPath=$link.IconLocation -replace ',\s*-?\d+$',''
                 if(-not $iconPath -or -not (Test-Path -LiteralPath $iconPath)) {$iconPath=$resolved}
                 $identity=if($resolved){'app:'+($resolved+'|'+$arguments).ToLowerInvariant()}else{'name:'+$name.ToLowerInvariant()}
-                # Squirrel launchers can have different executable paths for the same app.
+                # Les lanceurs Squirrel peuvent avoir des chemins d'exécutable différents pour la même application.
                 if($name -match '^(Discord|Wand|Wand \(WeMod\)|Vyra( \(2\))?|Firefox|WinRAR|Ubisoft Connect|Steam|Content Manager)$') {
                     $identity='named:'+($name -replace ' \(WeMod\)| \(2\)','').ToLowerInvariant() }
                 $kind=Classify-App $name ($resolved+' '+$arguments)
@@ -168,7 +168,7 @@ foreach($shortcutRoot in $shortcutRoots) {
                 if($url -match '^steam://rungameid/(\d+)') {
                     if(-not $steamInstalled.ContainsKey($Matches[1])){continue}
                     $identity='steam:'+$Matches[1]
-                    # Prefer shortcut icon to a generic Steam icon in the manifest record.
+                    # Préférer l'icône du raccourci à une icône Steam générique dans l'enregistrement du manifeste.
                     $existing=$catalog | Where-Object {$_.Id -eq $identity} | Select-Object -First 1
                     if($existing -and (Test-Path -LiteralPath $iconPath)){$existing.IconPath=$iconPath}
                 } else {$identity='url:'+$url.ToLowerInvariant()}
@@ -178,7 +178,7 @@ foreach($shortcutRoot in $shortcutRoots) {
         } catch {$diagnostics.Add($file.Name+': '+$_.Exception.Message)}
     }
 }
-# Epic manifests cover installed games without desktop shortcuts.
+# Les manifestes Epic couvrent les jeux installés sans raccourci sur le bureau.
 $epicManifestDir='C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests'
 foreach($manifest in @(Get-ChildItem -LiteralPath $epicManifestDir -Filter '*.item' -ErrorAction SilentlyContinue)) {
     try {
@@ -193,7 +193,7 @@ foreach($manifest in @(Get-ChildItem -LiteralPath $epicManifestDir -Filter '*.it
         }
     } catch {$diagnostics.Add('Epic: '+$_.Exception.Message)}
 }
-# Packaged applications (including Codex), without duplicating Win32 shortcuts.
+# Applications empaquetées (dont Codex), sans dupliquer les raccourcis Win32.
 $epicLauncher='C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe'
 if(Test-Path -LiteralPath $epicLauncher) {
     $epicPendingDir='C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests\Pending'
@@ -256,7 +256,7 @@ try {
         Add-Entry $app.Name ('shell:AppsFolder\'+$app.AppID) $kind[0] $kind[1] $iconPath ('uwp:'+$app.AppID)
     }
 } catch {$diagnostics.Add('Applications Windows: '+$_.Exception.Message)}
-# Known portable games and Xbox content not exposed by the Start menu.
+# Jeux portables connus et contenu Xbox non exposés par le menu Démarrer.
 foreach($game in @(
     @{Name='Assetto Corsa EVO';Path='E:\asseto corsa evo\Assetto.Corsa.EVO-InsaneRamZes\AssettoCorsaEVO.exe'},
     @{Name='SnowRunner';Path='E:\Game Pass\SnowRunner - Windows10\Content\SnowRunner.exe'},

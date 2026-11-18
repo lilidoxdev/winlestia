@@ -1,4 +1,5 @@
-// C#12 / VirtualDesktops probe: reads the registry (read-only), checks the computed key sequences and Start/Stop. Never sends any key.
+// C#12 / sonde VirtualDesktops : lit le registre (lecture seule), vérifie les séquences de touches calculées et Start/Stop. N'envoie jamais
+// aucune touche.
 using System;
 using System.Linq;
 using System.Threading;

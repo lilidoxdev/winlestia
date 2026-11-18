@@ -1,4 +1,5 @@
-// C#12 / AtomicFile: crash-safe writes of durable user data (C# helper + frontend/atomicfile.py via an isolated python -I script).
+// C#12 / AtomicFile : écritures à l'épreuve des plantages de données utilisateur durables (helper C# + frontend/atomicfile.py via un script
+// python -I isolé).
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -43,7 +44,7 @@ public class AtomicFileTests
             && Encoding.Unicode.GetString(raw, 2, raw.Length - 2) == "hi";
         AtomicFile.WriteAllBytes(f, new byte[] { 1, 2, 3, 0, 255 });
         r["bytes"] = File.ReadAllBytes(f).SequenceEqual(new byte[] { 1, 2, 3, 0, 255 });
-        // failure mid-way: original untouched, tmp cleaned, exception propagates
+        // échec en cours de route : original intact, tmp nettoyé, l'exception se propage
         AtomicFile.WriteAllText(f, "GOOD");
         bool threw = false;
         try
@@ -64,7 +65,7 @@ public class AtomicFileTests
         r["failureRethrown"] = threw;
         r["failureKeepsOriginal"] = File.ReadAllText(f) == "GOOD";
         r["failureRemovesTmp"] = NoTmp();
-        // failure to swap (target is a directory): original intact elsewhere, tmp cleaned
+        // échec de la permutation (la cible est un dossier) : original intact ailleurs, tmp nettoyé
         string dirTarget = Path.Combine(dir, "adir");
         Directory.CreateDirectory(dirTarget);
         threw = false;
@@ -77,7 +78,7 @@ public class AtomicFileTests
             threw = true;
         }
         r["swapFailureThrowsAndCleans"] = threw && NoTmp() && Directory.Exists(dirTarget);
-        // backup path keeps previous content
+        // le chemin de sauvegarde conserve le contenu précédent
         string bak = f + ".bak";
         AtomicFile.WriteAllText(f, "NEW", null, bak);
         r["backupKeepsPrevious"] = File.ReadAllText(bak) == "GOOD" && File.ReadAllText(f) == "NEW";

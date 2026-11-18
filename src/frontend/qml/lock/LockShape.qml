@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import QtQuick.Effects
+import qs.services
 
 // Polygone arrondi (points normalisés, coins adoucis par une courbe quadratique), avec calque enfant découpé à la forme.
 // Prédéfinis : pentagon, slanted, gem, clamShell, circle.
@@ -118,7 +119,7 @@ Item {
             preferredRendererType: Shape.CurveRenderer
 
             ShapePath {
-                fillColor: "white"
+                fillColor: Colours.palette.m3onSurface
                 strokeColor: "transparent"
                 strokeWidth: 0
 

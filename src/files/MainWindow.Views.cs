@@ -175,7 +175,7 @@ public sealed partial class MainWindow
         }
     }
 
-    // ---- details header: resizable columns --------------------------------------------------------------------------
+    // ---- en-tête des détails : colonnes redimensionnables ----
 
     static void Bind(ColumnDefinition column, string property) =>
         System.Windows.Data.BindingOperations.SetBinding(column, ColumnDefinition.WidthProperty,

@@ -60,7 +60,6 @@ internal sealed partial class QtShellBridge : IDisposable
     bool barsVisible;
     // Un Winjet de bureau lit `media.` : la sonde SMTC tourne alors même qu'aucun panneau n'est ouvert.
     bool mediaVisible;
-    string mediaTitleLog = "";
     static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(500);
     readonly DispatcherTimer timer = new() { Interval = TickInterval };
 
@@ -391,6 +390,7 @@ internal sealed partial class QtShellBridge : IDisposable
         StopProcess(running);
         timer.Stop();
         wifi.Dispose();
+        peripheralService?.Dispose();
         bars.Dispose();
         try
         {

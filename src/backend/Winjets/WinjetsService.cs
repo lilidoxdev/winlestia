@@ -1,4 +1,5 @@
-// language: C# 12, file: WinjetsService.cs, target: Windows 11 / .NET 8, façade des Winjets : bibliothèque, instances, données et état publié
+// language: C# 12, file: WinjetsService.cs, target: Windows 11 / .NET 8, façade des Winjets : bibliothèque, instances, données et état
+// publié
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -316,7 +317,8 @@ internal sealed class WinjetsService : IDisposable
             var known = library.Packages;
             var views = instances.All
                 .Where(i => known.Any(p => p.Id == i.PackageId))
-                .Select(i => new { id = i.Id, packageId = i.PackageId, hidden = i.Hidden, opacity = i.Opacity, geometry = i.Geometry, settings = i.Settings, state = i.State })
+                .Select(i => new { id = i.Id, packageId = i.PackageId, hidden = i.Hidden, opacity = i.Opacity, geometry = i.Geometry,
+                    settings = i.Settings, state = i.State })
                 .ToArray();
             var values = data.Snapshot().ToDictionary(p => p.Key, p => p.Value.ToDictionary(q => q.Key, q => (object)new
             {

@@ -1,4 +1,4 @@
-// C#12 / SecurityHardening: bookmark URI whitelist, private autostart temp path, FileSearch escaping (pure functions).
+// C#12 / SecurityHardening : liste blanche d'URI de favoris, chemin temporaire privé d'autostart, échappement FileSearch (fonctions pures).
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,7 +35,7 @@ public class SecurityHardeningTests
             && !BookmarkUri.IsOpenable("   ", out _)
             && !BookmarkUri.IsOpenable(null, out _)
             && !BookmarkUri.IsOpenable("/relative/path", out _);
-        // L2: private temp location
+        // L2 : emplacement temporaire privé
         string local = @"C:\Users\Moi\AppData\Local";
         string a = AutostartPolicy.PrivateTaskFile(local),
             b = AutostartPolicy.PrivateTaskFile(local);

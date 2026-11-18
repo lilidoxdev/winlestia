@@ -1,5 +1,5 @@
-// C#12 / FullscreenWatcher / DESKTOP: opens real top-level windows (normal, captionless maximised, fullscreen) on the primary monitor and
-// steals focus. Never run in CI.
+// C#12 / FullscreenWatcher / DESKTOP : ouvre de vraies fenêtres de premier niveau (normale, maximisée sans légende, plein écran) sur le
+// moniteur principal et vole le focus. Jamais exécuté en CI.
 using System;
 using System.Drawing;
 using System.Linq;
@@ -23,7 +23,7 @@ public class FullscreenWatcherIntegrationTests
                 return p;
             }
         }
-    }   // WS_POPUP|WS_THICKFRAME|WS_VISIBLE, no caption
+    }   // WS_POPUP|WS_THICKFRAME|WS_VISIBLE, sans légende
     static void Focus(Form f)
     {
         keybd_event(0x12, 0, 0, UIntPtr.Zero);
@@ -48,7 +48,7 @@ public class FullscreenWatcherIntegrationTests
     public void DetectsOnlyTrueFullscreenWindows() => Sta.Run(() =>
     {
         FullscreenWatcher.IncludeOwnProcessForTest = true;
-        // the running shell frontend (production ignores it too)
+        // le frontend shell en cours d'exécution (la production l'ignore aussi)
         FullscreenWatcher.IgnoredPids = () => System.Diagnostics.Process.GetProcessesByName("pythonw").Select(p => (uint)p.Id).ToArray();
         var screen = Screen.PrimaryScreen!;
         int fired = 0;
@@ -64,11 +64,13 @@ public class FullscreenWatcherIntegrationTests
             Focus(normal);
             Assert.False(Wait(() => FullscreenWatcher.Current.Length > 0, 500),
                 "a normal window must not be counted as fullscreen, got [" + Current() + "]");
-            // Electron-like maximized frameless window: work area plus ~8 px resize-border overhang, never the whole monitor
+            // Fenêtre maximisée sans cadre façon Electron : zone de travail plus ~8 px de débord de la bordure de redimensionnement, jamais
+            // tout le moniteur
             var wa = screen.WorkingArea;
             var maxed = new Popup { StartPosition = FormStartPosition.Manual, Bounds = Rectangle.Inflate(wa, 8, 8) };
             maxed.Show();
-            // with an auto-hidden taskbar the work area is the whole monitor: only a really zoomed window is not fullscreen
+            // avec une barre des tâches masquée automatiquement, la zone de travail est tout le moniteur : seule une fenêtre vraiment
+            // zoomée n'est pas en plein écran
             maxed.WindowState = FormWindowState.Maximized;
             Focus(maxed);
             Assert.False(Wait(() => FullscreenWatcher.Current.Length > 0, 600),

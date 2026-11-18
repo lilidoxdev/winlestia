@@ -65,6 +65,8 @@ def lookup(path, ctx):
                 node = node[int(part)]
             except (ValueError, IndexError):
                 return None
+        elif isinstance(node, str) and part == 'length':
+            node = len(node)
         else:
             return None
     return node
@@ -282,7 +284,7 @@ def _unquote(text):
     return text
 
 
-ROOTS = ('settings', 'state', 'data', 'instance', 'now', 'media', 'system')
+ROOTS = ('settings', 'state', 'data', 'instance', 'now', 'media', 'system', 'weather', 'files')
 
 
 def _filter_arg(arg, ctx):

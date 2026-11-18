@@ -28,7 +28,8 @@ public class ProcessUsageSamplerTests
     [Fact]
     public void Aggregate_FirstSampleHasNoCpu()
     {
-        var usage = ProcessUsageSampler.Aggregate(new[] { new ProcessUsageSampler.Raw(1, 100, @"C:\a\x.exe", 9 * Second, 1000) }, None, 0, 4, out var next);
+        var usage = ProcessUsageSampler.Aggregate(new[] { new ProcessUsageSampler.Raw(1, 100, @"C:\a\x.exe", 9 * Second, 1000) }, None, 0,
+            4, out var next);
         Assert.Equal(0, Assert.Single(usage).Cpu);
         Assert.Equal((100L, 9 * Second), next[1]);
     }
@@ -37,7 +38,8 @@ public class ProcessUsageSamplerTests
     public void Aggregate_UsesDeltaFromPreviousSample()
     {
         var previous = new Dictionary<int, (long, long)> { [1] = (100, Second) };
-        var usage = ProcessUsageSampler.Aggregate(new[] { new ProcessUsageSampler.Raw(1, 100, @"C:\a\x.exe", 3 * Second, 1) }, previous, 1, 2, out _);
+        var usage = ProcessUsageSampler.Aggregate(new[] { new ProcessUsageSampler.Raw(1, 100, @"C:\a\x.exe", 3 * Second, 1) }, previous, 1,
+            2, out _);
         Assert.Equal(100, Assert.Single(usage).Cpu);
     }
 
@@ -45,7 +47,8 @@ public class ProcessUsageSamplerTests
     public void Aggregate_ReusedPidWithOtherStartTimeCountsAsNew()
     {
         var previous = new Dictionary<int, (long, long)> { [1] = (100, Second) };
-        var usage = ProcessUsageSampler.Aggregate(new[] { new ProcessUsageSampler.Raw(1, 999, @"C:\a\x.exe", 50 * Second, 1) }, previous, 1, 2, out var next);
+        var usage = ProcessUsageSampler.Aggregate(new[] { new ProcessUsageSampler.Raw(1, 999, @"C:\a\x.exe", 50 * Second, 1) }, previous, 1,
+            2, out var next);
         Assert.Equal(0, Assert.Single(usage).Cpu);
         Assert.Equal(999, next[1].Start);
     }
@@ -78,7 +81,8 @@ public class ProcessUsageSamplerTests
     [Fact]
     public void Ancestors_WalksParentChainAndStopsOnCycleOrReusedPid()
     {
-        var processes = new[] { (Pid: 10, Parent: 5), (Pid: 5, Parent: 3), (Pid: 3, Parent: 1), (Pid: 1, Parent: 3), (Pid: 20, Parent: 99) };
+        var processes = new[] { (Pid: 10, Parent: 5), (Pid: 5, Parent: 3), (Pid: 3, Parent: 1), (Pid: 1, Parent: 3),
+            (Pid: 20, Parent: 99) };
         var all = ProcessUsageSampler.Ancestors(new[] { 10 }, processes, _ => 0);
         Assert.Equal(new[] { 1, 3, 5 }, all.OrderBy(x => x));
         // Le parent 3 est plus récent que son enfant 5 : PID réutilisé, la remontée s'arrête avant lui.
@@ -111,7 +115,8 @@ public class ProcessUsageSamplerTests
     [InlineData(@"C:\Program Files\App\app.exe")]
     public void StopPolicy_AllowsOrdinaryPrograms(string path) => Assert.False(StopPolicy.IsDenied(path));
 
-    static void Put(byte[] buffer, int entryOffset, int field, long value) => System.BitConverter.GetBytes(value).CopyTo(buffer, entryOffset + field);
+    static void Put(byte[] buffer, int entryOffset, int field, long value) => System.BitConverter.GetBytes(value)
+        .CopyTo(buffer, entryOffset + field);
 
     [Fact]
     public void ParseEntries_ReadsFieldsAtX64Offsets()
@@ -155,7 +160,8 @@ public class ProcessUsageSamplerTests
         Assert.NotEmpty(usages);
         Output?.WriteLine($"cores={System.Environment.ProcessorCount}");
         foreach (var u in usages.OrderByDescending(u => u.MemoryBytes).Take(8))
-            Output?.WriteLine($"{System.IO.Path.GetFileName(u.Path),-28} n={u.Count,3} mem={u.MemoryBytes / 1048576.0,8:F1} MB cpu={u.Cpu,5:F1} %");
+            Output?.WriteLine(
+                $"{System.IO.Path.GetFileName(u.Path),-28} n={u.Count,3} mem={u.MemoryBytes / 1048576.0,8:F1} MB cpu={u.Cpu,5:F1} %");
     }
 
     public Xunit.Abstractions.ITestOutputHelper? Output { get; }

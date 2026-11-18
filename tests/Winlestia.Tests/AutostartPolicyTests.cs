@@ -1,4 +1,4 @@
-// C#12 / AutostartPolicy: Run to logon-task migration rule and task XML content.
+// C#12 / AutostartPolicy : règle de migration de Run vers la tâche de connexion et contenu du XML de tâche.
 using System;
 using System.Collections.Generic;
 using PanneauxGlass;

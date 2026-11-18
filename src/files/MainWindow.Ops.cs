@@ -1,4 +1,4 @@
-// Step 4a: open, clipboard (CF_HDROP + Preferred DropEffect), rename (inline), delete, new folder, select all.
+// Étape 4a : ouvrir, presse-papiers (CF_HDROP + Preferred DropEffect), renommer (en place), supprimer, nouveau dossier, tout sélectionner.
 // Toute partie qui touche au disque s'exécute dans FileOps sur un thread STA dédié ; la liste est corrigée sur place à partir des
 // résultats RÉUSSIS.
 using System;

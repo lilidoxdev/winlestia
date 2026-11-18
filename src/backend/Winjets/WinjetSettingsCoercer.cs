@@ -13,7 +13,8 @@ internal static class WinjetSettingsCoercer
     internal static object? Plain(object? value)
     {
         if (value is not JsonElement e)
-            return value is bool or double or string ? value : value is int or long or float ? Convert.ToDouble(value, CultureInfo.InvariantCulture) : null;
+            return value is bool or double or string ? value : value is int or long or float
+                ? Convert.ToDouble(value, CultureInfo.InvariantCulture) : null;
         return e.ValueKind switch
         {
             JsonValueKind.True => true,
@@ -39,7 +40,8 @@ internal static class WinjetSettingsCoercer
                 return v is string t && (t == "true" || t == "false") ? t == "true" : fallback;
             case "number":
                 {
-                    double? n = v is double d ? d : v is string s && double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out double p) ? p : null;
+                    double? n = v is double d ? d : v is string s
+                        && double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out double p) ? p : null;
                     return n is { } x && double.IsFinite(x) ? Math.Clamp(x, setting.Min, setting.Max) : fallback;
                 }
             case "text":
@@ -61,13 +63,16 @@ internal static class WinjetSettingsCoercer
     }
 
     // Réglages d'entrée (objet JSON) -> dictionnaire complet : clés inconnues écartées, valeurs invalides = valeur actuelle.
-    internal static Dictionary<string, object?> Settings(WinjetDefinition def, JsonElement input, IReadOnlyDictionary<string, object?>? current)
+    internal static Dictionary<string, object?> Settings(WinjetDefinition def, JsonElement input, IReadOnlyDictionary<string,
+        object?>? current)
     {
         var result = new Dictionary<string, object?>(StringComparer.Ordinal);
         foreach (var s in def.Settings)
         {
-            object fallback = current != null && current.TryGetValue(s.Id, out var cur) && cur != null ? Coerce(s, cur, s.Default) : s.Default;
-            result[s.Id] = input.ValueKind == JsonValueKind.Object && input.TryGetProperty(s.Id, out var raw) ? Coerce(s, raw, fallback) : fallback;
+            object fallback = current != null && current.TryGetValue(s.Id, out var cur) && cur != null ? Coerce(s, cur, s.Default)
+                : s.Default;
+            result[s.Id] = input.ValueKind == JsonValueKind.Object && input.TryGetProperty(s.Id, out var raw) ? Coerce(s, raw, fallback)
+                : fallback;
         }
         return result;
     }
@@ -98,7 +103,8 @@ internal static class WinjetSettingsCoercer
         {
             bool => v as bool?,
             double => v as double?,
-            string => v is string s && s.Length <= 100 && !s.Any(char.IsControl) ? s : null,
+            string => v is string s && s.Length <= WinjetLimits.MaxStateTextLength
+                && !s.Any(c => char.IsControl(c) && c is not ('\n' or '\r' or '\t')) ? s : null,
             _ => null
         };
     }

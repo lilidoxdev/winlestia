@@ -1,5 +1,5 @@
-// C#12 / WifiPolicy: security classification, SSID grouping and sorting, profile XML (escaping, hex SSID, types), password validation,
-// error mapping.
+// C#12 / WifiPolicy : classification de sécurité, regroupement et tri des SSID, XML de profil (échappement, SSID hexadécimal, types),
+// validation du mot de passe, correspondance des erreurs.
 using System;
 using System.Collections.Generic;
 using System.Linq;

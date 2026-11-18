@@ -108,18 +108,18 @@ internal static class ShortcutCombo
     internal static bool IsWindowsReserved(uint modifiers, uint key)
     {
         if ((modifiers & 8) == 0)
-            return modifiers == 1 && key is 0x73 or 0x20;   // Alt+F4, Alt+Space (system menu)
+            return modifiers == 1 && key is 0x73 or 0x20;   // Alt+F4, Alt+Espace (menu système)
         uint rest = modifiers & ~8u;
         bool arrow = key is >= 0x25 and <= 0x28;
         return rest switch
         {
-            // Win + anything: Start, Search, Explorer, Run, Settings, snap, widgets, digits…
+            // Win + n'importe quoi : Démarrer, Recherche, Explorateur, Exécuter, Paramètres, ancrage, widgets, chiffres…
             0 => true,
-            // Win+Ctrl: virtual desktops, narrator, new desktop, close desktop
+            // Win+Ctrl : bureaux virtuels, narrateur, nouveau bureau, fermer le bureau
             2 => arrow || key is 0x44 or 0x73 or 0x0D,
-            // Win+Shift: screenshot, restore, move window
+            // Win+Maj : capture d'écran, restauration, déplacement de fenêtre
             4 => key is 0x53 or 0x4D || arrow,
-            // Win+Alt: record, Game Bar, HDR, cast, agenda, screenshot, media
+            // Win+Alt : enregistrement, Game Bar, HDR, diffusion, agenda, capture d'écran, média
             1 => key is 0x52 or 0x47 or 0x42 or 0x4B or 0x44 or 0x2C or 0x0D,
             _ => false
         };

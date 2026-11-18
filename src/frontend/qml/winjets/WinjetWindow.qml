@@ -23,7 +23,7 @@ Window {
 
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus | Qt.NoDropShadowWindowHint
     color: "transparent"
-    visible: !!inst && inst.valid === true && inst.hidden !== true && (inst.originalActive !== true || editing)
+    visible: !!inst && inst.valid === true && inst.hidden !== true
     transientParent: null
     title: inst && inst.packageName ? inst.packageName : "Winjet"
 
@@ -48,7 +48,7 @@ Window {
 
     function shape(): void {
         if (visible && !gesture)
-            Bridge.winjets.desktopLayer.shape(win, WinjetTheme.radius, glassOn, glassAmount);
+            Bridge.winjets.desktopLayer.shape(win, WinjetTheme.radiusFor(width, height), glassOn, glassAmount);
     }
 
     // Sortie du mode édition en plein geste (Échap, Terminé, clic sur la grille) : la poignée est détruite sans `released`.

@@ -1,12 +1,12 @@
-// C# 12: which bookmark addresses may be handed to the browser. Pure function, covered by tests/SecurityHardening.
+// C# 12 : quelles adresses de favoris peuvent être confiées au navigateur. Fonction pure, couverte par tests/SecurityHardening.
 using System;
 
 namespace PanneauxGlass;
 
 internal static class BookmarkUri
 {
-    // Only absolute http/https. file: (a UNC host in file://server/share makes Windows authenticate to that server), javascript:, data:,
-    // ms-settings: and the like are refused.
+    // Seuls les http/https absolus sont acceptés. file: (un hôte UNC dans file://server/share fait s'authentifier Windows auprès de ce
+    // serveur), javascript:, data:, ms-settings: et similaires sont refusés.
     internal static bool IsOpenable(string? url, out Uri uri)
     {
         uri = null!;

@@ -46,7 +46,7 @@ public partial class App : Application
                 {
                     Shutdown(0);
                     return;
-                }     // another instance already owns the pipe
+                }     // une autre instance possède déjà le pipe
                 hidden.Preload();
                 Perf.Mark("preloaded (hidden)");
                 ArmHealthyStart();
@@ -74,7 +74,7 @@ public partial class App : Application
         {
             CrashLog(ex);
             if (Winlestia.Shared.FilesHandlerGuard.CountsAsCrash(ex))
-                RecordStartupCrash();      // access denied / missing path: explorer fallback below, not a crash
+                RecordStartupCrash();      // accès refusé / chemin manquant : repli explorer ci-dessous, pas un crash
             try
             {
                 PathRouter.FallbackToExplorer(arg, background);   // --background / sans chemin : journal et sortie, jamais d'Explorateur
@@ -138,7 +138,7 @@ public partial class App : Application
             {
                 PaletteLoader.Refresh(Dispatcher, () => (MainWindow as MainWindow)?.RepaintChrome());
                 return;
-            }   // backend: palette / wallpaper / light-dark changed
+            }   // backend : palette / fond d'écran / clair-sombre modifié
             if (r.Cmd == "ping" || r.Args.Any(a => a.Equals("--background", StringComparison.OrdinalIgnoreCase)))
                 return;
             Perf.Log("pipe request received");
@@ -180,7 +180,7 @@ public partial class App : Application
         lock (gate)
         {
             if (pending.Exists(p => string.Equals(p, arg, StringComparison.OrdinalIgnoreCase)))
-                return;      // same path already waiting: coalesced
+                return;      // même chemin déjà en attente : fusionné
             if (pending.Count >= MaxPending)
             {
                 dropped++;

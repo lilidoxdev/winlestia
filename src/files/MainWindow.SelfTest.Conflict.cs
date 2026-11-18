@@ -274,7 +274,7 @@ internal static class Uia
                 }
                 break;
             }
-            Task.Delay(MainWindow.PauseTransitionMs).Wait();     // let the dialog switch page
+            Task.Delay(MainWindow.PauseTransitionMs).Wait();     // laisser le dialogue changer de page
         }
         return log;
     });
@@ -380,7 +380,7 @@ public sealed partial class MainWindow
             Check("(2) skip: destination still OLD", Read(Path.Combine(dst, "a.txt")) == "OLD", Read(Path.Combine(dst, "a.txt")));
             Check("(2) skip: list matches disk", DiskMatches());
 
-            // ---- pass 3: let me decide, keep both ----
+            // ---- passe 3 : me laisser décider, garder les deux ----
             Reset(1);
             var (r3, l3) = await Paste(1, new UiaStep("decide", decide), new UiaStep("keep both", Array.Empty<string>(), CheckAll: true,
                 WaitMs: 15000), new UiaStep("continue", new[] { "Continuer", "Continue" }, Closes: true));

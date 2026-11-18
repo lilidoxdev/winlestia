@@ -145,7 +145,7 @@ internal static class Theme
             RadiusScale=.22,ReflectionGain=.15,HaloGain=.45,Signature="poster",Kind=SurfaceKind.Poster,
             Heading="display",Tiles="cards",BorderWeight=3
         },
-        // Brume : soft daylight. Pale stone, dark ink, generous curves, no glass blur.
+        // Brume : lumière du jour douce. Pierre pâle, encre sombre, courbes généreuses, sans flou de verre.
         new(){
             Id="brume",Name="Brume",Description="Pierre claire, ombres douces, courbes généreuses. Une matière mate, lumineuse.",
             Surface=C(223,229,236),HaloA=C(255,255,255),HaloB=C(169,184,201),RimA=C(255,255,255),RimB=C(180,192,206),
@@ -211,7 +211,7 @@ internal static class Theme
     // personnalisée. Tout autre identifiant (amethyste, calque, retro...) est un thème hérité et ne s'applique que si l'utilisateur le
     // choisit.
     static bool IsShellFamily(string id) => id is "shell" or "shell-dark" or "nuit" or "custom";
-    // Same decision tree as QtShellBridge settings.themeMode: auto > custom > light (shell) > dark.
+    // Même arbre de décision que QtShellBridge settings.themeMode : auto > custom > light (shell) > dark.
     static ThemeDefinition Unify(ThemeDefinition legacy, bool custom)
     {
         M3Palette palette;

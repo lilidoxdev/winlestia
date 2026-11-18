@@ -52,10 +52,12 @@ internal sealed partial class QtShellBridge
         + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) && !SamePath(path, Environment.ProcessPath ?? "")
         && !StopPolicy.IsDenied(path);
     // Processus propres au shell (backend, frontend et leurs descendants) : jamais comptés ni arrêtés.
-    int[] ShellRoots() => new[] { Environment.ProcessId, System.Threading.Volatile.Read(ref frontend)?.Id ?? 0, (int)System.Threading.Volatile.Read(ref frontendWindowPid) };
+    int[] ShellRoots() => new[] { Environment.ProcessId, System.Threading.Volatile.Read(ref frontend)?.Id
+        ?? 0, (int)System.Threading.Volatile.Read(ref frontendWindowPid) };
     // Dernières mesures par exécutable ; renouvelées seulement par runningRefresh (la fenêtre « Applications » ouverte).
     Dictionary<string, ProcessUsageSampler.Usage> usageByPath = new(StringComparer.OrdinalIgnoreCase);
-    readonly ProcessUsageSampler sampler = new(); readonly Dictionary<string, string> backgroundNames = new(StringComparer.OrdinalIgnoreCase);
+    readonly ProcessUsageSampler sampler = new(); readonly Dictionary<string, string> backgroundNames =
+        new(StringComparer.OrdinalIgnoreCase);
     (double Cpu, int Memory, int Count) UsageOf(string path) => usageByPath.TryGetValue(path, out var u)
         ? (Math.Round(u.Cpu, 1), (int)Math.Round(u.MemoryBytes / 1048576.0), u.Count) : (0, 0, 0);
     void RefreshDockApps()
@@ -338,6 +340,8 @@ internal sealed partial class QtShellBridge
     }
     Entry PersistDockEntry(Entry entry)
     {
+        // Applis Store : on épingle l'AUMID (shell:AppsFolder\...), pas le dossier versionné qui disparaît à la mise à jour.
+        entry = PackagedApps.Canonical(entry, Store.Entries) ?? entry;
         var saved = Store.State.Custom.FirstOrDefault(e => e.Id.StartsWith("dock:") && SamePath(e.Target, entry.Target));
         if (saved != null)
             return saved;
@@ -449,7 +453,8 @@ internal sealed partial class QtShellBridge
                     {
                         Safe.Try(() =>
                         {
-                            if (!shellPids.Contains(p.Id) && p.SessionId == session && SamePath(TaskbarNative.ProcessImagePath((uint)p.Id), path))
+                            if (!shellPids.Contains(p.Id) && p.SessionId == session
+                                && SamePath(TaskbarNative.ProcessImagePath((uint)p.Id), path))
                                 p.Kill();
 
                         });

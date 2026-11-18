@@ -148,7 +148,7 @@ internal sealed class M3Palette
         return .2126 * L(c.R) + .7152 * L(c.G) + .0722 * L(c.B);
     }
     static Color OnColor(Color c) => Lum(c) < .179 ? Colors.White : H("#101518");
-    // chromatic_palette.py::generate_palette: hue-weighted wallpaper source, HSV surfaces, always dark.
+    // chromatic_palette.py::generate_palette : source de fond d'écran pondérée par la teinte, surfaces HSV, toujours sombre.
     internal static M3Palette FromWallpaper(string path, string background)
     {
         double chromatic = 0;
@@ -269,7 +269,7 @@ internal sealed class M3Palette
         double x = Lum(a) * 100 + 5, y = Lum(b) * 100 + 5;
         return Math.Max(x, y) / Math.Min(x, y);
     }
-    // colorsys equivalents
+    // équivalents de colorsys
     static void Hsv(double r, double g, double b, out double h, out double s, out double v)
     {
         double max = Math.Max(r, Math.Max(g, b)), min = Math.Min(r, Math.Min(g, b));
@@ -318,10 +318,10 @@ internal enum M3Role
 // Jetons de conception partagés avec AppearanceConfig.qml (arrondis, espacements, marges, typographie, mouvement).
 internal static class M3
 {
-    internal const double Small = 12, Normal = 17, Large = 25;                   // rounding
-    internal const double Sp1 = 7, Sp2 = 10, Sp3 = 12, Sp4 = 15, Sp5 = 20;             // spacing
-    internal const double Pad1 = 5, Pad2 = 7, Pad3 = 10, Pad4 = 12, Pad5 = 15;         // padding
-    internal static double Pt(double points) => points * 96.0 / 72.0;          // QML pt -> WPF device-independent px
+    internal const double Small = 12, Normal = 17, Large = 25;                   // arrondi
+    internal const double Sp1 = 7, Sp2 = 10, Sp3 = 12, Sp4 = 15, Sp5 = 20;             // espacement
+    internal const double Pad1 = 5, Pad2 = 7, Pad3 = 10, Pad4 = 12, Pad5 = 15;         // remplissage
+    internal static double Pt(double points) => points * 96.0 / 72.0;          // pt QML -> px WPF indépendants de l'appareil
     internal static readonly double FontSmall = Pt(11), FontBody = Pt(12), FontLabel = Pt(13), FontTitle = Pt(15), FontHeadline = Pt(18),
         FontDisplay = Pt(28);
     internal const int AnimFast = 200, AnimSlow = 400;

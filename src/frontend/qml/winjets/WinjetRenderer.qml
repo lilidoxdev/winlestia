@@ -46,6 +46,17 @@ Item {
     // Un bloc `media` lit Players.active de lui-même : la détection couvre donc la source d'expression et le bloc.
     readonly property bool usesMedia: layoutsText.indexOf("media.") >= 0 || layoutsText.indexOf('"type":"media"') >= 0
     readonly property bool usesSystem: layoutsText.indexOf("system.") >= 0
+    // Sources à abonnement (disques 30 s, météo 15 min, fichiers récents) : lues seulement par une carte visible qui les cite.
+    readonly property bool usesDisk: layoutsText.indexOf("system.disk") >= 0
+    readonly property bool usesCpuHistory: layoutsText.indexOf("system.cpuHistory") >= 0
+    readonly property bool usesWeather: layoutsText.indexOf("weather.") >= 0
+    // `files.*` et l'action `open` : paquets intégrés (id « winlestia.* ») seulement.
+    readonly property bool usesFiles: packageId.indexOf("winlestia.") === 0 && layoutsText.indexOf("files.") >= 0
+    readonly property string weatherCity: {
+        const city = inst?.settings?.city;
+        return String(city !== undefined && city !== null ? city : "").trim();
+    }
+    readonly property var feeds: Bridge.winjets.feeds
     readonly property var player: Players.active
     readonly property var mediaCtx: {
         const p = usesMedia ? player : null;
@@ -72,8 +83,69 @@ Item {
             ram: Math.round(SystemUsage.memPerc * 100),
             uptime: SysInfo.uptime,
             battery: isFinite(level) && level >= 0 ? level : null,
-            charging: perf.batteryCharging === true
+            charging: perf.batteryCharging === true,
+            disk: usesDisk ? feeds.disk : [],
+            diskMain: usesDisk ? feeds.diskMain : {},
+            cpuHistory: usesCpuHistory ? cpuHistory : []
         };
+    }
+    readonly property var weatherCtx: usesWeather ? (feeds.revision >= 0 ? feeds.weatherFor(weatherCity) : {}) : {}
+    readonly property var filesCtx: usesFiles ? {
+        recent: feeds.filesRecent,
+        folders: feeds.filesFolders
+    } : {}
+
+    // 40 derniers échantillons CPU, accumulés seulement tant qu'une carte visible lit `system.cpuHistory`.
+    property var cpuHistory: []
+    function sampleCpu(): void {
+        const next = cpuHistory.slice(-39);
+        next.push(Math.round(SystemUsage.cpuPerc * 100));
+        cpuHistory = next;
+    }
+    Connections {
+        target: SystemUsage
+        enabled: renderer.usesCpuHistory && renderer.live
+
+        function onCpuPercChanged(): void {
+            renderer.sampleCpu();
+        }
+    }
+
+    // Abonnements aux sources : une clé change quand une carte devient visible/masquée ou que la ville de l'instance change.
+    property var heldFeeds: ({
+            disk: false,
+            files: false,
+            cpu: false,
+            weather: null
+        })
+    readonly property string feedKey: [
+        usesDisk && live,
+        usesFiles && live,
+        usesCpuHistory && live,
+        usesWeather && live ? "w:" + weatherCity : ""
+    ].join("|")
+    onFeedKeyChanged: syncFeeds()
+    function syncFeeds(): void {
+        const want = {
+            disk: usesDisk && live,
+            files: usesFiles && live,
+            cpu: usesCpuHistory && live,
+            weather: usesWeather && live ? weatherCity : null
+        };
+        const have = heldFeeds;
+        if (want.disk !== have.disk)
+            want.disk ? feeds.hold("disk", "") : feeds.release("disk", "");
+        if (want.files !== have.files)
+            want.files ? feeds.hold("files", "") : feeds.release("files", "");
+        if (want.cpu && !have.cpu)
+            sampleCpu();
+        if (want.weather !== have.weather) {
+            if (have.weather !== null)
+                feeds.release("weather", have.weather);
+            if (want.weather !== null)
+                feeds.hold("weather", want.weather);
+        }
+        heldFeeds = want;
     }
     // SystemUsage n'échantillonne que s'il a des abonnés : un seul, et seulement tant que le widget le lit et est visible.
     readonly property bool holdsUsage: usesSystem && live
@@ -100,8 +172,15 @@ Item {
     Component.onCompleted: {
         syncUsage();
         syncMedia();
+        syncFeeds();
     }
     Component.onDestruction: {
+        if (heldFeeds.disk)
+            feeds.release("disk", "");
+        if (heldFeeds.files)
+            feeds.release("files", "");
+        if (heldFeeds.weather !== null)
+            feeds.release("weather", heldFeeds.weather);
         if (usageHeld)
             SystemUsage.refCount--;
         if (mediaHeld)
@@ -138,14 +217,16 @@ Item {
             },
             now: nowDate,
             media: mediaCtx,
-            system: systemCtx
+            system: systemCtx,
+            weather: weatherCtx,
+            files: filesCtx
         })
 
     // Appelée par les blocs ; jamais de code du paquet, seulement ces actions fermées.
     function runAction(action): void {
         if (!action || editing || !inst.id)
             return;
-        switch (action.type) {
+        switch (action.type ?? action.action) {
         case "setState":
             setState(String(action.key ?? ""), action.value);
             break;
@@ -154,6 +235,12 @@ Item {
             break;
         case "openUrl":
             Bridge.winjets.openUrl(inst.packageId, String(action.url ?? ""));
+            break;
+        case "open":
+            feeds.openPathFor(inst.packageId, String(action.path ?? ""));
+            break;
+        case "openDrive":
+            feeds.openDrive(String(action.drive ?? ""));
             break;
         case "openSettings":
             Bridge.winjets.requestSettings(inst.id);

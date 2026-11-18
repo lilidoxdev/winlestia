@@ -66,7 +66,12 @@ ColumnLayout {
         stepSize: 1
         commitOnRelease: true
         value: form.transparencyShown
-        valueText: form.opacitySet || form.draft !== null || slider.pressed ? Math.round(slider.value) + " %" : qsTr("Par défaut") + " (" + Math.round(slider.value) + " %)"
+        valueText: {
+            const pct = Math.round(slider.value) + " %";
+            if (form.opacitySet || form.draft !== null || slider.pressed)
+                return pct;
+            return qsTr("Par défaut") + " (" + pct + ")";
+        }
         slider.objectName: "winjetOpacity"
         onPreviewed: v => form.draft = Math.round(v)
         onMoved: v => form.commitOpacity(v)

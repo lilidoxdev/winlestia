@@ -23,7 +23,7 @@ internal sealed partial class DockPreviewForm : Form
             {
                 DwmThumb.Unregister(ref tile.Thumb);
                 continue;
-            }        // minimized windows give empty thumbnails -> title + icon tile
+            }        // les fenêtres réduites donnent des vignettes vides -> tuile titre + icône
             if (tile.Thumb == IntPtr.Zero && !DwmThumb.Register(Handle, window, out tile.Thumb, out tile.Source))
                 continue;
             double fit = Math.Min(Math.Min((double)tile.Area.Width / tile.Source.Width, (double)tile.Area.Height / tile.Source.Height), 1);
@@ -150,7 +150,7 @@ internal sealed partial class DockPreviewForm : Form
             using (var well = new SolidBrush(p.Surface))
                 g.FillPath(well, path);
             if (tile.Thumb == IntPtr.Zero)
-            {   // fallback tile: large icon + wrapped title
+            {   // tuile de repli : grande icône + titre sur plusieurs lignes
                 int big = PixelsOf(32);
                 g.DrawImage(icon, new Rectangle(tile.Area.X + (tile.Area.Width - big) / 2, tile.Area.Y + PixelsOf(18), big, big));
                 TextRenderer.DrawText(g, tile.Title, small, new Rectangle(tile.Area.X + inset, tile.Area.Y + PixelsOf(58),

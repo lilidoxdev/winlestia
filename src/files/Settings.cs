@@ -238,7 +238,7 @@ internal static class FilesSettings
         Save();
     }
 
-    // ---- view (list / details / medium / large) -------------------------------------------------------------------
+    // ---- vue (liste / détails / moyen / grand) ----
 
     internal static string InitialView() => Data.View is { Length: > 0 } v ? v : "details";
     internal static void SaveView(string view)

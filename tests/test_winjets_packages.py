@@ -32,7 +32,8 @@ FILTERS_WITH_ARG = {'number', 'currency', 'percent', 'date', 'default'}
 FILTERS_NO_ARG = FILTERS - FILTERS_WITH_ARG
 WINDOWS_RESERVED = re.compile(r'^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$', re.IGNORECASE)
 EXPR = re.compile(r'\{\{(.*?)\}\}', re.DOTALL)
-PATH_ROOT = re.compile(r'^(settings|state)\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+)*$|^data\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+|\[[^\[\]]+\])+$'
+PATH_ROOT = re.compile(r'^(settings|state)\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+)*$'
+                       r'|^data\.([A-Za-z][A-Za-z0-9]*)(\.[A-Za-z0-9_]+|\[[^\[\]]+\])+$'
                        r'|^now$|^instance\.(width|height)$|^media\.[a-zA-Z]+$|^system\.[a-zA-Z]+$|^time\.[a-zA-Z]+$')
 COND_TOKEN = re.compile(r"\s*(?:(?P<str>'[^']*')|(?P<num>-?\d+(?:\.\d+)?)|(?P<lit>true|false|null)\b"
                         r"|(?P<path>(?:settings|state|data|instance|media|system|time)(?:\.[A-Za-z0-9_]+|\[[^\[\]]+\])+|now)"

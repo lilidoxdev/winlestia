@@ -38,7 +38,8 @@ internal static class LrclibProvider
         try
         {
             bool known = duration > 0 && double.IsFinite(duration) && duration < 3600 * 4;
-            string get = "https://lrclib.net/api/get?track_name=" + Uri.EscapeDataString(title) + "&artist_name=" + Uri.EscapeDataString(artist)
+            string get = "https://lrclib.net/api/get?track_name=" + Uri.EscapeDataString(title) + "&artist_name="
+                + Uri.EscapeDataString(artist)
                          + (string.IsNullOrWhiteSpace(album) ? "" : "&album_name=" + Uri.EscapeDataString(album))
                          + (known ? "&duration=" + Math.Round(duration).ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
             var (status, body) = await Read(get, cancel);
@@ -97,7 +98,8 @@ internal static class LrclibProvider
         if (e.ValueKind != JsonValueKind.Object)
             return null;
         string? Text(string name) => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
-        double d = e.TryGetProperty("duration", out var dv) && dv.ValueKind == JsonValueKind.Number && dv.TryGetDouble(out double n) ? n : 0;
+        double d = e.TryGetProperty("duration", out var dv) && dv.ValueKind == JsonValueKind.Number && dv.TryGetDouble(out double n) ? n
+            : 0;
         bool instrumental = e.TryGetProperty("instrumental", out var iv) && iv.ValueKind == JsonValueKind.True;
         return new LyricCandidate(Text("syncedLyrics"), Text("plainLyrics"), instrumental, d);
     }

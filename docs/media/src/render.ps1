@@ -1,9 +1,9 @@
-# Winlestia - renders the HTML/CSS illustrations (motion-design stills, not screen captures).
-#   stills  -> docs/illustrations/*.webp (2000 px wide, quality 90)
-#   banner  -> docs/media/banner.webp   (2000 px wide)
-# Edge headless at 4x device scale (5120x3200), then bicubic downscale with System.Drawing.
+﻿# Winlestia - rend les illustrations HTML/CSS (images fixes de motion design, pas des captures d'écran).
+#   stills  -> docs/illustrations/*.webp (2000 px de large, qualité 90)
+#   banner  -> docs/media/banner.webp   (2000 px de large)
+# Edge headless à l'échelle d'appareil 4x (5120x3200), puis réduction bicubique avec System.Drawing.
 # Usage: powershell -ExecutionPolicy Bypass -File render.ps1 [-Only dashboard,media,banner]
-#   -Shots : renders only the aurora-palette variants used by the videos into video/shots/ (generated, not committed)
+#   -Shots : rend uniquement les variantes de palette aurore utilisées par les vidéos dans video/shots/ (générées, non commitées)
 param([string[]]$Only = @(), [switch]$Shots)
 $ErrorActionPreference = 'Stop'
 $Only = @($Only | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
@@ -19,7 +19,7 @@ $utf8  = New-Object System.Text.UTF8Encoding($false)
 $tmp   = Join-Path ([IO.Path]::GetTempPath()) 'winlestia-render'
 New-Item -ItemType Directory -Force -Path $tmp, $out | Out-Null
 
-# name, fragments (joined), palette override, wallpaper, window title
+# nom, fragments (joints), surcharge de palette, fond d'écran, titre de fenêtre
 $scenes = @(
   @{ n='desktop';      frag=@('desktop');     amb='';                wp='wallpaper-aurora.svg'; title='Desktop' },
   @{ n='dashboard';    page='dashboard.html' },
@@ -52,7 +52,7 @@ foreach ($s in $scenes) {
   $k = if ($s.scale) { $s.scale } else { 4 }
   $dest = if ($s.dest) { $s.dest } else { $out }
   if ($Shots) { $dest = Join-Path $src 'video\shots'; New-Item -ItemType Directory -Force -Path $dest | Out-Null }
-  if ($s.frag) {   # compose page = template + fragments
+  if ($s.frag) {   # composition de la page = modèle + fragments
     $body = ($s.frag | ForEach-Object { [IO.File]::ReadAllText((Join-Path $src "fragments\$_.html"), $utf8) }) -join "`n"
     $amb  = if ($s.amb) { "<link rel=`"stylesheet`" href=`"$($s.amb)`">" } else { '' }
     $html = $template.Replace('{{TITLE}}', $s.title).Replace('{{AMBIANCE}}', $amb).Replace('{{WALLPAPER}}', $s.wp).Replace('{{ICONS}}',

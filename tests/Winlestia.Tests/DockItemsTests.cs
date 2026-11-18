@@ -74,7 +74,8 @@ public class DockItemsTests
     {
         var all = new[] { "wifi", "bluetooth", "cellular" };
         Assert.Equal(new[] { "wifi", "bluetooth" }, DockItems.RadiosToRestore(null, all, r => r, r => r != "cellular"));
-        Assert.Equal(new[] { "wifi", "bluetooth" }, DockItems.RadiosToRestore(System.Array.Empty<string>(), all, r => r, r => r != "cellular"));
+        Assert.Equal(new[] { "wifi", "bluetooth" }, DockItems.RadiosToRestore(System.Array.Empty<string>(), all, r => r, r => r
+            != "cellular"));
         Assert.Equal(new[] { "wifi", "bluetooth" }, DockItems.RadiosToRestore(new[] { "gone" }, all, r => r, r => r != "cellular"));
     }
 }

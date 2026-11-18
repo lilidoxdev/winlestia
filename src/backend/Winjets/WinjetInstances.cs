@@ -1,4 +1,5 @@
-// language: C# 12, file: WinjetInstances.cs, target: Windows 11 / .NET 8, instances posées, persistées dans <données>\winjets\instances.json
+// language: C# 12, file: WinjetInstances.cs, target: Windows 11 / .NET 8, instances posées, persistées dans
+// <données>\winjets\instances.json
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,7 +61,8 @@ internal sealed class WinjetInstances
             {
                 File.Copy(path, path + ".corrupt.bak", true);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Store.Log("instances.json.corrupt.bak : " + ex.Message); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
+                Store.Log("instances.json.corrupt.bak : " + ex.Message); }
             file = File.Exists(path + ".bak") ? TryRead(path + ".bak") : null;
             if (file != null)
             {
@@ -69,7 +71,8 @@ internal sealed class WinjetInstances
                 {
                     File.Copy(path + ".bak", path, true);
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Store.Log("instances.json : " + ex.Message); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Store.Log("instances.json : " + ex.Message);
+                    }
             }
         }
         items = Sanitize(file?.Instances ?? new List<WinjetInstance>());
@@ -124,7 +127,8 @@ internal sealed class WinjetInstances
                 text = JsonSerializer.Serialize(new WinjetInstancesFile { Version = FileVersion, Instances = items }, Json);
             AtomicFile.WriteAllText(path, text, Encoding.UTF8, path + ".bak");
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Store.Log("instances.json : enregistrement : " + ex.Message); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
+            Store.Log("instances.json : enregistrement : " + ex.Message); }
         Changed?.Invoke();
     }
 

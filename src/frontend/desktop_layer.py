@@ -17,7 +17,7 @@ import ctypes
 import ctypes.wintypes as wt
 import sys
 
-from PySide6.QtCore import QAbstractNativeEventFilter, QCoreApplication, QObject, QRectF, QTimer, Signal, Slot
+from PySide6.QtCore import QAbstractNativeEventFilter, QCoreApplication, QObject, QRectF, Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QPainterPath
 
 GWL_EXSTYLE = -20
@@ -79,6 +79,11 @@ def forced_insert_after(mode, insert_after, flags):
     if insert_after == HWND_BOTTOM:
         return None
     return HWND_BOTTOM, flags
+
+
+def exstyle_for_focus(style, accept):
+    """Style étendu d'une carte : NOACTIVATE retiré le temps d'une saisie (`accept`), remis sinon. Pure."""
+    return style & ~WS_EX_NOACTIVATE if accept else style | WS_EX_NOACTIVATE
 
 
 def desktop_shown(windows):
@@ -298,7 +303,8 @@ class DesktopLayer(QObject):
                 windows = self._top_windows()
                 for hwnd in self.handles:
                     rect = wt.RECT()
-                    if self.user.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(rect)) and self.mode == 'bottom'                             and is_covered((rect.left, rect.top, rect.right, rect.bottom), windows):
+                    if (self.user.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(rect)) and self.mode == 'bottom'
+                        and is_covered((rect.left, rect.top, rect.right, rect.bottom), windows)):
                         covered.add(hwnd)
         except Exception:
             return
@@ -407,6 +413,37 @@ class DesktopLayer(QObject):
         self._register_session()
         self._style(hwnd)
         self._stack(hwnd)
+
+    @Slot(QObject, bool, result=bool)
+    def acceptFocus(self, window, accept):
+        """Saisie au clavier dans une carte (bloc `note`) : l'active le temps de la saisie, puis la rend non activable.
+
+        Pas de minuteur ni de hook : appelé par le QML au clic dans le champ (accept=True) et à la perte du focus ou de
+        l'activation (accept=False). La pile reste au fond : keep_bottom réécrit tout WM_WINDOWPOSCHANGING d'une activation
+        en HWND_BOTTOM tant que le mode est « bottom » ; à la fin on reposte quand même la carte au fond, par sécurité.
+        """
+        if window is None:
+            return False
+        window.setFlag(Qt.WindowDoesNotAcceptFocus, not accept)  # côté Qt (MA_NOACTIVATE, focus fenêtre)
+        if not self.native:
+            return True
+        hwnd = int(window.property('winjetHandle') or 0)
+        if not hwnd:
+            return True
+        style = self.user.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
+        wanted = exstyle_for_focus(style, accept)
+        if wanted != style:
+            self.user.SetWindowLongPtrW(hwnd, GWL_EXSTYLE, wanted)
+            self.user.SetWindowPos(hwnd, None, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED)
+        if accept:
+            if not self.user.SetForegroundWindow(ctypes.c_void_p(hwnd)):  # autorisé : le processus vient de recevoir un clic
+                self.acceptFocus(window, False)  # échec : jamais de carte laissée activable
+                return False
+            window.requestActivate()
+        else:
+            self._stack(hwnd)
+        return True
+
 
     @Slot(QObject)
     def unregister(self, window):

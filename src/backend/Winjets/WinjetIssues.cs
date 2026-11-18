@@ -1,4 +1,5 @@
-// language: C# 12, file: WinjetIssues.cs, target: Windows 11 / .NET 8, collecte des erreurs de validation (messages français avec chemin JSON)
+// language: C# 12, file: WinjetIssues.cs, target: Windows 11 / .NET 8, collecte des erreurs de validation (messages français avec chemin
+// JSON)
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -9,7 +9,7 @@
       168
     ],
     "max": [
-      720,
+      536,
       352
     ]
   },
@@ -38,9 +38,20 @@
       "minWidth": 0,
       "root": {
         "type": "column",
-        "padding": 16,
-        "gap": 4,
+        "padding": 0,
+        "gap": 0,
         "children": [
+          {
+            "type": "column",
+            "visibleWhen": "settings.showDate",
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ now | date:ddd d MMM }}",
+                "style": "eyebrow"
+              }
+            ]
+          },
           {
             "type": "stack",
             "grow": 1,
@@ -50,9 +61,15 @@
                 "visibleWhen": "!settings.hour12",
                 "children": [
                   {
-                    "type": "clock",
-                    "variant": "digital",
-                    "seconds": "{{ settings.showSeconds }}"
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "seconds": "{{ settings.showSeconds }}"
+                      }
+                    ]
                   }
                 ]
               },
@@ -61,9 +78,15 @@
                 "visibleWhen": "settings.hour12 && !settings.showSeconds",
                 "children": [
                   {
-                    "type": "clock",
-                    "variant": "digital",
-                    "format": "h:mm AP"
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "format": "h:mm AP"
+                      }
+                    ]
                   }
                 ]
               },
@@ -72,24 +95,17 @@
                 "visibleWhen": "settings.hour12 && settings.showSeconds",
                 "children": [
                   {
-                    "type": "clock",
-                    "variant": "digital",
-                    "format": "h:mm:ss AP"
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "format": "h:mm:ss AP"
+                      }
+                    ]
                   }
                 ]
-              }
-            ]
-          },
-          {
-            "type": "column",
-            "visibleWhen": "settings.showDate",
-            "children": [
-              {
-                "type": "text",
-                "text": "{{ now | date:ddd d MMM }}",
-                "style": "caption",
-                "tone": "secondary",
-                "maxLines": 1
               }
             ]
           }
@@ -100,9 +116,20 @@
       "minWidth": 340,
       "root": {
         "type": "column",
-        "padding": 20,
-        "gap": 8,
+        "padding": 0,
+        "gap": 0,
         "children": [
+          {
+            "type": "column",
+            "visibleWhen": "settings.showDate",
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ now | date:dddd d MMMM }}",
+                "style": "eyebrow"
+              }
+            ]
+          },
           {
             "type": "stack",
             "grow": 1,
@@ -112,9 +139,15 @@
                 "visibleWhen": "!settings.hour12",
                 "children": [
                   {
-                    "type": "clock",
-                    "variant": "digital",
-                    "seconds": "{{ settings.showSeconds }}"
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "seconds": "{{ settings.showSeconds }}"
+                      }
+                    ]
                   }
                 ]
               },
@@ -123,9 +156,15 @@
                 "visibleWhen": "settings.hour12 && !settings.showSeconds",
                 "children": [
                   {
-                    "type": "clock",
-                    "variant": "digital",
-                    "format": "h:mm AP"
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "format": "h:mm AP"
+                      }
+                    ]
                   }
                 ]
               },
@@ -134,24 +173,17 @@
                 "visibleWhen": "settings.hour12 && settings.showSeconds",
                 "children": [
                   {
-                    "type": "clock",
-                    "variant": "digital",
-                    "format": "h:mm:ss AP"
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "format": "h:mm:ss AP"
+                      }
+                    ]
                   }
                 ]
-              }
-            ]
-          },
-          {
-            "type": "column",
-            "visibleWhen": "settings.showDate",
-            "children": [
-              {
-                "type": "text",
-                "text": "{{ now | date:dddd d MMMM yyyy }}",
-                "style": "title",
-                "tone": "secondary",
-                "maxLines": 1
               }
             ]
           }

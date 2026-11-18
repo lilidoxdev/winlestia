@@ -18,7 +18,8 @@ public class WinjetDataServiceTests
     {
         internal int Calls;
         internal Func<HttpRequestMessage, Task<HttpResponseMessage>> Reply = _ => Task.FromResult(Ok("{\"p\":1}"));
-        internal static HttpResponseMessage Ok(string body) => new(HttpStatusCode.OK) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
+        internal static HttpResponseMessage Ok(string body) => new(HttpStatusCode.OK) {
+            Content = new StringContent(body, Encoding.UTF8, "application/json") };
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
             Interlocked.Increment(ref Calls);
@@ -270,7 +271,8 @@ public class WinjetDataServiceTests
     {
         var target = new Uri("https://api.example.com/v1");
         Assert.True(WinjetDataService.ShouldFilterAddresses(target, null));
-        Assert.True(WinjetDataService.ShouldFilterAddresses(target, new FixedProxy { Via = new Uri("http://10.0.0.1:3128") , Bypass = true }));
+        Assert.True(WinjetDataService.ShouldFilterAddresses(target, new FixedProxy {
+            Via = new Uri("http://10.0.0.1:3128") , Bypass = true }));
         Assert.True(WinjetDataService.ShouldFilterAddresses(target, new FixedProxy { Via = target }));
         Assert.True(WinjetDataService.ShouldFilterAddresses(target, new FixedProxy { Via = null }));
         Assert.False(WinjetDataService.ShouldFilterAddresses(target, new FixedProxy { Via = new Uri("http://10.0.0.1:3128") }));

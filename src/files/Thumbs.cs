@@ -58,7 +58,7 @@ internal static partial class Thumbs
 
     // ---- public surface ----------------------------------------------------------------------------------------
     internal static double Dpi = 1.0;                        // posé par la fenêtre (tailles tenant compte du DPI)
-    internal static int Pending;                              // live requests, for measurement
+    internal static int Pending;                              // requêtes en cours, pour la mesure
     internal static int Shown;
 
     internal sealed class Req
@@ -225,7 +225,7 @@ internal static partial class Thumbs
         }
     }
 
-    // ---- loading (worker thread) -------------------------------------------------------------------------------
+    // ---- chargement (thread de travail) ----
     static BitmapSource? Load(Req r)
     {
         BitmapSource? bmp = null;

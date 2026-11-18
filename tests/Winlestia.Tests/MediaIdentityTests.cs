@@ -1,4 +1,4 @@
-// C# 12 / MediaIdentity: AUMID resolution, audio session matching, position extrapolation (pure functions).
+// C# 12 / MediaIdentity : résolution d'AUMID, correspondance des sessions audio, extrapolation de position (fonctions pures).
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,7 +36,7 @@ public class MediaIdentityTests
     {
         const string FirefoxHash = "308046B0AF4A39CB";
 
-        // AUMID resolution.
+        // Résolution d'AUMID.
         var viaRegistry = Identity(new() { [FirefoxHash] = "Firefox" }).Resolve(FirefoxHash);
         Check("hashViaRegistry", viaRegistry.DisplayName == "Firefox" && viaRegistry.ExeStem == "firefox");
         Check("hashKeepsRawAumid", viaRegistry.Aumid == FirefoxHash);
@@ -77,7 +77,7 @@ public class MediaIdentityTests
             MediaSourceIdentity.IsHashStyle(FirefoxHash) && !MediaSourceIdentity.IsHashStyle("Spotify.exe")
         );
 
-        // Session matching.
+        // Correspondance de session.
         var firefox = new MediaTarget("firefox", FirefoxHash);
         Check("matchOwnExe", MediaSessionMatch.Matches(Session(10, "firefox"), firefox));
         Check("matchCaseInsensitive", MediaSessionMatch.Matches(Session(10, "Firefox"), firefox));
@@ -107,7 +107,7 @@ public class MediaIdentityTests
             !MediaSessionMatch.Matches(Session(31, "x", null, FirefoxHash), hashOnly)
         );
 
-        // Generic ancestors never match, direct exe still does.
+        // Les ancêtres génériques ne correspondent jamais, l'exe direct si.
         var explorerTarget = new MediaTarget("explorer", "Microsoft.Windows.Explorer");
         Check(
             "genericAncestorNoMatch",
@@ -117,7 +117,7 @@ public class MediaIdentityTests
         var discordViaShell = Session(42, "Discord", new[] { "Discord", "explorer", "cmd" });
         Check("discordNotFirefoxViaGenericAncestors", !MediaSessionMatch.Matches(discordViaShell, firefox));
 
-        // Ambiguous browsers: no wrong guess, short TTL only.
+        // Navigateurs ambigus : pas de mauvaise supposition, TTL court uniquement.
         var ambiguous = Identity(null, "firefox", "zen").Resolve(FirefoxHash, out bool ambiguousStable);
         Check(
             "ambiguousBrowsersGenericName",
@@ -130,7 +130,7 @@ public class MediaIdentityTests
         Identity(new() { [FirefoxHash] = "Firefox" }, "firefox", "zen").Resolve(FirefoxHash, out bool registryStable);
         Check("registryNameStable", registryStable);
 
-        // Process tree helpers.
+        // Aides sur l'arbre de processus.
         var parents = new Dictionary<int, int>
         {
             [11] = 10,
@@ -158,7 +158,7 @@ public class MediaIdentityTests
         Check("parentCycleTerminates", MediaSessionMatch.AncestorStems(1, loopParent, pid => "a").Count <= 2);
         Check("rootPidCycleTerminates", MediaSessionMatch.RootPid(1, "a", loopParent, pid => "a") > 0);
 
-        // Position extrapolation.
+        // Extrapolation de position.
         var t0 = new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
         var t5 = t0.AddSeconds(5);
         Check("playingAdvances", Math.Abs(MediaTimeline.ExtrapolatePosition(10, t0, t5, 1, true, 200) - 15) < 1e-9);
@@ -186,7 +186,7 @@ public class MediaIdentityTests
             !MediaTimeline.IsDurationKnown(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1))
         );
 
-        // Resubscription: same AUMID with a new object must resubscribe; the same object must not.
+        // Réabonnement : même AUMID avec un nouvel objet doit réabonner ; le même objet ne doit pas.
         var firstSession = new object();
         var secondSession = new object();
         Check("resubscribeOnNewObject", MediaTimeline.NeedsResubscribe(firstSession, secondSession));

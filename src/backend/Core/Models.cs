@@ -1,4 +1,4 @@
-// language: C# 12, file: Models.cs, target: Windows 11 / .NET 8, persistent local workspace
+// language: C# 12, file: Models.cs, target: Windows 11 / .NET 8, espace de travail local persistant
 using System;
 using System.Collections.Generic;
 using System.Globalization;

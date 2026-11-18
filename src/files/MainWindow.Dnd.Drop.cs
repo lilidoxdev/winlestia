@@ -183,7 +183,7 @@ public sealed partial class MainWindow
         ApplyResult(result, false);
     }
 
-    // ---- native context menu ---------------------------------------------------------------------------------
+    // ---- menu contextuel natif ----
 
     internal sealed class MenuSession : IDisposable
     {
