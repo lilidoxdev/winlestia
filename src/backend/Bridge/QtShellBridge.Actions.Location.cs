@@ -20,7 +20,14 @@ internal sealed partial class QtShellBridge
 
     // Forme publiée : { lat, lon, accuracyM, ok, requested }. N'instancie rien tant que personne n'a demandé la position.
     object LocationSnapshot() => locationService?.IsValueCreated == true ? locationService.Value.Snapshot()
-        : new { lat = 0d, lon = 0d, accuracyM = 0d, ok = false, requested = false };
+        : new
+        {
+            lat = 0d,
+            lon = 0d,
+            accuracyM = 0d,
+            ok = false,
+            requested = false
+        };
 
     [BridgeAction("locate")]
     void OnLocate(BridgeCall c) => _ = Locator.Request();

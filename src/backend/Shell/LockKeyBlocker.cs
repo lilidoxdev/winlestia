@@ -53,7 +53,11 @@ internal sealed class LockKeyBlocker : IDisposable
 
     internal bool Active
     {
-        get { lock (gate) return thread != null; }
+        get
+        {
+            lock (gate)
+                return thread != null;
+        }
     }
 
     internal void Start()

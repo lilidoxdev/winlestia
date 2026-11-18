@@ -114,7 +114,10 @@ internal sealed class LyricsService
     // Deux requêtes au plus (get puis search) : 8 s chacune via le délai du client, 16 s en tout.
     static readonly TimeSpan Budget = TimeSpan.FromSeconds(16);
 
-    internal static LyricsService Shared { get; } = new(new LyricsCache(Path.Combine(Store.Root, "lyrics")),
+    internal static LyricsService Shared
+    {
+        get;
+    } = new(new LyricsCache(Path.Combine(Store.Root, "lyrics")),
                                                        LrclibProvider.Fetch);
 
     readonly LyricsCache cache;

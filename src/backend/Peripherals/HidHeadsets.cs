@@ -45,7 +45,10 @@ internal static class HidHeadsets
 
     // ---- HID natif ----
     [StructLayout(LayoutKind.Sequential)]
-    struct SpDeviceInterfaceData { public uint Size; public Guid InterfaceClassGuid; public uint Flags; public IntPtr Reserved; }
+    struct SpDeviceInterfaceData
+    {
+        public uint Size; public Guid InterfaceClassGuid; public uint Flags; public IntPtr Reserved;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct HidpCaps
@@ -57,7 +60,10 @@ internal static class HidHeadsets
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct Overlapped { public IntPtr Internal, InternalHigh; public uint Offset, OffsetHigh; public IntPtr Event; }
+    struct Overlapped
+    {
+        public IntPtr Internal, InternalHigh; public uint Offset, OffsetHigh; public IntPtr Event;
+    }
 
     [DllImport("hid.dll")] static extern void HidD_GetHidGuid(out Guid guid);
     [DllImport("hid.dll")] static extern bool HidD_GetPreparsedData(SafeFileHandle handle, out IntPtr data);

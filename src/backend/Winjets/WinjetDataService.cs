@@ -61,7 +61,9 @@ internal sealed class WinjetDataService : IDisposable
             ConnectTimeout = WinjetLimits.HttpTimeout,
             AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
         })
-        { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+        {
+            Timeout = System.Threading.Timeout.InfiniteTimeSpan
+        };
         http.DefaultRequestHeaders.UserAgent.ParseAdd("Winlestia-Winjets/1");
         market = new WinjetMarketFeed((url, ct) => GetJsonAsync(url, ct), PublishMarket, this.clock);
     }
@@ -194,7 +196,12 @@ internal sealed class WinjetDataService : IDisposable
             int dot = path.IndexOf('.');
             if (dot < 0)
                 return null;
-            var scope = path[..dot] switch { "settings" => t.Settings, "state" => t.State, _ => null };
+            var scope = path[..dot] switch
+            {
+                "settings" => t.Settings,
+                "state" => t.State,
+                _ => null
+            };
             return scope != null && scope.TryGetValue(path[(dot + 1)..], out var v) ? v : null;
         });
 
@@ -599,8 +606,10 @@ internal sealed class WinjetDataService : IDisposable
             string file = CachePath(url);
             if (!File.Exists(file) || new FileInfo(file).Length > WinjetLimits.MaxResponseBytes + 4096)
                 return null;
-            using var doc = JsonDocument.Parse(File.ReadAllBytes(file), new JsonDocumentOptions {
-                MaxDepth = WinjetLimits.MaxJsonDepth + 2 });
+            using var doc = JsonDocument.Parse(File.ReadAllBytes(file), new JsonDocumentOptions
+            {
+                MaxDepth = WinjetLimits.MaxJsonDepth + 2
+            });
             var root = doc.RootElement;
             if (root.GetProperty("url").GetString() != url)
                 return null;

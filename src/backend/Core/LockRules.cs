@@ -9,7 +9,10 @@ internal sealed class LockAttempts
 {
     internal const int FreeAttempts = 4, DelaySeconds = 30;
     DateTime until = DateTime.MinValue;
-    internal int Failures { get; private set; }
+    internal int Failures
+    {
+        get; private set;
+    }
     internal int RetryAfter(DateTime now) => now >= until ? 0 : (int)Math.Ceiling((until - now).TotalSeconds);
     internal void Fail(DateTime now)
     {

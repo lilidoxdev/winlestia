@@ -27,7 +27,14 @@ internal sealed class PeripheralBatteryService : IDisposable
     }
 
     public IReadOnlyList<PeripheralCandidate> Candidates => candidates;
-    public bool Active { get { lock (gate) return active; } }
+    public bool Active
+    {
+        get
+        {
+            lock (gate)
+                return active;
+        }
+    }
 
     public void SetActive(bool on)
     {

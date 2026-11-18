@@ -35,7 +35,14 @@ internal static class WinjetSemVer
             if (!TryParseCore(rest, out var bound) || rest.Contains('-') || rest.Contains('+'))
                 return false;
             int cmp = current.CompareTo(bound);
-            all &= op switch { ">=" => cmp >= 0, ">" => cmp > 0, "<=" => cmp <= 0, "<" => cmp < 0, _ => cmp == 0 };
+            all &= op switch
+            {
+                ">=" => cmp >= 0,
+                ">" => cmp > 0,
+                "<=" => cmp <= 0,
+                "<" => cmp < 0,
+                _ => cmp == 0
+            };
         }
         matches = all;
         return true;

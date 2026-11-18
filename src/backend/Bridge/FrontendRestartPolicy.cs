@@ -15,7 +15,10 @@ internal sealed class FrontendRestartPolicy
     readonly List<DateTime> crashes = new();
 
     // Vrai dès qu'un frontend s'est connecté au moins une fois : sans cela (modules Python absents, --qt-root erroné), relancer est vain.
-    internal bool EverConnected { get; private set; }
+    internal bool EverConnected
+    {
+        get; private set;
+    }
 
     internal void MarkConnected() => EverConnected = true;
 

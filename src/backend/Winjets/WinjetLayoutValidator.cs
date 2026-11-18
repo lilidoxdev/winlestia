@@ -62,13 +62,26 @@ internal static class WinjetLayoutValidator
 
     static readonly Dictionary<string, string[]> Required = new(StringComparer.Ordinal)
     {
-        ["text"] = new[] { "text" }, ["image"] = new[] { "src" }, ["clock"] = new[] { "variant" }, ["calendar"] = new[] { "variant" },
-        ["list"] = new[] { "items", "title" }, ["chart"] = new[] { "series" }, ["stat"] = new[] { "value" },
-        ["progress"] = new[] { "value" }, ["note"] = new[] { "key" }, ["buttons"] = new[] { "options", "bind" },
-        ["column"] = new[] { "children" }, ["row"] = new[] { "children" }, ["stack"] = new[] { "children" }, ["grid"] = new[] {
+        ["text"] = new[] { "text" },
+        ["image"] = new[] { "src" },
+        ["clock"] = new[] { "variant" },
+        ["calendar"] = new[] { "variant" },
+        ["list"] = new[] { "items", "title" },
+        ["chart"] = new[] { "series" },
+        ["stat"] = new[] { "value" },
+        ["progress"] = new[] { "value" },
+        ["note"] = new[] { "key" },
+        ["buttons"] = new[] { "options", "bind" },
+        ["column"] = new[] { "children" },
+        ["row"] = new[] { "children" },
+        ["stack"] = new[] { "children" },
+        ["grid"] = new[] {
             "children" },
-        ["dots"] = Array.Empty<string>(), ["visualizer"] = Array.Empty<string>(), ["media"] = Array.Empty<string>(),
-            ["spacer"] = Array.Empty<string>(), ["divider"] = Array.Empty<string>()
+        ["dots"] = Array.Empty<string>(),
+        ["visualizer"] = Array.Empty<string>(),
+        ["media"] = Array.Empty<string>(),
+        ["spacer"] = Array.Empty<string>(),
+        ["divider"] = Array.Empty<string>()
     };
 
     static readonly string[] ColorProperties = { "color", "background", "fill", "stroke", "border", "tint" };

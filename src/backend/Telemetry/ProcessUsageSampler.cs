@@ -259,7 +259,10 @@ internal sealed class ProcessUsageSampler
         IntPtr handle = OpenProcess(0x1000, false, (uint)pid);
         if (handle == IntPtr.Zero)
             return 0;
-        try { return GetProcessTimes(handle, out long created, out _, out _, out _) ? created : 0; }
+        try
+        {
+            return GetProcessTimes(handle, out long created, out _, out _, out _) ? created : 0;
+        }
         finally { CloseHandle(handle); }
     }
 

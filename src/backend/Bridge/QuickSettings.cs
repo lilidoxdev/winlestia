@@ -54,11 +54,31 @@ internal sealed class QuickSettings
             bool anyRadio = radioOk && radios.Count > 0;
             return new
             {
-                wifi = new { available = radioOk && Has(RadioKind.WiFi), on = On(RadioKind.WiFi) },
-                bluetooth = new { available = radioOk && Has(RadioKind.Bluetooth), on = On(RadioKind.Bluetooth) },
-                airplane = new { available = anyRadio, on = anyRadio && radios.All(r => r.State != RadioState.On) },
-                micMute = new { available = micAvailable, on = micAvailable && micMuted },
-                keepAwake = new { available = true, on = awakeThread != null }
+                wifi = new
+                {
+                    available = radioOk && Has(RadioKind.WiFi),
+                    on = On(RadioKind.WiFi)
+                },
+                bluetooth = new
+                {
+                    available = radioOk && Has(RadioKind.Bluetooth),
+                    on = On(RadioKind.Bluetooth)
+                },
+                airplane = new
+                {
+                    available = anyRadio,
+                    on = anyRadio && radios.All(r => r.State != RadioState.On)
+                },
+                micMute = new
+                {
+                    available = micAvailable,
+                    on = micAvailable && micMuted
+                },
+                keepAwake = new
+                {
+                    available = true,
+                    on = awakeThread != null
+                }
             };
         }
     }
@@ -277,7 +297,10 @@ internal sealed class QuickSettings
                 release.Wait();
                 SetThreadExecutionState(EsContinuous);
             })
-            { IsBackground = true, Name = "KeepAwake" };
+            {
+                IsBackground = true,
+                Name = "KeepAwake"
+            };
             awakeRelease = release;
             awakeThread = thread;
             thread.Start();

@@ -32,13 +32,24 @@ internal sealed partial class QtShellBridge
             enabled = Store.State.PeripheralBatteryEnabled,
             devices = snapshot.Devices.Select(d => new
             {
-                id = d.Id, name = d.Name, kind = d.Kind, percent = d.Percent, charging = d.Charging, approximate = d.Approximate,
-                hidden = d.Hidden, source = d.Source
+                id = d.Id,
+                name = d.Name,
+                kind = d.Kind,
+                percent = d.Percent,
+                charging = d.Charging,
+                approximate = d.Approximate,
+                hidden = d.Hidden,
+                source = d.Source
             }).ToArray(),
             paired = snapshot.Paired.Select(p => new
             {
-                id = p.Id, name = p.Name, kind = p.Kind, detectedKind = p.DetectedKind, overridden = p.Overridden,
-                connected = p.Connected, percent = p.Percent,
+                id = p.Id,
+                name = p.Name,
+                kind = p.Kind,
+                detectedKind = p.DetectedKind,
+                overridden = p.Overridden,
+                connected = p.Connected,
+                percent = p.Percent,
                 canConnect = Peripherals.Candidates.Any(k => k.Id == p.Id && k.Source == "bluetooth"
                     && k.DetectedKind is not ("keyboard" or "mouse" or "gamepad"))
             }).ToArray(),

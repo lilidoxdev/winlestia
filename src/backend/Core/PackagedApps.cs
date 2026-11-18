@@ -155,8 +155,12 @@ internal static class PackagedApps
             string? resolved = Resolve(e.Target);
             var canon = resolved == null ? null : Canonical(new Entry
             {
-                Id = entryId, Name = e.Name, Target = ShellPrefix + resolved, IconPath = e.IconPath,
-                Section = e.Section, Category = e.Category
+                Id = entryId,
+                Name = e.Name,
+                Target = ShellPrefix + resolved,
+                IconPath = e.IconPath,
+                Section = e.Section,
+                Category = e.Category
             }, catalogue, manifestFallback);
             if (canon == null)
                 continue;

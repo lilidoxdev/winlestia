@@ -82,7 +82,10 @@ internal static class WinjetCalendar
     {
         var wall = DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
         TimeSpan offset;
-        try { offset = tz.GetUtcOffset(wall); }
+        try
+        {
+            offset = tz.GetUtcOffset(wall);
+        }
         catch (ArgumentException) { offset = tz.BaseUtcOffset; }
         return new DateTimeOffset(wall, offset).ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture);
     }
@@ -191,7 +194,10 @@ internal static class WinjetCalendar
             return (dt, TimeZoneInfo.Utc, false);
         if (p.Params.TryGetValue("TZID", out var tzid))
         {
-            try { return (dt, TimeZoneInfo.FindSystemTimeZoneById(tzid.TrimStart('/')), false); }
+            try
+            {
+                return (dt, TimeZoneInfo.FindSystemTimeZoneById(tzid.TrimStart('/')), false);
+            }
             catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException) { }
         }
         return (dt, local, false);
@@ -201,7 +207,10 @@ internal static class WinjetCalendar
     {
         if (from == local)
             return wall;
-        try { return TimeZoneInfo.ConvertTime(DateTime.SpecifyKind(wall, DateTimeKind.Unspecified), from, local); }
+        try
+        {
+            return TimeZoneInfo.ConvertTime(DateTime.SpecifyKind(wall, DateTimeKind.Unspecified), from, local);
+        }
         catch (ArgumentException) { return wall; }
     }
 
@@ -216,8 +225,13 @@ internal static class WinjetCalendar
 
     static readonly Dictionary<string, DayOfWeek> Days = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["MO"] = DayOfWeek.Monday, ["TU"] = DayOfWeek.Tuesday, ["WE"] = DayOfWeek.Wednesday, ["TH"] = DayOfWeek.Thursday,
-        ["FR"] = DayOfWeek.Friday, ["SA"] = DayOfWeek.Saturday, ["SU"] = DayOfWeek.Sunday
+        ["MO"] = DayOfWeek.Monday,
+        ["TU"] = DayOfWeek.Tuesday,
+        ["WE"] = DayOfWeek.Wednesday,
+        ["TH"] = DayOfWeek.Thursday,
+        ["FR"] = DayOfWeek.Friday,
+        ["SA"] = DayOfWeek.Saturday,
+        ["SU"] = DayOfWeek.Sunday
     };
 
     // Règle minimale : DAILY/WEEKLY(+BYDAY)/MONTHLY avec INTERVAL, COUNT, UNTIL. Tout autre cas (BYMONTHDAY, BYSETPOS, YEARLY...) -> null,
@@ -233,9 +247,15 @@ internal static class WinjetCalendar
             string k = part[..eq].ToUpperInvariant(), v = part[(eq + 1)..];
             switch (k)
             {
-                case "FREQ": r.Freq = v.ToUpperInvariant(); break;
-                case "INTERVAL": r.Interval = int.TryParse(v, out int iv) && iv >= 1 ? Math.Min(iv, 1000) : 1; break;
-                case "COUNT": r.Count = int.TryParse(v, out int c) && c >= 1 ? c : int.MaxValue; break;
+                case "FREQ":
+                    r.Freq = v.ToUpperInvariant();
+                    break;
+                case "INTERVAL":
+                    r.Interval = int.TryParse(v, out int iv) && iv >= 1 ? Math.Min(iv, 1000) : 1;
+                    break;
+                case "COUNT":
+                    r.Count = int.TryParse(v, out int c) && c >= 1 ? c : int.MaxValue;
+                    break;
                 case "UNTIL":
                     {
                         var u = ParseDate(new Prop("UNTIL", new Dictionary<string, string>(), v), local);
@@ -251,7 +271,8 @@ internal static class WinjetCalendar
                             r.ByDay.Add(dow);
                     }
                     break;
-                case "WKST": break;
+                case "WKST":
+                    break;
                 default:
                     if (k.StartsWith("BY", StringComparison.Ordinal))
                         r.Unsupported = true;

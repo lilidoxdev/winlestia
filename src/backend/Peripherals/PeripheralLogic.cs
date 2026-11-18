@@ -86,7 +86,14 @@ internal static class PeripheralLogic
     {
         if (batteryType is 0 or 1 or 0xFF)
             return null;
-        return level switch { 0 => 5, 1 => 25, 2 => 60, 3 => 100, _ => null };
+        return level switch
+        {
+            0 => 5,
+            1 => 25,
+            2 => 60,
+            3 => 100,
+            _ => null
+        };
     }
 
     static bool LooksXbox(string name) => name.Contains("xbox", StringComparison.OrdinalIgnoreCase);
@@ -109,7 +116,11 @@ internal static class PeripheralLogic
                 // L'identifiant bt: reste toujours : masquage et genre choisis par l'utilisateur doivent survivre.
                 if (b.Percent == null)
                 {
-                    result.Add(b with { Percent = pad.Percent, Approximate = pad.Approximate });
+                    result.Add(b with
+                    {
+                        Percent = pad.Percent,
+                        Approximate = pad.Approximate
+                    });
                     continue;
                 }
             }

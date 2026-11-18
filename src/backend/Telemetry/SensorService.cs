@@ -61,8 +61,22 @@ internal sealed class Freshness(Func<long> clock, long windowMs)
 {
     readonly object gate = new();
     bool has; long at;
-    internal bool IsFresh { get { lock (gate) return has && clock() - at < windowMs; } }
-    internal void Mark() { lock (gate) { has = true; at = clock(); } }
+    internal bool IsFresh
+    {
+        get
+        {
+            lock (gate)
+                return has && clock() - at < windowMs;
+        }
+    }
+    internal void Mark()
+    {
+        lock (gate)
+        {
+            has = true;
+            at = clock();
+        }
+    }
 }
 
 internal static class SensorPipe
@@ -106,7 +120,8 @@ internal static class SensorPipe
                 return false;
         }
         finally { CloseHandle(h); }
-        lock (pidGate) verifiedPid = pid;
+        lock (pidGate)
+            verifiedPid = pid;
         return true;
     }
 
@@ -174,7 +189,10 @@ internal sealed class SensorService(Action changed)
 
     static Version? FileVersion(string path)
     {
-        try { return Version.TryParse(FileVersionInfo.GetVersionInfo(path).FileVersion, out var v) ? v : null; }
+        try
+        {
+            return Version.TryParse(FileVersionInfo.GetVersionInfo(path).FileVersion, out var v) ? v : null;
+        }
         catch (Exception) { return null; }
     }
 
@@ -187,7 +205,9 @@ internal sealed class SensorService(Action changed)
         lock (gate)
         {
             state = SensorLogic.State(installed, hasDriver, active);
-            driver = hasDriver; outdated = old; available = shipped;
+            driver = hasDriver;
+            outdated = old;
+            available = shipped;
         }
         checkedAt.Mark();
     }
@@ -202,9 +222,11 @@ internal sealed class SensorService(Action changed)
                 string before, after;
                 try
                 {
-                    lock (gate) before = state + driver + outdated + available;
+                    lock (gate)
+                        before = state + driver + outdated + available;
                     Refresh();
-                    lock (gate) after = state + driver + outdated + available;
+                    lock (gate)
+                        after = state + driver + outdated + available;
                     if (before != after)
                         changed();
                 }
@@ -213,7 +235,14 @@ internal sealed class SensorService(Action changed)
             });
         }
         lock (gate)
-            return new { state, driver, outdated, available, result = Volatile.Read(ref busy) == 1 ? "busy" : result };
+            return new
+            {
+                state,
+                driver,
+                outdated,
+                available,
+                result = Volatile.Read(ref busy) == 1 ? "busy" : result
+            };
     }
 
     internal void Install(bool withDriver) => Launch(withDriver ? "install --driver" : "install");
@@ -256,7 +285,8 @@ internal sealed class SensorService(Action changed)
             {
                 // Laisse à la tâche lancée par l'assistant le temps de répondre avant de relire l'état.
                 await Task.Delay(1500);
-                lock (gate) result = outcome;
+                lock (gate)
+                    result = outcome;
                 Refresh();
             }
             finally

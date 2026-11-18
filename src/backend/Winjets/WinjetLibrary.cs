@@ -175,35 +175,35 @@ internal sealed class WinjetLibrary
         string staged = v.Release();
         bool updated;
         lock (mutate)
-        try
-        {
-            updated = Directory.Exists(final);
-            // Échange : l'ancienne version est mise de côté, la nouvelle prend sa place ; au moindre échec on remet l'ancienne.
-            if (updated)
-                Directory.Move(final, old);
             try
             {
-                Directory.Move(staged, final);
-            }
-            catch
-            {
+                updated = Directory.Exists(final);
+                // Échange : l'ancienne version est mise de côté, la nouvelle prend sa place ; au moindre échec on remet l'ancienne.
                 if (updated)
-                    try
-                    {
-                        Directory.Move(old, final);
-                    }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                    {
-                        Store.Log("Winjets : retour arrière impossible, l'ancienne version reste dans " + old + " : " + ex.Message);
-                    }
-                throw;
+                    Directory.Move(final, old);
+                try
+                {
+                    Directory.Move(staged, final);
+                }
+                catch
+                {
+                    if (updated)
+                        try
+                        {
+                            Directory.Move(old, final);
+                        }
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                        {
+                            Store.Log("Winjets : retour arrière impossible, l'ancienne version reste dans " + old + " : " + ex.Message);
+                        }
+                    throw;
+                }
             }
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            TryDelete(staged);
-            return Fail(id, "Installation impossible : " + ex.Message);
-        }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                TryDelete(staged);
+                return Fail(id, "Installation impossible : " + ex.Message);
+            }
         lock (mutate)
         {
             TryDelete(old);
@@ -244,7 +244,9 @@ internal sealed class WinjetLibrary
             if (Directory.Exists(dir))
                 Directory.Delete(dir, true);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
-            Store.Log("Winjets : nettoyage impossible : " + ex.Message); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Store.Log("Winjets : nettoyage impossible : " + ex.Message);
+        }
     }
 }

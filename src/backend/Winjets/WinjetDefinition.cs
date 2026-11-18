@@ -36,7 +36,10 @@ internal sealed class WinjetDefinition
     internal IReadOnlyDictionary<string, object> State { get; private init; } = new Dictionary<string, object>();
     internal IReadOnlyList<WinjetSource> Sources { get; private init; } = Array.Empty<WinjetSource>();
     // JSON d'origine, renvoyé tel quel au frontend (le renderer fait foi sur la mise en page).
-    internal JsonElement Raw { get; private init; }
+    internal JsonElement Raw
+    {
+        get; private init;
+    }
 
     // `dir` null = on ne vérifie pas l'existence des fichiers (aucun dossier de paquet disponible).
     internal static WinjetDefinition? Parse(JsonElement root, WinjetManifest manifest, string? dir, WinjetIssues issues)

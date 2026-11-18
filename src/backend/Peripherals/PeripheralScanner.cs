@@ -18,7 +18,10 @@ internal static class PeripheralScanner
 {
     // ---- XInput ----
     [StructLayout(LayoutKind.Sequential)]
-    struct XInputBattery { public byte Type, Level; }
+    struct XInputBattery
+    {
+        public byte Type, Level;
+    }
 
     [DllImport("xinput1_4.dll")]
     static extern uint XInputGetBatteryInformation(uint userIndex, byte devType, out XInputBattery info);
@@ -46,10 +49,16 @@ internal static class PeripheralScanner
 
     // ---- SetupAPI : propriétés PnP Bluetooth ----
     [StructLayout(LayoutKind.Sequential)]
-    struct SpDevinfoData { public uint Size; public Guid ClassGuid; public uint DevInst; public IntPtr Reserved; }
+    struct SpDevinfoData
+    {
+        public uint Size; public Guid ClassGuid; public uint DevInst; public IntPtr Reserved;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct DevPropKey { public Guid Fmtid; public uint Pid; }
+    struct DevPropKey
+    {
+        public Guid Fmtid; public uint Pid;
+    }
 
     [DllImport("setupapi.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern IntPtr SetupDiGetClassDevsW(IntPtr classGuid, string? enumerator, IntPtr hwnd, uint flags);
@@ -190,7 +199,11 @@ internal static class PeripheralScanner
             if (device == null)
                 return (null, null);
             ushort? appearance = null;
-            try { appearance = device.Appearance?.RawValue; } catch (Exception) { }
+            try
+            {
+                appearance = device.Appearance?.RawValue;
+            }
+            catch (Exception) { }
             int? percent = null;
             if (needBattery)
             {
@@ -253,9 +266,21 @@ internal static class PeripheralScanner
         var pnp = new Dictionary<ulong, PnpInfo>();
         var classic = new List<Aep>();
         var le = new List<Aep>();
-        try { pnp = await Timeout(Task.Run(ScanPnp), 8000) ?? pnp; } catch (Exception) { }
-        try { classic = await PairedAsync(BluetoothDevice.GetDeviceSelectorFromPairingState(true)); } catch (Exception) { }
-        try { le = await PairedAsync(BluetoothLEDevice.GetDeviceSelectorFromPairingState(true)); } catch (Exception) { }
+        try
+        {
+            pnp = await Timeout(Task.Run(ScanPnp), 8000) ?? pnp;
+        }
+        catch (Exception) { }
+        try
+        {
+            classic = await PairedAsync(BluetoothDevice.GetDeviceSelectorFromPairingState(true));
+        }
+        catch (Exception) { }
+        try
+        {
+            le = await PairedAsync(BluetoothLEDevice.GetDeviceSelectorFromPairingState(true));
+        }
+        catch (Exception) { }
 
         var bluetooth = new List<PeripheralCandidate>();
         foreach (ulong address in classic.Select(a => a.Address).Union(le.Select(a => a.Address)))
@@ -283,9 +308,17 @@ internal static class PeripheralScanner
             }
         }
         var pads = new List<PeripheralCandidate>();
-        try { pads = ScanXInput(); } catch (Exception) { }
+        try
+        {
+            pads = ScanXInput();
+        }
+        catch (Exception) { }
         var result = PeripheralLogic.Merge(bluetooth, pads);
-        try { result.AddRange(await Task.Run(() => HidHeadsets.Scan())); } catch (Exception) { }
+        try
+        {
+            result.AddRange(await Task.Run(() => HidHeadsets.Scan()));
+        }
+        catch (Exception) { }
         try
         {
             var (percent, charging) = BatteryStatus.Read();

@@ -19,7 +19,10 @@ internal sealed class WinjetManifest
     internal string CompatibleWith { get; private init; } = "";
     internal IReadOnlyList<string> Network { get; private init; } = Array.Empty<string>();
     // JSON d'origine, renvoyé tel quel au frontend.
-    internal JsonElement Raw { get; private init; }
+    internal JsonElement Raw
+    {
+        get; private init;
+    }
 
     internal bool AllowsHost(string host)
         => Network.Contains(host, StringComparer.OrdinalIgnoreCase)

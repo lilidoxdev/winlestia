@@ -166,7 +166,13 @@ internal sealed class WinjetCondition
                     if (op == "!=")
                         return !Equal(a, b);
                     int c = Compare(a, b, out bool ok);
-                    return ok && op switch { "<" => c < 0, "<=" => c <= 0, ">" => c > 0, _ => c >= 0 };
+                    return ok && op switch
+                    {
+                        "<" => c < 0,
+                        "<=" => c <= 0,
+                        ">" => c > 0,
+                        _ => c >= 0
+                    };
                 };
             }
             return left;

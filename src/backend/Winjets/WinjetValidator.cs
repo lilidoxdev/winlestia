@@ -18,9 +18,18 @@ internal sealed class WinjetValidation : IDisposable
         StagingDir = staging;
     }
 
-    internal IReadOnlyList<string> Errors { get; }
-    internal WinjetPackage? Package { get; }
-    internal string? StagingDir { get; private set; }
+    internal IReadOnlyList<string> Errors
+    {
+        get;
+    }
+    internal WinjetPackage? Package
+    {
+        get;
+    }
+    internal string? StagingDir
+    {
+        get; private set;
+    }
     internal bool Ok => Errors.Count == 0 && Package != null;
 
     internal string Release()
@@ -38,8 +47,10 @@ internal sealed class WinjetValidation : IDisposable
         {
             Directory.Delete(StagingDir, true);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
-            Store.Log("Winjets : nettoyage impossible : " + ex.Message); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Store.Log("Winjets : nettoyage impossible : " + ex.Message);
+        }
         StagingDir = null;
     }
 }
@@ -111,8 +122,10 @@ internal static class WinjetValidator
             if (Directory.Exists(dir))
                 Directory.Delete(dir, true);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
-            Store.Log("Winjets : nettoyage impossible : " + ex.Message); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Store.Log("Winjets : nettoyage impossible : " + ex.Message);
+        }
     }
 
     // Contenu réel des fichiers : un « .png » doit être un PNG, un « .json » doit être du JSON, preview.png ≤ 1600×1000.

@@ -139,7 +139,10 @@ internal sealed partial class QtShellBridge
             fullscreenMonitors = FullscreenWatcher.Current,
             winjets = winjets?.Snapshot(),
             location = LocationSnapshot(),
-            desktop = new { explorerEpoch = winjets?.ExplorerEpoch ?? 0 },
+            desktop = new
+            {
+                explorerEpoch = winjets?.ExplorerEpoch ?? 0
+            },
             quiet = Quiet,
             quietForced = QuietPolicy.Label(quietForce),
             performance = new

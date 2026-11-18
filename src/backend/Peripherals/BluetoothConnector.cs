@@ -12,7 +12,10 @@ namespace PanneauxGlass;
 internal static class BluetoothConnector
 {
     [StructLayout(LayoutKind.Sequential)]
-    internal struct SystemTime { public ushort Year, Month, DayOfWeek, Day, Hour, Minute, Second, Milliseconds; }
+    internal struct SystemTime
+    {
+        public ushort Year, Month, DayOfWeek, Day, Hour, Minute, Second, Milliseconds;
+    }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct BluetoothDeviceInfo

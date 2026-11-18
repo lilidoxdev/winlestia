@@ -206,7 +206,7 @@ internal sealed partial class QtShellBridge
         var items = Build();
         return items;
     }
-    Entry[] backgroundEntries =Array.Empty<Entry>(); bool scanningBackground; DateTime backgroundAt;
+    Entry[] backgroundEntries = Array.Empty<Entry>(); bool scanningBackground; DateTime backgroundAt;
     // Un seul balayage à la fois : le cache de noms n'est touché que par ce thread de travail.
     string BackgroundName(string path)
     {

@@ -34,7 +34,14 @@ internal sealed class LocationService
     internal object Snapshot()
     {
         lock (gate)
-            return new { lat = last.Lat, lon = last.Lon, accuracyM = last.AccuracyM, ok = last.Ok, requested };
+            return new
+            {
+                lat = last.Lat,
+                lon = last.Lon,
+                accuracyM = last.AccuracyM,
+                ok = last.Ok,
+                requested
+            };
     }
 
     // Lance une lecture si le cache est périmé et qu'aucune n'est en cours. Le résultat arrive par `changed`.
@@ -66,7 +73,10 @@ internal sealed class LocationService
                 lastAt = clock();
                 busy = false;
             }
-            try { changed(); }
+            try
+            {
+                changed();
+            }
             catch (Exception ex) { Store.Log("Position (notification) : " + ex.GetType().Name + ": " + ex.Message); }
         });
     }

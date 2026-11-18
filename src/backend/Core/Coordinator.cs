@@ -105,7 +105,7 @@ internal sealed partial class Coordinator : IDisposable
         var global = new GlobalShortcut(hwnd, Store.State.Shortcut, Store.State.PaletteShortcut, Store.State.PinShortcut,
             Store.State.CaptureShortcut, Store.State.WallpaperShortcut, Store.State.SettingsShortcut,
             Store.State.LockShortcut);
-        Keys =new ShortcutBindings(global, BuildRail, RefreshPaletteLabels);
+        Keys = new ShortcutBindings(global, BuildRail, RefreshPaletteLabels);
         foreach (var model in Store.State.Boards)
             Boards.Add(new BoardWindow(this, model));
         home = new HomeWindow(this);

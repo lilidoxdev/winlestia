@@ -49,7 +49,10 @@ internal sealed partial class QtShellBridge
         // Le canal du pont est séquentiel : le travail (WinRT, COM) part en tâche de fond, l'évènement « quick » rafraîchit l'interface.
         _ = Task.Run(async () =>
         {
-            try { await QuickSettings.Shared.Toggle(id, enabled); }
+            try
+            {
+                await QuickSettings.Shared.Toggle(id, enabled);
+            }
             catch (Exception ex) { Store.Log("quickToggle " + id + ": " + ex.Message); }
         });
     }

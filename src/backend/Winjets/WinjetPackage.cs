@@ -14,10 +14,22 @@ internal sealed class WinjetPackage
         Builtin = builtin;
     }
 
-    internal WinjetManifest Manifest { get; }
-    internal WinjetDefinition Definition { get; }
-    internal string Dir { get; }
-    internal bool Builtin { get; }
+    internal WinjetManifest Manifest
+    {
+        get;
+    }
+    internal WinjetDefinition Definition
+    {
+        get;
+    }
+    internal string Dir
+    {
+        get;
+    }
+    internal bool Builtin
+    {
+        get;
+    }
     internal string Id => Manifest.Id;
 
     // Chemin de preview.png s'il existe, sinon chaîne vide.
