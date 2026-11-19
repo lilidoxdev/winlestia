@@ -1,9 +1,8 @@
-// Unified modal confirmation (M3 card, error-coloured action). Used for the permanent delete (Shift+Del) only.
+// Confirmation modale unifiée (carte M3, action en couleur d'erreur). Utilisée uniquement pour la suppression définitive (Maj+Suppr).
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using PanneauxGlass;
-using PanneauxGlass.Views;
 
 namespace WinlestiaFiles;
 
@@ -22,29 +21,21 @@ internal static class ConfirmDialog
             Background = System.Windows.Media.Brushes.Transparent,
             Owner = owner,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            FontFamily = M3.Body,
+            FontFamily = M3.Body
         };
         var heading = UI.Text(title, M3.FontTitle, UI.White, true);
         var body = UI.Text(message, M3.FontSmall, UI.Label);
         body.TextWrapping = TextWrapping.Wrap;
         body.Margin = new Thickness(0, M3.Sp2, 0, M3.Sp4);
-        var cancel = UI.Flat(Strings.Cancel, 36, new CornerRadius(M3.Small));
+        var cancel = UI.Flat("Annuler", 36, new CornerRadius(M3.Small));
         cancel.Padding = new Thickness(M3.Sp4, 0, M3.Sp4, 0);
         cancel.Click += (_, _) => win.Close();
         var confirm = UI.Flat(confirmLabel, 36, new CornerRadius(M3.Small), UI.T(M3Role.Error));
         confirm.Padding = new Thickness(M3.Sp4, 0, M3.Sp4, 0);
         confirm.Foreground = UI.T(M3Role.OnError);
         confirm.Margin = new Thickness(M3.Pad1, 0, 0, 0);
-        confirm.Click += (_, _) =>
-        {
-            ok = true;
-            win.Close();
-        };
-        var buttons = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Right,
-        };
+        confirm.Click += (_, _) => { ok = true; win.Close(); };
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         buttons.Children.Add(cancel);
         buttons.Children.Add(confirm);
         var stack = new StackPanel();
@@ -61,13 +52,9 @@ internal static class ConfirmDialog
             MinWidth = 340,
             MaxWidth = 460,
             Margin = new Thickness(12),
-            Child = stack,
+            Child = stack
         };
-        win.KeyDown += (_, e) =>
-        {
-            if (e.Key == Key.Escape)
-                win.Close();
-        };
+        win.KeyDown += (_, e) => { if (e.Key == Key.Escape) win.Close(); };
         win.ShowDialog();
         return ok;
     }

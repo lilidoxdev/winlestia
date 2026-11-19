@@ -1,0 +1,17 @@
+{
+  "format": "winjet/1",
+  "id": "winlestia.marches",
+  "name": "Marchés",
+  "version": "2.0.0",
+  "author": "Winlestia",
+  "description": "Actions et indices en direct (AAPL, MSFT, S&P 500) via Yahoo Finance : cours, courbe du jour et variation. Disposition inspirée de PC Widgets par Walid Mahmud.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  },
+  "permissions": {
+    "network": [
+      "query1.finance.yahoo.com"
+    ]
+  }
+}

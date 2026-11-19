@@ -11,7 +11,7 @@ This guide is for people who just want Winlestia running, with no technical back
 
 ## 1. Download
 
-Go to the [Releases page](https://github.com/lilidoxdev/winlestia/releases/latest) and download `Winlestia-Setup-0.9.1.exe`, the installer. The SHA-256 used to verify it is in the [v0.9.1 release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1).
+Go to the [Releases page](https://github.com/lilidoxdev/winlestia/releases/latest) and download `WinlestiaSetup.exe`, the installer. The SHA-256 used to verify it is in the [v1.0.0 release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.0).
 
 ## 2. Verify the download (recommended)
 
@@ -21,10 +21,10 @@ The installer is not code-signed (see the next section). A checksum lets you con
 2. Run, adjusting the folder if you did not save to Downloads:
 
    ```powershell
-   Get-FileHash "$env:USERPROFILE\Downloads\Winlestia-Setup-0.9.1.exe" -Algorithm SHA256
+   Get-FileHash "$env:USERPROFILE\Downloads\WinlestiaSetup.exe" -Algorithm SHA256
    ```
 
-3. Compare the `Hash` shown by PowerShell with the SHA-256 in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1). It must match exactly (letter case does not matter).
+3. Compare the `Hash` shown by PowerShell with the SHA-256 in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.0). It must match exactly (letter case does not matter).
 
 If the values differ, do not run the file. Download it again, and open an issue if it still differs.
 
@@ -39,7 +39,7 @@ If the checksum matched and you want to continue:
 
 ## 4. Run the setup
 
-The setup wizard is in English by default and picks French or Spanish when Windows uses one of them. The steps are:
+The setup wizard is in French only (no other language is offered). The steps are:
 
 1. **Welcome** and licence (GPL-3.0).
 2. **Tasks** (checked on first install unless noted):
@@ -69,7 +69,7 @@ If something looks wrong, jump to [TROUBLESHOOTING.md](TROUBLESHOOTING.md). The 
 
 ## Updating from an older version
 
-Run the new `Winlestia-Setup-0.9.1.exe`. The setup detects the existing install and offers to update (or reinstall, or uninstall). It closes the running shell itself before replacing files, so you do not need to quit Winlestia first. Your settings in `%LOCALAPPDATA%\Panneaux` are kept. If terminal integration was already enabled, it stays checked.
+Run the new `WinlestiaSetup.exe`. The setup detects the existing install and offers to update (or reinstall, or uninstall). It closes the running shell itself before replacing files, so you do not need to quit Winlestia first. Your settings in `%LOCALAPPDATA%\Panneaux` are kept. If terminal integration was already enabled, it stays checked.
 
 ## Uninstalling
 
@@ -86,3 +86,13 @@ To remove both by hand after uninstalling, delete the profile folder and run `Re
 If an older install was made as administrator, the uninstaller may ask for UAC confirmation.
 
 To reset without uninstalling, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md#resetting-your-profile).
+
+## WinlestiaSetup (custom installer)
+
+`WinlestiaSetup.exe` is a single-window installer built with WPF (`installer/WinlestiaSetup`). Steps: welcome, license (information only), features, updates, summary, progress, done. If Winlestia is already installed, the first screen offers update, change features or uninstall and shows the installed and new versions.
+
+- Per-user install, no administrator rights. Nothing is written until you confirm on the summary screen.
+- Some features have no config key (panels, Winjets) and appear locked. The update notification switch is not wired yet.
+- Command line: `--dry-run` (full journey, no system writes), `--lang fr|en|es|de`, `--uninstall [--keep-data|--remove-data] [--dry-run]`.
+- Uninstall restores the Windows taskbar first and sends folders to the Recycle Bin. It never deletes permanently.
+- Details and limits: `installer/WinlestiaSetup/README.md`. Screenshots: `docs/media/installer/`.

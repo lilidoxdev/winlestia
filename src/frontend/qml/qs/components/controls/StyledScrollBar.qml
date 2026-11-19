@@ -22,7 +22,7 @@ ScrollBar {
     property bool _updatingFromFlickable: false
     property bool _updatingFromUser: false
 
-    // Sync nonAnimPosition with Qt's automatic position binding
+    // Synchronise nonAnimPosition avec la liaison de position automatique de Qt
     onPositionChanged: {
         if (_updatingFromUser) {
             _updatingFromUser = false;
@@ -37,7 +37,7 @@ ScrollBar {
         }
     }
 
-    // Sync nonAnimPosition with flickable when not animating
+    // Synchronise nonAnimPosition avec le flickable quand il n'y a pas d'animation
     Connections {
         target: flickable
         function onContentYChanged() {
@@ -127,7 +127,7 @@ ScrollBar {
             const newPos = Math.max(0, Math.min(1 - root.size, event.y / root.height - root.size / 2));
             root.nonAnimPosition = newPos;
             // Update flickable position
-            // Map scrollbar position [0, 1-size] to contentY [0, maxContentY]
+            // Convertit la position de la barre [0, 1-size] en contentY [0, maxContentY]
             if (root.flickable) {
                 const contentHeight = root.flickable.contentHeight;
                 const height = root.flickable.height;

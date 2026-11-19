@@ -1,0 +1,12 @@
+{
+  "format": "winjet/1",
+  "id": "winlestia.notes",
+  "name": "Notes",
+  "version": "2.0.0",
+  "author": "Winlestia",
+  "description": "Bloc-notes sur le bureau, enregistré automatiquement. Disposition inspirée de PC Widgets par Walid Mahmud.",
+  "license": "MIT",
+  "compatibility": {
+    "winlestia": ">=0.9.2"
+  }
+}

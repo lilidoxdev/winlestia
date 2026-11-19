@@ -1,0 +1,9 @@
+{
+  "state": "production-collapsed",
+  "elapsedMs": 5014.232,
+  "cpuMs": 31.25,
+  "oneCorePercent": 0.6229625635581294,
+  "wholeCpuPercent": 0.0519083595966378,
+  "workingSetMB": 118.140625,
+  "privateMB": 68.21875
+}

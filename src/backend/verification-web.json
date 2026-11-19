@@ -1,0 +1,51 @@
+{
+  "At": "2026-10-20T18:43:47.4966798+02:00",
+  "Passed": 11,
+  "Failed": 0,
+  "Checks": [
+    {
+      "Name": "Refus du protocole ou des identifiants : javascript",
+      "Pass": true
+    },
+    {
+      "Name": "Refus du protocole ou des identifiants : file",
+      "Pass": true
+    },
+    {
+      "Name": "Refus du protocole ou des identifiants : https",
+      "Pass": true
+    },
+    {
+      "Name": "HTTPS ajout\u00E9 aux adresses courtes",
+      "Pass": true
+    },
+    {
+      "Name": "Logo officiel PNG avec alpha : Gmail",
+      "Pass": true
+    },
+    {
+      "Name": "Logo officiel PNG avec alpha : GitHub",
+      "Pass": true
+    },
+    {
+      "Name": "Logo de secours local utilisable",
+      "Pass": true
+    },
+    {
+      "Name": "D\u00E9couverte HTML, titre et ic\u00F4ne relative sur un site de test local",
+      "Pass": true
+    },
+    {
+      "Name": "Site indisponible : cr\u00E9ation automatique du PNG de secours",
+      "Pass": true
+    },
+    {
+      "Name": "Persistance des sites web",
+      "Pass": true
+    },
+    {
+      "Name": "Migration des pr\u00E9f\u00E9rences ant\u00E9rieures aux deux bandes",
+      "Pass": true
+    }
+  ]
+}

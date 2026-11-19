@@ -1,0 +1,56 @@
+{
+  "size": {
+    "default": [
+      352,
+      352
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      536,
+      536
+    ]
+  },
+  "state": {
+    "text": ""
+  },
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 6,
+        "children": [
+          {
+            "type": "row",
+            "children": [
+              {
+                "type": "text",
+                "text": "Notes",
+                "style": "title"
+              },
+              {
+                "type": "spacer"
+              },
+              {
+                "type": "text",
+                "text": "{{ state.text.length }} car.",
+                "style": "caption",
+                "tone": "faint"
+              }
+            ]
+          },
+          {
+            "type": "note",
+            "key": "text",
+            "placeholder": "Écrivez ici…",
+            "grow": 1
+          }
+        ]
+      }
+    }
+  ]
+}

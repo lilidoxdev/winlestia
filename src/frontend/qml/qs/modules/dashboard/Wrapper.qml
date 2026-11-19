@@ -24,15 +24,17 @@ Item {
         filters: Images.validImageExtensions
         onAccepted: path => {
             if (CUtils.copyFile(Qt.resolvedUrl(path), Qt.resolvedUrl(`${Paths.home}/.face`)))
-                Quickshell.execDetached(["notify-send", "-a", "caelestia-shell", "-u", "low", "-h", `STRING:image-path:${path}`, "Profile picture changed", `Profile picture changed to ${Paths.shortenHome(path)}`]);
+                Quickshell.execDetached(["notify-send", "-a", "caelestia-shell", "-u", "low", "-h", `STRING:image-path:${path}`,
+                    "Profile picture changed", `Profile picture changed to ${Paths.shortenHome(path)}`]);
             else
-                Quickshell.execDetached(["notify-send", "-a", "caelestia-shell", "-u", "critical", "Unable to change profile picture", `Failed to change profile picture to ${Paths.shortenHome(path)}`]);
+                Quickshell.execDetached(["notify-send", "-a", "caelestia-shell", "-u", "critical", "Unable to change profile picture",
+                    `Failed to change profile picture to ${Paths.shortenHome(path)}`]);
         }
     }
 
     readonly property real nonAnimHeight: content.item?.nonAnimHeight ?? 0
 
-    // True while the drawer is moving (y/height changing); the layer exists only then, not during tab slides.
+    // Vrai pendant le déplacement du tiroir (y/height changent) ; la couche n'existe qu'alors, pas pendant les glissements d'onglet.
     property bool drawerMoving: false
 
     // Width the host can give the drawer (0 = unconstrained); panes scale down to fit, see Content.
@@ -55,7 +57,7 @@ Item {
         settle.restart();
     }
 
-    // Single-shot, only armed by a y/height change: no idle loop.
+    // Un seul coup, armé uniquement par un changement de y/height : pas de boucle au repos.
     Timer {
         id: settle
 
@@ -63,7 +65,7 @@ Item {
         onTriggered: root.drawerMoving = false
     }
 
-    // Keep initialized content warm; closing the drawer only changes visibility.
+    // Garde le contenu initialisé au chaud ; fermer le tiroir ne change que la visibilité.
     Loader {
         id: content
 

@@ -1,0 +1,17 @@
+# Verrou genere : versions exactes + SHA256 (wheels win_amd64, CPython 3.12). Source lisible : requirements.txt.
+# Regenerer : pip download -r requirements.txt --no-deps --only-binary=:all: --platform win_amd64 --python-version 3.12 -d <dossier>, puis pip hash <wheel>.
+# Installe par installer/build.ps1 avec --require-hashes --no-deps.
+material-color-utilities==0.2.6 \
+    --hash=sha256:954ec2440f98663530594eb4361cf211b0ece0ded07b7e077aa96bf23243d7a0
+numpy==2.5.4 \
+    --hash=sha256:a7b1b6353e36a7e50de2973a38d705c88ee93adcf120673cee7f45a4a3fa223a
+pillow==13.0.0 \
+    --hash=sha256:ff3fe9eb621fbb9db4c4be33ab946f6bac5f98ab50ca8d3260503653656c961b
+pyside6==6.10.3 \
+    --hash=sha256:c7847e4ae7b1aef1aad822ca7f175c2100c4f9f3af679125cbbdf2b364b32007
+pyside6-addons==6.10.3 \
+    --hash=sha256:b465b38d1ec3476a9197441fe6a62a1fac97c45a8094f11c2d7e318aee1e3fb3
+pyside6-essentials==6.10.3 \
+    --hash=sha256:051a70e2df79cf1c012a208ad82a98e8de23ca7fe3b0f3344d07152d15705b59
+shiboken6==6.10.3 \
+    --hash=sha256:38261c88e87a1c32d1302b642b755470d2369c78af3c7d7d9e95d631f79b556c

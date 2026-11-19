@@ -16,7 +16,7 @@ Item {
     property int implicitWidth: 70
     property bool enabled: true
     
-    // Expose activeFocus through alias to avoid FINAL property override
+    // Expose activeFocus via un alias pour éviter la surcharge d'une propriété FINAL
     readonly property alias hasFocus: inputField.activeFocus
     
     signal textEdited(string text)

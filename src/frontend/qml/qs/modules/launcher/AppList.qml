@@ -18,7 +18,7 @@ StyledListView {
 
     model: Bridge.paletteResults
     delegate: appItem
-    onModelChanged: currentIndex=0
+    onModelChanged: currentIndex = 0
 
     spacing: Appearance.spacing.small
     orientation: Qt.Vertical
@@ -108,5 +108,4 @@ StyledListView {
             visibilities: root.visibilities
         }
     }
-
 }

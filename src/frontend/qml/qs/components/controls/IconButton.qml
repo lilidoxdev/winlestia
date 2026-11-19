@@ -31,11 +31,13 @@ StyledRect {
             return Colours.palette.m3primary;
         return type === IconButton.Filled ? Colours.tPalette.m3surfaceContainer : Colours.palette.m3secondaryContainer;
     }
-    property color activeOnColour: type === IconButton.Filled ? Colours.palette.m3onPrimary : type === IconButton.Tonal ? Colours.palette.m3onSecondary : Colours.palette.m3primary
+    property color activeOnColour: type === IconButton.Filled ? Colours.palette.m3onPrimary : type === IconButton.Tonal
+        ? Colours.palette.m3onSecondary : Colours.palette.m3primary
     property color inactiveOnColour: {
         if (!toggle && type === IconButton.Filled)
             return Colours.palette.m3onPrimary;
-        return type === IconButton.Tonal ? Colours.palette.m3onSecondaryContainer : Bridge.themeMode==="auto"?Colours.palette.m3primary:Colours.palette.m3onSurfaceVariant;
+        return type === IconButton.Tonal ? Colours.palette.m3onSecondaryContainer : Bridge.themeMode === "auto" ? Colours.palette.m3primary
+            : Colours.palette.m3onSurfaceVariant;
     }
     property color disabledColour: Qt.alpha(Colours.palette.m3onSurface, 0.1)
     property color disabledOnColour: Qt.alpha(Colours.palette.m3onSurface, 0.38)

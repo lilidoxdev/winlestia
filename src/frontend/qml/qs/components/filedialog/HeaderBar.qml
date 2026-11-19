@@ -40,7 +40,7 @@ StyledRect {
                 id: upIcon
 
                 anchors.centerIn: parent
-                text:qsTr("drive_folder_upload")
+                text: qsTr("drive_folder_upload")
                 color: root.dialog.cwd.length === 1 ? Colours.palette.m3outline : Colours.palette.m3onSurface
                 grade: 200
             }
@@ -79,14 +79,15 @@ StyledRect {
                             active: folder.index > 0
                             asynchronous: true
                             sourceComponent: StyledText {
-                                text:qsTr("/")
+                                text: qsTr("/")
                                 color: Colours.palette.m3onSurfaceVariant
                                 font.bold: true
                             }
                         }
 
                         Item {
-                            implicitWidth: homeIcon.implicitWidth + (homeIcon.active ? Appearance.padding.small : 0) + folderName.implicitWidth + Appearance.padding.normal * 2
+                            implicitWidth: homeIcon.implicitWidth + (homeIcon.active ? Appearance.padding.small
+                                : 0) + folderName.implicitWidth + Appearance.padding.normal * 2
                             implicitHeight: folderName.implicitHeight + Appearance.padding.small * 2
 
                             Loader {
@@ -112,7 +113,7 @@ StyledRect {
                                 active: folder.index === 0 && folder.modelData === "Home"
                                 asynchronous: true
                                 sourceComponent: MaterialIcon {
-                                    text:qsTr("home")
+                                    text: qsTr("home")
                                     color: root.dialog.cwd.length === 1 ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
                                     fill: 1
                                 }
@@ -126,7 +127,8 @@ StyledRect {
                                 anchors.leftMargin: homeIcon.active ? Appearance.padding.small : 0
 
                                 text: folder.modelData
-                                color: folder.index < root.dialog.cwd.length - 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
+                                color: folder.index < root.dialog.cwd.length - 1 ? Colours.palette.m3onSurfaceVariant
+                                    : Colours.palette.m3onSurface
                                 font.bold: true
                             }
                         }

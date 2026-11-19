@@ -1,0 +1,24 @@
+{
+  "citation": {
+    "text": "Je pense, donc je suis.",
+    "author": "René Descartes"
+  },
+  "auteur": {
+    "name": "René Descartes",
+    "bio": "Philosophe, mathématicien et physicien français (1596-1650).",
+    "oeuvres": [
+      {
+        "titre": "Discours de la méthode",
+        "annee": "1637"
+      },
+      {
+        "titre": "Méditations métaphysiques",
+        "annee": "1641"
+      },
+      {
+        "titre": "Les Passions de l'âme",
+        "annee": "1649"
+      }
+    ]
+  }
+}

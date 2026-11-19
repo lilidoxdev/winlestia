@@ -1,4 +1,4 @@
-# Python 3.12 / test_surface_geometry.py / Silhouette regression checks independent of Windows composition.
+# Python 3.12 / test_surface_geometry.py / Vérifications de silhouette indépendantes de la composition Windows.
 import sys, unittest
 from pathlib import Path
 
@@ -29,5 +29,5 @@ class SurfaceGeometryTests(unittest.TestCase):
         self.assertLessEqual(max(abs(v) for command in commands for v in command[1:]), 1500)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

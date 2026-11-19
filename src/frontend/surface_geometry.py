@@ -1,4 +1,4 @@
-# Python 3.12 / surface_geometry.py / Qt 6. One filled silhouette owns every shell background.
+# Python 3.12 / surface_geometry.py / Qt 6. Une seule silhouette pleine porte tous les fonds du shell.
 from PySide6.QtCore import QObject, QTimer, QRectF, Qt
 from PySide6.QtGui import QPainterPath, QTransform, QRegion
 from functools import lru_cache
@@ -47,13 +47,48 @@ def dock_path(width, height, attached=True):
     return p
 
 
-def rail_path(width, height, attached=True, side="right"):
-    # Right-edge panel: the dock silhouette transposed ((X,Y)->(Y,X)) so its base lies on the right frame band, convex corners on the left (width x height = window size).
-    # Attached: overlap the band by 2 px so the union has no hairline seam where bump and frame meet.
-    # The transpose mirrors the contour: reverse it so its winding matches the frame ring (else WindingFill cancels the band under a sliding bump).
+PILL_FILLET = 26
+PILL_RADIUS = 24
+PILL_OVERLAP = 2
+
+
+def pill_path(width, height, attached=True):
+    # Bloc du coin haut droit (fenêtre de la Pilule = le bloc). Attaché : il déborde de 2 px dans les bandes haute et droite
+    # du cadre (aucune couture), raccord concave à gauche avec la bande haute et en dessous avec la bande droite ; seul son
+    # coin bas gauche est convexe. Les raccords sortent de la fenêtre : seul ce tracé les porte.
+    p = QPainterPath()
+    if width < 1 or height < 1:
+        return p
+    if not attached:
+        p.addRoundedRect(QRectF(0, 0, width, height), PILL_RADIUS, PILL_RADIUS)
+        return p
+    rf = min(PILL_FILLET, height / 2)
+    rb = min(PILL_RADIUS, height / 2, width / 2)
+    fb = min(PILL_FILLET, height)
+    o = PILL_OVERLAP
+    p.moveTo(-PILL_FILLET, -o)
+    p.lineTo(width + o, -o)
+    p.lineTo(width + o, height + fb)
+    p.lineTo(width, height + fb)
+    p.quadTo(width, height, width - fb, height)
+    p.lineTo(rb, height)
+    p.quadTo(0, height, 0, height - rb)
+    p.lineTo(0, rf)
+    p.quadTo(0, 0, -PILL_FILLET, 0)
+    p.closeSubpath()
+    return p
+
+
+def rail_path(width, height, attached=True, side='right'):
+    # Panneau du bord droit : la silhouette du dock transposée ((X,Y)->(Y,X)) pour que sa base repose sur la bande de
+    # cadre droite, coins convexes à gauche (largeur x hauteur = taille de la fenêtre).
+    # Attaché : recouvre la bande de 2 px pour que l'union n'ait aucune couture fine entre la bosse et le cadre.
+    # La transposition inverse le contour : on le renverse pour que son sens corresponde à l'anneau du cadre (sinon
+    # WindingFill annule la bande sous une bosse qui glisse).
     path = QTransform(0, 1, 1, 0, 0, 0).map(dock_path(height, width + (2 if attached else 0), attached)).toReversed()
-    # Left edge: horizontal mirror (x -> width-x, base overlaps the band by 2 px at x=-2); the mirror flips the winding again, so reverse once more.
-    return QTransform(-1, 0, 0, 1, width, 0).map(path).toReversed() if side == "left" else path
+    # Bord gauche : miroir horizontal (x -> largeur-x, la base recouvre la bande de 2 px à x=-2) ; le miroir inverse à
+    # nouveau le sens, donc on renverse une fois de plus.
+    return QTransform(-1, 0, 0, 1, width, 0).map(path).toReversed() if side == 'left' else path
 
 
 @lru_cache(maxsize=24)
@@ -67,15 +102,16 @@ def frame_path(width, height, thickness):
     return outer
 
 
-def shell_path(width, height, thickness, panel=None, dock=None, rail=None, left=None, dictation=None):
+def shell_path(width, height, thickness, panel=None, dock=None, rail=None, left=None, dictation=None, pill=None):
     path = QPainterPath(frame_path(width, height, thickness)) if thickness else QPainterPath()
     path.setFillRule(Qt.WindingFill)
     for spec, builder in (
         (panel, panel_path),
         (dock, dock_path),
         (rail, rail_path),
-        (left, lambda w, h, a: rail_path(w, h, a, "left")),
+        (left, lambda w, h, a: rail_path(w, h, a, 'left')),
         (dictation, dock_path),
+        (pill, pill_path),
     ):
         if spec:
             x, y, w, h, attached = spec
@@ -105,10 +141,10 @@ def path_commands(path, scale=1):
 def svg_path(path):
     result = []
     for kind, *points in path_commands(path):
-        letter = ("M", "L", "C")[kind]
+        letter = ('M', 'L', 'C')[kind]
         count = 6 if kind == 2 else 2
-        result.append(letter + " ".join(format(v, ".5f").rstrip("0").rstrip(".") or "0" for v in points[:count]))
-    return " ".join(result)
+        result.append(letter + ' '.join(format(v, '.5f').rstrip('0').rstrip('.') or '0' for v in points[:count]))
+    return ' '.join(result)
 
 
 class SurfaceScene(QObject):
@@ -122,6 +158,7 @@ class SurfaceScene(QObject):
         self.revision = 0
         self.stopped = False
         self.input_masks = {}
+        self.pill_watched = None
         bridge.changed.connect(self.request)
         bridge.geometryChanged.connect(self.request)
         bridge.screensChanged.connect(self.request)
@@ -130,9 +167,9 @@ class SurfaceScene(QObject):
         for window in (
             bridge.top,
             bridge.dock,
-            getattr(bridge, "social_win", None),
-            getattr(bridge, "bookmarks_win", None),
-            getattr(bridge, "dictation_win", None),
+            getattr(bridge, 'social_win', None),
+            getattr(bridge, 'bookmarks_win', None),
+            getattr(bridge, 'dictation_win', None),
         ):
             if window:
                 for signal in (
@@ -154,18 +191,36 @@ class SurfaceScene(QObject):
             self.queued = True
             QTimer.singleShot(0, self.refresh)
 
+    def watch_pill(self):
+        # La Pilule vit dans un Loader : sa fenêtre apparaît et disparaît, on s'abonne à sa géométrie à chaque nouvelle instance.
+        window = getattr(self.bridge, 'pill_win', None)
+        if window is self.pill_watched:
+            return window
+        self.pill_watched = window
+        if window:
+            for signal in (
+                window.xChanged,
+                window.yChanged,
+                window.widthChanged,
+                window.heightChanged,
+                window.visibleChanged,
+            ):
+                signal.connect(self.request)
+        return window
+
     def refresh(self):
         self.queued = False
         if self.stopped:
             return
         bridge = self.bridge
+        pill_window = self.watch_pill()
 
         def view(window, dock=False):
             if not window or not window.isVisible():
                 return None
-            offset = float(window.property("offset") or 0) if dock else 0
-            width = float(window.property("panelWidth") or window.width()) if not dock else window.width()
-            height = float(window.property("panelHeight") or window.height()) if not dock else window.height()
+            offset = float(window.property('offset') or 0) if dock else 0
+            width = float(window.property('panelWidth') or window.width()) if not dock else window.width()
+            height = float(window.property('panelHeight') or window.height()) if not dock else window.height()
             return (
                 window.x() + (window.width() - width) / 2,
                 window.y() + offset,
@@ -174,14 +229,15 @@ class SurfaceScene(QObject):
                 bridge.frameEnabled and not bridge.screenFullscreen,
             )
 
-        def rail_view(window, side="right"):
+        def rail_view(window, side='right'):
             if not window or not window.isVisible():
                 return None
-            # The window has a fixed size; the animated bump (bumpWidth/bumpHeight) is aligned to its screen edge and vertically centred in it.
-            bw = float(window.property("bumpWidth") or window.width())
-            bh = float(window.property("bumpHeight") or window.height())
-            offset = float(window.property("offset") or 0)
-            x = window.x() + window.width() - bw + offset if side == "right" else window.x() - offset
+            # La fenêtre a une taille fixe ; la bosse animée (bumpWidth/bumpHeight) est alignée sur son bord d'écran
+            # et centrée verticalement dedans.
+            bw = float(window.property('bumpWidth') or window.width())
+            bh = float(window.property('bumpHeight') or window.height())
+            offset = float(window.property('offset') or 0)
+            x = window.x() + window.width() - bw + offset if side == 'right' else window.x() - offset
             return (
                 x,
                 window.y() + (window.height() - bh) / 2,
@@ -191,11 +247,12 @@ class SurfaceScene(QObject):
             )
 
         def dictation_view(window):
-            # Dictation pill: dock silhouette (same concave joins) whose base slides in/out of the bottom band; width follows the animated pillWidth.
+            # Pastille de dictée : silhouette du dock (mêmes jonctions concaves) dont la base glisse dans la bande du
+            # bas ; la largeur suit pillWidth animé.
             if not window or not window.isVisible():
                 return None
-            width = float(window.property("pillWidth") or 0)
-            offset = float(window.property("offset") or 0)
+            width = float(window.property('pillWidth') or 0)
+            offset = float(window.property('offset') or 0)
             return (
                 (
                     window.x() + (window.width() - width) / 2,
@@ -208,20 +265,34 @@ class SurfaceScene(QObject):
                 else None
             )
 
+        def pill_view(window):
+            # Pilule : sa fenêtre est exactement le bloc du coin haut droit (taille animée), le fond est tracé ici.
+            if not window or not window.isVisible() or window.width() < 1 or window.height() < 1:
+                return None
+            return (
+                window.x(),
+                window.y(),
+                window.width(),
+                window.height(),
+                bridge.frameEnabled and not bridge.screenFullscreen,
+            )
+
+        pill = pill_view(pill_window)
         top = view(bridge.top)
         dock = view(bridge.dock, True)
-        rail = rail_view(getattr(bridge, "social_win", None))
-        left = rail_view(getattr(bridge, "bookmarks_win", None), "left")
-        dictation = dictation_view(getattr(bridge, "dictation_win", None))
+        rail = rail_view(getattr(bridge, 'social_win', None))
+        left = rail_view(getattr(bridge, 'bookmarks_win', None), 'left')
+        dictation = dictation_view(getattr(bridge, 'dictation_win', None))
         for window, spec, side in (
-            (getattr(bridge, "social_win", None), rail, "right"),
-            (getattr(bridge, "bookmarks_win", None), left, "left"),
+            (getattr(bridge, 'social_win', None), rail, 'right'),
+            (getattr(bridge, 'bookmarks_win', None), left, 'left'),
         ):
             if window and not spec:
                 self.input_masks.pop(int(window.winId()), None)
             if spec:
-                # Input mask uses the resting position (offset 0): it never depends on the slide animation phase, and is re-applied after every reveal.
-                mask_x = window.width() - spec[2] if side == "right" else 0
+                # Le masque de saisie utilise la position de repos (offset 0) : il ne dépend jamais de la phase
+                # d'animation du glissement et est réappliqué après chaque révélation.
+                mask_x = window.width() - spec[2] if side == 'right' else 0
                 mask_key = (
                     window.width(),
                     window.height(),
@@ -244,6 +315,10 @@ class SurfaceScene(QObject):
             (bridge.top, top, panel_path, False),
             (bridge.dock, dock, dock_path, True),
         ):
+            if window and not spec and is_dock:
+                self.input_masks.pop(
+                    int(window.winId()), None
+                )  # dock masqué : on oublie son masque, il est réappliqué à la prochaine apparition
             if window and spec:
                 offset = spec[1] - window.y() if is_dock else 0
                 mask_key = (window.width(), window.height(), round(spec[2]), round(spec[3]), spec[4], round(offset))
@@ -267,6 +342,7 @@ class SurfaceScene(QObject):
             rail,
             left,
             dictation,
+            pill,
             bridge.frameEnabled,
             bridge.frameThickness,
             bridge.capture.busy,
@@ -299,17 +375,18 @@ class SurfaceScene(QObject):
                     None if full else local(rail),
                     None if full else local(left),
                     local(dictation),
+                    local(pill),
                 )
             )
-            # Qt's curve renderer needs a normalized silhouette for overlapping contours.
+            # Le rendu de courbes de Qt exige une silhouette normalisée pour les contours qui se chevauchent.
             simple = path.simplified()
             outline = svg_path(simple)
             paths[name] = simple
             data[name] = {
-                "path": outline,
-                "outline": outline,
-                "visible": not path.isEmpty(),
-                "components": (thickness, local(top), local(dock), local(rail), local(left), local(dictation)),
+                'path': outline,
+                'outline': outline,
+                'visible': not path.isEmpty(),
+                'components': (thickness, local(top), local(dock), local(rail), local(left), local(dictation), local(pill)),
             }
         self.paths = paths
         self.data = data

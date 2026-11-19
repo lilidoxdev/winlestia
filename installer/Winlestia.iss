@@ -7,7 +7,9 @@
 ;   - déjà installé    → une page propose « Mettre à jour » ou « Désinstaller ».
 
 #define AppName        "Winlestia"
-#define AppVersion     "0.9.1"
+#ifndef AppVersion
+  #error AppVersion non defini : compiler via installer/build.ps1 (/DAppVersion lu dans Directory.Build.props).
+#endif
 #define AppPublisher   "dj"
 #define AppExe         "Panneaux.Glass.exe"
 #define AppId          "{{8E2B7C41-5F1A-4F7B-9C3D-6A2E0D5B7C18}"
@@ -157,6 +159,8 @@ Type: files; Name: "{app}\Glass-v5\winlestia.deps.json"
 Type: files; Name: "{app}\Glass-v5\winlestia.runtimeconfig.json"
 ; Les anciens fonds d'écran fournis sont remplacés par les nouveaux (le dossier utilisateur %LOCALAPPDATA%\Panneaux\Wallpapers n'est jamais touché).
 Type: files; Name: "{app}\wallpapers\*"
+; Winjets inclus : le dossier est remplacé en entier (retire les anciens horloge/calendrier/graphique-btc).
+Type: filesandordirs; Name: "{app}\Winjets\builtin"
 
 [Files]
 Source: "Close-Winlestia.ps1"; Flags: dontcopy
@@ -176,6 +180,9 @@ Source: "..\build\payload\Caelestia-Windows\*"; DestDir: "{app}\Caelestia-Window
 Source: "..\assets\wallpapers\*"; DestDir: "{app}\wallpapers"; Flags: ignoreversion
 
 Source: "..\build\payload\Winlestia-Terminal\*"; DestDir: "{app}\Winlestia-Terminal"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+; Winjets inclus (lecture seule)
+Source: "..\build\payload\Winjets\builtin\*"; DestDir: "{app}\Winjets\builtin"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDir: "{app}\Glass-v5"; IconFilename: "{app}\Glass-v5\{#AppExe}"; Tasks: startmenu
@@ -197,6 +204,9 @@ Filename: "{app}\Glass-v5\{#AppExe}"; Parameters: "--qt-shell --show"; WorkingDi
 Filename: "{sys}\schtasks.exe"; Parameters: "/delete /tn WinlestiaShell /f"; Flags: runhidden waituntilterminated; RunOnceId: "DeleteLogonTask"
 
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoLogo -NoProfile -ExecutionPolicy Bypass -File ""{app}\Close-Winlestia.ps1"" -AppRoot ""{app}"""; Flags: runhidden waituntilterminated; RunOnceId: "CloseWinlestia"
+
+; Assistant de capteurs élevé (installé dans Program Files à la demande de l'utilisateur) : tâche et dossier retirés, PawnIO conservé.
+Filename: "{app}\Glass-v5\Sensors\Winlestia.Sensors.exe"; Parameters: "uninstall"; Verb: runas; Flags: shellexec waituntilterminated runhidden skipifdoesntexist; Check: SensorsInstalled(); RunOnceId: "RemoveSensors"
 
 Filename: "{app}\Glass-v5\Winlestia.Files.exe"; Parameters: "--restore"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "RestoreFolderHandler"
 
@@ -458,6 +468,12 @@ begin
         MsgBox(CustomMessage('TerminalRestoreFailed'), mbError, MB_OK);
     end;
   end;
+end;
+
+// Vrai si l'assistant de capteurs a été installé dans Program Files (jamais d'élévation sinon).
+function SensorsInstalled(): Boolean;
+begin
+  Result := FileExists(ExpandConstant('{commonpf}\Winlestia\Sensors\Winlestia.Sensors.exe'));
 end;
 
 function PathIsEmpty(): Boolean;

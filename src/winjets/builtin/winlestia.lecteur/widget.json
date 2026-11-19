@@ -1,0 +1,56 @@
+{
+  "size": {
+    "default": [
+      352,
+      168
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      720,
+      352
+    ]
+  },
+  "settings": [
+    {
+      "id": "showArt",
+      "type": "toggle",
+      "label": "Afficher la pochette",
+      "default": true
+    },
+    {
+      "id": "showProgress",
+      "type": "toggle",
+      "label": "Afficher la progression",
+      "default": true
+    }
+  ],
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 0,
+        "children": [
+          {
+            "type": "stack",
+            "grow": 1,
+            "children": [
+              {
+                "type": "media",
+                "showArt": "{{ settings.showArt }}",
+                "showProgress": "{{ settings.showProgress }}",
+                "showControls": true,
+                "backdrop": true,
+                "pill": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

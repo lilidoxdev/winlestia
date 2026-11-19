@@ -1,4 +1,4 @@
-# Panneaux — dj
+# Winlestia
 
 Un tableau de bord Windows natif, une barre des tâches personnalisée, quatre panneaux redimensionnables et les icônes d’origine des applications. Le fond d’écran et les fichiers restent à leur emplacement.
 

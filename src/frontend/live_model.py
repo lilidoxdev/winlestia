@@ -1,4 +1,4 @@
-# Python 3.12 / live_model.py / Qt 6. Stable delegates while native audio values change.
+# Délégués stables pendant que les valeurs audio natives changent.
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, QByteArray
 
 
@@ -10,7 +10,7 @@ class LiveListModel(QAbstractListModel):
         self.rows = []
 
     def roleNames(self):
-        return {self.role: QByteArray(b"modelData")}
+        return {self.role: QByteArray(b'modelData')}
 
     def rowCount(self, parent=QModelIndex()):
         return 0 if parent.isValid() else len(self.rows)
@@ -19,14 +19,14 @@ class LiveListModel(QAbstractListModel):
         return self.rows[index.row()] if index.isValid() and role == self.role else None
 
     def sync(self, rows):
-        keys = {r["id"] for r in rows}
+        keys = {r['id'] for r in rows}
         for i in range(len(self.rows) - 1, -1, -1):
-            if self.rows[i]["id"] not in keys:
+            if self.rows[i]['id'] not in keys:
                 self.beginRemoveRows(QModelIndex(), i, i)
                 self.rows.pop(i)
                 self.endRemoveRows()
         for i, row in enumerate(rows):
-            old = next((j for j, r in enumerate(self.rows) if r["id"] == row["id"]), -1)
+            old = next((j for j, r in enumerate(self.rows) if r['id'] == row['id']), -1)
             if old < 0:
                 self.beginInsertRows(QModelIndex(), i, i)
                 self.rows.insert(i, row)

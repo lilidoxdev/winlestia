@@ -3,8 +3,8 @@ pragma Singleton
 import Quickshell
 
 Singleton {
-    // Literally just here to shorten accessing stuff :woe:
-    // Also kinda so I can keep accessing it with `Appearance.xxx` instead of `Config.appearance.xxx`
+    // Sert uniquement à raccourcir l'accès aux valeurs
+    // Et à garder l'accès via `Appearance.xxx` plutôt que `Config.appearance.xxx`
     readonly property var rounding: Config.appearance.rounding
     readonly property var spacing: Config.appearance.spacing
     readonly property var padding: Config.appearance.padding

@@ -1,0 +1,252 @@
+{
+  "size": {
+    "default": [
+      168,
+      168
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      352,
+      352
+    ]
+  },
+  "settings": [
+    {
+      "id": "style",
+      "type": "choice",
+      "label": "Forme de la jauge",
+      "default": "ring",
+      "options": [
+        {
+          "value": "ring",
+          "label": "Anneau"
+        },
+        {
+          "value": "bar",
+          "label": "Barre"
+        }
+      ]
+    },
+    {
+      "id": "showSource",
+      "type": "toggle",
+      "label": "Indiquer « Sur batterie » hors charge",
+      "default": true
+    }
+  ],
+  "data": {
+    "niveaux": {
+      "type": "file",
+      "path": "assets/niveaux.json"
+    }
+  },
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "gap": 6,
+        "children": [
+          {
+            "type": "column",
+            "grow": 1,
+            "gap": 6,
+            "visibleWhen": "system.battery >= 0",
+            "children": [
+              {
+                "type": "stack",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "column",
+                    "visibleWhen": "settings.style != 'bar'",
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "ring",
+                        "value": "{{ data.niveaux.ratio[system.battery] }}",
+                        "label": "{{ system.battery }} %"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "visibleWhen": "settings.style == 'bar'",
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "bar",
+                        "value": "{{ data.niveaux.ratio[system.battery] }}",
+                        "label": "{{ system.battery }} %"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "system.charging",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "En charge",
+                    "style": "label",
+                    "tone": "accent",
+                    "maxLines": 1
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "!system.charging && settings.showSource",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Sur batterie",
+                    "style": "label",
+                    "tone": "secondary",
+                    "maxLines": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "grow": 1,
+            "gap": 4,
+            "visibleWhen": "system.battery == null",
+            "children": [
+              {
+                "type": "spacer"
+              },
+              {
+                "type": "text",
+                "text": "Pas de batterie",
+                "style": "label",
+                "tone": "secondary",
+                "maxLines": 1
+              },
+              {
+                "type": "text",
+                "text": "Ce PC est sur secteur.",
+                "style": "caption",
+                "tone": "secondary",
+                "maxLines": 2
+              },
+              {
+                "type": "spacer"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "root": {
+        "type": "column",
+        "padding": 24,
+        "gap": 8,
+        "children": [
+          {
+            "type": "column",
+            "grow": 1,
+            "gap": 8,
+            "visibleWhen": "system.battery >= 0",
+            "children": [
+              {
+                "type": "stack",
+                "grow": 1,
+                "children": [
+                  {
+                    "type": "column",
+                    "visibleWhen": "settings.style != 'bar'",
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "ring",
+                        "value": "{{ data.niveaux.ratio[system.battery] }}",
+                        "label": "{{ system.battery }} %"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "visibleWhen": "settings.style == 'bar'",
+                    "children": [
+                      {
+                        "type": "progress",
+                        "variant": "bar",
+                        "value": "{{ data.niveaux.ratio[system.battery] }}",
+                        "label": "{{ system.battery }} %"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "system.charging",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "En charge",
+                    "style": "label",
+                    "tone": "accent",
+                    "maxLines": 1
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "!system.charging && settings.showSource",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "Sur batterie",
+                    "style": "label",
+                    "tone": "secondary",
+                    "maxLines": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "grow": 1,
+            "gap": 4,
+            "visibleWhen": "system.battery == null",
+            "children": [
+              {
+                "type": "spacer"
+              },
+              {
+                "type": "text",
+                "text": "Pas de batterie",
+                "style": "label",
+                "tone": "secondary",
+                "maxLines": 1
+              },
+              {
+                "type": "text",
+                "text": "Ce PC est sur secteur.",
+                "style": "caption",
+                "tone": "secondary",
+                "maxLines": 2
+              },
+              {
+                "type": "spacer"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

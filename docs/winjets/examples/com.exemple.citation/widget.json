@@ -1,0 +1,207 @@
+{
+  "size": {
+    "default": [
+      352,
+      168
+    ],
+    "min": [
+      352,
+      168
+    ],
+    "max": [
+      536,
+      352
+    ]
+  },
+  "state": {
+    "mode": "citation"
+  },
+  "data": {
+    "quotes": {
+      "type": "file",
+      "path": "assets/quotes.json"
+    }
+  },
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "gap": 8,
+        "children": [
+          {
+            "type": "row",
+            "gap": 8,
+            "children": [
+              {
+                "type": "text",
+                "text": "CITATION DU JOUR",
+                "style": "mono",
+                "tone": "secondary",
+                "maxLines": 1
+              },
+              {
+                "type": "dots",
+                "pattern": "ripple",
+                "shape": "circle"
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "state.mode == 'citation'",
+            "gap": 4,
+            "grow": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ data.quotes.citation.text }}",
+                "style": "title",
+                "maxLines": 3
+              },
+              {
+                "type": "text",
+                "text": "{{ data.quotes.citation.author }}",
+                "style": "caption",
+                "tone": "accent"
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "state.mode == 'auteur'",
+            "gap": 4,
+            "grow": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ data.quotes.auteur.name }}",
+                "style": "title",
+                "maxLines": 1
+              },
+              {
+                "type": "text",
+                "text": "{{ data.quotes.auteur.bio }}",
+                "style": "caption",
+                "tone": "secondary",
+                "maxLines": 3
+              }
+            ]
+          },
+          {
+            "type": "buttons",
+            "bind": "state.mode",
+            "options": [
+              {
+                "value": "citation",
+                "label": "Citation"
+              },
+              {
+                "value": "auteur",
+                "label": "Auteur"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "minHeight": 340,
+      "root": {
+        "type": "column",
+        "padding": 16,
+        "gap": 8,
+        "children": [
+          {
+            "type": "row",
+            "gap": 8,
+            "children": [
+              {
+                "type": "text",
+                "text": "CITATION DU JOUR",
+                "style": "mono",
+                "tone": "secondary",
+                "maxLines": 1
+              },
+              {
+                "type": "dots",
+                "pattern": "ripple",
+                "shape": "circle"
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "state.mode == 'citation'",
+            "gap": 4,
+            "grow": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ data.quotes.citation.text }}",
+                "style": "title",
+                "maxLines": 3
+              },
+              {
+                "type": "text",
+                "text": "{{ data.quotes.citation.author }}",
+                "style": "caption",
+                "tone": "accent"
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "state.mode == 'auteur'",
+            "gap": 4,
+            "grow": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ data.quotes.auteur.name }}",
+                "style": "title",
+                "maxLines": 1
+              },
+              {
+                "type": "text",
+                "text": "{{ data.quotes.auteur.bio }}",
+                "style": "caption",
+                "tone": "secondary",
+                "maxLines": 3
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "state.mode == 'auteur'",
+            "children": [
+              {
+                "type": "list",
+                "items": "{{ data.quotes.auteur.oeuvres }}",
+                "title": "titre",
+                "trailing": "annee",
+                "max": 3
+              }
+            ]
+          },
+          {
+            "type": "buttons",
+            "bind": "state.mode",
+            "options": [
+              {
+                "value": "citation",
+                "label": "Citation"
+              },
+              {
+                "value": "auteur",
+                "label": "Auteur"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

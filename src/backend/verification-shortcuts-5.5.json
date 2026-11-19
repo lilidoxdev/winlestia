@@ -1,0 +1,131 @@
+{
+  "At": "2026-10-24T23:58:57.8561573+02:00",
+  "Passed": 31,
+  "Failed": 0,
+  "Checks": [
+    {
+      "Name": "Migration : Ctrl F1 ajout\u00E9 sans perte de personnalisation",
+      "Pass": true
+    },
+    {
+      "Name": "Combinaisons valides, touches seules et F12 r\u00E9serv\u00E9e refus\u00E9es",
+      "Pass": true
+    },
+    {
+      "Name": "Enregistrement Windows r\u00E9el du raccourci de test",
+      "Pass": true
+    },
+    {
+      "Name": "R\u00E9servation concurrente d\u2019une combinaison diff\u00E9rente",
+      "Pass": true
+    },
+    {
+      "Name": "Conflit d\u00E9tect\u00E9 et expliqu\u00E9",
+      "Pass": true
+    },
+    {
+      "Name": "Le raccourci pr\u00E9c\u00E9dent reste r\u00E9serv\u00E9 apr\u00E8s \u00E9chec",
+      "Pass": true
+    },
+    {
+      "Name": "Remplacement atomique par une combinaison libre",
+      "Pass": true
+    },
+    {
+      "Name": "L\u2019ancienne combinaison est lib\u00E9r\u00E9e apr\u00E8s succ\u00E8s",
+      "Pass": true
+    },
+    {
+      "Name": "Les raccourcis sont lib\u00E9r\u00E9s \u00E0 l\u2019arr\u00EAt",
+      "Pass": true
+    },
+    {
+      "Name": "Commande rapide : Ctrl F2 par d\u00E9faut, jamais Ctrl K",
+      "Pass": true
+    },
+    {
+      "Name": "Onglets rapides : chaque cible par d\u00E9faut est r\u00E9solue par l\u2019\u00E9diteur",
+      "Pass": true
+    },
+    {
+      "Name": "Raccourci et onglets cohabitent dans une pr\u00E9f\u00E9rence unique",
+      "Pass": true
+    },
+    {
+      "Name": "Au moins quatre th\u00E8mes globaux, identifiants uniques",
+      "Pass": true
+    },
+    {
+      "Name": "Chaque th\u00E8me fournit verre, halos, accent et \u00E9chelle d\u2019angle",
+      "Pass": true
+    },
+    {
+      "Name": "Au moins quatre th\u00E8mes changent la mati\u00E8re et les formes",
+      "Pass": true
+    },
+    {
+      "Name": "Les th\u00E8mes varient aussi la disposition, la typographie et le cadre des contr\u00F4les",
+      "Pass": true
+    },
+    {
+      "Name": "Cinq mati\u00E8res suppl\u00E9mentaires sont propos\u00E9es",
+      "Pass": true
+    },
+    {
+      "Name": "Bento : cases pleines et contr\u00F4les plats",
+      "Pass": true
+    },
+    {
+      "Name": "N\u00E9on : cadres lumineux, aucun reflet",
+      "Pass": true
+    },
+    {
+      "Name": "R\u00E9tro : typographie pixel et boutons biseaut\u00E9s",
+      "Pass": true
+    },
+    {
+      "Name": "Suisse : index num\u00E9rot\u00E9 et cadres filaires",
+      "Pass": true
+    },
+    {
+      "Name": "Zen : rang\u00E9es larges et titres serif",
+      "Pass": true
+    },
+    {
+      "Name": "Changer de th\u00E8me recolore le texte partag\u00E9",
+      "Pass": true
+    },
+    {
+      "Name": "Papier calque : encre sombre, titres serif et fiches",
+      "Pass": true
+    },
+    {
+      "Name": "Encre : chasse fixe et listes",
+      "Pass": true
+    },
+    {
+      "Name": "Un th\u00E8me inconnu retombe sur Nuit bor\u00E9ale",
+      "Pass": true
+    },
+    {
+      "Name": "Panneau PC \u00E0 gauche sans chevauchement : 3440;1440",
+      "Pass": true
+    },
+    {
+      "Name": "Trois surfaces dans l\u2019\u00E9cran : 3440;1440",
+      "Pass": true
+    },
+    {
+      "Name": "Panneau PC \u00E0 gauche sans chevauchement : 1920;1080",
+      "Pass": true
+    },
+    {
+      "Name": "Trois surfaces dans l\u2019\u00E9cran : 1920;1080",
+      "Pass": true
+    },
+    {
+      "Name": "Panneau PC \u00E0 gauche sans chevauchement : 1366;768",
+      "Pass": true
+    }
+  ]
+}

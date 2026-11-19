@@ -8,11 +8,11 @@
 
 <a href="https://discord.gg/5jXv7NRj3Q"><img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join the Winlestia Discord server" height="40"></a>
 
-[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1)
+[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.0)
 [![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
 
-[Download](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
+[Download](https://github.com/lilidoxdev/winlestia/releases/latest) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
 
 <img src="docs/illustrations/desktop.webp" alt="Winlestia on a Windows 11 desktop" width="100%">
 
@@ -28,9 +28,30 @@ These visuals are motion-design illustrations made in HTML/CSS. They are not scr
 
 ## What is Winlestia
 
-Winlestia is a free, open-source desktop shell for Windows 11, bringing a Caelestia-inspired interface, dynamic themes, glass effects, a customizable dock and desktop tools.
+Winlestia is a free, open-source desktop shell for Windows 11. It is a port of [Caelestia](https://github.com/caelestia-dots/shell), which is its visual reference, and adds a dynamic dock, glass panels, desktop widgets (Winjets), a lock screen and a set of desktop tools. Version 1.0 is the first stable release.
 
 It replaces the surface of Windows, not the system. The taskbar is swapped for a dock, and a dashboard and glass panels sit on top of your normal desktop. Your files, windows and wallpaper stay where they are. The interface is a port of [Caelestia](https://github.com/caelestia-dots/shell) (Qt Quick), and a .NET 8 service handles the Windows side. Panel colours can be derived from your wallpaper (see [Wallpaper and dynamic theme](#wallpaper-and-dynamic-theme)).
+
+## What is new in 1.0
+
+- **Dock**: it grows with the open apps and scrolls when it overflows; optional battery pill for Bluetooth and XInput devices; pins of Store (MSIX) apps survive app updates and reboots; windows no longer slip between the dock's glass background and its icons.
+- **Control center**: Wi-Fi page, Bluetooth device connect/disconnect, audio output and microphone pages, per-application mixer.
+- **Command palette**: faster to open, including the first time after start-up.
+- **Winjets**: ten built-in desktop widgets that replace the PC Widgets pack, drawn with the liquid glass v2 treatment and fed with real data (weather with your location, Yahoo Finance quotes, ICS calendar, system, storage, media session, notes and more).
+- **Social rail**: the right-edge panel gathers notifications from Discord, Instagram, Snapchat, WhatsApp and Telegram.
+- **Also**: push-to-talk voice dictation (off by default), redesigned file manager, lock screen, window overview, and a new WPF installer and uninstaller.
+
+Full list: [CHANGELOG.md](CHANGELOG.md) and [release notes](docs/RELEASE-NOTES-1.0.md).
+
+### Screenshots
+
+<img src="docs/media/dock-dynamic.png" alt="The dock growing with open apps" width="100%">
+
+<img src="docs/media/peripheral-battery.png" alt="Battery pill for connected devices in the dock" width="100%">
+
+<img src="docs/media/winjets/all.png" alt="The built-in Winjets on the desktop" width="100%">
+
+<img src="docs/media/installer/en-01-welcome.png" alt="WinlestiaSetup welcome screen" width="60%">
 
 ## Features
 
@@ -55,11 +76,12 @@ Applications, Games, Projects and Documents boards, your favorites, recent short
 
 - A dock instead of the Windows taskbar, with window previews on hover and a virtual-desktop indicator. The dock auto-hides: it slides away a fraction of a second (about 0.45 s) after the pointer leaves it, and appears when the pointer reaches the bottom edge of the screen. The Windows key opens the normal Windows Start menu.
 - **Ctrl+F2** opens the palette: calculator, `>emoji`, `>wallpaper`, `>file ` for indexed files, open windows, Windows Settings pages and session actions (each asks for confirmation).
+- Optional battery indicator for connected Bluetooth and XInput devices (headset, gamepad, mouse, keyboard), next to the clock: one icon, gauge and percentage per device, in the error colour at 20 % or less. Hovering shows the name and state, clicking opens the Controls panel. Off by default; enable it and choose which paired devices appear, and their type, in Settings > Docks and panels > Icon bar.
 
 ### Media and quick controls
 <img src="docs/illustrations/media.webp" alt="Media panel" width="100%">
 
-Quick controls include a Wi-Fi network list, per-display brightness (DDC/CI, external displays too) and a "Reduced effects" switch. Audio and per-application mixer panels are included. The media panel shows a readable source name for browsers, updates the playback position, and the audio visualiser follows the playing browser.
+The Control center has toggle tiles (Wi-Fi, Bluetooth, Dark theme, Light mode), thick volume and per-display brightness sliders (DDC/CI, external displays too) and capture/clipboard shortcuts. Wi-Fi, Bluetooth and Sound sub-pages open inside the panel: Wi-Fi network list, Bluetooth device connect/disconnect, output/input device selection and per-application volume.
 
 ### Performance
 <img src="docs/illustrations/performance.webp" alt="Performance panel" width="100%">
@@ -77,7 +99,13 @@ Screen capture with annotation (**Ctrl+F3**), text recognition (OCR) on a captur
 ### Settings
 <img src="docs/illustrations/settings.webp" alt="Settings" width="100%">
 
-Six pages with a search field: appearance, desktop and dock, file explorer, daily use, messengers and bookmarks. Screen frame, accent border on windows, desktop logo, quiet mode (dock and OSD hidden during fullscreen), on-screen indicators for volume, brightness and microphone, and optional automatic tiling (off by default; Ctrl+Alt+arrows).
+Eight pages with a search field (a result opens its page and highlights the row): Appearance, Interface, Docks and panels, Keyboard shortcuts, Media and audio, Apps, bookmarks and links, Files and Windows, General.
+
+- **Docks and panels**: the dock, the bookmarks panel (left edge) and the social networks panel (right edge) can each be hidden. Hiding the dock while it replaces the Windows taskbar gives the Windows taskbar back, so there is always one bar.
+- **Keyboard shortcuts**: every global shortcut in one page, grouped. "Modifier" opens a capture dialog; a combination reserved by Windows or already used by another action is refused with the reason. Fixed shortcuts (backup dashboard shortcut, desktop rescue, tiling keys, dictation key) show why they cannot be changed here. A shortcut that another application already holds at start-up is flagged "Inactif".
+- **Opening Settings**: **Win+Alt+S** (reassignable), the tray icon menu ("Paramètres de Winlestia"), or `winlestia panel settings` from a terminal.
+
+Screen frame, accent border on windows, desktop logo, quiet mode (dock and OSD hidden during fullscreen), on-screen indicators for volume, brightness and microphone, and optional automatic tiling (off by default; Ctrl+Alt+arrows).
 
 ### Terminal
 <img src="docs/illustrations/terminal.webp" alt="Terminal with the Winlestia palette" width="100%">
@@ -87,17 +115,25 @@ Opt-in at setup: Command Prompt through [Clink](https://github.com/chrisant996/c
 ### Panels
 <img src="docs/illustrations/panels.webp" alt="Winlestia panels" width="100%">
 
-Also: a Files explorer, messenger and bookmark side rails (the dashboard moves aside so the social rail no longer covers its tabs; it reopens on the last tab used), the Glass shell UI in English, French and Spanish (language detected from Windows), an installer that detects the system language, an optional push-to-talk dictation (hold AltGr, off by default), and a `winlestia` command line to script the running shell.
+Also: a redesigned Files explorer, messenger and bookmark side rails, an optional push-to-talk dictation (hold AltGr, off by default), and a `winlestia` command line to script the running shell.
 
 ## Install
 
 Requires **Windows 11 (64-bit)**. No administrator rights needed.
 
-1. Download [`Winlestia-Setup-0.9.1.exe`](https://github.com/lilidoxdev/winlestia/releases/download/v0.9.1/Winlestia-Setup-0.9.1.exe) from the [release](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1).
-2. Check it: run `Get-FileHash .\Winlestia-Setup-0.9.1.exe -Algorithm SHA256` in PowerShell and compare the result with the SHA-256 printed in the [release notes](https://github.com/lilidoxdev/winlestia/releases/tag/v0.9.1).
-3. Run it. The installer is not code-signed yet, so Windows may show a SmartScreen warning: choose **More info**, then **Run anyway**. Code signing is being looked into (SignPath Foundation offers free signing for open-source projects).
+1. Download `WinlestiaSetup.exe` from the [GitHub Releases page](https://github.com/lilidoxdev/winlestia/releases/latest).
+2. Check it: run `Get-FileHash .\WinlestiaSetup.exe -Algorithm SHA256` in PowerShell and compare the result with the SHA-256 printed in the release notes.
+3. Run it. The binaries are **not code-signed**, so SmartScreen will likely warn: choose **More info**, then **Run anyway**.
 
-After installing, move the pointer to the bottom edge of the screen to reveal the dock. The setup wizard is in English by default and uses French or Spanish when Windows is set to one of them. Full guide, options, updating and uninstalling: [docs/INSTALL.md](docs/INSTALL.md).
+After installing, move the pointer to the bottom edge of the screen to reveal the dock. Full guide, options and updating: [docs/INSTALL.md](docs/INSTALL.md).
+
+### Uninstall
+
+Run `WinlestiaSetup.exe` again and choose uninstall, or use Settings > Apps > Installed apps > Winlestia, or the "Désinstaller Winlestia" entry of the power menu. The Windows taskbar is restored first. You choose whether settings and data (`%LOCALAPPDATA%\Panneaux`) are kept or sent to the Recycle Bin.
+
+### Restore the Windows taskbar
+
+If the taskbar is missing: press **Ctrl+Alt+Backspace**, or run `Panneaux.Glass.exe --restore-taskbar` from the `Glass-v5` folder of the install. More options: [docs/RESTORE.md](docs/RESTORE.md).
 
 ## Usage
 
@@ -108,6 +144,7 @@ After installing, move the pointer to the bottom edge of the screen to reveal th
 | Ctrl+F3 | Screen capture |
 | Ctrl+F8 | Pin window on top |
 | Win+Alt+W | Wallpaper switcher (Ctrl+Alt+W if Windows refuses it) |
+| Win+Alt+Tab | Window overview (Win+Alt+V if Windows refuses it) |
 | Ctrl+Alt+Backspace | Emergency rescue |
 
 All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` command: [docs/SHORTCUTS.md](docs/SHORTCUTS.md).
@@ -118,22 +155,31 @@ All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` c
 
 **Why does Windows warn me about the installer?** The installer and the programs it installs are not code-signed, so SmartScreen cannot show a publisher. Verify the SHA-256, then use "More info", "Run anyway". A matching checksum shows the file is the published one; it does not replace a signature.
 
-**Is there a notification centre?** No. Only on-screen indicators and toasts.
-
 **Where are my settings and logs?** In `%LOCALAPPDATA%\Panneaux`. The name is the project's former name, kept on purpose. Uninstalling keeps this folder; see Privacy and data below to remove it.
 
 **Why "Panneaux" in some file names?** Same reason: legacy name.
 
+## Winjets
+
+Winjets are small desktop widgets placed behind your windows, on the desktop. Each one is a package (a ZIP or a folder) that describes its layout, settings and data in JSON; no code from a package is ever run. The default set is: Calendar, Clock, Music (the Windows media session), System, Markets (Yahoo Finance equities and indexes), Storage, Files, Notes, Agenda (an ICS link, for example an Outlook published calendar) and Weather (a city setting, or the Windows location), plus Battery. They follow your palette and sit on the glass; see [all of them](docs/media/winjets/all.png). Add them from Settings > Winjets. Each Winjet has its own background transparency slider (0 to 100 %, or "Par défaut" to follow the global glass setting), under the settings button of its row; text stays opaque.
+
+To move or resize Winjets, double-click one: edit mode starts for all of them (double-click again, Esc, or a click on the empty desktop ends it). A grid of cells (168 px with a 16 px gap, so 4 x 2 cells is 720 x 352) appears under the cards with the screen centre lines. Drag a card by its body or a handle; edges and sizes snap to the grid, to the screen centre and to the other cards, with an accent guide line when they align. Hold Alt for free placement. The position is saved once, when you release.
+
+To make your own, see [docs/winjets/MON-PREMIER-WINJET.md](docs/winjets/MON-PREMIER-WINJET.md) (step-by-step guide, in French) and the format reference [docs/winjets/FORMAT-v1.md](docs/winjets/FORMAT-v1.md). A fill-in template and an example are in `docs/winjets/`.
+
 ## Known limitations
 
-- The Glass UI is available in French, English and Spanish. The language comes from `Caelestia/language.json` (`auto`, `fr`, `en` or `es` under `%LOCALAPPDATA%\Panneaux\Caelestia\`), then the Windows UI language, then English. Spanish is partial: about 230 of 820 strings have a Spanish text, the others fall back to English.
+- The shell panels are translated into English and Spanish; some rarer labels derived from the system may still appear in French. The language is chosen automatically from the Windows display language. To force it, set the `language` key (`auto`, `fr`, `en` or `es`) in `%LOCALAPPDATA%\Panneaux\Caelestia\language.json`. Fallback text is French.
 - Not tested on a clean machine or virtual machine, and not tested after a real reboot or sign-in (the start-up scheduled task was launched manually).
 - Binaries are unsigned, so SmartScreen may warn.
 - Windows 11 x64 only.
 - Temperature is shown in Celsius only.
-- Not a notification centre.
 - The optional terminal integration prints a welcome banner in French, with your session and computer names.
 - When you confirm a wallpaper in the switcher, the previous one can flash briefly before the new one appears.
+
+## Tests
+
+`dotnet test tests/Winlestia.Tests --filter "Category!=Desktop"` and `pytest -q`. Details in [docs/TESTS.md](docs/TESTS.md).
 
 ## Privacy and data
 
@@ -143,11 +189,13 @@ All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` c
 
 ## Roadmap
 
+**Shipped in 1.0:** dynamic dock, redesigned Control center, ten built-in Winjets, lock screen, window overview, push-to-talk dictation, WPF installer. See [CHANGELOG.md](CHANGELOG.md).
+
+**Shipped in 0.9.2:** redesigned settings in eight pages with search, palette editor, terminal that follows the light or dark theme, keyboard shortcuts page with rebinding, redesigned file manager, dock icons for packaged apps, separately hideable dock, bookmarks and social panel.
+
 **Shipped in 0.9.0:** Wi-Fi panel, per-display brightness, dashboard audio bars, fullscreen quiet mode, full-screen wallpaper switcher, richer command palette, settings search, tiling shortcuts, `winlestia` command line. See [CHANGELOG.md](CHANGELOG.md).
 
-**Shipped in 0.9.1:** media panel fixes, social rail spacing, English installer with language detection, safer writes of user data, .NET 10. See [docs/RELEASE-0.9.1.md](docs/RELEASE-0.9.1.md).
-
-**Ideas, not promises:** a notification centre, support for enterprise and hidden Wi-Fi networks, more testing on other display layouts, and a code-signed installer.
+**Ideas, not promises:** support for enterprise and hidden Wi-Fi networks, more testing on other display layouts, and a code-signed installer.
 
 ## Contributing
 

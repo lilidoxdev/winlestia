@@ -11,7 +11,8 @@ RowLayout {
     readonly property int padding: Appearance.padding.large
 
     function displayTemp(temp: real): string {
-        if (!Number.isFinite(temp)) return "—";
+        if (!Number.isFinite(temp))
+            return "—";
         return `${Math.ceil(Config.services.useFahrenheit ? temp * 1.8 + 32 : temp)}°${Config.services.useFahrenheit ? "F" : "C"}`;
     }
 
@@ -101,8 +102,9 @@ RowLayout {
         implicitWidth: Config.dashboard.sizes.resourceSize * primaryMult
         implicitHeight: Config.dashboard.sizes.resourceSize * primaryMult
 
-        // Repaint only while the Performance tab is on screen; one catch-up paint when it appears.
-        readonly property bool onScreen: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 2
+        // Repeint seulement quand l'onglet Performance est à l'écran ; un repeint de rattrapage à l'apparition.
+        readonly property bool onScreen: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard"
+            && Bridge.window.dashboardTab === 2
         function repaint(): void {
             if (onScreen)
                 canvas.requestPaint();

@@ -6,23 +6,66 @@ import qs.config
 import qs.services
 import qs.modules.launcher as Launcher
 import Quickshell
+
 Column {
-    id:root
-    spacing:Appearance.spacing.larger
-    PersistentProperties {id:vis;property bool launcher:true;property bool session:false}
-    RowLayout {
-        id:heading;width:parent.width;spacing:Appearance.spacing.normal
-        MaterialIcon {text:qsTr("search");font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
-        StyledText {text:qsTr("Commande rapide");font.pointSize:Appearance.font.size.title;Layout.fillWidth:true}
-        StyledText {text:Bridge.settings.paletteShortcut||"Ctrl + F2";font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
-        IconButton {icon:"close";type:IconButton.Text;onClicked:Bridge.closePanel()}
+    id: root
+    spacing: Appearance.spacing.larger
+    PersistentProperties {
+        id: vis
+        property bool launcher: true
+        property bool session: false
     }
-    readonly property bool wide:launcher.wallpaperMode
-    Launcher.Content {id:launcher;width:parent.width;visibilities:vis;panels:({});maxHeight:Math.min(610,Bridge.screenHeight-210)}
     RowLayout {
-        id:footer;width:parent.width
-        StyledText {text:qsTr("↑ ↓ naviguer · Entrée ouvrir · Échap fermer");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline;Layout.fillWidth:true}
-        StyledText {text:qsTr("> commandes · 24 × 7 calculer");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+        id: heading
+        width: parent.width
+        spacing: Appearance.spacing.normal
+        MaterialIcon {
+            text: qsTr("search")
+            font.pointSize: Appearance.font.size.extraLarge
+            color: Colours.palette.m3primary
+        }
+        StyledText {
+            text: qsTr("Commande rapide")
+            font.pointSize: Appearance.font.size.title
+            Layout.fillWidth: true
+        }
+        StyledText {
+            text: Bridge.settings.paletteShortcut || "Ctrl + F2"
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3outline
+        }
+        IconButton {
+            icon: "close"
+            type: IconButton.Text
+            onClicked: Bridge.closePanel()
+        }
     }
-    function reset(){vis.launcher=true;Bridge.searchPalette("");Qt.callLater(()=>Bridge.focusPalette())}
+    readonly property bool wide: launcher.wallpaperMode
+    Launcher.Content {
+        id: launcher
+        width: parent.width
+        visibilities: vis
+        panels: ({})
+        maxHeight: Math.min(610, Bridge.screenHeight - 210)
+    }
+    RowLayout {
+        id: footer
+        width: parent.width
+        StyledText {
+            text: qsTr("↑ ↓ naviguer · Entrée ouvrir · Échap fermer")
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3outline
+            Layout.fillWidth: true
+        }
+        StyledText {
+            text: qsTr("> commandes · 24 × 7 calculer")
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3outline
+        }
+    }
+    function reset() {
+        vis.launcher = true;
+        Bridge.searchPalette("");
+        Qt.callLater(() => Bridge.focusPalette());
+    }
 }

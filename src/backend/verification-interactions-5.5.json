@@ -1,0 +1,89 @@
+{
+  "At": "2026-10-24T23:24:23.6330239+02:00",
+  "Passed": 8,
+  "Failed": 2,
+  "Checks": [
+    {
+      "Name": "R\u00E9ouverture pendant le repli : derni\u00E8re intention respect\u00E9e",
+      "Pass": true
+    },
+    {
+      "Name": "Huit bascules rapides ne laissent pas de fermeture diff\u00E9r\u00E9e",
+      "Pass": true
+    },
+    {
+      "Name": "R\u00E9ouvertures rapides : un collecteur actif et red\u00E9marrage possible",
+      "Pass": false
+    },
+    {
+      "Name": "Aucun relev\u00E9 ni boucle de capteurs apr\u00E8s masquage",
+      "Pass": false
+    },
+    {
+      "Name": "Retour depuis les quatre panneaux : accueil, horloge et deux fl\u00E8ches seulement",
+      "Pass": true
+    },
+    {
+      "Name": "Commande rapide disponible launcher repli\u00E9",
+      "Pass": true
+    },
+    {
+      "Name": "Commande rapide referm\u00E9e sans laisser de surface fant\u00F4me",
+      "Pass": true
+    },
+    {
+      "Name": "Replier l\u2019espace ferme aussi la palette ouverte",
+      "Pass": true
+    },
+    {
+      "Name": "Replier l\u2019espace ferme aussi l\u2019\u00E9diteur d\u2019onglets",
+      "Pass": true
+    },
+    {
+      "Name": "Repli complet de toutes les surfaces",
+      "Pass": true
+    }
+  ],
+  "Measurements": [
+    {
+      "Name": "Accueil stable",
+      "ElapsedMs": 8009.4758,
+      "CpuMs": 1109.375,
+      "TotalCpuPercent": 1.1542254588928873,
+      "WorkingSetMB": 168.57421875,
+      "PrivateMB": 165,
+      "Samples": 0,
+      "Sampling": false
+    },
+    {
+      "Name": "Accueil \u002B \u00E9tat PC",
+      "ElapsedMs": 12010.7581,
+      "CpuMs": 109.375,
+      "TotalCpuPercent": 0.075886419781497,
+      "WorkingSetMB": 241.44921875,
+      "PrivateMB": 173.14453125,
+      "Samples": 0,
+      "Sampling": false
+    },
+    {
+      "Name": "Accueil apr\u00E8s repli PC",
+      "ElapsedMs": 6005.732,
+      "CpuMs": 578.125,
+      "TotalCpuPercent": 0.8021782361352644,
+      "WorkingSetMB": 251.82421875,
+      "PrivateMB": 217.58203125,
+      "Samples": 5,
+      "Sampling": true
+    },
+    {
+      "Name": "Interface repli\u00E9e",
+      "ElapsedMs": 6003.729,
+      "CpuMs": 31.25,
+      "TotalCpuPercent": 0.043375559614119916,
+      "WorkingSetMB": 315.18359375,
+      "PrivateMB": 326.2109375,
+      "Samples": 5,
+      "Sampling": false
+    }
+  ]
+}

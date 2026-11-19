@@ -26,7 +26,12 @@ Item {
         }
     }
 
-    Component.onCompleted: {if(modelData.kind==="app"||modelData.kind==="systemRecent")Bridge.action("icon",{id:modelData.id})}
+    Component.onCompleted: {
+        if (modelData.kind === "app" || modelData.kind === "systemRecent")
+            Bridge.action("icon", {
+                id: modelData.id
+            });
+    }
     Item {
         anchors.fill: parent
         anchors.leftMargin: Appearance.padding.larger
@@ -36,13 +41,17 @@ Item {
         IconImage {
             id: icon
 
-            source: Bridge.iconUrl(root.modelData.id,Bridge.iconRevision)
+            source: Bridge.iconUrl(root.modelData.id, Bridge.iconRevision)
             implicitSize: parent.height * 0.8
 
             anchors.verticalCenter: parent.verticalCenter
         }
 
-        MaterialIcon {anchors.centerIn:icon;text:root.modelData.icon||"apps";visible:!icon.source.toString()}
+        MaterialIcon {
+            anchors.centerIn: icon
+            text: root.modelData.icon || "apps"
+            visible: !icon.source.toString()
+        }
         Item {
             anchors.left: icon.right
             anchors.leftMargin: Appearance.spacing.normal

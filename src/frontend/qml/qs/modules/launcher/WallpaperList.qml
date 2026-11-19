@@ -30,16 +30,21 @@ PathView {
         id: scriptModel
 
         readonly property string term: root.search.text.split(" ").slice(1).join(" ")
-        // Scanned only now: this item exists only while the wallpaper mode is open.
+        // Scanné seulement maintenant : cet élément n'existe que tant que le mode fonds d'écran est ouvert.
         property int revision: 0
-        readonly property var values: { revision; return Bridge.wallpaperChoices(term) }
+        readonly property var values: {
+            revision;
+            return Bridge.wallpaperChoices(term);
+        }
         readonly property int length: values.length
     }
 
     Component.onCompleted: Bridge.refreshWallpapers()
     Connections {
         target: Bridge
-        function onWallpapersReady() { scriptModel.revision++ }
+        function onWallpapersReady() {
+            scriptModel.revision++;
+        }
     }
 
     implicitWidth: Math.min(numItems, count) * itemWidth

@@ -1,4 +1,4 @@
-// Caelestia Border.qml mask, with a native click-through Windows host.
+// Masque Border.qml de Caelestia, avec un hôte Windows natif laissant passer les clics.
 pragma ComponentBehavior: Bound
 
 import QtQuick
@@ -20,8 +20,8 @@ Item {
 
     anchors.fill: parent
 
-    // The ring is drawn as one even-odd shape: no layer, no mask texture, so the
-    // fill alpha reaches the screen unchanged and matches the dashboard exactly.
+    // L'anneau est dessiné comme une seule forme even-odd : pas de couche ni de texture de masque, donc
+    // l'alpha de remplissage arrive inchangé à l'écran et correspond exactement au tableau de bord.
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer
@@ -33,20 +33,71 @@ Item {
 
             startX: 0
             startY: 0
-            PathLine { x: root.width; y: 0 }
-            PathLine { x: root.width; y: root.height }
-            PathLine { x: 0; y: root.height }
-            PathLine { x: 0; y: 0 }
+            PathLine {
+                x: root.width
+                y: 0
+            }
+            PathLine {
+                x: root.width
+                y: root.height
+            }
+            PathLine {
+                x: 0
+                y: root.height
+            }
+            PathLine {
+                x: 0
+                y: 0
+            }
 
-            PathMove { x: root.innerLeft + root.rounding; y: root.innerTop }
-            PathLine { x: root.innerRight - root.rounding; y: root.innerTop }
-            PathArc { x: root.innerRight; y: root.innerTop + root.rounding; radiusX: root.rounding; radiusY: root.rounding; direction: PathArc.Clockwise }
-            PathLine { x: root.innerRight; y: root.innerBottom - root.rounding }
-            PathArc { x: root.innerRight - root.rounding; y: root.innerBottom; radiusX: root.rounding; radiusY: root.rounding; direction: PathArc.Clockwise }
-            PathLine { x: root.innerLeft + root.rounding; y: root.innerBottom }
-            PathArc { x: root.innerLeft; y: root.innerBottom - root.rounding; radiusX: root.rounding; radiusY: root.rounding; direction: PathArc.Clockwise }
-            PathLine { x: root.innerLeft; y: root.innerTop + root.rounding }
-            PathArc { x: root.innerLeft + root.rounding; y: root.innerTop; radiusX: root.rounding; radiusY: root.rounding; direction: PathArc.Clockwise }
+            PathMove {
+                x: root.innerLeft + root.rounding
+                y: root.innerTop
+            }
+            PathLine {
+                x: root.innerRight - root.rounding
+                y: root.innerTop
+            }
+            PathArc {
+                x: root.innerRight
+                y: root.innerTop + root.rounding
+                radiusX: root.rounding
+                radiusY: root.rounding
+                direction: PathArc.Clockwise
+            }
+            PathLine {
+                x: root.innerRight
+                y: root.innerBottom - root.rounding
+            }
+            PathArc {
+                x: root.innerRight - root.rounding
+                y: root.innerBottom
+                radiusX: root.rounding
+                radiusY: root.rounding
+                direction: PathArc.Clockwise
+            }
+            PathLine {
+                x: root.innerLeft + root.rounding
+                y: root.innerBottom
+            }
+            PathArc {
+                x: root.innerLeft
+                y: root.innerBottom - root.rounding
+                radiusX: root.rounding
+                radiusY: root.rounding
+                direction: PathArc.Clockwise
+            }
+            PathLine {
+                x: root.innerLeft
+                y: root.innerTop + root.rounding
+            }
+            PathArc {
+                x: root.innerLeft + root.rounding
+                y: root.innerTop
+                radiusX: root.rounding
+                radiusY: root.rounding
+                direction: PathArc.Clockwise
+            }
         }
     }
 }

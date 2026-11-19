@@ -1,0 +1,194 @@
+{
+  "size": {
+    "default": [
+      352,
+      168
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      536,
+      352
+    ]
+  },
+  "settings": [
+    {
+      "id": "hour12",
+      "type": "toggle",
+      "label": "Format 12 heures (AM/PM)",
+      "default": false
+    },
+    {
+      "id": "showSeconds",
+      "type": "toggle",
+      "label": "Afficher les secondes",
+      "default": false
+    },
+    {
+      "id": "showDate",
+      "type": "toggle",
+      "label": "Afficher la date",
+      "default": true
+    }
+  ],
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 0,
+        "children": [
+          {
+            "type": "column",
+            "visibleWhen": "settings.showDate",
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ now | date:ddd d MMM }}",
+                "style": "eyebrow"
+              }
+            ]
+          },
+          {
+            "type": "stack",
+            "grow": 1,
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "!settings.hour12",
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "seconds": "{{ settings.showSeconds }}"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.hour12 && !settings.showSeconds",
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "format": "h:mm AP"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.hour12 && settings.showSeconds",
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "format": "h:mm:ss AP"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 0,
+        "children": [
+          {
+            "type": "column",
+            "visibleWhen": "settings.showDate",
+            "children": [
+              {
+                "type": "text",
+                "text": "{{ now | date:dddd d MMMM }}",
+                "style": "eyebrow"
+              }
+            ]
+          },
+          {
+            "type": "stack",
+            "grow": 1,
+            "children": [
+              {
+                "type": "column",
+                "visibleWhen": "!settings.hour12",
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "seconds": "{{ settings.showSeconds }}"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.hour12 && !settings.showSeconds",
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "format": "h:mm AP"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "settings.hour12 && settings.showSeconds",
+                "children": [
+                  {
+                    "type": "stack",
+                    "grow": 1,
+                    "children": [
+                      {
+                        "type": "clock",
+                        "variant": "digital",
+                        "format": "h:mm:ss AP"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

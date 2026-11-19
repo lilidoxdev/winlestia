@@ -1,0 +1,197 @@
+# Pont backend C# <-> frontend PySide6
+
+Contrat du canal entre `src/backend/Bridge/QtShellBridge*.cs` (serveur ; un handler `[BridgeAction("nom")]` par action, dans `QtShellBridge.Actions.*.cs`) et `src/frontend/bridge_client.py` (client). Version du protocole : **1** (`QtShellBridge.ProtocolVersion`, `bridge_client.PROTOCOL_VERSION`). La forme lisible par machine est `docs/bridge-schema.json` ; les tests `BridgeContractTests` (xUnit) et `tests/test_bridge_contract.py` (pytest) vérifient par extraction statique que chaque message émis ou traité y figure.
+
+## Cadrage
+
+- Canal nommé Windows `\\.\pipe\PanneauxCaelestia`, octets, un seul client, `CurrentUserOnly`.
+- JSON UTF-8, **une ligne par message** terminée par `
+`. Requête client > 131072 octets : connexion fermée ; réponse lue côté client jusqu'à 8 Mio.
+- Mode **requête/réponse strict** : le client écrit une requête, le serveur répond exactement une ligne. Le serveur n'écrit jamais de lui-même ; les notifications passent par la file `events` de la réponse suivante.
+- Le client interroge en boucle (`state` toutes les 180 ms visible, 500 ms sinon, 1 s en mode silencieux ; `visualizer` 55 ms ; `audioBars` 33 ms) et intercale les commandes utilisateur.
+
+## Poignée de main / version
+
+Pas de message dédié : chaque requête porte `args.protocol` (entier). Au **premier message de chaque connexion**, le serveur compare à `ProtocolVersion` et écrit un avertissement dans le journal (`Qt IPC: version de protocole différente ...`) en cas de divergence ou d'absence (client ancien). La connexion n'est jamais refusée ; les commandes inconnues sont ignorées silencieusement. Un client récent sur un serveur ancien ne reçoit rien de plus (champ ignoré).
+
+## Requête (client -> serveur)
+
+`{"command": nom, "args": {...}}`. Les champs d'`args` absents prennent la valeur par défaut du serveur (`""`, `0`, `false`). Le client fusionne dans **chaque** requête l'abonnement courant :
+
+`pid:number, epoch:number, protocol:number, visible:boolean, page:number, dock:boolean, controls:boolean, mixer:boolean, wifi:boolean, bars:boolean`
+
+`pid` (processus du frontend), `epoch` (compteur de navigation ; les évènements `close` d'une époque révolue sont écartés), `visible/page/dock/controls/mixer/wifi/bars` (ce que le frontend affiche, pilote l'échantillonnage). `seq` n'est utile qu'à `audioBars`.
+
+Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {state, level, levels, lang, text, error}}`), `audioBars` (`{"audioBars": {seq, idle, bars}}`), `visualizer` (`{"spectrum": [..]}`). Toutes les autres commandes renvoient la réponse générale.
+
+### Commandes
+
+| Commande | Champs `args` | Requis |
+|---|---|---|
+| `activate` | hwnd:number, id:string | hwnd |
+| `addAccess` | board:string | - |
+| `addFolder` | board:string | - |
+| `audio` | - | - |
+| `audioBars` | seq:number | - |
+| `bookmarksBrowser` | id:string | - |
+| `bookmarksDeleteInBrowser` | confirmSync:boolean, id:string | - |
+| `bookmarksHide` | id:string | - |
+| `bookmarksItems` | - | - |
+| `bookmarksOpen` | id:string | - |
+| `bookmarksRefresh` | ifDirty:boolean | - |
+| `bookmarksUnhideAll` | - | - |
+| `brightness` | id:string, value:number | - |
+| `capture` | - | - |
+| `captureExport` | path:string | path |
+| `captureShortcutMode` | enabled:boolean | - |
+| `clipboard` | - | - |
+| `clipboardCopy` | id:string | - |
+| `clipboardFiles` | paths:array<string> | - |
+| `clipboardPin` | id:string | - |
+| `copyText` | text:string | text |
+| `customTheme` | colors:object, glass:boolean, opacity:number | - |
+| `desktopClose` | index:number | - |
+| `desktopNew` | - | - |
+| `desktopSwitch` | index:number, relative:number | - |
+| `deviceMute` | id:string, muted:boolean | - |
+| `deviceSelect` | id:string | - |
+| `deviceVolume` | id:string, value:number | - |
+| `dictation` | - | - |
+| `dictationCapture` | enabled:boolean | - |
+| `dockApp` | action:string, confirmed:boolean, hwnd:number, id:string, index:number | - |
+| `dockLayout` | bar:array<string>, drawer:array<string> | - |
+| `dockPreview` | cx:number, cy:number, dpr:number, id:string, x:number, y:number | - |
+| `dockPreviewEnd` | now:boolean | - |
+| `edit` | id:string | - |
+| `editEntry` | category:string, id:string, name:string | - |
+| `emptyRecycleBin` | - | - |
+| `entryIcon` | id:string, path:string | - |
+| `explorerFolder` | - | - |
+| `explorerOpen` | - | - |
+| `explorerPalette` | accent:string, background:string, text:string | - |
+| `explorerReport` | - | - |
+| `explorerRestore` | - | - |
+| `favorite` | id:string | - |
+| `fileCancel` | - | - |
+| `fileOpen` | gen:number, index:number | index |
+| `fileResults` | - | - |
+| `fileSearch` | gen:number, term:string | term |
+| `icon` | id:string | - |
+| `launch` | id:string | - |
+| `locate` | - | - |
+| `lockNow` | - | - |
+| `lockSetPassword` | current:string, password:string | - |
+| `lockSettings` | enabled:boolean, idleSeconds:number | - |
+| `lockShown` | - | - |
+| `lockUnlock` | password:string | - |
+| `lyrics` | album:string, artist:string, duration:number, key:string, title:string | title |
+| `masterMute` | muted:boolean | - |
+| `media` | action:string, value:number | - |
+| `mediaVolume` | value:number | - |
+| `microphone` | - | - |
+| `move` | board:string, id:string | - |
+| `openFiles` | - | - |
+| `overviewAct` | action:string, hwnd:string | - |
+| `overviewWindows` | - | - |
+| `palette` | - | - |
+| `paletteRun` | id:string, kind:string, query:string | - |
+| `preference` | enabled:boolean, key:string, value:string | key |
+| `profiles` | - | - |
+| `quit` | - | - |
+| `quickToggle` | enabled:boolean, id:string | - |
+| `openBluetooth` | - | - |
+| `peripheralKind` | id:string, kind:string (`auto` retire la surcharge) | - |
+| `peripheralVisibility` | id:string, visible:boolean | - |
+| `peripheralsRefresh` | - | - |
+| `radio` | kind:string | - |
+| `raiseMedia` | - | - |
+| `recycleFiles` | paths:array<string> | - |
+| `refreshCatalogue` | - | - |
+| `restoreTaskbar` | - | - |
+| `reveal` | id:string | - |
+| `runningRefresh` | - | - |
+| `sensorsInstall` | driver:boolean | - |
+| `sensorsRemove` | - | - |
+| `sessionMute` | id:string, muted:boolean | - |
+| `sessionVolume` | id:string, value:number | - |
+| `settings` | section:string | - |
+| `shortcut` | combo:string, id:any, key:number, kind:string, modifiers:number | - |
+| `shortcut-reset` | id:string | - |
+| `socialEnable` | enabled:boolean, id:string | - |
+| `socialGlobalMute` | muted:boolean | - |
+| `socialHistoryClear` | - | - |
+| `socialHistoryRemove` | seq:number | seq |
+| `socialLogin` | id:string | - |
+| `socialLogout` | id:string | - |
+| `socialMute` | id:string, muted:boolean | - |
+| `socialOpen` | id:string | - |
+| `socialSound` | enabled:boolean | - |
+| `socialTestSound` | - | - |
+| `socialVolume` | value:number | - |
+| `state` | - | - |
+| `systemAction` | confirmed:boolean, id:string | - |
+| `theme` | dark:boolean, mode:string | - |
+| `toolRun` | id:string | - |
+| `tools` | - | - |
+| `visualizer` | - | - |
+| `volume` | value:number | - |
+| `wallpaperApply` | display:number, path:string | path |
+| `wallpaperCapture` | h:number, token:string, w:number, x:number, y:number | - |
+| `wallpaperChanged` | - | - |
+| `wallpaperPicker` | - | - |
+| `website` | id:string | - |
+| `websites` | - | - |
+| `wifiConnect` | password:string, ssid:string | ssid |
+| `wifiForget` | ssid:string | ssid |
+| `wifiPortal` | - | - |
+| `wifiSettings` | page:string | - |
+| `windowList` | - | - |
+| `winjets.inspect` | path:string | - |
+| `winjets.import` | path:string | - |
+| `winjets.uninstall` | packageId:string | - |
+| `winjets.add` | packageId:string, screen:string, x:number, y:number | - |
+| `winjets.remove` | instanceId:string | - |
+| `winjets.setHidden` | instanceId:string, hidden:boolean | - |
+| `winjets.setOpacity` | instanceId:string, opacity:number|null | - |
+| `winjets.setGeometry` | instanceId:string, geometry:object | - |
+| `winjets.setSettings` | instanceId:string, settings:object | - |
+| `winjets.setState` | instanceId:string, key:string, value:any | - |
+| `winjets.setEditMode` | enabled:boolean | - |
+| `winjets.refresh` | instanceId:string | - |
+| `winjets.recoverAll` | - | - |
+| `workspace` | id:string | - |
+| `zipFiles` | paths:array<string> | - |
+
+### Clés de `preference`
+
+`args.key` choisit la préférence ; `enabled` (booléen) ou `value` (nombre / chaîne) porte la valeur. Clés : `accentBorders`, `activeBorderOnly`, `autoTile`, `autostart`, `bookmarksRailVisible`, `clipboardHistory`, `clipboardImages`, `clipboardLimit`, `customGlassOpacity`, `desktopIndicator`, `desktopLogo`, `dictationEnabled`, `dictationKey`, `dockDrawerOpen`, `dockVisible`, `dockWidth`, `explorerTheme`, `filesDefaultHandler`, `filesPreload`, `frameThickness`, `glassOpacity`, `iconSize`, `lyrics`, `motion`, `osd`, `peripheralBattery`, `pill`, `quietFullscreen`, `reducedEffects`, `replaceTaskbar`, `screenFrame`, `socialBackground`, `socialRailVisible`, `taskbar`, `tileExclusionRemove`, `topActivationMargin`. Le détail des champs par clé est dans le schéma (`preferenceKeys`).
+
+## Réponse générale (serveur -> client)
+
+`{"state", "events", "notice", "wallpaperCapture", "bookmarksItems", "windows", "fileResults", "lyrics", "wallpaperPicker"}` ; les clés `null` sont émises telles quelles.
+
+- `state` : objet instantané, clés de premier niveau : `systemRecent`, `wallpapers`, `wallpaperRevision`, `audioReadMs`, `audioMixer`, `quickTabs`, `social`, `bookmarks`, `settings`, `clipboard`, `diagnostics`, `dark`, `taskbarEnabled`, `networkKind`, `virtualDesktops`, `fullscreenMonitors`, `quiet`, `quietForced`, `performance`, `sysInfo`, `media`, `controls`, `quick`, `lock`, `apps`, `favorites`, `recent`, `launchCounts`, `websites`, `profiles`, `taskbarApps`, `runningApps`, `icons`, `iconRevision`, `winjets`, `desktop`, `peripherals`. `lock` : `{locked, failures, retryAfter, passwordResult, passwordSeq}` (`passwordResult` : `""`, `"ok"`, `"wrong"`, `"invalid"` ; `settings.lock` : `{enabled, hasPassword, idleSeconds}` ; ni mot de passe ni empreinte ne sortent jamais ; `retryAfter` = secondes restantes ; le client envoie `lockShown` dès sa fenêtre visible, sinon le verrou est levé après 8 s ; le raccourci de secours lève le verrou, c'est un verrou de shell et non une frontière de sécurité). `quick` : `{wifi, bluetooth, airplane, micMute, keepAwake}`, chacun `{available, on}` (cache alimenté par évènements, jamais d'appel système dans l'instantané) ; `settings.sensors` : `{state, driver, outdated, available, result}` (`state` : `"absent"`, `"noDriver"`, `"stopped"`, `"active"` ; `result`, issue de la dernière action : `""`, `"ok"`, `"reboot"`, `"declined"`, `"failed"`, `"busy"` ; état en cache 10 s, `sensorsInstall {driver}` et `sensorsRemove` lancent l'assistant élevé hors du fil du pont et émettent `sensors` au début et à la fin) ; `peripherals` : `{enabled, devices:[{id, name, kind, percent, charging, approximate, hidden, source}], paired:[{id, name, kind, detectedKind, overridden, connected, percent}]}` (`id` : `bt:<adresse>` / `xinput:<n>` / `hid:<vid>:<pid>` / `system:battery` ; `source` : `bluetooth`, `ble`, `xinput`, `hid`, `system` ; `kind` : `headset`, `gamepad`, `mouse`, `keyboard`, `other`, `laptop` (batterie de l'ordinateur, nom vide, jamais surchargeable) ; `charging` peut être `null` ; `devices` = connectés avec batterie connue, masqués inclus avec `hidden` ; cache alimenté par un sondage de 60 s actif seulement dock affiché et fonction activée, `settings.peripheralBattery` en est l'interrupteur) ; `settings.dockBar` et `settings.dockDrawer` : identifiants ordonnés des éléments du dock (barre / tiroir), écrits par `dockLayout`. Le contenu des sous-objets est libre (lu avec `.get` côté Python, donc tolérant aux champs manquants) et n'est pas figé par ce contrat.
+- Éléments de `runningApps` : en plus de `id`, `name`, `path`, `hwnd`, `pinned`, `favorite`, `background`, `canStop`, `count`, `active` et `windows`, chaque élément porte `cpu` (nombre, un chiffre après la virgule, % de la machine entière), `mem` (entier, Mo de jeu de travail privé, comme la colonne « Mémoire » du Gestionnaire des tâches ; repli sur la mémoire privée validée si la lecture globale est indisponible) et `procs` (entier, nombre de processus regroupés sous ce chemin). Ces trois champs ne sont mesurés que sur l’action `runningRefresh` ; hors de la fenêtre « Applications », ils gardent leur dernière valeur. Un élément à pseudo-chemin (application empaquetée) a `0`, `0`, `0`.
+- `events` : tableau de chaînes, vidé à chaque réponse (32 maximum en file).
+- `notice` : texte à afficher une fois (erreur ou confirmation).
+- `wallpaperCapture`, `bookmarksItems`, `windows`, `fileResults`, `lyrics`, `wallpaperPicker` : réponses ponctuelles aux commandes homonymes. `lyrics` : `{state, lines, plain, key}` ; la commande ne bloque jamais sur le réseau : elle répond `loading` tant que la recherche (LRCLIB, hors du canal) court, puis l'évènement `lyrics` invite le client à renvoyer la commande pour lire le résultat.
+
+### Évènements (`events`)
+
+Exacts : `toggle`, `access`, `media`, `performance`, `controls`, `palette`, `settings`, `settings:social`, `settings:bookmarks`, `clipboard`, `audio`, `microphone`, `tools`, `capture`, `capture-ocr`, `capture-select`, `wallpaper-switcher`, `overview`, `close`, `bookmarks`, `social`, `files`, `lyrics`, `quick`, `lock`, `sensors`, `dock`, `desktop.explorerRestarted`, `dictation:start`, `dictation:stop`, `dictation:keycancel`.
+Préfixes (suffixe variable) : `workspace:`, `osd:volume:`, `osd:brightness:`, `shortcut-key:`, `shortcut-saved:`, `osd:mic:`, `dictation:key:` — `workspace:<id>`, `osd:volume:<n>:<muet>`, `osd:brightness:<n>`, `osd:mic:<n>:<muet>`, `shortcut-key:<mods>:<vk>`, `shortcut-saved:<kind>`, `dictation:key:<vk>`.
+Évènements gérés côté client seulement (jamais émis par le serveur actuel) : `mixer`.
+
+### Winjets
+
+Actions `winjets.*` (voir `docs/WINJETS-DESIGN.md` §4), état `state.winjets` (`editMode`, `packages`, `instances`, `data`, `lastImport`) et `state.desktop.explorerEpoch` (compteur incrémenté à chaque redémarrage d'Explorer, avec l'évènement `desktop.explorerRestarted`).
+
+### Position (`locate`, `state.location`)
+
+Action `locate` (sans argument) : demande la position Windows (Windows.Devices.Geolocation, précision par défaut, délai de 5 s) au service de position, une seule lecture à la fois. Rien n'est lu en arrière-plan : seul `locate` déclenche une lecture. Un succès est gardé 30 min (un nouvel appel dans ce délai ne relit pas) ; un échec peut être réessayé après 1 min. Le résultat est publié dans `state.location` = `{lat, lon, accuracyM, ok, requested}` (`lat`/`lon` arrondis à 3 décimales, `accuracyM` en mètres) ; `requested` vaut `false` tant qu'aucune tentative n'a abouti ou échoué, `true` ensuite (succès ou échec) ; `ok` vaut `false` tant que rien n'a été lu et en cas d'accès refusé, de service de localisation désactivé ou de délai dépassé (alors `lat`, `lon` et `accuracyM` valent 0).
+
+## Faire évoluer le contrat
+
+1. Ajouter le message dans `docs/bridge-schema.json` et ce document.
+2. Changer d'incompatibilité (champ retiré, sens modifié) : incrémenter `ProtocolVersion` et `PROTOCOL_VERSION` ensemble (un test vérifie qu'ils sont égaux au schéma).
+3. Ajouter un champ optionnel ou une commande ne change pas la version.

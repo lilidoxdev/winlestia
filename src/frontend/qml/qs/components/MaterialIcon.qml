@@ -2,7 +2,7 @@ import qs.services
 import qs.config
 
 StyledText {
-    color:Bridge.themeMode==="auto"?Colours.palette.m3primary:Colours.palette.m3onSurface
+    color: Bridge.themeMode === "auto" ? Colours.palette.m3primary : Colours.palette.m3onSurface
     property real fill
     property int grade: Colours.light ? 0 : -25
 

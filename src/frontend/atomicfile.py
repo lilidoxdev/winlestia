@@ -1,4 +1,5 @@
-# Crash-safe replacement of durable user data: write a unique temp file in the same dir, fsync, then os.replace. The old file stays intact on any failure.
+# Crash-safe replacement of durable user data: write a unique temp file in the same dir, fsync, then os.replace. The old file stays
+# intact on any failure.
 import os, tempfile
 from pathlib import Path
 

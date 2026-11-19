@@ -1,4 +1,4 @@
-// language: C++17, file: TaskbarRescue.cpp, target: Windows 11 x64 / MSVC, independent taskbar recovery
+// language: C++17, file: TaskbarRescue.cpp, target: Windows 11 x64 / MSVC, récupération indépendante de la barre des tâches
 #include <windows.h>
 #include <shellapi.h>
 #include <fstream>

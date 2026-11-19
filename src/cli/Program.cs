@@ -1,4 +1,5 @@
-// C# 12 / winlestia.exe / Command-line client: sends one allow-listed command to the running shell through a user-only named pipe.
+// C# 12 / winlestia.exe / Client en ligne de commande : envoie une commande autorisée au shell en cours via un tube nommé réservé à
+// l'utilisateur.
 using System;
 using System.IO;
 using System.IO.Pipes;
@@ -7,13 +8,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using PanneauxGlass;
-using PanneauxGlass.Shell;
 
 namespace WinlestiaCli;
 
-// Source-generated metadata: reflection-based JSON is unavailable once the exe is trimmed.
+// Métadonnées générées par source : le JSON par réflexion n'est plus disponible une fois l'exe élagué.
 [JsonSerializable(typeof(string[]))]
-internal partial class CliJson : JsonSerializerContext { }
+internal partial class CliJson : JsonSerializerContext
+{
+}
 
 static class Program
 {
@@ -30,35 +32,25 @@ static class Program
             return 0;
         }
         if (command.Kind == CliKind.Wallpaper)
-        { // `wallpaper list` is WallpaperList and never reaches this path resolution
+        {   // `wallpaper list` est WallpaperList et n'atteint jamais cette résolution de chemin
             string full;
             try
             {
                 full = Path.GetFullPath(command.Arg);
             }
-            catch (Exception)
-            {
-                Console.Error.WriteLine("winlestia: invalid wallpaper path.");
-                return 2;
-            }
+            catch (Exception) { Console.Error.WriteLine("winlestia: invalid wallpaper path."); return 2; }
             if (!CliCommands.ValidWallpaper(full, File.Exists, out error))
             {
                 Console.Error.WriteLine("winlestia: " + error);
                 return 2;
             }
-            args =
-                command.Number > 0
-                    ? new[] { "wallpaper", full, "--display", command.Number.ToString() }
-                    : new[] { "wallpaper", full };
+            args = command.Number > 0 ? new[] { "wallpaper", full, "--display", command.Number.ToString() } : new[] { "wallpaper", full };
         }
         try
         {
-            using var client = new NamedPipeClientStream(
-                ".",
-                "WinlestiaCli",
-                PipeDirection.InOut,
-                PipeOptions.CurrentUserOnly | PipeOptions.Asynchronous
-            ); // Asynchronous: otherwise the 8 s read limit cannot interrupt the read
+            // Asynchrone : sinon la limite de lecture de 8 s ne peut pas interrompre la lecture
+            using var client = new NamedPipeClientStream(".", "WinlestiaCli", PipeDirection.InOut,
+                PipeOptions.CurrentUserOnly | PipeOptions.Asynchronous);
             client.Connect(1500);
             var writer = new StreamWriter(client, new UTF8Encoding(false), 4096, true) { AutoFlush = true };
             writer.WriteLine(JsonSerializer.Serialize(args, CliJson.Default.StringArray));
@@ -92,25 +84,9 @@ static class Program
             Console.Error.WriteLine("winlestia: " + text);
             return code;
         }
-        catch (TimeoutException)
-        {
-            Console.Error.WriteLine("winlestia: Winlestia is not running.");
-            return 3;
-        }
-        catch (IOException ex)
-        {
-            Console.Error.WriteLine("winlestia: could not talk to Winlestia: " + ex.Message);
-            return 3;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            Console.Error.WriteLine("winlestia: access to the shell was refused.");
-            return 3;
-        }
-        catch (JsonException)
-        {
-            Console.Error.WriteLine("winlestia: unreadable answer from the shell.");
-            return 3;
-        }
+        catch (TimeoutException) { Console.Error.WriteLine("winlestia: Winlestia is not running."); return 3; }
+        catch (IOException ex) { Console.Error.WriteLine("winlestia: could not talk to Winlestia: " + ex.Message); return 3; }
+        catch (UnauthorizedAccessException) { Console.Error.WriteLine("winlestia: access to the shell was refused."); return 3; }
+        catch (JsonException) { Console.Error.WriteLine("winlestia: unreadable answer from the shell."); return 3; }
     }
 }

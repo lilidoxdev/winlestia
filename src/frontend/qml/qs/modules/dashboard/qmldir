@@ -7,4 +7,15 @@ Performance Performance.qml
 Tabs Tabs.qml
 Weather Weather.qml
 Workspaces Workspaces.qml
+WorkspacesSpring WorkspacesSpring.qml
+WorkspacesEntrance WorkspacesEntrance.qml
+WorkspacesBlob WorkspacesBlob.qml
+WorkspacesLetter WorkspacesLetter.qml
+WorkspacesAppIcon WorkspacesAppIcon.qml
+WorkspacesPill WorkspacesPill.qml
+WorkspacesHeader WorkspacesHeader.qml
+WorkspacesCards WorkspacesCards.qml
+WorkspacesFavorites WorkspacesFavorites.qml
+WorkspacesRecents WorkspacesRecents.qml
+WorkspacesQuick WorkspacesQuick.qml
 Wrapper Wrapper.qml

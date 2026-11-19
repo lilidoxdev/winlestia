@@ -68,11 +68,14 @@ JsonObject {
         property list<real> standardDecel: [0, 0, 0, 1, 1, 1]
         property list<real> expressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1]
         property list<real> expressiveDefaultSpatial: [0.38, 1.21, 0.22, 1, 1, 1]
+        property list<real> expressiveSlowSpatial: [0.39, 1.29, 0.35, 0.98, 1, 1]
         property list<real> expressiveEffects: [0.34, 0.8, 0.34, 1, 1, 1]
+        property list<real> expressiveFastEffects: [0.31, 0.94, 0.34, 1, 1, 1]
+        property list<real> expressiveSlowEffects: [0.34, 0.88, 0.34, 1, 1, 1]
     }
 
     component AnimDurations: JsonObject {
-        // "Effets allégés": near-instant transitions (scale also applies to every duration below).
+        // « Effets allégés » : transitions quasi instantanées (l'échelle s'applique aussi à toutes les durées ci-dessous).
         property real scale: Bridge.reducedEffects || Bridge.quiet ? 0.1 : 1
         property int small: 200 * scale
         property int normal: 400 * scale
@@ -80,7 +83,10 @@ JsonObject {
         property int extraLarge: 1000 * scale
         property int expressiveFastSpatial: 350 * scale
         property int expressiveDefaultSpatial: 500 * scale
+        property int expressiveSlowSpatial: 650 * scale
         property int expressiveEffects: 200 * scale
+        property int expressiveFastEffects: 150 * scale
+        property int expressiveSlowEffects: 300 * scale
     }
 
     component Anim: JsonObject {

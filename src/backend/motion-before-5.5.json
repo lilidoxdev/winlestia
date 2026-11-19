@@ -1,0 +1,15 @@
+{
+  "At": "2026-10-21T12:04:19.2722776+02:00",
+  "Cycles": 6,
+  "Frames": 302,
+  "ElapsedMs": 16252.5263,
+  "CpuMs": 2125,
+  "TotalCpuPercent": 1.08957419950973,
+  "WorkingSetMB": 200.26171875,
+  "PrivateMB": 171.8046875,
+  "FrameP50Ms": 12.1212,
+  "FrameP95Ms": 24.2424,
+  "FrameP99Ms": 30.303,
+  "Over25Ms": 7,
+  "Note": "Intervalles WPF pendant les 360 ms suivant chaque transition ; ne mesure pas les pr\u00E9sentations DWM ni les FPS d\u2019un jeu."
+}

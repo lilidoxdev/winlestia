@@ -8,50 +8,185 @@ import qs.services
 import qs.config
 
 Item {
-    id:root;property bool microphone:false
-    implicitHeight:Math.min(640,Bridge.screenHeight-90)
-    ColumnLayout{anchors.fill:parent;spacing:Appearance.spacing.large
-        RowLayout{Layout.fillWidth:true;spacing:Appearance.spacing.normal
-            MaterialIcon{text:root.microphone?"mic":"speaker";font.pointSize:Appearance.font.size.extraLarge;color:Colours.palette.m3primary}
-            ColumnLayout{spacing:3
-                StyledText{text:root.microphone?qsTr("Microphones"):qsTr("Sortie audio");font.pointSize:Appearance.font.size.title}
-                StyledText{text:root.microphone?qsTr("Choisis ton entrée et règle sa sensibilité"):qsTr("Choisis où écouter tes applications");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+    id: root
+    property bool microphone: false
+    implicitHeight: Math.min(640, Bridge.screenHeight - 90)
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: Appearance.spacing.large
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.normal
+            MaterialIcon {
+                text: root.microphone ? "mic" : "speaker"
+                font.pointSize: Appearance.font.size.extraLarge
+                color: Colours.palette.m3primary
             }
-            Item{Layout.fillWidth:true}
-            IconButton{icon:"close";type:IconButton.Text;onClicked:Bridge.closePanel()}
+            ColumnLayout {
+                spacing: 3
+                StyledText {
+                    text: root.microphone ? qsTr("Microphones") : qsTr("Sortie audio")
+                    font.pointSize: Appearance.font.size.title
+                }
+                StyledText {
+                    text: root.microphone ? qsTr("Choisis ton entrée et règle sa sensibilité")
+                        : qsTr("Choisis où écouter tes applications")
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3outline
+                }
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+            IconButton {
+                icon: "close"
+                type: IconButton.Text
+                onClicked: Bridge.closePanel()
+            }
         }
-        RowLayout{Layout.fillWidth:true
-            IconTextButton{text:qsTr("Sorties");icon:"headphones";toggle:true;checked:!root.microphone;onClicked:Bridge.navigate("audio")}
-            IconTextButton{text:qsTr("Microphones");icon:"mic";toggle:true;checked:root.microphone;onClicked:Bridge.navigate("microphone")}
-            Item{Layout.fillWidth:true}
-            IconTextButton{text:qsTr("Mixeur");icon:"instant_mix";type:IconTextButton.Text;onClicked:Bridge.navigate("mixer")}
+        RowLayout {
+            Layout.fillWidth: true
+            IconTextButton {
+                text: qsTr("Sorties")
+                icon: "headphones"
+                toggle: true
+                checked: !root.microphone
+                onClicked: Bridge.navigate("audio")
+            }
+            IconTextButton {
+                text: qsTr("Microphones")
+                icon: "mic"
+                toggle: true
+                checked: root.microphone
+                onClicked: Bridge.navigate("microphone")
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+            IconTextButton {
+                text: qsTr("Mixeur")
+                icon: "instant_mix"
+                type: IconTextButton.Text
+                onClicked: Bridge.navigate("mixer")
+            }
         }
-        StyledListView{
-            id:list;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;spacing:Appearance.spacing.smaller;model:root.microphone?Bridge.audioInputs:Bridge.audioOutputs
-            delegate:StyledRect{
-                id:row;required property var modelData;width:list.width;implicitHeight:126;radius:Appearance.rounding.large;color:row.modelData.selected?Colours.palette.m3secondaryContainer:Colours.palette.m3surfaceContainer
-                ColumnLayout{anchors.fill:parent;anchors.margins:Appearance.padding.large;spacing:Appearance.spacing.smaller
-                    RowLayout{Layout.fillWidth:true;spacing:12
-                        IconButton{icon:row.modelData.selected?"check_circle":root.microphone?"mic":"speaker";type:IconButton.Text;onClicked:Bridge.action("deviceSelect",{id:row.modelData.id})}
-                        ColumnLayout{Layout.fillWidth:true;spacing:4
-                            StyledText{text:row.modelData.name;Layout.fillWidth:true;elide:Text.ElideRight;font.pointSize:Appearance.font.size.normal}
-                            StyledText{text:row.modelData.selected?qsTr("Périphérique par défaut"):qsTr("Cliquer pour utiliser");font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
+        StyledListView {
+            id: list
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            spacing: Appearance.spacing.smaller
+            model: root.microphone ? Bridge.audioInputs : Bridge.audioOutputs
+            delegate: StyledRect {
+                id: row
+                required property var modelData
+                width: list.width
+                implicitHeight: 126
+                radius: Appearance.rounding.large
+                color: row.modelData.selected ? Colours.palette.m3secondaryContainer : Colours.palette.m3surfaceContainer
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Appearance.padding.large
+                    spacing: Appearance.spacing.smaller
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+                        IconButton {
+                            icon: row.modelData.selected ? "check_circle" : root.microphone ? "mic" : "speaker"
+                            type: IconButton.Text
+                            onClicked: Bridge.action("deviceSelect", {
+                                id: row.modelData.id
+                            })
                         }
-                        IconTextButton{text:row.modelData.selected?qsTr("Actuel"):qsTr("Choisir");type:IconTextButton.Text;onClicked:Bridge.action("deviceSelect",{id:row.modelData.id})}
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+                            StyledText {
+                                text: row.modelData.name
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                font.pointSize: Appearance.font.size.normal
+                            }
+                            StyledText {
+                                text: row.modelData.selected ? qsTr("Périphérique par défaut") : qsTr("Cliquer pour utiliser")
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3outline
+                            }
+                        }
+                        IconTextButton {
+                            text: row.modelData.selected ? qsTr("Actuel") : qsTr("Choisir")
+                            type: IconTextButton.Text
+                            onClicked: Bridge.action("deviceSelect", {
+                                id: row.modelData.id
+                            })
+                        }
                     }
-                    RowLayout{Layout.fillWidth:true;spacing:12
-                        IconButton{icon:row.modelData.muted?(root.microphone?"mic_off":"volume_off"):(root.microphone?"mic":"volume_up");type:IconButton.Text;onClicked:Bridge.action("deviceMute",{id:row.modelData.id,muted:!row.modelData.muted})}
-                        StyledSlider{id:gain;Layout.fillWidth:true;implicitHeight:30;from:0;to:100;stepSize:1;onMoved:Bridge.action("deviceVolume",{id:row.modelData.id,value:value});Binding{target:gain;property:"value";value:row.modelData.volume;when:!gain.pressed}}
-                        StyledText{text:Math.round(gain.value)+" %";Layout.preferredWidth:43;font.pointSize:Appearance.font.size.small}
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+                        IconButton {
+                            icon: row.modelData.muted ? (root.microphone ? "mic_off" : "volume_off") : (root.microphone ? "mic"
+                                : "volume_up")
+                            type: IconButton.Text
+                            onClicked: Bridge.action("deviceMute", {
+                                id: row.modelData.id,
+                                muted: !row.modelData.muted
+                            })
+                        }
+                        StyledSlider {
+                            id: gain
+                            Layout.fillWidth: true
+                            implicitHeight: 30
+                            from: 0
+                            to: 100
+                            stepSize: 1
+                            onMoved: Bridge.action("deviceVolume", {
+                                id: row.modelData.id,
+                                value: value
+                            })
+                            Binding {
+                                target: gain
+                                property: "value"
+                                value: row.modelData.volume
+                                when: !gain.pressed
+                            }
+                        }
+                        StyledText {
+                            text: Math.round(gain.value) + " %"
+                            Layout.preferredWidth: 43
+                            font.pointSize: Appearance.font.size.small
+                        }
                     }
                 }
             }
-            C.ScrollBar.vertical:StyledScrollBar{flickable:list}
-            EmptyState{anchors.centerIn:parent;width:parent.width-20;visible:list.count===0;icon:root.microphone?"mic_off":"speaker_notes_off";title:!Bridge.audioReady?qsTr("Recherche des périphériques…"):root.microphone?qsTr("Aucun microphone connecté"):qsTr("Aucune sortie audio détectée")}
+            C.ScrollBar.vertical: StyledScrollBar {
+                flickable: list
+            }
+            EmptyState {
+                anchors.centerIn: parent
+                width: parent.width - 20
+                visible: list.count === 0
+                icon: root.microphone ? "mic_off" : "speaker_notes_off"
+                title: !Bridge.audioReady ? qsTr("Recherche des périphériques…") : root.microphone ? qsTr("Aucun microphone connecté")
+                    : qsTr("Aucune sortie audio détectée")
+            }
         }
-        RowLayout{Layout.fillWidth:true
-            StyledText{text:root.microphone?qsTr("Aucun enregistrement · réglage du niveau d’entrée uniquement"):qsTr("Le changement s’applique aux nouvelles lectures Windows");Layout.fillWidth:true;wrapMode:Text.Wrap;font.pointSize:Appearance.font.size.small;color:Colours.palette.m3outline}
-            IconTextButton{text:qsTr("Retour");icon:"arrow_back";type:IconTextButton.Text;onClicked:Bridge.navigate("controls")}
+        RowLayout {
+            Layout.fillWidth: true
+            StyledText {
+                text: root.microphone ? qsTr("Aucun enregistrement · réglage du niveau d’entrée uniquement")
+                    : qsTr("Le changement s’applique aux nouvelles lectures Windows")
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                font.pointSize: Appearance.font.size.small
+                color: Colours.palette.m3outline
+            }
+            IconTextButton {
+                text: qsTr("Retour")
+                icon: "arrow_back"
+                type: IconTextButton.Text
+                onClicked: Bridge.navigate("controls")
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
-// Opt-in measurement (WINLESTIA_FILES_PERF=1): Stopwatch lines in %LOCALAPPDATA%\Winlestia\Files\perf.log and a UI stall detector.
-// Nothing here exists at runtime when the variable is unset (Enabled is false, the timer is never created).
+// Mesure sur demande (WINLESTIA_FILES_PERF=1) : lignes Stopwatch dans %LOCALAPPDATA%\Winlestia\Files\perf.log et détecteur de blocage de
+// l'interface.
+// Rien de tout cela n'existe à l'exécution quand la variable n'est pas définie (Enabled est faux, le minuteur n'est jamais créé).
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -17,7 +18,6 @@ internal static class Perf
 
     internal static bool FirstFrameDone;
     internal static event Action? BeforeFirstFrame;
-
     internal static void FirstFrame()
     {
         FirstFrameDone = true;
@@ -25,10 +25,8 @@ internal static class Perf
         BeforeFirstFrame = null;
         pending?.Invoke();
     }
-
     static long processStart;
-
-    // Milestone line: ms since the process was created (only when Enabled).
+    // Ligne de jalon : ms depuis la création du processus (seulement si Enabled).
     internal static void Mark(string name)
     {
         if (!Enabled)
@@ -42,17 +40,11 @@ internal static class Perf
         Mark0();
         return Ms(processStart);
     }
-
     static void Mark0()
     {
         if (processStart == 0)
-            processStart =
-                Stopwatch.GetTimestamp()
-                - (long)(
-                    (DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds
-                    * Stopwatch.Frequency
-                    / 1000.0
-                );
+            processStart = Stopwatch.GetTimestamp() - (long)((DateTime.Now - Process.GetCurrentProcess().StartTime)
+                .TotalMilliseconds * Stopwatch.Frequency / 1000.0);
     }
 
     internal static double Ms(long since) => (Stopwatch.GetTimestamp() - since) * 1000.0 / Stopwatch.Frequency;
@@ -61,60 +53,42 @@ internal static class Perf
     {
         if (!Enabled)
             return;
-        string text =
-            DateTime.Now.ToString("HH:mm:ss.fff")
-            + " "
-            + line
-            + " qpc="
-            + Stopwatch.GetTimestamp()
-            + Environment.NewLine;
+        string text = DateTime.Now.ToString("HH:mm:ss.fff") + " " + line + " qpc=" + Stopwatch.GetTimestamp() + Environment.NewLine;
         Task.Run(() =>
         {
             try
             {
                 lock (gate)
                 {
-                    file ??= Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                        "Winlestia",
-                        "Files",
-                        "perf.log"
-                    );
+                    file ??= Path.Combine(FilesSettings.Dir, "perf.log");
                     Directory.CreateDirectory(Path.GetDirectoryName(file)!);
                     File.AppendAllText(file, text);
                 }
             }
-            catch { }
+            catch (Exception)
+            {
+                // Le journal ne peut pas se journaliser lui-même.
+            }
         });
     }
 }
 
-// 16 ms DispatcherTimer at Normal priority: its lateness is the time the UI thread was busy with one item.
+// DispatcherTimer de 16 ms en priorité Normal : son retard est le temps pendant lequel le thread UI était occupé par un seul élément.
 internal sealed class StallMonitor
 {
     readonly DispatcherTimer timer = new(DispatcherPriority.Normal) { Interval = TimeSpan.FromMilliseconds(16) };
     long last = Stopwatch.GetTimestamp();
     double max;
-
     internal StallMonitor()
     {
-        timer.Tick += (_, _) =>
-        {
-            double gap = Perf.Ms(last);
-            last = Stopwatch.GetTimestamp();
-            if (gap - 16 > max)
-                max = gap - 16;
-        };
+        timer.Tick += (_, _) => { double gap = Perf.Ms(last); last = Stopwatch.GetTimestamp(); if (gap - 16 > max) max = gap - 16; };
         timer.Start();
     }
-
     internal void Reset()
     {
         max = 0;
         last = Stopwatch.GetTimestamp();
     }
-
     internal double Max => max;
-
     internal void Stop() => timer.Stop();
 }

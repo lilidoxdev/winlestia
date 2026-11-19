@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Assistant élevé : lit la température du processeur (LibreHardwareMonitor + pilote PawnIO) et la sert au shell non élevé par
+       un tube nommé. WinExe : aucune fenêtre console. Ni rogné ni mono-fichier. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings><Nullable>enable</Nullable>
+    <AssemblyName>Winlestia.Sensors</AssemblyName><RootNamespace>WinlestiaSensors</RootNamespace>
+    <Company>dj</Company><Product>Panneaux</Product>
+    <Version>1.0.0</Version><AssemblyVersion>1.0.0.0</AssemblyVersion><FileVersion>1.0.0.0</FileVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>false</SelfContained>
+    <PublishTrimmed>false</PublishTrimmed><PublishSingleFile>false</PublishSingleFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+  </ItemGroup>
+</Project>

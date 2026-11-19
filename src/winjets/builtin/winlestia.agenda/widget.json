@@ -1,0 +1,316 @@
+{
+  "size": {
+    "default": [
+      352,
+      352
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      536,
+      536
+    ]
+  },
+  "settings": [
+    {
+      "id": "icsUrl",
+      "type": "text",
+      "label": "Lien ICS du calendrier (Outlook : publier)",
+      "default": "",
+      "maxLength": 200
+    }
+  ],
+  "data": {
+    "agenda": {
+      "type": "calendar",
+      "url": "{{ settings.icsUrl }}",
+      "refresh": 900
+    }
+  },
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 6,
+        "children": [
+          {
+            "type": "row",
+            "gap": 8,
+            "children": [
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ now | date:dddd }}",
+                    "style": "eyebrow"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ now | date:d MMMM }}",
+                    "style": "body"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "data.agenda.status == 'ok'",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ data.agenda.count }} événements",
+                    "style": "caption",
+                    "tone": "secondary",
+                    "align": "end"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "data.agenda.status == 'ok' && data.agenda.count > 0",
+            "grow": 1,
+            "children": [
+              {
+                "type": "list",
+                "items": "{{ data.agenda.events }}",
+                "title": "{{ item.title }}",
+                "subtitle": "{{ item.timeLabel }} · {{ item.location }}",
+                "group": "{{ item.dayLabel }}",
+                "relative": "start",
+                "accent": true,
+                "max": 3
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "data.agenda.status == 'ok' && data.agenda.count == 0",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "event_available",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Rien de prévu dans les 7 prochains jours.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "data.agenda.status == 'unconfigured'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "event",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Collez le lien ICS de votre calendrier dans les réglages.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              },
+              {
+                "type": "text",
+                "text": "Configurer",
+                "style": "eyebrow",
+                "align": "center",
+                "action": {
+                  "type": "openSettings"
+                }
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "data.agenda.status == 'error'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "event_busy",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Agenda indisponible.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "root": {
+        "type": "column",
+        "padding": 0,
+        "gap": 6,
+        "children": [
+          {
+            "type": "row",
+            "gap": 8,
+            "children": [
+              {
+                "type": "column",
+                "grow": 1,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ now | date:dddd }}",
+                    "style": "eyebrow"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ now | date:d MMMM }}",
+                    "style": "title"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "visibleWhen": "data.agenda.status == 'ok'",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ data.agenda.count }} événements",
+                    "style": "caption",
+                    "tone": "secondary",
+                    "align": "end"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "data.agenda.status == 'ok' && data.agenda.count > 0",
+            "grow": 1,
+            "children": [
+              {
+                "type": "list",
+                "items": "{{ data.agenda.events }}",
+                "title": "{{ item.title }}",
+                "subtitle": "{{ item.timeLabel }} · {{ item.location }}",
+                "group": "{{ item.dayLabel }}",
+                "relative": "start",
+                "accent": true,
+                "max": 6
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "data.agenda.status == 'ok' && data.agenda.count == 0",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "event_available",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Rien de prévu dans les 7 prochains jours.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "data.agenda.status == 'unconfigured'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "event",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Collez le lien ICS de votre calendrier dans les réglages.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              },
+              {
+                "type": "text",
+                "text": "Configurer",
+                "style": "eyebrow",
+                "align": "center",
+                "action": {
+                  "type": "openSettings"
+                }
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "visibleWhen": "data.agenda.status == 'error'",
+            "grow": 1,
+            "gap": 6,
+            "children": [
+              {
+                "type": "text",
+                "text": "event_busy",
+                "style": "icon",
+                "tone": "faint",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Agenda indisponible.",
+                "style": "body",
+                "tone": "secondary",
+                "align": "center",
+                "maxLines": 3
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

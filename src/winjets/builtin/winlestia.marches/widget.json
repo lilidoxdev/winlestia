@@ -1,0 +1,372 @@
+{
+  "size": {
+    "default": [
+      352,
+      352
+    ],
+    "min": [
+      168,
+      168
+    ],
+    "max": [
+      536,
+      536
+    ]
+  },
+  "data": {
+    "market": {
+      "type": "market",
+      "provider": "yahoo",
+      "symbols": [
+        "AAPL",
+        "MSFT",
+        "^GSPC"
+      ],
+      "refresh": 120
+    }
+  },
+  "layouts": [
+    {
+      "minWidth": 0,
+      "root": {
+        "type": "column",
+        "padding": 4,
+        "gap": 6,
+        "children": [
+          {
+            "type": "text",
+            "text": "Marchés",
+            "style": "eyebrow"
+          },
+          {
+            "type": "row",
+            "grow": 1,
+            "gap": 8,
+            "children": [
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "AAPL",
+                    "style": "body"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['AAPL'].name }}",
+                    "style": "caption",
+                    "tone": "secondary"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "gap": 2,
+                "align": "end",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['AAPL'].price | number:2 }}",
+                    "style": "body",
+                    "align": "end"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['AAPL'].change24h | number:2 }} %",
+                    "style": "caption",
+                    "tone": "signed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "row",
+            "grow": 1,
+            "gap": 8,
+            "children": [
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "MSFT",
+                    "style": "body"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['MSFT'].name }}",
+                    "style": "caption",
+                    "tone": "secondary"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "gap": 2,
+                "align": "end",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['MSFT'].price | number:2 }}",
+                    "style": "body",
+                    "align": "end"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['MSFT'].change24h | number:2 }} %",
+                    "style": "caption",
+                    "tone": "signed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "row",
+            "grow": 1,
+            "gap": 8,
+            "children": [
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "^GSPC",
+                    "style": "body"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['^GSPC'].name }}",
+                    "style": "caption",
+                    "tone": "secondary"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "gap": 2,
+                "align": "end",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['^GSPC'].price | number:2 }}",
+                    "style": "body",
+                    "align": "end"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['^GSPC'].change24h | number:2 }} %",
+                    "style": "caption",
+                    "tone": "signed"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "minWidth": 340,
+      "root": {
+        "type": "column",
+        "padding": 4,
+        "gap": 6,
+        "children": [
+          {
+            "type": "text",
+            "text": "Marchés",
+            "style": "eyebrow"
+          },
+          {
+            "type": "row",
+            "grow": 1,
+            "gap": 8,
+            "children": [
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "AAPL",
+                    "style": "body"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['AAPL'].name }}",
+                    "style": "caption",
+                    "tone": "secondary"
+                  }
+                ]
+              },
+              {
+                "type": "stack",
+                "grow": 2,
+                "children": [
+                  {
+                    "type": "chart",
+                    "variant": "spark",
+                    "series": "{{ data.market.symbols['AAPL'].history }}",
+                    "color": "primary"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "gap": 2,
+                "align": "end",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['AAPL'].price | number:2 }}",
+                    "style": "body",
+                    "align": "end"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['AAPL'].change24h | number:2 }} %",
+                    "style": "caption",
+                    "tone": "signed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "row",
+            "grow": 1,
+            "gap": 8,
+            "children": [
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "MSFT",
+                    "style": "body"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['MSFT'].name }}",
+                    "style": "caption",
+                    "tone": "secondary"
+                  }
+                ]
+              },
+              {
+                "type": "stack",
+                "grow": 2,
+                "children": [
+                  {
+                    "type": "chart",
+                    "variant": "spark",
+                    "series": "{{ data.market.symbols['MSFT'].history }}",
+                    "color": "primary"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "gap": 2,
+                "align": "end",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['MSFT'].price | number:2 }}",
+                    "style": "body",
+                    "align": "end"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['MSFT'].change24h | number:2 }} %",
+                    "style": "caption",
+                    "tone": "signed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "row",
+            "grow": 1,
+            "gap": 8,
+            "children": [
+              {
+                "type": "column",
+                "grow": 3,
+                "gap": 0,
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "^GSPC",
+                    "style": "body"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['^GSPC'].name }}",
+                    "style": "caption",
+                    "tone": "secondary"
+                  }
+                ]
+              },
+              {
+                "type": "stack",
+                "grow": 2,
+                "children": [
+                  {
+                    "type": "chart",
+                    "variant": "spark",
+                    "series": "{{ data.market.symbols['^GSPC'].history }}",
+                    "color": "primary"
+                  }
+                ]
+              },
+              {
+                "type": "column",
+                "gap": 2,
+                "align": "end",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['^GSPC'].price | number:2 }}",
+                    "style": "body",
+                    "align": "end"
+                  },
+                  {
+                    "type": "text",
+                    "text": "{{ data.market.symbols['^GSPC'].change24h | number:2 }} %",
+                    "style": "caption",
+                    "tone": "signed"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

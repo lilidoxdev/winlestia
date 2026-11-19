@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.components.filedialog
+import qs.components.controls
 import qs.config
 import Quickshell
 import Quickshell.Widgets
@@ -15,14 +16,16 @@ Item {
     required property PersistentProperties state
     required property FileDialog facePicker
     readonly property real nonAnimWidth: view.implicitWidth + viewWrapper.anchors.margins * 2
-    readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2
+    readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins
+        * 2
 
-    // Width the host can give the drawer (0 = unconstrained). Panes keep their natural layout and the
-    // whole view is scaled uniformly to fit, never below minScale (below that the host stops shrinking).
+    // Largeur que l'hôte peut donner au tiroir (0 = sans contrainte). Les volets gardent leur mise en page naturelle et la
+    // vue entière est mise à l'échelle uniformément, jamais sous minScale (en dessous, l'hôte cesse de rétrécir).
     property real availableWidth: 0
     readonly property real minScale: 0.7
-    // Scale basis follows paneMaxWidth through a short glide so a late-measured wider pane eases the scale
-    // instead of making it jump; rail-driven changes of availableWidth still apply immediately.
+    // La base d'échelle suit paneMaxWidth par un court glissement : un volet plus large mesuré tard adoucit l'échelle au lieu de la
+    // faire sauter ;
+    // les changements d'availableWidth dus au rail s'appliquent immédiatement.
     property real scaleBasis: paneMaxWidth
     Behavior on scaleBasis {
         enabled: !Appearance.reducedEffects
@@ -31,27 +34,26 @@ Item {
         }
     }
     readonly property real viewScale: availableWidth > 0
-        ? Math.max(minScale, Math.min(1, (availableWidth - viewWrapper.anchors.margins * 2) / scaleBasis))
-        : 1
+        ? Math.max(minScale, Math.min(1, (availableWidth - viewWrapper.anchors.margins * 2) / scaleBasis)) : 1
     readonly property real minWidth: paneMaxWidth * minScale + viewWrapper.anchors.margins * 2
-    // Unscaled drawer width (independent of the scale, so hosts can compute overlap without a binding loop).
+    // Largeur du tiroir hors échelle (indépendante de l'échelle : l'hôte calcule le recouvrement sans boucle de liaison).
     readonly property real naturalWidth: paneMaxWidth + viewWrapper.anchors.margins * 2
 
-    // Fixed drawer content size: max over panes, only ever grows (when a pane is first measured).
+    // Taille fixe du contenu du tiroir : maximum des volets, ne fait que croître (à la première mesure d'un volet).
     property real paneMaxWidth: 966
     property real paneMaxHeight: 450
 
-    // True while the tab slide runs; Wrapper uses it to enable its offscreen layer only then.
+    // Vrai pendant le glissement d'onglet ; Wrapper s'en sert pour n'activer sa couche hors écran qu'alors.
     readonly property bool animating: slide.running
 
     implicitWidth: nonAnimWidth
     implicitHeight: nonAnimHeight
 
-    // Preload panes one at a time (async) once the dashboard is shown; paused while hidden.
+    // Précharge les panneaux un par un (async) une fois le tableau de bord affiché ; en pause quand il est masqué.
     function preloadStep(): void {
         if (!root.visible)
             return;
-        // The pane the user is on (or switched to) always goes first.
+        // Le panneau où se trouve l'utilisateur (ou vers lequel il bascule) passe toujours en premier.
         const cur = row.children[root.state.currentTab];
         if (cur && !cur.active)
             cur.active = true;
@@ -77,13 +79,28 @@ Item {
         anchors.right: parent.right
         anchors.topMargin: Appearance.padding.normal
         anchors.margins: Appearance.padding.large
+        anchors.rightMargin: Appearance.padding.large + settingsButton.width + Appearance.padding.small
 
-        nonAnimWidth: root.nonAnimWidth - anchors.margins * 2
+        nonAnimWidth: root.nonAnimWidth - anchors.leftMargin - anchors.rightMargin
         state: root.state
     }
 
-    // Plain clipping, no layer: an OpacityMask layer recomposites its content and
-    // turns the glass opaque behind it, which broke the single shared alpha.
+    // Les réglages restent toujours accessibles depuis le tableau de bord (Ctrl+Alt+Espace), même dock masqué.
+    IconButton {
+        id: settingsButton
+
+        objectName: "dashboardSettingsButton"
+        anchors.right: parent.right
+        anchors.rightMargin: Appearance.padding.large
+        anchors.verticalCenter: tabs.verticalCenter
+        anchors.verticalCenterOffset: -Appearance.padding.small
+        icon: "settings"
+        type: IconButton.Text
+        onClicked: Bridge.action("settings", {})
+    }
+
+    // Rognage simple, sans couche : une couche OpacityMask recompose son contenu et
+    // rend le verre opaque derrière, ce qui cassait l'alpha unique partagé.
     Item {
         id: viewWrapper
 
@@ -100,7 +117,7 @@ Item {
 
             readonly property int currentIndex: root.state.currentTab
             readonly property Pane currentItem: row.children[currentIndex]
-            // Outgoing pane stays shown until the slide ends; lastIndex tracks the old value.
+            // Le panneau sortant reste affiché jusqu'à la fin du glissement ; lastIndex retient l'ancienne valeur.
             property int previousIndex: -1
             property int lastIndex: currentIndex
 
@@ -113,7 +130,7 @@ Item {
                 });
             }
 
-            // Laid out at the natural pane size, then scaled; implicit size is the scaled footprint.
+            // Disposé à la taille naturelle des volets, puis mis à l'échelle ; la taille implicite est l'empreinte mise à l'échelle.
             width: root.paneMaxWidth
             height: root.paneMaxHeight
             scale: root.viewScale
@@ -153,7 +170,7 @@ Item {
                 id: row
 
                 Pane {
-                    paneIndex:0
+                    paneIndex: 0
                     sourceComponent: Dash {
                         visibilities: root.visibilities
                         state: root.state
@@ -162,19 +179,19 @@ Item {
                 }
 
                 Pane {
-                    paneIndex:1
+                    paneIndex: 1
                     sourceComponent: Media {
                         visibilities: root.visibilities
                     }
                 }
 
                 Pane {
-                    paneIndex:2
+                    paneIndex: 2
                     sourceComponent: Performance {}
                 }
 
                 Pane {
-                    paneIndex:3
+                    paneIndex: 3
                     sourceComponent: Workspaces {
                         tabActive: root.state.currentTab === 3
                     }
@@ -185,7 +202,8 @@ Item {
                 Anim {
                     id: slide
 
-                    onRunningChanged: if (!running) view.previousIndex = -1
+                    onRunningChanged: if (!running)
+                        view.previousIndex = -1
 
                     duration: Appearance.reducedEffects ? 0 : Appearance.anim.durations.normal
                 }
@@ -197,7 +215,7 @@ Item {
         id: pane
 
         required property int paneIndex
-        // Measured once loaded, so the unloaded placeholder (and the first slide) has the right size.
+        // Mesuré une fois chargé, pour que l'emplacement non chargé (et le premier glissement) ait la bonne taille.
         property real cachedWidth: [823, 966, 835, 900][paneIndex] ?? 800
         property real cachedHeight: [429, 340, 270, 450][paneIndex] ?? 340
         readonly property bool current: paneIndex === view.currentIndex
@@ -205,29 +223,30 @@ Item {
 
         Layout.alignment: Qt.AlignTop
 
-        // Every pane sits in a fixed (max) cell; equal margins center it on both axes.
+        // Chaque panneau occupe une cellule fixe (max) ; des marges égales le centrent sur les deux axes.
         Layout.preferredWidth: cachedWidth
         Layout.preferredHeight: cachedHeight
         Layout.leftMargin: Math.max(0, (root.paneMaxWidth - cachedWidth) / 2)
         Layout.rightMargin: Layout.leftMargin
         Layout.topMargin: (root.paneMaxHeight - cachedHeight) / 2
         Layout.bottomMargin: Layout.topMargin
-        // Start of the pane's cell (x includes the centering margin).
+        // Début de la cellule du panneau (x inclut la marge de centrage).
         readonly property real cellX: x - Layout.leftMargin
 
-        onCachedWidthChanged: if (cachedWidth > root.paneMaxWidth) root.paneMaxWidth = cachedWidth
-        onCachedHeightChanged: if (cachedHeight > root.paneMaxHeight) root.paneMaxHeight = cachedHeight
+        onCachedWidthChanged: if (cachedWidth > root.paneMaxWidth)
+            root.paneMaxWidth = cachedWidth
+        onCachedHeightChanged: if (cachedHeight > root.paneMaxHeight)
+            root.paneMaxHeight = cachedHeight
         asynchronous: paneIndex > 0
         active: false
 
-        // Layout skips invisible items, so hide the loaded item rather than the Loader.
+        // Layout ignore les éléments invisibles : on masque donc l'élément chargé plutôt que le Loader.
         Binding {
             target: pane.item
             property: "visible"
             value: pane.shown
             when: pane.item !== null
         }
-
 
         Connections {
             target: pane.item
@@ -250,7 +269,9 @@ Item {
             if (status === Loader.Ready)
                 Qt.callLater(root.preloadStep);
         }
-        onCurrentChanged: if (current) active = true
-        Component.onCompleted: if (current) active = true
+        onCurrentChanged: if (current)
+            active = true
+        Component.onCompleted: if (current)
+            active = true
     }
 }
