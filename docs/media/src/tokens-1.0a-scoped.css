@@ -1,0 +1,17 @@
+/* Scoped palette variants for the 1.0 palette visual (same values as tokens.css / tokens-warm.css / tokens-teal.css,
+   applied to a sub-tree instead of :root so three palettes can sit side by side). */
+.pal-aurora {
+  --primary:#c458fa; --on-primary:#130d0e; --surface:#0f0c10;
+  --surface-container-low:#161218; --surface-container:#1f1a21; --surface-container-high:#28222b;
+  --surface-container-highest:#342d38; --outline-variant:#473d4d; --outline:#9a8f9c;
+}
+.pal-warm {
+  --primary:#fa5a41; --on-primary:#130d0e; --surface:#100c0c;
+  --surface-container-low:#181312; --surface-container:#211b1a; --surface-container-high:#2b2322;
+  --surface-container-highest:#382e2d; --outline-variant:#4c3f3d; --outline:#9a8f9c;
+}
+.pal-teal {
+  --primary:#4bf4fa; --on-primary:#130d0e; --surface:#0c1010;
+  --surface-container-low:#121818; --surface-container:#1a2121; --surface-container-high:#222b2b;
+  --surface-container-highest:#2d3838; --outline-variant:#3d4c4c; --outline:#9a8f9c;
+}

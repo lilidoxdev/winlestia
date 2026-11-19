@@ -32,6 +32,14 @@ $scenes = @(
   @{ n='terminal';     frag=@('terminal');    amb='tokens-teal.css'; wp='wallpaper-teal.svg';   title='Terminal' },
   @{ n='wallpaper';    frag=@('wallpaper');   amb='';                wp='wallpaper-aurora.svg'; title='Wallpaper switcher' },
   @{ n='panels';       frag=@('panels');      amb='';                wp='wallpaper-aurora.svg'; title='Quick controls' },
+  @{ n='settings-1.0'; frag=@('a-icons','settings-1.0'); amb=''; wp='wallpaper-aurora.svg'; title='Settings 1.0';
+     css=@('components-1.0a.css') },
+  @{ n='palette-1.0'; frag=@('a-icons','palette-1.0'); amb=''; wp='wallpaper-aurora.svg'; title='Palette 1.0';
+     css=@('tokens-1.0a-scoped.css','components-1.0a.css') },
+  @{ n='control-center-1.0'; frag=@('a-icons','control-center-1.0'); amb='tokens-warm.css'; wp='wallpaper-warm.svg';
+     title='Control center 1.0'; css=@('components-1.0a.css') },
+  @{ n='personnalisation-1.0'; frag=@('a-icons','settings-1.0','personnalisation-1.0'); amb='tokens-teal.css';
+     wp='wallpaper-teal.svg'; title='Personalisation 1.0'; css=@('components-1.0a.css') },
   @{ n='v-workspaces'; frag=@('workspaces');  amb='';                wp='wallpaper-aurora.svg'; title='Workspaces'; shot=$true },
   @{ n='v-workspaces-warm'; frag=@('workspaces'); amb='tokens-warm.css'; wp='wallpaper-warm.svg'; title='Workspaces'; shot=$true },
   @{ n='v-workspaces-teal'; frag=@('workspaces'); amb='tokens-teal.css'; wp='wallpaper-teal.svg'; title='Workspaces'; shot=$true },
@@ -55,6 +63,7 @@ foreach ($s in $scenes) {
   if ($s.frag) {   # composition de la page = modèle + fragments
     $body = ($s.frag | ForEach-Object { [IO.File]::ReadAllText((Join-Path $src "fragments\$_.html"), $utf8) }) -join "`n"
     $amb  = if ($s.amb) { "<link rel=`"stylesheet`" href=`"$($s.amb)`">" } else { '' }
+    foreach ($c in @($s.css)) { if ($c) { $amb += "<link rel=`"stylesheet`" href=`"$c`">" } }   # extra feuilles (1.0a)
     $html = $template.Replace('{{TITLE}}', $s.title).Replace('{{AMBIANCE}}', $amb).Replace('{{WALLPAPER}}', $s.wp).Replace('{{ICONS}}',
         $icons).Replace('{{BODY}}', $body)
     $page = "_$($s.n).html"
