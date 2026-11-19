@@ -45,11 +45,52 @@ Full list: [CHANGELOG.md](CHANGELOG.md) and [release notes](docs/RELEASE-NOTES-1
 
 ### Screenshots
 
-<img src="docs/media/dock-dynamic.png" alt="The dock growing with open apps" width="100%">
+<img src="docs/illustrations/dock-1.0.webp" alt="The dock growing with open apps, with the battery pill for connected devices" width="100%">
 
-<img src="docs/media/peripheral-battery.png" alt="Battery pill for connected devices in the dock" width="100%">
+<img src="docs/illustrations/winjets-1.0.webp" alt="The built-in Winjets on the desktop" width="100%">
 
-<img src="docs/media/winjets/all.png" alt="The built-in Winjets on the desktop" width="100%">
+### Control center and social rail
+
+Wi-Fi, Bluetooth, audio output, microphone and a per-application mixer. The right-edge social rail gathers notifications from Discord, Instagram, Snapchat, WhatsApp and Telegram.
+
+<img src="docs/illustrations/control-center-1.0.webp" alt="Control center and social rail" width="100%">
+
+### Palette from the wallpaper
+
+With the Automatic theme, panel colours are derived from the current wallpaper.
+
+<img src="docs/illustrations/palette-1.0.webp" alt="Palette derived from the wallpaper" width="100%">
+
+### Personalization and settings
+
+Settings has a search field and ten pages. The Appearance page holds the theme, the wallpaper palette,
+glass transparency and animation speed.
+
+<img src="docs/illustrations/personnalisation-1.0.webp" alt="Personalization page" width="100%">
+
+### Lock screen
+
+Press Ctrl+Alt+L.
+
+<img src="docs/illustrations/lockscreen-1.0.webp" alt="Lock screen" width="100%">
+
+### Window overview
+
+Press Win+Alt+Tab.
+
+<img src="docs/illustrations/overview-1.0.webp" alt="Window overview" width="100%">
+
+### Push-to-talk dictation
+
+Hold AltGr to dictate. Off by default.
+
+<img src="docs/illustrations/dictation-1.0.webp" alt="Push-to-talk dictation" width="100%">
+
+### Winlestia Fichiers
+
+The redesigned file manager.
+
+<img src="docs/illustrations/fichiers-1.0.webp" alt="Winlestia Fichiers" width="100%">
 
 <img src="docs/media/installer/en-01-welcome.png" alt="WinlestiaSetup welcome screen" width="60%">
 
@@ -97,7 +138,7 @@ Screen capture with annotation (**Ctrl+F3**), text recognition (OCR) on a captur
 **Win+Alt+W** opens a full-screen wallpaper switcher with live preview and per-display targeting. A fresh install uses the **Porcelain** theme (light, warm), which is fixed and does **not** follow the wallpaper; the **Automatic** theme does. To get colours from the wallpaper, open Settings (Customize), then Appearance, then Theme, and select **Automatic**. Glass blur comes from Windows itself. The Automatic theme starts with a glass transparency of 5 %, adjustable in Settings.
 
 ### Settings
-<img src="docs/illustrations/settings.webp" alt="Settings" width="100%">
+<img src="docs/illustrations/settings-1.0.webp" alt="Settings" width="100%">
 
 Eight pages with a search field (a result opens its page and highlights the row): Appearance, Interface, Docks and panels, Keyboard shortcuts, Media and audio, Apps, bookmarks and links, Files and Windows, General.
 

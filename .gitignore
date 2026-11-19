@@ -46,3 +46,4 @@ TestResults/
 *.bak-*
 src/frontend/trace-open
 !docs/winjets/examples/*.zip
+docs/media/src/_*-1.0.html
