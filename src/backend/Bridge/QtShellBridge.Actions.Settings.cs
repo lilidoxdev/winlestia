@@ -262,6 +262,9 @@ internal sealed partial class QtShellBridge
             case "socialRailVisible":
                 Store.State.SocialRailVisible = Flag(c.Args, "enabled");
                 break;
+            case "topHoverEnabled":
+                Store.State.TopHoverEnabled = Flag(c.Args, "enabled");
+                break;
             case "clipboardImages":
                 Store.State.ClipboardImages = Flag(c.Args, "enabled");
                 owner.ApplyClipboardSettings();

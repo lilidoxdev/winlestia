@@ -164,7 +164,7 @@ Cas spéciaux traités avant le `switch` : `dictation` (renvoie `{"dictation": {
 
 ### Clés de `preference`
 
-`args.key` choisit la préférence ; `enabled` (booléen) ou `value` (nombre / chaîne) porte la valeur. Clés : `accentBorders`, `activeBorderOnly`, `autoTile`, `autostart`, `bookmarksRailVisible`, `clipboardHistory`, `clipboardImages`, `clipboardLimit`, `customGlassOpacity`, `desktopIndicator`, `desktopLogo`, `dictationEnabled`, `dictationKey`, `dockDrawerOpen`, `dockVisible`, `dockWidth`, `explorerTheme`, `filesDefaultHandler`, `filesPreload`, `frameThickness`, `glassOpacity`, `iconSize`, `lyrics`, `motion`, `osd`, `peripheralBattery`, `pill`, `quietFullscreen`, `reducedEffects`, `replaceTaskbar`, `screenFrame`, `socialBackground`, `socialRailVisible`, `taskbar`, `tileExclusionRemove`, `topActivationMargin`. Le détail des champs par clé est dans le schéma (`preferenceKeys`).
+`args.key` choisit la préférence ; `enabled` (booléen) ou `value` (nombre / chaîne) porte la valeur. Clés : `accentBorders`, `activeBorderOnly`, `autoTile`, `autostart`, `bookmarksRailVisible`, `clipboardHistory`, `clipboardImages`, `clipboardLimit`, `customGlassOpacity`, `desktopIndicator`, `desktopLogo`, `dictationEnabled`, `dictationKey`, `dockDrawerOpen`, `dockVisible`, `dockWidth`, `explorerTheme`, `filesDefaultHandler`, `filesPreload`, `frameThickness`, `glassOpacity`, `iconSize`, `lyrics`, `motion`, `osd`, `peripheralBattery`, `pill`, `quietFullscreen`, `reducedEffects`, `replaceTaskbar`, `screenFrame`, `socialBackground`, `socialRailVisible`, `taskbar`, `tileExclusionRemove`, `topActivationMargin`, `topHoverEnabled`. Le détail des champs par clé est dans le schéma (`preferenceKeys`).
 
 ## Réponse générale (serveur -> client)
 

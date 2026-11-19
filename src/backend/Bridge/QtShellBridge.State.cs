@@ -105,6 +105,7 @@ internal sealed partial class QtShellBridge
                 replaceTaskbar = Store.State.ReplaceTaskbar,
                 bookmarksRailVisible = Store.State.BookmarksRailVisible,
                 socialRailVisible = Store.State.SocialRailVisible,
+                topHoverEnabled = Store.State.TopHoverEnabled,
                 clipboardImages = Store.State.ClipboardImages,
                 clipboardLimit = Store.State.ClipboardLimit,
                 shortcuts = owner.Shortcuts.List(),

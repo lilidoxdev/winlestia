@@ -238,7 +238,8 @@ class PointerMixin:
         self.pill_was_over = over_pill
         top_inside = self.top.isVisible() and (panel_rect.adjusted(-12, -2, 12, 16).contains(point) or over_pill)
         top_edge = (
-            geometry.top()
+            bool(self._state.get("settings", {}).get("topHoverEnabled", True))
+            and geometry.top()
             <= point.y()
             <= geometry.top() + int(self._state.get("settings", {}).get("topActivationMargin", 2))
             and abs(point.x() - geometry.center().x()) < 460

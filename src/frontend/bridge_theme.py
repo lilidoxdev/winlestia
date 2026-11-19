@@ -98,7 +98,17 @@ class ThemeMixin:
 
     @Slot(str, int, result='QVariantMap')
     def surfaceForScreen(self, name, revision):
-        return self.surface_scene.data.get(name, {}) if self.surface_scene else {}
+        if not self.surface_scene:
+            return {}
+        entry = self.surface_scene.data.get(name)
+        if not entry:
+            return {}
+        if 'path' not in entry and name in self.surface_scene.paths:
+            from surface_geometry import svg_path
+
+            outline = svg_path(self.surface_scene.paths[name])
+            return {**entry, 'path': outline, 'outline': outline}
+        return entry
 
     def sync_explorer_theme(self):
         if not self.settings.get('explorerTheme', False) and not self.settings.get('accentBorders', True):

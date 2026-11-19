@@ -291,6 +291,7 @@ public class BridgeHandlerTests
     [InlineData("dockDrawerOpen", nameof(Preferences.DockDrawerOpen))]
     [InlineData("bookmarksRailVisible", nameof(Preferences.BookmarksRailVisible))]
     [InlineData("socialRailVisible", nameof(Preferences.SocialRailVisible))]
+    [InlineData("topHoverEnabled", nameof(Preferences.TopHoverEnabled))]
     [InlineData("clipboardImages", nameof(Preferences.ClipboardImages))]
     [InlineData("clipboardHistory", nameof(Preferences.ClipboardHistory))]
     [InlineData("socialBackground", nameof(Preferences.SocialBackground))]

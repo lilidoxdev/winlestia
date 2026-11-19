@@ -94,6 +94,22 @@ ColumnLayout {
                 })
             }
         }
+
+        SettingsRow {
+            rowId: "topHover"
+            target: topHover
+
+            SettingsSwitch {
+                id: topHover
+
+                objectName: "topHoverToggle"
+                value: Bridge.settings.topHoverEnabled ?? true
+                onToggled: Bridge.action("preference", {
+                    key: "topHoverEnabled",
+                    enabled: checked
+                })
+            }
+        }
     }
 
     SettingsSection {
