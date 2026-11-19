@@ -4,7 +4,7 @@
 
 # Winlestia
 
-**A free, open-source desktop shell for Windows 11.**
+**A free, open-source desktop shell for Windows 11, with colours derived from your wallpaper.**
 
 <a href="https://discord.gg/5jXv7NRj3Q"><img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join the Winlestia Discord server" height="40"></a>
 
@@ -12,11 +12,28 @@
 [![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
 
-[Download](https://github.com/lilidoxdev/winlestia/releases/latest) · [Demo](#demo) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
+[Download WinlestiaSetup.exe](https://github.com/lilidoxdev/winlestia/releases/latest) · [Release 1.0.0](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.0) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
+
+</div>
+
+Winlestia replaces the surface of Windows 11 (taskbar, panels, launcher), not the system. The taskbar is swapped for a dock, and a dashboard,
+glass panels and desktop widgets (Winjets) sit on top of your normal desktop. Your files, windows and wallpaper stay where they are.
+
+It is a port of [Caelestia](https://github.com/caelestia-dots/shell), its visual reference. The interface uses Qt Quick, and a .NET 8 service
+handles the Windows side. Version 1.0 is the first stable release.
 
 <img src="docs/illustrations/desktop.webp" alt="Winlestia on a Windows 11 desktop" width="100%">
 
-</div>
+## Colour follows your wallpaper
+
+With the **Automatic** theme, the colours of the panels are derived from the current wallpaper. Change the wallpaper and the shell is recoloured.
+A fresh install uses the **Porcelain** theme (light, warm), which is fixed and does not follow the wallpaper. To switch, open Settings
+(Customize), then Appearance, then Theme, and select **Automatic**. The Automatic theme starts with a glass transparency of 5 %, adjustable in
+Settings. Glass blur comes from Windows itself.
+
+<img src="docs/illustrations/palette-1.0.webp" alt="Palette derived from the wallpaper" width="100%">
+
+The optional terminal integration applies the same palette to Command Prompt (see the Terminal entry in [More](#more)).
 
 ## Demo
 
@@ -24,65 +41,86 @@
 
 [Watch the 16:9 video](docs/media/winlestia-showcase-16x9.mp4) · [Vertical 9:16 version](docs/media/winlestia-vertical-9x16.mp4)
 
-These visuals are motion-design illustrations made in HTML/CSS. They are not screen captures.
-
-## What is Winlestia
-
-Winlestia is a free, open-source desktop shell for Windows 11. It is a port of [Caelestia](https://github.com/caelestia-dots/shell), which is its visual reference, and adds a dynamic dock, glass panels, desktop widgets (Winjets), a lock screen and a set of desktop tools. Version 1.0 is the first stable release.
-
-It replaces the surface of Windows, not the system. The taskbar is swapped for a dock, and a dashboard and glass panels sit on top of your normal desktop. Your files, windows and wallpaper stay where they are. The interface is a port of [Caelestia](https://github.com/caelestia-dots/shell) (Qt Quick), and a .NET 8 service handles the Windows side. Panel colours can be derived from your wallpaper (see [Wallpaper and dynamic theme](#wallpaper-and-dynamic-theme)).
+The images and videos in this page are motion-design illustrations made in HTML/CSS. They are not screen captures
+(see [docs/illustrations](docs/illustrations/README.md)).
 
 ## What is new in 1.0
 
-- **Dock**: it grows with the open apps and scrolls when it overflows; optional battery pill for Bluetooth and XInput devices; pins of Store (MSIX) apps survive app updates and reboots; windows no longer slip between the dock's glass background and its icons.
+- **Dock**: it grows with the open apps and scrolls when it overflows; optional battery pill for Bluetooth and XInput devices; pins of Store (MSIX)
+  apps survive app updates and reboots; windows no longer slip between the dock's glass background and its icons.
 - **Control center**: Wi-Fi page, Bluetooth device connect/disconnect, audio output and microphone pages, per-application mixer.
 - **Command palette**: faster to open, including the first time after start-up.
-- **Winjets**: ten built-in desktop widgets that replace the PC Widgets pack, drawn with the liquid glass v2 treatment and fed with real data (weather with your location, Yahoo Finance quotes, ICS calendar, system, storage, media session, notes and more).
+- **Winjets**: ten built-in desktop widgets that replace the PC Widgets pack, drawn with the liquid glass v2 treatment and fed with real data.
 - **Social rail**: the right-edge panel gathers notifications from Discord, Instagram, Snapchat, WhatsApp and Telegram.
 - **Also**: push-to-talk voice dictation (off by default), redesigned file manager, lock screen, window overview, and a new WPF installer and uninstaller.
 
 Full list: [CHANGELOG.md](CHANGELOG.md) and [release notes](docs/RELEASE-NOTES-1.0.md).
 
-### Screenshots
+## Feature tour
+
+### Dock
+
+A dock instead of the Windows taskbar, with window previews on hover and a virtual-desktop indicator. It grows with the open apps and scrolls
+with the mouse wheel when it overflows. It auto-hides: it slides away about 0.45 s after the pointer leaves it, and appears when the pointer
+reaches the bottom edge of the screen. The Windows key opens the normal Windows Start menu.
 
 <img src="docs/illustrations/dock-1.0.webp" alt="The dock growing with open apps, with the battery pill for connected devices" width="100%">
 
-<img src="docs/illustrations/winjets-1.0.webp" alt="The built-in Winjets on the desktop" width="100%">
+Optional battery indicator for connected Bluetooth and XInput devices (headset, gamepad, mouse, keyboard), next to the clock: one icon, gauge
+and percentage per device, in the error colour at 20 % or less. Hovering shows the name and state, clicking opens the Controls panel. Off by
+default; enable it and choose which paired devices appear, and their type, in Settings > Docks and panels > Icon bar.
 
 ### Control center and social rail
 
-Wi-Fi, Bluetooth, audio output, microphone and a per-application mixer. The right-edge social rail gathers notifications from Discord, Instagram, Snapchat, WhatsApp and Telegram.
+The Control center has toggle tiles (Wi-Fi, Bluetooth, Dark theme, Light mode), volume and per-display brightness sliders (DDC/CI, external
+displays too) and capture/clipboard shortcuts. Wi-Fi, Bluetooth and Sound sub-pages open inside the panel: Wi-Fi network list, Bluetooth device
+connect/disconnect, output/input device selection and per-application volume. The right-edge social rail gathers notifications from Discord,
+Instagram, Snapchat, WhatsApp and Telegram.
 
 <img src="docs/illustrations/control-center-1.0.webp" alt="Control center and social rail" width="100%">
 
-### Palette from the wallpaper
+### Winjets
 
-With the Automatic theme, panel colours are derived from the current wallpaper.
+Small desktop widgets placed behind your windows, drawn with the liquid glass v2 treatment. The ten built-in Winjets are Calendar, Clock, Music,
+System, Markets, Storage, Files, Notes, Agenda and Weather, plus Battery. Editing and custom Winjets:
+see [Winjets: editing and custom packages](#winjets-editing-and-custom-packages).
 
-<img src="docs/illustrations/palette-1.0.webp" alt="Palette derived from the wallpaper" width="100%">
+<img src="docs/illustrations/winjets-1.0.webp" alt="The built-in Winjets on the desktop" width="100%">
 
 ### Personalization and settings
 
-Settings has a search field and ten pages. The Appearance page holds the theme, the wallpaper palette,
-glass transparency and animation speed.
+Settings has a search field: a result opens its page and highlights the row. The Appearance page holds the theme, the wallpaper palette,
+glass transparency and animation speed. Pages: Appearance, Interface, Docks and panels, Keyboard shortcuts, Media and audio, Apps, bookmarks
+and links, Files and Windows, General, Winjets, Lock.
 
 <img src="docs/illustrations/personnalisation-1.0.webp" alt="Personalization page" width="100%">
 
+<img src="docs/illustrations/settings-1.0.webp" alt="Settings" width="100%">
+
+- **Docks and panels**: the dock, the bookmarks panel (left edge) and the social networks panel (right edge) can each be hidden. Hiding the dock
+  while it replaces the Windows taskbar gives the Windows taskbar back, so there is always one bar.
+- **Keyboard shortcuts**: every global shortcut in one page, grouped. "Modifier" opens a capture dialog; a combination reserved by Windows or
+  already used by another action is refused with the reason. Fixed shortcuts (backup dashboard shortcut, desktop rescue, tiling keys, dictation
+  key) show why they cannot be changed here. A shortcut that another application already holds at start-up is flagged "Inactif".
+- **Opening Settings**: **Win+Alt+S** (reassignable), the tray icon menu ("Paramètres de Winlestia"), or `winlestia panel settings` from a terminal.
+- Also in Settings: screen frame, accent border on windows, desktop logo, quiet mode (dock and OSD hidden during fullscreen), on-screen
+  indicators for volume, brightness and microphone, and optional automatic tiling (off by default; Ctrl+Alt+arrows).
+
 ### Lock screen
 
-Press Ctrl+Alt+L.
+Press **Ctrl+Alt+L**.
 
 <img src="docs/illustrations/lockscreen-1.0.webp" alt="Lock screen" width="100%">
 
 ### Window overview
 
-Press Win+Alt+Tab.
+Press **Win+Alt+Tab** (Win+Alt+V if Windows refuses it).
 
 <img src="docs/illustrations/overview-1.0.webp" alt="Window overview" width="100%">
 
 ### Push-to-talk dictation
 
-Hold AltGr to dictate. Off by default.
+Hold **AltGr** to dictate. Off by default.
 
 <img src="docs/illustrations/dictation-1.0.webp" alt="Push-to-talk dictation" width="100%">
 
@@ -92,71 +130,105 @@ The redesigned file manager.
 
 <img src="docs/illustrations/fichiers-1.0.webp" alt="Winlestia Fichiers" width="100%">
 
-<img src="docs/media/installer/en-01-welcome.png" alt="WinlestiaSetup welcome screen" width="60%">
-
-## Features
-
-The images in this section are motion-design illustrations made in HTML/CSS, not screen captures (see [docs/illustrations](docs/illustrations/README.md)).
-
 ### Dashboard
-<img src="docs/illustrations/dashboard.webp" alt="Dashboard" width="100%">
 
 Press **Ctrl+F1**. The dashboard has four pages: **Dashboard** (clock, calendar, weather, media), **Media**, **Performance** and **Workspaces**.
+
+<img src="docs/illustrations/dashboard.webp" alt="Dashboard" width="100%">
 
 - Media: the track playing in Windows, with audio bars that run only while the panel is visible. Nothing is recorded.
 - Performance: CPU, GPU, memory and storage readings.
 - Workspaces: your applications, games, projects and documents, with search.
 
-### Workspaces
+### More
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Workspaces**
+
 <img src="docs/illustrations/workspaces.webp" alt="Workspaces page of the dashboard" width="100%">
 
-Applications, Games, Projects and Documents boards, your favorites, recent shortcuts and quick actions (Clipboard, Quick command, Add website, Customize).
+Applications, Games, Projects and Documents boards, your favorites, recent shortcuts and quick actions (Clipboard, Quick command, Add website,
+Customize).
 
-### Dock and command palette
-<img src="docs/illustrations/dock-palette.webp" alt="Dock and command palette" width="100%">
+</td>
+<td width="50%" valign="top">
 
-- A dock instead of the Windows taskbar, with window previews on hover and a virtual-desktop indicator. The dock auto-hides: it slides away a fraction of a second (about 0.45 s) after the pointer leaves it, and appears when the pointer reaches the bottom edge of the screen. The Windows key opens the normal Windows Start menu.
-- **Ctrl+F2** opens the palette: calculator, `>emoji`, `>wallpaper`, `>file ` for indexed files, open windows, Windows Settings pages and session actions (each asks for confirmation).
-- Optional battery indicator for connected Bluetooth and XInput devices (headset, gamepad, mouse, keyboard), next to the clock: one icon, gauge and percentage per device, in the error colour at 20 % or less. Hovering shows the name and state, clicking opens the Controls panel. Off by default; enable it and choose which paired devices appear, and their type, in Settings > Docks and panels > Icon bar.
+**Media**
 
-### Media and quick controls
 <img src="docs/illustrations/media.webp" alt="Media panel" width="100%">
 
-The Control center has toggle tiles (Wi-Fi, Bluetooth, Dark theme, Light mode), thick volume and per-display brightness sliders (DDC/CI, external displays too) and capture/clipboard shortcuts. Wi-Fi, Bluetooth and Sound sub-pages open inside the panel: Wi-Fi network list, Bluetooth device connect/disconnect, output/input device selection and per-application volume.
+The track playing in Windows, in the dashboard and in the Control center.
 
-### Performance
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+**Performance**
+
 <img src="docs/illustrations/performance.webp" alt="Performance panel" width="100%">
 
-### Tools
+CPU, GPU, memory and storage readings.
+
+</td>
+<td width="50%" valign="top">
+
+**Tools**
+
 <img src="docs/illustrations/tools.webp" alt="Tools panel" width="100%">
 
-Screen capture with annotation (**Ctrl+F3**), text recognition (OCR) on a captured area, colour picker, pixel ruler, clipboard history, focus timer, notes, pin a window on top (**Ctrl+F8**), a large-files view, and a recycle-bin / clipboard / zip drop zone that appears when you drag a file toward the top of the screen.
+Screen capture with annotation (**Ctrl+F3**), text recognition (OCR) on a captured area, colour picker, pixel ruler, clipboard history, focus
+timer, notes, pin a window on top (**Ctrl+F8**), a large-files view, and a recycle-bin / clipboard / zip drop zone that appears when you drag a
+file toward the top of the screen.
 
-### Wallpaper and dynamic theme
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+**Wallpaper switcher**
+
 <img src="docs/illustrations/wallpaper.webp" alt="Wallpaper switcher" width="100%">
 
-**Win+Alt+W** opens a full-screen wallpaper switcher with live preview and per-display targeting. A fresh install uses the **Porcelain** theme (light, warm), which is fixed and does **not** follow the wallpaper; the **Automatic** theme does. To get colours from the wallpaper, open Settings (Customize), then Appearance, then Theme, and select **Automatic**. Glass blur comes from Windows itself. The Automatic theme starts with a glass transparency of 5 %, adjustable in Settings.
+**Win+Alt+W** opens a full-screen wallpaper switcher with live preview and per-display targeting.
 
-### Settings
-<img src="docs/illustrations/settings-1.0.webp" alt="Settings" width="100%">
+</td>
+<td width="50%" valign="top">
 
-Eight pages with a search field (a result opens its page and highlights the row): Appearance, Interface, Docks and panels, Keyboard shortcuts, Media and audio, Apps, bookmarks and links, Files and Windows, General.
+**Terminal**
 
-- **Docks and panels**: the dock, the bookmarks panel (left edge) and the social networks panel (right edge) can each be hidden. Hiding the dock while it replaces the Windows taskbar gives the Windows taskbar back, so there is always one bar.
-- **Keyboard shortcuts**: every global shortcut in one page, grouped. "Modifier" opens a capture dialog; a combination reserved by Windows or already used by another action is refused with the reason. Fixed shortcuts (backup dashboard shortcut, desktop rescue, tiling keys, dictation key) show why they cannot be changed here. A shortcut that another application already holds at start-up is flagged "Inactif".
-- **Opening Settings**: **Win+Alt+S** (reassignable), the tray icon menu ("Paramètres de Winlestia"), or `winlestia panel settings` from a terminal.
-
-Screen frame, accent border on windows, desktop logo, quiet mode (dock and OSD hidden during fullscreen), on-screen indicators for volume, brightness and microphone, and optional automatic tiling (off by default; Ctrl+Alt+arrows).
-
-### Terminal
 <img src="docs/illustrations/terminal.webp" alt="Terminal with the Winlestia palette" width="100%">
 
-Opt-in at setup: Command Prompt through [Clink](https://github.com/chrisant996/clink), with colours synchronized to the wallpaper palette. Reversible. Clink is downloaded at install time, so this option needs an Internet connection.
+Opt-in at setup: Command Prompt through [Clink](https://github.com/chrisant996/clink), with colours synchronized to the wallpaper palette.
+Reversible. Clink is downloaded at install time, so this option needs an Internet connection.
 
-### Panels
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+**Dock and command palette**
+
+<img src="docs/illustrations/dock-palette.webp" alt="Dock and command palette" width="100%">
+
+**Ctrl+F2** opens the palette: calculator, `>emoji`, `>wallpaper`, `>file ` for indexed files, open windows, Windows Settings pages and session
+actions (each asks for confirmation).
+
+</td>
+<td width="50%" valign="top">
+
+**Panels**
+
 <img src="docs/illustrations/panels.webp" alt="Winlestia panels" width="100%">
 
-Also: a redesigned Files explorer, messenger and bookmark side rails, an optional push-to-talk dictation (hold AltGr, off by default), and a `winlestia` command line to script the running shell.
+Messenger and bookmark side rails, and a `winlestia` command line to script the running shell.
+
+</td>
+</tr>
+</table>
 
 ## Install
 
@@ -165,6 +237,8 @@ Requires **Windows 11 (64-bit)**. No administrator rights needed.
 1. Download `WinlestiaSetup.exe` from the [GitHub Releases page](https://github.com/lilidoxdev/winlestia/releases/latest).
 2. Check it: run `Get-FileHash .\WinlestiaSetup.exe -Algorithm SHA256` in PowerShell and compare the result with the SHA-256 printed in the release notes.
 3. Run it. The binaries are **not code-signed**, so SmartScreen will likely warn: choose **More info**, then **Run anyway**.
+
+<img src="docs/media/installer/en-01-welcome.png" alt="WinlestiaSetup welcome screen" width="60%">
 
 After installing, move the pointer to the bottom edge of the screen to reveal the dock. Full guide, options and updating: [docs/INSTALL.md](docs/INSTALL.md).
 
@@ -200,7 +274,7 @@ All shortcuts (reassignable in Settings), palette prefixes and the `winlestia` c
 
 **Why "Panneaux" in some file names?** Same reason: legacy name.
 
-## Winjets
+## Winjets: editing and custom packages
 
 Winjets are small desktop widgets placed behind your windows, on the desktop. Each one is a package (a ZIP or a folder) that describes its layout, settings and data in JSON; no code from a package is ever run. The default set is: Calendar, Clock, Music (the Windows media session), System, Markets (Yahoo Finance equities and indexes), Storage, Files, Notes, Agenda (an ICS link, for example an Outlook published calendar) and Weather (a city setting, or the Windows location), plus Battery. They follow your palette and sit on the glass; see [all of them](docs/media/winjets/all.png). Add them from Settings > Winjets. Each Winjet has its own background transparency slider (0 to 100 %, or "Par défaut" to follow the global glass setting), under the settings button of its row; text stays opaque.
 

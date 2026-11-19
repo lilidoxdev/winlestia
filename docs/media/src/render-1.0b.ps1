@@ -31,15 +31,16 @@ foreach ($s in $scenes) {
   if (-not (Test-Path $fp)) { continue }
   $body = [IO.File]::ReadAllText($fp, $utf8)
   $amb = if ($s.amb) { "<link rel=`"stylesheet`" href=`"$($s.amb)`">" } else { '' }
-  $html = $template.Replace('{{TITLE}}', $s.title).Replace('{{W}}', "$($s.w)").Replace('{{H}}', "$($s.h)").Replace('{{AMBIANCE}}', $amb).Replace(
-    '{{WALLPAPER}}', $s.wp).Replace('{{ICONS}}', $icons).Replace('{{BODY}}', $body)
+  $html = $template.Replace('{{TITLE}}', $s.title).Replace('{{W}}', "$($s.w)").Replace('{{H}}', "$($s.h)")
+  $html = $html.Replace('{{AMBIANCE}}', $amb).Replace('{{WALLPAPER}}', $s.wp).Replace('{{ICONS}}', $icons).Replace('{{BODY}}', $body)
   $page = "_$($s.n).html"
   [IO.File]::WriteAllText((Join-Path $src $page), $html, $utf8)
   $big = Join-Path $tmp "$($s.n)-big.png"
   if (Test-Path $big) { Remove-Item $big }
   $k = if ($s.w -gt 1600) { 2 } else { 3 }
   $edgeArgs = @('--headless=new','--disable-gpu','--hide-scrollbars','--log-level=3','--allow-file-access-from-files',
-    "--force-device-scale-factor=$k","--window-size=$($s.w),$($s.h)",'--virtual-time-budget=12000','--run-all-compositor-stages-before-draw',
+    "--force-device-scale-factor=$k","--window-size=$($s.w),$($s.h)",'--virtual-time-budget=12000',
+    '--run-all-compositor-stages-before-draw',
     "--user-data-dir=$tmp\profile","--screenshot=$big",([Uri](Join-Path $src $page)).AbsoluteUri)
   Start-Process -FilePath $edge -ArgumentList $edgeArgs -Wait -NoNewWindow
   if (-not (Test-Path $big)) { throw "No screenshot for $($s.n)" }
