@@ -2,6 +2,7 @@
 from PySide6.QtCore import QObject, QTimer, QRectF, Qt
 from PySide6.QtGui import QPainterPath, QTransform, QRegion
 from functools import lru_cache
+import time
 from PySide6.QtWidgets import QApplication
 
 
@@ -158,6 +159,12 @@ class SurfaceScene(QObject):
         self.revision = 0
         self.stopped = False
         self.input_masks = {}
+        self._top_mask_at = 0.0
+        self._top_mask_pending = None
+        self._top_mask_timer = QTimer(self)
+        self._top_mask_timer.setSingleShot(True)
+        self._top_mask_timer.setInterval(100)
+        self._top_mask_timer.timeout.connect(self._apply_top_mask_pending)
         self.pill_watched = None
         bridge.changed.connect(self.request)
         bridge.geometryChanged.connect(self.request)
@@ -320,8 +327,8 @@ class SurfaceScene(QObject):
                     int(window.winId()), None
                 )  # dock masqué : on oublie son masque, il est réappliqué à la prochaine apparition
             if window and spec:
-                offset = spec[1] - window.y() if is_dock else 0
-                mask_key = (window.width(), window.height(), round(spec[2]), round(spec[3]), spec[4], round(offset))
+                offset = 0
+                mask_key = (window.width(), window.height(), round(spec[2]), round(spec[3]), spec[4])
                 handle = int(window.winId())
                 if self.input_masks.get(handle) != mask_key:
                     path = (
@@ -329,7 +336,19 @@ class SurfaceScene(QObject):
                         .translate((window.width() - spec[2]) / 2, offset)
                         .map(builder(spec[2], spec[3], spec[4]))
                     )
-                    window.setMask(QRegion(path.toFillPolygon().toPolygon(), Qt.WindingFill))
+                    region = QRegion(path.toFillPolygon().toPolygon(), Qt.WindingFill)
+                    if is_dock:
+                        window.setMask(region)
+                    else:
+                        now = time.monotonic()
+                        if handle not in self.input_masks or now - self._top_mask_at >= 0.10:
+                            window.setMask(region)
+                            self._top_mask_at = now
+                            self._top_mask_pending = None
+                            self._top_mask_timer.stop()
+                        else:
+                            self._top_mask_pending = (window, region)
+                            self._top_mask_timer.start()
                     self.input_masks[handle] = mask_key
         displays = [
             (s.name(), s.geometry().x(), s.geometry().y(), s.geometry().width(), s.geometry().height())
@@ -352,6 +371,13 @@ class SurfaceScene(QObject):
         if signature == self.signature:
             return
         self.signature = signature
+        if not (bridge.glassEnabled and not bridge.reducedEffects):
+            if self.paths or self.data:
+                self.paths = {}
+                self.data = {}
+                self.revision += 1
+                bridge.surfaceChanged.emit()
+            return
         paths = {}
         data = {}
         for name, x, y, w, h in displays:
@@ -380,11 +406,8 @@ class SurfaceScene(QObject):
             )
             # Le rendu de courbes de Qt exige une silhouette normalisée pour les contours qui se chevauchent.
             simple = path.simplified()
-            outline = svg_path(simple)
             paths[name] = simple
             data[name] = {
-                'path': outline,
-                'outline': outline,
                 'visible': not path.isEmpty(),
                 'components': (thickness, local(top), local(dock), local(rail), local(left), local(dictation), local(pill)),
             }
@@ -393,6 +416,16 @@ class SurfaceScene(QObject):
         self.revision += 1
         bridge.surfaceChanged.emit()
 
+    def _apply_top_mask_pending(self):
+        pending = self._top_mask_pending
+        self._top_mask_pending = None
+        if pending and not self.stopped:
+            window, region = pending
+            window.setMask(region)
+            self._top_mask_at = time.monotonic()
+
     def stop(self):
         self.stopped = True
         self.timer.stop()
+        self._top_mask_timer.stop()
+        self._top_mask_pending = None

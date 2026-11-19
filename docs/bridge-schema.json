@@ -980,6 +980,9 @@
     },
     "topActivationMargin": {
       "value": "number"
+    },
+    "topHoverEnabled": {
+      "enabled": "boolean"
     }
   },
   "replyKeys": {

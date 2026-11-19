@@ -1152,5 +1152,7 @@
  "Paramètres Wi-Fi": "Wi-Fi settings",
  "Entrée audio": "Audio input",
  "Dictée": "Dictation",
- "Fonds d’écran": "Wallpapers"
+ "Fonds d’écran": "Wallpapers",
+ "Barre supérieure (bord haut)": "Top bar (top edge)",
+ "Se déploie quand la souris touche le haut de l’écran": "Expands when the pointer touches the top edge of the screen"
 }

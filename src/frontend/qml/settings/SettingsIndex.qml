@@ -247,6 +247,14 @@ QtObject {
             kw: "reseaux sociaux messagerie social rail droite"
         },
         {
+            id: "topHover",
+            page: 2,
+            section: qsTr("Visibilité"),
+            label: qsTr("Barre supérieure (bord haut)"),
+            desc: qsTr("Se déploie quand la souris touche le haut de l’écran"),
+            kw: "barre superieure top bar dashboard hover survol haut"
+        },
+        {
             id: "replaceTaskbar",
             page: 2,
             section: qsTr("Barre des tâches"),

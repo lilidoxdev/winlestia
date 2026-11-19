@@ -100,7 +100,7 @@ class NativeGlass(QObject):
         bridge.surfaceChanged.connect(self.request_sync)
         self.timer = QTimer(self)
         self.timer.setInterval(250)
-        self.timer.timeout.connect(self.sync)
+        self.timer.timeout.connect(lambda: self.sync(from_timer=True))
         self.timer.start()
         self.request_sync()
 
@@ -109,7 +109,7 @@ class NativeGlass(QObject):
             self.queued = True
             QTimer.singleShot(0, self.sync)
 
-    def sync(self):
+    def sync(self, from_timer=False):
         self.queued = False
         if self.stopped:
             return
@@ -226,7 +226,9 @@ class NativeGlass(QObject):
         busy = bool(visible)
         # Pendant une animation (la géométrie change à chaque image) l'ordre Z ne change pas : la passe n'a lieu qu'à
         # l'apparition d'une fenêtre, puis à la première synchronisation sans mouvement (fin d'animation, tick de 250 ms).
-        if topmost_due(self.topmost_handles, handles, moved):
+        if (handles != self.topmost_handles or from_timer) if not self.windows else topmost_due(
+            self.topmost_handles, handles, moved
+        ):
             self.raise_content(handles)
         self.topmost_handles = handles
         for window in locking:

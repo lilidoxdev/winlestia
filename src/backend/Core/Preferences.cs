@@ -72,6 +72,7 @@ public sealed class Preferences
     public bool DockVisible { get; set; } = true;
     public bool BookmarksRailVisible { get; set; } = true;
     public bool SocialRailVisible { get; set; } = true;
+    public bool TopHoverEnabled { get; set; } = true;
     // Win+Alt+S : ouvre la page de réglages
     public ShortcutPreferences SettingsShortcut { get; set; } = new() { Modifiers = 9, Key = 0x53 };
     // Écran de verrouillage : jamais de mot de passe en clair, seulement sel + empreinte PBKDF2 (voir LockSecret).
