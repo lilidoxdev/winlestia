@@ -204,10 +204,13 @@ static class Installer
             var root = Path.GetFullPath(dir).TrimEnd('\\') + "\\";
             foreach (var e in zip.Entries)
             {
-                if (e.FullName.EndsWith("/")) continue;
-                var target = Path.GetFullPath(Path.Combine(dir, e.FullName.Replace('/', '\\')));
-                if (!target.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Unsafe entry: "
+                // Compress-Archive (Windows PowerShell 5.1) writes backslash separators and "folder\" entries.
+                var name = e.FullName.Replace('/', '\\');
+                var isDir = name.EndsWith("\\");
+                var target = Path.GetFullPath(Path.Combine(dir, name.TrimEnd('\\')));
+                if (!(target + "\\").StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Unsafe entry: "
                     + e.FullName);
+                if (isDir) { Directory.CreateDirectory(target); continue; }
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 e.ExtractToFile(target, true);
             }
