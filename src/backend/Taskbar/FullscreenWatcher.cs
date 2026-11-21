@@ -38,6 +38,8 @@ internal static partial class FullscreenWatcher
     static WinEventProc? proc;   // gardé vivant pendant toute la durée de vie des hooks
     static volatile string[] current = Array.Empty<string>();
     internal static string[] Current => current;
+    static volatile string[] maximized = Array.Empty<string>();
+    internal static string[] Maximized => maximized;
     // Levé (thread du pool, hors de tout verrou) seulement quand l'ensemble change ; les abonnés ne doivent pas lever d'exception (elles
     // sont avalées).
     internal static event Action? Changed;
@@ -155,6 +157,7 @@ internal static partial class FullscreenWatcher
         lock (computeGate)
         {
             current = Array.Empty<string>();
+            maximized = Array.Empty<string>();
         }   // attend un Recompute en cours ; SetSet revérifie `started`. Pas de Changed : les abonnés sont en cours de démontage.
     }
 
@@ -221,7 +224,7 @@ internal static partial class FullscreenWatcher
         {   // sérialisé : un ancien calcul ne peut jamais écraser un plus récent
             try
             {
-                changed = SetSet(Compute());
+                changed = SetSet(Compute()) | SetMaximized(pendingMaximized);
             }
             catch { /* keep the previous value */ }
         }
@@ -272,6 +275,19 @@ internal static partial class FullscreenWatcher
         if (sorted.SequenceEqual(current))
             return false;
         current = sorted;
+        return true;
+    }
+    static bool SetMaximized(string[] names)
+    {
+        lock (gate)
+        {
+            if (!started)
+                return false;
+        }
+        var sorted = names.Distinct().OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToArray();
+        if (sorted.SequenceEqual(maximized))
+            return false;
+        maximized = sorted;
         return true;
     }
     internal static void RaiseChangedForTest(string[] names)

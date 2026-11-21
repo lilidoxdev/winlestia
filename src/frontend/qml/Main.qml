@@ -20,6 +20,8 @@ Window {
     property bool peek: Bridge.preview
     property string pageMode: "dashboard"
     property bool extraOpen: false
+    // Panneau réellement ouvert (tableau de bord ou onglet), distinct de l'aperçu au survol qui montre aussi la fenêtre.
+    readonly property bool panelOpen: pageMode === "dashboard" ? vis.dashboard : extraOpen
     // Page affichée dans le Centre de contrôle : "main", "wifi", "bluetooth" ou "sound".
     property string controlsPage: "main"
     property bool wifiSampling: extraOpen && pageMode === "controls" && controlsPage === "wifi"
@@ -64,13 +66,54 @@ Window {
     property real panelHeight: Bridge.fileDragNearTop ? 0 :
         Math.ceil(Math.max(1, pageMode === "dashboard" ?
             (vis.dashboard ? drawer.implicitHeight : peek ? 82 : 0) : extraHeight))
+    // Vrai tant qu'une des deux animations (largeur, hauteur) tourne ; le passage à faux est regroupé (relance du Behavior).
+    property bool widthAnimRunning: false
+    property bool heightAnimRunning: false
+    readonly property bool animRunning: widthAnimRunning || heightAnimRunning
+    property bool animating: false
+    readonly property bool profiling: Bridge.panelProfiling
+    property bool profileFrame: false
+    function pmark(label) {
+        if (profiling)
+            Bridge.panelMark(label);
+    }
+    function panelName() {
+        if (pageMode === "dashboard")
+            return ["dashboard", "media", "performance", "access"][drawer.dashState.currentTab] ?? "dashboard";
+        return pageMode;
+    }
+    function setAnimating(value) {
+        if (animating === value)
+            return;
+        animating = value;
+        pmark(value ? "anim-start" : "anim-end");
+        Bridge.setPanelAnimating(value, panelName());
+    }
+    onAnimRunningChanged: {
+        if (animRunning)
+            setAnimating(true);
+        else
+            Qt.callLater(() => {
+                if (!window.animRunning)
+                    window.setAnimating(false);
+            });
+    }
     // La largeur de fenêtre reste stable (large) sauf si le panneau est décalé par le rail : elle épouse alors le panneau pour rester à
     // l'écran.
+    // Filets : si le Behavior ne signale jamais sa fin, ou si la fenêtre est masquée, l'état retombe à faux ; un nouveau changement de
+    // running réévalue normalement. Arrêté au repos.
+    Timer {
+        interval: Math.max(250 * (Bridge.settings.motionScale ?? 1), window.heightDuration * (Bridge.settings.motionScale ?? 1)) + 500
+        running: window.animating
+        repeat: false
+        onTriggered: window.setAnimating(false)
+    }
     width: dashboardShift > 0 ? Math.ceil(panelWidth) + 16 : Math.max(Math.min(1600, Bridge.screenWidth - 16), Math.ceil(panelWidth))
     height: Math.max(Math.min(900, Bridge.screenHeight - Config.border.thickness), Math.ceil(panelHeight))
     Behavior on panelWidth {
         enabled: !Appearance.reducedEffects && !window.railMoving
         Anim {
+            onRunningChanged: window.widthAnimRunning = running
             duration: Math.round(250 * (Bridge.settings.motionScale ?? 1))
             easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
         }
@@ -81,6 +124,7 @@ Window {
             duration: Math.round(window.heightDuration * (Bridge.settings.motionScale ?? 1))
             easing.bezierCurve: window.heightCurve
             onRunningChanged: {
+                window.heightAnimRunning = running;
                 if (running) {
                     if (window.tracing)
                         Bridge.trace("anim-start");
@@ -125,6 +169,14 @@ Window {
         function onFrameSwapped() {
             window.traceFrame = false;
             Bridge.trace("first-frame");
+        }
+    }
+    Connections {
+        target: window
+        enabled: window.profiling && window.profileFrame
+        function onFrameSwapped() {
+            window.profileFrame = false;
+            window.pmark("first-frame");
         }
     }
     onPanelWidthChanged: Bridge.updateSurfaces()
@@ -191,6 +243,10 @@ Window {
         if (tracing) {
             traceFrame = mode !== "close";
             Bridge.trace("openMode " + mode);
+        }
+        if (profiling) {
+            profileFrame = mode !== "close";
+            pmark("open-request " + mode);
         }
         if (mode === "close") {
             vis.dashboard = false;
@@ -264,8 +320,10 @@ Window {
             traceFrame = true;
             Bridge.trace(visible ? "visible" : "hidden");
         }
-        if (!visible)
+        if (!visible) {
             sessionDialog.open = false;
+            setAnimating(false);
+        }
         subscribe();
     }
     onExtraOpenChanged: if (!extraOpen) {
@@ -322,7 +380,18 @@ Window {
         property: "scale"
         value: Bridge.settings.motionScale ?? 1
     }
-    // Tous les fonds sont dessinés une seule fois par la surface d'écran partagée.
+    // Tous les fonds sont dessinés une seule fois par la surface d'écran partagée ; ce fond ne comble que le manque de lisibilité (voir
+    // Colours.panelFloor) sous les onglets et le contenu du panneau, dans la silhouette de panel_path (corps entre 20 px et width - 20).
+    Rectangle {
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: 0
+        width: Math.max(0, window.panelWidth - 40)
+        height: window.panelHeight
+        bottomLeftRadius: Math.min(25, height / 2)
+        bottomRightRadius: Math.min(25, height / 2)
+        color: Colours.panelBacking
+        visible: height > 1 && color.a > 0
+    }
     Dashboard.Wrapper {
         id: drawer
         maxWidth: window.railBound ? Math.max(drawer.minWidth, railLeft - 16 - 40) : 0

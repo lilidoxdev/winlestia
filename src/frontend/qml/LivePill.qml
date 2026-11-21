@@ -129,7 +129,8 @@ Window {
     }
     readonly property real targetWidth: wantedWidth > 0 ? wantedWidth : heldWidth
     // La languette sort du cadre (hauteur depuis 0) quand il y a quelque chose à montrer, et rentre sinon.
-    readonly property bool tabWanted: !suppressed && !mediaPageShown && !panelOverlaps && stateName !== "idle"
+    // Une fenêtre maximisée garde ses boutons de légende dans ce coin : la languette se rétracte tant qu'elle y est.
+    readonly property bool tabWanted: !suppressed && !mediaPageShown && !panelOverlaps && !Bridge.screenMaximized && stateName !== "idle"
     readonly property real targetHeight: !tabWanted ? 0 : stateName === "expanded" ? expandedHeight : stateName === "compact"
         ? compactHeightWanted : slimHeight
     // Lu par le pointeur (bridge_pointer.py) : la Pilule déployée est celle qu'on est en train de viser.

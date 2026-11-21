@@ -12,6 +12,31 @@ Item {
 
     readonly property var today: Weather.forecast && Weather.forecast.length > 0 ? Weather.forecast[0] : null
 
+    // Hauteur réservée à la rangée de prévisions pour que la taille du volet ne change pas à l'arrivée des données.
+    readonly property real forecastReserve: Appearance.padding.normal * 2 + Appearance.spacing.small * 2.5
+        + sansNormal.height * 2 + sansSmall.height + iconLarge.height
+
+    FontMetrics {
+        id: sansNormal
+
+        font.family: Appearance.font.family.sans
+        font.pointSize: Appearance.font.size.normal
+    }
+
+    FontMetrics {
+        id: sansSmall
+
+        font.family: Appearance.font.family.sans
+        font.pointSize: Appearance.font.size.small
+    }
+
+    FontMetrics {
+        id: iconLarge
+
+        font.family: Appearance.font.family.material
+        font.pointSize: Appearance.font.size.extraLarge
+    }
+
     Component.onCompleted: Weather.reload()
 
     ColumnLayout {
@@ -133,7 +158,7 @@ Item {
 
         StyledText {
             Layout.topMargin: Appearance.spacing.normal
-            visible: forecastRepeater.count > 0
+            opacity: forecastRepeater.count > 0 ? 1 : 0
             text: qsTr("7-Day Forecast")
             font.pointSize: Appearance.font.size.normal
             font.weight: 600
@@ -142,6 +167,7 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
+            Layout.preferredHeight: Math.max(implicitHeight, root.forecastReserve)
             spacing: Appearance.spacing.smaller
 
             Repeater {

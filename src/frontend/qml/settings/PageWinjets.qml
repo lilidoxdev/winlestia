@@ -132,7 +132,7 @@ ColumnLayout {
                         }
                         StyledText {
                             Layout.fillWidth: true
-                            text: tile.modelData.name ?? tile.modelData.id
+                            text: qsTr(tile.modelData.name ?? tile.modelData.id)
                             font.weight: Font.Medium
                             elide: Text.ElideRight
                         }
@@ -269,7 +269,7 @@ ColumnLayout {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: page.importedPackage.name ?? ""
+                        text: qsTr(page.importedPackage.name ?? "")
                         font.weight: Font.Medium
                         font.pointSize: Appearance.font.size.larger
                         elide: Text.ElideRight

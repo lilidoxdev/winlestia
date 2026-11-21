@@ -253,7 +253,7 @@ Item {
             else if (e.kind === "folder")
                 folders.push(e);
             else {
-                const c = e.category || qsTr("Autres");
+                const c = String(e.category || "").trim() || "Autres";
                 if (!cats.has(c))
                     cats.set(c, []);
                 cats.get(c).push(e);
@@ -262,7 +262,7 @@ Item {
         for (const c of Array.from(cats.keys()).sort((a, b) => a.localeCompare(b)))
             out.push({
                 key: "c:" + c,
-                label: c,
+                label: qsTr(c),
                 icon: "label",
                 items: cats.get(c).sort(byName)
             });
@@ -289,7 +289,7 @@ Item {
     }
     function syncModel() {
         const cols = Math.max(1, grid.columns);
-        const secs = buildSections(), flatNew = [], lines = [], info = {};
+        const secs = buildSections().filter(s => s.items.length > 0), flatNew = [], lines = [], info = {};
         for (const sec of secs) {
             const closed = isCollapsed(sec.key);
             info[sec.key] = {

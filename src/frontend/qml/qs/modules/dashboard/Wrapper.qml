@@ -74,7 +74,7 @@ Item {
 
         visible: true
         active: true
-        layer.enabled: !Appearance.reducedEffects && root.drawerMoving
+        layer.enabled: !Appearance.reducedEffects && (root.drawerMoving || Bridge.panelAnimating === true)
 
         sourceComponent: Content {
             visibilities: root.visibilities

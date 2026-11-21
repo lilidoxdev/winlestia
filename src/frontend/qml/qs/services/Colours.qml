@@ -9,6 +9,11 @@ QtObject {
     // Une base opaque, un alpha : le cadre, le tableau de bord et le dock lisent tous surfaceColor.
     readonly property color surfaceBase: pick("m3surface", Bridge.dark ? "#101518" : "#fff8f6")
     readonly property color surfaceColor: Qt.alpha(surfaceBase, surfaceOpacity)
+    // Plancher de lisibilité du panneau du haut : la teinte du verre peut être très faible (ou le flou natif absent) et laisser les onglets
+    // se fondre dans la fenêtre dessous. Le fond du panneau ajoute juste l'alpha manquant pour que le cumul avec surfaceColor atteigne
+    // ce plancher ; opacité 1 : rien à ajouter.
+    readonly property real panelFloor: 0.9
+    readonly property color panelBacking: Qt.alpha(surfaceBase, surfaceOpacity >= panelFloor ? 0 : (panelFloor - surfaceOpacity) / (1 - surfaceOpacity))
     readonly property bool light: !Bridge.dark
     // Changement de palette (nouveau fond d’écran) : fondu de l’ancienne vers la nouvelle, un seul réel animé.
     // Au repos progress vaut 1, les rôles sont constants : aucune animation, aucun timer.

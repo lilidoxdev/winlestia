@@ -3,7 +3,10 @@ from pathlib import Path
 import ctypes
 from PySide6.QtCore import QObject, QTimer
 from PySide6.QtWidgets import QApplication
+import panel_profile
 from surface_geometry import path_commands
+from sync_throttle import delay_ms
+from time import monotonic
 
 
 def default_library():
@@ -60,6 +63,7 @@ class NativeGlass(QObject):
         self.errors = []
         self.dll = None
         self.stopped = False
+        self.last_run = 0.0
         self.queued = False
         self.watched = set()
         try:
@@ -107,12 +111,20 @@ class NativeGlass(QObject):
     def request_sync(self, *args):
         if not self.stopped and not self.queued:
             self.queued = True
-            QTimer.singleShot(0, self.sync)
+            QTimer.singleShot(delay_ms(self.last_run), self.sync)
 
     def sync(self):
         self.queued = False
+        self.last_run = monotonic()
         if self.stopped:
             return
+        started = panel_profile.tick()
+        try:
+            self.sync_frames()
+        finally:
+            panel_profile.tock('glass', started)
+
+    def sync_frames(self):
         scene = self.bridge.surface_scene
         if not scene:
             return

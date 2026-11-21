@@ -100,7 +100,7 @@ ColumnLayout {
 
             Layout.fillWidth: true
             rowId: "winjets.setting." + modelData.id
-            title: modelData.label ?? modelData.id
+            title: qsTr(modelData.label ?? modelData.id)
             hint: ""
 
             Loader {
@@ -135,7 +135,10 @@ ColumnLayout {
         id: choiceField
 
         SettingsStepper {
-            model: parent && parent.entry && Array.isArray(parent.entry.options) ? parent.entry.options : []
+            model: parent && parent.entry && Array.isArray(parent.entry.options) ? parent.entry.options.map(o => ({
+                    label: qsTr(String(o.label ?? o.value)),
+                    value: o.value
+                })) : []
             current: parent ? parent.value : undefined
             onChosen: v => form.change(parent.entry.id, v)
         }

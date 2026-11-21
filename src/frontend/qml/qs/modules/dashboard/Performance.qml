@@ -4,6 +4,7 @@ import qs.services
 import qs.config
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Shapes
 
 RowLayout {
     id: root
@@ -17,6 +18,19 @@ RowLayout {
     }
 
     spacing: Appearance.spacing.large * 3
+
+    property bool firstDataMarked: false
+    Connections {
+        target: SystemUsage
+        ignoreUnknownSignals: true
+
+        function onCpuPercChanged(): void {
+            if (!root.firstDataMarked && Bridge.panelProfiling === true) {
+                root.firstDataMarked = true;
+                Bridge.panelMark("performance:first-data");
+            }
+        }
+    }
 
     Ref {
         service: SystemUsage
@@ -102,22 +116,6 @@ RowLayout {
         implicitWidth: Config.dashboard.sizes.resourceSize * primaryMult
         implicitHeight: Config.dashboard.sizes.resourceSize * primaryMult
 
-        // Repeint seulement quand l'onglet Performance est à l'écran ; un repeint de rattrapage à l'apparition.
-        readonly property bool onScreen: (Bridge.window?.visible ?? false) && Bridge.window.pageMode === "dashboard"
-            && Bridge.window.dashboardTab === 2
-        function repaint(): void {
-            if (onScreen)
-                canvas.requestPaint();
-        }
-        onOnScreenChanged: repaint()
-        onValue1Changed: repaint()
-        onHasValue1Changed: repaint()
-        onValue2Changed: repaint()
-        onFg1Changed: repaint()
-        onFg2Changed: repaint()
-        onBg1Changed: repaint()
-        onBg2Changed: repaint()
-
         Column {
             anchors.centerIn: parent
 
@@ -159,59 +157,79 @@ RowLayout {
             }
         }
 
-        Canvas {
-            id: canvas
+        // Arcs GPU (Shape + PathAngleArc) : aucun raster ni repeint à chaque image des Behavior.
+        Shape {
+            id: gauge
 
-            readonly property real centerX: width / 2
-            readonly property real centerY: height / 2
-
-            readonly property real arc1Start: degToRad(45)
-            readonly property real arc1End: degToRad(220)
-            readonly property real arc2Start: degToRad(230)
-            readonly property real arc2End: degToRad(360)
-
-            function degToRad(deg: int): real {
-                return deg * Math.PI / 180;
-            }
+            readonly property real radius: (Math.min(width, height) - res.thickness) / 2
+            readonly property real arcStroke: res.thickness
+            readonly property int capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
 
             anchors.fill: parent
+            preferredRendererType: Shape.CurveRenderer
 
-            onPaint: {
-                const ctx = getContext("2d");
-                ctx.reset();
+            ShapePath {
+                strokeWidth: res.hasValue1 ? gauge.arcStroke : -1
+                strokeColor: res.bg1
+                fillColor: "transparent"
+                capStyle: gauge.capStyle
 
-                ctx.lineWidth = res.thickness;
-                ctx.lineCap = Appearance.rounding.scale === 0 ? "square" : "round";
-
-                const radius = (Math.min(width, height) - ctx.lineWidth) / 2;
-                const cx = centerX;
-                const cy = centerY;
-                const a1s = arc1Start;
-                const a1e = arc1End;
-                const a2s = arc2Start;
-                const a2e = arc2End;
-
-                if (res.hasValue1) {
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, radius, a1s, a1e, false);
-                    ctx.strokeStyle = res.bg1;
-                    ctx.stroke();
-
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, radius, a1s, (a1e - a1s) * res.value1 + a1s, false);
-                    ctx.strokeStyle = res.fg1;
-                    ctx.stroke();
+                PathAngleArc {
+                    centerX: gauge.width / 2
+                    centerY: gauge.height / 2
+                    radiusX: gauge.radius
+                    radiusY: gauge.radius
+                    startAngle: 45
+                    sweepAngle: 175
                 }
+            }
 
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, a2s, a2e, false);
-                ctx.strokeStyle = res.bg2;
-                ctx.stroke();
+            ShapePath {
+                strokeWidth: res.hasValue1 ? gauge.arcStroke : -1
+                strokeColor: res.fg1
+                fillColor: "transparent"
+                capStyle: gauge.capStyle
 
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, a2s, (a2e - a2s) * res.value2 + a2s, false);
-                ctx.strokeStyle = res.fg2;
-                ctx.stroke();
+                PathAngleArc {
+                    centerX: gauge.width / 2
+                    centerY: gauge.height / 2
+                    radiusX: gauge.radius
+                    radiusY: gauge.radius
+                    startAngle: 45
+                    sweepAngle: Math.max(0.01, 175 * res.value1)
+                }
+            }
+
+            ShapePath {
+                strokeWidth: gauge.arcStroke
+                strokeColor: res.bg2
+                fillColor: "transparent"
+                capStyle: gauge.capStyle
+
+                PathAngleArc {
+                    centerX: gauge.width / 2
+                    centerY: gauge.height / 2
+                    radiusX: gauge.radius
+                    radiusY: gauge.radius
+                    startAngle: 230
+                    sweepAngle: 130
+                }
+            }
+
+            ShapePath {
+                strokeWidth: gauge.arcStroke
+                strokeColor: res.fg2
+                fillColor: "transparent"
+                capStyle: gauge.capStyle
+
+                PathAngleArc {
+                    centerX: gauge.width / 2
+                    centerY: gauge.height / 2
+                    radiusX: gauge.radius
+                    radiusY: gauge.radius
+                    startAngle: 230
+                    sweepAngle: Math.max(0.01, 130 * res.value2)
+                }
             }
         }
 

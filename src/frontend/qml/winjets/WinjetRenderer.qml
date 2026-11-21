@@ -209,6 +209,7 @@ Item {
                 height: height
             },
             scale: scale,
+            builtin: String(inst.packageId ?? "").startsWith("winlestia."),
             paused: paused,
             time: {
                 hours: nowDate.getHours(),

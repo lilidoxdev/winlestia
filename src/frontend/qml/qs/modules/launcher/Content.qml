@@ -22,6 +22,14 @@ Item {
     implicitWidth: listWrapper.width + padding * 2
     implicitHeight: searchWrapper.height + listWrapper.height + padding * 2
 
+    // Fond de repli sous le contenu : le fond natif est reconstruit pendant l'animation de taille, le texte ne doit
+    // jamais se retrouver sur le fond d'écran brut.
+    Rectangle {
+        anchors.fill: parent
+        radius: root.rounding
+        color: Colours.panelBacking
+    }
+
     Item {
         id: listWrapper
 

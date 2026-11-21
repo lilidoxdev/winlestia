@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import qs.components
 import qs.services
 import qs.config
@@ -34,6 +35,8 @@ LockCard {
     property bool typed: still
 
     implicitHeight: inset * 2 + head.height + linesColumn.implicitHeight + palette.height + Appearance.spacing.large * 2
+    // Jamais plus petite que son contenu : sinon la colonne de lignes déborde sur l'en-tête.
+    Layout.minimumHeight: implicitHeight
 
     SequentialAnimation {
         running: root.visible && !root.still && !root.typed
@@ -124,13 +127,14 @@ LockCard {
         anchors.bottomMargin: Appearance.spacing.large
         anchors.left: parent.left
         anchors.right: parent.right
+        clip: true
 
         LockMark {
             id: mark
 
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            width: middle.width * 0.4
+            width: middle.width * 0.32
             height: middle.height
         }
 
@@ -140,7 +144,7 @@ LockCard {
             anchors.left: mark.right
             anchors.leftMargin: Appearance.spacing.large
             anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
+            y: Math.max(0, (middle.height - height) / 2)
             spacing: Appearance.spacing.smaller
 
             Repeater {

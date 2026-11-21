@@ -39,6 +39,9 @@ Window {
         confirmStop = false;
         anchorX = px;
         anchorY = py;
+        // Un seul panneau flottant à la fois (comme Caelestia) : le menu peut atteindre le haut de l'écran et recouvrir les onglets.
+        if (Bridge.window?.panelOpen)
+            Bridge.closePanel();
         position();
         clearRows();
         visible = true;
@@ -49,6 +52,15 @@ Window {
     function position() {
         x = Math.max(Bridge.screenX + 8, Math.min(anchorX - width / 2, Bridge.screenX + Bridge.screenWidth - width - 8));
         y = Math.max(Bridge.screenY + 8, anchorY - height - 8);
+    }
+    // Le panneau du haut qui s'ouvre (tableau de bord, onglets) ferme le menu au lieu de s'y superposer.
+    Connections {
+        target: Bridge.window
+        enabled: menu.visible
+        function onPanelOpenChanged() {
+            if (Bridge.window?.panelOpen)
+                menu.visible = false;
+        }
     }
     onHeightChanged: if (visible)
         position()

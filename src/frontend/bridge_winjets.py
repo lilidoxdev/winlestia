@@ -10,7 +10,7 @@ import re
 from datetime import datetime
 from urllib.parse import urlparse
 
-from PySide6.QtCore import Property, QObject, QPointF, QTimer, QUrl, Signal, Slot
+from PySide6.QtCore import Property, QCoreApplication, QObject, QPointF, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QCursor, QGuiApplication
 
 import winjet_expr
@@ -25,6 +25,13 @@ THRESHOLD = 8
 MIN_SIDE = 120  # minSize imposé par le moteur
 MAX_W, MAX_H = 1600, 1000
 HANDLES = ('n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw')
+
+
+def _translated(text):
+    """Gabarit de Winjet intégré traduit (clé = texte source du paquet) avant interpolation ; texte inconnu inchangé.
+
+    Appelé seulement pour les paquets intégrés (ctx.builtin) : le texte saisi ou issu de données n'est jamais traduit."""
+    return QCoreApplication.translate('', text) if isinstance(text, str) and text else text
 
 
 # --- Écrans et géométrie -------------------------------------------------------------------------------------------
@@ -612,11 +619,13 @@ class WinjetsBridge(QObject):
 
     @Slot(str, 'QVariant', result='QVariant')
     def render(self, text, ctx):
-        return winjet_expr.render(text, self._ctx(ctx))
+        ctx = self._ctx(ctx)
+        return winjet_expr.render(_translated(text) if ctx.get('builtin') is True else text, ctx)
 
     @Slot(str, 'QVariant', result=str)
     def renderText(self, text, ctx):
-        return winjet_expr.render_text(text, self._ctx(ctx))
+        ctx = self._ctx(ctx)
+        return winjet_expr.render_text(_translated(text) if ctx.get('builtin') is True else text, ctx)
 
     @Slot('QVariant', 'QVariant', result='QVariant')
     def resolve(self, value, ctx):

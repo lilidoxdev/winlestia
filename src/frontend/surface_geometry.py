@@ -3,6 +3,9 @@ from PySide6.QtCore import QObject, QTimer, QRectF, Qt
 from PySide6.QtGui import QPainterPath, QTransform, QRegion
 from functools import lru_cache
 from PySide6.QtWidgets import QApplication
+from sync_throttle import delay_ms
+from time import monotonic
+import panel_profile
 
 
 def panel_path(width, height, attached=True):
@@ -156,6 +159,7 @@ class SurfaceScene(QObject):
         self.signature = None
         self.queued = False
         self.revision = 0
+        self.last_run = 0.0
         self.stopped = False
         self.input_masks = {}
         self.pill_watched = None
@@ -189,7 +193,8 @@ class SurfaceScene(QObject):
     def request(self, *args):
         if not self.stopped and not self.queued:
             self.queued = True
-            QTimer.singleShot(0, self.refresh)
+            # Au plus une passe toutes les ~33 ms ; la dernière géométrie est toujours traitée (minuteur unique).
+            QTimer.singleShot(delay_ms(self.last_run), self.refresh)
 
     def watch_pill(self):
         # La Pilule vit dans un Loader : sa fenêtre apparaît et disparaît, on s'abonne à sa géométrie à chaque nouvelle instance.
@@ -210,9 +215,11 @@ class SurfaceScene(QObject):
 
     def refresh(self):
         self.queued = False
+        self.last_run = monotonic()
         if self.stopped:
             return
         bridge = self.bridge
+        started = panel_profile.tick()
         pill_window = self.watch_pill()
 
         def view(window, dock=False):
@@ -350,6 +357,7 @@ class SurfaceScene(QObject):
             tuple(bridge.fullscreen_names),
         )
         if signature == self.signature:
+            panel_profile.tock('surfaces', started)
             return
         self.signature = signature
         paths = {}
@@ -391,6 +399,7 @@ class SurfaceScene(QObject):
         self.paths = paths
         self.data = data
         self.revision += 1
+        panel_profile.tock('surfaces', started)
         bridge.surfaceChanged.emit()
 
     def stop(self):

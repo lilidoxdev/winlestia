@@ -137,6 +137,7 @@ internal sealed partial class QtShellBridge
                 names = VirtualDesktops.Current.Names
             },
             fullscreenMonitors = FullscreenWatcher.Current,
+            maximizedMonitors = FullscreenWatcher.Maximized,
             winjets = winjets?.Snapshot(),
             location = LocationSnapshot(),
             desktop = new

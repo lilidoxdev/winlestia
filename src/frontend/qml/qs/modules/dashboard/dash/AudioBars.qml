@@ -11,7 +11,7 @@ Item {
 
     readonly property int count: 28
     readonly property bool wanted: !Appearance.reducedEffects && (Bridge.window?.visible ?? false)
-        && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0
+        && Bridge.window.pageMode === "dashboard" && Bridge.window.dashboardTab === 0 && Bridge.panelAnimating !== true
     readonly property real gap: Math.max(1, Appearance.padding.small / 2)
     readonly property real barWidth: Math.max(1, (width - gap * (count - 1)) / count)
 

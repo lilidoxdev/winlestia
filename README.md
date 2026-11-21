@@ -8,11 +8,11 @@
 
 <a href="https://discord.gg/5jXv7NRj3Q"><img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join the Winlestia Discord server" height="40"></a>
 
-[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.0)
+[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.1)
 [![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
 
-[Download WinlestiaSetup.exe](https://github.com/lilidoxdev/winlestia/releases/latest) · [Release 1.0.0](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.0) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
+[Download WinlestiaSetup.exe](https://github.com/lilidoxdev/winlestia/releases/latest) · [Release 1.0.1](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.1) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
 
 </div>
 

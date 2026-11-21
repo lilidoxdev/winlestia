@@ -67,12 +67,18 @@ Item {
         onTriggered: Players.active?.positionChanged()
     }
 
-    ServiceRef {
-        service: Audio.cava
-    }
+    // Capture cava / battements : seulement quand l'onglet est à l'écran et que l'animation du panneau est terminée.
+    Loader {
+        active: root.onScreen && Bridge.panelAnimating !== true
 
-    ServiceRef {
-        service: Audio.beatTracker
+        sourceComponent: QtObject {
+            readonly property ServiceRef cavaRef: ServiceRef {
+                service: Audio.cava
+            }
+            readonly property ServiceRef beatRef: ServiceRef {
+                service: Audio.beatTracker
+            }
+        }
     }
 
     Shape {
@@ -160,9 +166,12 @@ Item {
 
             source: Players.active?.trackArtUrl ?? ""
             asynchronous: true
+            cache: true
             fillMode: Image.PreserveAspectCrop
             sourceSize.width: width
             sourceSize.height: height
+            onStatusChanged: if (status === Image.Ready && Bridge.panelProfiling === true)
+                Bridge.panelMark("media:first-data")
         }
     }
 

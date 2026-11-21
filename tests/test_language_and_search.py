@@ -24,3 +24,29 @@ def test_palette_search_lists_recent_first():
         '', {'systemRecent': [{'id': 'recent:C', 'name': 'Canada'}], 'quickTabs': [{'id': 'games', 'name': 'Jeux'}]}
     )
     assert a[0]['name'] == 'Canada', f'recent entry must come first, got {a[0]["name"]!r}'
+
+
+def test_winjet_and_app_category_keys_translated():
+    import json
+    from localization import I18N_DIR
+    tables = {l: json.loads((I18N_DIR / (l + '.json')).read_text(encoding='utf-8')) for l in ('fr', 'en', 'es')}
+    expected_en = {
+        'par %1': 'by %1', 'Aucun accès réseau': 'No network access', 'Stockage': 'Storage', 'Système': 'System',
+        'Importer un Winjet': 'Import a Winjet', 'Déposez un fichier .zip ici': 'Drop a .zip file here',
+        'Choisir un fichier': 'Choose a file', 'Sur le bureau': 'On the desktop',
+        'Aucun Winjet sur le bureau pour le moment.': 'No Winjet on the desktop yet.',
+        '{{ system.diskMain.freeGb }} Go libres': '{{ system.diskMain.freeGb }} GB free',
+        'Tout': 'All', 'Audio, vidéo et capture': 'Audio, video and capture', 'Autres logiciels': 'Other software',
+        'Bureautique et finance': 'Office and finance', 'Autres': 'Other',
+    }
+    for key, english in expected_en.items():
+        assert tables['en'].get(key) == english, f'en.json: {key!r} -> {tables["en"].get(key)!r}'
+        assert key in tables['fr'] and key in tables['es'], f'{key!r} missing in fr.json or es.json'
+
+
+def test_winjet_templates_translate_through_bridge():
+    import bridge_winjets
+    from localization import TABLE
+    source = '{{ system.diskMain.freeGb }} Go libres'
+    assert TABLE[source]['en'] == '{{ system.diskMain.freeGb }} GB free'
+    assert bridge_winjets._translated('texte inconnu') == 'texte inconnu'

@@ -2,6 +2,29 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les notes de chaque version sont aussi publiées sur la page GitHub Releases. Les entrées 0.9.0 et antérieures sont conservées dans la langue où elles ont été écrites.
 
+## 1.0.1 — 2026-11-21
+
+Version corrective. L'installateur n'est toujours pas signé (voir 1.0.0 pour SmartScreen et le SHA-256).
+
+### Corrections
+
+- Menu Démarrer : ouverture moins saccadée (mise à jour du verre et de la géométrie limitée à une toutes les 33 ms, recherche des applications différée après l'ouverture, fond de palette sous le menu pendant l'animation).
+- Panneaux : fond de palette sous le contenu, les onglets n'apparaissent plus sans fond.
+- Pilule média : elle se rétracte quand une fenêtre maximisée est au premier plan sur l'écran, au lieu de recouvrir ses boutons.
+- Menu d'alimentation : un seul panneau ouvert à la fois.
+- Écran de verrouillage : le bloc d'informations système ne déborde plus.
+- Recherche « Applications » : catégories traduites, sections vides masquées, titre vide remplacé par « Autres ».
+- Winjets : libellés intégrés traduits en français et en espagnol.
+
+### Améliorations
+
+- Tableau de bord : onglets préchargés hors animation, jauges de performance dessinées en formes vectorielles, visualiseur audio démarré après l'ouverture.
+- Profilage des animations de panneaux, activé par `WINLESTIA_PROFILE_PANELS=1` (une ligne par animation dans `frontend.log`).
+
+### Connu
+
+- La première ouverture d'un panneau après le démarrage reste plus lente que les suivantes.
+
 ## 1.0.0 — 2026-11-18
 
 Première version stable, après la 0.9.2. L'installateur n'est pas signé : SmartScreen affiche un avertissement. Choisir « Informations complémentaires » puis « Exécuter quand même » (vérifier le SHA-256 publié avec la version).

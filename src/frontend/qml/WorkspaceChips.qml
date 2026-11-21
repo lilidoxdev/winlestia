@@ -31,7 +31,7 @@ Item {
             model: browser.categories
             WorkspaceFilterChip {
                 required property string modelData
-                label: modelData
+                label: qsTr(modelData)
                 count: modelData === "Tout" ? -1 : (browser.categoryCounts[modelData] ?? -1)
                 selected: browser.category === modelData
                 onTriggered: {

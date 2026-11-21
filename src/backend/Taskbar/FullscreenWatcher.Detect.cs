@@ -10,9 +10,14 @@ namespace PanneauxGlass;
 
 internal static partial class FullscreenWatcher
 {
+    // Moniteurs dont la fenêtre décisive est maximisée (barre de titre gardée, donc pas en plein écran) : ses boutons de légende sont
+    // en haut à droite, là où le shell pose la Pilule. Écrit par Compute (sous computeGate), publié par Recompute.
+    static string[] pendingMaximized = Array.Empty<string>();
+
     // Public pour le test de sonde. La fenêtre active (premier plan) décide de son propre moniteur : plein écran seulement si elle le
     // remplit. Autres moniteurs : la fenêtre éligible la plus haute (EnumWindows suit l'ordre Z) couvrant au moins la moitié du
     // moniteur décide.
+
     internal static string[] Compute()
     {
         // instantané unique : le délégué ne doit pas s'exécuter par fenêtre pendant que computeGate est tenu
@@ -26,6 +31,7 @@ internal static partial class FullscreenWatcher
             // Fournisseur de PID à ignorer défaillant : aucun PID ignoré à ce tour.
         }
         var decided = new System.Collections.Generic.Dictionary<IntPtr, string?>();
+        var zoomed = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var fg = GetForegroundWindow();
         if (fg != IntPtr.Zero)
         {
@@ -37,7 +43,12 @@ internal static partial class FullscreenWatcher
                 var mon = MonitorFromWindow(fg, MONITOR_DEFAULTTONEAREST);
                 var info = new MONITORINFOEX { cbSize = Marshal.SizeOf<MONITORINFOEX>() };
                 if (mon != IntPtr.Zero && GetMonitorInfoW(mon, ref info))
-                    decided[mon] = IsFullscreen(fg, info.rcMonitor) ? info.szDevice : null;
+                {
+                    bool full = IsFullscreen(fg, info.rcMonitor);
+                    decided[mon] = full ? info.szDevice : null;
+                    if (!full && IsZoomed(fg))
+                        zoomed.Add(info.szDevice);
+                }
             }
         }
         EnumWindows((h, _) =>
@@ -54,9 +65,13 @@ internal static partial class FullscreenWatcher
             // jeu/discussion) ne doivent pas décider du moniteur : seule une fenêtre qui en couvre au moins la moitié le fait.
             if (!CoversHalf(h, info.rcMonitor))
                 return true;
-            decided[mon] = IsFullscreen(h, info.rcMonitor) ? info.szDevice : null;
+            bool full = IsFullscreen(h, info.rcMonitor);
+            decided[mon] = full ? info.szDevice : null;
+            if (!full && IsZoomed(h))
+                zoomed.Add(info.szDevice);
             return true;
         }, IntPtr.Zero);
+        pendingMaximized = zoomed.ToArray();
         var result = decided.Values.Where(v => v != null).Select(v => v!).ToList();
         fg = GetForegroundWindow();
         if (fg != IntPtr.Zero && SHQueryUserNotificationState(out int state) == 0 && state == QUNS_RUNNING_D3D_FULL_SCREEN && Eligible(fg,

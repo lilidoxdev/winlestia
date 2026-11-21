@@ -81,7 +81,8 @@ ListView {
                 icon: ""
             })
         width: grid.width
-        height: 42
+        height: info.count > 0 ? 42 : 0
+        visible: info.count > 0
         Rectangle {
             anchors.fill: parent
             color: Qt.alpha(Colours.palette.m3surface, .94)

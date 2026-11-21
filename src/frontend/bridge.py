@@ -11,6 +11,7 @@ from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QApplication
 import app_state
+import panel_profile
 from app_state import CONFIG, ROOT
 from bridge_actions import ActionMixin
 from bridge_assets import AssetMixin
@@ -53,6 +54,8 @@ class Bridge(
     colorPicked = Signal(str)
 
     surfaceChanged = Signal()
+
+    panelAnimatingChanged = Signal()
 
     changed = Signal()
 
@@ -105,6 +108,8 @@ class Bridge(
     fileChanged = Signal()
 
     _windows = []
+
+    _panel_animating = False
 
     _file_gen = 0
 
@@ -177,6 +182,7 @@ class Bridge(
         self.walltheme = WallpaperTheme(self)
         self.walltheme.changed.connect(self.theme_ready)
         self.fullscreen_names = ()
+        self.maximized_names = ()
         self.quiet_on = False
         self.quiet_forced = 'auto'
         self._bars_want = False
@@ -313,6 +319,8 @@ class Bridge(
     surfaceRevision = Property(int, lambda s: s.surface_scene.revision if s.surface_scene else 0, notify=surfaceChanged)
 
     fileDragChanged = Signal()
+    panelProfiling = Property(bool, lambda s: panel_profile.ENABLED, constant=True)
+    panelAnimating = Property(bool, lambda s: s._panel_animating, notify=panelAnimatingChanged)
     fileDragActive = Property(bool, lambda s: getattr(s, '_file_drag_active', False), notify=fileDragChanged)
     fileDragNearTop = Property(bool, lambda s: getattr(s, '_file_drag_near', False), notify=fileDragChanged)
 
@@ -535,6 +543,8 @@ class Bridge(
         self._menu_down = down
         p = QCursor.pos()
         return down and not was and not (x <= p.x() < x + w and y <= p.y() < y + h)
+
+    screenMaximized = Property(bool, lambda s: s._screen.name() in s.maximized_names, notify=frameChanged)
 
     screenFullscreen = Property(bool, lambda s: s._screen.name() in s.fullscreen_names, notify=frameChanged)
 

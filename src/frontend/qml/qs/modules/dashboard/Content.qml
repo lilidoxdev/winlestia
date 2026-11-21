@@ -50,8 +50,11 @@ Item {
     implicitHeight: nonAnimHeight
 
     // Précharge les panneaux un par un (async) une fois le tableau de bord affiché ; en pause quand il est masqué.
+    // Vrai pendant l'animation d'ouverture/fermeture du panneau : on n'y construit rien et on n'y remesure rien.
+    readonly property bool panelBusy: Bridge.panelAnimating === true
+
     function preloadStep(): void {
-        if (!root.visible)
+        if (root.panelBusy)
             return;
         // Le panneau où se trouve l'utilisateur (ou vers lequel il bascule) passe toujours en premier.
         const cur = row.children[root.state.currentTab];
@@ -68,7 +71,13 @@ Item {
         }
     }
 
-    onVisibleChanged: preloadStep()
+    onPanelBusyChanged: {
+        if (panelBusy)
+            return;
+        for (let i = 0; i < row.children.length; i++)
+            row.children[i].applyPending?.();
+        Qt.callLater(preloadStep);
+    }
     Component.onCompleted: Qt.callLater(preloadStep)
 
     Tabs {
@@ -240,6 +249,21 @@ Item {
         asynchronous: paneIndex > 0
         active: false
 
+        // Mesures reçues pendant l'animation du panneau : appliquées à sa fin pour ne pas relayouter le tiroir en mouvement.
+        property real pendingWidth: -1
+        property real pendingHeight: -1
+
+        function applyPending(): void {
+            if (pendingWidth >= 0) {
+                cachedWidth = pendingWidth;
+                pendingWidth = -1;
+            }
+            if (pendingHeight >= 0) {
+                cachedHeight = pendingHeight;
+                pendingHeight = -1;
+            }
+        }
+
         // Layout ignore les éléments invisibles : on masque donc l'élément chargé plutôt que le Loader.
         Binding {
             target: pane.item
@@ -253,11 +277,17 @@ Item {
             ignoreUnknownSignals: true
 
             function onImplicitWidthChanged(): void {
-                pane.cachedWidth = pane.item.implicitWidth;
+                if (root.panelBusy)
+                    pane.pendingWidth = pane.item.implicitWidth;
+                else
+                    pane.cachedWidth = pane.item.implicitWidth;
             }
 
             function onImplicitHeightChanged(): void {
-                pane.cachedHeight = pane.item.implicitHeight;
+                if (root.panelBusy)
+                    pane.pendingHeight = pane.item.implicitHeight;
+                else
+                    pane.cachedHeight = pane.item.implicitHeight;
             }
         }
 
@@ -266,8 +296,11 @@ Item {
             cachedHeight = item.implicitHeight;
         }
         onStatusChanged: {
-            if (status === Loader.Ready)
+            if (status === Loader.Ready) {
+                if (Bridge.panelProfiling === true)
+                    Bridge.panelMark(["dash", "media", "performance", "workspaces"][paneIndex] + ":loaded");
                 Qt.callLater(root.preloadStep);
+            }
         }
         onCurrentChanged: if (current)
             active = true

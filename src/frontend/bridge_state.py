@@ -4,6 +4,7 @@ import ctypes
 import ctypes.wintypes
 import time
 import open_trace
+import panel_profile
 from PySide6.QtCore import Slot
 from win_native import MonitorInfo, user32
 from PySide6.QtWidgets import QApplication
@@ -19,6 +20,22 @@ class StateMixin:
     @Slot(str)
     def trace(self, label):
         open_trace.mark(label)
+
+    @Slot(str)
+    def panelMark(self, name):
+        panel_profile.mark(name)
+
+    @Slot(bool, str)
+    def setPanelAnimating(self, animating, panel):
+        # L'état sert au QML (travail différé) et au Python (masque/surfaces) : actif même sans profilage.
+        if bool(animating) != self._panel_animating:
+            self._panel_animating = bool(animating)
+            if panel_profile.ENABLED:
+                if animating:
+                    panel_profile.begin(panel, self.top)
+                else:
+                    panel_profile.end(panel)
+            self.panelAnimatingChanged.emit()
 
     def screen_names(self, devices):
         # Le backend nomme les moniteurs par périphérique Win32 (\\.\DISPLAY1) alors que QScreen.name() est le nom du
@@ -51,6 +68,11 @@ class StateMixin:
             names = tuple(sorted(self.screen_names(message['state']['fullscreenMonitors'])))
             if names != self.fullscreen_names:
                 self.fullscreen_names = names
+                self.frameChanged.emit()
+        if 'state' in message and isinstance(message['state'].get('maximizedMonitors'), list):
+            names = tuple(sorted(self.screen_names(message['state']['maximizedMonitors'])))
+            if names != self.maximized_names:
+                self.maximized_names = names
                 self.frameChanged.emit()
         if 'state' in message:
             quiet = bool(message['state'].get('quiet', False))

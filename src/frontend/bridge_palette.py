@@ -17,10 +17,15 @@ class PaletteMixin:
 
     def palette_lifecycle(self, was):
         if self.mode == 'palette' and was != 'palette':
-            self.action('windowList', {})
+            # Après les premières images de l'animation d'ouverture ; les frappes (searchPalette) restent immédiates.
+            QTimer.singleShot(200, self.palette_windows)
         elif was == 'palette' and self.mode != 'palette':
             self._windows = []
             self.fileQuery('')
+
+    def palette_windows(self):
+        if self.mode == 'palette':
+            self.action('windowList', {})
 
     @Slot(str)
     def fileQuery(self, term):
