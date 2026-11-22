@@ -19,8 +19,8 @@ Item {
         reloadableId: "dashboardState"
     }
     readonly property FileDialog facePicker: FileDialog {
-        title: qsTr("Select a profile picture")
-        filterLabel: qsTr("Image files")
+        title: qsTr("Choisir une photo de profil")
+        filterLabel: qsTr("Fichiers image")
         filters: Images.validImageExtensions
         onAccepted: path => {
             if (CUtils.copyFile(Qt.resolvedUrl(path), Qt.resolvedUrl(`${Paths.home}/.face`)))

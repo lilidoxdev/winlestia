@@ -153,7 +153,7 @@ Item {
             Layout.fillWidth: true
             spacing: Appearance.spacing.normal
             MaterialIcon {
-                text: qsTr("wifi")
+                text: "wifi"
                 font.pointSize: Appearance.font.size.extraLarge
                 color: Colours.palette.m3primary
             }
@@ -228,7 +228,7 @@ Item {
             }
             MaterialIcon {
                 Layout.alignment: Qt.AlignHCenter
-                text: qsTr("wifi_off")
+                text: "wifi_off"
                 font.pointSize: Appearance.font.size.extraLarge
                 color: Colours.palette.m3outline
             }
@@ -346,17 +346,17 @@ Item {
                         }
                         MaterialIcon {
                             visible: row.saved
-                            text: qsTr("bookmark")
+                            text: "bookmark"
                             color: Colours.palette.m3outline
                         }
                         MaterialIcon {
                             visible: row.secure
-                            text: qsTr("lock")
+                            text: "lock"
                             color: Colours.palette.m3outline
                         }
                         MaterialIcon {
                             visible: row.connected
-                            text: qsTr("check")
+                            text: "check"
                             color: Colours.palette.m3primary
                         }
                     }
@@ -421,7 +421,7 @@ Item {
                                     color: eyeArea.pressed ? Colours.palette.m3secondaryContainer : Colours.palette.m3surfaceContainerHigh
                                     MaterialIcon {
                                         anchors.centerIn: parent
-                                        text: qsTr("visibility")
+                                        text: "visibility"
                                         color: Colours.palette.m3onSurface
                                     }
                                     MouseArea {

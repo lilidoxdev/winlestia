@@ -18,7 +18,7 @@ Item {
             Layout.fillWidth: true
             spacing: Appearance.spacing.normal
             MaterialIcon {
-                text: qsTr("content_paste")
+                text: "content_paste"
                 font.pointSize: Appearance.font.size.extraLarge
                 color: Colours.palette.m3primary
             }

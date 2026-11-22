@@ -191,10 +191,12 @@ internal static class TaskbarNative
     internal static List<IntPtr> ExplorerBars()
     {
         var result = new List<IntPtr>();
-        EnumWindows((h, _) => { if (ClassName(h) is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd") result.Add(h); return true; },
+        EnumWindows((h, _) => { if (ClassName(h) is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd" && !Native.Owns(h)) result.Add(h); return true; },
             IntPtr.Zero);
         return result;
     }
+    // Barre principale de l'explorateur : jamais la fenêtre "Shell_TrayWnd" de TrayHost, même classe, même processus que nous.
+    internal static IntPtr ExplorerTray() => ExplorerBars().FirstOrDefault(h => ClassName(h) == "Shell_TrayWnd");
     internal static double Scale(Forms.Screen screen)
     {
         try
@@ -211,7 +213,7 @@ internal static class TaskbarNative
     }
     internal static Lease Snapshot()
     {
-        var data = Data(FindWindow("Shell_TrayWnd", null));
+        var data = Data(ExplorerTray());
         return new()
         {
             State = (int)SHAppBarMessage(4, ref data).ToUInt64(),
@@ -221,14 +223,14 @@ internal static class TaskbarNative
     }
     internal static void HideExplorer()
     {
-        var data = Data(FindWindow("Shell_TrayWnd", null));
+        var data = Data(ExplorerTray());
         var state = (int)SHAppBarMessage(4, ref data).ToUInt64();
         data.Param = new IntPtr(state | 1);
         SHAppBarMessage(10, ref data);
         foreach (var bar in ExplorerBars())
             ShowWindow(bar, 0);
     }
-    internal static bool ExplorerReady() => FindWindow("Shell_TrayWnd", null) != IntPtr.Zero;
+    internal static bool ExplorerReady() => ExplorerTray() != IntPtr.Zero;
     internal static void EnsureHidden()
     {
         foreach (var bar in ExplorerBars())
@@ -239,7 +241,7 @@ internal static class TaskbarNative
     {
         if (lease == null)
             return;
-        var data = Data(FindWindow("Shell_TrayWnd", null));
+        var data = Data(ExplorerTray());
         data.Param = new IntPtr(lease.State);
         SHAppBarMessage(10, ref data);
         foreach (var bar in ExplorerBars())

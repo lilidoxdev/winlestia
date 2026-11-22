@@ -16,7 +16,7 @@ Window {
     title: "Panneaux · Dock Caelestia"
     color: "transparent"
     flags: (Bridge.preview ? Qt.Window
-        : Qt.Tool) | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | Qt.WindowDoesNotAcceptFocus
+        : Qt.Tool) | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint | (Bridge.dockPeek ? 0 : Qt.WindowDoesNotAcceptFocus)
     property var dockItems: Bridge.taskbarApps
     property string dragId: ""
     property int dragIndex: -1
@@ -170,7 +170,45 @@ Window {
     height: 68
     x: Bridge.screenX + (Bridge.screenWidth - width) / 2
     y: Bridge.screenY + Bridge.screenHeight - height - (Bridge.screenFullscreen ? 12 : Math.max(0, Config.border.thickness))
-    visible: (Bridge.settings.dockVisible ?? Bridge.taskbarEnabled) && shownCore && !Bridge.screenFullscreen && !Bridge.dockQuiet
+    visible: (Bridge.settings.dockVisible ?? Bridge.taskbarEnabled) && shownCore && ((!Bridge.screenFullscreen && !Bridge.dockQuiet) || Bridge.dockPeek)
+    // Révélation en plein écran (Win seul) : le dock prend l'activation ; la perdre (retour au jeu) referme la révélation.
+    // Activation différée : les flags (WindowDoesNotAcceptFocus) sont appliqués avant ; un activeChanged(false) avant la première activation est ignoré.
+    property bool peekWasActive: false
+    function peekActivate() {
+        Qt.callLater(() => {
+            if (dock.visible && Bridge.dockPeek) {
+                dock.requestActivate();
+                // requestActivate seul est refusé par Windows face au jeu (focus interne seulement, souris gardée par le jeu) :
+                // premier plan forcé, comme la palette.
+                Bridge.focusLockWindow(dock);
+            }
+        });
+    }
+    onVisibleChanged: if (visible && Bridge.dockPeek) peekActivate()
+    onActiveChanged: if (active) peekWasActive = true
+    // La révélation se termine quand le shell entier perd l'activation (retour au jeu) : passer du dock à son menu ou à un
+    // panneau du haut (tableau de bord, médias, palette) la garde.
+    Connections {
+        target: Qt.application
+        function onStateChanged() {
+            if (Qt.application.state !== Qt.ApplicationActive && Bridge.dockPeek && dock.peekWasActive)
+                Bridge.dockPeekEnd();
+        }
+    }
+    // Bridge.dockPeek notifie via frameChanged : on suit sa valeur côté QML.
+    readonly property bool peekOn: Bridge.dockPeek
+    onPeekOnChanged: {
+        dock.peekWasActive = dock.active && peekOn;
+        if (peekOn && dock.visible)
+            dock.peekActivate();
+    }
+    // Filet : si l'activation est refusée, la révélation ne reste pas bloquée.
+    Timer {
+        interval: 1500
+        repeat: false
+        running: Bridge.dockPeek && !dock.peekWasActive
+        onTriggered: if (Bridge.dockPeek && !dock.peekWasActive) Bridge.dockPeekEnd()
+    }
     Behavior on offset {
         Anim {
             duration: Appearance.anim.durations.expressiveFastSpatial

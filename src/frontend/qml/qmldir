@@ -32,3 +32,7 @@ CcIconButton CcIconButton.qml
 CcWifiPage CcWifiPage.qml
 CcBluetoothPage CcBluetoothPage.qml
 CcSoundPage CcSoundPage.qml
+DiscordLogo DiscordLogo.qml
+KeyCap KeyCap.qml
+TutorialCard TutorialCard.qml
+Tutorial Tutorial.qml

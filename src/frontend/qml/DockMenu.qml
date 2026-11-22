@@ -1057,6 +1057,19 @@ Window {
                                         menu.selectEntry(app);
                                 }
                             }
+                            TapHandler {
+                                enabled: taskRow.isBackground
+                                acceptedButtons: Qt.RightButton
+                                onTapped: {
+                                    // Le menu de l'icône appartient à l'application : on libère l'écran avant de le demander.
+                                    const id = taskRow.rid;
+                                    menu.visible = false;
+                                    Bridge.action("dockApp", {
+                                        id: id,
+                                        action: "trayMenu"
+                                    });
+                                }
+                            }
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: Appearance.padding.large

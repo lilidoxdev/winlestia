@@ -56,14 +56,14 @@ Item {
         sourceComponent: ColumnLayout {
             MaterialIcon {
                 Layout.alignment: Qt.AlignHCenter
-                text: qsTr("scan_delete")
+                text: "scan_delete"
                 color: Colours.palette.m3outline
                 font.pointSize: Appearance.font.size.extraLarge * 2
                 font.weight: 500
             }
 
             StyledText {
-                text: qsTr("This folder is empty")
+                text: qsTr("Ce dossier est vide")
                 color: Colours.palette.m3outline
                 font.pointSize: Appearance.font.size.large
                 font.weight: 500

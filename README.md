@@ -8,11 +8,11 @@
 
 <a href="https://discord.gg/5jXv7NRj3Q"><img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join the Winlestia Discord server" height="40"></a>
 
-[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.1)
+[![Release](https://img.shields.io/github/v/release/lilidoxdev/winlestia?style=flat-square)](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.2)
 [![License](https://img.shields.io/github/license/lilidoxdev/winlestia?style=flat-square)](LICENSE)
 [![Windows 11](https://img.shields.io/badge/Windows-11-0078D4?style=flat-square)](docs/INSTALL.md)
 
-[Download WinlestiaSetup.exe](https://github.com/lilidoxdev/winlestia/releases/latest) · [Release 1.0.1](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.1) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
+[Download WinlestiaSetup.exe](https://github.com/lilidoxdev/winlestia/releases/latest) · [Release 1.0.2](https://github.com/lilidoxdev/winlestia/releases/tag/v1.0.2) · [Install guide](docs/INSTALL.md) · [Shortcuts](docs/SHORTCUTS.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Discord](https://discord.gg/5jXv7NRj3Q)
 
 </div>
 
@@ -52,6 +52,7 @@ The images and videos in this page are motion-design illustrations made in HTML/
 - **Command palette**: faster to open, including the first time after start-up.
 - **Winjets**: ten built-in desktop widgets that replace the PC Widgets pack, drawn with the liquid glass v2 treatment and fed with real data.
 - **Social rail**: the right-edge panel gathers notifications from Discord, Instagram, Snapchat, WhatsApp and Telegram.
+- **Guided tour**: 14 short steps with a spotlight on the real element, shown on first start only (also for users who update without having seen it). Skip with Esc; replay from Settings > General.
 - **Also**: push-to-talk voice dictation (off by default), redesigned file manager, lock screen, window overview, and a new WPF installer and uninstaller.
 
 Full list: [CHANGELOG.md](CHANGELOG.md) and [release notes](docs/RELEASE-NOTES-1.0.md).
@@ -89,8 +90,9 @@ see [Winjets: editing and custom packages](#winjets-editing-and-custom-packages)
 
 ### Personalization and settings
 
-Settings has a search field: a result opens its page and highlights the row. The Appearance page holds the theme, the wallpaper palette,
-glass transparency and animation speed. Pages: Appearance, Interface, Docks and panels, Keyboard shortcuts, Media and audio, Apps, bookmarks
+Settings has a search field: a result opens its page and highlights the row. The Personalisation page (Appearance and Interface merged) has five
+sections: Colours, Motion, Borders and frame, Desktop, Top panel. Each option shows a live preview drawn from the wallpaper palette and a one-sentence
+help text. Pages: Personalisation, Docks and panels, Keyboard shortcuts, Media and audio, Apps, bookmarks
 and links, Files and Windows, General, Winjets, Lock.
 
 <img src="docs/illustrations/personnalisation-1.0.webp" alt="Personalization page" width="100%">
@@ -284,7 +286,7 @@ To make your own, see [docs/winjets/MON-PREMIER-WINJET.md](docs/winjets/MON-PREM
 
 ## Known limitations
 
-- The shell panels are translated into English and Spanish; some rarer labels derived from the system may still appear in French. The language is chosen automatically from the Windows display language. To force it, set the `language` key (`auto`, `fr`, `en` or `es`) in `%LOCALAPPDATA%\Panneaux\Caelestia\language.json`. Fallback text is French.
+- The shell panels are translated into English, Spanish and Russian; some rarer labels derived from the system may still appear in French. The language is chosen automatically from the Windows display language. To force it, set the `language` key (`auto`, `fr`, `en`, `es` or `ru`) in `%LOCALAPPDATA%\Panneaux\Caelestia\language.json`. Fallback text is French.
 - Not tested on a clean machine or virtual machine, and not tested after a real reboot or sign-in (the start-up scheduled task was launched manually).
 - Binaries are unsigned, so SmartScreen may warn.
 - Windows 11 x64 only.

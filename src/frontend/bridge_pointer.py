@@ -57,6 +57,32 @@ class PointerMixin:
         # mode silencieux est forcé.
         return self.quiet_on and (self.quiet_forced == 'on' or screen.name() in self.fullscreen_names)
 
+    peek_screen = ''  # écran dont le dock est révélé par un appui isolé sur Win pendant un plein écran
+
+    def dock_peek_toggle(self):
+        """Appui isolé sur Win : 'on' / 'off' si l'écran courant est en plein écran, sinon None (comportement normal)."""
+        name = self._screen.name()
+        if name not in self.fullscreen_names:
+            return None
+        if self.peek_screen == name:
+            self.dock_peek_clear()
+            return 'off'
+        self.peek_screen = name
+        self.frameChanged.emit()
+        return 'on'
+
+    def dock_peek_clear(self):
+        if not self.peek_screen:
+            return
+        self.peek_screen = ''
+        self.frameChanged.emit()
+        self.shellEvent.emit('dockHide')
+
+    def dock_peek_sync(self):
+        # Le plein écran de l'écran révélé a disparu : la révélation s'arrête.
+        if self.peek_screen and self.peek_screen not in self.fullscreen_names:
+            self.dock_peek_clear()
+
     def quiet_slow(self):
         # Les minuteurs ne passent à leur rythme le plus lent que si tous les écrans sont silencieux ; le raccourci du
         # shell et la détection de sortie sont pilotés par événements dans le backend.
@@ -163,7 +189,7 @@ class PointerMixin:
         if trigger and not full:
             self.shellEvent.emit(event[0])
             setattr(self, attr, 0)
-        elif inside or not rail.property('shown'):
+        elif inside or not rail.property('shown') or key in self.tutorial_hold:
             setattr(self, attr, 0)
         else:
             if not getattr(self, attr):
@@ -216,6 +242,7 @@ class PointerMixin:
         if fullscreen_names != self.fullscreen_names:
             self.fullscreen_names = fullscreen_names
             self.frameChanged.emit()
+            self.dock_peek_sync()
         dock_full = (
             self.dock_quiet(screen) if backend_full else full
         )  # préférence désactivée : le dock garde son comportement de bord normal en plein écran
@@ -254,7 +281,7 @@ class PointerMixin:
         elif top_inside:
             self.away_top = 0
             self.top_seen = True
-        elif self.top.isVisible() and panel_height < 95 and now > self.opening_until:
+        elif self.top.isVisible() and panel_height < 95 and now > self.opening_until and 'panel' not in self.tutorial_hold:
             if not self.away_top:
                 self.away_top = now
             if now - self.away_top > 0.55 and not self.args.preview:
@@ -283,7 +310,9 @@ class PointerMixin:
             if menu_open:
                 dock_inside = True
             bottom = point.y() >= geometry.bottom() - 7
-            decision = self.edge_policy.update(now, bottom, dock_inside, dock_full, now < self.force_dock)
+            decision = self.edge_policy.update(
+                now, bottom, dock_inside, dock_full, now < self.force_dock or 'dock' in self.tutorial_hold
+            )
             if decision is True:
                 self.shellEvent.emit('dock')
             elif decision is False and not self.args.preview:
@@ -333,6 +362,7 @@ class PointerMixin:
             or self.away_social
             or self.away_bookmarks
             or now < self.force_dock
+            or bool(self.tutorial_hold)
             or getattr(self, '_file_drag_down', False)
             or bool(user32.GetAsyncKeyState(1) & 0x8000)
         )

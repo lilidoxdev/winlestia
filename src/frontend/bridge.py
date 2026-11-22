@@ -23,6 +23,7 @@ from bridge_pointer import PointerMixin
 from bridge_shortcuts import ShortcutMixin
 from bridge_state import StateMixin
 from bridge_theme import ThemeMixin
+from bridge_tutorial import TutorialMixin
 from bridge_wallpaper import WallpaperMixin
 from bridge_weather import WeatherMixin
 from bridge_winjets import WinjetsBridge
@@ -50,6 +51,7 @@ class Bridge(
     LyricsMixin,
     StateMixin,
     PointerMixin,
+    TutorialMixin,
 ):
     colorPicked = Signal(str)
 
@@ -94,6 +96,11 @@ class Bridge(
     tabRequested = Signal(int)
 
     dictationChanged = Signal()
+
+    tutorialPendingChanged = Signal()
+
+    tutorialRequested = Signal()
+    tutorialAborted = Signal()
 
     dictationKeyCaptured = Signal(int)
 
@@ -198,6 +205,9 @@ class Bridge(
         except (OSError, ValueError):
             self.city = ''
         self._winjets = WinjetsBridge(self)
+        self.init_tutorial()
+        self.changed.connect(self.tutorial_check)
+        self.frameChanged.connect(self.tutorial_check)
 
     # Winjets : géométrie, expressions et actions (bridge_winjets.py), lues par qml/winjets/ et la page Réglages.
     winjets = Property(QObject, lambda s: s._winjets, constant=True)
@@ -536,6 +546,8 @@ class Bridge(
 
     preview = Property(bool, lambda s: s.args.preview, constant=True)
 
+    tutorialPending = Property(bool, lambda s: s.tutorial_pending(), notify=tutorialPendingChanged)
+
     @Slot(float, float, float, float, result=bool)
     def menuOutsideClick(self, x, y, w, h):
         down = bool(user32.GetAsyncKeyState(1) & 0x8000 or user32.GetAsyncKeyState(2) & 0x8000)
@@ -549,6 +561,12 @@ class Bridge(
     screenFullscreen = Property(bool, lambda s: s._screen.name() in s.fullscreen_names, notify=frameChanged)
 
     quiet = Property(bool, lambda s: s.quiet_on, notify=frameChanged)
+
+    dockPeek = Property(bool, lambda s: bool(s.peek_screen) and s._screen.name() == s.peek_screen, notify=frameChanged)
+
+    @Slot()
+    def dockPeekEnd(self):
+        self.dock_peek_clear()
 
     dockQuiet = Property(bool, lambda s: s.dock_quiet(s._screen), notify=frameChanged)
 

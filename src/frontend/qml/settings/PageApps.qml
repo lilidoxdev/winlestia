@@ -35,6 +35,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "bookmarksBrowser"
+            preview: Component {
+                PagePreview {
+                    kind: "bookmarksBrowser"
+                    value: Bridge.bookmarks.browser
+                }
+            }
             below: true
 
             SettingsOptionList {
@@ -61,6 +67,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "bookmarksUnhide"
+            preview: Component {
+                PagePreview {
+                    kind: "bookmarksUnhide"
+                    value: Bridge.bookmarks.hiddenCount ?? 0
+                }
+            }
             title: qsTr("Réafficher les favoris retirés (%1)").arg(Bridge.bookmarks.hiddenCount ?? 0)
 
             TextButton {
@@ -80,6 +92,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "socialBackground"
+            preview: Component {
+                PagePreview {
+                    kind: "socialBackground"
+                    value: background.checked
+                }
+            }
             target: background
 
             SettingsSwitch {
@@ -96,6 +114,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "socialNetworks"
+            preview: Component {
+                PagePreview {
+                    kind: "socialNetworks"
+                    value: Bridge.social.networks ?? []
+                }
+            }
             below: true
 
             ColumnLayout {
@@ -205,6 +229,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "socialGlobalMute"
+            preview: Component {
+                PagePreview {
+                    kind: "socialMute"
+                    value: mute.checked
+                }
+            }
             target: mute
 
             SettingsSwitch {
@@ -220,6 +250,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "socialSound"
+            preview: Component {
+                PagePreview {
+                    kind: "socialSound"
+                    value: sound.checked
+                }
+            }
             target: sound
 
             SettingsSwitch {
@@ -235,6 +271,13 @@ ColumnLayout {
 
         SettingsSliderRow {
             rowId: "socialVolume"
+            id: volumeRow
+            preview: Component {
+                PagePreview {
+                    kind: "socialVolume"
+                    value: volumeRow.slider.value
+                }
+            }
             sub: true
             shown: page.sound
             from: 0
@@ -261,6 +304,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "clipboardHistory"
+            preview: Component {
+                PagePreview {
+                    kind: "clipboardHistory"
+                    value: history.checked
+                }
+            }
             target: history
 
             SettingsSwitch {
@@ -276,6 +325,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "clipboardImages"
+            preview: Component {
+                PagePreview {
+                    kind: "clipboardImages"
+                    value: images.checked
+                }
+            }
             sub: true
             shown: Bridge.settings.clipboardHistory ?? false
             target: images
@@ -293,6 +348,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "clipboardLimit"
+            preview: Component {
+                PagePreview {
+                    kind: "clipboardLimit"
+                    value: page.clipLimit
+                }
+            }
             sub: true
             shown: Bridge.settings.clipboardHistory ?? false
 

@@ -97,7 +97,7 @@ Item {
             anchors.centerIn: parent
 
             grade: 200
-            text: qsTr("art_track")
+            text: "art_track"
             color: Colours.palette.m3onSurfaceVariant
             font.pointSize: (parent.width * 0.4) || 1
         }

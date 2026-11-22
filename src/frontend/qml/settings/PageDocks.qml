@@ -48,6 +48,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "dockVisible"
+            preview: Component {
+                SystemPreview {
+                    kind: "dock"
+                    value: dock.checked
+                }
+            }
             target: dock
             hint: qsTr("Masquer le dock réaffiche la barre des tâches de Windows.")
 
@@ -65,6 +71,13 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "bookmarksRail"
+            preview: Component {
+                SystemPreview {
+                    kind: "rail"
+                    value: bookmarks.checked
+                    value2: "left"
+                }
+            }
             target: bookmarks
 
             SettingsSwitch {
@@ -81,6 +94,13 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "socialRail"
+            preview: Component {
+                SystemPreview {
+                    kind: "rail"
+                    value: social.checked
+                    value2: "right"
+                }
+            }
             target: social
 
             SettingsSwitch {
@@ -102,6 +122,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "replaceTaskbar"
+            preview: Component {
+                SystemPreview {
+                    kind: "dock"
+                    value: taskbar.checked
+                }
+            }
             target: taskbar
 
             SettingsSwitch {
@@ -117,7 +143,15 @@ ColumnLayout {
         }
 
         SettingsSliderRow {
+            id: iconRow
+
             rowId: "iconSize"
+            preview: Component {
+                SystemPreview {
+                    kind: "iconSize"
+                    value: iconRow.slider.value
+                }
+            }
             from: 40
             to: 80
             stepSize: 2
@@ -136,6 +170,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "autoTile"
+            preview: Component {
+                SystemPreview {
+                    kind: "autoTile"
+                    value: tile.checked
+                }
+            }
             target: tile
 
             SettingsSwitch {
@@ -152,6 +192,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "tileShortcuts"
+            preview: Component {
+                SystemPreview {
+                    kind: "tiles"
+                    value: "focus"
+                }
+            }
             sub: true
             below: true
             shown: page.tiling
@@ -215,6 +261,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "tileExclusions"
+            preview: Component {
+                SystemPreview {
+                    kind: "tiles"
+                    value: "exclude"
+                }
+            }
             sub: true
             below: true
             shown: page.tiling
@@ -260,6 +312,13 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "dockLayout"
+            preview: Component {
+                SystemPreview {
+                    kind: "dockLayout"
+                    value: page.layout.bar.length
+                    value2: page.layout.drawer.length
+                }
+            }
             below: true
 
             ColumnLayout {
@@ -331,6 +390,13 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "dockLayoutReset"
+            preview: Component {
+                SystemPreview {
+                    kind: "dockLayout"
+                    value: DockItems.defaults().bar.length
+                    value2: DockItems.defaults().drawer.length
+                }
+            }
 
             IconTextButton {
                 objectName: "dockLayoutResetButton"
@@ -343,6 +409,13 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "peripheralBattery"
+            preview: Component {
+                SystemPreview {
+                    kind: "peripheral"
+                    value: peripheralSwitch.checked
+                    value2: 2
+                }
+            }
             target: peripheralSwitch
 
             SettingsSwitch {
@@ -359,6 +432,13 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "peripheralList"
+            preview: Component {
+                SystemPreview {
+                    kind: "peripheral"
+                    value: true
+                    value2: peripheralList.shownDevices.filter(d => !(d.hidden ?? false)).length
+                }
+            }
             below: true
             shown: page.peripheralsOn
 

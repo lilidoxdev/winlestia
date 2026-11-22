@@ -21,6 +21,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "osd"
+            preview: Component {
+                SystemPreview {
+                    kind: "osd"
+                    value: osd.checked
+                }
+            }
             target: osd
 
             SettingsSwitch {
@@ -37,6 +43,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "pill"
+            preview: Component {
+                SystemPreview {
+                    kind: "pill"
+                    value: pill.checked
+                }
+            }
             target: pill
 
             SettingsSwitch {
@@ -53,6 +65,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "lyrics"
+            preview: Component {
+                SystemPreview {
+                    kind: "lyrics"
+                    value: lyrics.checked
+                }
+            }
             target: lyrics
 
             SettingsSwitch {
@@ -74,6 +92,13 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "dictationEnabled"
+            preview: Component {
+                SystemPreview {
+                    kind: "dictation"
+                    value: dictation.checked
+                    value2: ""
+                }
+            }
             target: dictation
 
             SettingsSwitch {
@@ -90,6 +115,13 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "dictationKey"
+            preview: Component {
+                SystemPreview {
+                    kind: "dictation"
+                    value: true
+                    value2: Bridge.vkName(Bridge.settings.dictationKey ?? 0xA5)
+                }
+            }
             sub: true
             shown: Bridge.settings.dictationEnabled ?? false
 

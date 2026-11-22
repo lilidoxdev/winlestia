@@ -69,6 +69,7 @@ class StateMixin:
             if names != self.fullscreen_names:
                 self.fullscreen_names = names
                 self.frameChanged.emit()
+                self.dock_peek_sync()
         if 'state' in message and isinstance(message['state'].get('maximizedMonitors'), list):
             names = tuple(sorted(self.screen_names(message['state']['maximizedMonitors'])))
             if names != self.maximized_names:
@@ -233,6 +234,8 @@ class StateMixin:
                 continue
             if event == 'dock':
                 self.force_dock = time.monotonic() + 3
+                if self.dock_peek_toggle() == 'off':
+                    continue
             if event in (
                 'toggle',
                 'access',

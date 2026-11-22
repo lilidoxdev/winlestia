@@ -43,7 +43,7 @@ RowLayout {
             anchors.leftMargin: Appearance.padding.large + Appearance.padding.small
             anchors.rightMargin: Appearance.padding.larger
             MaterialIcon {
-                text: qsTr("search")
+                text: "search"
                 color: query.activeFocus ? Colours.palette.m3primary : Colours.palette.m3outline
                 scale: query.activeFocus && browser.fx ? 1.15 : 1
                 Behavior on scale {

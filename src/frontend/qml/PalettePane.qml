@@ -20,7 +20,7 @@ Column {
         width: parent.width
         spacing: Appearance.spacing.normal
         MaterialIcon {
-            text: qsTr("search")
+            text: "search"
             font.pointSize: Appearance.font.size.extraLarge
             color: Colours.palette.m3primary
         }

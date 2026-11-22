@@ -283,7 +283,7 @@ ListView {
                         MaterialIcon {
                             x: iconWell.x + iconWell.width - width + 4
                             y: iconWell.y - 4
-                            text: qsTr("star")
+                            text: "star"
                             fill: 1
                             font.pointSize: Appearance.font.size.small
                             color: Colours.palette.m3tertiary

@@ -54,7 +54,7 @@ Item {
                 spacing: Appearance.spacing.small / 2
 
                 StyledText {
-                    text: Weather.city || qsTr("Loading...")
+                    text: Weather.city || qsTr("Chargement…")
                     font.pointSize: Appearance.font.size.extraLarge
                     font.weight: 600
                     color: Colours.palette.m3onSurface
@@ -76,14 +76,14 @@ Item {
 
                 WeatherStat {
                     icon: "wb_twilight"
-                    label: "Sunrise"
+                    label: qsTr("Lever du soleil")
                     value: Weather.sunrise
                     colour: Colours.palette.m3tertiary
                 }
 
                 WeatherStat {
                     icon: "bedtime"
-                    label: "Sunset"
+                    label: qsTr("Coucher du soleil")
                     value: Weather.sunset
                     colour: Colours.palette.m3tertiary
                 }
@@ -138,19 +138,19 @@ Item {
 
             DetailCard {
                 icon: "water_drop"
-                label: "Humidity"
+                label: qsTr("Humidité")
                 value: Weather.humidity + "%"
                 colour: Colours.palette.m3secondary
             }
             DetailCard {
                 icon: "thermostat"
-                label: "Feels Like"
+                label: qsTr("Ressenti")
                 value: Weather.feelsLike
                 colour: Colours.palette.m3primary
             }
             DetailCard {
                 icon: "air"
-                label: "Wind"
+                label: qsTr("Vent")
                 value: Weather.windSpeed ? Weather.windSpeed + " km/h" : "--"
                 colour: Colours.palette.m3tertiary
             }
@@ -159,7 +159,7 @@ Item {
         StyledText {
             Layout.topMargin: Appearance.spacing.normal
             opacity: forecastRepeater.count > 0 ? 1 : 0
-            text: qsTr("7-Day Forecast")
+            text: qsTr("Prévisions sur 7 jours")
             font.pointSize: Appearance.font.size.normal
             font.weight: 600
             color: Colours.palette.m3onSurface

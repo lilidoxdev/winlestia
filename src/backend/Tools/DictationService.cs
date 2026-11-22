@@ -28,7 +28,7 @@ internal sealed partial class DictationService : IDisposable
     const int Bands = 32, Fft = 1024, FftLog = 10, MaxSeconds = 60;
     const string ModelFile = "ggml-large-v3-turbo-q5_0.bin";
     const string ModelUrl = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/" + ModelFile;
-    static readonly string[] Allowed = { "fr", "en", "es" };
+    static readonly string[] Allowed = { "fr", "en", "es", "ru" };
 
     // --- hook -----------------------------------------------------------------------------------
     [StructLayout(LayoutKind.Sequential)]

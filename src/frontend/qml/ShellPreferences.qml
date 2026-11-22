@@ -26,10 +26,16 @@ Item {
 
     // « social » et « bookmarks » mènent à ces sections de la page Applications.
     function openSection(name: string): void {
+        name = SettingsIndex.pageAliases[name] ?? name;
         if (name === "winjets") {
             go(SettingsIndex.pageIndex("winjets"));
             return;
         }
+        for (let i = 0; i < SettingsIndex.pages.length; i++)
+            if (SettingsIndex.pages[i].id === name) {
+                go(i);
+                return;
+            }
         go(SettingsIndex.pageIndex("apps"));
         slot.jumpTo(name);
     }

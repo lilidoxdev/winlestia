@@ -65,10 +65,18 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "winjetsEdit"
+            preview: Component {
+                PagePreview {
+                    kind: "winjetsEdit"
+                    value: editSwitch.checked
+                }
+            }
             title: qsTr("Modifier les Winjets")
             hint: qsTr("Déplacez, redimensionnez ou retirez les cartes directement sur le bureau.")
 
             SettingsSwitch {
+                id: editSwitch
+
                 objectName: "winjetsEditToggle"
                 value: Bridge.winjets.editMode
                 onToggled: Bridge.winjets.setEditMode(checked)
@@ -77,6 +85,11 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "winjetsRecover"
+            preview: Component {
+                PagePreview {
+                    kind: "winjetsRecover"
+                }
+            }
             title: qsTr("Ramener tous les Winjets sur l'écran principal")
             hint: qsTr("Utile après le débranchement d'un écran.")
 

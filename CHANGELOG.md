@@ -2,6 +2,18 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les notes de chaque version sont aussi publiées sur la page GitHub Releases. Les entrées 0.9.0 et antérieures sont conservées dans la langue où elles ont été écrites.
 
+## 1.0.2 — 2026-11-22
+
+### Nouveautés
+
+- Visite guidée au premier lancement : affichée au premier démarrage, y compris pour ceux qui mettent à jour sans l'avoir vue, en 14 courtes étapes avec projecteur sur l'élément réel : Commande rapide (Ctrl+F2), onglets du tableau de bord (Tableau de bord, Médias, Performance, Workspaces), dock, batterie des périphériques (casque, manettes, souris, clavier), favoris (bord gauche), notifications et messages (bord droit), dictée vocale (maintenir la touche de dictée, AltGr par défaut), verrouillage (Ctrl+Alt+L) et secours (Ctrl+Alt+Retour arrière), grille des raccourcis, lien Discord. Ignorable à tout moment (Échap) ; rejouable depuis Réglages > Général. Elle ne se relance plus après une mise à jour une fois vue.
+- Réglages : les pages Apparence et Interface sont fusionnées en une page « Personnalisation » de cinq sections (Couleurs, Mouvement, Bordures et cadre, Bureau, Panneau du haut) ; chaque option affiche un aperçu en direct tiré de la palette du fond d'écran et une phrase d'aide.
+- Réglages > Général : ligne « Communauté Discord ».
+- Installateur : carte Discord sur les pages d'accueil et de fin ; il écrit `install-stamp.txt` (mémorisé, sans effet sur l'affichage de la visite).
+- Langue russe (interface du shell) ; chaînes restées sans traduction corrigées.
+- Commande rapide (Ctrl+F2) : le clic droit sur une icône de la zone de notification ouvre le vrai menu de l'application.
+- Touche Windows en jeu plein écran : le dock s'affiche brièvement.
+
 ## 1.0.1 — 2026-11-21
 
 Version corrective. L'installateur n'est toujours pas signé (voir 1.0.0 pour SmartScreen et le SHA-256).

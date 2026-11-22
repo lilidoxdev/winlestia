@@ -4,6 +4,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.config
+import ".."
 import "."
 
 // Language, start-up, services, restoration, about.
@@ -68,6 +69,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "language"
+            preview: Component {
+                PagePreview {
+                    kind: "language"
+                    value: Bridge.languageMode
+                }
+            }
             below: true
 
             SettingsOptionList {
@@ -93,6 +100,11 @@ ColumnLayout {
                         label: "Español",
                         value: "es",
                         flag: "es"
+                    },
+                    {
+                        label: "Русский",
+                        value: "ru",
+                        flag: "ru"
                     }
                 ].map(o => ({
                             label: o.label,
@@ -111,6 +123,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "autostart"
+            preview: Component {
+                PagePreview {
+                    kind: "autostart"
+                    value: autostart.checked
+                }
+            }
             target: autostart
 
             SettingsSwitch {
@@ -131,6 +149,11 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "weatherCity"
+            preview: Component {
+                PagePreview {
+                    kind: "weatherCity"
+                }
+            }
 
             IconTextButton {
                 text: qsTr("Choisir")
@@ -142,6 +165,11 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "refreshCatalogue"
+            preview: Component {
+                PagePreview {
+                    kind: "refreshCatalogue"
+                }
+            }
 
             IconTextButton {
                 text: qsTr("Actualiser")
@@ -159,6 +187,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "sensorsStatus"
+            preview: Component {
+                PagePreview {
+                    kind: "sensors"
+                    value: page.sensorsState
+                }
+            }
 
             hint: page.sensorsHint
             hintColor: page.sensorsHintColor
@@ -192,6 +226,11 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "sensorsConsent"
+            preview: Component {
+                PagePreview {
+                    kind: "sensorsConsent"
+                }
+            }
             title: qsTr("Autorisation requise")
             hint: qsTr(
                 "Winlestia va installer un petit service qui s'exécute avec les droits administrateur, ainsi que le pilote PawnIO "
@@ -238,6 +277,11 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "restore"
+            preview: Component {
+                PagePreview {
+                    kind: "restoreTaskbar"
+                }
+            }
 
             IconTextButton {
                 objectName: "restoreTaskbarButton"
@@ -255,6 +299,11 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "about"
+            preview: Component {
+                PagePreview {
+                    kind: "about"
+                }
+            }
             hint: page.dataFolder !== "" ? page.dataFolder : SettingsIndex.desc("about")
 
             StyledText {
@@ -263,6 +312,48 @@ ColumnLayout {
                 font.pointSize: Appearance.font.size.small
                 font.weight: Font.Medium
                 color: Colours.palette.m3primary
+            }
+        }
+
+        SettingsRow {
+            rowId: "tutorial"
+            preview: Component {
+                PagePreview {
+                    kind: "tutorial"
+                }
+            }
+
+            IconTextButton {
+                objectName: "tutorialReplayButton"
+                text: qsTr("Revoir")
+                icon: "tour"
+                type: IconTextButton.Tonal
+                onClicked: {
+                    Bridge.closePanel();
+                    Bridge.startTutorial();
+                }
+            }
+        }
+
+        SettingsRow {
+            rowId: "discord"
+            preview: Component {
+                PagePreview {
+                    kind: "discord"
+                }
+            }
+
+            DiscordLogo {
+                size: 22
+                color: Colours.palette.m3primary
+            }
+
+            IconTextButton {
+                objectName: "discordJoinButton"
+                text: qsTr("Rejoindre")
+                icon: "open_in_new"
+                type: IconTextButton.Tonal
+                onClicked: Qt.openUrlExternally("https://discord.gg/5jXv7NRj3Q")
             }
         }
     }

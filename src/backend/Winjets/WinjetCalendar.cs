@@ -41,6 +41,7 @@ internal static class WinjetCalendar
         ["en"] = ("Today", "Tomorrow", "All day"),
         ["fr"] = ("Aujourd’hui", "Demain", "Toute la journée"),
         ["es"] = ("Hoy", "Mañana", "Todo el día"),
+        ["ru"] = ("Сегодня", "Завтра", "Весь день"),
     };
 
     internal static JsonElement BuildPayload(string status, IReadOnlyList<CalendarEvent> events, DateTime todayLocal, TimeZoneInfo tz,

@@ -358,6 +358,7 @@ static class Pages
                 Content = Loc.T("done.launch"), Margin = new Thickness(0, 4, 0, 16) };
             cb.Click += (_, _) => Ctx.LaunchAfter = cb.IsChecked == true;
             b.Children.Add(cb);
+            var dc = Ui.DiscordCard(); dc.Margin = new Thickness(0, 0, 0, 14); b.Children.Add(dc);
             var s = new StackPanel();
             s.Children.Add(Ui.Tx(Loc.T("safety.title"), 15, "TextBrush", FontWeights.SemiBold));
             ((TextBlock)s.Children[0]).Margin = new Thickness(0, 0, 0, 10);

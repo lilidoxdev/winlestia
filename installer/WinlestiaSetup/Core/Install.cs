@@ -170,6 +170,7 @@ static class Installer
             l.Add(new("task", () => Task(dir)));
             l.Add(new("shortcuts", () => Shortcuts(dir)));
             l.Add(new("registry", () => Registry_(dir)));
+            l.Add(new("stamp", () => Stamp(dir)));
         }
         return l;
     }
@@ -217,6 +218,29 @@ static class Installer
             var setupDir = Path.Combine(dir, "Setup"); Directory.CreateDirectory(setupDir);
             File.Copy(Environment.ProcessPath!, Path.Combine(setupDir, "WinlestiaSetup.exe"), true);
         });
+        return null;
+    }
+
+    // install-stamp.txt a la racine d'installation (parent de Glass-v5) : "GUID ISO-8601 UTC" sur une ligne ; lu par le tutoriel du shell.
+    static string? Stamp(string dir)
+    {
+        var file = Path.Combine(dir, "install-stamp.txt");
+        // Ecrit seulement s'il n'existe pas : la visite se rejoue apres une installation neuve, pas apres chaque mise a jour.
+        if (File.Exists(file)) return null;
+        try
+        {
+            Runner.Do("write install-stamp.txt in " + dir, () =>
+            {
+                Directory.CreateDirectory(dir);
+                File.WriteAllText(file,
+                    Guid.NewGuid().ToString("D") + " " + DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'") + "\n", new UTF8Encoding(false));
+            });
+        }
+        catch (Exception ex)
+        {
+            Log.Write("stamp failed: " + ex);
+            return "install-stamp.txt not written: " + ex.Message;
+        }
         return null;
     }
 

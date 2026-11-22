@@ -90,6 +90,13 @@ ColumnLayout {
                     hintColor: inactive ? Colours.palette.m3error : Colours.palette.m3outline
                     hint: modelData.configurable ? (inactive ? qsTr("Inactif : une autre application utilise cette combinaison.") : "")
                         : qsTr(modelData.reason ?? "")
+                    preview: Component {
+                        SystemPreview {
+                            kind: "shortcut"
+                            value: sc.modelData.id
+                            value2: sc.modelData.combo
+                        }
+                    }
 
                     SettingsKeyCaps {
                         combo: sc.modelData.combo
@@ -140,6 +147,13 @@ ColumnLayout {
                 rowId: "sc:" + modelData.id
                 title: modelData.label
                 hint: qsTr("Actif seulement quand le panneau est ouvert.")
+                preview: Component {
+                    SystemPreview {
+                        kind: "shortcut"
+                        value: lc.modelData.id
+                        value2: lc.modelData.combo
+                    }
+                }
 
                 SettingsKeyCaps {
                     combo: lc.modelData.combo.indexOf(" … ") >= 0 ? "" : lc.modelData.combo

@@ -11,7 +11,7 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Appearance.spacing.normal
         MaterialIcon {
-            text: qsTr("screenshot_monitor")
+            text: "screenshot_monitor"
             font.pointSize: Appearance.font.size.extraLarge
             color: Colours.palette.m3primary
         }
@@ -91,7 +91,7 @@ ColumnLayout {
                     }
                 }
                 MaterialIcon {
-                    text: qsTr("chevron_right")
+                    text: "chevron_right"
                     font.pointSize: Appearance.font.size.larger
                     color: Colours.palette.m3outline
                 }

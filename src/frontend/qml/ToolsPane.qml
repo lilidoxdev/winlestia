@@ -123,7 +123,7 @@ Item {
             Layout.fillWidth: true
             spacing: Appearance.spacing.normal
             MaterialIcon {
-                text: qsTr("construction")
+                text: "construction"
                 font.pointSize: Appearance.font.size.extraLarge
                 color: Colours.palette.m3primary
             }
@@ -228,7 +228,7 @@ Item {
                                 }
                             }
                             MaterialIcon {
-                                text: qsTr("chevron_right")
+                                text: "chevron_right"
                                 font.pointSize: Appearance.font.size.larger
                                 color: Colours.palette.m3outline
                             }

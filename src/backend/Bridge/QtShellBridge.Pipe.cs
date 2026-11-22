@@ -25,7 +25,7 @@ internal sealed partial class QtShellBridge
         if (frontendWindowPid > 0
             && (value is "toggle" or "access" or "media" or "performance" or "controls" or "palette" or "settings"
                     or "settings:social" or "settings:bookmarks" or "clipboard" or "audio" or "microphone" or "tools"
-                    or "capture" or "wallpaper-switcher" or "overview" or "lock"
+                    or "capture" or "wallpaper-switcher" or "overview" or "lock" or "dock"
                 || value.StartsWith("workspace:")))
             AllowSetForegroundWindow(frontendWindowPid);
         if (events.Count < 32)

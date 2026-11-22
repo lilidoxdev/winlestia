@@ -237,8 +237,15 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "lockCurrent"
+            preview: Component {
+                PagePreview {
+                    kind: "lockPassword"
+                    value: currentField.text.length
+                    value2: "current"
+                }
+            }
             title: qsTr("Mot de passe actuel")
-            hint: ""
+            hint: qsTr("Saisissez d'abord l'ancien mot de passe pour pouvoir le changer")
             shown: page.hasPassword
 
             PasswordField {
@@ -250,8 +257,15 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "lockNew"
+            preview: Component {
+                PagePreview {
+                    kind: "lockPassword"
+                    value: newField.text.length
+                    value2: "new"
+                }
+            }
             title: qsTr("Nouveau mot de passe")
-            hint: ""
+            hint: qsTr("Il déverrouillera l'écran : 4 caractères minimum")
 
             PasswordField {
                 id: newField
@@ -262,9 +276,16 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "lockConfirm"
+            preview: Component {
+                PagePreview {
+                    kind: "lockPassword"
+                    value: confirmField.text.length
+                    value2: confirmField.text.length === 0 ? "confirm" : confirmField.text === newField.text ? "confirm good" : "confirm bad"
+                }
+            }
             title: qsTr("Confirmer")
-            hint: page.resultText
-            hintColor: page.resultGood ? Colours.palette.m3primary : Colours.palette.m3error
+            hint: page.resultText !== "" ? page.resultText : qsTr("Retapez le même mot de passe pour le confirmer")
+            hintColor: page.resultText === "" ? Colours.palette.m3outline : page.resultGood ? Colours.palette.m3primary : Colours.palette.m3error
 
             PasswordField {
                 id: confirmField
@@ -287,6 +308,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "lockEnabled"
+            preview: Component {
+                PagePreview {
+                    kind: "lockEnabled"
+                    value: enabledSwitch.checked
+                }
+            }
             target: enabledSwitch
             hint: page.hasPassword ? SettingsIndex.desc("lockEnabled") : qsTr("Mot de passe requis")
             onBlockedTapped: page.focusPassword()
@@ -305,6 +332,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "lockIdle"
+            preview: Component {
+                PagePreview {
+                    kind: "lockIdle"
+                    value: idleSwitch.checked
+                }
+            }
             target: idleSwitch
             hint: {
                 if (page.lockReady)
@@ -328,6 +361,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "lockIdleTime"
+            preview: Component {
+                PagePreview {
+                    kind: "lockIdleTime"
+                    value: page.shownIdle
+                }
+            }
             title: qsTr("Délai d'inactivité")
             hint: page.idleWords
             sub: true
@@ -362,6 +401,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "lockShortcut"
+            preview: Component {
+                PagePreview {
+                    kind: "lockShortcut"
+                    value: page.shortcut?.combo ?? ""
+                }
+            }
             target: shortcutButton
 
             SettingsKeyCaps {
@@ -383,8 +428,13 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "lockNow"
+            preview: Component {
+                PagePreview {
+                    kind: "lockNow"
+                }
+            }
             title: qsTr("Verrouiller maintenant")
-            hint: page.lockReady ? "" : page.hasPassword ? qsTr("Activez d'abord le verrouillage") : qsTr("Mot de passe requis")
+            hint: page.lockReady ? qsTr("Verrouille l'écran tout de suite, sans attendre l'inactivité") : page.hasPassword ? qsTr("Activez d'abord le verrouillage") : qsTr("Mot de passe requis")
 
             TextButton {
                 objectName: "lockNowButton"

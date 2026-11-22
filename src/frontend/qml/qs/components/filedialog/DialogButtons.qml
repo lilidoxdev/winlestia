@@ -22,7 +22,7 @@ StyledRect {
         spacing: Appearance.spacing.small
 
         StyledText {
-            text: qsTr("Filter:")
+            text: qsTr("Filtre :")
         }
 
         StyledRect {
@@ -62,7 +62,7 @@ StyledRect {
                 anchors.centerIn: parent
                 anchors.margins: Appearance.padding.normal
 
-                text: qsTr("Select")
+                text: qsTr("Sélectionner")
                 color: root.dialog.selectionValid ? Colours.palette.m3onSurface : Colours.palette.m3outline
             }
         }

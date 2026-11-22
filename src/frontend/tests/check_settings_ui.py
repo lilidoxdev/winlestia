@@ -291,7 +291,7 @@ def run():
             yield 700
             # PySide se bloque quand un QTranslator Python est appelé depuis les threads du chargeur QML pendant que loadData bloque :
             # compiler d'abord chaque page sans traducteur, puis installer le traducteur et retraduire sur le thread principal.
-            for page in range(8):
+            for page in range(9):
                 root.setProperty('pageTo', -1)
                 root.setProperty('pageTo', page)
                 yield 350
@@ -302,7 +302,7 @@ def run():
             entries = root.property('entryIds')
             entries = entries.toVariant() if hasattr(entries, 'toVariant') else entries
             seen = set()
-            for page in range(8):
+            for page in range(9):
                 root.setProperty('pageTo', page)
                 yield 700
                 if OUT:
@@ -330,7 +330,7 @@ def run():
                 checks['search:hasResults'] = find(root, 'prefsResult0') is not None
                 QTest.keyClick(root, Qt.Key_Return)
                 yield 900
-                nav2 = find(root, 'prefsPage2')
+                nav2 = find(root, 'prefsPage1')
                 checks['search:navigatedToDocks'] = bool(nav2 is not None and nav2.property('selected'))
                 search.setProperty('text', 'zzzzqq')
                 yield 400
@@ -338,7 +338,7 @@ def run():
                 search.setProperty('text', '')
                 yield 300
                 # La boîte de raccourci s'ouvre, un statut d'échec s'affiche, puis elle se ferme.
-                root.setProperty('pageTo', 3)
+                root.setProperty('pageTo', 2)
                 yield 600
                 btn = find(root, 'shortcutEdit-palette')
                 checks['shortcuts:editButton'] = btn is not None

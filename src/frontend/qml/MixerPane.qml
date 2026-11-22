@@ -20,7 +20,7 @@ Item {
             Layout.fillWidth: true
             spacing: Appearance.spacing.normal
             MaterialIcon {
-                text: qsTr("instant_mix")
+                text: "instant_mix"
                 font.pointSize: Appearance.font.size.extraLarge
                 color: Colours.palette.m3primary
             }

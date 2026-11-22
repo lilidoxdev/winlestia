@@ -73,7 +73,7 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: root.padding
 
-            text: qsTr("search")
+            text: "search"
             color: Colours.palette.m3onSurfaceVariant
         }
 
@@ -90,7 +90,7 @@ Item {
             topPadding: Appearance.padding.larger
             bottomPadding: Appearance.padding.larger
 
-            placeholderText: qsTr("Type \"%1\" for commands").arg(Config.launcher.actionPrefix)
+            placeholderText: qsTr("Tape « %1 » pour les commandes").arg(Config.launcher.actionPrefix)
 
             // Chemin d'activation commun à Entrée et à Ctrl+1…9 : lance l'élément courant de la liste affichée, quel que soit son type.
             function activateCurrent(): bool {
@@ -206,7 +206,7 @@ Item {
                 return 1;
             }
 
-            text: qsTr("close")
+            text: "close"
             color: Colours.palette.m3onSurfaceVariant
 
             MouseArea {

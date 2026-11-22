@@ -94,6 +94,9 @@ es.IconUninstall=Desinstalar {#AppName}
 en.RunLaunch=Launch {#AppName} now
 fr.RunLaunch=Lancer {#AppName} maintenant
 es.RunLaunch=Iniciar {#AppName} ahora
+en.DiscordLink=Got a question? Join the community on Discord
+fr.DiscordLink=Une question ? Rejoignez la communauté sur Discord
+es.DiscordLink=¿Tienes dudas? Únete a la comunidad en Discord
 en.InstalledCaption={#AppName} is already installed
 fr.InstalledCaption={#AppName} est déjà installé
 es.InstalledCaption={#AppName} ya está instalado
@@ -306,6 +309,32 @@ begin
   Result := FileExists(ExpandConstant('{localappdata}\Winlestia\terminal-backup\state.json'));
 end;
 
+procedure DiscordLinkClick(Sender: TObject);
+var Code: Integer;
+begin
+  ShellExec('open', 'https://discord.gg/5jXv7NRj3Q', '', '', SW_SHOWNORMAL, ewNoWait, Code);
+end;
+
+function HexPart(Len: Integer): String;
+var I: Integer;
+begin
+  Result := '';
+  for I := 1 to Len do Result := Result + Copy('0123456789abcdef', Random(16) + 1, 1);
+end;
+
+// install-stamp.txt a la racine d'installation ({app}) : "GUID ISO-8601 (heure locale)", lu par le tutoriel du shell (comparaison de chaine
+// seulement). Ecrit uniquement s'il n'existe pas : la visite se rejoue apres une installation neuve, pas apres une mise a jour.
+procedure WriteInstallStamp();
+var F: String;
+begin
+  F := ExpandConstant('{app}\install-stamp.txt');
+  if FileExists(F) then Exit;
+  SaveStringToFile(F,
+    HexPart(8) + '-' + HexPart(4) + '-4' + HexPart(3) + '-a' + HexPart(3) + '-' + HexPart(12) + ' ' +
+    GetDateTimeString('yyyy-mm-dd"T"hh:nn:ss', '-', ':') + #10,
+    False);
+end;
+
 procedure InitializeWizard();
 var
   Pseudo: String;
@@ -334,6 +363,19 @@ begin
   if Pseudo = '' then
     Pseudo := GetUserNameString();
   ProfilePage.Values[0] := Pseudo;
+
+  // Lien Discord sur la page finale (wpFinished), en bas, style lien.
+  with TNewStaticText.Create(WizardForm) do
+  begin
+    Parent := WizardForm.FinishedPage;
+    Caption := CustomMessage('DiscordLink');
+    Cursor := crHand;
+    Font.Style := Font.Style + [fsUnderline];
+    Font.Color := clHotLight;
+    Left := WizardForm.FinishedLabel.Left;
+    Top := WizardForm.FinishedPage.ClientHeight - ScaleY(28);
+    OnClick := @DiscordLinkClick;
+  end;
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
@@ -452,6 +494,7 @@ begin
   begin
     SaveProfile();
     SaveLanguage();
+    WriteInstallStamp();
     // Comportement : intégrer si la tâche est cochée ; en mode silencieux (page non affichée) une intégration existante est
     // conservée même sans /TASKS. Le retrait n'a lieu qu'en mode interactif (case décochée), jamais en silencieux.
     if WizardIsTaskSelected('terminal') or (WizardSilent and TerminalIntegrated()) then

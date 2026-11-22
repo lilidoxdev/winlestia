@@ -442,6 +442,10 @@ internal sealed partial class QtShellBridge
             case "reveal":
                 owner.Reveal(entry);
                 break;
+            case "trayMenu":
+                if (!Native.GetCursorPos(out var cursor) || TrayHost.Current?.ShowMenu(path, cursor.X, cursor.Y) != true)
+                    return "Cette application n’a pas d’icône de notification.";
+                break;
             case "stop":
                 if (!Flag(args, "confirmed") || !CanStop(path))
                     return "Arrêt refusé pour ce processus.";

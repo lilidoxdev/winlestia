@@ -370,7 +370,8 @@ class SurfaceScene(QObject):
                 return None
 
             thickness = bridge.frameThickness if bridge.frameEnabled and name not in bridge.fullscreen_names else 0
-            full = name in bridge.fullscreen_names
+            # En plein écran, ces fenêtres ne sont visibles que sur demande (Win, raccourci, clic) : elles gardent leur verre,
+            # en forme flottante (épaisseur 0, sans jonction au cadre).
             path = (
                 QPainterPath()
                 if bridge.capture.busy or bridge.picking
@@ -378,10 +379,10 @@ class SurfaceScene(QObject):
                     w,
                     h,
                     thickness,
-                    None if full else local(top),
-                    None if full else local(dock),
-                    None if full else local(rail),
-                    None if full else local(left),
+                    local(top),
+                    local(dock),
+                    local(rail),
+                    local(left),
                     local(dictation),
                     local(pill),
                 )

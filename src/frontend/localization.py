@@ -6,11 +6,11 @@ from pathlib import Path
 from PySide6.QtCore import QTranslator
 
 I18N_DIR = Path(__file__).resolve().parent / 'i18n'
-LANGUAGES = ('fr', 'en', 'es')
+LANGUAGES = ('fr', 'en', 'es', 'ru')
 
 
 def load_table():
-    """Reconstruit TABLE (source -> {fr, en, es}) depuis i18n/<langue>.json, chargé une fois au démarrage."""
+    """Reconstruit TABLE (source -> {fr, en, es, ru}) depuis i18n/<langue>.json, chargé une fois au démarrage."""
     tables = {}
     for lang in LANGUAGES:
         try:
@@ -31,7 +31,7 @@ def windows_language():
         ctypes.windll.kernel32.GetUserDefaultUILanguage.restype = ctypes.c_ushort
         ident = ctypes.windll.kernel32.GetUserDefaultUILanguage()
         primary = ident & 0x3FF
-        return {12: 'fr', 9: 'en', 10: 'es'}.get(primary, 'en')
+        return {12: 'fr', 9: 'en', 10: 'es', 25: 'ru'}.get(primary, 'en')
     except Exception:
         return 'en'
 
@@ -56,5 +56,5 @@ class Translator(QTranslator):
         return TABLE.get(source, {}).get(self.language, source)
 
     def select(self, mode):
-        self.mode = mode if mode in ('auto', 'fr', 'en', 'es') else 'auto'
+        self.mode = mode if mode in ('auto',) + LANGUAGES else 'auto'
         atomic_write_text(self.path, json.dumps({'language': self.mode}))

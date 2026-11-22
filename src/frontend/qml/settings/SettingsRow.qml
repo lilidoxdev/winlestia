@@ -24,6 +24,8 @@ FocusScope {
     property bool dim: false
     // Le contrôle activé quand on clique la ligne elle-même (interrupteurs).
     property Item target: null
+    // Aperçu décoratif optionnel (Component, ex. OptionPreview) : à gauche du texte en large, au-dessus des contrôles en étroit.
+    property Component preview: null
     default property alias control: ctl.data
 
     readonly property bool stacked: width < 460
@@ -109,29 +111,52 @@ FocusScope {
             columnSpacing: Appearance.spacing.normal
             rowSpacing: Appearance.spacing.smaller
 
-            ColumnLayout {
+            RowLayout {
                 Layout.row: 0
                 Layout.column: 0
                 Layout.fillWidth: true
-                Layout.minimumWidth: 120
                 Layout.alignment: Qt.AlignVCenter
-                spacing: 1
+                spacing: Appearance.spacing.normal
 
-                StyledText {
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                    text: row.title
-                    font.pointSize: Appearance.font.size.normal
+                Loader {
+                    active: row.preview !== null && !row.stacked
+                    visible: active
+                    Layout.alignment: Qt.AlignVCenter
+                    sourceComponent: row.preview
                 }
 
-                StyledText {
+                ColumnLayout {
                     Layout.fillWidth: true
-                    visible: text !== ""
-                    wrapMode: Text.WordWrap
-                    text: row.hint
-                    font.pointSize: Appearance.font.size.small
-                    color: row.hintColor
+                    Layout.minimumWidth: 120
+                    Layout.alignment: Qt.AlignVCenter
+                    spacing: 1
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        text: row.title
+                        font.pointSize: Appearance.font.size.normal
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        visible: text !== ""
+                        wrapMode: Text.WordWrap
+                        text: row.hint
+                        font.pointSize: Appearance.font.size.small
+                        color: row.hintColor
+                    }
                 }
+            }
+
+            Loader {
+                Layout.row: 1
+                Layout.column: 0
+                Layout.columnSpan: 2
+                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                active: row.preview !== null && row.stacked
+                visible: active
+                sourceComponent: row.preview
             }
 
             StyledText {
@@ -148,7 +173,7 @@ FocusScope {
             RowLayout {
                 id: ctl
 
-                Layout.row: row.dropped ? 1 : 0
+                Layout.row: row.dropped ? (row.preview !== null && row.stacked ? 2 : 1) : 0
                 Layout.column: row.dropped ? 0 : 1
                 Layout.columnSpan: row.dropped ? 2 : 1
                 Layout.fillWidth: row.dropped

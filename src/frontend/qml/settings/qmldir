@@ -1,15 +1,15 @@
 singleton SettingsIndex SettingsIndex.qml
-PageAppearance PageAppearance.qml
 PageApps PageApps.qml
 PageDocks PageDocks.qml
 PageFiles PageFiles.qml
 PageGeneral PageGeneral.qml
-PageInterface PageInterface.qml
 PageLock PageLock.qml
 PageMedia PageMedia.qml
+PagePersonalisation PagePersonalisation.qml
 PageShortcuts PageShortcuts.qml
 PageWinjets PageWinjets.qml
 SettingsChips SettingsChips.qml
+OptionPreview OptionPreview.qml
 SettingsFocusRing SettingsFocusRing.qml
 SettingsKeyCaps SettingsKeyCaps.qml
 SettingsNav SettingsNav.qml
@@ -22,3 +22,5 @@ SettingsShortcutDialog SettingsShortcutDialog.qml
 SettingsSliderRow SettingsSliderRow.qml
 SettingsStepper SettingsStepper.qml
 SettingsSwitch SettingsSwitch.qml
+PagePreview PagePreview.qml
+SystemPreview SystemPreview.qml

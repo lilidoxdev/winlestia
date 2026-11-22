@@ -142,7 +142,7 @@ QtObject {
  readonly property real storageUsed: Bridge.performance.diskUsedKiB ?? 0
  readonly property string lang: Bridge.language || "en"
  function fmtKib(value, decimals) {
-  const units = lang === "fr" ? ["Ko", "Mo", "Go"] : ["KB", "MB", "GB"];
+  const units = lang === "fr" ? ["Ko", "Mo", "Go"] : lang === "ru" ? ["КБ", "МБ", "ГБ"] : ["KB", "MB", "GB"];
   let n = Number(value) || 0, u = 0;
   while (n >= 1024 && u < 2) { n /= 1024; u++ }
   n = decimals > 0 ? +n.toFixed(decimals) : Math.floor(n);

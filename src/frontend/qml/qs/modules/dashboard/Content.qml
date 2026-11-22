@@ -82,6 +82,7 @@ Item {
 
     Tabs {
         id: tabs
+        objectName: "dashboardTabs"
 
         anchors.top: parent.top
         anchors.left: parent.left

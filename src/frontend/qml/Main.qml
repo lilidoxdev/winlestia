@@ -185,7 +185,8 @@ Window {
     // Centré sur l'écran, décalé vers la gauche du recouvrement réel avec le rail social.
     x: Bridge.screenX + (Bridge.screenWidth - width) / 2 - dashboardShift
     y: Bridge.screenY + Math.max(0, Config.border.thickness)
-    visible: panelHeight > 1 && !Bridge.screenFullscreen
+    // En plein écran, seul l'aperçu au survol reste masqué : une ouverture voulue (raccourci, clic) s'affiche par-dessus le jeu.
+    visible: panelHeight > 1 && (!Bridge.screenFullscreen || pageMode !== "dashboard" || vis.dashboard)
     property int servicePage: pageMode === "dashboard" ? drawer.dashState.currentTab :
         pageMode === "controls" ? 4 :
         pageMode === "clipboard" ? 6 :
@@ -304,6 +305,12 @@ Window {
                     preferences.item.openSection("bookmarks");
                 else
                     preferences.pendingSection = "bookmarks";
+            }
+            if (pageMode === "settings" && mode.indexOf("settings:") === 0 && !["social", "bookmarks", "winjets"].includes(mode.slice(9))) {
+                if (preferences.item)
+                    preferences.item.openSection(mode.slice(9));
+                else
+                    preferences.pendingSection = mode.slice(9);
             }
             if (pageMode === "settings" && mode === "settings:winjets") {
                 if (preferences.item)
@@ -716,5 +723,33 @@ Window {
     SocialRail {
         id: socialRail
     }
-    BookmarksRail {}
+    BookmarksRail {
+        id: bookmarksRail
+    }
+    // Visite guidée du premier lancement : rien n'est chargé tant qu'elle ne tourne pas.
+    Loader {
+        id: tutorialLoader
+        active: false
+        sourceComponent: Tutorial {
+            panel: window
+            dock: bottomDock
+            social: socialRail
+            bookmarks: bookmarksRail
+            onCloseRequested: tutorialLoader.active = false
+        }
+        // Echec de chargement : état Python remis à zéro (sans marquer la visite comme vue) puis chargeur coupé.
+        onStatusChanged: if (status === Loader.Error) {
+            Bridge.abortTutorial();
+            active = false;
+        }
+    }
+    Connections {
+        target: Bridge
+        function onTutorialRequested() {
+            tutorialLoader.active = true;
+        }
+        function onTutorialAborted() {
+            tutorialLoader.active = false;
+        }
+    }
 }

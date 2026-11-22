@@ -26,7 +26,7 @@ internal sealed class ShellTaskbar : IDisposable
     };
     readonly TaskbarNative.WinEvent callback; readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
     readonly List<IntPtr> hooks = new();
-    Process? guard; WindowsDockKey? windowsKey; EventWaitHandle? ready, release; TaskbarNative.Lease? lease; bool enabled, disposed;
+    Process? guard; WindowsDockKey? windowsKey; TrayHost? tray; EventWaitHandle? ready, release; TaskbarNative.Lease? lease; bool enabled, disposed;
     string key = "";
     internal IEnumerable<Window> Windows => bars;
     internal bool Enabled => enabled;
@@ -82,6 +82,7 @@ internal sealed class ShellTaskbar : IDisposable
             enabled = true;
             CreateBars();
             TaskbarNative.HideExplorer();
+            tray = TrayHost.Start();
             if (owner.QtShell == null)
                 foreach (var bar in bars)
                     bar.Register();
@@ -193,6 +194,8 @@ internal sealed class ShellTaskbar : IDisposable
         enabled = false;
         windowsKey?.Dispose();
         windowsKey = null;
+        tray?.Dispose();
+        tray = null;
         refresh.Stop();
         foreach (var hook in hooks)
             if (hook != IntPtr.Zero)

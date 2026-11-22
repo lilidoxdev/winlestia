@@ -20,6 +20,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "explorerTheme"
+            preview: Component {
+                PagePreview {
+                    kind: "explorerTheme"
+                    value: explorer.checked
+                }
+            }
             below: true
             target: explorer
 
@@ -67,6 +73,11 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "explorerFolders"
+            preview: Component {
+                PagePreview {
+                    kind: "explorerFolders"
+                }
+            }
             below: true
             hint: (Bridge.settings.explorerStatus ?? qsTr("Prêt à personnaliser")) + " · "
                 + qsTr("Icônes locales adaptatives. Le contenu et les menus restent ceux de Windows ; leur transparence ne change pas.")
@@ -105,6 +116,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "filesDefaultHandler"
+            preview: Component {
+                PagePreview {
+                    kind: "filesDefaultHandler"
+                    value: handler.checked
+                }
+            }
             target: handler
 
             SettingsSwitch {
@@ -121,6 +138,12 @@ ColumnLayout {
 
         SettingsRow {
             rowId: "filesPreload"
+            preview: Component {
+                PagePreview {
+                    kind: "filesPreload"
+                    value: preload.checked
+                }
+            }
             target: preload
 
             SettingsSwitch {

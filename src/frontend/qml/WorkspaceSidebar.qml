@@ -38,7 +38,7 @@ StyledRect {
                 color: Colours.palette.m3primaryContainer
                 MaterialIcon {
                     anchors.centerIn: parent
-                    text: qsTr("space_dashboard")
+                    text: "space_dashboard"
                     fill: 1
                     font.pointSize: Appearance.font.size.larger
                     color: Colours.palette.m3onPrimaryContainer

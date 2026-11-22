@@ -142,16 +142,49 @@ SETTINGS_PAGES = (
     ),
     ('ms-settings:windowsupdate', 'Windows Update', 'Windows Update', 'Windows Update', 'mise a jour updates'),
 )
+SETTINGS_RU = {
+    'ms-settings:network-wifi': 'Wi-Fi',
+    'ms-settings:network': 'Сеть и Интернет',
+    'ms-settings:network-vpn': 'VPN',
+    'ms-settings:bluetooth': 'Bluetooth и устройства',
+    'ms-settings:printers': 'Принтеры и сканеры',
+    'ms-settings:display': 'Дисплей',
+    'ms-settings:nightlight': 'Ночник',
+    'ms-settings:sound': 'Звук',
+    'ms-settings:notifications': 'Уведомления',
+    'ms-settings:batterysaver': 'Батарея',
+    'ms-settings:powersleep': 'Питание и спящий режим',
+    'ms-settings:storagesense': 'Хранилище',
+    'ms-settings:multitasking': 'Многозадачность',
+    'ms-settings:about': 'О системе',
+    'ms-settings:personalization': 'Персонализация',
+    'ms-settings:personalization-colors': 'Цвета',
+    'ms-settings:taskbar': 'Панель задач',
+    'ms-settings:appsfeatures': 'Установленные приложения',
+    'ms-settings:defaultapps': 'Приложения по умолчанию',
+    'ms-settings:startupapps': 'Автозагрузка приложений',
+    'ms-settings:yourinfo': 'Учётные записи',
+    'ms-settings:dateandtime': 'Дата и время',
+    'ms-settings:regionformatting': 'Регион',
+    'ms-settings:regionlanguage': 'Язык',
+    'ms-settings:typing': 'Клавиатура',
+    'ms-settings:mousetouchpad': 'Мышь и сенсорная панель',
+    'ms-settings:easeofaccess': 'Специальные возможности',
+    'ms-settings:privacy': 'Конфиденциальность',
+    'ms-settings:privacy-webcam': 'Конфиденциальность камеры',
+    'ms-settings:privacy-microphone': 'Конфиденциальность микрофона',
+    'ms-settings:windowsupdate': 'Центр обновления Windows',
+}
 SETTINGS_URIS = frozenset(page[0] for page in SETTINGS_PAGES)
-SETTINGS_LABEL = {'fr': 'Paramètres Windows', 'en': 'Windows Settings', 'es': 'Configuración de Windows'}
+SETTINGS_LABEL = {'fr': 'Paramètres Windows', 'en': 'Windows Settings', 'es': 'Configuración de Windows', 'ru': 'Параметры Windows'}
 
 SESSION_KEYWORDS = {
-    'shutdown': ('shut down', 'poweroff', 'eteindre', 'arreter', 'apagar'),
-    'restart': ('reboot', 'redemarrer', 'reiniciar'),
-    'logout': ('log out', 'sign out', 'deconnecter', 'deconnexion', 'cerrar sesion'),
-    'lock': ('verrouiller', 'bloquear'),
-    'sleep': ('veille', 'mettre en veille', 'suspend', 'suspender'),
-    'hibernate': ('hibernation', 'hiberner', 'hibernar'),
+    'shutdown': ('shut down', 'poweroff', 'eteindre', 'arreter', 'apagar', 'выключить', 'завершение работы'),
+    'restart': ('reboot', 'redemarrer', 'reiniciar', 'перезагрузить', 'перезагрузка'),
+    'logout': ('log out', 'sign out', 'deconnecter', 'deconnexion', 'cerrar sesion', 'выйти', 'выход'),
+    'lock': ('verrouiller', 'bloquear', 'заблокировать', 'блокировка'),
+    'sleep': ('veille', 'mettre en veille', 'suspend', 'suspender', 'спящий режим', 'сон'),
+    'hibernate': ('hibernation', 'hiberner', 'hibernar', 'гибернация'),
 }
 
 
@@ -163,11 +196,11 @@ def settings_results(words, language='fr', limit=4):
     column = {'fr': 1, 'en': 2, 'es': 3}.get(language, 1)
     found = []
     for page in SETTINGS_PAGES:
-        if all(w in fold(' '.join(page[1:])) for w in words):
+        if all(w in fold(' '.join(page[1:]) + ' ' + SETTINGS_RU[page[0]]) for w in words):
             found.append(
                 {
                     'id': page[0],
-                    'name': page[column],
+                    'name': SETTINGS_RU[page[0]] if language == 'ru' else page[column],
                     'comment': SETTINGS_LABEL.get(language, SETTINGS_LABEL['fr']),
                     'icon': 'settings',
                     'kind': 'setting',

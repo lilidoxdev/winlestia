@@ -216,11 +216,18 @@ _CONDITIONS = {
            'weather_snowy': 'Snow', 'thunderstorm': 'Thunderstorm'},
     'fr': {'sunny': 'Dégagé', 'partly_cloudy_day': 'Peu nuageux', 'cloud': 'Nuageux', 'foggy': 'Brouillard', 'rainy': 'Pluie',
            'weather_snowy': 'Neige', 'thunderstorm': 'Orage'},
+    'es': {'sunny': 'Despejado', 'partly_cloudy_day': 'Poco nuboso', 'cloud': 'Nublado', 'foggy': 'Niebla', 'rainy': 'Lluvia',
+           'weather_snowy': 'Nieve', 'thunderstorm': 'Tormenta'},
+    'ru': {'sunny': 'Ясно', 'partly_cloudy_day': 'Малооблачно', 'cloud': 'Облачно', 'foggy': 'Туман', 'rainy': 'Дождь',
+           'weather_snowy': 'Снег', 'thunderstorm': 'Гроза'},
 }
 _DAYS = {
     'en': ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'),
     'fr': ('Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'),
+    'es': ('Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'),
+    'ru': ('Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'),
 }
+_CURRENT_LOCATION = {'en': 'Current location', 'fr': 'Position actuelle', 'es': 'Ubicación actual', 'ru': 'Текущее местоположение'}
 
 
 def weather_status(status, source, city=''):
@@ -259,13 +266,13 @@ def weather_payload(forecast, city, source, lang='en'):
     }
 
 
-def location_label(lat, lon, global_geo, name=''):
+def location_label(lat, lon, global_geo, name='', lang='en'):
     """Nom d'une position : `name` du backend, sinon la ville globale si ses coordonnées coïncident, sinon « Current location »."""
     if name:
         return str(name)
     if global_geo and abs(global_geo[0] - lat) < 0.5 and abs(global_geo[1] - lon) < 0.5:
         return global_geo[2]
-    return 'Current location'
+    return _CURRENT_LOCATION.get(lang, _CURRENT_LOCATION['en'])
 
 
 def fetch_json(url):
@@ -300,7 +307,7 @@ def compute_weather(key, mode, location, global_city, lang='en'):
         if mode == 'location':
             lat, lon = float(location['lat']), float(location['lon'])
             geo = geocode(global_city) if global_city else None
-            label = location_label(lat, lon, geo, location.get('name') or '')
+            label = location_label(lat, lon, geo, location.get('name') or '', lang)
             return weather_payload(fetch_forecast(lat, lon), label, 'location', lang)
         geo = geocode(key or global_city)
         if geo is None:
@@ -452,7 +459,8 @@ class WinjetFeeds(QObject):
         return str(getattr(self.bridge, 'city', '') or '').strip()
 
     def _lang(self):
-        return 'fr' if str(getattr(self.bridge, 'language', '') or '').startswith('fr') else 'en'
+        language = str(getattr(self.bridge, 'language', '') or '')[:2]
+        return language if language in _CONDITIONS else 'en'
 
     def _set_weather(self, key, payload):
         if self._weather.get(key) != payload:

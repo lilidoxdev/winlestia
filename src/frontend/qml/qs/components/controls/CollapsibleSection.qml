@@ -45,7 +45,7 @@ ColumnLayout {
             }
 
             MaterialIcon {
-                text: qsTr("expand_more")
+                text: "expand_more"
                 rotation: root.expanded ? 180 : 0
                 color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.normal

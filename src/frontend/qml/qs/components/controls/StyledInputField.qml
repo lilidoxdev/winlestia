@@ -9,7 +9,7 @@ import QtQuick
 Item {
     id: root
 
-    property string text:qsTr("")
+    property string text: ""
     property var validator: null
     property bool readOnly: false
     property int horizontalAlignment: TextInput.AlignHCenter

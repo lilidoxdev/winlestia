@@ -9,18 +9,11 @@ QtObject {
     // group : les entrées d'un même groupe restent ensemble dans la navigation ; un espace/séparateur distingue les groupes.
     readonly property var pages: [
         {
-            id: "appearance",
+            id: "personalisation",
             icon: "palette",
             group: 0,
-            title: qsTr("Apparence"),
-            subtitle: qsTr("Thème, couleurs, transparence, animations")
-        },
-        {
-            id: "interface",
-            icon: "dashboard_customize",
-            group: 0,
-            title: qsTr("Interface"),
-            subtitle: qsTr("Contours, cadre, logo, ouverture du panneau")
+            title: qsTr("Personnalisation"),
+            subtitle: qsTr("Couleurs, mouvement, contours, bureau, panneau du haut")
         },
         {
             id: "docks",
@@ -80,7 +73,14 @@ QtObject {
         }
     ]
 
+    // Anciens identifiants de page, fusionnés dans « personnalisation ».
+    readonly property var pageAliases: ({
+            "appearance": "personnalisation",
+            "interface": "personnalisation"
+        })
+
     function pageIndex(id: string): int {
+        id = pageAliases[id] ?? id;
         for (let i = 0; i < pages.length; i++)
             if (pages[i].id === id)
                 return i;
@@ -94,113 +94,113 @@ QtObject {
         {
             id: "theme",
             page: 0,
-            section: qsTr("Thème"),
+            section: qsTr("Couleurs"),
             label: qsTr("Thème"),
-            desc: qsTr("Les couleurs de tout le shell"),
+            desc: qsTr("Porcelaine est clair, Nuit est sombre, Automatique suit ton fond d’écran."),
             kw: "couleurs mode clair sombre nuit porcelaine automatique fond d’écran wallpaper dark light theme colors"
         },
         {
             id: "customPalette",
             page: 0,
-            section: qsTr("Thème"),
+            section: qsTr("Couleurs"),
             label: qsTr("Ma palette"),
-            desc: qsTr("Personnalisé : tes propres couleurs, avec option de verre transparent."),
+            desc: qsTr("Crée tes propres couleurs avec le thème Personnalisé."),
             kw: "personnalise custom editeur couleurs verre",
             anchor: "theme"
         },
         {
             id: "transparency",
             page: 0,
-            section: qsTr("Transparence"),
+            section: qsTr("Couleurs"),
             label: qsTr("Transparence du verre"),
-            desc: qsTr("Plus la valeur est haute, plus le fond transparaît"),
+            desc: qsTr("Plus la valeur est basse, plus on voit le fond d’écran à travers les panneaux."),
             kw: "opacite verre glass blur flou transparency opacity"
         },
         {
             id: "motion",
             page: 0,
-            section: qsTr("Animations"),
+            section: qsTr("Mouvement"),
             label: qsTr("Animations"),
-            desc: qsTr("Vitesse des transitions du shell"),
+            desc: qsTr("Choisis la vitesse des mouvements à l’écran."),
             kw: "vitesse transitions mouvement sans rapides motion speed"
         },
         {
             id: "reducedEffects",
             page: 0,
-            section: qsTr("Animations"),
+            section: qsTr("Mouvement"),
             label: qsTr("Effets allégés"),
-            desc: qsTr("Rendu plus léger pour les petites configurations"),
+            desc: qsTr("Retire le flou et les ombres pour un ordinateur moins puissant."),
             kw: "performance leger economie reduced effects light"
         },
         {
             id: "accentBorders",
-            page: 1,
-            section: qsTr("Contours"),
-            label: qsTr("Liseré sur les applications"),
-            desc: qsTr("La couleur du thème autour des fenêtres du Bureau"),
+            page: 0,
+            section: qsTr("Contours et cadre"),
+            label: qsTr("Liseré sur les fenêtres"),
+            desc: qsTr("Ajoute un fin contour de couleur autour des fenêtres."),
             kw: "bordure contour fenetre accent border"
         },
         {
             id: "activeBorderOnly",
-            page: 1,
-            section: qsTr("Contours"),
+            page: 0,
+            section: qsTr("Contours et cadre"),
             label: qsTr("Seulement la fenêtre active"),
-            desc: qsTr("Le liseré suit la fenêtre au premier plan"),
+            desc: qsTr("Le contour n’apparaît que sur la fenêtre au premier plan."),
             kw: "bordure active focus",
             anchor: "accentBorders"
         },
         {
             id: "screenFrame",
-            page: 1,
-            section: qsTr("Cadre de l’écran"),
+            page: 0,
+            section: qsTr("Contours et cadre"),
             label: qsTr("Cadre de l’écran"),
-            desc: qsTr("Un contour arrondi coloré autour du Bureau"),
+            desc: qsTr("Un contour arrondi et coloré autour de ton écran."),
             kw: "bordure ecran frame arrondi"
         },
         {
             id: "frameThickness",
-            page: 1,
-            section: qsTr("Cadre de l’écran"),
-            label: qsTr("Épaisseur des contours"),
-            desc: qsTr("Largeur du cadre de l’écran"),
+            page: 0,
+            section: qsTr("Contours et cadre"),
+            label: qsTr("Épaisseur du cadre"),
+            desc: qsTr("Rend le cadre plus fin ou plus épais."),
             kw: "taille largeur frame thickness",
             anchor: "screenFrame"
         },
         {
             id: "desktopLogo",
-            page: 1,
+            page: 0,
             section: qsTr("Bureau"),
             label: qsTr("Logo Winlestia"),
-            desc: qsTr("Un repère discret dans le coin de l’écran"),
+            desc: qsTr("Affiche un petit logo discret sur le bureau."),
             kw: "logo marque watermark"
         },
         {
             id: "desktopIndicator",
-            page: 1,
+            page: 0,
             section: qsTr("Bureau"),
             label: qsTr("Indicateur de bureaux virtuels"),
-            desc: qsTr("Une pastille par bureau Windows dans le dock"),
+            desc: qsTr("Montre des points pour savoir sur quel bureau tu es."),
             kw: "bureaux virtuels desktops pastille indicator"
         },
         {
             id: "quietFullscreen",
-            page: 1,
+            page: 0,
             section: qsTr("Bureau"),
             label: qsTr("Mode discret en plein écran"),
-            desc: qsTr("Masque l’OSD, le visualiseur et les animations quand une application est en plein écran."),
+            desc: qsTr("Cache les indicateurs du shell pendant un film ou un jeu."),
             kw: "plein ecran jeu video quiet fullscreen osd"
         },
         {
             id: "topActivation",
-            page: 1,
-            section: qsTr("Ouverture du panneau"),
-            label: qsTr("Zone de détection"),
-            desc: qsTr("Bande en haut de l’écran qui ouvre le panneau"),
+            page: 0,
+            section: qsTr("Panneau du haut"),
+            label: qsTr("Zone d’ouverture"),
+            desc: qsTr("Bande en haut de l’écran qui ouvre le panneau quand la souris y passe."),
             kw: "calibrer haut ecran souris survol panneau calibrate hover"
         },
         {
             id: "dockVisible",
-            page: 2,
+            page: 1,
             section: qsTr("Visibilité"),
             label: qsTr("Dock Winlestia"),
             desc: qsTr("Le dock avec les applications ouvertes, au bord bas de l’écran"),
@@ -208,7 +208,7 @@ QtObject {
         },
         {
             id: "dockLayout",
-            page: 2,
+            page: 1,
             section: qsTr("Barre d’icônes"),
             label: qsTr("Boutons du dock"),
             desc: qsTr("Choisis les boutons de la barre, ceux du tiroir (la flèche de la barre l’ouvre) et leur ordre."),
@@ -216,7 +216,7 @@ QtObject {
         },
         {
             id: "dockLayoutReset",
-            page: 2,
+            page: 1,
             section: qsTr("Barre d’icônes"),
             label: qsTr("Rétablir les boutons par défaut"),
             desc: "",
@@ -224,7 +224,7 @@ QtObject {
         },
         {
             id: "peripheralBattery",
-            page: 2,
+            page: 1,
             section: qsTr("Barre d’icônes"),
             label: qsTr("Batterie des périphériques"),
             desc: qsTr("Affiche dans le dock le niveau de batterie des appareils connectés"),
@@ -232,7 +232,7 @@ QtObject {
         },
         {
             id: "bookmarksRail",
-            page: 2,
+            page: 1,
             section: qsTr("Visibilité"),
             label: qsTr("Panneau des favoris (bord gauche)"),
             desc: qsTr("Se déploie quand la souris touche le bord gauche de l’écran"),
@@ -240,7 +240,7 @@ QtObject {
         },
         {
             id: "socialRail",
-            page: 2,
+            page: 1,
             section: qsTr("Visibilité"),
             label: qsTr("Panneau des réseaux sociaux (bord droit)"),
             desc: qsTr("Se déploie quand la souris touche le bord droit de l’écran"),
@@ -248,7 +248,7 @@ QtObject {
         },
         {
             id: "replaceTaskbar",
-            page: 2,
+            page: 1,
             section: qsTr("Barre des tâches"),
             label: qsTr("Masquer la barre des tâches de Windows"),
             desc: qsTr("Elle se rétablit à tout moment depuis Général › Restauration."),
@@ -256,7 +256,7 @@ QtObject {
         },
         {
             id: "iconSize",
-            page: 2,
+            page: 1,
             section: qsTr("Barre des tâches"),
             label: qsTr("Taille des aperçus de bureaux"),
             desc: qsTr("Taille des icônes dans les vues de bureaux et d’applications"),
@@ -264,7 +264,7 @@ QtObject {
         },
         {
             id: "autoTile",
-            page: 2,
+            page: 1,
             section: qsTr("Disposition automatique"),
             label: qsTr("Organisation automatique"),
             desc: qsTr("Les fenêtres se partagent chaque écran en tuiles, dans un ordre stable, avec des raccourcis clavier"),
@@ -272,7 +272,7 @@ QtObject {
         },
         {
             id: "tileShortcuts",
-            page: 2,
+            page: 1,
             section: qsTr("Disposition automatique"),
             label: qsTr("Raccourcis du tuilage"),
             desc: qsTr("Actifs seulement quand l’organisation automatique est activée"),
@@ -281,7 +281,7 @@ QtObject {
         },
         {
             id: "tileExclusions",
-            page: 2,
+            page: 1,
             section: qsTr("Disposition automatique"),
             label: qsTr("Applications exclues"),
             desc: qsTr("Aucune application exclue"),
@@ -289,7 +289,7 @@ QtObject {
         },
         {
             id: "osd",
-            page: 4,
+            page: 3,
             section: qsTr("Affichage à l’écran"),
             label: qsTr("Afficher l’OSD"),
             desc: qsTr("Indicateur de volume, luminosité et micro à l’écran"),
@@ -297,7 +297,7 @@ QtObject {
         },
         {
             id: "pill",
-            page: 4,
+            page: 3,
             section: qsTr("Affichage à l’écran"),
             label: qsTr("Pilule"),
             desc: qsTr("Musique, volume et luminosité dans une capsule en haut de l’écran"),
@@ -305,7 +305,7 @@ QtObject {
         },
         {
             id: "lyrics",
-            page: 4,
+            page: 3,
             section: qsTr("Affichage à l’écran"),
             label: qsTr("Paroles"),
             desc: qsTr("Affiche les paroles synchronisées du morceau en cours. Le titre et l’artiste sont envoyés à lrclib.net."),
@@ -313,7 +313,7 @@ QtObject {
         },
         {
             id: "dictationEnabled",
-            page: 4,
+            page: 3,
             section: qsTr("Dictée vocale"),
             label: qsTr("Activer la dictée"),
             desc: qsTr("Transcription locale, sans envoyer ta voix sur Internet"),
@@ -321,7 +321,7 @@ QtObject {
         },
         {
             id: "dictationKey",
-            page: 4,
+            page: 3,
             section: qsTr("Dictée vocale"),
             label: qsTr("Touche de dictée"),
             desc: qsTr("Maintenez la touche pour dicter (français, anglais, espagnol, détection auto)"),
@@ -330,7 +330,7 @@ QtObject {
         },
         {
             id: "bookmarksBrowser",
-            page: 5,
+            page: 4,
             section: qsTr("Favoris"),
             label: qsTr("Navigateur des favoris"),
             desc: qsTr("Le navigateur dont Winlestia lit les favoris"),
@@ -338,7 +338,7 @@ QtObject {
         },
         {
             id: "bookmarksUnhide",
-            page: 5,
+            page: 4,
             section: qsTr("Favoris"),
             label: qsTr("Réafficher les favoris retirés"),
             desc: qsTr("Ceux retirés de Winlestia uniquement, pas du navigateur"),
@@ -346,7 +346,7 @@ QtObject {
         },
         {
             id: "socialBackground",
-            page: 5,
+            page: 4,
             section: qsTr("Réseaux sociaux"),
             label: qsTr("Garder les messageries actives en arrière-plan"),
             desc: qsTr("Compteurs de messages à jour, mais plus de mémoire utilisée."),
@@ -354,7 +354,7 @@ QtObject {
         },
         {
             id: "socialNetworks",
-            page: 5,
+            page: 4,
             section: qsTr("Réseaux sociaux"),
             label: qsTr("Comptes des réseaux sociaux"),
             desc: qsTr("La connexion se fait toi-même dans la fenêtre du service. Snapchat Web peut être limité."),
@@ -362,7 +362,7 @@ QtObject {
         },
         {
             id: "socialGlobalMute",
-            page: 5,
+            page: 4,
             section: qsTr("Notifications"),
             label: qsTr("Couper toutes les notifications"),
             desc: qsTr("Plus de son ; les compteurs continuent"),
@@ -370,7 +370,7 @@ QtObject {
         },
         {
             id: "socialSound",
-            page: 5,
+            page: 4,
             section: qsTr("Notifications"),
             label: qsTr("Son de notification"),
             desc: qsTr("Joue un son à chaque nouveau message"),
@@ -378,7 +378,7 @@ QtObject {
         },
         {
             id: "socialVolume",
-            page: 5,
+            page: 4,
             section: qsTr("Notifications"),
             label: qsTr("Volume"),
             desc: qsTr("Volume du son de notification"),
@@ -386,7 +386,7 @@ QtObject {
         },
         {
             id: "clipboardHistory",
-            page: 5,
+            page: 4,
             section: qsTr("Presse-papiers"),
             label: qsTr("Historique du presse-papiers"),
             desc: qsTr("Garde les éléments copiés pour les recoller"),
@@ -394,7 +394,7 @@ QtObject {
         },
         {
             id: "clipboardImages",
-            page: 5,
+            page: 4,
             section: qsTr("Presse-papiers"),
             label: qsTr("Garder les images copiées"),
             desc: qsTr("Ajoute aussi les captures et images à l’historique"),
@@ -403,7 +403,7 @@ QtObject {
         },
         {
             id: "clipboardLimit",
-            page: 5,
+            page: 4,
             section: qsTr("Presse-papiers"),
             label: qsTr("Taille de l’historique"),
             desc: qsTr("Nombre maximal d’éléments conservés"),
@@ -412,7 +412,7 @@ QtObject {
         },
         {
             id: "explorerTheme",
-            page: 6,
+            page: 5,
             section: qsTr("Explorateur Windows"),
             label: qsTr("Icônes et contours assortis"),
             desc: qsTr("Dossiers personnels et sous-dossiers à tes couleurs (aperçu ci-dessus)"),
@@ -420,7 +420,7 @@ QtObject {
         },
         {
             id: "explorerFolders",
-            page: 6,
+            page: 5,
             section: qsTr("Explorateur Windows"),
             label: qsTr("Dossiers personnalisés"),
             desc: qsTr("Ajouter un dossier, ouvrir l’Explorateur ou restaurer les icônes d’origine"),
@@ -428,7 +428,7 @@ QtObject {
         },
         {
             id: "filesDefaultHandler",
-            page: 6,
+            page: 5,
             section: qsTr("Winlestia Fichiers"),
             label: qsTr("Ouvrir les dossiers avec Winlestia Fichiers"),
             desc: qsTr("Explorer reste disponible ; désactivable à tout moment"),
@@ -436,7 +436,7 @@ QtObject {
         },
         {
             id: "filesPreload",
-            page: 6,
+            page: 5,
             section: qsTr("Winlestia Fichiers"),
             label: qsTr("Précharger Winlestia Fichiers"),
             desc: qsTr("Garde une instance cachée (~70 Mo de mémoire) pour ouvrir les dossiers plus vite ; " +
@@ -445,7 +445,7 @@ QtObject {
         },
         {
             id: "language",
-            page: 7,
+            page: 6,
             section: qsTr("Langue"),
             label: qsTr("Langue"),
             desc: qsTr("Langue de l’interface de Winlestia"),
@@ -453,7 +453,7 @@ QtObject {
         },
         {
             id: "autostart",
-            page: 7,
+            page: 6,
             section: qsTr("Démarrage"),
             label: qsTr("Démarrer avec Windows"),
             desc: qsTr("Winlestia s’ouvre à ta connexion"),
@@ -461,7 +461,7 @@ QtObject {
         },
         {
             id: "weatherCity",
-            page: 7,
+            page: 6,
             section: qsTr("Services"),
             label: qsTr("Ville de la météo"),
             desc: qsTr("Pour la météo du tableau de bord"),
@@ -469,7 +469,7 @@ QtObject {
         },
         {
             id: "sensorsStatus",
-            page: 7,
+            page: 6,
             section: qsTr("Capteur de température"),
             label: qsTr("Température du processeur"),
             desc: qsTr("Service optionnel pour lire la température du processeur"),
@@ -477,7 +477,7 @@ QtObject {
         },
         {
             id: "refreshCatalogue",
-            page: 7,
+            page: 6,
             section: qsTr("Services"),
             label: qsTr("Liste des applications"),
             desc: qsTr("Relit les applications installées"),
@@ -485,7 +485,7 @@ QtObject {
         },
         {
             id: "restore",
-            page: 7,
+            page: 6,
             section: qsTr("Restauration"),
             label: qsTr("Rétablir la barre Windows"),
             desc: qsTr("Réaffiche la barre des tâches de Windows"),
@@ -493,15 +493,31 @@ QtObject {
         },
         {
             id: "about",
-            page: 7,
+            page: 6,
             section: qsTr("À propos"),
             label: qsTr("À propos de Winlestia"),
             desc: qsTr("Version et dossier des données"),
             kw: "version dossier donnees data folder about"
         },
         {
+            id: "tutorial",
+            page: 6,
+            section: qsTr("À propos"),
+            label: qsTr("Revoir la visite guidée"),
+            desc: qsTr("Une courte présentation de Winlestia, pas à pas"),
+            kw: "tutoriel visite guidee aide decouverte premier lancement tour tutorial help onboarding"
+        },
+        {
+            id: "discord",
+            page: 6,
+            section: qsTr("À propos"),
+            label: qsTr("Communauté Discord"),
+            desc: qsTr("Posez vos questions et échangez avec les autres utilisateurs"),
+            kw: "discord communaute aide support serveur community help chat"
+        },
+        {
             id: "winjetsEdit",
-            page: 8,
+            page: 7,
             section: qsTr("Bureau"),
             label: qsTr("Modifier les Winjets"),
             desc: qsTr("Déplacez, redimensionnez ou retirez les cartes directement sur le bureau."),
@@ -509,7 +525,7 @@ QtObject {
         },
         {
             id: "winjetsRecover",
-            page: 8,
+            page: 7,
             section: qsTr("Bureau"),
             label: qsTr("Ramener tous les Winjets sur l'écran principal"),
             desc: qsTr("Utile après le débranchement d'un écran."),
@@ -517,7 +533,7 @@ QtObject {
         },
         {
             id: "winjetsGallery",
-            page: 8,
+            page: 7,
             section: qsTr("Galerie"),
             label: qsTr("Galerie de Winjets"),
             desc: qsTr("Ajouter une carte au bureau"),
@@ -525,7 +541,7 @@ QtObject {
         },
         {
             id: "lockPassword",
-            page: 9,
+            page: 8,
             section: qsTr("Mot de passe"),
             label: qsTr("Mot de passe de verrouillage"),
             desc: qsTr("Le mot de passe demandé pour déverrouiller le shell"),
@@ -533,7 +549,7 @@ QtObject {
         },
         {
             id: "lockEnabled",
-            page: 9,
+            page: 8,
             section: qsTr("Verrouillage"),
             label: qsTr("Activer l'écran de verrouillage"),
             desc: qsTr("Autorise le raccourci et le verrouillage automatique"),
@@ -541,7 +557,7 @@ QtObject {
         },
         {
             id: "lockIdle",
-            page: 9,
+            page: 8,
             section: qsTr("Verrouillage"),
             label: qsTr("Verrouiller après inactivité"),
             desc: qsTr("Verrouille le shell après un temps sans activité"),
@@ -549,7 +565,7 @@ QtObject {
         },
         {
             id: "lockShortcut",
-            page: 9,
+            page: 8,
             section: qsTr("Verrouillage"),
             label: qsTr("Raccourci de verrouillage"),
             desc: qsTr("Combinaison qui verrouille le shell"),
